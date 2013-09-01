@@ -1,25 +1,26 @@
  Lite Script is Not a Language
 
-***DISCLAIMER***: *All characters and events in the following histories are entirely fictional. All facts
+***DISCLAIMER***: <i>All characters and events in the following histories are entirely fictional. All facts
 were twisted to fit the needs of the plot. Celebrity voices are impersonated (poorly). So, even if
-semantical, grammatical, and sintactic corrections from grammar... (let's not say grammar-nazis
-because the text surely has one error every ten unicode characters, so, if you're a native speaker,
-you don't have to be a grammar-nazi to be horrorized and compelled to send corrections... then, let's
-say that: even if corrections and complete rewrites are gladly accepted from kind persons and
-grammar-social-engineers, don't bother fact-checking. This in inteded to be an amusing reading,
-not a documentary. -Se non e vero, e ben trovato-*
+semantical, grammatical, and sintactic corrections from grammar ~~na~~... </i> Well, let's not say grammar-nazis
+because the text surely has one error every ten unicode characters, so, if you're a native english speaker,
+you don't have to be a grammar-nazi to be horrorized and compelled to send corrections, they'll be appreciated.
+So, let's say that: <i>even if corrections and complete rewrites are gladly accepted from kind persons and
+grammar-social-engineers, don't bother fact-checking. The following text is inteded to be an amusing reading,
+not a documentary. <b>Se non è vero, è ben trovato.</b></i>
 
 
 Introduction:
 =============
 
-<cite>
-"I always promise during my talks that if anyone in the audience
+<i>
+I always promise during my talks that if anyone in the audience
 says during the next 12 months, 'But we've always done it that way,
 I will immediately materialize beside him and haunt him for the
-next 24 hours and see if I could get him to take a second look."<br>
+next 24 hours and see if I could get him to take a second look.
+</i>
 -- Grace Murray Hopper
-</cite>
+
 
 The Space Shuttle and two horse's rear end
 --
