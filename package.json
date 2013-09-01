@@ -1,0 +1,24 @@
+{
+  "name": "LiteScript"
+  ,"description": "low footprint, low complexity, syntax sugar for .js"
+  ,"version": "1.0.0"
+  ,"homepage": "http://github.com/luciotato/litescript"
+  ,"license" : "MIT"
+  ,"bugs": "http://github.com/luciotato/litescript/issues"
+  ,"repository": {
+    "type": "git"
+    ,"url": "git://github.com/luciotato/litescript.git"
+  }
+  ,"author": {
+    "name": "Lucio M. Tato"
+    ,"email": "luciotato@gmail.com"
+    ,"url":"http://github.com/luciotato"
+  }
+ ,"main": "compile.js"
+ ,"engines": [ "node >= 0.8.0"]
+ ,"scripts": {
+    "start": "node compile"
+    ,"lite": "node compile"
+    ,"test": "node test"
+  }
+}
