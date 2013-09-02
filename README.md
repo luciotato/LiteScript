@@ -1,4 +1,11 @@
- Lite Script is Not a Language
+<h3>New! Online Test Drive!, check
+<a href=http://rawgithub.com/luciotato/LiteScript/master/demo.html target=_blank>
+LiteScript Online</a>
+</h3>
+
+--
+
+Lite Script is Not a Language
 
 ***DISCLAIMER***: <i>All characters and events in the following histories are entirely fictional. All facts
 were twisted to fit the needs of the plot. Celebrity voices are impersonated (poorly). So, even if
