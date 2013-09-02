@@ -92,69 +92,70 @@
 
 function liteSQL(lite, newState, blockState) { // extra-sugar entry-point
 
-	var leido = newState.leido;
-	//-- inner function ------
-	function sugar_SQL(prefix) {
+    var leido = newState.leido;
 
-		prefix = prefix||"var result ="; //default
+    //-- inner function ------
+    function sugar_SQL(prefix) {
 
-		blockState.out( prefix + " wait.forMethod(db,'execute'");
+        prefix = prefix||"var data ="; //default 
+
+        blockState.out( prefix + " wait.forMethod(db,'execute'");
         blockState.blockIndent+=4;
 
-		var lineIndex=0,comments,lineWithParams;
-		var parameters=[];
-		// process SQL lines
-		var line=leido;
-		while(true){
-			comments = line.trimComments(); //trim & return comments
-			// replace $var for ?, and remember var
-			var spl=split$expressions(line.words.join(''), blockState.err);
-			lineWithParams="";
-			spl.items.forEach( //for each $expression
-				function(item){
-					lineWithParams += item.pre + '?';
-					parameters.push(item.expr); //parameters for the ?
-				 }
-			);
-			// save line
-			blockState.out( (lineIndex===0?',"':'+" ') + lineWithParams + spl.post + '" ' + comments );
-			if (lite.peekNextItem().indent <= leido.indent)
-				break;// end of indented block
+        var lineIndex=0,comments,lineWithParams;
+        var parameters=[];
+        // process SQL lines
+        var line=leido;
+        while(true){
+            comments = line.trimComments(); //trim & return comments
+            // replace $var for ?, and remember var
+            var spl=split$expressions(line.words.join(''), blockState.err);
+            lineWithParams="";
+            spl.items.forEach( //for each $expression
+                function(item){
+                    lineWithParams += item.pre + '?';
+                    parameters.push(item.expr); //parameters for the ?
+                 }
+            );
+            // save line
+            blockState.out( (lineIndex===0?',"':'+" ') + lineWithParams + spl.post + '" ' + comments );
+            if (lite.peekNextItem().indent <= leido.indent)
+                break;// end of indented block
 
-			line = lite.readNext(); //next block line
-			lineIndex++;
-		}
-		// return last section, "bind parameters", as the original line translation
-		leido.words = ['    ,[', parameters.toString(), ']',');'];
+            line = lite.readNextLine(); //next block line
+            lineIndex++;
+        }
+        // return last section, "bind parameters", as the original line translation
+        leido.words = ['    ,[', parameters.toString(), ']',');'];
         blockState.blockIndent-=4;
 
-	} // end inner function
+    } // end inner function
 
-	function isSql(word){
-		return ["into","select","insert","update","delete"].indexOf(word)>=0;
-	}
+    function isSql(word){
+        return ["into","select","insert","update","delete"].indexOf(word)>=0;
+    }
+
 // -----------------------
 // --liteSQL body
 // -----------------------
     var varname;
-    
-	if (isSql(leido.code)) {
-		 sugar_SQL();
-	}
-	else if (leido.code==='var'){
-         varname = leido.nextCode();
-         if (leido.nextCode()==='=' && isSql(leido.nextCode())) {
-		        // var data = select ...
-                leido.words.splice(0,leido.inx); //remove 
-		        sugar_SQL('var '+varname + ' =');
-         }
-	}
-	else if (leido.nextCode()==='=' && isSql(leido.nextCode())) {
-		    // data = select ...
-            leido.words.splice(0,leido.inx); //remove
-		    sugar_SQL(leido.code + ' ='); 
-	 }
 
+        if (isSql(leido.token)) {
+            sugar_SQL();
+        }
+        else {
+            // get (possible) varname
+            if (leido.token==='var')
+                varname = leido.nextToken();
+            else
+                 varname = leido.token;
+
+            if (leido.nextToken()==='=' && isSql(leido.nextToken())) {
+                // [var] data = select ...
+                leido.words.splice(0,leido.inx); //remove
+                sugar_SQL('var '+varname + ' =');
+            }
+        }
 }
 
 

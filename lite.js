@@ -56,28 +56,23 @@ Lite.prototype.setSource = function(sourceText){
 //
 //- 'new' Constructor
 //-------------------
-function State(lite,keyword,indent) {
+function State(lite,leido) {
 
     if (!lite || ! this instanceof State) throw new Error("call 'lite.makeState()' instead of 'new State()'"); // do not call directly
 
     this.lite = lite; // remember to wich processor this state belongs
 
-    if (!keyword) { //main block
+    if ( ! leido) { //main block
         this.blockStarterIndent=0;
         this.terminator=' ';
     }
-    else if (keyword instanceof Leido) { //if called as: lite.makeState(leido)
-        this.leido = keyword;
-        this.blockStarterIndent=keyword.indent;
-        this.keyword=keyword.token;
-    }
     else {
-        this.keyword=keyword;
-        this.blockStarterIndent=indent;
+        this.leido = leido;
+        this.blockStarterIndent = leido?leido.indent:0;
+        this.keyword = leido.token;
     }
 
-    this.blockStater = '{'; //default block opener
-
+    this.blockStarter = '{'; //default block opener
 }
 // end class State
 //------------------
@@ -138,7 +133,7 @@ Lite.prototype.processBlock = function(state) {
     while(true) {
 
         // read line
-        leido = this.readNext();  // leido = read (as in: ~red)
+        leido = this.readNextLine();  // leido = read (as in: ~red)
         if (leido.EOF) return; //EOF
 
         state.blockLinesCount++;
@@ -151,18 +146,18 @@ Lite.prototype.processBlock = function(state) {
             null;
         //--------
 
+        // same line sugars
         // sugar_THROW
-        var inx=findAfter(leido.words,'throw');
-        if (inx) this.sugar_THROW(leido, inx);
+        this.sugar_THROW(leido);
+        leido.reset();
 
         // call registered extra sugar functions
         var thisLite=this;
-        this.extraSugar_fns.forEach(
-                function(extraSugar_fn){
-			        leido.reset();
-			        extraSugar_fn(thisLite,newState,state);
-                }
-        );
+        for (var i=0; i<this.extraSugar_fns.length;i++){
+            leido.reset();
+            this.extraSugar_fns[i](thisLite,newState,state);
+            leido=newState.leido;
+        };
         leido.reset();
 
         if (leido.token==="function" || leido.token==="export") {
@@ -198,7 +193,7 @@ Lite.prototype.processBlock = function(state) {
 
         } else if (leido.token==='bool' ) { //sugar for boolean var assignment
 
-            this.sugar_BOOL_VAR(newState, state);
+            this.sugar_BOOL(newState, state);
 
         }
 
@@ -219,7 +214,7 @@ Lite.prototype.processBlock = function(state) {
             }
             else { // regular curly-abided constructions
                 // add block's opening brace to this line, if it's not there
-                if (!newState.openBraceInserted) newState.openBraceInserted = leido.addTerminator(newState.blockStater,' ');
+                if (!newState.openBraceInserted) newState.openBraceInserted = leido.addTerminator(newState.blockStarter||'{',' ');
             }
 
             this.out(leido);  // out read (& converted) block starter line
@@ -407,9 +402,17 @@ Lite.prototype.sugar_FOR = function(newState, blockState) {
             varname=leido.nextToken(); // get varname
             newState.expect('in'); //next should be 'in'
             var arrayName = leido.nextToken();
+            var optional = leido.nextToken();
+            if (optional===',') optional = leido.nextToken();
+            var startValue='0';
+            if (optional==='start'||optional==='starting'){
+                newState.expect('at'); //next should be 'in'
+                leido.trimComments();
+                startValue=leido.words.slice(leido.inx+2).join('');
+            }
 
             // Modo standard
-            blockState.out('for(var index=0; index<'+arrayName+'.length; index++){');
+            blockState.out('for(var index='+startValue+'; index<'+arrayName+'.length; index++){');
             words[0]= space(4)+'var '+varname+'='+arrayName+'[index];';
             words.splice(1);
             newState.openBraceInserted=true;
@@ -526,7 +529,13 @@ Lite.prototype.sugar_BOOL_EXPRESION = function(newState, blockState) {
 
             case "not": case "no": leido.replaceWith("!"); break;
 
-            case "<>": leido.replaceWith("!="); break;
+            case "<":
+                if (leido.words[leido.inx+1]==='>') {
+                    leido.replaceWith('!');
+                    leido.inx++;
+                    leido.replaceWith('==');
+                }
+                break;
 
             case "and": leido.replaceWith("&&"); break;
 
@@ -560,7 +569,7 @@ Lite.prototype.sugar_BOOL_EXPRESION = function(newState, blockState) {
 
                 var negated=false;
                 if (leido.token==='not'){
-                    words[is_inx]="!="; // <-- replacement for 'is not'
+                    words[is_inx]="!=="; // <-- replacement for 'is not'
                     negated=true;
                     leido.replaceWith(""); //remove ' not'
                     if (!leido.nextToken()) newState.err("error parsing keyword 'is not'. Expected: another word after 'is not'");
@@ -597,8 +606,6 @@ Lite.prototype.sugar_BOOL_EXPRESION = function(newState, blockState) {
 
                 break; //case 'is'
 
-            default:
-                leido.replaceWith(leido.token.replaceAll('<>','!=')); // <> --> !=
         }
 
         prev_inx = leido.inx;
@@ -618,12 +625,16 @@ Lite.prototype.sugar_BOOL_EXPRESION = function(newState, blockState) {
 // bool [var] x = [bool expression]
 //
 //-----------------------------------------------------
-Lite.prototype.sugar_BOOL_VAR = function(newState, blockState) {
+Lite.prototype.sugar_BOOL = function(newState, blockState) {
 
     var leido=newState.leido;
     leido.replaceWith(''); //remove 'bool'
-    if (leido.nextToken()==='var') leido.nextToken(); //varname
-    leido.nextToken(); // =
+    leido.words[leido.inx+1]=''; //remove space
+    next=leido.nextToken(); //skip next word
+    if (next==='var') {
+        leido.nextToken(); //skip next word
+        leido.nextToken(); //skip next word
+    }
     this.sugar_BOOL_EXPRESION(newState,blockState); //process rest of line as a bool expression
 };
 
@@ -868,7 +879,7 @@ Lite.prototype.sugar_ON = function(newState, blockState) {
         leido.appendCode(')');
     }
     else {
-        newState.blockStater = ','; // indented items are parameters on the 'on' call
+        newState.blockStarter = ','; // indented items are parameters on the 'on' call
         newState.terminator = ');'; //close 'on' call when closing this block
     }
 
@@ -879,13 +890,13 @@ Lite.prototype.sugar_ON = function(newState, blockState) {
 // -------------------------------
 // throw 'message' -> throw(new Error('message'))
 // -------------------------------
-Lite.prototype.sugar_THROW = function(leido, afterInx) {
+Lite.prototype.sugar_THROW = function(leido) {
 
-    var afterThrow = leido.nextToken(afterInx);
-    if (afterThrow.isQuotedString()){ // throw 'message' -> throw(new Error('message'))
-        leido.words[afterInx]='(new Error(';
-        leido.inx++;
-        leido.insertCode('));');
+    var afterThrow = leido.tokenAfter('throw');
+    if (afterThrow && afterThrow.isQuotedString()) {
+        // throw 'message' -> throw(new Error('message'))
+        leido.words[leido.inx-1]='(new Error(';
+        leido.words[leido.inx+1]='));';
     };
 
 };
@@ -1137,7 +1148,7 @@ function Leido(line) {
 //-----------
 Leido.prototype.reset= function() {
     this.inx=-1;
-    this.nextToken(); //set this.token to first word
+    this.readNextToken(); //set this.token to first word
 };
 
 Leido.prototype.readNextToken = function(atIndex) {
@@ -1153,6 +1164,13 @@ Leido.prototype.readNextToken = function(atIndex) {
 
 Leido.prototype.nextToken = function(inx) {
     this.readNextToken(inx); //get next
+    return this.token; //return it
+};
+
+Leido.prototype.tokenAfter = function(token) {
+    var inx = findAfter(this.words, token);
+    if (inx===0) return;
+    this.readNextToken(inx); //get next token
     return this.token; //return it
 };
 
@@ -1283,7 +1301,7 @@ State.prototype.split$expressions = function(){
 //----------------------------
 State.prototype.out = function(s){
     // agrego linea al resultado
-    this.lite.result.push( space(this.blockIndent) + s );
+    this.lite.result.push( space(this.blockIndent||this.blockStarterIndent) + s );
 };
 
 //----------------------------
@@ -1394,7 +1412,7 @@ Lite.prototype.peekNextItem = function() {//peek ahead next token line
 
 
 //----------------------------
-Lite.prototype.readNext = function() // read next source token line
+Lite.prototype.readNextLine = function() // read next source token line
                     //return leido={line:string, indent:number, words:[], [EOF:true]}
                     // skips comments and empty lines
 {
@@ -1430,35 +1448,9 @@ Lite.prototype.readNext = function() // read next source token line
 
     //split words
     leido.words = splitJSLine(leido.line);
-
+    leido.reset();
     return leido;
 };
-
-//--------------------------------------------------------------------
-// Lite.getSubBlock(state) //append sub-block into state.leido.words
-//--------------------------------------------------------------------
-State.prototype.appendSubBlock = function() {
-    var leido = this.leido;
-    var comments=leido.trimComments();
-    var res=leido.words;
-    while (true) {
-        // peek ahead, next line
-        var nextItem = this.lite.peekNextItem(); // peek Next token Line
-        if (nextItem.indent > this.leido.indent) { //next line is indented
-            var nextLine=this.lite.readNext(); //get next line
-            comments = comments.concat(nextLine.trimComments()); //trim comments
-            res.push(' '); // add a space and...
-            res = res.concat(nextLine.words);  // concat next line words
-        }
-        else
-            break; //break loop
-
-    } //loop
-
-    this.leido.words = res;
-    return comments;
-};
-
 
 // ----------------------------------------------
 // Process all source loop

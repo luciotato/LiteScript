@@ -36,9 +36,9 @@ function validateUser(username, hashpass)
         where socusua01_name = $username
         and socusua01_hashpass = $hashpass
 
-    if result.length is 0 then throw 'invalid username or password'
+    if no data then throw 'invalid username or password'
 
-    return result.id_socusua01
+    return data.id_socusua01
 
 end function
 
@@ -62,7 +62,7 @@ function respondWithToken(request, response)
                      set socusua30_datetime = $(new Date().getTime())
                      where socusua30_token = $request.token
 
-                if result.rowCount is 0 then throw 'invalid token'
+                if data.rowsAffected is 0 then throw 'invalid token'
 
             when 'logout'
                 delete from soc_usua_30

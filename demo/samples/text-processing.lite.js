@@ -60,7 +60,7 @@ function processBlock(state)  //uses globals: leido, pos
         // line's first word
         var word = leido.first()
 
-        if ++state.blockLinesCount is 1 
+        if ++state.blockLinesCount is 1
             //1st line of block sets block's indent
             state.blockIndent = leido.indent;
             //first word sets block keyword (if it wasn't provided)
@@ -116,9 +116,9 @@ function processBlock(state)  //uses globals: leido, pos
                     else
 
                         out_leido(';') // statement: add ";" if it's not there
-                    
+
                     end if
-                    
+
                 end if
 
             end case // check if sugary
@@ -167,12 +167,22 @@ function Sugar_FUNCTION_Block
     // remove optional type information
     var typeInfo=[]
 
-    for var n=4 to words.length
+    for var n=4 to words.length-1
 
         case words[n]
 
             when ":" // optional type information
                 typeInfo.push(words.slice(n-1,n+2)) // save info
+                words[n]=""   //clear
+                words[n+1]="" //clear
+
+            when ";" // title
+                titleInfo.push(words.slice(n-1,n+2)) // save info
+                words[n]=""   //clear
+                words[n+1]="" //clear
+
+            when "/" // alias
+                aliasInfo.push(words.slice(n-1,n+2)) // save info
                 words[n]=""   //clear
                 words[n+1]="" //clear
 
@@ -263,7 +273,7 @@ function Sugar_BOOLEAN
 
     end for
 
-    if not thenKeywordFound // si NO HUBO un 'then'... | if there was not a 'then' keyword....
+    if no thenKeywordFound // si NO HUBO un 'then'... | if there was not a 'then' keyword....
 
         words.push(')') // fuerzo ")" | force ")"
 
@@ -279,7 +289,7 @@ end function
 
 //-----------------------------------------
 //-----------------------------------------
-function Sugar_CASE_Block(leido) 
+function Sugar_CASE_Block(leido)
 
     // "case"'s first line
     var words=leido.words
@@ -292,7 +302,7 @@ function Sugar_CASE_Block(leido)
 
     bool var booleanMode = words[1] is 'when'
 
-    if booleanMode 
+    if booleanMode
 
         words[0] = "if"
 
@@ -322,18 +332,18 @@ function sugar_CASE_WHEN_subBlock(state, newState)
 
     newState.keyword='when';
 
-    case state.keyword 
-        when 'case'then 
+    case state.keyword
+        when 'case'then
             sugar_CASE_IF_ELSE_subBlock (state, newState)
-        
-        when 'switch' then 
+
+        when 'switch' then
             sugar_SWITCH_WHEN_subBlock (state, newState)
-        
-        else 
+
+        else
             err ("'when' without 'case'")
 
 end function
-    
+
 
 // -------------------------------
 function sugar_SWITCH_WHEN_subBlock(state, newState)
@@ -344,29 +354,29 @@ function sugar_SWITCH_WHEN_subBlock(state, newState)
     words[leido.inx]="" // delete 'when'
 
     var codeFound=false
-    
+
     // check each word in the 'when' line (to construct js's case value1: case value2:)
     // veo cada palabra en esta linea de "when" (valores para js's case value:)
     while leido.nextCode()
 
-        case 
-            when leido.code is ',' or leido.code is 'or' or leido.code is ':' 
+        case leido.code
+            when  ',', 'or', ':'
                 words[leido.inx]="" //  optionals, delete | opcionales, borro
-            
-            when leido.code is 'then'  // 'then' -> //end of value list | fin de lista de valores 
+
+            when 'then'  // 'then' -> //end of value list | fin de lista de valores
                 words[leido.inx]="" // remove 'then'
                 if leido.nextCode() // there is code after 'when', assume single line 'case'
                     codeFound = true
                     addTerminator(';')
                     appendCode("break")
-                
-                break; //exit while, end of value list | fin de lista de valores 
-        
+
+                break; //exit while, end of value list | fin de lista de valores
+
             else  // a value
                 leido.replaceWith("case $words[leido.inx] :"); // Lite: 'when [value]' --> js: 'case [value]:'
 
         end case
-        
+
     end while
 
     newState.terminator='break;'
@@ -380,7 +390,7 @@ function sugar_SWITCH_WHEN_subBlock(state, newState)
 
 
 // -------------------------------
-function sugar_CASE_ELSE_subBlock(state) 
+function sugar_CASE_ELSE_subBlock(state)
 
     if state.keyword is 'switch' then // mode 2: case [var] when value then... else... end
             leido.replaceWith("default:") // replace 'else' -> "default:"
@@ -402,7 +412,7 @@ function startBracedSubBlock(newState)  //start braced indented block
     //output words, add '{', block starts
     if newState.terminator is not 'break;' // not when terminator='break;'
         newState.openBraceInserted = addTerminator('{',' '); // add ' {' if it's not there
-        
+
     out_leido()
 
     // RECURSIVE
@@ -425,7 +435,7 @@ function insertCode(char, inx)
     if n>=leido.words.length or not leido.words[n].startsWith(char) // next word does not have it
         leido.words.splice(inx,0,char) // insert at inx
         return true //inserted
- 
+
     return false
 
 end function
@@ -453,8 +463,8 @@ function addTerminator(terminator, pre)
     if not leido.commentLine
 
         // default value
-        pre=pre||''; 
-    
+        pre=pre||'';
+
         // skip comments and spaces at the end of the line
         var n=leido.words.length-1
         while n>=0 and ( leido.words[n] is ' ' or leido.words[n].isComment() )
@@ -494,7 +504,7 @@ function closeBlock(state, nextItem)  // add '};', call callback
 
              nextItem.line = "$state.terminator // $nextItem.line"; // close block, with optional cues as comment
 
-        else 
+        else
             // no closing brace, no cues --> add closing block brace, auto-cues
             // closing block brace on its own line
             result.push( '' )
@@ -509,7 +519,7 @@ function closeBlock(state, nextItem)  // add '};', call callback
 end function
 
 //-----------------------------------------
-function Default_EndBlock_callback(state, nextItem) 
+function Default_EndBlock_callback(state, nextItem)
     // end of block hook
     return null;
 
@@ -522,22 +532,22 @@ end function
 String.prototype.startsWith = function(s)
     bool return this.slice(0, s.length) is s
 
-String.prototype.isComment = function() 
+String.prototype.isComment = function()
     bool return this.length>1 and ( this.slice(0,2) is "//" or this.slice(0,2) is "/*" )
 
-String.prototype.isCode = function() 
-    bool return this.length>0 and this<>' ' and not this.isComment() 
+String.prototype.isCode = function()
+    bool return this.length>0 and this<>' ' and not this.isComment()
 
 String.prototype.endsWith = function(s)
-    return this.slice(-s.length)===s 
+    return this.slice(-s.length)===s
 
-String.prototype.replaceAt = function(index, count, replacement) 
+String.prototype.replaceAt = function(index, count, replacement)
     return this.slice(0, index) + replacement + this.slice(index + count)
 
-String.prototype.isEmpty = function() 
+String.prototype.isEmpty = function()
     bool return  not this  or this.length is 0  or this.trimLeft().trimRight().length is 0
 
-String.prototype.replaceAll = function (find, replace) 
+String.prototype.replaceAll = function (find, replace)
     return this.replace(new RegExp(find,'ig'), replace)
 
 
@@ -560,7 +570,7 @@ function space(cant){
 }
 
 // -------------------------
-function err(s) 
+function err(s)
 
     console.log("line: $result.length - ERR: $s");
     result.push("---------------------------------------------------");
@@ -588,7 +598,7 @@ end function
 //class Leido
 //----------------------------
 //- 'new' Constructor
-function Leido(line) 
+function Leido(line)
 
     if not this instanceof Leido return new Leido(line); // in case somebody forgets the "new"
 
@@ -596,27 +606,27 @@ function Leido(line)
 
     // Count & Remove leading spaces
     var indent=0
-    for var n=0 to line.length
-        if line[n] is ' ' then 
+    for each char in line
+        if char is ' ' then
             indent++
-        else if line[n] is "\t" then 
+        else if char is "\t" then
             indent+=4;
-        else 
+        else
             break; //not space or tab, exit for
     end for
 
     line = line.slice(n) //cut leading spaces/tabs
-    
+
     this.line = line
     this.indent = indent
 
-    bool this.lineComment = _ 
+    bool this.lineComment = _
             line.length>1 _
             and ( line.slice(0,2) is "//" or line.slice(0,2) is "/*" )
-    
+
     bool this.hasCode = line and not this.lineComment
 
-    this.inx=-1        
+    this.inx=-1
 
 end function
 
@@ -624,7 +634,7 @@ end function
 
 Leido.prototype.first = function() { return this.words[0] };
 
-Leido.prototype.EOL = function() { 
+Leido.prototype.EOL = function() {
     return (this.inx>=this.words.length);
 }
 
@@ -632,18 +642,18 @@ Leido.prototype.nextCode = function()
 
     this.code =''
     this.inx++
-    
+
     // skip spaces & comments
-    while this.inx < this.words.length and not this.words[this.inx].isCode() 
+    while this.inx < this.words.length and not this.words[this.inx].isCode()
         this.inx++
-        
+
     if this.inx >= this.words.length then return false; //no more code words
     this.code = this.words[this.inx]
     return true
 
 end function
 
-Leido.prototype.replaceWith = function(s) { 
+Leido.prototype.replaceWith = function(s) {
     if this.inx<this.words.length then this.words[this.inx] = s
 }
 
@@ -656,12 +666,12 @@ Leido.prototype.replaceWith = function(s) {
 function preProcess // sourceLines[ string ] --> source[ {hasCode:bool, EOF:bool, indent:number, line:string },... ]
 
     source=[];
-    
+
     var insideMultilineComment=false
 
     //pre-process all source lines
     //append on continuation code
-    
+
     for each line in lite.sourceLines
 
         line = line.trimRight() //trim extra spaces
@@ -669,26 +679,26 @@ function preProcess // sourceLines[ string ] --> source[ {hasCode:bool, EOF:bool
         var start = i;
 
         // line continuation code: ' _'
-        while i < lite.sourceLines.length-1 and line.length>=2 and line.slice(-2) is ' _') 
+        while i < lite.sourceLines.length-1 and line.length>=2 and line.slice(-2) is ' _')
             line=line.slice(0,-2) + lite.sourceLines[++i].trimLeft().trimRight(); //append next line
         }
 
         leido = new Leido(line)
-        
+
         line = leido.line // convenience. w/o leading spaces
-        
+
         leido.sourceLinesStart = start
         leido.sourceLinesEnd = i
 
         if line.startsWith("/*" )
             insideMultilineComment= true
-        
 
-        if insideMultilineComment then 
+
+        if insideMultilineComment then
             leido.commentLine = true
             leido.hasCode = false
-        
-        
+
+
         if insideMultilineComment and line contains "*/"
             insideMultilineComment= false
 
@@ -707,10 +717,10 @@ end function
 //----------------------------
 function peekNextItem() // peek ahead next code line
 
-    for var n=pos.lineIndex to source.length-1
-        if source[n].hasCode then return source[n]
-    
-    return source[n] //return item with EOF code
+    for each item in source starting at pos.lineIndex
+        if item.hasCode then return item
+
+    return source[source.length-1] //return item with EOF code
 
 end function
 
@@ -736,7 +746,7 @@ function readNext() // read next source code line
         if (leido.EOF) return false //reached EOF mark
 
         if (leido.hasCode) break // Code line, exit "skip blank and comments" loop
-        
+
         result.push( space(leido.indent) + leido.line )
         // isn't code, output w/o change, keep reading lines
 
@@ -776,10 +786,10 @@ function splitJSLine(s)
                 inQuotes=false;
                 res.push(s.slice(start,i+1));
                 start = i+1;
-            
-            else 
+
+            else
                 null //do nothing, still in quotes
-        
+
         else // not in quotes
 
             case char
@@ -807,7 +817,7 @@ function splitJSLine(s)
         end if
 
         previous=char
-    
+
     end for
 
     if start<i then res.push(s.slice(start,i)) // last word

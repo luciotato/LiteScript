@@ -8,29 +8,29 @@
     //--------------------
     //FILTER: - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
     //--------------------
-    
+
     Lite: -------------- using SQL sintax
 
         filter this.words into comments where item.isComment() and index>2;
-        
+
     js: -----------------
 
         comments=this.words.filter(function(item,index){return item.isComment() && index>2});
-    
+
     //--------------------
     //--MAP
     //--------------------
-    
-    Lite: -------------- 
 
-        map this.words into comments 
+    Lite: --------------
+
+        map this.words into comments
             function(item,index)
-                if index<2 then 
+                if index<2 then
                     return item
                 else
                     return '// comment $index is $item"
                 end if
-        
+
     js: -----------------
 
         comments = this.words.map(
@@ -41,38 +41,38 @@
                     return '// comment ' + index + " is " + item;
                 }
             });
-    
+
     */
 
 function liteArrayLike(lite, newState, blockState) { // extra-sugar entry-point
 
-    var leido = newState.leido; 
+    var leido = newState.leido;
 
     //-- inner functions -----------------------------------
     function sugar_FILTER() {
-    
-        var src = leido.nextCode();
+
+        var src = leido.nextToken();
         lite.expect('into',newState);
-        var dest = leido.nextCode();
+        var dest = leido.nextToken();
         lite.expect('where',newState);
-        
+
         leido.splice(0,leido.inx+1); //clear up-to here
-        
+
         lite.sugar_BOOL_EXPRESION(newState, blockState); // process as boolean expression
         var boolExpr = leido.words;
 
         // set transformed line
         leido.words=[dest,'=',src,'.filter(function(item,index){return '].concat(boolExpr).push('});')
-        
+
     } // end sugar FILTER
-    
+
     function sugar_MAP() {
-    
+
         lite.out(newState.indent,'//'+leido.line); //include as comment
 
         leido.trimComments();
-        
-        var src = leido.nextCode();
+
+        var src = leido.nextToken();
         lite.expect('into',newState);
         var dest = leido.slice(leido.inx+1).join(); //all the rest
 

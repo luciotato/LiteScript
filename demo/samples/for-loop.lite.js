@@ -16,3 +16,12 @@ function padLines(src,result)
 
 end function
 
+function peekNextItem() // peek ahead next code line
+
+    for each item in source, starting at pos.lineIndex
+        if item.hasCode then return item
+
+    return null; //no more code lines
+
+end function
+

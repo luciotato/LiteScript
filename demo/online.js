@@ -15,12 +15,12 @@ var lite = new Lite();
 // -----------
 function OnLine_Main(){
 
-    lite.addSugar(liteSQL); //add embeddeb SQL sugar 
+    lite.addSugar(liteSQL); //add embeddeb SQL sugar
     lite.addSugar(liteArrayLike); //add array-like map filter sugar
 
     CompareLite_ed = mkEditor("Compare-Lite");
     CompareJs_ed = mkEditor("Compare-js");
-    loadFile ('embedded-sql');
+    loadSample('embedded-sql');
 }
 
 function loadFile(fname, callback) {
@@ -35,23 +35,23 @@ function loadFile(fname, callback) {
     var fileName = 'demo/samples/'+fname+'.lite.js';
     document.getElementById('status').textContent=fileName;
     httpGet(fileName
-        ,function(err,data){ 
+        ,function(err,data){
             if (err && !data) data=err.toString();
             data = data.replace('\r',''); // remove CR from windows-edited files
-        
+
             CompareLite_ed.setValue(data);
-        
+
             CompareLite_ed.clearSelection();
             CompareLite_ed.scrollToLine(0);
-            
+
             if (callback) callback(err);
-        } 
+        }
     );
 }
 
 function loadSample(fname) {
-    loadFile(fname, function(err){ if (!err) Run();} );
-} 
+    loadFile(fname, function(err){ if (!err) run();} );
+}
 
 function mkEditor(divName){
 
@@ -141,13 +141,13 @@ function Online_advanceHook(){
     // keep a "padded Source" to match lines on result
     // add lines to result if needed
     //var n;
-    
+
     var srcePos = lite.pos.originalSource_lineIndex+1;
 
     //copy source on sourcePadded (up to current processing position)
     while (sourcePadded_onSrceIndex<srcePos)
         sourcePadded.push(lite.sourceLines[sourcePadded_onSrceIndex++]);
-    
+
     while (sourcePadded.length < lite.result.length) {
         sourcePadded.push(""); //add line - nbsp
       //  if (lite.sourceLines[sourcePadded_onSrceIndex]==="") { //ya estaba agregada en el source
@@ -158,7 +158,7 @@ function Online_advanceHook(){
     while (lite.result.length < sourcePadded.length) {
         lite.result.push(""); //add line to result
     }
-    
+
     /*
     while (sourcePadded.length < lite.result.length) {
         sourcePadded.push(" "); //add line
@@ -167,20 +167,20 @@ function Online_advanceHook(){
         lite.result.push(" "); //add line
     }
     */
-    
+
     null;
-    
+
     //for(n=lite.sourceLines.length;n<result.length;n++) lite.sourceLines.push("");
     //for(n=result.length;n<lite.sourceLines.length;n++) result.push("")
 
     //document.title = "line " + pos.SourceLinesIndex;
-    
+
     /*var stat=$("#status");
     stat.parent().hide();
     stat.html();
     stat.parent().show();
     */
-    
+
     /*
     addRun( lite.sourceLines.slice(lite.SourceLinesIndex,pos.SourceLinesIndex+1)
            ,result.slice(lite.prevResultIndex,result.length));
@@ -188,12 +188,12 @@ function Online_advanceHook(){
     lite.SourceLinesIndex = pos.SourceLinesIndex+1;
     lite.prevResultIndex = result.length;
     */
-   
+
 }
 
-function Run() {
+function run() {
 
-//    try{ 
+//    try{
 
         var OriginalSource=CompareLite_ed.session.getValue();
 
@@ -202,7 +202,7 @@ function Run() {
         //CompareLite_ed.setValue("");
         CompareLite_ed.resize(true);
         //CompareJs_ed.setValue("");
-        //CompareJs_ed.resize(true); 
+        //CompareJs_ed.resize(true);
 
         //$('#run-rows').html('<tr class=headers>'
         //        +'<td>Lite code</td><td width="20px"></td><td>js code</td>');
@@ -217,7 +217,7 @@ function Run() {
         /*CompareLite_ed.setValue(MainLite_ed.getValue());
         CompareLite_ed.resize(true);
         CompareJs_ed.setValue(lite.result.join('\n'));
-        CompareJs_ed.resize(true);  
+        CompareJs_ed.resize(true);
         */
 
         addRun( '','' ); //extra line, to ease scrolling to the end
@@ -227,18 +227,18 @@ function Run() {
         for(n=lite.result.length;n<sourcePadded.length;n++) lite.result.push("");
 
         CompareLite_ed.setValue(null);
-        addLines.call ( CompareLite_ed, sourcePadded ); 
-    
+        addLines.call ( CompareLite_ed, sourcePadded );
+
         CompareJs_ed.setValue(null);
-        addLines.call ( CompareJs_ed, lite.result ); 
+        addLines.call ( CompareJs_ed, lite.result );
 
         CompareLite_ed.clearSelection();
         CompareJs_ed.clearSelection();
-        
+
         //sync eds
         syncEditors([CompareLite_ed, CompareJs_ed]);
 
-        CompareLite_ed.scrollToLine(0); 
+        CompareLite_ed.scrollToLine(0);
 
 //    }catch(ex){
 //        console.trace();
