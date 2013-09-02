@@ -15,7 +15,7 @@ var lite = new Lite();
 // -----------
 function OnLine_Main(){
 
-    lite.addSugar(liteSQL); //add embeddeb SQL sugar
+    lite.addSugar(liteSQL); //add embeddeb SQL sugar 
     lite.addSugar(liteArrayLike); //add array-like map filter sugar
 
     CompareLite_ed = mkEditor("Compare-Lite");

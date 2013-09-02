@@ -6,7 +6,7 @@
 
 // ---------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------
-// This js code should work on node and the browser. For node-specific code see main.js --
+// This js token should work on node and the browser. For node-specific token see main.js --
 // ---------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------
 
@@ -69,7 +69,7 @@ function State(lite,keyword,indent) {
     else if (keyword instanceof Leido) { //if called as: lite.makeState(leido)
         this.leido = keyword;
         this.blockStarterIndent=keyword.indent;
-        this.keyword=keyword.code;
+        this.keyword=keyword.token;
     }
     else {
         this.keyword=keyword;
@@ -144,7 +144,6 @@ Lite.prototype.processBlock = function(state) {
         state.blockLinesCount++;
 
         // prepare base new state (in case a new block is started)
-        leido.nextCode(); //first code
         var newState = this.makeState(leido);
 
         //debug breakpoint
@@ -152,51 +151,52 @@ Lite.prototype.processBlock = function(state) {
             null;
         //--------
 
+        // sugar_THROW
+        var inx=findAfter(leido.words,'throw');
+        if (inx) this.sugar_THROW(leido, inx);
+
         // call registered extra sugar functions
         var thisLite=this;
         this.extraSugar_fns.forEach(
                 function(extraSugar_fn){
-                        extraSugar_fn(thisLite,newState,state);
+			        leido.reset();
+			        extraSugar_fn(thisLite,newState,state);
                 }
         );
+        leido.reset();
 
-        if (leido.code==="function" || leido.code==="export") {
+        if (leido.token==="function" || leido.token==="export") {
 
             this.sugar_FUNCTION(newState, state);
 
-        } else if (leido.code==="if" || leido.code==="while") {
+        } else if (leido.token==="if" || leido.token==="while") {
 
             this.sugar_BOOL_EXPRESION(newState, state);
 
-        } else if (leido.code==="case" && state.keyword !== 'switch') {
+        } else if (leido.token==="case" && state.keyword !== 'switch') {
 
             this.sugar_CASE(newState, state);
 
-        } else if (leido.code==='when') {
+        } else if (leido.token==='when') {
 
-            if (state.keyword==='case' ) {
-                this.sugar_CASE_WHEN_subBlock(newState, state);
-            }
-            else {
-                this.sugar_WHEN_DONE(newState, state);
-            }
+	    this.sugar_CASE_WHEN_subBlock(newState, state);
 
-        } else if (leido.code==='for' ) {
+        } else if (leido.token==='for' ) {
 
             this.sugar_FOR(newState, state);
 
-        } else if (leido.code==='on' ) {
+        } else if (leido.token==='on' ) {
 
             this.sugar_ON(newState, state);
 
-        } else if (leido.code==='else' ) {
+        } else if (leido.token==='else' ) {
 
-            if (leido.nextCode()==='if') {
+            if (leido.nextToken()==='if') {
 
                 this.sugar_BOOL_EXPRESION(newState, state);
             }
 
-        } else if (leido.code==='bool' ) { //sugar for boolean var assignment
+        } else if (leido.token==='bool' ) { //sugar for boolean var assignment
 
             this.sugar_BOOL_VAR(newState, state);
 
@@ -205,24 +205,16 @@ Lite.prototype.processBlock = function(state) {
         // after the sugar, depending on the indentation of the next line,
         // we can close the current block, continue, or open a sub-block.
         // peek ahead, next line
-        var nextItem = this.peekNextItem(); // peek Next code Line
+        var nextItem = this.peekNextItem(); // peek Next token Line
 
         if ( nextItem.indent > leido.indent ) { // next line is indented
             //--> this line is a block starter
 
             //new block
             newState.blockIndent = nextItem.indent; //block indent: defined by first indented line
-            if (leido.code==='var') newState.separator=','; // for 'var' blocks => ',' is item separator
+            if (leido.token==='var') newState.separator=','; // for 'var' blocks => ',' is item separator
 
-            var last = leido.lastCode();
-            if (last==='done:') { //callback signal
-                leido.replaceWith(' '); // clear...
-                if (leido.lastcode()==='when') leido.replaceWith(' '); // clear...
-                leido.appendCode(',function(err,data)')
-                //next block is function body
-            }
-
-            if (leido.code==='switch'||leido.code==='case'||leido.code==='default') { // for js 60's "C" inherited 'switch', no open brace, no terminator
+            if (leido.token==='switch'||leido.token==='case'||leido.token==='default') { // for js 60's "C" inherited 'switch', no open brace, no terminator
                 newState.terminator=' ';
             }
             else { // regular curly-abided constructions
@@ -239,7 +231,7 @@ Lite.prototype.processBlock = function(state) {
 
             state.blockLinesCount+=newState.blockLinesCount; // add sub block lines count to this block
 
-            nextItem = this.peekNextItem(); // re-peek Next code Line, after sub-block
+            nextItem = this.peekNextItem(); // re-peek Next token Line, after sub-block
 
         }
         else { // Next line is not indented, this is not a block starter line,
@@ -249,12 +241,6 @@ Lite.prototype.processBlock = function(state) {
             if (last===',') { // ends with ','
                 newState.separator=','; // assume line separator is comma
             }
-            else if (last==='...') { //callback signal
-                leido.replaceWith(' '); // clear...
-                newState.separator=','; // inside function call, separator is comma
-                //next line should be 'when done'
-            }
-
             // add separator, if it's required
             if (!nextItem.avoidSeparator()) leido.addTerminator(state.separator);
             this.out(leido);  //out read (& converted) line
@@ -267,15 +253,14 @@ Lite.prototype.processBlock = function(state) {
 
             if (!nextItem.line.startsWith(state.terminator)) { // add '}', if it isn't there
 
-                if ( nextItem.line.startsWith(state.endWord+' ') // --> Block-end cues: 'end if', 'end function', 'end case'...
-                     && nextItem.indent==state.blockStarterIndent ) { // && correctly positioned
-
+                // --> Block-end cues: 'end if', 'end function', 'end case'...
+                if ( nextItem.line.startsWith(state.endWord+' ') && nextItem.indent===state.blockStarterIndent ) { // && correctly positioned
                     nextItem.line = state.terminator + ' //'+nextItem.line; // close block, with optional cues as comment
-
-                } else {
+                }
+                else {
                     // no closing brace, no cues --> add closing block brace, auto-cues
                     // closing block brace on its own line
-                    var cue = (state.leido && state.blockLinesCount>4 && state.keyword!='var'? "// end "+ state.leido.line : "");
+                    var cue = (state.leido && state.blockLinesCount>4 && state.keyword!=='var'? "// end "+ state.leido.line : "");
                     this.out( state.blockStarterIndent,
                         state.terminator + cue );
                 }
@@ -291,6 +276,9 @@ Lite.prototype.processBlock = function(state) {
         if (this.advanceHook) this.advanceHook();
 
     } //end while, loop until end of block
+
+    // hook for online test
+    if (this.advanceHook) this.advanceHook();
 
 };
 
@@ -336,36 +324,36 @@ Lite.prototype.sugar_FUNCTION = function(newState, blockState) {
         newState.expect('function');
         newState.keyword='function';
 
-        newState.functionName = leido.nextCode();
+        newState.functionName = leido.nextToken();
 
         leido.replacePrevious('module.exports.'+newState.functionName+' =function');
     }
     else {
-        newState.functionName = leido.nextCode();
+        newState.functionName = leido.nextToken();
         if (newState.functionName==='(') { // anonymous fn
             newState.functionName='';
             leido.inx--; // return paren
         }
     }
 
-    if (leido.nextCode() !='(') { // has no ( )
+    if (leido.nextToken() !=='(') { // has no ( )
         leido.appendCode('()'); // inject "()"
     }
 
     // remove optional type information
     var typeInfo=[];
-    var lastcode = leido.code;
+    var lastcode = leido.token;
 
-    while (leido.nextCode()) {
+    while (leido.nextToken()) {
 
-        if (leido.code===':') { // optional type information (a:string, b:number, c:array)
+        if (leido.token===':') { // optional type information (a:string, b:number, c:array)
             var colon_inx = leido.inx;
-            typeInfo.push(lastcode +': '+ leido.nextCode()); // save info
+            typeInfo.push(lastcode +': '+ leido.nextToken()); // save info
             words[colon_inx]=""; //clear
             words[leido.inx]=""; //clear
         }
 
-        lastcode = leido.code;
+        lastcode = leido.token;
     }
 
     if (typeInfo.length) words.push("// "+typeInfo.join(', ')); // add typeinfo as comment
@@ -409,16 +397,16 @@ Lite.prototype.sugar_FOR = function(newState, blockState) {
     var leido = newState.leido;
     var words = leido.words;
 
-    if (leido.nextCode()!=='(') { // is not pure-js 'for('... add sugar
+    if (leido.nextToken()!=='(') { // is not pure-js 'for('... add sugar
 
         var varname;
 
-        if (leido.code==='each') { // sugar for each
+        if (leido.token==='each') { // sugar for each
 
             blockState.out("//"+leido.line); // for each a in items... as comment
-            varname=leido.nextCode(); // get varname
+            varname=leido.nextToken(); // get varname
             newState.expect('in'); //next should be 'in'
-            var arrayName = leido.nextCode();
+            var arrayName = leido.nextToken();
 
             // Modo standard
             blockState.out('for(var index=0; index<'+arrayName+'.length; index++){');
@@ -438,8 +426,8 @@ Lite.prototype.sugar_FOR = function(newState, blockState) {
 
             leido.insertCode('('); // add '('
 
-            if (leido.code==='var') leido.nextCode(); //read another
-            varname=leido.code; // get varname
+            if (leido.token==='var') leido.nextToken(); //read another
+            varname=leido.token; // get varname
 
             var inx_eq = words.indexOf('=');
             if (inx_eq<0) {
@@ -527,14 +515,14 @@ Lite.prototype.sugar_BOOL_EXPRESION = function(newState, blockState) {
     var codecount=0;
 
     // process 'if'/'while' line words
-    while (leido.nextCode() && !thenKeywordFound) {
+    while (leido.nextToken() && !thenKeywordFound) {
 
         codecount++;
-        if (codecount==1 && leido.code!='(') { // missing "("
+        if (codecount==1 && leido.token!='(') { // missing "("
             insertedOpeningPar = leido.insertCode('('); // returns true if inserted
         }
 
-        switch(leido.code) {
+        switch(leido.token) {
 
             case "not": case "no": leido.replaceWith("!"); break;
 
@@ -568,14 +556,14 @@ Lite.prototype.sugar_BOOL_EXPRESION = function(newState, blockState) {
                 var is_inx = leido.inx;
                 leido.replaceWith("===");
 
-                if (!leido.nextCode()) newState.err("error parsing keyword 'is'. Expected: more words after 'is'");
+                if (!leido.nextToken()) newState.err("error parsing keyword 'is'. Expected: more words after 'is'");
 
                 var negated=false;
-                if (leido.code==='not'){
+                if (leido.token==='not'){
                     words[is_inx]="!="; // <-- replacement for 'is not'
                     negated=true;
                     leido.replaceWith(""); //remove ' not'
-                    if (!leido.nextCode()) newState.err("error parsing keyword 'is not'. Expected: another word after 'is not'");
+                    if (!leido.nextToken()) newState.err("error parsing keyword 'is not'. Expected: another word after 'is not'");
                 }
 
                 // basic replacement:  is -> ==, is not -> !=
@@ -586,7 +574,7 @@ Lite.prototype.sugar_BOOL_EXPRESION = function(newState, blockState) {
                 // Usage 2: [variable] is [null|undefined]  ->js:  if (![variable]){...   // false for null,undefined and ''
                 // Usage 3: [variable] is [function|string|object|array]  ->js:  typeof [variable]==='[keyword]'"
 
-                switch(leido.code) { //special cases
+                switch(leido.token) { //special cases
 
                     case "function": case "string": case "number": //-> (typeof x ==='type')
                     case "object": case "Object":
@@ -610,12 +598,12 @@ Lite.prototype.sugar_BOOL_EXPRESION = function(newState, blockState) {
                 break; //case 'is'
 
             default:
-                leido.replaceWith(leido.code.replaceAll('<>','!=')); // <> --> !=
+                leido.replaceWith(leido.token.replaceAll('<>','!=')); // <> --> !=
         }
 
         prev_inx = leido.inx;
 
-    } // each code word
+    } // each token word
 
     if ( !thenKeywordFound && insertedOpeningPar) { // if there was not a 'then' keyword.... | si NO HUBO un 'then'...
                                                     // and the opening par was inserted...
@@ -634,10 +622,10 @@ Lite.prototype.sugar_BOOL_VAR = function(newState, blockState) {
 
     var leido=newState.leido;
     leido.replaceWith(''); //remove 'bool'
-    if (leido.nextCode()=='var') leido.nextCode(); //varname
-    leido.nextCode(); // =
+    if (leido.nextToken()==='var') leido.nextToken(); //varname
+    leido.nextToken(); // =
     this.sugar_BOOL_EXPRESION(newState,blockState); //process rest of line as a bool expression
-}
+};
 
 
 //--------------------------------------------
@@ -735,17 +723,17 @@ Lite.prototype.sugar_CASE = function(newState, blockState) {
 
     var case_inx = leido.inx;
 
-    if (!leido.nextCode()) { //only 'case', mode 1: case /n when [bool expression] then...
+    if (!leido.nextToken()) { //only 'case', mode 1: case /n when [bool expression] then...
 
         words[case_inx] = "// " + words[case_inx]; //comment case
 
     } else { // mode 2: case [variable] /n when [value] then...
 
-        newState.varName = leido.code;
+        newState.varName = leido.token;
 
-        if (!leido.nextCode()) { // only one word, single variable
+        if (!leido.nextToken()) { // only one word, single variable
 
-            words[case_inx]="{ //"+words[case_inx]; //open block, comment original code
+            words[case_inx]="{ //"+words[case_inx]; //open block, comment original token
 
         } else { // more than one word => expression, store to evaluate only once
             this.out(leido.indent, "//" + leido.line); //add comment, original source
@@ -764,7 +752,7 @@ Lite.prototype.sugar_CASE = function(newState, blockState) {
 Lite.prototype.sugar_CASE_WHEN_subBlock = function(newState, blockState) {
 
     //check
-    if ( blockState.keyword!='case') blockState.err("'when' without 'case'");
+    if ( blockState.keyword!=='case') blockState.err("found 'when' outside 'case'. 'when' lines must be indented");
 
     newState.keyword='when';
 
@@ -799,21 +787,21 @@ Lite.prototype.sugar_CASE_VAR_subBlock = function(newState, blockState) {
 
     // check each word in the 'when' line (to construct js's condition $value=value1 ||...)
     // veo cada palabra en esta linea de "when" (valores para js's condition)
-    while (leido.nextCode()) {
+    while (leido.nextToken()) {
 
-        if (leido.code===':' ) {
+        if (leido.token===':' ) {
             words[leido.inx]=""; //  optionals, delete | opcionales, borro
 
-        } else if (leido.code===',' || leido.code==='or' ) {
+        } else if (leido.token===',' || leido.token==='or' ) {
             words[leido.inx]="||"; //  or value==...
             orAdded=true;
 
-        } else if (leido.code==='then') { // 'then' -> //end of value list | fin de lista de valores
+        } else if (leido.token==='then') { // 'then' -> //end of value list | fin de lista de valores
             thenFound=true;
             var then_inx=leido.inx;
             words[then_inx]=")"; // replace 'then'
-            if (leido.nextCode()) {
-                // there is code after 'when', assume single line 'when'
+            if (leido.nextToken()) {
+                // there is token after 'when', assume single line 'when'
                 words[then_inx]=") {"; // replace'then'
                 codeFound = true;
                 leido.addTerminator('}');
@@ -833,73 +821,11 @@ Lite.prototype.sugar_CASE_VAR_subBlock = function(newState, blockState) {
         leido.appendCode(")");
     }
 
-    //check, in case there is no code after 'case'
+    //check, in case there is no token after 'case'
     if (!codeFound)  {
         var nextItem=this.peekNextItem();
         if (nextItem.indent <= leido.indent) newState.err("expected some CODE for the 'case/when' block");
     }
-
-};
-
-
-//-----------------------------------------------
-//---- SUGAR "when done:", sugar for callbacks --
-//-----------------------------------------------
-/*
-Note: 'when done:' can be used on the same line,
-or in the next line, same indent.
-
-Lite:
------
-
-    readFile(filename,...
-    when done: (data)
-            writeFile(dest, data, when done:
-                if err then
-                    response.end(err.message)
-                else
-                    response.end('data saved')
-
-
----> js:
-
-    readFile(filename, function(data){
-            writeFile(dest,data,function(){
-                    if (err)
-                        response.end(err.message)
-                    else
-                        response.end('data saved')
-
-            });
-    });
-
-
-*/
-// -------------------------------
-Lite.prototype.sugar_WHEN_DONE = function(newState, blockState) {
-
-    var leido = newState.leido;
-    this.out(leido.indent,'//'+leido.line); //out "when done:" as comment
-
-    newState.terminator = '});'; //close fn call when closing "when done:" block
-
-    leido.replaceWith('function');// replace 'when'
-
-    //check
-    newState.expect('done');
-    leido.replaceWith('');// replace 'done'
-
-    if (leido.nextCode()===':') { leido.replaceWith('');leido.nextCode(); } // optional ":"
-
-    if (leido.code==='(') return; //explicit prameters, nothing more to do
-
-    leido.insertCode('(err,data)'); //default paramteres
-    if (leido.code!=='') {// more code on the same line
-            leido.insertCode('{');
-            leido.appendCode('})');
-    }
-
-    return; //continue, process subblock
 
 };
 
@@ -930,13 +856,13 @@ Lite.prototype.sugar_ON = function(newState, blockState) {
     var leido = newState.leido;
     //this.out(leido.indent,'//'+leido.line); //out as comment
 
-    var emitterName = leido.nextCode();
+    var emitterName = leido.nextToken();
 
     leido.replacePrevious(emitterName+'.on(');// replace 'on object' --> object.on(
 
-    var eventName = leido.nextCode();
+    var eventName = leido.nextToken();
 
-    if (leido.nextCode()) { // there are more code on the same line
+    if (leido.nextToken()) { // there are more token on the same line
         //assume function call as in: on socket 'close' flushData(socket)
         //close the 'on' call here
         leido.appendCode(')');
@@ -950,7 +876,21 @@ Lite.prototype.sugar_ON = function(newState, blockState) {
 
 };
 
+// -------------------------------
+// throw 'message' -> throw(new Error('message'))
+// -------------------------------
+Lite.prototype.sugar_THROW = function(leido, afterInx) {
+
+    var afterThrow = leido.nextToken(afterInx);
+    if (afterThrow.isQuotedString()){ // throw 'message' -> throw(new Error('message'))
+        leido.words[afterInx]='(new Error(';
+        leido.inx++;
+        leido.insertCode('));');
+    };
+
+};
 //----------------------------
+
 // utility protoype functions
 //----------------------------
 Lite.prototype.Default_EndBlock_callback = function(blockState, nextItem) {
@@ -962,16 +902,19 @@ Lite.prototype.Default_EndBlock_callback = function(blockState, nextItem) {
 // utility String protoype functions
 //----------------------------------
 String.prototype.startsWith =
-    function(s){ return this.slice(0, s.length) == s; };
+    function(s){ return this.slice(0, s.length) === s; };
 
 String.prototype.isComment =
     function() { return (this.length>1 && ( this.slice(0,2)==="//" || this.slice(0,2)==="/*" ) ); };
+
+String.prototype.isQuotedString =
+    function() { return (this.length>1 && ( this[0]==="'" || this[0]==='"' ) ); };
 
 String.prototype.isCode =
     function() { return (this.length>0 && this!=' ' && !this.isComment() ); };
 
 String.prototype.endsWith =
-    function(s){ return this.slice(-s.length) == s; };
+    function(s){ return this.slice(-s.length) === s; };
 
 String.prototype.replaceAt =
     function(index, count, replacement) { return this.slice(0, index) + replacement + this.slice(index + count); };
@@ -987,8 +930,8 @@ String.prototype.findMatchingPair = function (start, closer) {
     var opener=this[start];
     var opencount=1;
     for (var n=start+1;n<this.length;n++) {
-        if (this[n]==closer && --opencount===0) return n;
-        if (this[n]==opener) opencount++;
+        if (this[n]===closer && --opencount===0) return n;
+        if (this[n]===opener) opencount++;
     }
     return -1;
 };
@@ -1015,7 +958,7 @@ function splitJSLine(s){
         var char = s[i];
 
         if (inQuotes){
-            if (char==quoteChar && i<s.length && s[i+1]!=char){ //end of quotes
+            if (char===quoteChar && i<s.length && s[i+1]!==char){ //end of quotes
                 inQuotes=false;
                 var quoted=s.slice(start,i+1);
                 if (quoteChar==='"') quoted = replace$inPlace(quoted);
@@ -1076,6 +1019,12 @@ function find(s,searched,start){
     var inx=s.indexOf(searched,start);
     return inx<0? s.length : inx;
 }
+//-----------------------------------------
+//--- findAfter: return next following word, or 0 if not found
+//-----------------------------------------
+function findAfter(s,searched,start){
+    return s.indexOf(searched,start)+1;
+}
 
 //------------------------
 //- split on $expresion --
@@ -1093,7 +1042,6 @@ function split$expressions(q, err_fn){ //returns { items:[{pre,$pos,$len,expr},.
     //clear start and end quotes
     if (q[0]==='"') q=q.substr(1);
     if (q[q.length-1]==='"') q = q.substr(0,q.length-1);
-
 
     var last_delimiter=0;
     while (true) {
@@ -1136,10 +1084,8 @@ function replace$inPlace(q,err_fn){
     var arrResult=[];
     spl.items.forEach(
         function(item,index){
-            if (item.pre) {
-                arrResult.push(quoted(item.pre));
-                arrResult.push(' + ');
-            }
+            arrResult.push(quoted(item.pre));
+            arrResult.push(' + ');
             arrResult.push(item.expr);
         }
     );
@@ -1167,9 +1113,9 @@ function Leido(line) {
     // Count & Remove leading spaces
     var indent=0;
     for (var n = 0; n < line.length; n++) {
-        if (line[n] === " " ) indent++;
-        else if ( line[n] === "\t") indent+=4;
-        else break; //not space or tab
+         if (line[n] === " " ) indent++;
+         else if ( line[n] === "\t") indent+=4;
+         else break; //not space or tab
     }
 
     line = line.slice(n); //cut leading spaces/tabs
@@ -1178,31 +1124,36 @@ function Leido(line) {
     this.indent = indent;
 
     this.lineComment
-        = (line.length>1 &&
-            ( line.slice(0,2)==="//" || line.slice(0,2)==="/*" )
-        );
+         = (line.length>1 &&
+              ( line.slice(0,2)==="//" || line.slice(0,2)==="/*" )
+         );
 
     this.hasCode = ((line && !this.lineComment)? true: false);
+    this.reset();
 
-    this.inx=-1;
 }
-
+//-----------
 //- Methods
-//---------
-Leido.prototype.readNextCode = function() {
-    this.code ='';
-    this.inx++;
+//-----------
+Leido.prototype.reset= function() {
+    this.inx=-1;
+    this.nextToken(); //set this.token to first word
+};
+
+Leido.prototype.readNextToken = function(atIndex) {
+    this.token ='';
+    if (atIndex) this.inx = atIndex; else this.inx++;
     if (!this.words) return false; //no words
     // skip spaces & comments
     while (this.inx<this.words.length && !this.words[this.inx].isCode()) this.inx++;
-    if (this.inx>=this.words.length) return false; // ***** no more code words
-    this.code = this.words[this.inx];
+    if (this.inx>=this.words.length) return false; // ***** no more token words
+    this.token = this.words[this.inx];
     return true;
 };
 
-Leido.prototype.nextCode = function() {
-    this.readNextCode(); //get next
-    return this.code; //return it
+Leido.prototype.nextToken = function(inx) {
+    this.readNextToken(inx); //get next
+    return this.token; //return it
 };
 
 Leido.prototype.replaceWith = function(s) {
@@ -1247,7 +1198,7 @@ Leido.prototype.insertCode = function(char,where){
 
 //----------------------------
 Leido.prototype.lastCode = function(char){
-    // search for the last code at the end of the line (considering comments)
+    // search for the last token at the end of the line (considering comments)
 
     // skip comments and spaces at the end of the line
     var n=this.words.length-1;
@@ -1354,6 +1305,7 @@ State.prototype.err = function(s) {
         sourceRef= __dirname+'/'+this.lite.fileName+':'+this.leido.sourceLinesStart;
     else
         sourceRef='line :'+this.leido.sourceLinesStart;
+
     console.log(s,sourceRef);
     this.lite.out(this.blockIndent, "---------------------------------------------------");
     this.lite.out(this.blockIndent, "!!! ERROR: " + s);
@@ -1366,7 +1318,7 @@ State.prototype.err = function(s) {
 // Expect, throw error if not
 // ----------------------------------------------
 State.prototype.expect = function (expected) {
-    if (this.leido.nextCode()!==expected)
+    if (this.leido.nextToken()!==expected)
         this.err("Expected '"+expected+"' after '"+this.leido.words.slice(0,this.leido.inx).join('')+"'");
 };
 
@@ -1381,13 +1333,13 @@ Lite.prototype.preProcess = function() {// sourceLines[ string ] --> source[ {ha
     var leido;
 
     //pre-process all source lines
-    //append on continuation code
+    //append on continuation token
     for(var n=0; n<this.sourceLines.length; n++) {
 
         var start = n;
         var line = this.sourceLines[n].trimRight(); //trim extra spaces
 
-        // line continuation code: ' _'
+        // line continuation token: ' _'
         while (n < this.sourceLines.length-1 && line.length>=2 && line.slice(-2)===' _') {
             line=line.slice(0,-1) + this.sourceLines[++n].trimLeft().trimRight(); //append next line
         }
@@ -1432,7 +1384,7 @@ Lite.prototype.preProcess = function() {// sourceLines[ string ] --> source[ {ha
 };
 
 //----------------------------
-Lite.prototype.peekNextItem = function() {//peek ahead next code line
+Lite.prototype.peekNextItem = function() {//peek ahead next token line
 
     for(var n=this.pos.lineIndex+1; n<this.source.length-1; n++) {
         if (this.source[n].hasCode) return this.source[n]; //another line
@@ -1442,7 +1394,7 @@ Lite.prototype.peekNextItem = function() {//peek ahead next code line
 
 
 //----------------------------
-Lite.prototype.readNext = function() // read next source code line
+Lite.prototype.readNext = function() // read next source token line
                     //return leido={line:string, indent:number, words:[], [EOF:true]}
                     // skips comments and empty lines
 {
@@ -1467,14 +1419,14 @@ Lite.prototype.readNext = function() // read next source code line
         if (leido.hasCode) break; // Code line, exit "skip blank and comments" loop
 
         this.out ( leido.indent, leido.line );
-        // isn't code, output w/o change, keep reading lines
+        // isn't token, output w/o change, keep reading lines
 
     } // loop - keep reading lines, while line is empty or comment
       // loop - sigo leyendo, mientras sea linea vacia o de comentario
 
 
     //aqui, la linea contiene codigo
-    //here, the line has code
+    //here, the line has token
 
     //split words
     leido.words = splitJSLine(leido.line);
@@ -1491,7 +1443,7 @@ State.prototype.appendSubBlock = function() {
     var res=leido.words;
     while (true) {
         // peek ahead, next line
-        var nextItem = this.lite.peekNextItem(); // peek Next code Line
+        var nextItem = this.lite.peekNextItem(); // peek Next token Line
         if (nextItem.indent > this.leido.indent) { //next line is indented
             var nextLine=this.lite.readNext(); //get next line
             comments = comments.concat(nextLine.trimComments()); //trim comments
@@ -1520,8 +1472,6 @@ Lite.prototype.process = function (sourceText) {
     }
 
 };
-
-
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
