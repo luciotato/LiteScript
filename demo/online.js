@@ -142,13 +142,13 @@ function Online_advanceHook(){
     // add lines to result if needed
     //var n;
 
-    var srcePos = lite.pos.originalSource_lineIndex+1;
+    var srcePos = lite.pos.originalSource_lineIndex-1;
 
     //copy source on sourcePadded (up to current processing position)
     while (sourcePadded_onSrceIndex<srcePos)
         sourcePadded.push(lite.sourceLines[sourcePadded_onSrceIndex++]);
 
-    while (sourcePadded.length < lite.result.length) {
+    while (sourcePadded.length < lite.result.length-1) {
         sourcePadded.push(""); //add line - nbsp
       //  if (lite.sourceLines[sourcePadded_onSrceIndex]==="") { //ya estaba agregada en el source
       //      sourcePadded_onSrceIndex++; //no la agrego de nuevo en la proxima
@@ -158,37 +158,6 @@ function Online_advanceHook(){
     while (lite.result.length < sourcePadded.length) {
         lite.result.push(""); //add line to result
     }
-
-    /*
-    while (sourcePadded.length < lite.result.length) {
-        sourcePadded.push(" "); //add line
-    }
-    while (lite.result.length < sourcePadded.length) {
-        lite.result.push(" "); //add line
-    }
-    */
-
-    null;
-
-    //for(n=lite.sourceLines.length;n<result.length;n++) lite.sourceLines.push("");
-    //for(n=result.length;n<lite.sourceLines.length;n++) result.push("")
-
-    //document.title = "line " + pos.SourceLinesIndex;
-
-    /*var stat=$("#status");
-    stat.parent().hide();
-    stat.html();
-    stat.parent().show();
-    */
-
-    /*
-    addRun( lite.sourceLines.slice(lite.SourceLinesIndex,pos.SourceLinesIndex+1)
-           ,result.slice(lite.prevResultIndex,result.length));
-
-    lite.SourceLinesIndex = pos.SourceLinesIndex+1;
-    lite.prevResultIndex = result.length;
-    */
-
 }
 
 function run() {
@@ -209,19 +178,20 @@ function run() {
 
         sourcePadded=[];
         sourcePadded_onSrceIndex=0;
-
         lite.advanceHook = Online_advanceHook;
 
-        lite.process(OriginalSource);
+        lite.process(OriginalSource); 
 
-        /*CompareLite_ed.setValue(MainLite_ed.getValue());
-        CompareLite_ed.resize(true);
-        CompareJs_ed.setValue(lite.result.join('\n'));
-        CompareJs_ed.resize(true);
-        */
+        //CompareLite_ed.setValue(MainLite_ed.getValue());
+        //CompareLite_ed.resize(true);
+        //CompareJs_ed.setValue(lite.result.join('\n'));
+        //CompareJs_ed.resize(true);
 
         addRun( '','' ); //extra line, to ease scrolling to the end
 
+        lite.pos.originalSource_lineIndex++;
+        Online_advanceHook();
+        
         var n;
         for(n=sourcePadded.length;n<lite.result.length;n++) sourcePadded.push("");
         for(n=lite.result.length;n<sourcePadded.length;n++) lite.result.push("");

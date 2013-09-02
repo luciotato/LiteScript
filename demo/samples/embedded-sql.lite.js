@@ -1,33 +1,6 @@
 var db = require('database')
-var wait = require('wait.for'); //  http://github.com/luciotato/waitfor
-var zlib = require('zlib');
-
-/*
- NOTE: 'database' is a generic relational database access lib
-
- db.execute(query, params, callback) accepts:
-     a parametrized sql statement
-     its parameters
-     and a callback(err,data)
-
- db.execute automatically handles prepared statment caching.
-
-// -----------------------
-// db.execute PSEUDO-CODE:
-// -----------------------
-function db.execute(query, params, callback)  //callback=fn(err,data)
-    var hashq = hash(query,'md5');
-    var inx = this.prepared_cache.indexOf(hashq);
-    if (inx>=0) {
-        prepared = this.prepared_cache[inx];
-    }
-    else {
-        prepared = this.driver.prepare_statement(query, params);
-        this.prepared_cache[hashq]=prepared;
-    }
-    this.driver.execute_prepared_statement(prepared,params,callback);
-end function
-*/
+var wait = require('wait.for') // http://github.com/luciotato/waitfor
+var zlib = require('zlib')
 
 //-----------------
 function validateUser(username, hashpass)
@@ -36,7 +9,7 @@ function validateUser(username, hashpass)
         where socusua01_name = $username
         and socusua01_hashpass = $hashpass
 
-    if no data then throw 'invalid username or password'
+    if no data.rows then throw 'invalid username or password'
 
     return data.id_socusua01
 
@@ -91,4 +64,31 @@ function UserInfo_1(id_socusua01, response)
         response.end(502,err.message)
 
 end function
+
+/*
+ NOTE: 'database' is a generic relational database access lib
+
+ db.execute(query, params, callback) accepts:
+     a parametrized sql statement
+     its parameters
+     and a callback(err,data)
+
+ db.execute automatically handles prepared statment caching.
+
+// -----------------------
+// db.execute PSEUDO-CODE:
+// -----------------------
+function db.execute(query, params, callback)  //callback=fn(err,data)
+    var hashq = hash(query,'md5');
+    var inx = this.prepared_cache.indexOf(hashq);
+    if (inx>=0) {
+        prepared = this.prepared_cache[inx];
+    }
+    else {
+        prepared = this.driver.prepare_statement(query, params);
+        this.prepared_cache[hashq]=prepared;
+    }
+    this.driver.execute_prepared_statement(prepared,params,callback);
+end function
+*/
 

@@ -267,13 +267,8 @@ Lite.prototype.processBlock = function(state) {
             break; //*** end of this block (break loop, return)
         }
 
-        // hook for online test
-        if (this.advanceHook) this.advanceHook();
-
     } //end while, loop until end of block
 
-    // hook for online test
-    if (this.advanceHook) this.advanceHook();
 
 };
 
@@ -311,6 +306,9 @@ js: -------------------
 */
 //-----------------------------------------
 Lite.prototype.sugar_FUNCTION = function(newState, blockState) {
+
+    // hook for online test
+    if (this.advanceHook) this.advanceHook();
 
     var leido = newState.leido;
     var words = leido.words;
@@ -390,7 +388,6 @@ js: -------------------
 Lite.prototype.sugar_FOR = function(newState, blockState) {
 
     var leido = newState.leido;
-    var words = leido.words;
 
     if (leido.nextToken()!=='(') { // is not pure-js 'for('... add sugar
 
@@ -413,8 +410,8 @@ Lite.prototype.sugar_FOR = function(newState, blockState) {
 
             // Modo standard
             blockState.out('for(var index='+startValue+'; index<'+arrayName+'.length; index++){');
-            words[0]= space(4)+'var '+varname+'='+arrayName+'[index];';
-            words.splice(1);
+            leido.words[0]= space(4)+'var '+varname+'='+arrayName+'[index];';
+            leido.words.splice(1);
             newState.openBraceInserted=true;
 
             // Modo nuevo: Array.forEach
@@ -432,25 +429,26 @@ Lite.prototype.sugar_FOR = function(newState, blockState) {
             if (leido.token==='var') leido.nextToken(); //read another
             varname=leido.token; // get varname
 
-            var inx_eq = words.indexOf('=');
+            var inx_eq = leido.words.indexOf('=');
             if (inx_eq<0) {
                 newState.err("Equal (=) not found. Expected for [var] x =... " );
             }
 
             var inc_dec='++';
             var compare='<=';
-            var inx_to = words.indexOf('to');
+            var inx_to = leido.words.indexOf('to');
             if (inx_to<0) {
-                inx_to = words.indexOf('downto');
+                inx_to = leido.words.indexOf('downto');
                 inc_dec='--';
                 compare='>=';
             }
             if (inx_to<0) newState.err("Expected 'to/downto' after 'for'");
 
-            words[inx_to]='; '+varname+' '+compare; // add ;varname<=/>= x
+            leido.words[inx_to]='; '+varname+' '+compare; // add ;varname<=/>= x
             leido.appendCode(' ; '+varname+inc_dec+')'); // add ;varname++/--)
         }
     }
+
 };
 
 //-----------------------------------------
