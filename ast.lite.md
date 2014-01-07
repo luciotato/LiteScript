@@ -6,12 +6,36 @@ It's main purpose is to provide a prototype AST node with utility methods to par
 the token stream into classes derived from `ASTBase`
 
 
+###Declarations for external or forward symbols
+
+To avoid long debug sessions over a mistyped object member, LiteScript compiler will emit warninigs when a variable is used before declaration, and when a object property is unknown. The `compiler declare` directive lists valid property names, avoiding warnings. It is used to declare externally defined objects, or to forward-declare methods.
+
+    compiler declare on ASTBase
+        opt
+        out
+        spacesIndent
+        listArgs
+
+    compiler declare on lexer
+        posToString
+        getPos, setPos
+        lineInfo, token, index, nextToken
+        sourceLineNum
+        hardError
+        outStartNewLine
+
+    compiler declare on token
+        type, value
+
+    compiler declare on err
+        controled
+
+
 ###public Class ParseFailed
 
-The parser is contructed as a hand-coded optimized recursive-descent parser.
+The parser is a hand-coded optimized recursive-descent parser.
 
 The parsing function in each grammar class .parse() method is straightforward.
-
 Each .parse() method *requires* specific tokens in a specific order, and consume *optional* 
 token for variations. When a *required* token is missing, the parsing fails,
 the token stream is *rewound* and another grammar class can be tried over the token stream.
@@ -28,35 +52,6 @@ as the parent node will try other AST classes against the token stream before de
 ####Constructor(message)
         me.message = message
 
-###Declarations for external or forward symbols
-
-To avoid long debug sessions over a mistyped object member, LiteScript compiler will emit warninigs when a variable is used before declaration, and when a object property is unknown. `compiler declare` list valid property names disabling the warnings. It is needed only for externally defined objects, or to forward-declare methods.
-
-    compiler declare on ASTBase
-        opt
-        out
-        spacesIndent
-        listArgs
-
-    compiler declare on lexer
-        posToString
-        getPos
-        setPos
-        token      
-        lineInfo
-        sourceLineNum
-        nextToken
-        index
-        hardError
-        outStartNewLine
-
-    compiler declare on err
-        controled
-
-    compiler declare on token
-        type
-        value
-
 
 public Class ASTBase
 ====================
@@ -64,14 +59,11 @@ public Class ASTBase
 This class serves as a base class on top of which all AST classes are defined.
 It contains basic functions to parse the token stream.
      
-      properties
+###properties
         parentNode
+        lexer, indent, column, sourceLineNum, lineInx
         locked # when `true`, means the node is lock-on-target. Any exception when locked, is a Syntax Error.
-        lexer
-        sourceLineNum
-        column
-        lineInx
-        indent
+
 
 Constructor(lexer, parent)
 --------------------------
@@ -108,15 +100,10 @@ Also remeber line index in tokenized lines, and this line indent
 
 **lock** marks this class as locked, meaning we are certain this is the correct class
 for the given syntax. For example, if the `FunctionExpression` class sees the IDENTIFIER `function`,
-we are certain this is the correct class to use. Once locked, any invalid syntax causes compilation to fail.
-
-`lock` can be called multiple times to update the line number. If a node spans multiple lines,
-this is useful because the line number is reported in the error message.
+we are certain this is the rigth class to use. Once locked, any invalid syntax causes compilation to fail.
 
         me.locked = on // `on` is alias for `true`
 
-method toString()
-        return typeof me
 
 method throwError(msg)
 ----------------------
@@ -129,7 +116,7 @@ adds lexer position info and throws a 'controled' error
     
         err.controled = true
 
-        throw err
+        throw errdi
 
 
 method throwParseFailed(msg)
@@ -160,25 +147,27 @@ Child classes _must_ override this method
 method produce()
 ---------------
 
-**produce()** is the method to produce target code
+**produce()** is the method to produce target code.
 Child classes should override this, if the default production isnt: `me.out me.name`
 
         me.out me.name
 
 
-method parseDirect(key,directObj)
+method parseDirect(key, directAssoc)
 ---------------------------------
 
 We use a DIRECT associative array to pick the exact AST node to parse 
 based on the actual token value or type.
 This speeds up parsing, avoiding parsing by trial & error
 
-        if directObj.hasOwnProperty(key)
-          var directASTNode = directObj[key]
-          return me.opt(directASTNode)
+        if directAssoc.hasOwnProperty(key)
+          var directASTClass = directAssoc[key]
+
+*opt* tries to parse directASTClass. It returns 'null' if parse failed. 
+
+          return me.opt(directASTClass)
 
       end method
-
 
 
 method opt(list, options)
@@ -203,7 +192,10 @@ check 2nd parameter not to be a string (common error)
 
         #debug - control
         if typeof options is 'string'
-          me.throwError "compiler-internals: Check parameteres in opt/req call. Accepted parameter are: list[] (Array) and options (object). Check second parameter"
+          me.throwError """
+                compiler-internals: Check parameteres in opt/req call. 
+                Accepted parameter are: list[] (Array) and options (object)
+                """
 
 Remember the actual position, to rewind if all the arguments to `opt` fail
 
@@ -219,7 +211,10 @@ with the class, or match the token type to the string.
 
           #debug - control
           if typeof searched is 'string' and searched isnt searched.toUpperCase()
-            me.throwError "compiler-internals: a call to req('#{searched}') was made, but '#{searched}' is not UPPERCASE. Do you mean to call reqValue()?"
+            me.throwError """
+                compiler-internals: a call to req('#{searched}') was made, 
+                but '#{searched}' is not UPPERCASE. Do you mean to call reqValue()?
+                """
 
 For strings we check the token **type**, and return the token value if the type match
 
