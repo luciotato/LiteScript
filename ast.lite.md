@@ -10,20 +10,27 @@ the token stream into classes derived from `ASTBase`
 
 The parser is contructed as a hand-coded optimized recursive-descent parser.
 
-The parsing function in each grammar class .parse() function is straightforward.
+The parsing function in each grammar class .parse() method is straightforward.
 
-During a node.parse(), if there is a mismatch, a ParseFailed error is raised.
-`ParseFailed` signals that the class failed to parse the tokens from the stream, 
-however the syntax might still be valid for another AST node. 
+Each .parse() method *requires* specific tokens in a specific order, and consume *optional* 
+token for variations. When a *required* token is missing, the parsing fails,
+the token stream is *rewound* and another grammar class can be tried over the token stream.
 
-If the AST node was locked-on-target, it is a hard-error.
-If the AST node was NOT locked, it's a soft-error, and will not abort compilation 
-as the parent node will try other AST classes against the token stream before failing.
+During a node.parse(), if a *required* token is missing, a "ParseFailed" error is raised.
+`ParseFailed` signals the class failed to parse the tokens from the stream, 
+however the syntax might still be valid for another AST class. 
+
+If the AST node was locked-on-target, it is a hard-error. (The node 'locks' when, after reading on or more *required* tokens, the construction is recognized and there's no other syntax construction possible.
+
+If the AST node was NOT locked, `ParseFailed` is a soft-error, and will not abort compilation 
+as the parent node will try other AST classes against the token stream before declaring a "Syntax Error".
 
 ####Constructor(message)
         me.message = message
 
 ###Declarations for external or forward symbols
+
+To avoid long debug sessions over a mistyped object member, LiteScript compiler will emit warninigs when a variable is used before declaration, and when a object property is unknown. `compiler declare` list valid property names disabling the warnings. It is needed only for externally defined objects, or to forward-declare methods.
 
     compiler declare on ASTBase
         opt
@@ -59,7 +66,7 @@ It contains basic functions to parse the token stream.
      
       properties
         parentNode
-        locked # `true` means the node is lock-on-target. Any exception when locked, is a Syntax Error.
+        locked # when `true`, means the node is lock-on-target. Any exception when locked, is a Syntax Error.
         lexer
         sourceLineNum
         column
@@ -69,12 +76,11 @@ It contains basic functions to parse the token stream.
 Constructor(lexer, parent)
 --------------------------
 
-Control arguments
+First, let's control passed arguments 
 
         if no lexer, fail with 'call to new ASTBase: lexer is null'
 
-The object is initially marked as "unlocked",
-indicating that we are not sure that this is the right node to parse this segment of the token stream.
+The object is initially marked as "unlocked", indicating that we are not sure this is the right node to parse this segment of the token stream.
 We can't declare syntax errors until we are sure this is the right class.
 
         me.locked = false
@@ -107,7 +113,7 @@ we are certain this is the correct class to use. Once locked, any invalid syntax
 `lock` can be called multiple times to update the line number. If a node spans multiple lines,
 this is useful because the line number is reported in the error message.
 
-        me.locked = on
+        me.locked = on // `on` is alias for `true`
 
 method toString()
         return typeof me
@@ -131,7 +137,7 @@ method throwParseFailed(msg)
 
 throws a `ParseFailed` error
 
-        if me.locked #is a hard-error
+        if me.locked # is a hard-error
           me.throwError(msg)
 
         else #is a soft-error          
@@ -144,11 +150,11 @@ throws a `ParseFailed` error
 method parse()
 --------------
 
-**parse()** is an abstract method representing the TRY-Parse of the node.
+**parse()** is the method representing a parsing attempt of the node.
 Child classes _must_ override this method
 
         me.lock()
-        me.throwParseFailed 'Parser Not Implemented: ' + me.constructor.name
+        me.throwParseFailed 'Must implememnt on derived classes'
 
 
 method produce()
