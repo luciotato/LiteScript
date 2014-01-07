@@ -1,11 +1,29 @@
 The Abstract Syntax Tree (AST)
 ------------------------------
 
-This module defines error classes and the base abstract syntax tree class used by the parser and grammar. It's main purpose is to provide utility methods to parse the token array into classes that inherit from `ASTBase`.
+This module defines the base abstract syntax tree class used by the parser. 
+It's main purpose is to provide a prototype AST node with utility methods to parse 
+the token stream into classes derived from `ASTBase`
 
 
--------------------------------------------------------------------------------------
-Declarations for external of forward symbols
+###public Class ParseFailed
+
+The parser is contructed as a hand-coded optimized recursive-descent parser.
+
+The parsing function in each grammar class .parse() function is straightforward.
+
+During a node.parse(), if there is a mismatch, a ParseFailed error is raised.
+`ParseFailed` signals that the class failed to parse the tokens from the stream, 
+however the syntax might still be valid for another AST node. 
+
+If the AST node was locked-on-target, it is a hard-error.
+If the AST node was NOT locked, it's a soft-error, and will not abort compilation 
+as the parent node will try other AST classes against the token stream before failing.
+
+####Constructor(message)
+        me.message = message
+
+###Declarations for external or forward symbols
 
     compiler declare on ASTBase
         opt
@@ -32,29 +50,16 @@ Declarations for external of forward symbols
         type
         value
 
-public Class ParseFailed
-========================
-
-During a node.parse(), if there is a mismatch, a ParseFailed error is raised.
-`ParseFailed` signals that the class failed to parse the tokens from the stream, 
-however the syntax might still be valid for another AST node. 
-If the AST node was locked-on-target, it is a hard-error.
-If the AST node was NOT locked, it's a Soft-error, and will not abort compilation 
-as the parent node will try other AST classes against the token stream before failing.
-
-      method initialize(message)
-        me.message = message
-
 
 public Class ASTBase
 ====================
 
-This class serves as a base class on top of which AST nodes are defined.
+This class serves as a base class on top of which all AST classes are defined.
 It contains basic functions to parse the token stream.
      
       properties
         parentNode
-        locked
+        locked # `true` means the node is lock-on-target. Any exception when locked, is a Syntax Error.
         lexer
         sourceLineNum
         column
@@ -66,8 +71,7 @@ Constructor(lexer, parent)
 
 Control arguments
 
-        if not lexer 
-          fail with 'call to new ASTBase: lexer is null'
+        if no lexer, fail with 'call to new ASTBase: lexer is null'
 
 The object is initially marked as "unlocked",
 indicating that we are not sure that this is the right node to parse this segment of the token stream.
@@ -91,12 +95,10 @@ Also remeber line index in tokenized lines, and this line indent
         me.lineInx = lexer.lineInx
         me.indent = lexer.indent
 
-
       end constructor
 
 
-method lock()
--------------
+###method lock()
 
 **lock** marks this class as locked, meaning we are certain this is the correct class
 for the given syntax. For example, if the `FunctionExpression` class sees the IDENTIFIER `function`,
