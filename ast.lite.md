@@ -1,19 +1,23 @@
 The Abstract Syntax Tree (AST)
 ------------------------------
 
-This module defines the base abstract syntax tree class used by the parser. 
+This module defines the base abstract syntax tree class `ASTBase` used by the parser. 
 It's main purpose is to provide a prototype AST node with utility methods to parse 
 the token stream into classes derived from `ASTBase`
 
 ###Declarations for external or forward symbols
 
-To avoid long debug sessions over a mistyped object member, LiteScript compiler will emit warninigs when a variable is used before declaration, and when a object property is unknown. The `compiler declare` directive lists valid property names, avoiding warnings. It is used to declare externally defined objects, or to forward-declare methods.
+To avoid long debug sessions over a mistyped object member, LiteScript compiler will emit warnings 
+when a variable is used before declaration, and when a object property is unknown. 
+The `compiler declare` directive lists valid property names, avoiding warnings. 
+It is used to declare externally defined objects, or to forward-declare methods.
 
     compiler declare on ASTBase
         opt
         out
         spacesIndent
         listArgs
+        keyword
 
     compiler declare on lexer
         posToString
@@ -21,6 +25,7 @@ To avoid long debug sessions over a mistyped object member, LiteScript compiler 
         lineInfo, token, index, nextToken
         sourceLineNum
         hardError
+        options, filename
         outStartNewLine
 
     compiler declare on token
@@ -29,6 +34,7 @@ To avoid long debug sessions over a mistyped object member, LiteScript compiler 
     compiler declare on Error
         soft
         controled
+        log, warning
 
     compiler declare on String
         spaces
@@ -41,41 +47,42 @@ The parser is a hand-coded optimized recursive-descent parser.
 The parsing logic in each grammar class .parse() method is straightforward.
 
 Each .parse() method *requires* specific tokens in a specific order, and consume *optional* 
-token for syntax variations.  
-
-When a *required* token is missing, the parsing fails,
-the token stream is *rewound* and another grammar class can be tried over the token stream.
+tokens for syntax variations.  
 
 During a node.parse(), if a *required* token is missing, a "parse failed" error is raised.
 However the syntax might still be valid for another AST class. 
 
-If the node was locked-on-target, it is a hard-error. (The parse function 'locks' after reading one or more *required* tokens,
-when the syntax is recognized and there's no other syntax construction possible).
+When a *required* token is missing, a 'parse failed' exception is thrown, then, method `.req` rewinds the token stream 
+for another grammar class to be tried.
 
 If the AST node was NOT locked, "parse failed" is a soft-error, and will not abort compilation 
 as the parent node will try other AST classes against the token stream.
 
- 
+If the node was locked-on-target, it is a hard-error, compilation will be aborted. 
+(The parse function 'locks' when enough tokens are recognized to clearly identifiy the construction).
+
 
 public Class ASTBase
 ====================
 
 This class serves as a base class on top of which all AST classes are defined.
-It contains basic functions to parse the token stream.
+It contains basic functions to parse the token stream. Provides methods to **require** a token, `req()`, 
+to get **optional** tokens, `opt()` and specialized methods to parse, for example, 
+a comma separated list of symbols, `optCommaSeparated(symbol,closer)`
      
 ###properties
         parentNode
         lexer, indent, column, sourceLineNum, lineInx
         locked # when `true`, means the node is lock-on-target. Any exception when locked, aborts compilation.
 
-Constructor(lexer, parent)
---------------------------
+Constructor (lexer, parent)
+---------------------------
 
 First, let's control passed arguments 
 
-        if no lexer, fail with 'call to new ASTBase: lexer is null'
+        if no lexer then fail with 'call to new ASTBase: lexer is null'
 
-The object is initially marked as "unlocked", indicating that we are not sure this is the right node to parse this segment of the token stream.
+The node starts "unlocked", indicating that we are not sure this is the right node to parse this segment of the token stream.
 We can't declare syntax errors until we are sure this is the right class.
 
         me.locked = false
@@ -99,11 +106,11 @@ Also remember line index in tokenized lines, and this line indent
       end constructor
 
 
-method lock()
--------------
+method lock
+-----------
 
 **lock** marks this class as locked, meaning we are certain this is the correct class
-for the given syntax. For example, if the `FunctionDeclaration` class sees the IDENTIFIER `function`,
+for the given syntax. For example, if the `FunctionDeclaration` class sees the token '**function**',
 we are certain this is the rigth class to use. Once locked, any invalid syntax causes compilation to fail.
 
         me.locked = on // `on` is alias for `true`
@@ -111,7 +118,7 @@ we are certain this is the rigth class to use. Once locked, any invalid syntax c
 debug helper method toString()
 
       method toString()
-        return "[#{me.constructor.name}] (#{me.lexer.options.filename}:#{me.sourceLineNum}:#{me.column})"
+        return "[#me.constructor.name] (#me.lexer.options.filename:#me.sourceLineNum:#me.column)"
 
 
 method throwError(msg)
@@ -124,8 +131,8 @@ adds lexer position info and throws a 'controled' error
         throw e
       
 
-method throwParseFailed(msg)
-----------------------------
+method throwParseFailed (msg)
+-----------------------------
 
 During a node.parse(), if there is a token mismatch, a "parse failed" is raised.
 "parse failed" signals a failure to parse the tokens from the stream, 
@@ -133,15 +140,18 @@ however the syntax might still be valid for another AST node.
 If the AST node was NOT locked, it's a soft-error, and will not abort compilation 
 as the parent node will try other AST classes against the token stream before failing.
 
-        var e = new Error(msg)
-        e.soft = not me.locked  #soft error if not locked
+        if me.locked #hard error if locked
+          me.throwError(msg) 
+
+        e = new Error(msg)
+        e.soft = true  #"parse failed" is a soft error
         e.controled = true
         throw e
 
 ------------------------------------------------------------------------
 
-method parse()
---------------
+method parse
+------------
 
 **parse()** is the method representing a parsing attempt.
 Child classes _must_ override this method
@@ -150,16 +160,16 @@ Child classes _must_ override this method
         me.throwParseFailed 'Parser Not Implemented: ' + me.constructor.name
 
 
-method produce()
----------------
+method produce
+--------------
 
 **produce()** is the method to produce target code.
-Child classes should override this, if the default production isn't: `me.out me.name`
+Child classes should override this.
 
         me.out me.name
 
 
-method parseDirect(key, directAssoc)
+method parseDirect (key, directAssoc)
 ------------------------------------
 
 We use a DIRECT associative array to pick the exact AST node to parse 
@@ -180,8 +190,8 @@ if parsed ok, store the key in the node (to ease debuging and to validate option
           return result
 
 
-method opt(list, options)
--------------------------
+method opt 
+----------
 
 **opt** attempts to parse the token stream using one of the classes or token types specified.
 This method takes a variable number of arguments.
@@ -199,16 +209,20 @@ Remember the actual position, to rewind if all the arguments to `opt` fail
         var spaces = me.spacesIndent()
 
 For each argument, -a class or a string-, we will attempt to parse the token stream 
-with the class, or match the token type to the string.
+with the class, or match the token type to the string. 
 
         for searched in arguments
 
-          #debug - control
-          if typeof searched is 'string' and searched isnt searched.toUpperCase()
-            me.throwError """
-                compiler-internals: a call to req('#{searched}') was made, 
-                but '#{searched}' is not UPPERCASE. Do you mean to call reqValue()?
-                """
+First we have some **debug** code to avoid common error while developing support for new grammars.
+The body of `compile if debug` will be included only if compiler's `options.debug` is set.
+It's like C's `#ifdef` preprocessor directive.
+
+          compile if debug
+            if typeof searched is 'string' and searched isnt searched.toUpperCase()
+              me.throwError """
+                  compiler-internals: a call to req('#{searched}') was made, 
+                  but '#{searched}' is not UPPERCASE. Do you mean to call reqValue()?
+                  """
 
 For strings we check the token **type**, and return the token value if the type match
 
@@ -297,10 +311,10 @@ No more arguments.
         return undefined
 
 
-method req(list,options)
-------------------------
+method req
+----------
 
-**req** works the same way as `opt` except that it throws an error if none of the arguments
+**req** (***require***) works the same way as `opt` except that it throws an error if none of the arguments
 can be used to parse the stream.
 
 We first call `opt` to see what we get. If a value is returned, the function was successful,
@@ -308,10 +322,10 @@ so we just return the node that `opt` found.
 
 else, If `opt` returned nothing, we give the user a useful error.
 
-        var result = me.opt(list,options)
+        var result = me.opt.apply(this,arguments)
 
         if no result 
-          me.throwParseFailed "#{me.constructor.name}: #{me.lexer.token.toString()} found but #{me.listArgs(list)} required"
+          me.throwParseFailed "#{me.constructor.name}: #{me.lexer.token.toString()} found but #{me.listArgs(arguments)} required"
 
         return result
 
@@ -346,15 +360,15 @@ return found token.value
 
           return undefined
 
-method reqValue(list)
----------------------
+method reqValue
+---------------
 
 **reqValue** is the same as `optValue` except that it throws an error if the value 
 is not in the arguments
         
 First, call optValue
 
-        var val = me.optValue(list)
+        var val = me.optValue.apply(this,arguments)
         if val 
             return val
 
@@ -362,17 +376,17 @@ if it returns nothing, the token.value didn't match. We raise an error.
 if the AST node was 'locked' on target, it'll be a hard-error, 
 else, it'll be a soft-error and others AST nodes could be tried.
 
-        me.throwParseFailed "#{me.constructor.name}: '#{me.lexer.token.value}' found but #{me.listArgs(list)} was required"
+        me.throwParseFailed "#{me.constructor.name}: '#{me.lexer.token.value}' found but #{me.listArgs(arguments)} was required"
 
-method ifOptValue(optionalText)
--------------------------------
+method ifOptValue (optionalText)
+--------------------------------
 
 **ifOptValue** this very simple method calls 'optValue' but returns true|false instead of string|undefined
 
         return me.optValue(optionalText)? true :false;
 
 
-method getSeparatedList(astClass, separator, closer)
+method getSeparatedList (astClass, separator, closer)
 -----------------------------------------------------
 
 This generic method will look for zero or more instances of the requested structure,
@@ -427,9 +441,9 @@ Example: While loop body (separator is ";" - non-freeForm mode)
 helper internal function to get optional NEWLINE. Warn if indent is not even.
 
         function optNewLine()
-          result = me.opt('NEWLINE')
+          var result = me.opt('NEWLINE')
           if result and me.lexer.indent mod 2 isnt 0
-            log.warning "possible misaligned indent #{self.lexer.indent}, not-even, at #{self.lexer.posToString()}"
+            log.warning "possible misaligned indent #{me.lexer.indent}, not-even, at #{me.lexer.posToString()}"
           return result
         end function
 
@@ -437,8 +451,10 @@ Start getSeparatedList
 
         debug "[#{me.constructor.name}] indent:#{me.indent}, getSeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer char-'
 
-        result = []
-        freeFormMode = false
+        var 
+          result = []
+          freeFormMode = false
+          item, newLineAfterItem
 
 If the list starts with a NEWLINE, we enter free-form mode
 
@@ -521,7 +537,7 @@ in **freeForm mode**, separator (comma|semicolon) is optional, NEWLINE is valid 
 Not **freeForm mode**, here 'comma' means: 'there is another item'
 any token other than comma means 'end of comma separated list'
 
-                separ = me.optValue(separator)
+                var separ = me.optValue(separator)
                 if no separ
                   #any token other than comma means 'end of comma separated list'
                   if closer 
@@ -541,8 +557,8 @@ newline after comma is optional, in any mode
         return result
 
 
-method optCommaSeparated(astClass, closer)
-------------------------------------------
+method optCommaSeparated (astClass, closer)
+-------------------------------------------
 
 This method calls *getSeparatedList* with common parameters.
 It looks for a *specific class* list, *comma* separated, and with an *optional closer*
@@ -583,8 +599,9 @@ and `NameValuePair: IDENTIFIER ":" Expression`
 Helper functions for code generation
 ====================================
 
-method out()
-------------
+method out
+----------
+
 *out* is a helper function for code generation
 It evaluates and output its arguments
 
@@ -623,11 +640,11 @@ Object codes
                   #empty list
                   continue
 
-              if item.freeForm, me.out NL
+              if item.freeForm, me.out '\n'
 
               for each inx,value in item.CSL
                 if inx>0, me.lexer.out ', '
-                if item.freeForm, me.out NL
+                if item.freeForm, me.out '\n'
                 me.out value
               end for
 
