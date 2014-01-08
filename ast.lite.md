@@ -193,15 +193,15 @@ if parsed ok, store the key in the node (to ease debuging and to validate option
 method opt 
 ----------
 
-**opt** attempts to parse the token stream using one of the classes or token types specified.
 This method takes a variable number of arguments.
+**opt**, **optional**, attempts to parse the token stream using one of the classes or token types passed.
 For example:
   calling `me.opt IfStatement, Expression, 'IDENTIFIER'`
-  would attempt to parse the token stream first as an `IfStatement`. If that fails, it would attempt
+  would try to parse the token stream first as an `IfStatement`. If that fails, it would attempt
   to use the `Expression` class. If that fails, it will accept a token of type `IDENTIFIER`.
   If all of those fail, it will return `undefined`.
 
-Remember the actual position, to rewind if all the arguments to `opt` fail
+First. remember the actual position, to rewind if all the `opt`ions fail
 
         var startPos = me.lexer.getPos()
 
@@ -236,25 +236,22 @@ Ok, type found! Let's store matched type in me.type
 
               me.type = searched
 
+              debug spaces, me.constructor.name,'matched OK:',searched, me.lexer.token.value
+
 Now we return: token.value
 
-Note: we shouldnt return the 'token' object, because returning objects (here and in js) 
-is a "pass by reference" return. You are returning a "pointer" to the object.
-If we return the 'token' object, the calling function will recive a "pointer"
-and it can inadvertedly alter the token object in the token stream. (it should not, leads to subtle bugs)
-
-              debug spaces, me.constructor.name,'matched OK:',searched, me.lexer.token.value
+Note: we shouldn't return the 'token' object. If we return the 'token' object, we're returning a "pointer" to the Token object, and the calling function will receive a "pointer", and it can inadvertedly alter the properties of the original  token in the token stream. (leading to subtle bugs)
 
               var result = me.lexer.token.value 
 
-Advance a token, me.lexer.token always has next token
+Advance a token, `me.lexer.token` always has the next token
 
               me.lexer.nextToken()
 
               return result
 
 else, if the argument is an AST node class, we instantiate the class and try the `parse()` method.
-`parse()` can fail with `ParseFailed` if the construction do not match
+`parse()` can fail with "parse failed" if the construction do not match the tokens.
 
           else
 
@@ -268,17 +265,18 @@ else, if the argument is an AST node class, we instantiate the class and try the
 
             catch err
 
-If parsing fail, but the AST node were not 'locked' on target, is a soft-error,
+If parsing fail, but the AST node was not 'locked' on target, is a soft-error,
 we will try other AST nodes.
 
               if err.soft
 
                   debug spaces, searched.name,'parse failed.',err.message
 
-rewind the token stream, to try other AST nodes
+rewind the token stream, to try other AST classes
+
+                  me.lexer.setPos startPos
 
                   debug 'REW to', me.sourceLineNum, me.lexer.index, me.lexer.token.toString()
-                  me.lexer.setPos startPos
 
               else
 
