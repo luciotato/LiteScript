@@ -5,7 +5,6 @@ This module defines the base abstract syntax tree class used by the parser.
 It's main purpose is to provide a prototype AST node with utility methods to parse 
 the token stream into classes derived from `ASTBase`
 
-
 ###Declarations for external or forward symbols
 
 To avoid long debug sessions over a mistyped object member, LiteScript compiler will emit warninigs when a variable is used before declaration, and when a object property is unknown. The `compiler declare` directive lists valid property names, avoiding warnings. It is used to declare externally defined objects, or to forward-declare methods.
@@ -27,31 +26,36 @@ To avoid long debug sessions over a mistyped object member, LiteScript compiler 
     compiler declare on token
         type, value
 
-    compiler declare on err
+    compiler declare on Error
+        soft
         controled
 
+    compiler declare on String
+        spaces
+        repeat
 
-###public Class ParseFailed
+###The AST classes parsing mechanism
 
 The parser is a hand-coded optimized recursive-descent parser.
 
-The parsing function in each grammar class .parse() method is straightforward.
+The parsing logic in each grammar class .parse() method is straightforward.
+
 Each .parse() method *requires* specific tokens in a specific order, and consume *optional* 
-token for variations. When a *required* token is missing, the parsing fails,
+token for syntax variations.  
+
+When a *required* token is missing, the parsing fails,
 the token stream is *rewound* and another grammar class can be tried over the token stream.
 
-During a node.parse(), if a *required* token is missing, a "ParseFailed" error is raised.
-`ParseFailed` signals the class failed to parse the tokens from the stream, 
-however the syntax might still be valid for another AST class. 
+During a node.parse(), if a *required* token is missing, a "parse failed" error is raised.
+However the syntax might still be valid for another AST class. 
 
-If the AST node was locked-on-target, it is a hard-error. (The node 'locks' when, after reading on or more *required* tokens, the construction is recognized and there's no other syntax construction possible.
+If the node was locked-on-target, it is a hard-error. (The parse function 'locks' after reading one or more *required* tokens,
+when the syntax is recognized and there's no other syntax construction possible).
 
-If the AST node was NOT locked, `ParseFailed` is a soft-error, and will not abort compilation 
-as the parent node will try other AST classes against the token stream before declaring a "Syntax Error".
+If the AST node was NOT locked, "parse failed" is a soft-error, and will not abort compilation 
+as the parent node will try other AST classes against the token stream.
 
-####Constructor(message)
-        me.message = message
-
+ 
 
 public Class ASTBase
 ====================
@@ -62,8 +66,7 @@ It contains basic functions to parse the token stream.
 ###properties
         parentNode
         lexer, indent, column, sourceLineNum, lineInx
-        locked # when `true`, means the node is lock-on-target. Any exception when locked, is a Syntax Error.
-
+        locked # when `true`, means the node is lock-on-target. Any exception when locked, aborts compilation.
 
 Constructor(lexer, parent)
 --------------------------
@@ -88,7 +91,7 @@ Remember this node source position
         me.sourceLineNum = lexer.sourceLineNum
         me.column = lexer.token.column
 
-Also remeber line index in tokenized lines, and this line indent
+Also remember line index in tokenized lines, and this line indent
 
         me.lineInx = lexer.lineInx
         me.indent = lexer.indent
@@ -96,13 +99,19 @@ Also remeber line index in tokenized lines, and this line indent
       end constructor
 
 
-###method lock()
+method lock()
+-------------
 
 **lock** marks this class as locked, meaning we are certain this is the correct class
-for the given syntax. For example, if the `FunctionExpression` class sees the IDENTIFIER `function`,
+for the given syntax. For example, if the `FunctionDeclaration` class sees the IDENTIFIER `function`,
 we are certain this is the rigth class to use. Once locked, any invalid syntax causes compilation to fail.
 
         me.locked = on // `on` is alias for `true`
+
+debug helper method toString()
+
+      method toString()
+        return "[#{me.constructor.name}] (#{me.lexer.options.filename}:#{me.sourceLineNum}:#{me.column})"
 
 
 method throwError(msg)
@@ -110,51 +119,48 @@ method throwError(msg)
 
 adds lexer position info and throws a 'controled' error
 
-        me.lock() # lock() to ensure a hard-error
-
-        var err = new Error( msg + me.lexer.posToString())
-    
-        err.controled = true
-
-        throw errdi
-
+        var e = new Error(msg + me.lexer.posToString() )
+        e.controled = true
+        throw e
+      
 
 method throwParseFailed(msg)
 ----------------------------
 
-throws a `ParseFailed` error
+During a node.parse(), if there is a token mismatch, a "parse failed" is raised.
+"parse failed" signals a failure to parse the tokens from the stream, 
+however the syntax might still be valid for another AST node. 
+If the AST node was NOT locked, it's a soft-error, and will not abort compilation 
+as the parent node will try other AST classes against the token stream before failing.
 
-        if me.locked # is a hard-error
-          me.throwError(msg)
-
-        else #is a soft-error          
-          var pf = new ParseFailed(msg)
-          pf.controled = true
-          throw pf
+        var e = new Error(msg)
+        e.soft = not me.locked  #soft error if not locked
+        e.controled = true
+        throw e
 
 ------------------------------------------------------------------------
 
 method parse()
 --------------
 
-**parse()** is the method representing a parsing attempt of the node.
+**parse()** is the method representing a parsing attempt.
 Child classes _must_ override this method
 
         me.lock()
-        me.throwParseFailed 'Must implememnt on derived classes'
+        me.throwParseFailed 'Parser Not Implemented: ' + me.constructor.name
 
 
 method produce()
 ---------------
 
 **produce()** is the method to produce target code.
-Child classes should override this, if the default production isnt: `me.out me.name`
+Child classes should override this, if the default production isn't: `me.out me.name`
 
         me.out me.name
 
 
 method parseDirect(key, directAssoc)
----------------------------------
+------------------------------------
 
 We use a DIRECT associative array to pick the exact AST node to parse 
 based on the actual token value or type.
@@ -165,9 +171,13 @@ This speeds up parsing, avoiding parsing by trial & error
 
 *opt* tries to parse directASTClass. It returns 'null' if parse failed. 
 
-          return me.opt(directASTClass)
+          var result = me.opt(directASTClass)
 
-      end method
+if parsed ok, store the key in the node (to ease debuging and to validate optional `end` statements)
+
+          if result, result.keyword = key
+
+          return result
 
 
 method opt(list, options)
@@ -179,23 +189,7 @@ For example:
   calling `me.opt IfStatement, Expression, 'IDENTIFIER'`
   would attempt to parse the token stream first as an `IfStatement`. If that fails, it would attempt
   to use the `Expression` class. If that fails, it will accept a token of type `IDENTIFIER`.
-  If all of those fail, it will return `nothing`.
-
-      
-arguments control:
-convert to array if it was a single element
-
-        if not Array.isArray(list)
-          list = [list]
-
-check 2nd parameter not to be a string (common error)
-
-        #debug - control
-        if typeof options is 'string'
-          me.throwError """
-                compiler-internals: Check parameteres in opt/req call. 
-                Accepted parameter are: list[] (Array) and options (object)
-                """
+  If all of those fail, it will return `undefined`.
 
 Remember the actual position, to rewind if all the arguments to `opt` fail
 
@@ -207,7 +201,7 @@ Remember the actual position, to rewind if all the arguments to `opt` fail
 For each argument, -a class or a string-, we will attempt to parse the token stream 
 with the class, or match the token type to the string.
 
-        for searched in list
+        for searched in arguments
 
           #debug - control
           if typeof searched is 'string' and searched isnt searched.toUpperCase()
@@ -231,9 +225,9 @@ Ok, type found! Let's store matched type in me.type
 Now we return: token.value
 
 Note: we shouldnt return the 'token' object, because returning objects (here and in js) 
-is a "pass by reference". You return a "pointer" to the object.
-If we return then 'token' object, the calling function will recive a "pointer"
-and it can inadvertedly alter the token object in the token stream. (it should not - subtle bugs)
+is a "pass by reference" return. You are returning a "pointer" to the object.
+If we return the 'token' object, the calling function will recive a "pointer"
+and it can inadvertedly alter the token object in the token stream. (it should not, leads to subtle bugs)
 
               debug spaces, me.constructor.name,'matched OK:',searched, me.lexer.token.value
 
@@ -245,15 +239,12 @@ Advance a token, me.lexer.token always has next token
 
               return result
 
+else, if the argument is an AST node class, we instantiate the class and try the `parse()` method.
+`parse()` can fail with `ParseFailed` if the construction do not match
+
           else
 
             debug spaces, me.constructor.name,'TRY',searched.name, 'on', me.lexer.token.toString()
-
-            if searched.name is "Object"
-                debugger
-
-if the argument is an AST node class, we instantiate the class and try the `parse()` method.
-`parse()` can fail with `ParseFailed` if the construction do not match
 
             try
                 var ASTnode = new searched(me.lexer, me)
@@ -263,11 +254,10 @@ if the argument is an AST node class, we instantiate the class and try the `pars
 
             catch err
 
-If parsing fail, but the AST node were not 'locked' on target, 
-and the error is instanceof ParseFailed, then is a soft-error. 
-Parse failed, but we will try other AST nodes.
+If parsing fail, but the AST node were not 'locked' on target, is a soft-error,
+we will try other AST nodes.
 
-              if not ASTnode.locked and err instanceof ParseFailed
+              if err.soft
 
                   debug spaces, searched.name,'parse failed.',err.message
 
@@ -287,36 +277,31 @@ We abort parsing and throw.
                   # the first hard-error is the most informative, the others are cascading ones
                   if me.lexer.hardError is null 
                       me.lexer.hardError = err
-                  #end if
+                  end if
 
 raise up, abort parsing
 
                   raise err
 
-              #end if - type of error
+              end if # type of error
 
-            #end catch
+            end catch
             
-          #end if - string or class
+          end if # string or class
 
-        #loop - try the next argument
+        end for # try the next argument
 
 No more arguments.
-`opt` returns `null` if none of the arguments could be use to parse the stream.
+`opt` returns `undefined` if none of the arguments could be use to parse the stream.
 
-        return null
+        return undefined
 
-      #end method opt
 
------------------------------
+method req(list,options)
+------------------------
 
 **req** works the same way as `opt` except that it throws an error if none of the arguments
 can be used to parse the stream.
-
-      method req(list,options)
-
-        if not Array.isArray(list)
-          list = [list]
 
 We first call `opt` to see what we get. If a value is returned, the function was successful,
 so we just return the node that `opt` found.
@@ -333,18 +318,9 @@ else, If `opt` returned nothing, we give the user a useful error.
 
 ------------------------------------------------------------------------
 **optValue** checks if the next token has a "value" that matches one of the arguments provided.
-If so, it returns token.value and advances the stream. Otherwise, it returns `nothing`.
+If so, it returns token.value and advances the stream. Otherwise, it returns `undefined`
 
-      method optValue(list)
-
-convert to array if it was a single element
-
-        if not Array.isArray(list)
-          list = [list]
-
-        #debug - control
-        if arguments[1]
-          throw new Error("compiler-internals: optValue accepts only one parameter of type Array")
+      method optValue()
 
         #debug
         var spaces = me.spacesIndent()
@@ -352,7 +328,7 @@ convert to array if it was a single element
 
         var actual = me.lexer.token.value
 
-        if actual in list
+        if actual in arguments
 
 One of the searched 'values' match
 
@@ -368,17 +344,14 @@ return found token.value
 
         else
 
-          return null
+          return undefined
 
-------------------------------------------------------------------------
+method reqValue(list)
+---------------------
+
 **reqValue** is the same as `optValue` except that it throws an error if the value 
 is not in the arguments
-
-      method reqValue(list)
         
-        if not Array.isArray(list)
-          list = [list]
-
 First, call optValue
 
         var val = me.optValue(list)
@@ -391,32 +364,43 @@ else, it'll be a soft-error and others AST nodes could be tried.
 
         me.throwParseFailed "#{me.constructor.name}: '#{me.lexer.token.value}' found but #{me.listArgs(list)} was required"
 
-------------------------------------------------------------------------------------
-**ifOptValue** this very simple method calls 'optValue' but returns true|false instead of string|null
+method ifOptValue(optionalText)
+-------------------------------
 
-      method ifOptValue(optionalText)
-        if me.optValue(optionalText) 
-          return true
-        else
-          return false
+**ifOptValue** this very simple method calls 'optValue' but returns true|false instead of string|undefined
 
-------------------------------------------------------------------------------------
-**opt_commaSeparated** this method will look for zero or more of the requested class,
-parsing a comma separated list of class items.
+        return me.optValue(optionalText)? true :false;
+
+
+method getSeparatedList(astClass, separator, closer)
+-----------------------------------------------------
+
+This generic method will look for zero or more instances of the requested structure,
+parsing a comma|semicolon separated list of class items.
 If it can't match any tokens it returns an empty array.
-
-It will try to match as many comma separated occurrences of a class as possible,
-until a "closer" token is found. "NEWLINES" are allowed inside the comma separated list.
-
-***freeForm mode***
-If there is a NEWLINE before the first Item (dangling assignment), 
-a 'freeForm mode' is set.
-In 'freeForm mode', each item sits in it's own line, all of them with the same indent (block)
-In 'freeForm mode', NEWLINE act as comma, and commas are optional
 This method always returns an array.
 
+It will try to match as many comma|semicolon separated occurrences of a class as possible,
+until a "closer" token is found. "NEWLINES" are allowed inside the list, before or after the separator.
+
+This method is used to parse:
+* items in an object expression
+* an array expression,
+* arguments for a function
+* variables in a var statement
+* a class body
+* a function body
+* the body statements of a loop
+* Anywhere a separated list apply.
+
+####freeForm mode
+
+If there is a NEWLINE before the first Item, a 'freeForm mode' is set.
+In 'freeForm mode', each item sits in it's own line, all of them with the same indent (block)
+In 'freeForm mode', separators are optional.
+
 /*
-Example: Object Expression (freeForm mode)
+Example: Object Expression (separator is "," - freeForm mode)
   a = {
    value: 
       list: 10
@@ -424,45 +408,44 @@ Example: Object Expression (freeForm mode)
    title: 'a string'
  }
 
-Example: List Expression (FreeForm mode)
+Example: List Expression (separator is "," )
   a = [
-   "value"
-   "title"
-   "year"
-   "author"
+   "value","title"
+   "year","author"
    ]
+
+Example: While loop body (separator is ";" - freeForm mode)
+  while a<10
+   print a
+   a++
+
+Example: While loop body (separator is ";" - non-freeForm mode)
+  while a<10; print a; a++
+
 */
-
-      method opt_commaSeparated(required, closer, options)
-
-        debug "opt_commaSeparated ", required.name, closer or '-no closer char-'
-
-        var self = me
 
 helper internal function to get optional NEWLINE. Warn if indent is not even.
 
-        var optNewLine = function()
-          var result = self.opt('NEWLINE')
-          if result and self.lexer.indent mod 2 isnt 0
-            print "WARNING: possible misaligned indent #{self.lexer.indent}, not-even, at #{self.lexer.posToString()}"
+        function optNewLine()
+          result = me.opt('NEWLINE')
+          if result and me.lexer.indent mod 2 isnt 0
+            log.warning "possible misaligned indent #{self.lexer.indent}, not-even, at #{self.lexer.posToString()}"
           return result
-        #end function
+        end function
 
-Start opt_commaSeparated
+Start getSeparatedList
 
-        var 
-          result = []
-          freeFormMode = false
-          item
-          newLineAfterItem
-          comma
+        debug "[#{me.constructor.name}] indent:#{me.indent}, getSeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer char-'
 
-If the list starts with a NEWLINE (dangling assignment)
+        result = []
+        freeFormMode = false
+
+If the list starts with a NEWLINE, we enter free-form mode
 
         if optNewLine()
 
 Starts with a NEWLINE => freeForm Mode
-In "freeForm Mode", each item stands in its own line, and commas are optional.
+In "freeForm Mode", each item stands in its own line, and commas (separators) are optional.
 The item list ends when a closer is found or when indentation changes
 
           freeFormMode = true
@@ -471,14 +454,25 @@ In "freeForm Mode", first line sets indent level
 
           indent = me.lexer.indent 
 
-        #end if #newline
+          if indent <= me.indent  #next line is same or less indented - assume empty list
+            debug "getSeparatedList: next line is same or less indented (#{indent}) - assume empty list"
+            return result
+          end if
 
-        while true
+        end if #start with newline
 
-            if closer and me.optValue(closer) #closer found `]`, `)`, `}`, 
+now loop until: a closer, or an indent change
+
+        do:
+
+if closer found (`]`, `)`, `}`), end of list
+
+            if closer and me.optValue(closer)
               break #end of list
 
-            item = me.req(required,options)
+else, get a item
+
+            item = me.req(astClass)
             me.lock()
 
 add item to result
@@ -489,7 +483,7 @@ newline after item (before comma or closer) is optional
 
             newLineAfterItem = optNewLine()
 
-if the closer found, then exit. 
+if now we got the closer, then exit. 
 closer is normally one of: `]` , `)`, `}`
 
             if closer and me.optValue(closer) #closer found
@@ -506,32 +500,35 @@ if in freeForm mode, check indent
 Indent changed:
 if a closer was specified, an indent change before the closer is an error (line misaligned)
 
-                  if closer 
-                    me.throwParseFailed "misaligned line. Indent: #{me.lexer.indent}. Expected indent: #{indent} or '#{closer}' to end list"
+                    if closer, me.throwParseFailed "misaligned line. Indent: #{me.lexer.indent}. Expected indent: #{indent} or '#{closer}' to end list"
 
-else, if no closer specified, indent change => end of list
+check for excesive indent
 
-                  break #end of list
+                    if me.lexer.indent > me.indent, me.throwError "misaligned indent #{me.lexer.posToString()} Excesive. indent is #{me.lexer.indent}, expected: #{me.indent} or less to close the block"
 
-                #end if
+else, no closer specified, indent change => end of list
 
-in **freeForm mode**, comma is optional, NEWLINE is the separator
+                    break #end of list
 
-                me.optValue ',' 
+                end if
+
+in **freeForm mode**, separator (comma|semicolon) is optional, NEWLINE is valid as separator
+
+                me.optValue separator
 
             else
 
 Not **freeForm mode**, here 'comma' means: 'there is another item'
 any token other than comma means 'end of comma separated list'
 
-                comma = me.optValue(',')
-                if no comma
+                separ = me.optValue(separator)
+                if no separ
                   #any token other than comma means 'end of comma separated list'
                   if closer 
-                    # if a closer was specified, it should be this not-comma token
+                    # but, if a closer was specified, it should be this not-comma token
                     me.reqValue(closer) #we *require* the closer or throw error
                   break # ok, end of comma separated list'
-                #end if
+                end if
 
             #end if
 
@@ -539,31 +536,32 @@ newline after comma is optional, in any mode
 
             optNewLine() 
 
-        #wend #try next token
+        loop #try get next item
 
         return result
 
 
-/*
-------------------------------------------------------------------------
-**req_multi** this method is like `req` except that it will return one or more of the requested class or token type.
-If it can't match any tokens it does throw an error. It is "greedy" in that it will try to match as many occurences
-as possible. `req_multi` will only return objects/tokens from the first argument that matches the token stream.
-This method always returns an array.
+method optCommaSeparated(astClass, closer)
+------------------------------------------
 
-      method req_multi()
-        result = me.opt_multi.apply(this,arguments)
-        if result.length > 0
-            return result
+This method calls *getSeparatedList* with common parameters.
+It looks for a *specific class* list, *comma* separated, and with an *optional closer*
+It is used for arguments lists, object and list expresions, var statements.
 
-  Create a useful error message for the user.
+Example: arguments lists:
+  return me.getSeparatedList(Expression, ',', ')')
+it means: look for a comma separated list of Expressions, ending at ")"
 
-        me.throwParseFailed "Expected one of " + me.listArgs(arguments)
-*/
+Example: Object expression:
+  return me.getSeparatedList(NameValuePair, ',', '}')
+it means: look for a comma separated list of NameValuePair, ending at "}"
+and `NameValuePair: IDENTIFIER ":" Expression`
+
+        return me.getSeparatedList(astClass,',',closer)
 
 
-------------------------------------------------------------------------
-#debug - listArgs list arguments, for debugging
+---------------------------------------------------------
+###debug Helper function - list arguments, for debugging and error report
 
       method listArgs(args)
         var msg = []
@@ -582,12 +580,13 @@ This method always returns an array.
 
 
 
+Helper functions for code generation
+====================================
 
 method out()
 ------------
 *out* is a helper function for code generation
 It evaluates and output its arguments
-
 
         for item in arguments
 
@@ -601,13 +600,16 @@ if it is an AST node, call .produce()
 
             item.produce()
 
- New line char => start new line, with this statement indent
-
-          else if item is '\n'
-            me.outStartNewLine(me.indent)
+a string, out it
 
           else if typeof item is 'string'
             me.lexer.out item
+
+New line char => start new line, with this statement indent
+
+          else if item is '\n'
+            me.lexer.outStartNewLine()
+            me.lexer.out String.spaces(me.indent-1)
 
 Object codes
 
@@ -618,34 +620,32 @@ Object codes
             if item.hasOwnProperty('CSL')
 
               if no item.CSL
-                 #empty list
-                 continue
+                  #empty list
+                  continue
 
-              if item.freeForm 
-                me.outStartNewLine(me.indent)
+              if item.freeForm, me.out NL
 
               for each inx,value in item.CSL
                 if inx>0, me.lexer.out ', '
-                if item.freeForm, me.outStartNewLine(me.indent)
+                if item.freeForm, me.out NL
                 me.out value
               end for
 
               if item.freeForm, me.outStartNewLine(me.indent)
 
-
  {NLI:indent} --> Start new line, with this indent
  
             else if item.NLI isnt undefined
-              me.outStartNewLine(item.NLI)
-
+              me.lexer.outStartNewLine()
+              me.lexer.out String.spaces(item.NLI-1)
  
  {COMMENT:text} --> output text as a comment 
  
             else if item.COMMENT isnt undefined
 
-              # prepend // if necessary
-              if not item.COMMENT.startsWith("//")
-                me.out "//"
+prepend // if necessary
+
+              if not item.COMMENT.startsWith("//"), me.out "//"
 
               me.out item.COMMENT
 
@@ -661,7 +661,7 @@ else, if the object has a 'name' property...
               me.lexer.out item.name           
  
             else
-              var msg = "method:ASTBase.out() Caller:#{me.constructor.name}: object not recognized. type: "+ typeof item
+              var msg = "method:ASTBase.out() Caller:#{me.constructor.name}: object not recognized: "+ item.constructor.name
               debug msg
               debug item
               fail with msg
@@ -672,26 +672,17 @@ Last resort, out item.toString()
 
             me.lexer.out item.toString() # try item.toString()
 
-          #end if
+          end if
 
-        #end Loop
+        end for #each argument
 
-
-------------
-
-      method outStartNewLine(indent)
-
-        me.lexer.outStartNewLine()
-        me.lexer.out(String.spaces(indent))
 
 -------------
+Helper method for debug output, indent according to tree depth level
 
-      method spacesIndent()
+      method levelIndent()
 
-        var 
-          indent = ' '
-          parent = me.parentNode
-
+        var indent = ' ', parent = me.parentNode
         while parent
           parent = parent.parentNode
           indent += '  '
