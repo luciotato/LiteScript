@@ -1,8 +1,3 @@
-###New! Online Test Drive, check
-
-<a href=http://rawgithub.com/luciotato/LiteScript/master/demo.html target=_blank>
-LiteScript Online</a>
-
 Considerations
 ==============
 
@@ -38,8 +33,8 @@ Introduction:
 
 <blockquote>
 ***DISCLAIMER***: <i>All characters and events in the following histories are entirely fictional. All facts were twisted to fit the needs of the plot. Celebrity voices are impersonated (poorly).
-Semantical, grammatical, and syntactic corrections are greatly appreciated. (this text has an error ratio of one every forty unicode points). Please don't even try to do fact-checking. 
-The tales described here are intended to be amusing, not real. 
+Semantical, grammatical, and syntactic corrections are greatly appreciated. (this text has an error ratio of one every forty unicode points). Please don't even try to do fact-checking.
+The tales described here are intended to be amusing, not real.
 <b>Se non è vero, è ben trovato.</b></i>
 </blockquote>
 
@@ -52,7 +47,7 @@ With indentation as block scope, you're forced to properly indent. -that's good-
 (you're doing it anyhow, if you're not insane).
 
 Using EOL as statement separator, you stop worrying about semicolons and curly braces, -that's good-.
-Nevertheless, you can put a semicolon at the end of every line (We will happily ignore it), and use semicolons to separate statement the same line. (although, more than one statement in one line affects readability and is discouraged) 
+Nevertheless, you can put a semicolon at the end of every line (We will happily ignore it), and use semicolons to separate statement the same line. (although, more than one statement in one line affects readability and is discouraged)
 
 Block end cues for the casual reader
 ------------------------------------
@@ -64,6 +59,7 @@ by a phone call.
 
 Picture the following "screen" in C (and js, java, etc)
 
+<pre>
   +-------------------------------------------
   |987|                   inx++;
   |988|               }
@@ -76,6 +72,7 @@ Picture the following "screen" in C (and js, java, etc)
   |995|
   |996|function theSecond(){
   |997|
+</pre>
 
 Now, you're back at the screen , and you see a well-indented cascade of
 closing curly braces... and you ask yourself... wtf are each one of them are closing?
@@ -108,7 +105,7 @@ That's clear, and easier to read... and it is *optional*
 
 ## Literate LiteScript
 
-LiteScript is literate. (based on the idea of [Literate CoffeeScript](http://coffeescript.org/#literate)). 
+LiteScript is literate. (based on the idea of [Literate CoffeeScript](http://coffeescript.org/#literate)).
 
 You write code and documentation on the same file, using [Github flavored Markdown](https://help.github.com/articles/github-flavored-markdown) syntax.
 
@@ -118,7 +115,7 @@ With some exceptions, everything not indented at least 4 spaces, is considered M
 
 Exceptions:
 
-*Any line starting with keywords: `public class`,`public function`,`function`,`class`,`constructor`,`method` or `properties` are recognized and considered a CODE line. 
+*Any line starting with keywords: `public class`,`public function`,`function`,`class`,`constructor`,`method` or `properties` are recognized and considered a CODE line.
 
 This exception exists to allow literate comments *inside* classes and functions.
 Comments, if left outside the class or function tend to get dettached from their code on reorganizations
@@ -139,7 +136,7 @@ Example          |  Usage
 `":"`            | literal symbols are quoted (terminal symbol)
 `exit-Condition` | lowercase`-`Symbol meanss: "tagged non-terminal", the tag helps declaring the intention
 
-`IDENTIFIER`,`OPER` | all-uppercase denotes entire classes of terminal symbols 
+`IDENTIFIER`,`OPER` | all-uppercase denotes entire classes of terminal symbols
 `NEWLINE`,`EOF`     | or special unprintable characters
 
 `[of]`               | Optional symbols are enclosed in brackets
@@ -171,7 +168,7 @@ Grammar Examples:
 `Body: (Statement;)*`
 
   Means: Semicolon separated list of Statement (zero or more), and when a separated list is accepted
-  also "freeForm" is accepted, so it is also: (Statement [NEWLINE][;][NEWLINE])*`, meaning: 
+  also "freeForm" is accepted, so it is also: (Statement [NEWLINE][;][NEWLINE])*`, meaning:
   zero or more of Statement, optionally followed by "NEWLINE", optionally followed by ";", optionally followed by "NEWLINE".
 
 
@@ -195,7 +192,7 @@ Example: All of the following contructions are equivalent and valid in LiteScrip
     var a =
         prop1: 30
 
-        prop2: 
+        prop2:
           prop2_1: 19
           prop2_2: 71
 
@@ -204,13 +201,13 @@ Example: All of the following contructions are equivalent and valid in LiteScrip
 
     var a = {
         prop1: 30
-        prop2: 
+        prop2:
           prop2_1: 19,
           prop2_2: 71,
-        arr: [ 
-            "Jan", 
+        arr: [
+            "Jan",
             "Feb"
-            "Mar" 
+            "Mar"
             ]
         }
 
@@ -231,29 +228,29 @@ and
 
 *Literal Array expression
 
-  because a Literal Array expression is 
+  because a Literal Array expression is
   "[" a comma separated list of expressions "]"
 
 But the option also applies for:
 
 *Function parameters declarations
 
-  because a Function parameters declarations is: 
+  because a Function parameters declarations is:
   "(" a comma separated list of paramter names ")"
 
-*Arguments, for any function call 
+*Arguments, for any function call
 
   because function call arguments are:
   "(" a comma separated list of expressions ")"
 
-*Variables declaration 
+*Variables declaration
 
   because a variables declaration is:
-  "var" + a comma separated list of: IDENTIFIER ["=" Expression] 
+  "var" + a comma separated list of: IDENTIFIER ["=" Expression]
 
 Examples:
 
-  js: 
+  js:
 
     Console.log(title,subtitle,line1,line2,value,recommendation)
 
@@ -306,7 +303,7 @@ Multiline comments are enclosed by `/*` and `*/` (C-style)
 
 ## Optional End keyword
 
-All of the indented structures can be optionally ended with an "end" keyword, to ease code reading and to 
+All of the indented structures can be optionally ended with an "end" keyword, to ease code reading and to
 make harder to introduce subtle bugs on code modifications and/or indentation changes
 
 example:
@@ -365,8 +362,8 @@ As in js, you can use 'arguments' as an array-like object containing all the fun
 
 ## Variables and properties, must be declared
 
-To avoid long debug sessions over a mistyped object member, LiteScript compiler will emit warnings 
-when a variable is used before declaration, and when a object property is unknown. 
+To avoid long debug sessions over a mistyped object member, LiteScript compiler will emit warnings
+when a variable is used before declaration, and when a object property is unknown.
 
 Example: The following js code mistake, will be catch only while debugging. The complex the code, the longer the debugging.
 
@@ -377,7 +374,7 @@ Example: The following js code mistake, will be catch only while debugging. The 
   initFunction(options);
   prepareDom(options)
   if (options.importantCodesDefaultTrue) { moreInit(); subtleChanges(); }
-  
+
 
 The same LiteScript code, will emit an error during compilation -no debugging required-.
 
@@ -388,7 +385,7 @@ The same LiteScript code, will emit an error during compilation -no debugging re
   initFunction options
   prepareDom options
   if options.importantCodesDefaultTrue then moreInit(); subtleChanges()
-  
+
 
 ## Globals
 
@@ -408,18 +405,18 @@ Example:
 JAVASCRIPT, var, and Scope
 --------------------------
 
-Actual Javascript (ES5) has only 'function' scope. Function scope means 
+Actual Javascript (ES5) has only 'function' scope. Function scope means
 all `var` declarations are considered to be made at the start of the function.
 
-Also, Javascript **does not force** an implicit assignment at the point of declaration. 
+Also, Javascript **does not force** an implicit assignment at the point of declaration.
 
 This means subtle bugs can be introduced by declaring vars in the middle of a function.
 
 https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Scope_Cheatsheet
 
 
-Example: 
-  
+Example:
+
   javascript:
 
     // show even numbers
@@ -457,8 +454,8 @@ Why the difference?
 -------------------
 
 LiteScript forces variables to be initialized at the point of declaration,
-thus somewhat limiting the scope of the variable **value** to start at the point of declaration. 
-(Javascript does not force an implicit assignment at the point of declaration). 
+thus somewhat limiting the scope of the variable **value** to start at the point of declaration.
+(Javascript does not force an implicit assignment at the point of declaration).
 
 The compiled js, for the LitesSript code is:
 
@@ -488,16 +485,16 @@ Strings can either be double-quoted (`"`) or single quoted (`'`).
     x = 'this is a "string" with quotes in it'
     y = "so is 'this'"
 
-## Embedded Expressions In Strings ## 
+## Embedded Expressions In Strings ##
 
 Strings can contain interpolated values using the default interpolation char: `#` (as in CoffeeScript).
 
-Example: `print "x is #x"` 
+Example: `print "x is #x"`
 
-`[` and `.` are considered part of the expression, 
+`[` and `.` are considered part of the expression,
 so `#var[inx]` and `#obj.prop` are valid
 
-If the replacement is a expression, it can be enclosed in curly braces, as in 
+If the replacement is a expression, it can be enclosed in curly braces, as in
 
     print 'the function result plus 3 is #{fn(10)+3}'
 
@@ -531,7 +528,7 @@ Examples:
 
     compiler option
       interpolation char is '$'
-      
+
     var inx = 3
 
     var arr = [
@@ -541,7 +538,7 @@ Examples:
       "test"
       ]
 
-    var agent = 
+    var agent =
       type: "cow"
       talk: "moo"
 
@@ -567,8 +564,8 @@ Examples:
 
 String interpolation is applied for single and double quoted strings.
 
-if you need to include a literal `#` in a string, use: `\x23`. 
-if you need to include a literal `$` in a string, use: `\x24`. 
+if you need to include a literal `#` in a string, use: `\x23`.
+if you need to include a literal `$` in a string, use: `\x24`.
 
 Example:
 
@@ -683,26 +680,26 @@ Grammar:
 `ForEachProperty: for each [own] property name-VariableDecl in object-VariableRef`
 
 where `name-VariableDecl` is a variable declared on the spot to store each property name,
-and `object-VariableRef` is the object having the properties 
+and `object-VariableRef` is the object having the properties
 
 if the optional `own` keyword is used, only instance properties will be looped (no property chain access)
 
 Examples:
 
-    function showOptions ( options )    
+    function showOptions ( options )
 
       for each own property key in options
           if options[key], print "Option #key is #{options[key]}"
 
 
-    function showAllProps ( object )    
+    function showAllProps ( object )
 
       for each property name in object
           print "property #name is #{object[name]}"
           if not object.hasOwnProperty(name), print "property #name is in the prototype chain"
 
 
-    function showProps ( object )    
+    function showProps ( object )
 
       print "Object own properties:"
       for each own property name in object
@@ -719,7 +716,7 @@ Javascript translations of the above examples:
       for(key in options) if options.hasOwnProperty(key){
 
           //if options[key], print "Option #key is #{options[key]}"
-          if(options[key]) {console.log("Option "+key+" is "+ options[key])} 
+          if(options[key]) {console.log("Option "+key+" is "+ options[key])}
       }
     }
 
@@ -769,7 +766,7 @@ you can use comma or semicolons between the expressions.
 Examples:
 
     months = ['Jan','Feb','March']
-    for i=0; while i<3 
+    for i=0; while i<3
       print months[i]
 
     // print event numbers until 10
@@ -808,7 +805,7 @@ The condition is evaluated *before* entering the loop.
 Grammar:
 `WhileUntilLoop: (while|until) condition-Expression ("," DoLoop | Block)`
 
-where `pre-condition-Expression` is a boolean epxression to check *before* each loop iteration. 
+where `pre-condition-Expression` is a boolean epxression to check *before* each loop iteration.
 do *while* the condition is true or *until* the condition is true.
 
 Examples:
@@ -816,14 +813,14 @@ Examples:
  // plain old C and js `while` loop still works the same
 
     x = 0
-    while x < 6  
+    while x < 6
       x += 1
       print x
 
  // loop *until* condition is true, checks first
 
     x = 0
-    until x is 5 
+    until x is 5
       x += 1
       print x
 
@@ -837,7 +834,7 @@ The condition is evaluated *after* the loop body.
 Grammar:
 `DoLoop: do [:] Block loop (while|until) post-condition-Expression`
 
-where `post-condition-Expression` is a boolean epxression to check *after* each loop iteration. 
+where `post-condition-Expression` is a boolean epxression to check *after* each loop iteration.
 The code loops *while* the condition is true or *until* the condition is true.
 
 Example: Checking *after* the loop:
@@ -896,14 +893,14 @@ Example:
       if result>100
         print x, result
         break
-     
+
       x++
 
     loop
 
 
     var x=-1
-    do 
+    do
       x++
 
       if x mod 2 is 0, continue //skip even numbers
@@ -914,15 +911,15 @@ Example:
 
 
     var x=0
-    do 
+    do
 
       // exit
        loop when function result > 1000
-      when fn(x)>1000, break  //infinite loop 
+      when fn(x)>1000, break  //infinite loop
 
       x++
 
-    loop 
+    loop
 
 
 
@@ -966,30 +963,30 @@ Listed below are LiteScript's operators and constants, and their other-language 
 http://javascript.crockford.com/prototypal.html
 http://yehudakatz.com/2011/08/12/understanding-prototypes-in-javascript/
 
-Classes are defined with the `class` keyword and are just 
+Classes are defined with the `class` keyword and are just
 syntactic sugar for js Capitalized functions (js function-classes).
 
 The `constructor` function, if present, is used as the body for the function-class.
 
-`properties` declared inside the `class` body are properties added to the prototype. 
+`properties` declared inside the `class` body are properties added to the prototype.
 
-`method`s declared inside the `class` body are functions added to the prototype. 
+`method`s declared inside the `class` body are functions added to the prototype.
 
 You cannot define local variables with the same name of a property (case insensitive)
-It derives from the rule: To avoid subtle errors, you cannot define any two names in the same scope 
+It derives from the rule: To avoid subtle errors, you cannot define any two names in the same scope
 differing only in uppercase/lowercase.
 
-Checking if a object is instance of a Class 
+Checking if a object is instance of a Class
 -------------------------------------------
 
 `instance of Class` is used to check if an object is an instance of a class (or one of its parent Classes)
 
 Synonyms:
-  `is instance of Class` 
-  `instanceof Class` 
+  `is instance of Class`
+  `instanceof Class`
 
 Full grammar:
-`object-IDENTIFIER [(is|isnt|is not) (instance of|instanceof) Class-IDENTIFIER` 
+`object-IDENTIFIER [(is|isnt|is not) (instance of|instanceof) Class-IDENTIFIER`
 
 As expected, an object `is instance of` its Class and also `is instance of` all classes up the prototype chain.
 
@@ -1034,14 +1031,14 @@ Classes can have other classes as prototypes, and override or add to their proto
     print(sue is a FrumpyPerson) # prints true
     print(jen is a FrumpyPerson) # prints false
 
-You can add or override class methods after the class is defined (in another file, for example) 
+You can add or override class methods after the class is defined (in another file, for example)
 by using the `extend` keyword.
 
 The `extend class` construction is a shortcut for altering the Class `prototype` object.
 
     class MyClass
 
-      properties 
+      properties
         value
 
       function myMethod(c)
@@ -1051,7 +1048,7 @@ The `extend class` construction is a shortcut for altering the Class `prototype`
 
     var x = new MyClass()
     var y = new MyClass()
-    
+
     x.myMethod 10
     print x.value # prints 10
 
@@ -1077,12 +1074,12 @@ The `extend class` construction is a shortcut for altering the Class `prototype`
 Prototypal Inheritance, extend object
 -------------------------------------
 
-You can also use the `extend object` construction 
+You can also use the `extend object` construction
 *to add methods and properties to a specific instance only*
 
     class MyClass
 
-      properties 
+      properties
         value
 
       function myMethod(c)
@@ -1090,7 +1087,7 @@ You can also use the `extend object` construction
 
     end class
 
-    var 
+    var
       x = new MyClass()
       y = new MyClass()
 
@@ -1104,7 +1101,7 @@ You can also use the `extend object` construction
 
     x.myMethod 10
     print x.value # prints 10, not changed
-    
+
     y.myMethod 10
     print y.value # prints 20
 
@@ -1145,7 +1142,7 @@ LiteScript, extend object:
             me.extraValue = c
             me.value = c + 10
 
-    end extend 
+    end extend
 
 translate to js:
 
@@ -1158,7 +1155,7 @@ translate to js:
       this.value = c + 10;
     }
 
-    
+
 ### Creating Shims ###
 
 if you don't want to replace a method if it already exists in the Class
@@ -1199,14 +1196,14 @@ in the parent class, but you have 'shadowed' the method in this class.
 In order to add similar functionality, LiteScript adds a `super` property to every prototype:
 `Class.prototype.super = ParentClass.prototype` after the prototype is created.
 
-This allows you to use `this.super.fn(x)` to call a function named `fn` on the parent class, 
+This allows you to use `this.super.fn(x)` to call a function named `fn` on the parent class,
 even if `fn` is shadowed in the current instance or class.
 
 Example
 
     class BaseClass
 
-      properties 
+      properties
         value
 
       function myMethod(c)
@@ -1234,7 +1231,7 @@ Example
 By adding `export` to a function, class or object
 you'll be adding it to the `exports` object (as node-js modules specification)
 
-    export var Months = 
+    export var Months =
       "jan"
       "feb"
       "march"
@@ -1274,7 +1271,7 @@ The `throw` has a synonym: `raise`, and a similar construction `fail with`
 `fail with` is like throw, but expects a string. It creates an Error object and then throws.
 
 Example:
-    
+
     fail with 'read error'
 
 translates to js:
@@ -1325,14 +1322,14 @@ Examples:
 
     import fs,path,util // -> var fs = require('fs'), path = require('path'), util = require('util');
 
-    import 
+    import
       fs
       pah
       sourceMap = "source-map"
 
-      // -> 
-      var fs = require('fs'), 
-          path = require('path'), 
+      // ->
+      var fs = require('fs'),
+          path = require('path'),
           SourceMap = require('source-map');
 
 
@@ -1341,14 +1338,14 @@ Examples:
 
 The `wait for` statement executes a standard async function and pauses execution (yielding to the runtime) until the async function callback is called.
 
-Wait For it's supported by available libs. 
+Wait For it's supported by available libs.
 See: http://github.com/luciotato/waitfor
 See: http://github.com/luciotato/waitfor-ES6
 
 `wait for` can be used to call and wait for any *standard async function*.
 A *standard async function*, is an async function in which the last parameter is callback(err,data)
 
-The following code, for node.js, get's google.com IPs (async) and then tries to 
+The following code, for node.js, get's google.com IPs (async) and then tries to
 reverse-dns each ip (async)
 
 ```LiteScript
@@ -1369,14 +1366,14 @@ function resolveReverse
 
 Note that:
 
-* After the `wait for` line, execution is paused (the function yields) so other code can run. 
+* After the `wait for` line, execution is paused (the function yields) so other code can run.
 Keep this in mind if you have global variables that are modified asynchronously as they may change between the `wait for` line and the line after it. **(Better: do not use global variables)**
 
-* Any errors, in the function code or reported by `dns.resolve4` 
-(via callback's err parameter) **will be thrown in the function**. 
+* Any errors, in the function code or reported by `dns.resolve4`
+(via callback's err parameter) **will be thrown in the function**.
 You can catch all errors in the `exception` block of the function.
 
-* On node, `wait for` will be implmented with (wait.for/node-fibers) or generators (waitfor-ES6) 
+* On node, `wait for` will be implmented with (wait.for/node-fibers) or generators (waitfor-ES6)
 if --harmony flag is passed to node.
 
 
@@ -1393,7 +1390,7 @@ On node, `wait for` can be implemented with:
 * the wait.for-ES6 lib, which uses generators (waitfor-ES6, http://github.com/luciotato/waitfor-ES6)  if the --harmony flag is provided to node (or when ES6 become part of stable node)
 
 In the browser, for now you'll have to wait for ES6 to become stable. Or help implementing https://github.com/luciotato/waitfor-javascript for LiteScript
- 
+
 
 More examples:
 
@@ -1425,7 +1422,7 @@ print 'parallel reads launched!'
 Some node.js API functions (like `http.get`) don't follow the normal convention of callback(err,data).
 For these functions you must create a standardized wrapper :
 
-Example: 
+Example:
 
     import http
 
@@ -1438,7 +1435,7 @@ Example:
         req.on ( 'error', function(e)
                               callback(e)
                )
-    } 
+    }
 
     //wait for request from http.get 'http://www.google.com'
     print 'response:', wait for hGet('www.google.com')
@@ -1539,4 +1536,10 @@ LitesScript Corollary:
 ======================
 
   * if your LiteScript is harder to read than pure-js, you're doing it wrong.
+
+
+###Online Test Drive - OLD
+
+<a href=http://rawgithub.com/luciotato/LiteScript/master/demo.html target=_blank>
+LiteScript Online</a>
 
