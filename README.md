@@ -54,7 +54,9 @@ This exception exists to allow markdown titles to act as block starters (class, 
 ###Example:
 -----
 ###Class Person
-This is a example of some class, the title above is CODE, becaise the line start with 'class'. This this text is not code. This is a comment paragraph, which explains the class use, and has high chances of being kept attachhed to the class in code refactorings. No let's wrtie the class body (code)
+This is an example of some class, the title above is CODE, because the line start with 'class'. This text is not code. This is a comment paragraph, which explains the class usage, and, because its location, has high chances of being kept attached to the class in code refactorings. 
+
+Now let's write the class body (code)
     
     properties
         name
@@ -76,7 +78,7 @@ it prints:
 
 
 ---
-The actual version of the LiteScript compiler, is written in LiteScript. Check any source file to see examples of literate code.
+The LiteScript compiler, is written in LiteScript. Check any source file to see examples of literate code.
 
 -----
 
@@ -114,8 +116,8 @@ Meta-Syntax| Meaning
 **[of]**               | Optional symbols are enclosed in brackets
 **(var &#124; let)**     | The vertical bar represents ordered alternatives
 **(Oper Operand)**     | Parentheses groups symbols
-**(Oper Operand)+**    | Plus after a group ** (...)+ ** means one or more of the group
-<b>[Oper Operand]*</b>    | Asterisk after a optional group **[...]* ** means zero or more of the group
+**(Oper Operand)+**    | Plus after a group (...)+  means one or more of the group
+**[Oper Operand]* **    | Asterisk after a optional group [...]*  means zero or more of the group
 **"(" [Expression,] ")"** | the comma means a comma "Separated List". 
 **Body: (Statement;)** | the semicolon means: a semicolon "Separated List". 
 
@@ -127,7 +129,7 @@ Meta-Syntax| Meaning
 
 Example Grammar:  
 
->** FunctionCall: IDENTIFIER "(" [Expression,] ")"**
+>**FunctionCall: IDENTIFIER "(" [Expression,] ")"**
 
 Explanation:
 
