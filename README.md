@@ -1,4 +1,4 @@
-###LiteScript is a highly-readable language
+###LiteScript is a highly-readable language that compiles into javascript
 
 ##Design considerations
 LiteScript is designed with the following considerations in mind:
