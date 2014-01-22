@@ -1,6 +1,6 @@
-Considerations
-==============
+###LiteScript is a highly-readable language
 
+##Design considerations
 LiteScript is designed with the following considerations in mind:
 
 * More hours are expended READING and DEBUGGING code, than WRITING it.
@@ -14,82 +14,95 @@ maximizing readability and easing code-understanding for newcomers.
 and should be available to be used when required.
 * Hidden side-effects and global variables should be avoided whenever possible.
 
-Objectives
-==========
+##Objectives
 
 * Make code as readable and easy to follow as possible.
 * DO NOT try to be terse and clever. The best code is the clearest, not the shortest. We have plenty of room for source code
 * Catch typos in variables and object members *in the compilation phase*. Is too time-expensive to debug subtle bugs caused by mistyped variable or member names.
 * Provide an easy alternative to async and callbacks (wait.for/generators) while providing asynchronous support.
 
-Design Options
-==============
+##Design Options
 * Allow an easy context-switch in the coder's mind between programming languages.
-Try to use the same meaning for the same symbols when the symbol has meaning in javascript, CoffeScript
-and other mainstream web related languages.
+Try to use the same meaning for the same symbols when the symbol has meaning in javascript, CoffeScript, Phyton, C, JAVA, etc.
 * Use js symbols and EcmaScript 6 constructs when appropriated and available.
 * Use ANSI (SQL) symbols and constructs when appropriated.
 
 
-Implementation:
-=============
+------
 
-<blockquote>
-***DISCLAIMER***: <i>All characters and events in the following histories are entirely fictional.
-All facts were twisted to fit the needs of the plot. Celebrity voices are impersonated (poorly).
-Semantical, grammatical, and syntactic corrections are greatly appreciated.
-(this text has an error ratio of one every forty unicode points).
-</blockquote>
+>>**DISCLAIMER**: All characters and events are entirely fictional. Celebrity voices are impersonated (poorly). All facts were twisted to fit the needs of the plot. This document has an error ratio of one every forty unicode points. Semantical, grammatical, and syntactic corrections are greatly appreciated.
 
 
-##Literate LiteScript
+------
 
-LiteScript is literate. (based on the idea of [Literate CoffeeScript](http://coffeescript.org/#literate)).
+##LiteScript is Literate
 
-You write code and documentation on the same file, using [Github flavored Markdown](https://help.github.com/articles/github-flavored-markdown) syntax.
+LiteScript is literate. (based on the idea of [Literate CoffeeScript](http://coffeescript.org/#literate)).  You write code and documentation on the same file, using [Github flavored Markdown](https://help.github.com/articles/github-flavored-markdown) syntax.  
 
-Code blocks, denoted by four spaces of indentation, are treated as... well, code.
+Code blocks, denoted by four spaces of indentation after a blank line, are treated as **code**.
 
-With some exceptions, everything not indented at least 4 spaces, is considered Markdown and treated as comments
+Every other line not indented at least 4 spaces, is considered Markdown and treated as comments by the compiler, *with some exceptions*.
 
-Exceptions:
+The exceptions are the lines starting with the keywords:
 
-*Any line starting with keywords: `public class`,`public function`,`function`,`class`,`constructor`,`method`
-or `properties` are recognized and considered a CODE line, even if not indented.
+`public class`,`public function`,`function`,`class` 
 
-This exception exists to allow literate comments *inside* classes and functions.
-Comments, if left outside the class or function tend to get detached from their code on reorganizations
+which are recognized and the line considered **CODE**, even if not indented or marked as a markdown title (###)
 
-The actual version of the LiteScript compiler, is written in LiteScript. Check any source file to
-see examples of literate LiteScript.
+This exception exists to allow markdown titles to act as block starters (class, function), and then keep literate markdown comments *inside* classes and functions. Comments, if left outside the class or function, tend to get detached from their code on reorganizations
+
+###Example:
+-----
+###Class Person
+This is a example of some class, the title above is CODE, becaise the line start with 'class'. This this text is not code. This is a comment paragraph, which explains the class use, and has high chances of being kept attachhed to the class in code refactorings. No let's wrtie the class body (code)
+    
+    properties
+        name
+    
+    constructor(name)
+        this.name = name
+    
+    method hello
+        print "Hello! I'm #this.name"
+
+Now test the class
+
+    var a = new Person('Moe')
+    a.hello
+
+it prints:
+
+    > Hello! I'm Moe
 
 
-To semicolon or not to semicolon:
----------------------------------
+---
+The actual version of the LiteScript compiler, is written in LiteScript. Check any source file to see examples of literate code.
 
-LiteScript uses indentation as block scope (Like Python, and CofeeScript)
+-----
 
-With indentation as block scope, you're forced to properly indent. -that's good-
+###Optional semicolons:
+
+LiteScript uses indentation as block scope (Like Python and CofeeScript)
+
+With indentation as block scope, you're forced to indent properly. -that's good-
 (you're doing it anyhow, if you're not insane).
 
 LiteScript accepts NEWLINE as statement separator, (all semicolons are optional)
-so you stop worrying about semicolons and curly braces, -that's good-.
+so you stop worrying about semicolons and curly braces, -that's good-.<br>
 Nevertheless, you can put a semicolon at the end of every line (We will happily ignore it),
 and you can use semicolons to separate statements on the same line.
 (don't: more than one statement in one line affects readability)
 
 
-##Grammar MetaSyntax
-
-Each Grammar class parsing code, contains a 'grammar definition' as reference.
-The meta-syntax for the grammar definitions is
-an extended form of [Parsing Expression Grammars (PEGs)](http://en.wikipedia.org/wiki/Parsing_expression_grammar)
+###Grammar MetaSyntax
+LiteScript parser is a hand-coded class implemented PEG.  
+Each Grammar class parsing code, contains a 'grammar definition' for the symbol as reference.
+The meta-syntax for the grammar definitions is **an extended form** of [Parsing Expression Grammars (PEGs)](http://en.wikipedia.org/wiki/Parsing_expression_grammar)
 
 The differences with classic PEG are:
-* instead of **Symbol <- definition**, we use **Symbol: definition**
 * we use **[Symbol]** for optional symbols instead of **Symbol?** (brackets also groups symbols, the entire group is optional)
-* symbols upper/lower case carries meaning
-* we add `(Symbol,)` **Separated List** as a powerful syntax option
+* word upper/lower case carries meaning
+* we add **(Symbol,)** meaning: **Separated List of Symbol** as a powerful syntax option
 
 Meta-Syntax| Meaning
 ----|---
@@ -101,31 +114,41 @@ Meta-Syntax| Meaning
 **[of]**               | Optional symbols are enclosed in brackets
 **(var &#124; let)**     | The vertical bar represents ordered alternatives
 **(Oper Operand)**     | Parentheses groups symbols
-**(Oper Operand)+**    | Plus after a group `()+` means one or more of the group
-<b>[Oper Operand]*</b>    | Asterisk after a optional group `[]*` means zero or more of the group
+**(Oper Operand)+**    | Plus after a group ** (...)+ ** means one or more of the group
+<b>[Oper Operand]*</b>    | Asterisk after a optional group **[...]* ** means zero or more of the group
 **"(" [Expression,] ")"** | the comma means a comma "Separated List". 
 **Body: (Statement;)** | the semicolon means: a semicolon "Separated List". 
 
-"Separated List"
-----------------
 
-Example: **FunctionCall: IDENTIFIER "(" [Expression,] ")"**
+---
 
-**[Expression,]** means *optional* comma **"Separated List"** of Expressions. When the comma is
-inside a *optional **[  ]** group, it means the entire list is optional.
+###Separated List
 
-Example: ***VarStatement: (VariableDecl,)***
 
-**(VariableDecl,)*** means a comma **"Separated List"** of *VariableDecl*  (**VariableDecl: IDENTIFIER ["=" Expresion]**). When the comma is inside a ** ( ) ** group, it means: *one or more of the group*
+Example Grammar:  
 
+>** FunctionCall: IDENTIFIER "(" [Expression,] ")"**
+
+Explanation:
+
+>**[Expression,]**  means *optional* comma **Separated List** of Expressions. Since  the comma is inside a *optional*  group **[...]**, it means the entire list is optional.
+
+Example Grammar:  
+>**VarStatement: (IDENTIFIER ["=" Expression] ,)***
+
+Explanation:
+
+>**(IDENTIFIER ["=" Expression] ,)** means a comma **Separated List** of ( *IDENTIFIER* followed by optional "=" and value ). When the comma is inside a ** ( ) ** group, it means: *one or more items*
+
+###Free-Form Separated List
 At every point where a "Separated List" is accepted, also
 a "**free-form** Separated List" is accepted.
 
 In *free-form* mode, each item stands on its own line, and separators (comma/semicolon)
 are optional, and can appear after or before the NEWLINE.
 
-For example, given the previous example: **VarStatement: var (VariableDecl,)**,
-all of the following constructions are equivalent and valid in LiteScript:
+For example, given the previous example: **VarStatement: (IDENTIFIER ["=" Expression] ,)**,
+all the following constructions are equivalent and valid in LiteScript:
 
 Examples: 
 /*
@@ -133,17 +156,15 @@ Examples:
     //standard js
     var a = {prop1:30 prop2: { prop2_1:19, prop2_2:71} arr:["Jan","Feb","Mar"]}
 
-    //mixed freeForm and comma separated
+    //LiteScript: mixed freeForm and comma separated
     var a =
         prop1: 30
         prop2:
-          prop2_1: 19
-          prop2_2: 71
+          prop2_1: 19, prop2_2: 71
         arr: [ "Jan",
               "Feb", "Mar"]
 
-
-    //in freeForm, commas are optional
+    //LiteScript: in freeForm, commas are optional
     var a = 
         prop1: 30
         prop2:
@@ -243,27 +264,29 @@ Multiline comments are enclosed by `/*` and `*/` (C-style)
 
 
 ## Functions
+Module-level Functions are defined with 'function', class methods are also functions, but defined with 'method'. A 'method' cannot appear outside a class, nor a function inside a class.
+Also class constructors are functions, declared by the word 'constructor'. 
+Functions can have default arguments, parentheses are not required if you have no arguments.
 
-Functions can have default arguments:
-
-Example:
+Examples:
 
     function myFn( x, y=2)
       return x + y
 
-    print myFn(1) # prints 3
+    function helloWorld
+      print "hello world!"
 
-##Optional parentheses
-Functions are called using parentheses, but can be called without parentheses when the result is discarded.
+    print myFn(1) # prints 3
+    helloWorld # prints hello world!
+
+##Function Call, optional parentheses
+Functions are called using parentheses, but can be called without parentheses when used as statements and the result discarded.
 
 Example:
 
-    var a = myFunction(1, 2)
-
-    initializeSystem userName, new Date()   // js: initializeSystem(userName, new Date());
-
-    result.push data // js: result.push(data);
-
+    var a = myFunction(1, 2)  // js: idem
+    result.push data          // js: result.push(data);
+    init userName, new Date   // js: init(userName, new Date());
 
 ## Variables and properties, must be declared
 
@@ -273,12 +296,11 @@ when a variable is used before declaration, and when a object property is unknow
 Example: The following js code mistake, will be caught only while debugging. The complex the code, the longer the debugging.
 
     options = options || {};
-    if (options.importantCodeDefaultTrue===undefined) options.importantCodeDefaultTrue=true;
-    if (options.anotherOptionDefaultZero===undefined) options.anotherOptionDefaultZero=0;
-    
+    if (options.impCodeDefaultTrue===undefined) options.impCodeDefaultTrue=true;
+    if (options.anotherOptDefZero===undefined) options.anotherOptDefZero=0;
     initFunction(options);
     prepareDom(options);
-    if (options.importantCodesDefaultTrue) { 
+    if (options.impCodeDefaultsTrue) { 
        moreInit(); 
        subtleChanges(); 
     }
@@ -287,14 +309,13 @@ Example: The following js code mistake, will be caught only while debugging. The
 The same LiteScript code, will emit an error during compilation -no debugging required-.
 
     options = options or {}
-    if options.importantCodeDefaultTrue is undefined, options.importantCodeDefaultTrue = true
-    if options.anotherOptionDefaultZero is undefined, options.anotherOptionDefaultZero=0
-    
+    if options.impCodeDefaultTrue is undefined, options.impCodeDefaultTrue=true
+    if options.anotherOptDefZero is undefined, options.anotherOptDefZero=0
     initFunction options
     prepareDom options
-    if options.importantCodesDefaultTrue
-       moreInit
-       subtleChanges
+    if options.impCodeDefaultTrue
+       moreInit()
+       subtleChanges()
 
 
 ###Uppercase, lowercase
@@ -306,8 +327,7 @@ The same LiteScript code, will emit an error during compilation -no debugging re
 
 
 
-JAVASCRIPT, var, and Scope
---------------------------
+##JAVASCRIPT, var, and Scope
 
 Javascript (ES5) has only 'function' scope. Function scope means
 all `var` declarations are considered to be made at the start of the function.
@@ -355,8 +375,7 @@ Expected result is: 2,4,6,8
 
 this LiteScript code outs: 2,4,6,8
 
-Why the difference?
--------------------
+####Why the difference?
 
 LiteScript forces variables to be initialized at the point of declaration,
 thus somewhat limiting the scope of the variable **value** to start at the point of declaration.
@@ -375,21 +394,20 @@ The compiled js, for the LitesSript code is:
     ta.innerText = result.join(',')
 
 
-## Strings
+### Strings
 
 Strings can either be double-quoted (`"`) or single quoted (`'`).
 
     x = 'this is a "string" with quotes in it'
     y = "so is 'this'"
 
-## Embedded Expressions In Strings ##
+### String Interpolation
 
 Strings can contain interpolated values using the default interpolation char: `#` (as in CoffeeScript).
 
 Example: `print "x is #x"`
 
-`[` and `.` are considered part of the expression,
-so `#var[inx]` and `#obj.prop` are valid
+`.` is considered part of the expression, so `#obj.prop` is valid
 
 If the replacement is a expression, it can be enclosed in curly braces, as in
 
@@ -397,23 +415,19 @@ If the replacement is a expression, it can be enclosed in curly braces, as in
 
 Note: **BOTH**, *Single AND doble quoted strings* are interpolated.
 
-You can change the interpolation char using a compiler directive, for instance, use `$` instead of `#` (as in ES6)
+    textArea.innerText = 'result of 1+3*3-7 = #{1+3-3*7}
+    print "the function returns: #{theFunction(reference,item,value)}"
+    textArea.innerText = 'google.com HTML is: #{wait for httpGet("www.google.com")}'
+
+You can change the interpolation char using a compiler directive, for instance, to use `$` instead of `#` (as in ES6)
 
     compiler option
       interpolation char is '$'
 
-Example: simple expressions
+    print "The $n th element is: ${arr[n]}"
+    ul.addChild('<li class="$class"> ${item[inx]} $obj.value </li>'
 
-    print "The #n th element is: $arr[n]"
-    ul.addChild('<li class="$class" onclick="${handlerFnName}();"> $item[inx] $obj.value </li>'
-
-Example: complex expressions
-
-    div.innerHtml = '<textarea>result of 1+3*3-7 = #{1+3-3*7}
-    print "the function returns: #{theFunction(reference,item,value)}"
-    div.innerHtml = '<textarea>google.com HTML is: #{wait for httpGet("www.google.com")}</textarea>'
-
-All the embedded expressions are replaced with: `+ Expression +` or `+ (Expression) +` if it used {}
+All the interpolated expressions are replaced with: `+Expression+` for simple variables,<br> and `+(Expression)+` if  `#{...}` / `${...}` was used 
 
 Examples:
 
@@ -457,7 +471,7 @@ Examples:
 > "The function returns: moo 10 times!"
 
 
-## Including literal $ or # ##
+#### Including literal $ or # ##
 
 String interpolation is applied for single and double quoted strings.
 
@@ -474,7 +488,7 @@ or you can use multi-line strings, like:
       var MyString = """sing on b#: Get out of here, get me some $ too"""
 
 
-# Defaults for objects #
+### Defaults for objects 
 It's a common pattern in javascript to use a object parameters (named "options")
 to pass misc options to functions.
 
@@ -538,8 +552,8 @@ Will print `Jan`, `Feb`, `March`
 
     woods = ["cedar", "oak", "maple"]
 
-    for each i,w in woods
-      print i,w
+    for each index,w in woods
+      print index,w
 
 Will print `0 cedar`, `1 oak`, `2 maple`
 
@@ -573,39 +587,37 @@ Javascript translations of the above examples:
 
 ### Variant 2) 'for each property' to loop over *object property names* ###
 
-Grammar:
-`ForEachProperty: for each [own] property name-VariableDecl in object-VariableRef`
+Grammar:<br>
+>`ForEachProperty: for each [own] property name-VariableDecl in object-VariableRef`
 
 where `name-VariableDecl` is a variable declared on the spot to store each property name,
-and `object-VariableRef` is the object having the properties
+and `object-VariableRef` is the object with the properties
 
 if the optional `own` keyword is used, only instance properties will be looped (no property chain access)
 
 Examples:
 
     function showOptions ( options )
-
+    
       for each own property key in options
           if options[key], print "Option #key is #{options[key]}"
 
 
     function showAllProps ( object )
-
+    
       for each property name in object
           print "property #name is #{object[name]}"
-          if not object.hasOwnProperty(name), print "property #name is in the prototype chain"
-
+          if not object.hasOwnProperty(name)
+            print "property #name is in the prototype chain"
 
     function showProps ( object )
-
+    
       print "Object own properties:"
       for each own property name in object
           print "#name:#{object[name]}"
 
 
-Javascript translations of the above examples:
-----------------------------------------------
-
+####Javascript translations of the above examples:
 
     function showOptions ( options ) {
 
@@ -625,14 +637,15 @@ Javascript translations of the above examples:
           //print "property #name is #{object[name]}"
           console.log("property "+name+" is "+ object[name])
 
-          //if not object.hasOwnProperty(name), print "property #name is in the prototype chain"
-          if(!object.hasOwnProperty(name)) {console.log("property "+name+" is in the prototype chain")};
+          //if not object.hasOwnProperty(name)
+          //   print "property #name is in the prototype chain"
+          if(!object.hasOwnProperty(name)) {
+            console.log("property "+name+" is in the prototype chain")
+          };
       }
     }
 
-
     function showProps ( object ) {
-
       //print "Object own properties:"
 
       //for each own property name in object
@@ -645,7 +658,8 @@ Javascript translations of the above examples:
 
 
 
-### Variant 3) 'for index=...' to create *numeric loops* ###
+###Numeric Loops
+##### Variant 3) 'for index=...' to create *numeric loops* 
 
 This `for` variant are just verbose expressions of the standard C (and js) `for()` loop
 the increment of the loop variable is included by default, if it is not specified
