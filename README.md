@@ -5,105 +5,44 @@ LiteScript is designed with the following considerations in mind:
 
 * More hours are expended READING and DEBUGGING code, than WRITING it.
 * Code should be easy to read and follow. Intention and effects should be clear and explicit
-* Code flow should be straightforward, top-down and left to rigth
+* Code flow should be straightforward, top-down and left to right
   * Condition evaluation should precede conditionally executed statements
   * Sequential programming with exceptions, shows in a very clean form the flow and intention of the code,
 maximizing readability and easing code-understanding for newcomers.
   * Deviations from error-free expected program flow,should be handled as "exceptions" to normal (error-free) flow
-  * Programming async with callbacks and closures, should be optional and not imposed. Async callbacks and closures are great tools, and shuold be available to be used when they are the right tools for the job.
+  * Programming async with callbacks and closures, should be optional. Async callbacks and closures are great tools,
+and should be available to be used when required.
 * Hidden side-effects and global variables should be avoided whenever possible.
 
 Objectives
 ==========
 
 * Make code as readable and easy to follow as possible.
-* DO NOT try to be terse and clever. The best code is the clearest, not the shortest. We have plenty of room for source code size.
+* DO NOT try to be terse and clever. The best code is the clearest, not the shortest. We have plenty of room for source code
 * Catch typos in variables and object members *in the compilation phase*. Is too time-expensive to debug subtle bugs caused by mistyped variable or member names.
-* Provide an easy alternative to callbacks while providing asynchronous support. Async should be available, but as an option, not an imposition.
+* Provide an easy alternative to async and callbacks (wait.for/generators) while providing asynchronous support.
 
 Design Options
 ==============
-* Allow an easy context-switch in the coder's mind between programming languages. Try to use the same meaning for the same symbols when the symbol has meaning in javascript, CoffeScript and other mainstream web related languages.
+* Allow an easy context-switch in the coder's mind between programming languages.
+Try to use the same meaning for the same symbols when the symbol has meaning in javascript, CoffeScript
+and other mainstream web related languages.
 * Use js symbols and EcmaScript 6 constructs when appropriated and available.
-* Use ANSI SQL symbols and constructs when appropriated.
+* Use ANSI (SQL) symbols and constructs when appropriated.
 
 
-Introduction:
+Implementation:
 =============
 
 <blockquote>
-***DISCLAIMER***: <i>All characters and events in the following histories are entirely fictional. All facts were twisted to fit the needs of the plot. Celebrity voices are impersonated (poorly).
-Semantical, grammatical, and syntactic corrections are greatly appreciated. (this text has an error ratio of one every forty unicode points). Please don't even try to do fact-checking.
-The tales described here are intended to be amusing, not real.
-<b>Se non è vero, è ben trovato.</b></i>
+***DISCLAIMER***: <i>All characters and events in the following histories are entirely fictional.
+All facts were twisted to fit the needs of the plot. Celebrity voices are impersonated (poorly).
+Semantical, grammatical, and syntactic corrections are greatly appreciated.
+(this text has an error ratio of one every forty unicode points).
 </blockquote>
 
-To semicolon or not to semicolon:
----------------------------------
 
-LiteScript accepts end of line (EOL) as statement separator and indentation as block scope (Like Python, and CofeeScript)
-
-With indentation as block scope, you're forced to properly indent. -that's good-
-(you're doing it anyhow, if you're not insane).
-
-Using EOL as statement separator, you stop worrying about semicolons and curly braces, -that's good-.
-Nevertheless, you can put a semicolon at the end of every line (We will happily ignore it), and use semicolons to separate statement the same line. (although, more than one statement in one line affects readability and is discouraged)
-
-Block end cues for the casual reader
-------------------------------------
-
-There is a problem I call "The closing braces wtf problem"
-
-Let's say you were following the 900 lines of code from the function "theFirst", and you get distracted
-by a phone call.
-
-Picture the following "screen" in C (and js, java, etc)
-
-<pre>
-  +-------------------------------------------
-  |987|                   inx++;
-  |988|               }
-  |989|               importantVar=false;
-  |990|            }
-  |991|        }
-  |992|    }
-  |993|};
-  |994|
-  |995|
-  |996|function theSecond(){
-  |997|
-</pre>
-
-Now, you're back at the screen , and you see a well-indented cascade of
-closing curly braces... and you ask yourself... wtf are each one of them are closing?
-Now, you depend on some crazy jumping courtesy of your favorite editor's "find matching brace" function
-(if you're lucky enough to be using your editor, and not, let's say, "reading code on the web").
-
-In this case, you gain nothing by using indent as block scope (picture the same, but w/o the curly braces)
-It's even worse: you can't even be sure of how many blocks are closing.
-
-LiteScript allows you to -optionally- use the `end` keyword to mark blocks closings.
-
-So, to ease code reading, it's good to have (optional... yes optional) end block statements, as in...
-
-  +------------------------------
-  |987|                  inx++;
-  |988|               end if // if anotherVar was 3
-  |989|               importantVar=false;
-  |990|           end if
-  |991|
-  |992|       end loop cols
-  |993|    end loop rows
-  |994|end function theFirst
-  |995|
-  |996|function theSecond(){
-  |997|
-
-That's clear, and easier to read... and it is *optional*
-
-
-
-## Literate LiteScript
+##Literate LiteScript
 
 LiteScript is literate. (based on the idea of [Literate CoffeeScript](http://coffeescript.org/#literate)).
 
@@ -115,80 +54,86 @@ With some exceptions, everything not indented at least 4 spaces, is considered M
 
 Exceptions:
 
-*Any line starting with keywords: `public class`,`public function`,`function`,`class`,`constructor`,`method` or `properties` are recognized and considered a CODE line.
+*Any line starting with keywords: `public class`,`public function`,`function`,`class`,`constructor`,`method`
+or `properties` are recognized and considered a CODE line, even if not indented.
 
 This exception exists to allow literate comments *inside* classes and functions.
-Comments, if left outside the class or function tend to get dettached from their code on reorganizations
+Comments, if left outside the class or function tend to get detached from their code on reorganizations
 
-The actual version of the LiteScript compiler, is written in LiteScript. Check any source file to see examples of literate LiteScript.
-
-
-Grammar MetaSyntax
-==================
-
-Along this document and the code, a loose grammar is used to define language construction.
-The syntax for this 'grammar definition language' is:
-
-Example          |  Usage
------------------|------------------
-`IfStatement`    | Capitalized is reserved for non-terminal symbols
-`function`       | all-lowercase means the literal word, (terminal symbol)
-`":"`            | literal symbols are quoted (terminal symbol)
-`exit-Condition` | lowercase`-`Symbol meanss: "tagged non-terminal", the tag helps declaring the intention
-
-`IDENTIFIER`,`OPER` | all-uppercase denotes entire classes of terminal symbols
-`NEWLINE`,`EOF`     | or special unprintable characters
-
-`[of]`               | Optional symbols are enclosed in brackets
-`(Oper Operand)`     | Parentheses groups symbols
-`(bitwise|shift)`    | The vertical bar represents an alternative
-`(Accessor)*`        | Asterisk after a group `()*` means zero or more of the group
-`(Accessor)+`        | Plus after a group `()+` means one or more of the group
-
-`var [VariableDecl,]+` | a comma means: "Comma Separated List". When a "Comma Separated List" is accepted,
-                       |  also a *free-form* is accepted
-`Body: [Statement;]*`  | a semicolon means: "Semicolon Separated List". Also a *free-form* is accepted.
-
-Grammar Examples:
-
-`VarStatement: (var|let) (VariableDecl,)+`
-
-  Means: keyword "var" or "let", followed by a comma separated list of VariableDecl (at least one)
-
-`VariableDecl: IDENTIFIER ['=' Expression]`
-
-  Means: IDENTIFIER, **optionally** followed by an equal sign and a Expression.
-
-`ForEachInArray: for each [index-VariableDecl ","] item-VariableDecl in array-Expression Body`
-
-  Means: keyword "for", then keyword "each", then **optional** VariableDecl (index) followed by a ",".
-  After, VariableDecl is required (item), keyword "in" and a Expresion (array).
-  After, a Body
-
-`Body: (Statement;)*`
-
-  Means: Semicolon separated list of Statement (zero or more), and when a separated list is accepted
-  also "freeForm" is accepted, so it is also: (Statement [NEWLINE][;][NEWLINE])*`, meaning:
-  zero or more of Statement, optionally followed by "NEWLINE", optionally followed by ";", optionally followed by "NEWLINE".
+The actual version of the LiteScript compiler, is written in LiteScript. Check any source file to
+see examples of literate LiteScript.
 
 
-Comma Separated List
---------------------
+To semicolon or not to semicolon:
+---------------------------------
 
-When a "Comma Separated List" is accepted:
+LiteScript uses indentation as block scope (Like Python, and CofeeScript)
 
-Example:
-`FunctionCall: IDENTIFIER "(" [Expression,]* ")"`
+With indentation as block scope, you're forced to properly indent. -that's good-
+(you're doing it anyhow, if you're not insane).
 
-also a *free-form* is accepted.
+LiteScript accepts NEWLINE as statement separator, (all semicolons are optional)
+so you stop worrying about semicolons and curly braces, -that's good-.
+Nevertheless, you can put a semicolon at the end of every line (We will happily ignore it),
+and you can use semicolons to separate statements on the same line.
+(don't: more than one statement in one line affects readability)
 
-In *free-form*, each item stands on its own line.
-Commas are optional, and can appear after or before the NEWLINE
 
-Example: All of the following contructions are equivalent and valid in LiteScript
+##Grammar MetaSyntax
 
+Each Grammar class parsing code, contains a 'grammar definition' as reference.
+The meta-syntax for the grammar definitions is
+an extended form of [Parsing Expression Grammars (PEGs)](http://en.wikipedia.org/wiki/Parsing_expression_grammar)
+
+The differences with classic PEG are:
+* instead of **Symbol <- definition**, we use **Symbol: definition**
+* we use **[Symbol]** for optional symbols instead of **Symbol?** (brackets also groups symbols, the entire group is optional)
+* symbols upper/lower case carries meaning
+* we add `(Symbol,)` **Separated List** as a powerful syntax option
+
+Meta-Syntax| Meaning
+----|---
+**IfStatement**    | CamelCase is reserved for non-terminal symbol
+**function**       | all-lowercase means the literal word
+**":"**            | literal symbols are quoted
+**IDENTIFIER,OPER** | all-uppercase denotes entire classes of symbols
+**NEWLINE,EOF**     | or special unprintable characters
+**[of]**               | Optional symbols are enclosed in brackets
+**(var &#124; let)**     | The vertical bar represents ordered alternatives
+**(Oper Operand)**     | Parentheses groups symbols
+**(Oper Operand)+**    | Plus after a group `()+` means one or more of the group
+<b>[Oper Operand]*</b>    | Asterisk after a optional group `[]*` means zero or more of the group
+**"(" [Expression,] ")"** | the comma means a comma "Separated List". 
+**Body: (Statement;)** | the semicolon means: a semicolon "Separated List". 
+
+"Separated List"
+----------------
+
+Example: `FunctionCall: IDENTIFIER "(" [Expression,] ")"`
+
+`[Expression,]` means *optional* **comma "Separated List"** of Expressions. When the comma is
+inside a **[]** group, it means the entire list is optional.
+
+Example: `VarStatement: (VariableDecl,)`
+
+`(VariableDecl,)` means **comma "Separated List"** of `VariableDecl` (`VariableDecl: IDENTIFIER ["=" Expresion]`).
+When the comma is inside a **()** group, it means one or more of the group
+
+At every point where a "Separated List" is accepted, also
+a "**free-form** Separated List" is accepted.
+
+In *free-form* mode, each item stands on its own line, and separators (comma/semicolon)
+are optional, and can appear after or before the NEWLINE.
+
+For example, given the previous example: `VarStatement: var (VariableDecl,)`,
+all of the following constructions are equivalent and valid in LiteScript:
+
+Examples:
+/*
+    //standard js
     var a = {prop1:30 prop2: { prop2_1:19, prop2_2:71} arr:["Jan","Feb","Mar"]}
 
+    //mixed freeForm and comma separated
     var a =
         prop1: 30
 
@@ -196,9 +141,11 @@ Example: All of the following contructions are equivalent and valid in LiteScrip
           prop2_1: 19
           prop2_2: 71
 
-        arr: [ "Jan", "Feb"
-              , "Mar" ]
+        arr: [ "Jan",
+              "Feb", "Mar"]
 
+
+    //in freeForm, commas are optional
     var a = {
         prop1: 30
         prop2:
@@ -210,10 +157,9 @@ Example: All of the following contructions are equivalent and valid in LiteScrip
             "Mar"
             ]
         }
+*/
 
-
-More about comma separated lists
-================================
+##More about comma separated lists
 
 The examples above only show Object and List Expressions, but *you can use free-form mode (multiple lines with the same indent), everywhere a comma separated list of items apply.*
 
@@ -294,32 +240,11 @@ Examples:
       ...function body...
 
 
-## Comments
+##Comments
 
 Comments are preceeded by `//` or a `#` sign
 
 Multiline comments are enclosed by `/*` and `*/` (C-style)
-
-
-## Optional End keyword
-
-All of the indented structures can be optionally ended with an "end" keyword, to ease code reading and to
-make harder to introduce subtle bugs on code modifications and/or indentation changes
-
-example:
-
-    function my_function(arg1, arg2)
-      return arg1 + arg2
-    end function
-
-    for each property name in options
-        print name
-        if options[name] is Array
-            for each item in options[key]
-                print item
-            end for
-        end if
-    end for
 
 
 ## Functions
@@ -1530,6 +1455,82 @@ print 'parallel read completed'
  var reverses = parallel map addresses using getReverse;
  console.log("reverses", reverses);
 ```
+
+
+##Optional End keyword
+
+All of the indented structures can be optionally ended with an "end" keyword, to ease code reading and to
+make harder to introduce subtle bugs on code modifications and/or indentation changes
+
+example:
+
+    function my_function(arg1, arg2)
+      return arg1 + arg2
+    end function
+
+    for each property name in options
+        print name
+        if options[name] is Array
+            for each item in options[key]
+                print item
+            end for
+        end if
+    end for
+
+
+Block end cues for the casual reader
+------------------------------------
+
+There is a problem I call "The closing braces wtf problem"
+
+Let's say you were following the 900 lines of code from the function "theFirst", and you get distracted
+by a phone call.
+
+Picture the following "screen" in C (and js, java, etc)
+
+<pre>
+  +-------------------------------------------
+  |987|                   inx++;
+  |988|               }
+  |989|               importantVar=false;
+  |990|            }
+  |991|        }
+  |992|    }
+  |993|};
+  |994|
+  |995|
+  |996|function theSecond(){
+  |997|
+</pre>
+
+Now, you're back at the screen , and you see a well-indented cascade of
+closing curly braces... and you ask yourself... what are each one of them closing?
+Now, you depend on some crazy jumping courtesy of your favorite editor's "find matching brace" function
+(if you're lucky enough to be using your editor, and not, let's say, "reading code on the web").
+
+In this case, you gain nothing by using indent as block scope (picture the same, but w/o the curly braces)
+It's even worse: you can't even be sure of how many blocks are closing.
+
+LiteScript allows you to -optionally- use the `end` keyword to mark blocks closings.
+
+So, to ease code reading, it's good to have (optional... yes optional) end block statements, as in...
+
+<pre>
+  +------------------------------
+  |987|                  inx++;
+  |988|               end if // if anotherVar was 3
+  |989|               importantVar=false;
+  |990|           end if
+  |991|
+  |992|       end loop cols
+  |993|    end loop rows
+  |994|end function theFirst
+  |995|
+  |996|function theSecond(){
+  |997|
+</pre>
+
+That's clear, and easier to read... and it is *optional*
 
 
 LitesScript Corollary:
