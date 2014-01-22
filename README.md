@@ -18,7 +18,7 @@ and should be available to be used when required.
 
 * Make code as readable and easy to follow as possible.
 * DO NOT try to be terse and clever. The best code is the clearest, not the shortest. We have plenty of room for source code
-* Catch typos in variables and object members *in the compilation phase*. Is too time-expensive to debug subtle bugs caused by mistyped variable or member names.
+* Catch typos in variables and object members *in the compilation phase*. It is too time-expensive to debug subtle javascript bugs caused by mistyped variable or member names.
 * Provide an easy alternative to async and callbacks (wait.for/generators) while providing asynchronous support.
 
 ##Design Options
@@ -97,14 +97,21 @@ and you can use semicolons to separate statements on the same line.
 
 
 ###Grammar MetaSyntax
-LiteScript parser is a hand-coded class implemented PEG.  
-Each Grammar class parsing code, contains a 'grammar definition' for the symbol as reference.
-The meta-syntax for the grammar definitions is **an extended form** of [Parsing Expression Grammars (PEGs)](http://en.wikipedia.org/wiki/Parsing_expression_grammar)
+LiteScript parser is a hand-coded class-implemented PEG.  
+The meta-syntax for the grammar definitions is **an extended form** of [Parsing Expression Grammars (PEGs)](http://en.wikipedia.org/wiki/Parsing_expression_grammar)<br>
+Each Grammar class, contains a 'grammar definition' for the symbol as reference.
 
 The differences with classic PEG are:
+* we use **:** instead of **<-**
 * we use **[Symbol]** for optional symbols instead of **Symbol?** (brackets also groups symbols, the entire group is optional)
 * word upper/lower case carries meaning
 * we add **(Symbol,)** meaning: **Separated List of Symbol** as a powerful syntax option
+
+Examples:  
+
+>**FunctionCall: IDENTIFIER "(" [Expression,] ")"**
+
+>**VarStatement: (IDENTIFIER ["=" Expression] ,)***
 
 Meta-Syntax| Meaning
 ----|---
@@ -117,7 +124,7 @@ Meta-Syntax| Meaning
 **(var &#124; let)**     | The vertical bar represents ordered alternatives
 **(Oper Operand)**     | Parentheses groups symbols
 **(Oper Operand)+**    | Plus after a group (...)+  means one or more of the group
-**[Oper Operand]* **    | Asterisk after a optional group [...]*  means zero or more of the group
+**[Oper Operand]***    | Asterisk after a optional group [...]*  means zero or more of the group
 **"(" [Expression,] ")"** | the comma means a comma "Separated List". 
 **Body: (Statement;)** | the semicolon means: a semicolon "Separated List". 
 
