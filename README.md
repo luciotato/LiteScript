@@ -109,15 +109,14 @@ Meta-Syntax| Meaning
 "Separated List"
 ----------------
 
-Example: `FunctionCall: IDENTIFIER "(" [Expression,] ")"`
+Example: **FunctionCall: IDENTIFIER "(" [Expression,] ")"**
 
-`[Expression,]` means *optional* **comma "Separated List"** of Expressions. When the comma is
-inside a **[]** group, it means the entire list is optional.
+**[Expression,]** means *optional* comma **"Separated List"** of Expressions. When the comma is
+inside a *optional **[  ]** group, it means the entire list is optional.
 
-Example: `VarStatement: (VariableDecl,)`
+Example: ***VarStatement: (VariableDecl,)***
 
-`(VariableDecl,)` means **comma "Separated List"** of `VariableDecl` (`VariableDecl: IDENTIFIER ["=" Expresion]`).
-When the comma is inside a **()** group, it means one or more of the group
+**(VariableDecl,)*** means a comma **"Separated List"** of *VariableDecl*  (**VariableDecl: IDENTIFIER ["=" Expresion]**). When the comma is inside a ** ( ) ** group, it means: *one or more of the group*
 
 At every point where a "Separated List" is accepted, also
 a "**free-form** Separated List" is accepted.
@@ -125,28 +124,27 @@ a "**free-form** Separated List" is accepted.
 In *free-form* mode, each item stands on its own line, and separators (comma/semicolon)
 are optional, and can appear after or before the NEWLINE.
 
-For example, given the previous example: `VarStatement: var (VariableDecl,)`,
+For example, given the previous example: **VarStatement: var (VariableDecl,)**,
 all of the following constructions are equivalent and valid in LiteScript:
 
-Examples:
+Examples: 
 /*
+
     //standard js
     var a = {prop1:30 prop2: { prop2_1:19, prop2_2:71} arr:["Jan","Feb","Mar"]}
 
     //mixed freeForm and comma separated
     var a =
         prop1: 30
-
         prop2:
           prop2_1: 19
           prop2_2: 71
-
         arr: [ "Jan",
               "Feb", "Mar"]
 
 
     //in freeForm, commas are optional
-    var a = {
+    var a = 
         prop1: 30
         prop2:
           prop2_1: 19,
@@ -156,7 +154,7 @@ Examples:
             "Feb"
             "Mar"
             ]
-        }
+
 */
 
 ##More about comma separated lists
@@ -165,34 +163,28 @@ The examples above only show Object and List Expressions, but *you can use free-
 
 The previous examples were for:
 
-*Literal Object expression
-
-  because a Literal Object expression is:
-  "{" a comma separated list of Item:Value pairs "}"
+* Literal Object expression<br>
+  because a Literal Object expression is:<br>
+  "{" + a comma separated list of Item:Value pairs + "}"
 
 and
+* Literal Array expression<br>
+  because a Literal Array expression is<br>
+  "[" + a comma separated list of expressions + "]"
 
-*Literal Array expression
+But the free-form option also applies for:
 
-  because a Literal Array expression is
-  "[" a comma separated list of expressions "]"
+* Function parameters declaration<br>
+  because Function parameters declaration is:<br>
+  "(" + a comma separated list of paramter names + ")"
 
-But the option also applies for:
+* Arguments, for any function call<br>
+  because function call arguments are:<br>
+  "(" + a comma separated list of expressions + ")"
 
-*Function parameters declarations
-
-  because a Function parameters declarations is:
-  "(" a comma separated list of paramter names ")"
-
-*Arguments, for any function call
-
-  because function call arguments are:
-  "(" a comma separated list of expressions ")"
-
-*Variables declaration
-
-  because a variables declaration is:
-  "var" + a comma separated list of: IDENTIFIER ["=" Expression]
+* Variables declaration<br>
+  because variables declaration is:<br>
+  'var' + a comma separated list of: IDENTIFIER ["=" Expression]
 
 Examples:
 
@@ -202,8 +194,9 @@ Examples:
 
   LiteScript available variations:
 
-    print title,subtitle
-          line1,line2,value,recommendation
+    print title,subtitle,
+          line1,line2,
+          value,recommendation
 
     print
       title
@@ -214,10 +207,12 @@ Examples:
       recommendation
 
   js:
+  
     var a=10, b=20, c=30,
         d=40;
 
-    function complexFn( 10, 4, 'sample', 'see 1', 2+2, null ){
+    function complexFn( 10, 4, 'sample'
+       ,'see 1', 2+2, null ){
       ...function body...
     };
 
@@ -249,17 +244,17 @@ Multiline comments are enclosed by `/*` and `*/` (C-style)
 
 ## Functions
 
-Functions can have default arguments. These will be used if the specified argument is `null` or `undefined`:
+Functions can have default arguments:
 
 Example:
 
-    function myFn(x,y = 2)
+    function myFn( x, y=2)
       return x + y
 
     print myFn(1) # prints 3
 
-Functions are called using parentheses when you use the result, but can be called without parentheses
-when the result is discarded.
+##Optional parentheses
+Functions are called using parentheses, but can be called without parentheses when the result is discarded.
 
 Example:
 
@@ -269,68 +264,52 @@ Example:
 
     result.push data // js: result.push(data);
 
-Objects work like JavaScript objects, so you can access members either using array subscripts or `.` notation
-
-Example:
-
-    var x =
-      a : 1
-      b : 2
-
-    print x['a'] # prints 1
-    print x.b    # prints 2
-
-## Arguments
-
-As in js, you can use 'arguments' as an array-like object containing all the function call arguments (declared or not)
-
 
 ## Variables and properties, must be declared
 
 To avoid long debug sessions over a mistyped object member, LiteScript compiler will emit warnings
 when a variable is used before declaration, and when a object property is unknown.
 
-Example: The following js code mistake, will be catch only while debugging. The complex the code, the longer the debugging.
+Example: The following js code mistake, will be caught only while debugging. The complex the code, the longer the debugging.
 
-  options = options || {};
-  if (options.importantCodeDefaultTrue===undeinfed) options.importantCodeDefaultTrue=true;
-  if (options.anotherOptionDefaultZero===undeinfed) options.anotherOptionDefaultZero=0;
-
-  initFunction(options);
-  prepareDom(options)
-  if (options.importantCodesDefaultTrue) { moreInit(); subtleChanges(); }
-
+    options = options || {};
+    if (options.importantCodeDefaultTrue===undefined) options.importantCodeDefaultTrue=true;
+    if (options.anotherOptionDefaultZero===undefined) options.anotherOptionDefaultZero=0;
+    
+    initFunction(options);
+    prepareDom(options);
+    if (options.importantCodesDefaultTrue) { 
+       moreInit(); 
+       subtleChanges(); 
+    }
+    
 
 The same LiteScript code, will emit an error during compilation -no debugging required-.
 
-  options = options or {}
-  if options.importantCodeDefaultTrue is undeinfed, options.importantCodeDefaultTrue = true
-  if options.anotherOptionDefaultZero is undeinfed, options.anotherOptionDefaultZero=0;
-
-  initFunction options
-  prepareDom options
-  if options.importantCodesDefaultTrue then moreInit(); subtleChanges()
-
-
-## Globals
-
-You cannot create 'by mistake' a variable or function in the global scope. It's an error.
-The only way to create a global variable or function is to use the `global` object.
-
-Example:
-
-    var x=3 # <- error, will create global variable
-
-    global.x = 3 # <-ok
+    options = options or {}
+    if options.importantCodeDefaultTrue is undefined, options.importantCodeDefaultTrue = true
+    if options.anotherOptionDefaultZero is undefined, options.anotherOptionDefaultZero=0
+    
+    initFunction options
+    prepareDom options
+    if options.importantCodesDefaultTrue
+       moreInit
+       subtleChanges
 
 
-`global` is alias for `window` on the browser.
+###Uppercase, lowercase
+
+* To avoid subtle errors, you cannot define any two variable names only differing in uppercase/lowercase
+* Class Names are required to be Capitalized.
+* CONST are required to be all UPPERCASE.
+* All other identifiers are required to be camelCased
+
 
 
 JAVASCRIPT, var, and Scope
 --------------------------
 
-Actual Javascript (ES5) has only 'function' scope. Function scope means
+Javascript (ES5) has only 'function' scope. Function scope means
 all `var` declarations are considered to be made at the start of the function.
 
 Also, Javascript **does not force** an implicit assignment at the point of declaration.
@@ -359,16 +338,17 @@ Expected result is: 2,4,6,8
 
 this js code outs: 2,2,4,4,6,6,8,8
 
-  LiteScript:
+  LiteScript, same code:
 
+    // show even numbers
     var n = 0
     var ta = document.getElementById('result')
     var result=[]
-    for var i=2 while i<10
+    for i=2 while i<10
         var j
-        if i mod 2 is 0 then j = i
-        if j then result.push(j)
-    }
+        if i mod 2 is 0, j = i
+        if j, result.push(j)
+    
     ta.innerText = result.join(',')
 
 Expected result is: 2,4,6,8
@@ -393,14 +373,6 @@ The compiled js, for the LitesSript code is:
         if (j) result.push(j);
     }
     ta.innerText = result.join(',')
-
-
-###Uppercase, lowercase
-
-* To avoid subtle errors, you cannot define any two variable names only differing in uppercase/lowercase
-* Class Names are required to be Capitalized.
-* CONST are required to be all UPPERCASE.
-* All other identifiers are required to be camelCased
 
 
 ## Strings
@@ -1455,7 +1427,6 @@ print 'parallel read completed'
  var reverses = parallel map addresses using getReverse;
  console.log("reverses", reverses);
 ```
-
 
 ##Optional End keyword
 
