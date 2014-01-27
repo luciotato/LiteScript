@@ -1,12 +1,13 @@
 The LiteScript Compiler Module
 ==============================
 LiteScript is a highly readable language that compiles to JavaScript.
+
 The LiteScript compiler is written in LiteScript. 
 
-String helpers. Note: if not assigned to dummy, not recognized as 'import'
+First, require util functions and declare external objects
 
     require('./string-shims') #.startWith, endsWith
-    require('./util') #.startWith, endsWith
+    require('./util') #global debug, log
 
     declare Environment
     declare on Environment
@@ -20,7 +21,7 @@ String helpers. Note: if not assigned to dummy, not recognized as 'import'
     declare on log
         errors,warning,message
 
-Dependencies
+Module Dependencies
 
     var ASTBase = require('./ASTBase')
     var Grammar = require('./Grammar')
@@ -34,9 +35,7 @@ Dependencies
 ### Append to class ASTBase
 
 #### method addBuiltInObject(name, options) 
-
-Adds a BuiltIn Class to global scope
-return class prototype
+Adds a built-in class to global scope, return class prototype
 
       declare builtInObject:Grammar.NameDeclaration
 
@@ -59,8 +58,7 @@ Add 1st level properties, and for 'prototype', 2nd level as well
 
 
 #### Helper Method getMembersFromObjProperties(obj) #Recursive
-
-recursively converts a obj properties in NameDeclarations.
+Recursively converts a obj properties in NameDeclarations.
 it's used when a pure.js module is imported by 'require'
 to convert required 'exports' to LiteScript compiler usable NameDeclarations
 
@@ -103,7 +101,7 @@ The Modules dependency tree is the *Project tree*.
         compilerVars: Grammar.NameDeclaration
         lexer 
         Producer
-        recurseLevel
+        recurseLevel = 0
 
 #### constructor(basePath, options)
 
@@ -145,9 +143,9 @@ The `Environment` abstraction allows us to support compile on server(node) or th
             window.Environment = require('./browser-environment-support.js')
 
 
-Initialize this project. Receives compiling options
-Project has a cache for required modules. As with node's `require` mechanism, a module, 
-when imported/required is only compiled once and then cached.
+Initialize this project. Project has a cache for required modules. 
+As with node's `require` mechanism, a module, 
+when imported|required is only compiled once and then cached.
     
         me.name = 'Project'
         me.basePath = basePath
@@ -158,14 +156,13 @@ when imported/required is only compiled once and then cached.
             dirname: "."
             moduleName: me.name
 
-Create the "root" node (a NameDeclaration) to hold the globalScope and all modules. 
-All modules are children of "root".
+Create the "root" node (a NameDeclaration) to hold the globalScope.
 
         var rootNode = new Grammar.NameDeclaration(me)
         rootNode.name = "Project Root Node"
 
-Initialize global scope
-"scope" in "project root Module" is the global scope (root)
+The "scope" of rootNode is the global scope. 
+Initialize the global scope
 
         var root = rootNode.createScope() 
 
@@ -198,7 +195,7 @@ Initialize global scope
 
         me.root = root
 
-compiler vars, usable at conditional compile
+compiler vars, to use at conditional compilation
 
         me.compilerVars = me.root.declareName('Compiler Vars')
 
@@ -208,8 +205,10 @@ compiler vars, usable at conditional compile
 
 
 in 'options' we receive also the target code to generate. (default is 'js')
-Now we load the **Producer** module for the selected targent code.
-The **Producer** extends Grammar classes adding a `produce()` method
+
+Now we load the **Producer** module for the selected target code.
+
+The **Producer** module append to each Grammar class a `produce()` method
 which generates target code for the AST class. Example: [Producer_js.lite.md]
     
         me.Producer = require('./Producer_'+options.target)
@@ -217,8 +216,7 @@ which generates target code for the AST class. Example: [Producer_js.lite.md]
 
 #### method createNewModule(fileInfo)
 
-create a **new Module**.
-and then create a **new lexer** for the Module 
+create a **new Module** and then create a **new lexer** for the Module 
 (each module has its own lexer. There is one lexer per file)
 
         var moduleNode = new Grammar.Module(me.root)
@@ -227,10 +225,8 @@ and then create a **new lexer** for the Module
 
         moduleNode.lexer = new Lexer()
 
-create the module scope
-create two local scope vars: 
-'module' and 'exports = module.exports'
-'exports' will hold all exported members 
+Now create the module scope, with two local scope vars: 
+'module' and 'exports = module.exports'. 'exports' will hold all exported members.
 
         moduleNode.createScope()
         var moduleVar = moduleNode.addToScope('module')
@@ -242,7 +238,7 @@ add other common built-in members of var 'module'. http://nodejs.org/api/modules
         moduleVar.addMember 'filename',{value: fileInfo.filename}
         moduleVar.addMember 'parent'
 
-Also, register every `import/require` in this module body, to track dependency.
+Also, register every `import|require` in this module body, to track modules dependencies.
 We create a empty `.required[]` to keep track of every other importe/require '**importParameter**'
 and also a empty `.imported[]` to hold the **imported AST Module node**
 
@@ -253,47 +249,44 @@ and also a empty `.imported[]` to hold the **imported AST Module node**
 
 
 #### method compileOnModule(moduleNode, sourceLines)
+This method will compile source lines into ModuleNode scope
 
-        var stage
-        try
+set Lexer source code, process lines, tokenize
 
-set Lexer source code
-process lines, tokenize
-
-            stage = "lexer"
-            moduleNode.lexer.initSource( moduleNode.name, sourceLines )
-            moduleNode.lexer.process()
+        var stage = "lexer"
+        moduleNode.lexer.initSource( moduleNode.name, sourceLines )
+        moduleNode.lexer.process()
 
 Parse source
         
-            stage = "parsing"
-            moduleNode.parse()
+        stage = "parsing"
+        moduleNode.parse()
 
 prepare out buffer
 & produce target code 
     
-            stage = "producing"
-            moduleNode.outCode.start()
-            moduleNode.produce()
-            # the produced code will be at: moduleNode.outCode.getResult() :string array
+        stage = "producing"
+        moduleNode.outCode.start()
+        moduleNode.produce()
+        # the produced code will be at: moduleNode.outCode.getResult() :string array
 
 Check if errors were emitted
 
-            if moduleNode.lexer.errCount
-                var errsEmitted = new Error("#{moduleNode.lexer.errCount} errors emitted")
-                errsEmitted.controled = true
-                throw errsEmitted
+        if moduleNode.lexer.errCount
+            var errsEmitted = new Error("#{moduleNode.lexer.errCount} errors emitted")
+            errsEmitted.controled = true
+            throw errsEmitted
 
-Handle errors,  add stage info, and stack
+Handle errors, add stage info, and stack
 
-        catch err
+        exception err
     
             me.errCount+=1
-            err = moduleNode.lexer.hardError or err #get important (inner) error
-            if not err.controled # if not 'controled' show call stack (includes err text)
+            err = moduleNode.lexer.hardError or err //get important (inner) error
+            if not err.controled  //if not 'controled' show call stack (includes err text)
                 err.message = "#{stage} stage\n#{moduleNode.lexer.posToString()}\n#{err.stack or err.message}"
             else
-                #add stage info
+                //add stage info
                 err.message = "#{stage} stage. #{err.message}"
 
             log.error err.message
@@ -349,6 +342,7 @@ Determine the full module filename. Search for the module in the environment.
         var fileInfo = Environment.searchModule(importParameter, me.basePath, importingModule.fileInfo.dirname, me.options)
 
 Before compiling the module, check internal, and external cache
+
 Check Internal Cache: if it is already compiled, return cached Module node
 
         if me.moduleCache.hasOwnProperty(fileInfo.filename)
@@ -356,10 +350,7 @@ Check Internal Cache: if it is already compiled, return cached Module node
             me.recurseLevel-=1
             return me.moduleCache[fileInfo.filename]
 
-It isn't on internal cache, 
-then create a **new Module**.
-and then create a **new lexer** for the Module 
-(each module has its own lexer. There is one lexer per file)
+It isn't on internal cache, then create a **new Module**.
 
         var moduleNode = me.createNewModule(fileInfo)
 
@@ -394,6 +385,7 @@ if it is not a lite file, require the module, and get the exported vars
             Environment.externalCacheSave(fileInfo.outExportRequired)
 
         else
+
 Check External Cache:
 
 If the module is already compiled and cached in external cache (disk)
@@ -448,7 +440,6 @@ Get the produced code
         var resultLines = moduleNode.outCode.getResult()
 
 add to external cache (save to disk)
-Note: convert exports NameDeclarations to a simpler object structure for JSON & cache
 
         Environment.externalCacheSave(fileInfo.outFilename,resultLines)
 
@@ -468,35 +459,15 @@ and return the Module node
     #end importModule
 
 
-#### method startCompilation(mainModuleName)
-
-        declare valid me.options.outDir
-        declare valid me.options.debug
-
-        log.message "Base Path: #{me.basePath}"
-        log.message "Out Dir: #{me.options.outDir}"
-
-Import the main module. The main module will trigger import/require on the dependency tree
-
-        me.recurseLevel = 0
-        me.importModule(me, mainModuleName)
-
-
-        if me.errCount is 0
-            print "compilation OK"
-
-After importing mainModuleName, if no errors occurred, 
-mainModuleName and all its dependencies, will be compiled in 
-the output dir: './out/debug'
-
-      #end Project.startCompilation
-
-
 ### Public Function compileLines (filename, sourceLines, options)
 
-input: filename (for error reporting), LiteScript code: string array 
-output: moduleNode:Grammar.Module 
-compiled result is at: moduleNode.outCode.getResult() :string array
+input: 
+* filename (for error reporting), 
+* sourceLines: string array, LiteScript code.
+
+output: 
+* moduleNode:Grammar.Module 
+* compiled result is at: moduleNode.outCode.getResult() :string array
 
         var project = new Project('.', options or {} )
 
@@ -517,21 +488,26 @@ The compilation of the main module will trigger import and compilation of all it
 
 Create a 'Project' to hold the main module and dependent modules
 
+The main module is the root of the module dependency tree, and can reference
+another modules via import|require.
+
         var project = new Project(basePath,options)
 
-Now call `importModule` on the main module
-and store the result in me.main
+        declare valid me.options.outDir
 
-The main module is the root of the module dependency tree, and can reference
-another modules via import/require.
+        log.message "Base Path: #{basePath}"
+        log.message "Out Dir: #{options.outDir}"
 
-We 'import' the main module, which in turn will 'import' and 'compile' -if not cached-, 
+Import the main module. The main module will, in turn, 'import' and 'compile' -if not cached-, 
 all dependent modules.
 
-        project.startCompilation(mainModuleName)
+        me.importModule(me, mainModuleName)
 
-After project compilation, if no errors occurred, 
-mainModuleName and all its dependencies, will be compiled in 
+        if me.errCount is 0
+            print "compilation OK"
+
+After importing mainModuleName, if no errors occurred, 
+mainModuleName and all its dependencies will be compiled in 
 the output dir: './out/debug'
 
         return project
