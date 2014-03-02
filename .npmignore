@@ -1,0 +1,17 @@
+
+*.sublime-workspace
+.SyncID
+.SyncIgnore
+
+# This project
+
+/source/
+/devel/
+
+/old/
+*/old/
+
+/out/
+*/out/
+
+

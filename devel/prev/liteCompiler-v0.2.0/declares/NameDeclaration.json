@@ -1,0 +1,120 @@
+{
+  "required": [
+    "./ASTBase",
+    "./Grammar"
+  ],
+  "exported": [
+    {
+      "name": "prototype",
+      "members": [
+        {
+          "name": "constructor",
+          "members": [
+            {
+              "name": "name"
+            }
+          ],
+          "type": "NameDeclaration"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "members",
+          "members": [
+            {
+              "name": "hasOwnProperty"
+            }
+          ]
+        },
+        {
+          "name": "nodeDeclared",
+          "type": "ASTBase.prototype"
+        },
+        {
+          "name": "parent",
+          "type": "NameDeclaration.prototype"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "itemType"
+        },
+        {
+          "name": "converted"
+        },
+        {
+          "name": "value"
+        },
+        {
+          "name": "isForward"
+        },
+        {
+          "name": "isDummy"
+        },
+        {
+          "name": "setMember"
+        },
+        {
+          "name": "findOwnMember"
+        },
+        {
+          "name": "ownMember"
+        },
+        {
+          "name": "replaceForward"
+        },
+        {
+          "name": "makePointTo"
+        },
+        {
+          "name": "getMembersFromObjProperties"
+        },
+        {
+          "name": "positionText"
+        },
+        {
+          "name": "originalDeclarationPosition"
+        },
+        {
+          "name": "sayErr"
+        },
+        {
+          "name": "warn"
+        },
+        {
+          "name": "caseMismatch"
+        },
+        {
+          "name": "addMember"
+        },
+        {
+          "name": "toString"
+        },
+        {
+          "name": "info"
+        }
+      ]
+    },
+    {
+      "name": "allOfThem",
+      "members": [
+        {
+          "name": "push"
+        },
+        {
+          "name": "remove"
+        }
+      ],
+      "itemType": "NameDeclaration.prototype"
+    },
+    {
+      "name": "normalizePropName"
+    },
+    {
+      "name": "fixSpecialNames"
+    }
+  ]
+}

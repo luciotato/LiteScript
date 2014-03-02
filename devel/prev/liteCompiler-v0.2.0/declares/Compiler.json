@@ -1,0 +1,21 @@
+{
+  "required": [
+    "./ASTBase",
+    "./Grammar",
+    "./Lexer",
+    "./NameDeclaration",
+    "./Validate",
+    "./Environment",
+    "./Producer_js",
+    "./string-shims",
+    "./util"
+  ],
+  "exported": [
+    {
+      "name": "compileLines"
+    },
+    {
+      "name": "compile"
+    }
+  ]
+}

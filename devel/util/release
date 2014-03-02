@@ -1,0 +1,56 @@
+#!/bin/bash
+#This script will create at ../out
+#a release version of the LiteScript compiler, in order to
+#make the litescript compiler stable package for the npm repository
+
+echo release $1 $2 $3
+set -e
+
+VERSION=$1
+using=$2
+PREV=$3
+
+if [ "$2" = "" ]; then 
+    using=using
+    PREV=$VERSION #compile itself 
+fi
+
+if [ "$1" = "" -o "$using" != "using" -o "$PREV" = "" ]; then 
+    echo usage: ./release 0.6.0 [using x.y.z]
+    exit 1
+fi
+
+cwd=$(pwd) 
+out='out'
+
+#--------------------------------------
+# MAIN
+
+echo Release LiteScript ${VERSION} 
+echo -----------------------
+echo cwd: ${cwd}
+echo dest dir: ${out}
+
+mkdir -p ${out}
+
+#compile lite-cli (command line interface) v${VERSION} using ${PREV} version, w/o comments or mapsource
+node lite-js -use v${PREV} -noval -nomap -comments 0 -compile ../source-v${VERSION}/lite-cli -o ${out}/lib
+
+#compile main Compiler ${VERSION} using ${PREV} version, w/o comments or mapsource
+node lite-js -use v${PREV} -noval -nomap -comments 0 -compile ../source-v${VERSION}/Compiler -o ${out}/lib
+
+#test compiler at ${out}/lib
+node test -compiler-path ./${out}/lib
+
+#update package.json version
+node lite-js -use v${VERSION} -run update-package-json ${VERSION}
+
+#copy to out
+cp -u model.package.json ${out}/package.json
+
+#copy if newer, lite (#!/usr/bin/env node), calls lite-cli.js
+cp -u lite ${out}/lib/lite
+chmod 777 ${out}/lib/lite
+
+echo files created at: ${out}/
+

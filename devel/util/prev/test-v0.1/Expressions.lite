@@ -1,0 +1,331 @@
+Expression test
+---------------
+
+    var Tests = {
+
+      'arithmetic operators (+,-,*,/)':
+    
+        code: function
+
+            var x=5
+
+            return {
+                '8-.8' : 8 - 0.8
+                '10+1-7' : 10+1-7
+                '10/5': 10/5
+                '2*4': 2*4
+                'x isnt 5': x isnt 5
+                'x': x
+                }
+
+        expected: 
+                '8-.8': 7.2
+                '10+1-7' : 4
+                '10/5': 2
+                '2*4': 8
+                'x isnt 5': false
+                'x': 5
+        
+      'simple expressions':
+
+        code: function
+
+            var 
+                x=5
+                a=[0,1,2,3]
+                inx1 = 1
+                inx2 = 2
+
+            return {
+                '-8' : -8
+                '-.8' : -0.8
+                '++x' : ++x
+                '--x' : --x
+                'x++' : x++
+                'x--' : x--
+            }
+
+        expected: 
+                '-8' : -8
+                '-.8' : -0.8
+                '++x' : 6
+                '--x' : 5
+                'x++' : 5
+                'x--' : 6
+        
+
+      'simple expressions + accessors':
+
+        code: function
+
+            var 
+                x=5
+                a=[0,1,2,3]
+                inx1 = 1
+                inx2 = 2
+
+            return {
+                'a[0]++' : a[0]++
+                'a[0]--' : a[0]--
+                '++a[3]' : ++a[3]
+                '--a[2]' : --a[2]
+                '++a[++inx1]' : ++a[++inx1]
+                '--a[++inx2]' : --a[++inx2]
+                'x': x
+            }
+
+        expected: 
+                'a[0]++' : 0
+                'a[0]--' : 1
+                '++a[3]' : 4
+                '--a[2]' : 1
+                '++a[++inx1]' : 2
+                '--a[++inx2]' : 3
+                'x': 5
+
+      'logical operators (no, not, and, or, is, isnt)':
+
+        code: function
+
+            var emptyVar
+            var zero = 0
+            var one = 1
+
+            var result = {
+                'on and on': on and on
+                'on and off': on and off
+                'false and true' : false and true
+                'false and false' : false and false
+
+                'on or on' : false or false
+                'on or off' : on or off
+                'false or true' : false or true
+                'false or false' : false or false
+
+                'not true': not true
+                'not false': not false
+
+                'no emptyVar': no emptyVar
+                'no zero': no zero
+                'no one': no one
+
+                '2 is 2': 2 is 2
+                '3 is 1' : 3 is 1
+                '3 is "3"': 3 is "3"
+                '"3" is "3"': "3" is "3"
+
+                '2 isnt 2': 2 isnt 2
+                '3 isnt 1': 3 isnt 1
+                '3 isnt "3"': 3 isnt "3"
+                '"3" isnt "3"': "3" isnt "3"
+                }
+
+            return result
+
+        expected :
+            'on and on': on
+            'on and off': off
+            'false and true' : false 
+            'false and false' : false 
+
+            'on or on' : false
+            'on or off' : on
+            'false or true' :  true
+            'false or false' : false 
+
+            'not true': false
+            'not false': true
+
+            'no emptyVar': true
+            'no zero': true
+            'no one': false
+
+            '2 is 2': true
+            '3 is 1' : false
+            '3 is "3"': false
+            '"3" is "3"': true
+
+            '2 isnt 2': false
+            '3 isnt 1': true
+            '3 isnt "3"': true
+            '"3" isnt "3"': false
+
+
+      'parens':
+
+        code: function
+
+            var x,y,z,result=[]
+
+            x = 5 * (2 + 3)
+            result.push(x)
+
+            y = 5 * (2 + 3 * (4 + 5))
+            result.push(y)
+            z = (6)
+            result.push(z)
+
+            return result
+
+        expected: [25,145,6]
+
+
+      'operators precedence':
+
+        code: function
+
+            return  1 + 2 * 4 + 4 - 3 ^ 2 / 6
+
+        expected: 11.5
+
+      'property access and function call().property':
+
+        code: function
+
+            var w = {y:2,z:3,x:undefined}
+            
+            w.x = {a:5,b:6, c:undefined}
+            
+            w.x.c = function
+                        return {g:7,h:8}
+
+            return w.x.a + w.x.b + w.y + w.z + w.x.c().g + w.x.c().h
+
+        expected: 31
+
+
+      'is included boolean op':
+
+        code: function
+
+            var result=[]
+            var a = ['a','b','c','1',2,3]
+
+            result.push(2 in a)
+            result.push('a' in a)
+            result.push(3 in a)
+            result.push(7 in a)
+            result.push(1 in a)
+
+            result.push(2 not in a)
+            result.push('a' not in a)
+            result.push(3 not in a)
+            result.push(7 not in a)
+            result.push(1 not in a)
+
+            return result
+
+        expected: [true,true,true,false,false,
+                    false,false,false,true,true]
+
+
+      '`but` alias for "and" operator':
+
+        code: function
+
+            var
+                result=[]
+                a = true
+                b = true
+                c = false
+
+            result.push(a but b)
+            result.push(a but not c)
+            result.push(a but b but not c)
+            result.push(a but c)
+
+            return result
+
+        expected: [true,true,true,false]
+
+
+      'bitwise operators':
+
+        code: function
+
+            var
+                result=[]
+                a = 0x55
+                b = 0xaa
+                c = 0x01
+                d = 0x80
+
+            result.push(a|b)
+            result.push(a|d)
+            result.push(a&b)
+            result.push(a&c)
+            result.push(a^c)
+            result.push(~a)
+
+            return result
+
+        expected: [
+                0xff
+                0xd5
+                0x00
+                0x01
+                0x54
+                -0x55 -1
+                ]
+
+
+      'bit-shift operators':
+
+        code: function 
+            var x = 0x55
+            return [x << 1,
+                    x >> 1 ]
+                   
+        expected: [0xaa, 0x2a]
+
+
+      '`not in` syntax':
+
+        code: function
+
+            var 
+                result=[]
+                x = [1, 2, 3, 4]
+                s
+
+            result.push(5 not in x)  #true
+            result.push(2 not in x)  #false
+            result.push(1 in x but 7 not in x) #true
+            result.push(5 in x or 7 in x) #false
+            result.push(5 not in x and 7 not in x) #true
+            
+            if 5 > 3 and 10 not in x
+              s = true
+            else
+              s = false
+
+            result.push(s)
+
+            if 3 > 6 or 1 not in x
+              s = true
+            else
+              s = false
+
+            result.push(s)
+
+            result.push( 4 in x but not (7 in x or 10 in x)? 'correct':'incorrect' ) 
+            
+            return result
+
+        expected: [true,false,true,false,true, true,false ,'correct']
+
+
+
+      '"is not" as "isnt"':
+
+        code: function
+            var x = 3
+            return [
+                x is not 3 #.should.be.false
+                x is not 4 #.should.be.true
+                true is not 5  # this case would fail if we compile this as `true is (not 5)`.
+                ]
+
+        expected: [false,true,true]
+
+    }

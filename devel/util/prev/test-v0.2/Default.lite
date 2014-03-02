@@ -1,0 +1,130 @@
+Default Constrcut Tests
+-----------------------
+
+    function aFn(x,y, options)
+
+      default options =
+          num1 : 5
+          num2 : 0
+          string1: "xx"
+          string2: ""
+          func: aFn
+          bool1: true
+          bool2: false
+
+      return options
+
+
+    function multiLevel(options)
+
+      default options =
+          num : 
+            nonZero:5
+            zero : 0
+          stringValue:
+            withData: "xx"
+            empty: ""
+          func: 
+            name:
+              display: "the Function"
+              internal: "fn"
+          more: {}
+
+      return options
+
+    var Tests = 
+
+      'missing options parameter':
+
+        code: function
+
+            var options = aFn(10,20)
+
+            expect options.num1, 5
+            expect options.num2, 0
+            expect options.string1, "xx"
+            expect options.string2, ""
+            expect options.func is aFn, true
+            expect options.bool1, true
+            expect options.bool2, false
+
+      'change num & bool':
+
+        code: function
+
+            var options = aFn(10,20,{num1:11, bool1:false})
+
+            expect options.num1, 11
+            expect options.num2, 0
+            expect options.string1, "xx"
+            expect options.string2, ""
+            expect options.func is aFn, true
+            expect options.bool1, false
+            expect options.bool2, false
+
+      'change num from zero, undeclared param and func:null':
+
+        code: function
+
+            var options = aFn (10,20,{
+                                  num1:21
+                                  num2:7
+                                  string1:false
+                                  other:/./
+                                  func: null
+                                })
+
+            expect options.num1, 21
+            expect options.num2, 7
+            expect options.string1, false
+            expect options.string2, ""
+            expect options.func, null
+            expect options.bool1, true
+            expect options.bool2, false
+            expect options.other, /./
+
+      'multilevel- empty':
+
+        code: function
+
+            var options = multiLevel()
+
+            expect options.num.nonZero, 5
+            expect options.num.zero, 0
+            expect options.stringValue.withData, "xx"
+            expect options.stringValue.empty, ""
+            expect options.func.name.display, "the Function"
+            expect options.func.name.internal, "fn"
+
+      'multilevel':
+
+        code: function
+
+            var options = multiLevel({
+                                  num:
+                                    nonZero:0
+                                    zero:5
+                                  func: 
+                                    name: 
+                                      display:"myFunc", internal:"mf"
+                                    filter:/./
+                                  more:
+                                    more1:1
+                                    more2:"data"
+                                  unexpected:
+                                    l1:
+                                      l2:
+                                        l3:0
+                                })
+
+            expect options.num.nonZero, 0
+            expect options.num.zero, 5
+            expect options.stringValue.withData, "xx"
+            expect options.stringValue.empty, ""
+            expect options.func.name.display, "myFunc"
+            expect options.func.name.internal, "mf"
+            expect options.func.filter, /./
+            expect options.more.more1, 1
+            expect options.more.more2, "data"
+            expect options.unexpected.l1.l2.l3, 0
+

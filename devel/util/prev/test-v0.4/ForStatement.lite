@@ -1,0 +1,320 @@
+For Statement
+-------------
+
+    declare global expect
+
+    var Tests = {
+
+      'for each item in iterable':
+
+        code: function
+
+          var i = 0
+          var iterable = ['this','is','a','test']
+          var out_s = ''
+          for each item in iterable
+            out_s += item + " "
+            i += 1
+         
+          return [out_s,i]
+
+        expected: ["this is a test ",4]
+
+
+      'should not execute if the iterable is empty':
+
+        code: function
+
+          var result = []
+          result.push(1)
+
+          for each x in []
+            result.push('should not')
+          
+          result.push(2)
+
+          return result
+
+        expected: [1,2]
+
+
+      'for loop var scope inside function':
+
+        code: function
+
+          var j = 1
+
+          function x()
+
+              var z,s=""
+
+              for each k in [1,2,3,4]
+                s += "#{k}-"
+                z = 1
+
+              for each item in [1,2,3,4,5,6]  // should throw error duplicate var
+                z++
+
+              expect s, "1-2-3-4-"
+
+              return z
+
+          end function
+
+          expect x(), 7
+          expect j, 1
+
+
+      'expression as iterable':
+
+        code:function 
+
+          var 
+            s = "a,b,c,def"
+            t = ','
+            y = ''
+
+          for each part in s.split(t)
+            y += part
+          
+          return y
+
+        expected: "abcdef"
+
+
+      'for each property in object':
+
+        code: function
+
+          var i = 0
+
+          var obj = {'this':1,'is':2,'a':3,'test':4}
+
+          var out_s = ''
+
+          for each property k in obj
+            out_s += "#{k}."
+            i += obj[k]
+          end for
+
+          return [out_s,i]
+
+        expected: ["this.is.a.test.", 1+2+3+4 ]
+
+
+      'for each own property in Object':
+
+        code: function
+
+          class A 
+            properties
+              aProp = 10
+
+          class B
+            properties
+              bProp = 20
+
+          var obj = new B
+          append to object obj
+            properties ownProp1 = 1, ownProp2 = 2
+
+          var out_s = ''
+          for each property k in obj
+            out_s += "#{k},"
+
+          end for
+
+          var out_own = ''
+          for each own property k in obj
+            out_own += "#{k},"
+          end for
+
+          return [out_s,out_own]
+
+        expected: ["ownProp1,ownProp2,bProp,", "ownProp1,ownProp2," ]
+
+
+      'for each property,value in object':
+
+        code: function
+
+          var i = 0
+
+          var obj = {'this':1,'is':2,'a':3,'test':4}
+
+          var out_s = ''
+
+          for each property k,v in obj
+            out_s += "#{k}:#{v}."
+            i += obj[k]
+          end for
+
+          return [out_s,i]
+
+        expected: ["this:1.is:2.a:3.test:4.", 1+2+3+4 ]
+
+
+      'for each own property,value in Object':
+
+        code: function
+
+          class Av 
+            properties
+              aProp = 10
+
+          class Bv extends Av
+            properties
+              bProp = 20
+
+          var obj = new Bv
+          append to object obj
+            properties ownProp1 = 1, ownProp2 = 2
+
+          var out_s = ''
+          for each property k,value in obj
+            out_s += "#{k}:#{value},"
+
+          end for
+
+          var out_own = ''
+          for each own property k,v in obj
+            out_own += "#{k}:#{v},"
+          end for
+
+          return [out_s,out_own]
+
+        expected: ["ownProp1:1,ownProp2:2,bProp:20,aProp:10,", "ownProp1:1,ownProp2:2," ]
+
+
+      'for each own property in Array':
+
+        code: function
+
+          var i = 0
+
+          var obj = ["a","b","c"]
+          Array.prototype.foo = "Z"
+
+          var out_s = ''
+          for each property k in obj
+            out_s += "#{k}."
+
+          end for
+
+          var out_own = ''
+          for each own property k in obj
+            out_own += "#{k}."
+          end for
+
+          delete Array.prototype.foo
+
+          return [out_s,out_own]
+
+        expected: ["0.1.2.foo.", "0.1.2." ]
+
+
+      'for i=0; while i<10':
+
+        code: function
+
+          var 
+            iterable = ['this','is'
+                          ,'a','test']
+            out_s = ''
+            sum = 0
+
+          for i=0 while i<iterable.length
+            out_s += "#{iterable[i]}-"
+            sum += i+1
+          end for
+
+          return [out_s, sum]
+
+        expected: ["this-is-a-test-", 1+2+3+4 ]
+
+
+      'for i=0; until i<10':
+
+        code: function
+
+          var 
+            iterable = ['this','is'
+                          ,'a','test']
+            out_s = ''
+            sum = 0
+            last
+
+          for i=0, until i is iterable.length
+            out_s += "#{iterable[i]}-"
+            sum += i+1
+            last = i
+          end for
+          
+          return [out_s, sum, last]
+
+        expected: ["this-is-a-test-", 1+2+3+4, 3 ]
+
+      'for i=0; until i is 10; i+=2':
+
+        code: function
+
+          var 
+            iterable = ['this','is','a','test']
+            out_s = ''
+            sum = 0
+            last_index 
+
+          for i=0, while i < iterable.length, i+=2
+            out_s += "#{iterable[i]}-"
+            sum += i+1
+            last_index = i
+
+          return [out_s, last_index]
+
+        expected: ["this-a-", 2 ]
+
+      'for i=0 to 10':
+
+        code: function
+
+          var 
+            iterable = ['this','is','a','test']
+            out_s = ''
+            sum = 0
+            last_index 
+
+          for i=0 to iterable.length-1
+            out_s += "#{iterable[i]}-"
+            sum += i+1
+            last_index = i
+          end for
+
+          return [out_s,sum, last_index]
+
+        expected: ["this-is-a-test-", 1+2+3+4, 3 ]
+
+
+      'break':
+
+        code: function
+
+          var 
+            iterable = ['this','is','a','test']
+            out_s = ''
+            sum = 0
+            last_index
+
+          for i=0 to 100
+
+            sum += i
+            if i is iterable.length then break
+            out_s += "#{iterable[i]}-"
+            last_index = i
+            
+          end for
+
+          return [out_s,sum, last_index]
+
+        expected: ["this-is-a-test-", 1+2+3+4, 3 ]
+
+    }

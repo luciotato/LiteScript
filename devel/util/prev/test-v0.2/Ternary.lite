@@ -1,0 +1,33 @@
+Ternary Expression test
+-----------------------
+
+    var Tests = {
+
+      'basic - true-value:else-value':
+
+        code: function
+          
+          var a = 4
+
+          return [ a is 4? 'yes':'no', a is 5? 'yes':'no' ]
+
+        expected: ['yes', 'no' ]
+
+
+      'composed':
+
+        code: function
+          
+          var 
+            a = 4
+
+          return [ 
+            a > 0 and a<10? a is 5? 'yes,5!' : a is 4? 'yes 4!':'not 4' : 'not in 1..9' 
+            a > 10 and a<0? a is 5? 'yes,5!' : a is 4? 'yes 4!':'not 4' : 'last option'
+            a > 0 and a<10? a is 5? 'yes 5!':'not 5' : 'not in 1..9' 
+            ]
+
+        expected: ['yes 4!', 'last option', 'not 5']
+
+    }
+    

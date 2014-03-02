@@ -1,0 +1,495 @@
+Classes: .x -> this.x
+---------------------
+
+    declare global expect #provided by test framework
+
+    var Tests = 
+
+      'function return array type':
+
+        code: function
+
+          function test() returns string array
+            return ['item','item']
+
+          #the following should compile without warnings
+
+          var fnResult = test()
+
+          expect fnResult.length, 2
+
+          expect fnResult[0].length, 4
+
+          expect fnResult,['item','item']
+
+
+      'dot this as parameters':
+
+        code: function
+
+          function params()
+            return Array.prototype.slice.call(arguments)
+
+          class First 
+
+            properties
+              val: number = -1
+
+            constructor(val)
+              .val = val
+
+            method getVal()
+              return .val
+
+
+          class Child extends First
+
+            method info
+              return .constructor.name
+
+            method add(number)
+              .val += number
+
+            method getVal
+              return super.getVal.call(this)+10 # OK
+
+          end class
+
+          class GrandChild extends Child
+
+            method newThing(a)
+              return a
+
+            method dotAsParam()
+              params .val,.val+.val,2*.val
+              return params(.val,.val+.val,2*.val)
+
+          end class
+
+
+          var f
+          if no f, f=undefined;
+          f = new First(10)
+
+          expect f.val, 10
+          expect f.constructor.name, 'First'
+
+          var c = new Child(5)
+
+          expect c.getVal(), 15
+
+          expect c.val, 5
+          expect c.constructor.prototype.val, -1
+          expect c.constructor.name, 'Child'
+          expect c.info(), 'Child'
+
+          c.add 2
+          expect c.val, 7
+
+          var gc = new GrandChild(3)
+          expect gc.val, 3
+
+          #gc.other()   #this line, if uncommented, should generate a UNDECLARED MEMBER compiler error
+
+          gc.add 2
+
+          expect c.val, 7
+          expect gc.val, 5
+
+          expect gc.dotAsParam(), [5,10,10]
+
+      'class definition and instantiation':
+
+        code: function
+
+            class SomeClass
+
+              properties
+                val: string
+
+              constructor(val)
+                this.val = val
+
+              method getVal()
+                return 'value is #this.val'
+
+              method toString()
+                return "-SomeClass instance, #{.getVal()}-"
+
+            end class
+
+
+            append to class SomeClass
+
+              properties
+                  title: string = 'title of SomeClass'
+                  version: string = '0.1.0'
+                  major = 0
+                  minor = 0
+                  release = 0
+
+              method goodFn
+                return this.title
+
+              method badFn
+                //if no this.val // should emit compiler error: 'Use of undeclared name'
+                  do nothing 
+                //return 7
+
+            end extend namespace
+
+
+            var util = 
+
+              NL : '\n'
+              
+              isObjEmpty: function (obj) 
+
+                  // falsey
+                  if no obj then return true
+
+                  declare valid obj.length
+                  // if there is a 'length' property and is > 0, then is not empty
+                  if obj.length > 0, return false
+                  // if the property exists and is 0 => is empty (we trust 'length')
+                  if obj.length is 0, return true
+
+                  // Otherwise, does it have any properties of its own?
+                  for each own property key in obj
+                      return false
+
+                  return true
+            
+Declare isNumeric as String.checkNumeric("1234")
+
+            append to object String
+
+              shim method checkNumeric(x)
+                  return not isNaN(parseFloat(x)) and isFinite(x)
+
+            end extend String
+
+Declare isNumeric as "1234".isNumeric() (add to String.prototype)
+
+            append to class String
+
+              // isNumeric()
+              // http://stackoverflow.com/questions/18082/validate-numbers-in-javascript-isnumeric
+
+              shim method isNumeric(x)
+                  return not isNaN(parseFloat(x)) and isFinite(x)
+
+            end extend String
+
+
+            append to object util
+
+              properties
+                chars = {
+                    NL: '\n'
+                    CR: '\r'
+                    TAB: '\t'
+                  }
+
+              method splitLines(text:string)
+                return text.split(.chars.NL)
+
+            end extend
+
+
+            var 
+              c1 = new SomeClass(6)
+              c2 = new SomeClass(7)
+            
+            expect c1.val , 6
+            expect c1.toString(), "-SomeClass instance, value is 6-"
+
+            expect c2.val, 7
+            expect c2.getVal(), 'value is 7'
+
+            expect SomeClass.prototype.goodFn() , "title of SomeClass"
+
+            /*
+            try 
+              c1.goodFn() //error
+            catch error
+              global.result.push "c1.goodFn()-> shared, error"
+
+            global.expected.push "c1.goodFn()-> shared, error"
+            */
+
+
+
+
+      'should support the instance of operator':
+
+        code: function
+
+          class ClassA
+            method x
+              return 1
+
+          class ClassB
+            method x
+              return 2
+
+          class ClassA1 extends ClassA
+            method y
+              return 11
+
+          class ClassA2 extends ClassA
+            method x
+              return 12
+          
+          class ClassB1 extends ClassB
+            method z
+              return 21
+          
+          var
+            a = new ClassA
+            a1 = new ClassA1
+            c = new ClassA2
+            b = new ClassB1
+          
+          expect a instanceof ClassA , true
+          expect a1 instanceof ClassA , true
+          expect a instance of ClassB , false
+          expect c instance of ClassB , false
+          expect c isnt instance of ClassA , false
+          expect b is not instance of ClassB , false
+
+          expect b is not instance of ClassA , true
+          expect b isnt instance of ClassA , true
+          expect not b instance of ClassA , true
+
+          #weird combinations
+          expect no b instance of ClassA , true
+          expect no b instanceof ClassA , true
+          expect no b isnt instance of ClassA , false
+
+          function checkIsProto(x,y)
+            if x is instance of y then return 1 
+            return 2
+
+          expect checkIsProto(a,ClassA), 1
+          expect checkIsProto(a,ClassB), 2
+
+          var n = 1
+
+          if a instance of ClassB then n = 2 
+          expect n, 1
+
+          if b is instance of ClassB then n = 3 
+          expect n, 3
+
+
+      'access super class protoype values':
+
+        code: function
+
+          class ClassX
+
+            properties a=1,b=2,c=3
+
+            constructor(a1,b1,c1)
+              this.a = a1? a1 : 99 
+              this.b = b1
+              this.c = c1
+
+            method info
+              return 'on ClassX, c is #{this.c}'
+
+          class ClassY extends ClassX
+            constructor(a1,b1)
+              this.a = a1
+              this.b = b1
+              this.c = 10
+
+            method info
+              return 'on ClassY, c is #{this.c}'
+
+            method superPrototype()
+              return super
+
+            method superProp(name)
+              return super[name]
+
+          class ClassZ extends ClassY
+            constructor(z1)
+              this.c = z1
+
+            method info
+              return 'on ClassZ, c is #{this.c}'
+
+            method superProp(name)
+              return super[name]
+
+            method superPrototype()
+              return super
+
+          var x,y,z
+
+          x = new ClassX(4, 5, 6)
+          y = new ClassY(8, 9)
+          z = new ClassZ(12)
+
+          expect x.a, 4
+          expect x.b, 5
+          expect x.c, 6
+          expect x.info(), 'on ClassX, c is 6'
+
+          expect y.a, 8
+          expect y.b, 9
+          expect y.c, 10
+          expect y.info(), 'on ClassY, c is 10'
+
+          expect z.a, 1
+          expect z.b, 2
+          expect z.c, 12
+          expect z.info(), 'on ClassZ, c is 12'
+
+          expect x.constructor.name, 'ClassX'
+          expect x.constructor.prototype.a, 1
+          expect x.constructor.prototype.b, 2
+          expect x.constructor.prototype.c, 3
+
+          expect y.constructor.name, 'ClassY'
+          expect y.superPrototype().info(), 'on ClassX, c is 3'
+          expect y.superPrototype().info.apply(y), 'on ClassX, c is 10'
+          expect y.superProp("a"), 1
+          expect y.superProp("b"), 2
+          expect y.superProp("c"), 3
+
+          expect z.constructor.name, 'ClassZ'
+          expect z.superPrototype().info(), 'on ClassY, c is 3'
+          expect z.superPrototype().info.apply(z), 'on ClassY, c is 12'
+          expect z.superProp("a"), 1
+          expect z.superProp("b"), 2
+          expect z.superProp("c"), 3
+
+
+      'call super class methods':
+
+        code: function
+
+          class ClassXS
+
+            properties c=1
+
+            constructor(c)
+              this.c = c
+
+            method info
+              return 'on XS,c=#{this.c}'
+
+          class ClassYS extends ClassXS
+            constructor(c)
+              super.constructor.apply(this,arguments)
+
+            method info
+              return "super: #{super.info.call(this)}, this: on YS,c=#{this.c}"
+
+          class ClassZS extends ClassYS
+            constructor(c)
+              super.constructor.apply(this,arguments)
+
+            method info
+              return "super: #{super.info.call(this)}, this: on ZS,c=#{this.c}"
+
+          var x,y,z
+
+          x = new ClassXS(1)
+          y = new ClassYS(2)
+          z = new ClassZS(3)
+
+          expect x.constructor.name, 'ClassXS'
+          expect y.constructor.name, 'ClassYS'
+          expect z.constructor.name, 'ClassZS'
+
+          expect x.c, 1
+          expect x.info(), 'on XS,c=1'
+
+          expect y.c, 2
+          expect y.info(), 'super: on XS,c=2, this: on YS,c=2'
+
+          expect z.c, 3
+          expect z.info(), 'super: super: on XS,c=3, this: on YS,c=3, this: on ZS,c=3'
+
+
+      'append to class':
+
+        code: function
+
+          class Class1
+
+            properties
+              x 
+
+            constructor()
+              .x = 1
+
+            method thing()
+              return .x
+
+          class Class2 extends Class1
+            constructor()
+              this.x = 2
+
+          append to class Class1
+            method p(a) 
+              this.x = a
+
+          var a = new Class1()
+          var b = new Class2()
+          expect a.thing(), 1
+          expect a.x, 1
+          expect b.thing(), 2
+          a.p(7)
+          b.p(8)
+          expect a.thing(), 7
+          expect b.thing(), 8
+
+      'append to object':
+
+        code: function
+
+          var obj = 
+
+              someValue: 10
+
+              aFunction: function
+                  return this.someValue
+
+          expect obj.aFunction(), 10
+
+          append to object obj
+
+            method anotherFn
+                  return this.someValue+1
+
+          expect obj.anotherFn(), 11
+
+      'function in class':
+
+        code: function
+
+          class Bad
+
+            properties
+              val: number = -1
+
+            constructor(val)
+              .val = val
+
+            method getVal()
+              return .val
+
+
+          append to class Bad
+            method other
+              return .val+10
+
+          var f = new Bad(10)
+          expect f.val, 10
+          expect f.getVal(), 10
+          expect f.other(), 20

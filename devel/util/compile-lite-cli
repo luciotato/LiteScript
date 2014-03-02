@@ -1,0 +1,32 @@
+#!/bin/bash
+#This script will create at ../out
+#a release version of the LiteScript compiler, in order to
+#make the litescript compiler stable package for the npm repository
+
+#set -e
+
+VERSION=0.6.0
+using=using
+PREV=0.6.0
+
+if [ ! "$using" = "using" ]; then 
+    echo usage: ./release 0.6.0 using 0.5.0
+    exit 1
+fi
+
+cwd=$(pwd) 
+out='out'
+
+#--------------------------------------
+# MAIN
+
+echo Release LiteScript ${VERSION} 
+echo -----------------------
+echo cwd: ${cwd}
+echo dest dir: ${out}
+
+mkdir -p ${out}
+
+#compile lite-cli (command line interface) v${VERSION} using ${PREV} version, w/o comments or mapsource
+#node --debug-brk lite-js -use v${PREV} -noval -nomap -comments 1 -compile ../source-v${VERSION}/lite-cli -o ${out}/lib
+node lite-js -use v${PREV} -noval -nomap -comments 0 -compile ../source-v${VERSION}/lite-cli -o ${out}/lib

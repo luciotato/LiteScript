@@ -1,0 +1,334 @@
+For Statement
+-------------
+
+    declare global expect
+
+    var Tests = 
+
+      'for each item in iterable':
+
+        code: function
+
+          var i = 0
+          var iterable: string array = ['this','is','a','test']
+          var out_s = ''
+          for each item in iterable where item.length<=2
+            out_s += item + " "
+            i += 1
+         
+          return [out_s,i]
+
+        expected: ["is a ",2]
+
+
+      'should not execute if where is always false':
+
+        code: function
+
+          var result = []
+          result.push(1)
+
+          for each x in [1,2,3,4,5] where x>5
+            result.push('should not')
+          
+          result.push(2)
+
+          return result
+
+        expected: [1,2]
+
+
+      'for loop var scope inside function':
+
+        code: function
+
+          var j = 1
+
+          function x()
+
+              var z=7,s=""
+
+              for each k in [1,2,3,4] where k+2 into var l < 6
+                s += "#{l}-"
+
+              expect s, "3-4-5-"
+
+              return z
+
+          end function
+
+          expect x(), 7
+          expect j, 1
+
+
+      'expression as iterable':
+
+        code:function 
+
+          var 
+            s = "a,b,c,def"
+            t = ','
+            y = ''
+
+          for each index,char in s.split(t) where index<3
+            y += char
+          
+          return y
+
+        expected: "abc"
+
+
+      'for each property in object':
+
+        code: function
+
+          var i = 0
+
+          var obj = {'this':1,'is':2,'a':3,'test':4}
+
+          var out_s = ''
+
+          for each property k in obj where k.length is 2 or k.length is 4
+            out_s += "#{k}."
+            i += obj[k]
+          end for
+
+          return [out_s,i]
+
+        expected: ["this.is.test.", 1+2+4 ]
+
+
+      'for each own property in Object':
+
+        code: function
+
+          class A 
+            properties
+              aProp = 10
+
+          class B
+            properties
+              bProp1 = 20
+
+          var obj = new B
+          append to object obj
+            properties ownProp1 = 1, ownProp2 = 2
+
+          var out_s = ''
+          for each property k in obj where k like /1/
+            out_s += "#{k},"
+
+          end for
+
+          var out_own = ''
+          for each own property k in obj where k like /1/
+            out_own += "#{k},"
+          end for
+
+          return [out_s,out_own]
+
+        expected: ["ownProp1,bProp1,", "ownProp1," ]
+
+
+      'for each property prop,value in object':
+
+        code: function
+
+          var i = 0
+
+          var obj = {p:'this',s:'is',t:'a',c:'test'}
+
+          var result = []
+
+          for each property propName,value:string in obj 
+                where value.length is 2 or value.length is 4
+            
+            result.push "#{propName}:#{value}"
+
+          end for
+
+          expect result.join(", "), "p:this, s:is, c:test"
+
+
+      'for each *own* property prop,value in Object':
+
+        code: function
+
+          class Av
+            properties
+              aProp = 10
+
+          class Bv extends Av
+            properties
+              bProp1 = 20
+
+          var obj = new Bv
+          append to object obj
+            properties ownProp1 = 1, ownProp2 = 2
+
+          var out_s = ''
+          for each property k,v in obj where k like /1/
+            out_s += "#{k}:#{v},"
+
+          end for
+
+          var out_own = ''
+          for each own property k,v in obj where v>1
+            out_own += "#{k}:#{v},"
+          end for
+
+          return [out_s,out_own]
+
+        expected: ["ownProp1:1,bProp1:20,", "ownProp2:2," ]
+
+
+      'for each own property in Array':
+
+        code: function
+
+          var i = 0
+
+          var obj = ["a","b","c"]
+          Array.prototype.foo = "Z"
+
+          var out_s = ''
+          for each property propName in obj where not propName like /2/
+            out_s += "#{propName}."
+
+          end for
+
+          var out_own = ''
+          for each own property propName in obj where not propName like /2/
+            out_own += "#{propName}."
+          end for
+
+          delete Array.prototype.foo
+
+          return [out_s,out_own]
+
+        expected: ["0.1.foo.", "0.1." ]
+
+
+      'for i=0 while i<10 where i%2 is 0':
+
+        code: function
+
+          var 
+            iterable = ['this','is'
+                          ,'a','test']
+            out_s = ''
+            sum = 0
+
+          for i=0 while i<iterable.length, where i%2 is 0
+            out_s += "#{iterable[i]}-"
+            sum += i+1
+          end for
+
+          return [out_s, sum]
+
+        expected: ["this-a-", 1+3 ]
+
+
+      'for i=0, until i<10, where i no in [3,7]':
+
+        code: function
+
+          var 
+            iterable = ['this','is'
+                          ,'a','test']
+            out_s = ''
+            sum = 0
+            last
+
+          for i=0, until i is iterable.length, where i not in [3,7]
+            out_s += "#{iterable[i]}-"
+            sum += i+1
+            last = i
+          end for
+          
+          return [out_s, sum, last]
+
+        expected: ["this-is-a-", 1+2+3, 2 ]
+
+      'for i=0 until i is 10, where i not in [2,7], i+=2':
+
+        code: function
+
+          var 
+            iterable = ['this','is','a','test','five']
+            out_s = ''
+            sum = 0
+            last_index 
+
+          for i=0, while i < iterable.length, where i not in [2,7], i+=2 
+            out_s += "#{iterable[i]}-"
+            sum += i+1
+            last_index = i
+
+          return [out_s, last_index]
+
+        expected: ["this-five-", 4 ]
+
+      'for i=0 to 10 where i isnt 2':
+
+        code: function
+
+          var 
+            iterable = ['this','is','a','test']
+            out_s = ''
+            sum = 0
+            last_index 
+
+          for i=0 to iterable.length-1 where i isnt 2
+            out_s += "#{iterable[i]}-"
+            sum += i
+            last_index = i
+          end for
+
+          return [out_s,sum, last_index]
+
+        expected: ["this-is-test-", 0+1+3, 3 ]
+
+
+      'break':
+
+        code: function
+
+          var 
+            iterable = ['this','is','a','test']
+            out_s = ''
+            sum = 0
+            last_index
+
+          for i=0 to 100 where i isnt 2
+
+            sum += i
+
+            if i is iterable.length, break
+
+            out_s += "#{iterable[i]}-"
+            last_index = i
+            
+          end for
+
+          return [out_s,sum, last_index]
+
+        expected: ["this-is-test-", 1+3+4, 3 ]
+
+      'into assignment-expression for, with where':
+    
+        code: function
+
+          var result = []
+          var source = ['this','is','a','test']
+
+          function getValue(i)
+            return source[i]
+
+          for inx=3, while getValue(inx) into var data, where data isnt 'a', inx--
+            result.push data
+
+          return result
+
+        expected: ['test','is','this']
+

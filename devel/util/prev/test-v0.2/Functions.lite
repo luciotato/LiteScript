@@ -1,0 +1,95 @@
+Functions Tests
+---------------
+
+/*
+    'support function calls with optional parentheses', ->
+    calls = 0
+    function a(x)
+      calls += 1
+      x.should.equal 6
+    function b(y)
+      calls += 1
+      require('should').exist y
+    a 6
+    g = 6
+    a g
+    b /ra/
+    h = [a,b]
+    h[0] 6
+    h[1] /rox/
+    calls.should.equal 5
+*/
+
+    var Tests = {
+
+      'internal function':
+
+        code: function
+
+            var result=[]
+
+            function aFn(x,y=2,z=3)
+              return x + y - z
+
+            result.push ( aFn(1, 5, 2) ) // return 4
+            
+            result.push ( aFn(1, 5) ) // should.equal 3
+
+            result.push ( aFn(1) ) // should.equal 0
+            
+            result.push ( aFn(1,0,0) ) // should.equal 1
+
+            result.push ( isNaN(aFn()) ) // .should.be.true
+
+            return result
+
+        expected: [4,3,0,1,true]
+
+      'default arguments':
+
+        code: function
+
+            var result=[]
+
+            var default_args = function(x,y=2,z=3)
+              return x + y - z
+
+            result.push ( default_args(1, 5, 2) ) // return 4
+            
+            result.push ( default_args(1, 5) ) // should.equal 3
+
+            result.push ( default_args(1) ) // should.equal 0
+            
+            result.push ( isNaN(default_args()) ) // .should.be.true
+
+            return result
+
+        expected: [4,3,0,true]
+
+      'parameters as indented block':
+
+        code: function
+
+            var result=[]
+
+            function aFn(
+                      x      // the first parameter
+                      y = 2  // the second, with a default
+                      z = 3  // the third
+                      )
+                return x + y - z
+
+            result.push ( 
+              aFn(
+                1 # <- x
+                5 # <- y
+                2 # <- z
+                )
+              ) // should return 4
+            
+            return result
+
+        expected: [4]
+
+    }
+

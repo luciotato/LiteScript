@@ -1,0 +1,130 @@
+Assignment Statement
+--------------------
+
+    declare global expect
+
+    var Tests = 
+
+      'assign a value to an identifier':
+
+        code: function()
+          var a = 1
+          return a
+
+        expected: 1
+        
+
+      'allow access to node globals':
+    
+        code: function()
+          return process.title
+          
+        expected: 'node'
+
+      'allow assignment of functions to variables':
+    
+        code: function()
+
+          var f,g
+          f = function(a,b)
+            return a + b
+          g = function (a,b)
+            return a * b
+    
+          return [f(2,3),g(5,10)]
+
+        expected: [5,50]
+
+      'support compound assignment operators':
+
+        code: function
+
+          var result=[],i
+
+          i = 5
+          i += 1
+          result.push(i)
+
+          i -= 2
+          result.push(i)
+
+          i *= 3
+          result.push(i)
+    
+          i = i % 5
+          result.push(i)
+          
+          i /= 2
+          result.push(i)
+
+          return result
+
+        expected: [6,4,12,2,1]
+        
+
+      'into assignment-expression':
+    
+        code: function
+
+          var result = []
+          var source = ['this','is','a','test']
+          var inx = source.length
+
+          function getValue(x)
+            return source[--inx]
+
+          function test(x,y)
+            result.push x; result.push y
+
+          while getValue() into var data
+            result.push data
+
+          inx = 4
+          if getValue() into var selected and getValue() into var another
+              result.push selected
+              result.push another
+
+          if selected, test 1,2 
+            
+          return result
+
+        expected: ['test','a','is','this','test','a',1,2]
+
+
+      'if into assignment-expression':
+
+        code: function
+
+          var result = []
+
+          if 3+4 into var a > 5
+              result.push a
+
+          if 3+7 into a and 4*4/2 into var b
+              result.push a
+              result.push b
+
+          return result
+
+        expected: [7, 10, 8]
+
+
+      'into assignment-expression for':
+    
+        code: function
+
+          var result = []
+          var source = ['this','is','a','test']
+
+          function getValue(i)
+            return source[i]
+
+          for inx=3, while getValue(inx) into var data, inx--
+            result.push data
+
+          return result
+
+        expected: ['test','a', 'is','this']
+
+
+    

@@ -1,0 +1,32 @@
+{
+  "name": "litescript",
+  "version": "0.6.0",
+  "description": "LiteScript is a highly readable language that compiles to javascript",
+  "keywords": ["alt-js", "language", "simple", "PEG", "compiler"],
+  "author": {
+    "name": "Lucio M. Tato",
+    "email": "luciotato@gmail.com",
+    "url": "http://github.com/luciotato"
+  },
+  "homepage": "http://github.com/luciotato/litescript",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/luciotato/litescript.git"
+  },
+  "bugs": "http://github.com/luciotato/litescript/issues",
+  "license": "MIT",
+  "engines": [
+    "node >= 0.8.0"
+  ],
+  "scripts": {
+    "test": "cd util;node test"
+  },
+  "directories" : {
+    "lib" : "./lib"
+  },
+  "main": "./lib/Compiler.js",
+  "bin": {
+      "lite": "./lib/lite"
+  },
+  "preferGlobal": true
+}

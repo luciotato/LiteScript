@@ -1,0 +1,15 @@
+compiler validation
+--------------------
+
+    var Tests = 
+
+      'assign a value to an identifier':
+
+        code: function()
+          
+          var a = 1
+          if a is NL, a = 0
+          return a
+
+        expected: 1
+        

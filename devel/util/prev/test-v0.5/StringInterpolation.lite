@@ -1,0 +1,83 @@
+String Interpolation
+--------------------
+
+	declare global expect
+
+	var Tests = 
+
+
+		'simple expresion':
+
+			code: function
+
+				var item = 'some'
+				expect "#{item}", "some"
+
+
+		'two expressions':
+
+			code: function
+
+				var a = 'cow'
+				var b = 'moo'
+
+				return 'the #{a} says #{b}!'
+
+			expected: "the cow says moo!"
+
+	
+		'two expresions':
+
+			code: function
+
+				var item = 'some'
+
+				return "#{4} #{4-1} #{4-2} #{4-3}"
+
+			expected: "4 3 2 1"
+
+
+		'complex numeric and functions':
+
+			code: function
+
+				var item = 'this is a test'
+
+				return '#{1} #{256>>7} #{item.split(" ").length-1}'
+
+			expected: "1 2 3"
+
+		'complex 1':
+
+			code: function
+
+				var item = 'this|is|a|test'
+
+				return 'item is "#{item}", and item.split("|") is #{JSON.stringify(item.split("|"))}'
+
+			expected: 'item is "this|is|a|test", and item.split("|") is ["this","is","a","test"]'
+
+
+		'complex 2':
+
+			code: function
+
+				var item = 'this is a test'
+
+				return '"#{item}" has #{item.split(" ").length} words. Words (sorted) are: #{JSON.stringify(item.split(" ").sort())}'
+
+			expected: '"this is a test" has 4 words. Words (sorted) are: ["a","is","test","this"]'
+
+
+		'implicit this':
+
+			code: function
+
+				class TestClass
+					
+					properties 
+						prop="some"
+
+					method test
+						expect "#{.prop}","some"
+

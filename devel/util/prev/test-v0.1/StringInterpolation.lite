@@ -1,0 +1,51 @@
+String Interpolation
+--------------------
+
+	var Tests = {
+
+		'simple \x24 expresion':
+
+			code: function
+
+				var item = 'some'
+				return "$item"
+
+			expected: "some"
+
+
+		'complex \x24{} single expresion':
+
+			code: function
+
+				var item = 'some'
+
+				return "${item}."
+
+			expected: "some."
+
+
+
+		'complex \x24{}':
+
+			code: function
+
+				var item = 'this|is|a|test'
+
+				return 'item is ${item}, and item.split("|") is ${JSON.stringify(item.split("|"))}'
+
+			expected: 'item is this|is|a|test, and item.split("|") is ["this","is","a","test"]'
+
+
+		'several \x24':
+
+			code: function
+
+				var a = 'cow'
+				var b = 'moo'
+
+				return 'the $a says $b!'
+
+			expected: "the cow says moo!"
+
+	}
+	
