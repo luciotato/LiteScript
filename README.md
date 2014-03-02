@@ -2,7 +2,7 @@
 
 ##Design considerations
 
-- More hours are expended *reading* and *debugging* code, than *writting* it.
+- More hours are expended *reading* and *debugging* code, than *writing* it.
 - Code should be easy to read and follow. 
 - Programmer intention and code effects should be clear and explicit
 - Code flow should be straightforward, top-down, left-right, then:
@@ -11,7 +11,7 @@
   - Sequential programming with exceptions should be preferred.
   - Async callbacks and closures should be available to be used when required
   - Async callbacks and closures *should not* break the exception handling logic.
-  - Hidden side-effects and global variables should be avoided whenever possible.
+  - Hidden side-effects and global variables should be avoided whenever possible.  
 
 ##Objectives
 
@@ -67,21 +67,18 @@ Now test the class
     var a = new Agent('the README')
     a.hello
 
-Since LiteScript is literate, you can *run this README.md*, 
+Since LiteScript is literate, you can **run this README**, 
 and see the above example in action. 
 
 do:
+```
+npm install -g litescript
+git clone https://github.com/luciotato/LiteScript
+cd LiteScript
+lite -run README.md
+```
 
->npm install -g litescript
-
->git clone https://github.com/luciotato/LiteScript
-
->cd LiteScript
-
->lite -run README.md
-
-
->Hello! I'm the README
+***> Hello! I'm the README***
 
 
 -----------
@@ -91,7 +88,6 @@ OK, now you can:
 1. Go cowboy-style, get hands-on and try it online, 
 go to [LiteScript Online Playground](http://rawgithub.com/luciotato/litescript_online_playground/master/playground/index.html)
 
-2. Be mode academic, and read the whole [Litescript Grammar](/source/Grammar.lite.md)
+2. Be more academic, and read the whole [LiteScript Grammar](/source/Grammar.lite.md)
 
 3. Continue reading the highlights at [/doc](/doc)
-
