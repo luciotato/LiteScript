@@ -1,26 +1,25 @@
 ###LiteScript is a highly-readable language that compiles to javascript
 
 ##Design considerations
-LiteScript is designed with the following considerations in mind:
 
-* More hours are expended *reading* and *debugging* code, than *writting* it.
-* Code should be easy to read and follow. 
-* Programmer intention and code effects should be clear and explicit
-* Code flow should be straightforward, top-down, left-right, then:
-  * Condition evaluation should precede conditionally executed statements
-  * Deviations from expected program flow, should be handled as "exceptions" (try-catch-finally)
-  * Sequential programming with exceptions should be preferred.
-  * Async callbacks and closures should be available to be used when required
-  * Async callbacks and closures *should not* break the exception handling logic.
-  * Hidden side-effects and global variables should be avoided whenever possible.
+- More hours are expended *reading* and *debugging* code, than *writting* it.
+- Code should be easy to read and follow. 
+- Programmer intention and code effects should be clear and explicit
+- Code flow should be straightforward, top-down, left-right, then:
+  - Condition evaluation should precede conditionally executed statements
+  - Deviations from expected program flow, should be handled as "exceptions" (try-catch-finally)
+  - Sequential programming with exceptions should be preferred.
+  - Async callbacks and closures should be available to be used when required
+  - Async callbacks and closures *should not* break the exception handling logic.
+  - Hidden side-effects and global variables should be avoided whenever possible.
 
 ##Objectives
 
-* Make code as readable and easy to follow as possible.
-* DO NOT try to be terse and clever. The best code is the clearest, not the shortest. We have plenty of room for source code.
-* Create readable javascript code
-* Catch typos in object members *in the compilation phase*. Is too time-expensive to debug subtle bugs caused by mistyped member names.
-* Allow an easy context-switch in the coder's mind between programming languages.
+- Make code as readable and easy to follow as possible.
+- Do not try to be terse and clever. The best code is the clearest, not the shortest. 
+- Create readable javascript code
+- Catch typos in object members **in the compilation phase**. Is too time-expensive to debug subtle bugs caused by mistyped member names.
+- Allow an easy context-switch in the coder's mind between programming languages.
   - Try to use the same meaning for the same symbols when the symbol is used in javascript, CoffeScript, Phyton, C, C#, JAVA, SQL.
   - Use js symbols and EcmaScript 6 constructs when appropriated and available.
   - Embrace javascript prototypal inheritance. "class" is syntax sugar
@@ -39,11 +38,9 @@ introducing classes, methods and functions.
 
 This exception exists to allow markdown titles to act as block starters (class, function, method), 
 and then keep literate markdown comments *inside classes and functions*. 
-
 Comments, if left outside the class or function, tend to 
-get detached from their code on reorganizations
-
-Anything else starting on col 1, 2 or 3 is a literate comment, Github flavor MarkDown syntax.
+get detached from their code on reorganizations.
+Anything else not indented 4 spaces is a literate comment, Github flavor MarkDown syntax.
 
 ###Example:
 
@@ -71,15 +68,20 @@ Now test the class
     a.hello
 
 Since LiteScript is literate, you can *run this README.md*, 
-and see the above example in action. do:
+and see the above example in action. 
+
+do:
 
 >npm install -g litescript
+
 >git clone https://github.com/luciotato/LiteScript
+
 >cd LiteScript
+
 >lite -run README.md
 
 
-> Hello! I'm the README
+>Hello! I'm the README
 
 
 -----------
@@ -89,7 +91,7 @@ OK, now you can:
 1. Go cowboy-style, get hands-on and try it online, 
 go to [LiteScript Online Playground](http://rawgithub.com/luciotato/litescript_online_playground/master/playground/index.html)
 
-2. Be mode academic, and read the whole Grammar at [source/Grammar.lite.md]
+2. Be mode academic, and read the whole [Litescript Grammar](/source/Grammar.lite.md)
 
-3. Continue reading the highlights ad /doc [/doc]
+3. Continue reading the highlights at [/doc](/doc)
 
