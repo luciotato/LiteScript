@@ -28,7 +28,7 @@ as the new 'export default' (instead of 'module.exports')
             if .exportDefault.list.length > 1, .exportDefault.throwError "only one var:Object alllowed for 'export default'"
             .lexer.out.exportNamespace = .exportDefault.list[0].name
 
-        else if .exportDefault instance of Grammar.ASTBase
+        else if .exportDefault instance of ASTBase
             declare valid .exportDefault.name
             .lexer.out.exportNamespace = .exportDefault.name
 
@@ -380,8 +380,8 @@ We just defer to JavaScript's built in `.` `[ ]` and `( )` accessors
 
 -----------
 
-### Append to class Grammar.ASTBase
-#### helper method lastLineInxOf(list:Grammar.ASTBase array) 
+### Append to class ASTBase
+#### helper method lastLineInxOf(list:ASTBase array) 
 
 More Helper methods, get max line of list
 
@@ -1180,7 +1180,7 @@ Many LiteScript operators can be easily mapped one-to-one with their JavaScript 
 
 ---------------------------------
 
-### Append to class Grammar.ASTBase
+### Append to class ASTBase
 
 Helper methods and properties, valid for all nodes
 

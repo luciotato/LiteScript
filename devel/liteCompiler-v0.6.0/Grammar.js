@@ -13,156 +13,42 @@
 
 //The differences with classic PEG are:
 //* instead of `Symbol <- definition`, we use `Symbol: definition` (colon instead of arrow)
-//* we use `[Symbol]` for optional symbols instead of `Symbol` (brackets also groups symbols, the entire group is optional)
-//* symbols upper/lower case carries meaning
-//* we add `(Symbol,)` meaning: `comma separated List of` as a syntax option
+//* we use `[Symbol]` for optional symbols instead of `Symbol?` (brackets also groups symbols, the entire group is optional)
+//* symbols upper/lower case has meaning
+//* we add `(Symbol,)` for `comma separated List of` as a powerful syntax option
 
 //Examples:
 
-//`ReturnStatement`    : CamelCase is reserved for non-terminal symbol
-//`function`       : all-lowercase means the literal word
-//`":"`            : literal symbols are quoted
+//`ReturnStatement`    : CamelCase is reserved for non-terminal symbol<br>
+//`function`       : all-lowercase means the literal word<br>
+//`":"`            : literal symbols are quoted<br>
 
-//`IDENTIFIER`,`OPER` : all-uppercase denotes entire classes of symbols
-//`NEWLINE`,`EOF`     : or special unprintable characters
+//`IDENTIFIER`,`OPER` : all-uppercase denotes entire classes of symbols<br>
+//`NEWLINE`,`EOF`     : or special unprintable characters<br>
 
-//`[of]`               : Optional symbols are enclosed in brackets
-//`(var|let)`          : The vertical bar represents ordered alternatives
-//`(Oper Operand)`     : Parentheses groups symbols
-//`(Oper Operand)*`    : Asterisk after a group `()*` means the group can repeat (meaning one or more)
-//`[Oper Operand]*`    : Asterisk after a optional group `[]*` means *zero* or more of the group.
+//`[to]`               : Optional symbols are enclosed in brackets<br>
+//`(var|let)`          : The vertical bar represents ordered alternatives<br>
 
-//`"(" [Expression,] ")"` : the comma means a comma "Separated List".
+//`(Oper Operand)`     : Parentheses groups symbols<br>
+//`(Oper Operand)*`    : Asterisk after a group `()*` means the group can repeat (meaning one or more)<br>
+//`[Oper Operand]*`    : Asterisk after a optional group `[]*` means *zero* or more of the group.<br>
 
-//`Body: (Statement;)` : the semicolon means: a semicolon "Separated List".
+//`"(" [Expression,] ")"` : the comma means a comma "Separated List".<br>
+//`Body: (Statement;)` : the semicolon means: a semicolon "Separated List".<br>
 
 
 //###"Separated List"
 
 //Example: `FunctionCall: IDENTIFIER '(' [Expression,] ')'`
 
-//`[Expression,]` means *optional* **comma "Separated List"** of Expressions. When the comma is
-//inside a **[ ]** group, it means the entire list is optional.
+//`[Expression,]` means *optional* **comma "Separated List"** of Expressions.
+//Since the comma is inside a **[ ]** group, it means the entire list is optional.
 
 //Example: `VarStatement: (VariableDecl,)`, where `VariableDecl: IDENTIFIER ["=" Expression]`
 
 //`(VariableDecl,)` means **comma "Separated List"** of `VariableDecl`
-//When the comma is inside a **( )** group, it means one or more of the group
+//Since the comma is inside a **( )** group, it means at least one of the Symbol is required.
 
-//###Free-Form Separated List
-//At every point where a "Separated List" is accepted, also
-//a "**free-form** Separated List" is accepted.
-
-//In *free-form* mode, each item stands on its own line, and separators (comma/semicolon)
-//are optional, and can appear after or before the NEWLINE.
-
-//For example, given the previous example: **VarStatement: (IDENTIFIER ["=" Expression] ,)**,
-//all the following constructions are equivalent and valid in LiteScript:
-
-//Examples:
-
-
-//    //standard js
-//    var a = {prop1:30 prop2: { prop2_1:19, prop2_2:71} arr:["Jan","Feb","Mar"]}
-
-//    //LiteScript: mixed freeForm and comma separated
-//    var a =
-//        prop1: 30
-//        prop2:
-//          prop2_1: 19, prop2_2: 71
-//        arr: [ "Jan",
-//              "Feb", "Mar"]
-
-//    //LiteScript: in freeForm, commas are optional
-//    var a =
-//        prop1: 30
-//        prop2:
-//          prop2_1: 19,
-//          prop2_2: 71,
-//        arr: [
-//            "Jan",
-//            "Feb"
-//            "Mar"
-//            ]
-
-
-//##More about comma separated lists
-
-//The examples above only show Object and List Expressions, but *you can use free-form mode (multiple lines with the same indent), everywhere a comma separated list of items apply.*
-
-//The previous examples were for:
-
-//* Literal Object expression<br>
-  //because a Literal Object expression is:<br>
-  //"{" + a comma separated list of Item:Value pairs + "}"
-
-//and
-//* Literal Array expression<br>
-  //because a Literal Array expression is<br>
-  //"[" + a comma separated list of expressions + "]"
-
-//But the free-form option also applies for:
-
-//* Function parameters declaration<br>
-  //because Function parameters declaration is:<br>
-  //"(" + a comma separated list of paramter names + ")"
-
-//* Arguments, for any function call<br>
-  //because function call arguments are:<br>
-  //"(" + a comma separated list of expressions + ")"
-
-//* Variables declaration<br>
-  //because variables declaration is:<br>
-  //'var' + a comma separated list of: IDENTIFIER ["=" Expression]
-
-//Examples:
-
-
-//  js:
-
-//    Console.log(title,subtitle,line1,line2,value,recommendation)
-
-//  LiteScript available variations:
-
-//    print title,subtitle,
-//          line1,line2,
-//          value,recommendation
-
-//    print
-//      title
-//      subtitle
-//      line1
-//      line2
-//      value
-//      recommendation
-
-//  js:
-
-//    var a=10, b=20, c=30,
-//        d=40;
-
-//    function complexFn( 10, 4, 'sample'
-//       'see 1',
-//       2+2,
-//       null ){
-//      ...function body...
-//    };
-
-//  LiteScript:
-
-//    var
-//      a=10,b=20
-//      c=30,d=40
-
-//    function complexFn(
-//      10       # determines something important to this function
-//      4        # do not pass nulll to this
-//      'sample' # this is original data
-//      'see 1'  # note param
-//      2+2      # useful tip
-//      null     # reserved for extensions ;)
-//      )
-//      ...function body...
 
 //Implementation
 //---------------
@@ -4040,10 +3926,121 @@
 
 
 
-//###re-export ASTBase
 
-   exports.ASTBase = ASTBase;
+//##Free-Form Separated List
+//At every point where a "Separated List" is accepted, also
+//a "**free-form** Separated List" is accepted.
 
+//In *free-form* mode, each item stands on its own line, and separators (comma/semicolon)
+//are optional, and can appear after or before the NEWLINE.
+
+//For example, given the previous example: **VarStatement: (IDENTIFIER ["=" Expression] ,)**,
+//all the following constructions are equivalent and valid in LiteScript:
+
+//Examples:
+
+
+//    //standard js
+//    var a = {prop1:30 prop2: { prop2_1:19, prop2_2:71} arr:["Jan","Feb","Mar"]}
+
+//    //LiteScript: mixed freeForm and comma separated
+//    var a =
+//        prop1: 30
+//        prop2:
+//          prop2_1: 19, prop2_2: 71
+//        arr: [ "Jan",
+//              "Feb", "Mar"]
+
+//    //LiteScript: in freeForm, commas are optional
+//    var a =
+//        prop1: 30
+//        prop2:
+//          prop2_1: 19,
+//          prop2_2: 71,
+//        arr: [
+//            "Jan",
+//            "Feb"
+//            "Mar"
+//            ]
+
+
+//##More about comma separated lists
+
+//The examples above only show Object and List Expressions, but *you can use free-form mode (multiple lines with the same indent), everywhere a comma separated list of items apply.*
+
+//The previous examples were for:
+
+//* Literal Object expression<br>
+  //because a Literal Object expression is:<br>
+  //"{" + a comma separated list of Item:Value pairs + "}"
+
+//and
+//* Literal Array expression<br>
+  //because a Literal Array expression is<br>
+  //"[" + a comma separated list of expressions + "]"
+
+//But the free-form option also applies for:
+
+//* Function parameters declaration<br>
+  //because Function parameters declaration is:<br>
+  //"(" + a comma separated list of paramter names + ")"
+
+//* Arguments, for any function call<br>
+  //because function call arguments are:<br>
+  //"(" + a comma separated list of expressions + ")"
+
+//* Variables declaration<br>
+  //because variables declaration is:<br>
+  //'var' + a comma separated list of: IDENTIFIER ["=" Expression]
+
+//Examples:
+
+
+//  js:
+
+//    Console.log(title,subtitle,line1,line2,value,recommendation)
+
+//  LiteScript available variations:
+
+//    print title,subtitle,
+//          line1,line2,
+//          value,recommendation
+
+//    print
+//      title
+//      subtitle
+//      line1
+//      line2
+//      value
+//      recommendation
+
+//  js:
+
+//    var a=10, b=20, c=30,
+//        d=40;
+
+//    function complexFn( 10, 4, 'sample'
+//       'see 1',
+//       2+2,
+//       null ){
+//      ...function body...
+//    };
+
+//  LiteScript:
+
+//    var
+//      a=10,b=20
+//      c=30,d=40
+
+//    function complexFn(
+//      10       # determines something important to this function
+//      4        # do not pass nulll to this
+//      'sample' # this is original data
+//      'see 1'  # note param
+//      2+2      # useful tip
+//      null     # reserved for extensions ;)
+//      )
+//      ...function body...
 
 //Compiled by LiteScript compiler v0.5.0, source: /home/ltato/LiteScript/devel/source-v0.6.0/Grammar.lite.md
 //# sourceMappingURL=Grammar.js.map

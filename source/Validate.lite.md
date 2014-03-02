@@ -284,7 +284,7 @@ Inform unconverted types as errors
             var type = nameDecl.findOwnMember('**proto**')
             if type and type isnt instanceof NameDeclaration
                 nameDecl.sayErr "undeclared type: '#{type.toString()}'"
-                if type instanceof Grammar.ASTBase
+                if type instanceof ASTBase
                     log.error type.positionText(),"for reference: type declaration position"
             
 #### Pass 3 Evaluate Assignments

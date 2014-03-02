@@ -36,7 +36,7 @@
            this.lexer.out.exportNamespace = this.exportDefault.list[0].name;
        }
        
-       else if (this.exportDefault instanceof Grammar.ASTBase) {
+       else if (this.exportDefault instanceof ASTBase) {
             //declare valid .exportDefault.name
            this.lexer.out.exportNamespace = this.exportDefault.name;
        };
@@ -501,10 +501,10 @@
 
 //-----------
 
-   //append to class Grammar.ASTBase
+   //append to class ASTBase
    
-    //helper method lastLineInxOf(list:Grammar.ASTBase array)
-    Grammar.ASTBase.prototype.lastLineInxOf = function(list){
+    //helper method lastLineInxOf(list:ASTBase array)
+    ASTBase.prototype.lastLineInxOf = function(list){
 
 //More Helper methods, get max line of list
 
@@ -523,7 +523,7 @@
 
 
     //method getOwnerPrefix() returns array
-    Grammar.ASTBase.prototype.getOwnerPrefix = function(){
+    ASTBase.prototype.getOwnerPrefix = function(){
 
 //check if we're inside a ClassDeclaration or AppendToDeclaration.
 //return prefix for item to be appended
@@ -1595,7 +1595,7 @@
 
 //---------------------------------
 
-   //append to class Grammar.ASTBase
+   //append to class ASTBase
    
 
 //Helper methods and properties, valid for all nodes
@@ -1603,7 +1603,7 @@
      //     properties skipSemiColon
 
     //helper method assignIfUndefined(name,value)
-    Grammar.ASTBase.prototype.assignIfUndefined = function(name, value){
+    ASTBase.prototype.assignIfUndefined = function(name, value){
 
           //declare valid value.root.name.name
           //#do nothing if value is 'undefined'

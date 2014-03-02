@@ -84,7 +84,7 @@
            var type = nameDecl.findOwnMember('**proto**');
            if (type && !(type instanceof NameDeclaration)) {
                nameDecl.sayErr("undeclared type: '" + (type.toString()) + "'");
-               if (type instanceof Grammar.ASTBase) {
+               if (type instanceof ASTBase) {
                    log.error(type.positionText(), "for reference: type declaration position");
                };
            };

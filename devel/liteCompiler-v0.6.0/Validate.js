@@ -326,8 +326,8 @@
            //if type and type isnt instanceof NameDeclaration
            if (type && !(type instanceof NameDeclaration)) {
                nameDecl.sayErr("undeclared type: '" + (type.toString()) + "'");
-               //if type instanceof Grammar.ASTBase
-               if (type instanceof Grammar.ASTBase) {
+               //if type instanceof ASTBase
+               if (type instanceof ASTBase) {
                    log.error(type.positionText(), "for reference: type declaration position");
                };
            };
