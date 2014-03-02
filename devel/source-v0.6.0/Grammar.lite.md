@@ -567,48 +567,38 @@ loop while x < 10
         postWhileUntilExpression
 
       method parse()
-        
         .req 'do'
-
         if .opt('nothing')
           .throwParseFailed('is do nothing')
-
         .opt ":"
         .lock()
 
 Get optional pre-condition
 
         .preWhileUntilExpression = .opt(WhileUntilExpression)
-
         .body = .opt(Body)
-
         .req "loop"
 
 Get optional post-condition
 
         .postWhileUntilExpression = .opt(WhileUntilExpression)
-
         if .preWhileUntilExpression and .postWhileUntilExpression
-          .sayErr "Loop: cant have a pre-condition a and post-condition at the same time"
+          .sayErr "Loop: cannot have a pre-condition a and post-condition at the same time"
 
 
 ### export class WhileUntilLoop extends DoLoop
       
 `WhileUntilLoop: pre-WhileUntilExpression Body`
 
-Execute the block `while` the condition is true or `until` the condition is true 
-
-while|until loops are simpler forms of loops. The `while` form, is the same as in C and js.
-
-WhileUntilLoop derives from DoLoop, to use its `.produce()` method (it is a simple form of DoLoop)
+Execute the block `while` the condition is true or `until` the condition is true.
+WhileUntilLoop are a simpler form of loop. The `while` form, is the same as in C and js.
+WhileUntilLoop derives from DoLoop, to use its `.produce()` method.
 
       properties preWhileUntilExpression, body
 
       method parse()
-        
         .preWhileUntilExpression = .req(WhileUntilExpression)
         .lock()
-
         .body = .opt(Body)
 
 
@@ -655,11 +645,12 @@ This handles the `break` and `continue` keywords.
       
 `ForStatement: (ForEachProperty|ForEachInArray|ForIndexNumeric)`
 
+There are 3 variants of `ForStatement` in LiteScript
+
       properties 
         variant: ASTBase
 
       method parse()
-      
         declare valid .createScope
 
 We start with commonn `for` keyword
@@ -667,12 +658,12 @@ We start with commonn `for` keyword
         .req 'for'
         .lock()
 
-There are 3 variants of `ForStatement` in LiteScript,
-we now require one of them
+we now require one of the variants
 
         .variant = .req(ForEachProperty,ForEachInArray,ForIndexNumeric)
 
-##Variant 1) **for each property** to loop over **object property names**
+##Variant 1) **for each property** 
+###Loop over **object property names**
 
 Grammar:
 `ForEachProperty: for each [own] property name-VariableDecl ["," value-VariableDecl] in object-VariableRef [where Expression]`
@@ -692,7 +683,6 @@ if the optional `own` keyword is used, only instance properties will be looped
         body
 
       method parse()
-      
         .req('each')
 
 then check for optional `own`
@@ -708,17 +698,17 @@ Get index variable name (to store property names)
 
         .indexVar = .req(VariableDecl)
 
-Get main variable name (to store property value)
+if comma present, get main variable name (to store property value)
 
         if .opt(",")
           .mainVar = .req(VariableDecl)
 
-Then we require `in`, then the iterable-Expression (a object)
+Then we require `in`, and the iterable-Expression (a object)
 
         .req 'in'
         .iterable = .req(Expression)
 
-optional where expression
+optional where expression (filter)
 
         .where = .opt(ForWhereFilter)
 
@@ -727,7 +717,8 @@ Now, get the loop body
         .body = .req(Body)
 
 
-##Variant 2) **for each in** to loop over **Arrays**
+##Variant 2) **for each in** 
+### loop over **Arrays**
 
 Grammar:
 `ForEachInArray: for each [index-VariableDecl,]item-VariableDecl in array-VariableRef [where Expression]`
@@ -775,7 +766,8 @@ and then, loop body
 
         .body = .req(Body)
 
-##Variant 3) **for index=...** to create **numeric loops**
+##Variant 3) **for index=...** 
+### to do **numeric loops**
 
 This `for` variant is just a verbose expressions of the standard C (and js) `for(;;)` loop
 
@@ -784,8 +776,12 @@ Grammar:
 
 where `index-VariableDecl` is a numeric variable declared on the spot to store loop index,
 `start-Expression` is the start value for the index (ussually 0)
-`end-Expression` is the end value (`to`), the condition to keep looping (`while`) or to end looping (`until`)
-and `increment-Statement` is the statement used to advance the loop index. If omitted the default is `index++`
+`end-Expression` is:
+- the end value (`to`)
+- the condition to keep looping (`while`) 
+- the condition to end looping (`until`)
+<br>and `increment-Statement` is the statement used to advance the loop index. 
+If omitted the default is `index++`
 
 ### export class ForIndexNumeric extends ASTBase
       
@@ -796,14 +792,13 @@ and `increment-Statement` is the statement used to advance the loop index. If om
         increment: Statement
         body
 
-      method parse()
-      
 we require: a variableDecl, with optional assignment
 
+      method parse()
         .indexVar = .req(VariableDecl)
         .lock()
 
-next comma is  optional
+next comma is  optional, then
 get 'while|until|to' and condition
 
         .opt ','
@@ -829,13 +824,13 @@ Now, get the loop body
 ### public helper class ForWhereFilter extends ASTBase
 `ForWhereFilter: [NEWLINE] where Expression`
 
+This is a helper symbol denoting optional filter for the ForLoop variants.
+is: optional NEWLINE, then 'where' then filter-Expression
+
       properties
         filter
 
       method parse
-
-optional NEWLINE, then 'where' then filter-Expression
-
         var optNewLine = .opt('NEWLINE')
 
         if .opt('where')
@@ -862,15 +857,14 @@ optional NEWLINE, then 'where' then filter-Expression
 
 ### export class AssignmentStatement extends ASTBase
       
-`AssignmentStatement: VariableRef ("="|"+="|"-="|"*="|"/=") Expression`
+`AssignmentStatement: VariableRef ASSIGN Expression`
+<br>`ASSIGN: ("="|"+="|"-="|"*="|"/=")`
 
       properties lvalue:VariableRef, rvalue:Expression
 
       method parse()
       
-        declare valid this.scopeEvaluateAssignment
         declare valid .parent.preParsedVarRef
-        declare valid .scopeEvaluateAssignment
 
         if .parent.preParsedVarRef
           .lvalue  = .parent.preParsedVarRef # get already parsed VariableRef 
@@ -904,13 +898,14 @@ but also after a String constant, a Regex Constant,
 a ObjectLiteral and a ArrayLiteral 
 
 Examples:
-  myObj.item.fn(call)  <-- 3 accesors, two PropertyAccess and a FunctionAccess
-  myObj[5](param).part  <-- 3 accesors, IndexAccess, FunctionAccess and PropertyAccess
-  [1,2,3,4].indexOf(3) <-- 2 accesors, PropertyAccess and FunctionAccess
+- `myObj.item.fn(call)`  <-- 3 accesors, two PropertyAccess and a FunctionAccess
+- `myObj[5](param).part`  <-- 3 accesors, IndexAccess, FunctionAccess and PropertyAccess
+- `[1,2,3,4].indexOf(3)` <-- 2 accesors, PropertyAccess and FunctionAccess
 
 
-Actions:
-`.`-> PropertyAccess: Search the property in the object and in his pototype chain.
+#####Actions:
+
+`.` -> PropertyAccess: Search the property in the object and in his pototype chain.
                       It resolves to the property value
 
 `[...]` -> IndexAccess: Same as PropertyAccess
@@ -987,23 +982,18 @@ We provide a class Accessor to be super class for the three accessors types.
 
 ##### helper method parseAccessors
       
-(performance) only if the next token in ".[("
-
+          #(performance) only if the next token in ".[("
           if .lexer.token.value not in '.[(' then return
 
 We store the accessors in the property: .accessors
-if the accessors node exists, .list will have **at least one item**
-
-loop parsing accessors
+if the accessors node exists, .list will have **at least one item**.
+Loop parsing accessors
 
           do
               var ac:Accessor = .parseDirect(.lexer.token.value, AccessorsDirect)
               if no ac, break
-
               .addAccessor ac
-
           loop #continue parsing accesors
-
           return
 
 ##### helper method insertAccessorAt(position,item)
@@ -1040,8 +1030,9 @@ if any accessor is a function call, this statement is assumed to have side-effec
 `VariableRef` is a Variable Reference
 
 a VariableRef can include chained 'Accessors', which do:
-* access a property of the object : `.`-> **PropertyAccess** and `[...]`->**IndexAccess**
-* assume the variable is a function and perform a function call :  `(...)`->**FunctionAccess**
+- access a property of the object : `.`-> **PropertyAccess** and `[...]`->**IndexAccess**
+- assume the variable is a function and perform a function call :  `(...)`->**FunctionAccess**
+
 
       properties 
         preIncDec
@@ -1050,9 +1041,7 @@ a VariableRef can include chained 'Accessors', which do:
       declare name affinity varRef
 
       method parse()
-
         .preIncDec = .opt('--','++')
-
         .executes = false
 
 assume 'this.x' on '.x'. 
@@ -1070,16 +1059,17 @@ get var name
         .lock()
 
 Now we check for accessors: 
-`.`->**PropertyAccess** 
-`[...]`->**IndexAccess** 
-`(...)`->**FunctionAccess**
-Note: paserAccessors() will:
-* set .hasSideEffects=true if a function accessor is parsed
-* set .executes=true if the last accessor is a function accessor
+<br>`.`->**PropertyAccess** 
+<br>`[...]`->**IndexAccess** 
+<br>`(...)`->**FunctionAccess**
+
+Note: **.paserAccessors()** will:
+- set .hasSideEffects=true if a function accessor is parsed
+- set .executes=true if the last accessor is a function accessor
 
         .parseAccessors
 
-Replace lexical 'super' by '#{SuperClass name}.prototype'
+Replace lexical `super` by `#{SuperClass name}.prototype`
     
         if .name is 'super'
 
