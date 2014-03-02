@@ -1,0 +1,19 @@
+Compile-if
+----------
+
+    declare global expect #provided by test framework
+
+    var Tests = 
+
+      'in node':
+
+        code: function
+
+          var a
+          compile if inNode
+            a = 'inNode'
+          compile if inBrowser
+            a = 'inBrowser'
+
+          expect a,'inNode'
+

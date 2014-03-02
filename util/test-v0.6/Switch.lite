@@ -1,0 +1,116 @@
+Switch Statement Test
+-----------------------
+
+    declare global expect
+
+    var Tests = 
+
+      'basic': 
+        code:function
+          
+          var a = 4, ais:string
+          switch a 
+              case 4: 
+                ais = 'is 4'
+              case 5:
+                ais = 'is 5'
+              default
+                ais='other'
+
+          expect ais, 'is 4'
+          
+          a=5
+          switch a 
+              case 4: 
+                ais = 'is 4'
+              case 5:
+                ais = 'is 5'
+              default
+                ais='other'
+
+          expect ais, 'is 5'
+
+          a=1
+          switch a 
+              case 4: 
+                ais = 'is 4'
+              case 5:
+                ais = 'is 5'
+              default
+                ais='other'
+
+          expect ais, 'other'
+
+
+
+      'composed': 
+        code:function
+
+          helper function check(a)
+            
+            var result
+
+            switch a 
+                case 'a','b','c': 
+                  result = 'is abc'
+
+                case 'l','m','t':
+                  result = 'is lmt'
+
+                default:
+                  result='other'
+
+            return result
+          
+          end helper function
+
+          expect check('b'),'is abc'
+          expect check('a'),'is abc'
+          expect check('c'),'is abc'
+          
+          expect check('l'),'is lmt'
+          expect check('m'),'is lmt'
+
+          expect check('x'),'other'
+          expect check(12),'other'
+          expect check(12.4),'other'
+          expect check({}),'other'
+
+
+      'true-expression': 
+        code:function
+
+          helper function check(a)
+
+            var result
+            switch 
+                case a in 'abc' or a in 'ABC': 
+                  result = 'is abc'
+
+                case a in 'lmt' or a in 'LMT':
+                  result = 'is lmt'
+
+                case a>1 and a<10 or a is 42:
+                  result = 'between 1 and 10, or 42'
+
+                default:
+                  result='other'
+
+            return result
+
+          end helper function
+
+          expect check('b'),'is abc'
+          expect check('a'),'is abc'
+          expect check('c'),'is abc'
+          
+          expect check('l'),'is lmt'
+          expect check('m'),'is lmt'
+
+          expect check('x'),'other'
+          expect check(12),'other'
+          expect check(5),'between 1 and 10, or 42'
+          expect check(42),'between 1 and 10, or 42'
+          expect check({}),'other'
+
+    

@@ -1,0 +1,73 @@
+Namespaces
+----------
+
+    declare global expect
+
+    var Tests = 
+
+      'namespace':
+
+          code:function
+
+            namespace main
+
+              properties
+                  title: string = 'title'
+                  version: string = '0.1.0'
+                  major = 0
+                  minor = 0
+                  release = 0
+
+              method goodFn
+                return this.title
+
+            end namespace
+
+
+            namespace util 
+
+              properties
+
+                NL = '\n'
+
+              method isObjEmpty (obj) 
+
+                  // falsey
+                  if no obj then return true
+
+                  declare valid obj.length
+                  // if there is a 'length' property and is > 0, then is not empty
+                  if obj.length > 0, return false
+                  // if the property exists and is 0 => is empty (we trust 'length')
+                  if obj.length is 0, return true
+
+                  // Otherwise, does it have any properties of its own?
+                  for each own property key in obj
+                      return false
+
+                  return true
+
+            end namespace
+            
+            append to namespace util
+
+              properties
+                chars = {
+                    NL: '\n'
+                    CR: '\r'
+                    TAB: '\t'
+                  }
+
+              method splitLines(text:string)
+                return text.split(.chars.NL)
+
+            end append
+
+
+            expect main.goodFn() , "title"
+            expect util.NL, '\n'
+            expect util.chars.NL, '\n'
+            expect util.chars.TAB, '\t'
+            expect util.splitLines('two\nlines'), ['two','lines']
+
+

@@ -1,0 +1,3 @@
+#!/usr/bin/env node
+//run LiteScript Command Line Interface
+require(__dirname + '/lib/lite-cli').main();

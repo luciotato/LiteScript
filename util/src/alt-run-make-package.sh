@@ -1,0 +1,1 @@
+node ../lite-js -use v0.6.0 -r make-litescript-package.md

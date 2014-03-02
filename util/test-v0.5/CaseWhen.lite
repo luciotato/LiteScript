@@ -1,0 +1,136 @@
+Case When Expression
+--------------------
+
+    declare global expect
+
+    var Tests = 
+
+      'basic': 
+        code:function
+          
+          var a = 4
+          
+          var ais = case a 
+              when 4 then 'is 4'
+              when 5 then  'is 5'
+              else 'other'
+              end
+
+          expect ais, 'is 4'
+          
+          a=5
+          ais = case a 
+              when 4 then 'is 4'
+              when 5 then  'is 5'
+              else 'other'
+              end
+
+          expect ais, 'is 5'
+
+          a=1
+          ais = case a 
+              when 4 then 'is 4'
+              when 5 then  'is 5'
+              else 'other'
+              end
+
+          expect ais, 'other'
+
+
+
+      'composed': 
+        code:function
+
+          helper function check(a)
+            
+            var result = case a
+                when 'a','b','c' then 'is abc'
+                when  'l','m','t' then 'is lmt'
+                else 'other'
+                end
+
+            return result
+          
+          end helper function
+
+          expect check('b'),'is abc'
+          expect check('a'),'is abc'
+          expect check('c'),'is abc'
+          
+          expect check('l'),'is lmt'
+          expect check('m'),'is lmt'
+
+          expect check('x'),'other'
+          expect check(12),'other'
+          expect check(12.4),'other'
+          expect check({}),'other'
+
+
+      'true-expression': 
+        code:function
+
+          helper function check(a)
+
+            var result = case 
+
+                when a in 'abc' or a in 'ABC' then 'is abc'
+
+                when a in 'lmt' or a in 'LMT' then 'is lmt'
+
+                when a>1 and a<10 or a is 42 then 'between 1 and 10, or 42'
+
+                else 'other'
+
+            end 
+
+            return result
+
+          end helper function
+
+          expect check('b'),'is abc'
+          expect check('a'),'is abc'
+          expect check('c'),'is abc'
+          
+          expect check('l'),'is lmt'
+          expect check('m'),'is lmt'
+
+          expect check('x'),'other'
+          expect check(12),'other'
+          expect check(5),'between 1 and 10, or 42'
+          expect check(42),'between 1 and 10, or 42'
+          expect check({}),'other'
+
+      'default': 
+        code:function
+
+            var a = "l"
+            expect case 
+                      when a in 'abc' or a in 'ABC' then 'is abc'
+                      when a in 'lmt' or a in 'LMT' then 'is lmt'
+                      when a>1 and a<10 or a is 42 then 'between 1 and 10, or 42'
+                    end 
+                , 'is lmt'
+
+            a=[1,2,3,4,5]
+            expect case 
+                      when a in 'abc' or a in 'ABC' then 'is abc'
+                      when a in 'lmt' or a in 'LMT' then 'is lmt'
+                      when a>1 and a<10 or a is 42 then 'between 1 and 10, or 42'
+                    end 
+                , undefined
+
+            a = 42
+            expect case a 
+                      when 'abc' then 'is abc'
+                      when 'lmt' then 'is lmt'
+                      when 1,10,42 then '1, 10, or 42'
+                    end 
+                , '1, 10, or 42'
+
+            a=[1,2,3,4,5]
+            expect case a 
+                      when 'abc' then 'is abc'
+                      when 'lmt' then 'is lmt'
+                      when 1,10,42 then '1, 10, or 42'
+                    end 
+                , undefined

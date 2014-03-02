@@ -1,0 +1,10 @@
+language: node_js
+before_script:
+script:
+  - cd util
+  - node lite-js -use v0.5.0 -nomap -noval -compile ../source-v0.6.0 -o ../liteCompiler-v0.6.0
+  - node test -use v0.6.0
+node_js:
+  - 0.8
+  - 0.10
+

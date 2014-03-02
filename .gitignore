@@ -1,1 +1,11 @@
-nbproject/
+
+*.sublime-workspace
+.SyncID
+.SyncIgnore
+
+# This project
+/old/
+*/old/
+/out/
+*/out/
+/liteCompiler-v*/

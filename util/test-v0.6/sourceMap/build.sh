@@ -1,0 +1,1 @@
+node ../../lite -use v0.4.0 -d -c sourceMapTest
