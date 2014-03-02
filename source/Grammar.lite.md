@@ -123,7 +123,7 @@ LiteScript Grammar - AST Classes
 This file is code and documentation, you'll find a class 
 for each syntax construction the compiler accepts.
 
-### export Class PrintStatement extends ASTBase
+### export class PrintStatement extends ASTBase
 
 `PrintStatement: 'print' [Expression,]`
 
@@ -133,19 +133,16 @@ This handles `print` followed by an optional comma separated list of expressions
         args
 
       method parse()
-
         this.req 'print'
 
 At this point we lock because it is definitely a `print` statement. Failure to parse the expression 
 from this point is a syntax error.
 
         this.lock()
-
         this.args = this.optSeparatedList(Expression,",")
 
 
-
-### export Class VarStatement extends ASTBase
+### export class VarStatement extends ASTBase
 
 `VarStatement: (var|let) (VariableDecl,)+ `
 
@@ -156,14 +153,12 @@ from this point is a syntax error.
         export:boolean, default:boolean
 
       method parse()
-
         .req('var','let')
         .lock()
-
         .list = .reqSeparatedList(VariableDecl,",")
 
 
-### export Class VariableDecl extends ASTBase
+### export class VariableDecl extends ASTBase
     
 `VariableDecl: IDENTIFIER (':' dataType-VariableRef) ('=' assignedValue-Expression)`
 
@@ -171,11 +166,11 @@ from this point is a syntax error.
 
 Note: If no value is assigned, `= undefined` is assumed
 
-VariableDecls are used in `var` statement, in functions for *parameter declaration*
-and in class *properties declaration*
+VariableDecls are used in `var` statement, in function parameter declaration
+and in class properties declaration
 
 Example:  
-  `var a : string = 'some text'` 
+  `var a : string = 'some text'` <br> 
   `function x ( a : string = 'some text', b, c=0)`
 
       properties
@@ -187,24 +182,22 @@ Example:
       declare name affinity varDecl, paramDecl
 
       method parse()
-
         .name = .req('IDENTIFIER')
-
         .lock()
 
-optional type annotation 
+optional type annotation & 
 optional assigned value 
 
         var dangling
 
         if .opt(':')
-            if .lexer.token.type is 'NEWLINE' #dangling assignment :
+            if .lexer.token.type is 'NEWLINE' #dangling assignment ":"[NEWLINE]
                 dangling=true
             else
                 .parseType
 
         if not dangling and .opt('=')
-            if .lexer.token.type is 'NEWLINE' #dangling assignment =
+            if .lexer.token.type is 'NEWLINE' #dangling assignment "="[NEWLINE]
                 dangling=true
             else
                 .assignedValue   = .req(Expression)
@@ -214,7 +207,122 @@ optional assigned value
             .assignedValue   = .req(FreeObjectLiteral)
 
 
-### export Class PropertiesDeclaration extends ASTBase
+
+##FreeObjectLiteral and Free-Form Separated List
+
+In *free-form* mode, each item stands on its own line, and separators (comma/semicolon)
+are optional, and can appear after or before the NEWLINE.
+
+For example, given the previous example: **VarStatement: (IDENTIFIER ["=" Expression] ,)**,
+all the following constructions are equivalent and valid in LiteScript:
+
+Examples: /*
+
+    //standard js
+    var a = {prop1:30 prop2: { prop2_1:19, prop2_2:71} arr:["Jan","Feb","Mar"]}
+
+    //LiteScript: mixed freeForm and comma separated
+    var a =
+        prop1: 30
+        prop2:
+          prop2_1: 19, prop2_2: 71
+        arr: [ "Jan",
+              "Feb", "Mar"]
+
+    //LiteScript: in freeForm, commas are optional
+    var a = 
+        prop1: 30
+        prop2:
+          prop2_1: 19,
+          prop2_2: 71,
+        arr: [
+            "Jan",
+            "Feb"
+            "Mar"
+            ]
+
+*/
+
+##More about comma separated lists
+
+The examples above only show Object and List Expressions, but *you can use free-form mode (multiple lines with the same indent), everywhere a comma separated list of items apply.*
+
+The previous examples were for:
+
+* Literal Object expression<br>
+  because a Literal Object expression is:<br>
+  "{" + a comma separated list of Item:Value pairs + "}"
+
+and
+* Literal Array expression<br>
+  because a Literal Array expression is<br>
+  "[" + a comma separated list of expressions + "]"
+
+But the free-form option also applies for:
+
+* Function parameters declaration<br>
+  because Function parameters declaration is:<br>
+  "(" + a comma separated list of paramter names + ")"
+
+* Arguments, for any function call<br>
+  because function call arguments are:<br>
+  "(" + a comma separated list of expressions + ")"
+
+* Variables declaration<br>
+  because variables declaration is:<br>
+  'var' + a comma separated list of: IDENTIFIER ["=" Expression]
+
+Examples: /*
+
+  js:
+
+    Console.log(title,subtitle,line1,line2,value,recommendation)
+
+  LiteScript available variations:
+
+    print title,subtitle,
+          line1,line2,
+          value,recommendation
+
+    print
+      title
+      subtitle
+      line1
+      line2
+      value
+      recommendation
+
+  js:
+  
+    var a=10, b=20, c=30,
+        d=40;
+
+    function complexFn( 10, 4, 'sample'
+       'see 1', 
+       2+2, 
+       null ){
+      ...function body...
+    };
+
+  LiteScript:
+
+    var
+      a=10,b=20
+      c=30,d=40
+
+    function complexFn(
+      10       # determines something important to this function
+      4        # do not pass nulll to this
+      'sample' # this is original data
+      'see 1'  # note param
+      2+2      # useful tip
+      null     # reserved for extensions ;)
+      )
+      ...function body...
+*/
+
+
+### export class PropertiesDeclaration extends ASTBase
 
 `PropertiesDeclaration: properties (VariableDecl,)`
 
@@ -236,7 +344,7 @@ The `properties` keyword is used inside classes to define properties of the clas
         .list = .reqSeparatedList(VariableDecl,',')
 
 
-### export Class TryCatch extends ASTBase
+### export class TryCatch extends ASTBase
 
 `TryCatch: 'try' Body ExceptionBlock`
 
@@ -252,9 +360,9 @@ Defines a `try` block for trapping exceptions and handling them.
         .exceptionBlock = .req(ExceptionBlock)
 
 
-### export Class ExceptionBlock extends ASTBase
+### export class ExceptionBlock extends ASTBase
 
-`ExceptionBlock: (exception|catch) Identifier Body [finally Body]`
+`ExceptionBlock: (exception|catch) IDENTIFIER Body [finally Body]`
 
 Defines a `catch` block for trapping exceptions and handling them. 
 If no `try` preceded this construction, `try` is assumed at the beggining of the function
@@ -282,7 +390,7 @@ get optional "finally" block
           .finallyBody = .req(Body)
 
 
-### export Class ThrowStatement extends ASTBase
+### export class ThrowStatement extends ASTBase
       
 `ThrowStatement: (throw|raise|fail with) Expression`
 
@@ -291,20 +399,18 @@ This handles `throw` and its synonyms followed by an expression
       properties specifier, expr
 
       method parse()
-
         .specifier = .req('throw', 'raise', 'fail')
 
 At this point we lock because it is definitely a `throw` statement
 
         .lock()
 
-        if .specifier is 'fail'
-            .req 'with'
+        if .specifier is 'fail', .req 'with'
 
-        .expr = .req(Expression)
+        .expr = .req(Expression) #trow expression
 
 
-### export Class ReturnStatement extends ASTBase
+### export class ReturnStatement extends ASTBase
 
 `ReturnStatement: return Expression`
 
@@ -316,12 +422,12 @@ At this point we lock because it is definitely a `throw` statement
         .expr = .opt(Expression)
 
 
-### export Class IfStatement extends ASTBase
+### export class IfStatement extends ASTBase
       
 `IfStatement: (if|when) Expression (then|',') SingleLineStatement [ElseIfStatement|ElseStatement]*`
 `IfStatement: (if|when) Expression Body [ElseIfStatement|ElseStatement]*`
  
-Parses `if` statments and any attached `else`s or `else if`s 
+Parses `if` statments and any attached `else` or chained `else if` 
 
       properties conditional,body,elseStatement
 
@@ -329,41 +435,39 @@ Parses `if` statments and any attached `else`s or `else if`s
 
         .req 'if','when'
         .lock()
-
         .conditional = .req(Expression)
-
-        if .opt(',','then')
 
 after `,` or `then`, a statement on the same line is required 
 
+        if .opt(',','then')
             .body = .req(SingleLineStatement)
-        
+
         else # and indented block
-
             .body = .req(Body)
-
-        #end if
+        end if
 
 control: "if"-"else" are related by having the same indent
 
         if .lexer.token.value is 'else'
 
-          if .lexer.index isnt 0 
-            .throwError 'expected "else" to start on a new line'
+            if .lexer.index isnt 0 
+                .throwError 'expected "else" to start on a new line'
 
-          if .lexer.indent < .indent
-            #token is 'else' **BUT IS LESS-INDENTED**. It is not the "else" to this "if"
-            return
+            if .lexer.indent < .indent
+                #token is 'else' **BUT IS LESS-INDENTED**. It is not the "else" to this "if"
+                return
 
-          if .lexer.indent > .indent
-            .throwError "'else' statement is over-indented"
+            if .lexer.indent > .indent
+                .throwError "'else' statement is over-indented"
 
-        #end if
+        end if
+
+Now get optional `[ElseIfStatement|ElseStatement]`
 
         .elseStatement = .opt(ElseIfStatement, ElseStatement)
 
 
-### export Class ElseIfStatement extends ASTBase
+### export class ElseIfStatement extends ASTBase
 
 `ElseIfStatement: (else|otherwise) if Expression Body`
 
@@ -372,27 +476,25 @@ This class handles chained else-if statements
       properties nextIf
 
       method parse()
-
         .req 'else'
         .req 'if'
         .lock()
 
-return the consumed 'if', to parse as a normal 'IfStatement'
+return the consumed 'if', to parse as a normal `IfStatement`
 
         .lexer.returnToken()
         .nextIf = .req(IfStatement)
 
 
-### export Class ElseStatement extends ASTBase
+### export class ElseStatement extends ASTBase
 
-`ElseStatement: ('else'|'otherwise') (Statement | Body) `
+`ElseStatement: else (Statement | Body) `
 
 This class handles closing "else" statements
       
       properties body
       
       method parse()
-
         .req 'else'
         .lock()
         .body = .req(Body)
@@ -402,21 +504,8 @@ Loops
 =====
 
 LiteScript provides the standard js and C `while` loop, but also provides a `until` loop
-and a post-condition `do loop while|until`
+and a versatil `do loop while|until`
 
-
-### export Class WhileUntilExpression extends ASTBase
-      
-common symbol for loops conditions. Is the word 'while' or 'until' followed by a boolean-Expression
-
-`WhileUntilExpression: ('while'|'until') boolean-Expression`
-
-      properties expr
-
-      method parse()
-        .name = .req('while','until')
-        .lock()
-        .expr = .req(Expression)
 
 DoLoop
 ------
@@ -426,59 +515,49 @@ DoLoop
 
 do-loop can have a optional pre-condition or a optional post-condition
 
-### Case 1) do-loop without any condition
+##### Case 1) do-loop without any condition
 
 a do-loop without any condition is an *infinite loop* (usually with a `break` statement inside)
 
-Example:
-/*
-  var x=1
-  
-  do:
+Example: 
+```
+var x=1
+do:
+  x++
+  print x
+  when x is 10, break
+loop
+```
 
-    x++
-    print x
-    when x is 10, break
-
-  loop
-*/
-
-### Case 2) do-loop with pre-condition
+##### Case 2) do-loop with pre-condition
 
 A do-loop with pre-condition, is the same as a while|until loop
 
 Example:
-/*
-  var x=1
-  
-  do while x<10
+```
+var x=1
+do while x<10
+  x++
+  print x
+loop
+```
 
-    x++
-    print x
-
-  loop
-*/
-
-### Case 3) do-loop with post-condition
+##### Case 3) do-loop with post-condition
 
 A do-loop with post-condition, execute the block, at least once, and after each iteration, 
 checks the post-condition, and loops `while` the expression is true
 *or* `until` the expression is true 
 
 Example:
-/*
-  var x=1
-  
-  do
+```
+var x=1
+do
+  x++
+  print x
+loop while x < 10
+```
 
-    x++
-    print x
-
-  loop while x < 10
-*/
-
-
-### Implementation
+#### Implementation
 
     public class DoLoop extends ASTBase
       
@@ -513,7 +592,7 @@ Get optional post-condition
           .sayErr "Loop: cant have a pre-condition a and post-condition at the same time"
 
 
-### export Class WhileUntilLoop extends DoLoop
+### export class WhileUntilLoop extends DoLoop
       
 `WhileUntilLoop: pre-WhileUntilExpression Body`
 
@@ -533,7 +612,22 @@ WhileUntilLoop derives from DoLoop, to use its `.produce()` method (it is a simp
         .body = .opt(Body)
 
 
-### export Class LoopControlStatement extends ASTBase
+### export helper class WhileUntilExpression extends ASTBase
+      
+common symbol for loops conditions. Is the word 'while' or 'until' 
+followed by a boolean-Expression
+
+`WhileUntilExpression: ('while'|'until') boolean-Expression`
+
+      properties expr
+
+      method parse()
+        .name = .req('while','until')
+        .lock()
+        .expr = .req(Expression)
+
+
+### export class LoopControlStatement extends ASTBase
       
 `LoopControlStatement: (break|continue)`
 
@@ -546,7 +640,7 @@ This handles the `break` and `continue` keywords.
         .control = .req('break','continue')
 
 
-### export Class DoNothingStatement extends ASTBase
+### export class DoNothingStatement extends ASTBase
 
 `DoNothingStatement: do nothing`
 
@@ -557,7 +651,7 @@ This handles the `break` and `continue` keywords.
 
 ## For Statement
 
-### export Class ForStatement extends ASTBase
+### export class ForStatement extends ASTBase
       
 `ForStatement: (ForEachProperty|ForEachInArray|ForIndexNumeric)`
 
@@ -589,7 +683,7 @@ and `object-VariableRef` is the object having the properties
 if the optional `own` keyword is used, only instance properties will be looped 
 (no prototype chain properties)
 
-### export Class ForEachProperty extends ASTBase
+### export class ForEachProperty extends ASTBase
 
       properties 
         ownOnly
@@ -643,7 +737,7 @@ where:
 * `item-VariableDecl` is a variable declared on the spot to store each array item (array[index])
 and `array-VariableRef` is the array to iterate over
 
-### export Class ForEachInArray extends ASTBase
+### export class ForEachInArray extends ASTBase
       
       properties 
         indexVar:VariableDecl, mainVar:VariableDecl, iterable:Expression
@@ -693,7 +787,7 @@ where `index-VariableDecl` is a numeric variable declared on the spot to store l
 `end-Expression` is the end value (`to`), the condition to keep looping (`while`) or to end looping (`until`)
 and `increment-Statement` is the statement used to advance the loop index. If omitted the default is `index++`
 
-### export Class ForIndexNumeric extends ASTBase
+### export class ForIndexNumeric extends ASTBase
       
       properties 
         indexVar:VariableDecl
@@ -766,7 +860,7 @@ optional NEWLINE, then 'where' then filter-Expression
         .varRef = .req(VariableRef)
 
 
-### export Class AssignmentStatement extends ASTBase
+### export class AssignmentStatement extends ASTBase
       
 `AssignmentStatement: VariableRef ("="|"+="|"-="|"*="|"/=") Expression`
 
@@ -827,14 +921,14 @@ Actions:
 ## Implementation
 We provide a class Accessor to be super class for the three accessors types.
 
-### export Class Accessor extends ASTBase
+### export class Accessor extends ASTBase
       method parse
         fail with 'abstract'
       method toString
         fail with 'abstract'
 
 
-### export Class PropertyAccess extends Accessor
+### export class PropertyAccess extends Accessor
 
 `.` -> PropertyAccess: get the property named "n" 
 
@@ -849,7 +943,7 @@ We provide a class Accessor to be super class for the three accessors types.
         return '.'+.name
 
 
-### export Class IndexAccess extends Accessor
+### export class IndexAccess extends Accessor
 
 `[n]`-> IndexAccess: get the property named "n" / then nth index of the array
                        It resolves to the property value
@@ -867,7 +961,7 @@ We provide a class Accessor to be super class for the three accessors types.
         return '[...]'
 
 
-### export Class FunctionAccess extends Accessor
+### export class FunctionAccess extends Accessor
 `(...)` -> FunctionAccess: The object is assumed to be a function, and the code executed. 
                            It resolves to the function return value.
 
@@ -939,7 +1033,7 @@ if any accessor is a function call, this statement is assumed to have side-effec
 
 
 
-### export Class VariableRef extends ASTBase
+### export class VariableRef extends ASTBase
       
 `VariableRef: ('--'|'++') IDENTIFIER [Accessors] ('--'|'++')`
 
@@ -2170,7 +2264,7 @@ keep track of `import/require` calls
             parentModule.requireCallNodes.push item
 
 
-### export Class ImportStatementItem extends ASTBase
+### export class ImportStatementItem extends ASTBase
 
 `ImportStatementItem: IDENTIFIER [from STRING]`
 
@@ -2187,7 +2281,7 @@ Example: `import http, wait from 'wait.for'` ->  node.js:`var http=require('http
             .importParameter = .req(StringLiteral)
 
 
-### export Class DeclareStatement extends ASTBase
+### export class DeclareStatement extends ASTBase
 
 #### DeclareStatement
 
@@ -2971,118 +3065,3 @@ Anything standing aline in it's own line, its an imperative statement (it does s
             .type = 'Array'
 
 
-
-##Free-Form Separated List
-At every point where a "Separated List" is accepted, also
-a "**free-form** Separated List" is accepted.
-
-In *free-form* mode, each item stands on its own line, and separators (comma/semicolon)
-are optional, and can appear after or before the NEWLINE.
-
-For example, given the previous example: **VarStatement: (IDENTIFIER ["=" Expression] ,)**,
-all the following constructions are equivalent and valid in LiteScript:
-
-Examples: /*
-
-    //standard js
-    var a = {prop1:30 prop2: { prop2_1:19, prop2_2:71} arr:["Jan","Feb","Mar"]}
-
-    //LiteScript: mixed freeForm and comma separated
-    var a =
-        prop1: 30
-        prop2:
-          prop2_1: 19, prop2_2: 71
-        arr: [ "Jan",
-              "Feb", "Mar"]
-
-    //LiteScript: in freeForm, commas are optional
-    var a = 
-        prop1: 30
-        prop2:
-          prop2_1: 19,
-          prop2_2: 71,
-        arr: [
-            "Jan",
-            "Feb"
-            "Mar"
-            ]
-
-*/
-
-##More about comma separated lists
-
-The examples above only show Object and List Expressions, but *you can use free-form mode (multiple lines with the same indent), everywhere a comma separated list of items apply.*
-
-The previous examples were for:
-
-* Literal Object expression<br>
-  because a Literal Object expression is:<br>
-  "{" + a comma separated list of Item:Value pairs + "}"
-
-and
-* Literal Array expression<br>
-  because a Literal Array expression is<br>
-  "[" + a comma separated list of expressions + "]"
-
-But the free-form option also applies for:
-
-* Function parameters declaration<br>
-  because Function parameters declaration is:<br>
-  "(" + a comma separated list of paramter names + ")"
-
-* Arguments, for any function call<br>
-  because function call arguments are:<br>
-  "(" + a comma separated list of expressions + ")"
-
-* Variables declaration<br>
-  because variables declaration is:<br>
-  'var' + a comma separated list of: IDENTIFIER ["=" Expression]
-
-Examples: /*
-
-  js:
-
-    Console.log(title,subtitle,line1,line2,value,recommendation)
-
-  LiteScript available variations:
-
-    print title,subtitle,
-          line1,line2,
-          value,recommendation
-
-    print
-      title
-      subtitle
-      line1
-      line2
-      value
-      recommendation
-
-  js:
-  
-    var a=10, b=20, c=30,
-        d=40;
-
-    function complexFn( 10, 4, 'sample'
-       'see 1', 
-       2+2, 
-       null ){
-      ...function body...
-    };
-
-  LiteScript:
-
-    var
-      a=10,b=20
-      c=30,d=40
-
-    function complexFn(
-      10       # determines something important to this function
-      4        # do not pass nulll to this
-      'sample' # this is original data
-      'see 1'  # note param
-      2+2      # useful tip
-      null     # reserved for extensions ;)
-      )
-      ...function body...
-*/
