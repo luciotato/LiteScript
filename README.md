@@ -163,7 +163,7 @@ and then use F4 to check each error (Sublime jumps automatically to source pos)
 This environment It's higly recommendable to be productive with the language.
 
 If you have a windows box, it's time to start using Linux. Node.js works on windows, 
-but some other very useful tools do not worj smoothly (like node-inspector). 
+but some other very useful tools do not work smoothly on windows (like node-inspector). 
 Go now and download "Virtual Box". After installing "Virtual Box" 
 goto http://www.debian.org/distrib/netinst and continue from there 
 until you've got the above configuration.
