@@ -107,9 +107,7 @@ text processing, class based program written in LiteScript.
 
 ##### On the browser: 
 
-##### LiteScript_online_playground
-
-[LiteScript_online_playground](https://github.com/luciotato/LiteScript_online_playground.git)
+#####[LiteScript_online_playground](https://github.com/luciotato/LiteScript_online_playground.git)
 
 Its a single page browser app. It downloads the entire LiteScript compiler (not minified) 
 and fetch example LiteScript code  via AJAX, then compile on the browser presenting 
@@ -125,9 +123,7 @@ This project has a minimal "Document.interface.md" for the DOM and also minimals
 **Note:** The "Document.interface.md" and "jQuery.interface.md" are partial and incomplete.
 Patches are welcomed.
 
-##### LiteScript-reception-demo
-
-[LiteScript-reception-demo](https://github.com/luciotato/LiteScript-reception-demo.git)
+#####[LiteScript-reception-demo](https://github.com/luciotato/LiteScript-reception-demo.git)
 
 Its a web app *prototype* for IPAD we were commisioned to do. In order to test LiteScript
 with real-world code, I've ported it from pure browser javascript 
@@ -146,8 +142,8 @@ It's very useful to have syntax coloring to try a new language. This is what I u
 - OS: Linux, Debian, with KDE / or the linux distro that pleases you
 - node.js >= 0.10
 - [Sublime Text 2](http://www.sublimetext.com/2) - Higly recommended 
-- LiteScript tmLanguage for Sublime Text. install from : (/extras/sublime)
-- A custom theme for Sublime Text "Lite Dark" based on "Soda Dark". install from: (/extras/sublime)
+- [LiteScript tmLanguage](/extras/sublime) for Sublime Text. 
+- A custom theme for Sublime Text ["Lite Dark"](/extras/sublime) based on "Soda Dark". install from: 
 - A very simple Sublime "build system" (Ctrl-B)
 ```
   {
@@ -167,10 +163,10 @@ and then use F4 to check each error (Sublime jumps automatically to source pos)
 This environment It's higly recommendable to be productive with the language.
 
 If you have a windows box, it's time to start using Linux. Node.js works on windows, 
-but some other ver useful tools do not (like node-inspector). 
+but some other very useful tools do not worj smoothly (like node-inspector). 
 Go now and download "Virtual Box". After installing "Virtual Box" 
 goto http://www.debian.org/distrib/netinst and continue from there 
-until you've gto the above configuration.
+until you've got the above configuration.
 
 ----
 Developing a new version of LiteScript 
