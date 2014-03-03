@@ -297,8 +297,6 @@ You can also use `where` to filter
 
 > 0 Jan 2 March
 
-
--------------------------------------------------------
 ### 2) 'for each property' 
 to loop over *object property names and values* ###
 
@@ -318,8 +316,7 @@ Examples:
             print "'#{key}' has a string value"
 
 
--------------------------------------------------------
-##### 3) 'for index=...' to create *numeric loops* 
+### 3) 'for index=...' to create *numeric loops* 
 
 This `for` variant is just a verbose expression 
 of the standard C (and js) `for()` loop.
