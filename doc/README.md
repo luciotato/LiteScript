@@ -1,4 +1,3 @@
-
 ##Indentation as Block Scope
 
 LiteScript uses indentation as block scope (Like Python and CofeeScript)
@@ -39,14 +38,14 @@ Examples:
     start(10,20) | start(10,20);  | Normal function call
     start 10,20  | start(10,20);  | function call w/o parentheses
     start.data   | start.data();  | start.data, on its own, is considered a function call
-    i++          | i++;           | i++ is a statement in itself
+    i++          | i++;           | i++ is imperative statement in itself
 
 You can omit parentheses only when you're discarding the function result.
 
 Example: 
-  getNextMessage #function call, discard result
+<br>`getNextMessage //function call, discard result`
 vs. 
-  a = getNextMessage() #execute & store result in a, "()"" required
+<br>`a = getNextMessage() //execute & store result in a, "()"" required`
 
 
 ##Comments
@@ -57,10 +56,8 @@ Multiline comments are enclosed by `/*` and `*/` (C-style)
 
 
 ## Functions
-Module-level Functions are defined with 'function', class methods are defined with 'method'. 
-A 'method' cannot appear outside a class, nor a function inside a class.
-Class constructors are declared by the word 'constructor'. 
-Functions can have default arguments, parentheses are not required if you have no arguments.
+Module-level Functions are defined with 'function'.
+Functions parameteres can have default arguments. Parentheses are not required if you have no arguments.
 
 Examples:
 
@@ -70,9 +67,9 @@ Examples:
     function helloWorld
       print "hello world!"
 
-    print myFunction(1) # prints 3
+    print myFunction(1) // prints 3
 
-    helloWorld # prints hello world!
+    helloWorld // prints hello world!
 
 ##Function Call, optional parentheses
 Functions can be called without parentheses 
@@ -123,7 +120,7 @@ The same LiteScript code, will emit an error during compilation -no debugging re
 
 ###Uppercase, lowercase
 
-* To avoid subtle errors, you cannot define any two variable names only differing in uppercase/lowercase
+* The compiler will emit a CASE MISMATCH error if you have two property names only differing in uppercase/lowercase, example: `options.total=10` and `options.toTals=0` -> CASE MISMATCH at compile-time 
 * Class Names are required to be Capitalized.
 * CONST are required to be all UPPERCASE.
 * All other identifiers are required to be camelCased
@@ -276,7 +273,7 @@ Example:
 
 There are 3 variants of `for loops` in LiteScript
 
-### Variant 1) 'for each index,value in array' 
+### 1) 'for each index,value in array' 
 to loop over *Array indexes and items* ###
 
 Examples:
@@ -302,31 +299,27 @@ You can also use `where` to filter
 
 
 -------------------------------------------------------
-### Variant 2) 'for each property' 
+### 2) 'for each property' 
 to loop over *object property names and values* ###
 
 Examples:
 
-    function showAllProps ( object )
-    
-      for each property name,value in object
-          print "property '#{name}' is #{value}"
+    //show all enumerable properties (proto chain)
+    for each property name,value in object
+        print "property '#{name}' is #{value}"
 
-    function showProps ( object )
-    
-      print "Object own properties:"
-      for each own property propName,propValue in object
-          print '#{propName}:#{propValue}'
+    // show Object own properties
+    for each own property propName,propValue in object
+        print '#{propName}:#{propValue}'
 
-    function showStringOptions ( options )
-    
-      for each own property key,value in options 
+    // show own properties which are strings
+    for each own property key,value in options 
         where type of value is 'string'
-          print "'#{key}' has a string value"
+            print "'#{key}' has a string value"
 
 
 -------------------------------------------------------
-##### Variant 3) 'for index=...' to create *numeric loops* 
+##### 3) 'for index=...' to create *numeric loops* 
 
 This `for` variant is just a verbose expression 
 of the standard C (and js) `for()` loop.
@@ -350,9 +343,6 @@ Examples:
 
 ## While/Until Loop ##
 
-While/Until Loop is the *pre-check* conditional loop.
-The condition is evaluated *before* entering the loop.
-
 Examples:
 
 plain old C and js `while` loop still works the same
@@ -371,9 +361,6 @@ loop *until* condition is true, checks first
 
 
 ## Do while|until... loop while|until ##
-
-DoLoop is the *post-check* conditional loop
-The condition is evaluated *after* the loop body.
 
 ### Case 1) do-loop without any condition
 
