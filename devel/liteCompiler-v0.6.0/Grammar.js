@@ -33,7 +33,7 @@
 //`(Oper Operand)*`    : Asterisk after a group `()*` means the group can repeat (meaning one or more)<br>
 //`[Oper Operand]*`    : Asterisk after a optional group `[]*` means *zero* or more of the group.<br>
 
-//`"(" [Expression,] ")"` : the comma means a comma "Separated List".<br>
+//`[Expression,]` : the comma means a comma "Separated List".<br>
 //`Body: (Statement;)` : the semicolon means: a semicolon "Separated List".<br>
 
 
@@ -344,12 +344,9 @@
 
      //method parse()
      PropertiesDeclaration.prototype.parse = function(){
-
        this.toNamespace = this.opt('namespace') ? true : false;
-
        this.req('properties');
        this.lock();
-
        this.list = this.reqSeparatedList(VariableDecl, ',');
      };
    //export
@@ -394,7 +391,6 @@
 
      //method parse()
      ExceptionBlock.prototype.parse = function(){
-
        this.req('catch', 'exception', 'Exception');
        this.lock();
 
@@ -408,10 +404,9 @@
 
 //get optional "finally" block
 
-       //if .opt('finally')
+       //if .opt('finally'), .finallyBody = .req(Body)
        if (this.opt('finally')) {
-         this.finallyBody = this.req(Body);
-       };
+           this.finallyBody = this.req(Body)};
      };
    //export
    module.exports.ExceptionBlock = ExceptionBlock;
@@ -435,11 +430,9 @@
 //At this point we lock because it is definitely a `throw` statement
 
        this.lock();
-
        //if .specifier is 'fail', .req 'with'
        if (this.specifier === 'fail') {
            this.req('with')};
-
        this.expr = this.req(Expression);// #trow expression
      };
    //export
@@ -3704,7 +3697,8 @@
 //The generic `Statement` is used to define `Body: (Statement;)`, that is,
 //**Body** is a list of semicolon (or NEWLINE) separated **Statements**.
 
-//Grammar: ```
+//Grammar:
+//```
 //Statement: [Adjective]* (ClassDeclaration|FunctionDeclaration
  //|IfStatement|ForStatement|WhileUntilLoop|DoLoop
  //|AssignmentStatement

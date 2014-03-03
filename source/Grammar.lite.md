@@ -33,7 +33,7 @@ Examples:
 `(Oper Operand)*`    : Asterisk after a group `()*` means the group can repeat (meaning one or more)<br>
 `[Oper Operand]*`    : Asterisk after a optional group `[]*` means *zero* or more of the group.<br>
 
-`"(" [Expression,] ")"` : the comma means a comma "Separated List".<br>
+`[Expression,]` : the comma means a comma "Separated List".<br>
 `Body: (Statement;)` : the semicolon means: a semicolon "Separated List".<br>
 
 
@@ -160,7 +160,7 @@ from this point is a syntax error.
 
 ### export class VariableDecl extends ASTBase
     
-`VariableDecl: IDENTIFIER (':' dataType-VariableRef) ('=' assignedValue-Expression)`
+`VariableDecl: IDENTIFIER [':' dataType-VariableRef] ['=' assignedValue-Expression]`
 
 (variable name, optional type anotation and optionally assign a value)
 
@@ -324,9 +324,9 @@ Examples: /*
 
 ### export class PropertiesDeclaration extends ASTBase
 
-`PropertiesDeclaration: properties (VariableDecl,)`
+`PropertiesDeclaration: [namespace] properties (VariableDecl,)`
 
-The `properties` keyword is used inside classes to define properties of the class (prototype).
+The `properties` keyword is used inside classes to define properties of the class instances.
 
       properties
         list: VariableDecl array
@@ -335,12 +335,9 @@ The `properties` keyword is used inside classes to define properties of the clas
       declare name affinity propDecl
       
       method parse()
-
         .toNamespace = .opt('namespace')? true else false
-
         .req('properties')
         .lock()
-
         .list = .reqSeparatedList(VariableDecl,',')
 
 
@@ -372,7 +369,6 @@ If no `try` preceded this construction, `try` is assumed at the beggining of the
         body,finallyBody
 
       method parse()
-
         .req 'catch','exception','Exception'
         .lock()
 
@@ -386,8 +382,7 @@ get body
 
 get optional "finally" block
 
-        if .opt('finally')
-          .finallyBody = .req(Body)
+        if .opt('finally'), .finallyBody = .req(Body)
 
 
 ### export class ThrowStatement extends ASTBase
@@ -404,9 +399,7 @@ This handles `throw` and its synonyms followed by an expression
 At this point we lock because it is definitely a `throw` statement
 
         .lock()
-
         if .specifier is 'fail', .req 'with'
-
         .expr = .req(Expression) #trow expression
 
 
