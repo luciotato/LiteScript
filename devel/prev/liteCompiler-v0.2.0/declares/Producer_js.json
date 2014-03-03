@@ -1,7 +1,0 @@
-{
-  "required": [
-    "./Grammar",
-    "./util"
-  ],
-  "exported": []
-}

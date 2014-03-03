@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.0, source: /home/ltato/LiteScript/devel/source-v0.6.0/Args.lite.md
+//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/Args.lite.md
    
     function Args(argv){
        var arr = argv.slice(2);

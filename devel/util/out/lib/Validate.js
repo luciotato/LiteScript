@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.0, source: /home/ltato/LiteScript/devel/source-v0.6.0/Validate.lite.md
+//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/Validate.lite.md
    var log = require('./log');
    var debug = log.debug;
    var ASTBase = require('./ASTBase');
@@ -115,8 +115,8 @@
    
    function walkAllNodesCalling(methodName){
        for ( var filename in project.moduleCache)if (project.moduleCache.hasOwnProperty(filename)){
-           module = project.moduleCache[filename];
-           module.callOnSubTree(methodName);
+           var moduleNode = project.moduleCache[filename];
+           moduleNode.callOnSubTree(methodName);
            }
        
        
@@ -457,7 +457,7 @@
      var options = {
          scopeCase: undefined
          };
-     var isInterface = parentModule.lexer.options.interfaceMode;
+     var isInterface = parentModule.lexer.interfaceMode;
      if (isInterface) {
          options.scopeCase = true};
      if (asDefault && !(isInterface)) {

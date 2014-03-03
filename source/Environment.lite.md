@@ -94,7 +94,7 @@ we search the module
             if not found
                 log.throwControled '#{importingModuleFileInfo.relFilename}: Module not found: #{this.importParameter}\n'
                                     +'\tSearched as:\n'
-                                    +'\t#search(.lite.md|.md|.js)]'
+                                    +'\t#{search}(.lite.md|.md|.js)]'
             
             //set filename & Recalc extension
             this.filename =  path.resolve(full); //full path

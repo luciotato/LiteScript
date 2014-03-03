@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.0, source: /home/ltato/LiteScript/devel/source-v0.6.0/NameDeclaration.lite.md
+//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/NameDeclaration.lite.md
    var ASTBase = require('./ASTBase');
    var Grammar = require('./Grammar');
    var log = require('./log');

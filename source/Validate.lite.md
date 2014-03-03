@@ -323,8 +323,8 @@ Inform forward declarations not fulfilled, as errors
 For all modules, for each node, if the specific AST node has methodName, call it
 
         for each own property filename in project.moduleCache
-            module = project.moduleCache[filename]
-            module.callOnSubTree methodName
+            var moduleNode:Grammar.Module = project.moduleCache[filename]
+            moduleNode.callOnSubTree methodName
 
 
 ### export function createGlobalScope(aProject)
@@ -849,7 +849,7 @@ Add to parentModule.exports, but *preserve parent*
 if we're processing an interface.md file, 
 properties will be moved to global scope. Keep case
 
-      var isInterface = parentModule.lexer.options.interfaceMode 
+      var isInterface = parentModule.lexer.interfaceMode 
 
       if isInterface, options.scopeCase = true #keep 1st letter case
 

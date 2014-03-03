@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.0, source: /home/ltato/LiteScript/devel/source-v0.6.0/string-shims.md
+//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/string-shims.md
    
        if (!String.prototype.startsWith)
        String.prototype.startsWith = function(text){

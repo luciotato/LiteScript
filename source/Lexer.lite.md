@@ -46,6 +46,7 @@ The Lexer class turns the input lines into an array of "infoLines"
         lineInx, sourceLineNum
         infoLine, token, index
 
+        interfaceMode: boolean
         stringInterpolationChar: string
 
         last:LexerPos
@@ -63,7 +64,6 @@ use same options as compiler
           .options = options
 
           default options = 
-              interfaceMode : undefined
               browser       : undefined
               comments      : 1 #comment level
 
@@ -91,7 +91,7 @@ Load filename and source code in the lexer.
 First, remember filename (for error reporting) 
 
           .filename = filename
-          if filename.endsWith('interface.md'), .options.interfaceMode = true
+          .interfaceMode = filename.endsWith('interface.md')
 
 create source lines array
 

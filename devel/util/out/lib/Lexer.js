@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.0, source: /home/ltato/LiteScript/devel/source-v0.6.0/Lexer.lite.md
+//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/Lexer.lite.md
    var LineTypes = {CODE: 0, COMMENT: 1, BLANK: 2};
    var log = require('./log');
    var debug = log.debug;
@@ -17,8 +17,7 @@
    
     Lexer.prototype.initSource = function(filename, source){
          this.filename = filename;
-         if (filename.endsWith('interface.md')) {
-             this.options.interfaceMode = true};
+         this.interfaceMode = filename.endsWith('interface.md');
          if (source instanceof Array) {
            this.lines = source;
          }

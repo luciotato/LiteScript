@@ -3,14 +3,16 @@
 set -e
 
 VERSION=$1
-[ "$VERSION" = "" ] && VERSION=0.6.0
+[ "$VERSION" = "" ] && VERSION=0.6
 
 CWD=$(pwd)
 
+#get main source folder: /source
 cd "../.."
 MAIN=$(pwd)
 cd -
 
+#get devel source folder /devel/source-v${VERSION} 
 cd ../source-v${VERSION} 
 SRCVRS=$(pwd)
 cd -
@@ -23,9 +25,6 @@ echo copy /out/lib to main dir /lib
 mkdir -p ${MAIN}/lib
 rm ${MAIN}/lib/*
 cp -p out/lib/* ${MAIN}/lib/
-
-echo update if newer package.json
-cp -up out/package.json ${MAIN}/
 
 echo update main dir/source
 
@@ -41,9 +40,14 @@ for file in *.md; do
 done
 
 # update newer sources
-echo cp -uv ${SRCVRS}/ $(pwd)
+echo ${SRCVRS}/ to $(pwd)
 cp -uvp ${SRCVRS}/*.lite.md .
 
 cd ${CWD}
 
+#update extras/sublime
+mkdir -p ${MAIN}/extras/sublime/LiteScript
+cp -uvp /home/ltato/.config/sublime-text-2/Packages/LiteScript/* ${MAIN}/extras/sublime/LiteScript
+mkdir -p "${MAIN}/extras/sublime/Theme - Lite Dark"
+cp -uvp "/home/ltato/.config/sublime-text-2/Packages/Theme - Lite Dark"/* "${MAIN}/extras/sublime/Theme - Lite Dark"
 

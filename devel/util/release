@@ -16,7 +16,7 @@ if [ "$2" = "" ]; then
 fi
 
 if [ "$1" = "" -o "$using" != "using" -o "$PREV" = "" ]; then 
-    echo usage: ./release 0.6.0 [using x.y.z]
+    echo usage: ./release 0.6 [using x.y]
     exit 1
 fi
 
@@ -41,12 +41,6 @@ node lite-js -use v${PREV} -noval -nomap -comments 0 -compile ../source-v${VERSI
 
 #test compiler at ${out}/lib
 node test -compiler-path ./${out}/lib
-
-#update package.json version
-node lite-js -use v${VERSION} -run update-package-json ${VERSION}
-
-#copy to out
-cp -u model.package.json ${out}/package.json
 
 #copy if newer, lite (#!/usr/bin/env node), calls lite-cli.js
 cp -u lite ${out}/lib/lite

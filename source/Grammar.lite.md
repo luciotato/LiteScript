@@ -759,6 +759,7 @@ and then, loop body
 
         .body = .req(Body)
 
+
 ##Variant 3) **for index=...** 
 ### to do **numeric loops**
 
@@ -1808,7 +1809,7 @@ if it's a "dangling assignment", we assume FreeObjectLiteral
           .value = .req(FreeObjectLiteral)
 
         else
-          if .lexer.options.interfaceMode
+          if .lexer.interfaceMode
               .parseType
           else
               .value = .req(Expression)
@@ -2011,7 +2012,7 @@ Defines a new class with an optional parent class. properties and methods go ins
 
 Control: class names should be Capitalized, except: jQuery
 
-        if not .lexer.options.interfaceMode and not String.isCapitalized(.name)
+        if not .lexer.interfaceMode and not String.isCapitalized(.name)
             .lexer.sayErr "class names should be Capitalized: class #{.name}"
 
 Now parse optional `,(extend|proto is|inherits from)` setting the super class
@@ -2847,9 +2848,9 @@ Anywhere a list of semicolon separated statements apply.
 
       method parse()
 
-        if .lexer.options.interfaceMode
+        if .lexer.interfaceMode
             if .parent.constructor not in [ClassDeclaration,AppendToDeclaration,NamespaceDeclaration]
-                return #no 'Bodys' expected on interface.md file except for the above
+                return //"no 'Bodys' expected on interface.md file except for: class, append to and namespace
 
         if .lexer.token.type isnt 'NEWLINE'
             .lexer.sayErr "found #{.lexer.token} but expected NEWLINE and indented body"

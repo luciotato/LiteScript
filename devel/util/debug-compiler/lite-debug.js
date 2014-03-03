@@ -1,4 +1,3 @@
 //run LiteScript Command Line Interface
-var cli = require('/home/ltato/LiteScript/util/litescript-npm/lib/lite-cli');
-debugger;
+var cli = require('../out/lib/lite-cli');
 cli.main();

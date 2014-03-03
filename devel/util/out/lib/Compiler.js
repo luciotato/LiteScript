@@ -1,5 +1,5 @@
-//Compiled by LiteScript compiler v0.6.0, source: /home/ltato/LiteScript/devel/source-v0.6.0/Compiler.lite.md
-   var version = '0.6.0';
+//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/Compiler.lite.md
+   var version = '0.6.1';
    
    module.exports.version = version;
    var ASTBase = require('./ASTBase');
