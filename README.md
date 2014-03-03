@@ -16,7 +16,7 @@
 ##Objectives
 
 - Make code as readable and easy to follow as possible.
-- Do not try to be terse and clever. The best code is the clearest, not the shortest. 
+- Favor clear, readable code, over terse, hard to read code.
 - Create readable javascript code
 - Catch typos in object members **in the compilation phase**. Is too time-expensive to debug subtle bugs caused by mistyped member names in javascript.
 - Allow an easy context-switch in the coder's mind between programming languages.
