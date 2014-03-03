@@ -18,11 +18,11 @@
 - Make code as readable and easy to follow as possible.
 - Do not try to be terse and clever. The best code is the clearest, not the shortest. 
 - Create readable javascript code
-- Catch typos in object members **in the compilation phase**. Is too time-expensive to debug subtle bugs caused by mistyped member names.
+- Catch typos in object members **in the compilation phase**. Is too time-expensive to debug subtle bugs caused by mistyped member names in javascript.
 - Allow an easy context-switch in the coder's mind between programming languages.
   - Try to use the same meaning for the same symbols when the symbol is used in javascript, CoffeScript, Phyton, C, C#, JAVA, SQL.
   - Use js symbols and EcmaScript 6 constructs when appropriated and available.
-  - Embrace javascript prototypal inheritance. "class" is syntax sugar
+  - Embrace javascript prototypal inheritance. "class" is syntax sugar.
 
 ------
 
@@ -185,5 +185,5 @@ it's ready for release.
 You can also clone the other repositories: 
 [litescript_reception_demo](https://github.com/luciotato/LiteScript-reception-demo) 
 and [LiteScript_online_playground](https://github.com/luciotato/LiteScript_online_playground), 
-to see a web proyect using LiteScript.
+to see a web project using LiteScript.
 
