@@ -116,20 +116,17 @@
 
      //method parse()
      PrintStatement.prototype.parse = function(){
-
        this.req('print');
 
 //At this point we lock because it is definitely a `print` statement. Failure to parse the expression
 //from this point is a syntax error.
 
        this.lock();
-
        this.args = this.optSeparatedList(Expression, ",");
      };
    //export
    module.exports.PrintStatement = PrintStatement;
    //end class PrintStatement
-
 
 
    //export class VarStatement extends ASTBase
@@ -146,10 +143,8 @@
 
      //method parse()
      VarStatement.prototype.parse = function(){
-
        this.req('var', 'let');
        this.lock();
-
        this.list = this.reqSeparatedList(VariableDecl, ",");
      };
    //export
@@ -175,20 +170,18 @@
 
      //method parse()
      VariableDecl.prototype.parse = function(){
-
        this.name = this.req('IDENTIFIER');
-
        this.lock();
 
-//optional type annotation
+//optional type annotation &
 //optional assigned value
 
        var dangling = undefined;
 
        //if .opt(':')
        if (this.opt(':')) {
-           //if .lexer.token.type is 'NEWLINE' #dangling assignment :
-           if (this.lexer.token.type === 'NEWLINE') {// #dangling assignment :
+           //if .lexer.token.type is 'NEWLINE' #dangling assignment ":"[NEWLINE]
+           if (this.lexer.token.type === 'NEWLINE') {// #dangling assignment ":"[NEWLINE]
                dangling = true;
            }
            
@@ -199,8 +192,8 @@
 
        //if not dangling and .opt('=')
        if (!(dangling) && this.opt('=')) {
-           //if .lexer.token.type is 'NEWLINE' #dangling assignment =
-           if (this.lexer.token.type === 'NEWLINE') {// #dangling assignment =
+           //if .lexer.token.type is 'NEWLINE' #dangling assignment "="[NEWLINE]
+           if (this.lexer.token.type === 'NEWLINE') {// #dangling assignment "="[NEWLINE]
                dangling = true;
            }
            
@@ -218,6 +211,121 @@
    //export
    module.exports.VariableDecl = VariableDecl;
    //end class VariableDecl
+
+
+
+//##FreeObjectLiteral and Free-Form Separated List
+
+//In *free-form* mode, each item stands on its own line, and separators (comma/semicolon)
+//are optional, and can appear after or before the NEWLINE.
+
+//For example, given the previous example: **VarStatement: (IDENTIFIER ["=" Expression] ,)**,
+//all the following constructions are equivalent and valid in LiteScript:
+
+//Examples:
+
+
+//    //standard js
+//    var a = {prop1:30 prop2: { prop2_1:19, prop2_2:71} arr:["Jan","Feb","Mar"]}
+
+//    //LiteScript: mixed freeForm and comma separated
+//    var a =
+//        prop1: 30
+//        prop2:
+//          prop2_1: 19, prop2_2: 71
+//        arr: [ "Jan",
+//              "Feb", "Mar"]
+
+//    //LiteScript: in freeForm, commas are optional
+//    var a =
+//        prop1: 30
+//        prop2:
+//          prop2_1: 19,
+//          prop2_2: 71,
+//        arr: [
+//            "Jan",
+//            "Feb"
+//            "Mar"
+//            ]
+
+
+//##More about comma separated lists
+
+//The examples above only show Object and List Expressions, but *you can use free-form mode (multiple lines with the same indent), everywhere a comma separated list of items apply.*
+
+//The previous examples were for:
+
+//* Literal Object expression<br>
+  //because a Literal Object expression is:<br>
+  //"{" + a comma separated list of Item:Value pairs + "}"
+
+//and
+//* Literal Array expression<br>
+  //because a Literal Array expression is<br>
+  //"[" + a comma separated list of expressions + "]"
+
+//But the free-form option also applies for:
+
+//* Function parameters declaration<br>
+  //because Function parameters declaration is:<br>
+  //"(" + a comma separated list of paramter names + ")"
+
+//* Arguments, for any function call<br>
+  //because function call arguments are:<br>
+  //"(" + a comma separated list of expressions + ")"
+
+//* Variables declaration<br>
+  //because variables declaration is:<br>
+  //'var' + a comma separated list of: IDENTIFIER ["=" Expression]
+
+//Examples:
+
+
+//  js:
+
+//    Console.log(title,subtitle,line1,line2,value,recommendation)
+
+//  LiteScript available variations:
+
+//    print title,subtitle,
+//          line1,line2,
+//          value,recommendation
+
+//    print
+//      title
+//      subtitle
+//      line1
+//      line2
+//      value
+//      recommendation
+
+//  js:
+
+//    var a=10, b=20, c=30,
+//        d=40;
+
+//    function complexFn( 10, 4, 'sample'
+//       'see 1',
+//       2+2,
+//       null ){
+//      ...function body...
+//    };
+
+//  LiteScript:
+
+//    var
+//      a=10,b=20
+//      c=30,d=40
+
+//    function complexFn(
+//      10       # determines something important to this function
+//      4        # do not pass nulll to this
+//      'sample' # this is original data
+//      'see 1'  # note param
+//      2+2      # useful tip
+//      null     # reserved for extensions ;)
+//      )
+//      ...function body...
 
 
    //export class PropertiesDeclaration extends ASTBase
@@ -322,19 +430,17 @@
 
      //method parse()
      ThrowStatement.prototype.parse = function(){
-
        this.specifier = this.req('throw', 'raise', 'fail');
 
 //At this point we lock because it is definitely a `throw` statement
 
        this.lock();
 
-       //if .specifier is 'fail'
+       //if .specifier is 'fail', .req 'with'
        if (this.specifier === 'fail') {
-           this.req('with');
-       };
+           this.req('with')};
 
-       this.expr = this.req(Expression);
+       this.expr = this.req(Expression);// #trow expression
      };
    //export
    module.exports.ThrowStatement = ThrowStatement;
@@ -377,47 +483,45 @@
 
        this.req('if', 'when');
        this.lock();
-
        this.conditional = this.req(Expression);
-
-       //if .opt(',','then')
-       if (this.opt(',', 'then')) {
 
 //after `,` or `then`, a statement on the same line is required
 
+       //if .opt(',','then')
+       if (this.opt(',', 'then')) {
            this.body = this.req(SingleLineStatement);
        }
        
        else {
-
            this.body = this.req(Body);
        };
-
-        //#end if
+       //end if
 
 //control: "if"-"else" are related by having the same indent
 
        //if .lexer.token.value is 'else'
        if (this.lexer.token.value === 'else') {
 
-         //if .lexer.index isnt 0
-         if (this.lexer.index !== 0) {
-           this.throwError('expected "else" to start on a new line');
-         };
+           //if .lexer.index isnt 0
+           if (this.lexer.index !== 0) {
+               this.throwError('expected "else" to start on a new line');
+           };
 
-         //if .lexer.indent < .indent
-         if (this.lexer.indent < this.indent) {
-            //#token is 'else' **BUT IS LESS-INDENTED**. It is not the "else" to this "if"
-           return;
-         };
+           //if .lexer.indent < .indent
+           if (this.lexer.indent < this.indent) {
+                //#token is 'else' **BUT IS LESS-INDENTED**. It is not the "else" to this "if"
+               return;
+           };
 
-         //if .lexer.indent > .indent
-         if (this.lexer.indent > this.indent) {
-           this.throwError("'else' statement is over-indented");
-         };
+           //if .lexer.indent > .indent
+           if (this.lexer.indent > this.indent) {
+               this.throwError("'else' statement is over-indented");
+           };
        };
 
-        //#end if
+       //end if
+
+//Now get optional `[ElseIfStatement|ElseStatement]`
 
        this.elseStatement = this.opt(ElseIfStatement, ElseStatement);
      };
@@ -438,12 +542,11 @@
 
      //method parse()
      ElseIfStatement.prototype.parse = function(){
-
        this.req('else');
        this.req('if');
        this.lock();
 
-//return the consumed 'if', to parse as a normal 'IfStatement'
+//return the consumed 'if', to parse as a normal `IfStatement`
 
        this.lexer.returnToken();
        this.nextIf = this.req(IfStatement);
@@ -465,7 +568,6 @@
 
      //method parse()
      ElseStatement.prototype.parse = function(){
-
        this.req('else');
        this.lock();
        this.body = this.req(Body);
@@ -479,28 +581,8 @@
 //=====
 
 //LiteScript provides the standard js and C `while` loop, but also provides a `until` loop
-//and a post-condition `do loop while|until`
+//and a versatil `do loop while|until`
 
-
-   //export class WhileUntilExpression extends ASTBase
-   //constructor
-   function WhileUntilExpression(){
-       // default constructor: call super.constructor
-       ASTBase.prototype.constructor.apply(this,arguments)
-      //properties expr
-   };
-   // WhileUntilExpression (extends|super is) ASTBase
-   WhileUntilExpression.prototype.__proto__ = ASTBase.prototype;
-
-     //method parse()
-     WhileUntilExpression.prototype.parse = function(){
-       this.name = this.req('while', 'until');
-       this.lock();
-       this.expr = this.req(Expression);
-     };
-   //export
-   module.exports.WhileUntilExpression = WhileUntilExpression;
-   //end class WhileUntilExpression
 
 //DoLoop
 //------
@@ -510,56 +592,49 @@
 
 //do-loop can have a optional pre-condition or a optional post-condition
 
-//### Case 1) do-loop without any condition
+//##### Case 1) do-loop without any condition
 
 //a do-loop without any condition is an *infinite loop* (usually with a `break` statement inside)
 
 //Example:
+//```
+//var x=1
+//do:
+  //x++
+  //print x
+  //when x is 10, break
+//loop
+//```
 
-//  var x=1
-
-//  do:
-
-//    x++
-//    print x
-//    when x is 10, break
-
-//  loop
-
-//### Case 2) do-loop with pre-condition
+//##### Case 2) do-loop with pre-condition
 
 //A do-loop with pre-condition, is the same as a while|until loop
 
 //Example:
+//```
+//var x=1
+//do while x<10
+  //x++
+  //print x
+//loop
+//```
 
-//  var x=1
-
-//  do while x<10
-
-//    x++
-//    print x
-
-//  loop
-
-//### Case 3) do-loop with post-condition
+//##### Case 3) do-loop with post-condition
 
 //A do-loop with post-condition, execute the block, at least once, and after each iteration,
 //checks the post-condition, and loops `while` the expression is true
 //*or* `until` the expression is true
 
 //Example:
+//```
+//var x=1
+//do
+  //x++
+  //print x
+//loop while x < 10
+//```
 
-//  var x=1
-
-//  do
-
-//    x++
-//    print x
-
-//  loop while x < 10
-
-
-//### Implementation
+//#### Implementation
 
    //public class DoLoop extends ASTBase
    //constructor
@@ -576,32 +651,26 @@
 
      //method parse()
      DoLoop.prototype.parse = function(){
-
        this.req('do');
-
        //if .opt('nothing')
        if (this.opt('nothing')) {
          this.throwParseFailed('is do nothing');
        };
-
        this.opt(":");
        this.lock();
 
 //Get optional pre-condition
 
        this.preWhileUntilExpression = this.opt(WhileUntilExpression);
-
        this.body = this.opt(Body);
-
        this.req("loop");
 
 //Get optional post-condition
 
        this.postWhileUntilExpression = this.opt(WhileUntilExpression);
-
        //if .preWhileUntilExpression and .postWhileUntilExpression
        if (this.preWhileUntilExpression && this.postWhileUntilExpression) {
-         this.sayErr("Loop: cant have a pre-condition a and post-condition at the same time");
+         this.sayErr("Loop: cannot have a pre-condition a and post-condition at the same time");
        };
      };
    //export
@@ -621,15 +690,34 @@
 
      //method parse()
      WhileUntilLoop.prototype.parse = function(){
-
        this.preWhileUntilExpression = this.req(WhileUntilExpression);
        this.lock();
-
        this.body = this.opt(Body);
      };
    //export
    module.exports.WhileUntilLoop = WhileUntilLoop;
    //end class WhileUntilLoop
+
+
+   //export helper class WhileUntilExpression extends ASTBase
+   //constructor
+   function WhileUntilExpression(){
+       // default constructor: call super.constructor
+       ASTBase.prototype.constructor.apply(this,arguments)
+      //properties expr
+   };
+   // WhileUntilExpression (extends|super is) ASTBase
+   WhileUntilExpression.prototype.__proto__ = ASTBase.prototype;
+
+     //method parse()
+     WhileUntilExpression.prototype.parse = function(){
+       this.name = this.req('while', 'until');
+       this.lock();
+       this.expr = this.req(Expression);
+     };
+   //export
+   module.exports.WhileUntilExpression = WhileUntilExpression;
+   //end class WhileUntilExpression
 
 
    //export class LoopControlStatement extends ASTBase
@@ -687,7 +775,6 @@
 
      //method parse()
      ForStatement.prototype.parse = function(){
-
         //declare valid .createScope
 
 //We start with commonn `for` keyword
@@ -695,8 +782,7 @@
        this.req('for');
        this.lock();
 
-//There are 3 variants of `ForStatement` in LiteScript,
-//we now require one of them
+//we now require one of the variants
 
        this.variant = this.req(ForEachProperty, ForEachInArray, ForIndexNumeric);
      };
@@ -704,7 +790,8 @@
    module.exports.ForStatement = ForStatement;
    //end class ForStatement
 
-//##Variant 1) **for each property** to loop over **object property names**
+//##Variant 1) **for each property**
+//###Loop over **object property names**
 
 //Grammar:
 //`ForEachProperty: for each [own] property name-VariableDecl ["," value-VariableDecl] in object-VariableRef [where Expression]`
@@ -731,7 +818,6 @@
 
      //method parse()
      ForEachProperty.prototype.parse = function(){
-
        this.req('each');
 
 //then check for optional `own`
@@ -747,19 +833,19 @@
 
        this.indexVar = this.req(VariableDecl);
 
-//Get main variable name (to store property value)
+//if comma present, get main variable name (to store property value)
 
        //if .opt(",")
        if (this.opt(",")) {
          this.mainVar = this.req(VariableDecl);
        };
 
-//Then we require `in`, then the iterable-Expression (a object)
+//Then we require `in`, and the iterable-Expression (a object)
 
        this.req('in');
        this.iterable = this.req(Expression);
 
-//optional where expression
+//optional where expression (filter)
 
        this.where = this.opt(ForWhereFilter);
 
@@ -772,7 +858,8 @@
    //end class ForEachProperty
 
 
-//##Variant 2) **for each in** to loop over **Arrays**
+//##Variant 2) **for each in**
+//### loop over **Arrays**
 
 //Grammar:
 //`ForEachInArray: for each [index-VariableDecl,]item-VariableDecl in array-VariableRef [where Expression]`
@@ -833,7 +920,8 @@
    module.exports.ForEachInArray = ForEachInArray;
    //end class ForEachInArray
 
-//##Variant 3) **for index=...** to create **numeric loops**
+//##Variant 3) **for index=...**
+//### to do **numeric loops**
 
 //This `for` variant is just a verbose expressions of the standard C (and js) `for(;;)` loop
 
@@ -842,8 +930,12 @@
 
 //where `index-VariableDecl` is a numeric variable declared on the spot to store loop index,
 //`start-Expression` is the start value for the index (ussually 0)
-//`end-Expression` is the end value (`to`), the condition to keep looping (`while`) or to end looping (`until`)
-//and `increment-Statement` is the statement used to advance the loop index. If omitted the default is `index++`
+//`end-Expression` is:
+//- the end value (`to`)
+//- the condition to keep looping (`while`)
+//- the condition to end looping (`until`)
+//<br>and `increment-Statement` is the statement used to advance the loop index.
+//If omitted the default is `index++`
 
    //export class ForIndexNumeric extends ASTBase
    //constructor
@@ -860,15 +952,14 @@
    // ForIndexNumeric (extends|super is) ASTBase
    ForIndexNumeric.prototype.__proto__ = ASTBase.prototype;
 
-     //method parse()
-     ForIndexNumeric.prototype.parse = function(){
-
 //we require: a variableDecl, with optional assignment
 
+     //method parse()
+     ForIndexNumeric.prototype.parse = function(){
        this.indexVar = this.req(VariableDecl);
        this.lock();
 
-//next comma is  optional
+//next comma is  optional, then
 //get 'while|until|to' and condition
 
        this.opt(',');
@@ -908,9 +999,6 @@
 
      //method parse
      ForWhereFilter.prototype.parse = function(){
-
-//optional NEWLINE, then 'where' then filter-Expression
-
        var optNewLine = this.opt('NEWLINE');
 
        //if .opt('where')
@@ -967,9 +1055,7 @@
      //method parse()
      AssignmentStatement.prototype.parse = function(){
 
-        //declare valid this.scopeEvaluateAssignment
         //declare valid .parent.preParsedVarRef
-        //declare valid .scopeEvaluateAssignment
 
        //if .parent.preParsedVarRef
        if (this.parent.preParsedVarRef) {
@@ -1001,6 +1087,174 @@
 
 //-----------------------
 
+   //export class VariableRef extends ASTBase
+   //constructor
+   function VariableRef(){
+       // default constructor: call super.constructor
+       ASTBase.prototype.constructor.apply(this,arguments)
+      //properties
+        //preIncDec
+        //postIncDec
+   };
+   // VariableRef (extends|super is) ASTBase
+   VariableRef.prototype.__proto__ = ASTBase.prototype;
+
+      //declare name affinity varRef
+
+     //method parse()
+     VariableRef.prototype.parse = function(){
+       this.preIncDec = this.opt('--', '++');
+       this.executes = false;
+
+//assume 'this.x' on '.x'.
+//get var name
+
+       //if .opt('.','SPACE_DOT') # note: DOT has SPACES in front when .property used as parameter
+       if (this.opt('.', 'SPACE_DOT')) {// # note: DOT has SPACES in front when .property used as parameter
+          //#'.name' -> 'this.name'
+         this.lock();
+         this.name = 'this';
+         var member = this.req('IDENTIFIER');
+         this.addAccessor(new PropertyAccess(this, member));
+       }
+       
+       else {
+         this.name = this.req('IDENTIFIER');
+       };
+
+       this.lock();
+
+//Now we check for accessors:
+//<br>`.`->**PropertyAccess**
+//<br>`[...]`->**IndexAccess**
+//<br>`(...)`->**FunctionAccess**
+
+//Note: **.paserAccessors()** will:
+//- set .hasSideEffects=true if a function accessor is parsed
+//- set .executes=true if the last accessor is a function accessor
+
+       this.parseAccessors();
+
+//Replace lexical `super` by `#{SuperClass name}.prototype`
+
+       //if .name is 'super'
+       if (this.name === 'super') {
+
+           var classDecl = this.getParent(ClassDeclaration);
+           //if no classDecl
+           if (!classDecl) {
+             this.throwError("can't use 'super' outside a class method");
+           };
+
+           //if classDecl.varRefSuper
+           if (classDecl.varRefSuper) {
+                //#replace name='super' by name = #{SuperClass name}
+               this.name = classDecl.varRefSuper.name;
+           }
+                //#replace name='super' by name = #{SuperClass name}
+           
+           else {
+               this.name = 'Object';// # no superclass means 'Object' is super class
+           };
+
+            //#insert '.prototype.' as first accessor (after super class name)
+           this.insertAccessorAt(0, 'prototype');
+
+            //#if super class is a composed name (x.y.z), we must insert those accessors also
+            //# so 'super.myFunc' turns into 'NameSpace.subName.SuperClass.prototype.myFunc'
+           //if classDecl.varRefSuper and classDecl.varRefSuper.accessors
+           if (classDecl.varRefSuper && classDecl.varRefSuper.accessors) {
+                //#insert super class accessors
+               var position = 0;
+               //for each ac in classDecl.varRefSuper.accessors
+               for( var ac__inx=0,ac ; ac__inx<classDecl.varRefSuper.accessors.length ; ac__inx++){ac=classDecl.varRefSuper.accessors[ac__inx];
+               
+                 //if ac instanceof PropertyAccess
+                 if (ac instanceof PropertyAccess) {
+                   this.insertAccessorAt(position++, ac.name);
+                 };
+               }; // end for each in classDecl.varRefSuper.accessors
+               
+           };
+       };
+
+       //end if super
+
+//Allow 'null' as alias to 'do nothing'
+
+       //if .name is 'null', .executes = true
+       if (this.name === 'null') {
+           this.executes = true};
+
+//Hack: after 'into var', allow :type for simple (no accessor) var names
+
+       //if .getParent(Statement).intoVars and .opt(":")
+       if (this.getParent(Statement).intoVars && this.opt(":")) {
+           this.type = this.req(VariableRef);
+       };
+
+//check for post-fix increment/decrement
+
+       this.postIncDec = this.opt('--', '++');
+
+//If this variable ref has ++ or --, IT IS CONSIDERED a "call to execution" in itself,
+//a "imperative statement", because it has side effects.
+//(`i++` has a "imperative" part, It means: "give me the value of i, and then increment it!")
+
+       //if .preIncDec or .postIncDec
+       if (this.preIncDec || this.postIncDec) {
+         this.executes = true;
+         this.hasSideEffects = true;
+       };
+
+//Note: In LiteScript, *any VariableRef standing on its own line*, it's considered
+//a function call. A VariableRef on its own line means "execute this!",
+//so, when translating to js, it'll be translated as a function call, and `()` will be added.
+//If the VariableRef is marked as 'executes' then it's assumed it is alread a functioncall,
+//so `()` will NOT be added.
+
+//Examples:
+//---------
+    //LiteScript   | Translated js  | Notes
+    //-------------|----------------|-------
+    //start        | start();       | "start", on its own, is considered a function call
+    //start(10,20) | start(10,20);  | Normal function call
+    //start 10,20  | start(10,20);  | function call w/o parentheses
+    //start.data   | start.data();  | start.data, on its own, is considered a function call
+    //i++          | i++;           | i++ is marked "executes", it is a statement in itself
+
+//Keep track of 'require' calls, to import modules (recursive)
+
+       //if .name is 'require'
+       if (this.name === 'require') {
+           this.getParent(Module).requireCallNodes.push(this);
+       };
+     };
+
+//---------------------------------
+     //helper method toString()
+     VariableRef.prototype.toString = function(){
+//This method is only valid to be used in error reporting.
+//function accessors will be output as "(...)", and index accessors as [...]
+
+       var result = (this.preIncDec || "") + this.name;
+       //if .accessors
+       if (this.accessors) {
+         //for each ac in .accessors
+         for( var ac__inx=0,ac ; ac__inx<this.accessors.length ; ac__inx++){ac=this.accessors[ac__inx];
+         
+           result += ac.toString();
+         }; // end for each in this.accessors
+         
+       };
+       return result + (this.postIncDec || "");
+     };
+   //export
+   module.exports.VariableRef = VariableRef;
+   //end class VariableRef
+
+//-----------------------
+
 //## Accessors
 
 //`Accessors: (PropertyAccess|FunctionAccess|IndexAccess)`
@@ -1015,13 +1269,14 @@
 //a ObjectLiteral and a ArrayLiteral
 
 //Examples:
-  //myObj.item.fn(call)  <-- 3 accesors, two PropertyAccess and a FunctionAccess
-  //myObj[5](param).part  <-- 3 accesors, IndexAccess, FunctionAccess and PropertyAccess
-  //[1,2,3,4].indexOf(3) <-- 2 accesors, PropertyAccess and FunctionAccess
+//- `myObj.item.fn(call)`  <-- 3 accesors, two PropertyAccess and a FunctionAccess
+//- `myObj[5](param).part`  <-- 3 accesors, IndexAccess, FunctionAccess and PropertyAccess
+//- `[1,2,3,4].indexOf(3)` <-- 2 accesors, PropertyAccess and FunctionAccess
 
 
-//Actions:
-//`.`-> PropertyAccess: Search the property in the object and in his pototype chain.
+//#####Actions:
+
+//`.` -> PropertyAccess: Search the property in the object and in his pototype chain.
                       //It resolves to the property value
 
 //`[...]` -> IndexAccess: Same as PropertyAccess
@@ -1153,16 +1408,14 @@
      //helper method parseAccessors
      ASTBase.prototype.parseAccessors = function(){
 
-//(performance) only if the next token in ".[("
-
+          //#(performance) only if the next token in ".[("
          //if .lexer.token.value not in '.[(' then return
          if ('.[('.indexOf(this.lexer.token.value)===-1) {
              return};
 
 //We store the accessors in the property: .accessors
-//if the accessors node exists, .list will have **at least one item**
-
-//loop parsing accessors
+//if the accessors node exists, .list will have **at least one item**.
+//Loop parsing accessors
 
          //do
          while(true){
@@ -1170,10 +1423,8 @@
              //if no ac, break
              if (!ac) {
                  break};
-
              this.addAccessor(ac);
          };//end loop
-
          return;
      };
 
@@ -1216,187 +1467,19 @@
 
 
 
-   //export class VariableRef extends ASTBase
-   //constructor
-   function VariableRef(){
-       // default constructor: call super.constructor
-       ASTBase.prototype.constructor.apply(this,arguments)
-      //properties
-        //preIncDec
-        //postIncDec
-   };
-   // VariableRef (extends|super is) ASTBase
-   VariableRef.prototype.__proto__ = ASTBase.prototype;
-
-      //declare name affinity varRef
-
-     //method parse()
-     VariableRef.prototype.parse = function(){
-
-       this.preIncDec = this.opt('--', '++');
-
-       this.executes = false;
-
-//assume 'this.x' on '.x'.
-//get var name
-
-       //if .opt('.','SPACE_DOT') # note: DOT has SPACES in front when .property used as parameter
-       if (this.opt('.', 'SPACE_DOT')) {// # note: DOT has SPACES in front when .property used as parameter
-          //#'.name' -> 'this.name'
-         this.lock();
-         this.name = 'this';
-         var member = this.req('IDENTIFIER');
-         this.addAccessor(new PropertyAccess(this, member));
-       }
-       
-       else {
-         this.name = this.req('IDENTIFIER');
-       };
-
-       this.lock();
-
-//Now we check for accessors:
-//`.`->**PropertyAccess**
-//`[...]`->**IndexAccess**
-//`(...)`->**FunctionAccess**
-//Note: paserAccessors() will:
-//* set .hasSideEffects=true if a function accessor is parsed
-//* set .executes=true if the last accessor is a function accessor
-
-       this.parseAccessors();
-
-//Replace lexical 'super' by '#{SuperClass name}.prototype'
-
-       //if .name is 'super'
-       if (this.name === 'super') {
-
-           var classDecl = this.getParent(ClassDeclaration);
-           //if no classDecl
-           if (!classDecl) {
-             this.throwError("can't use 'super' outside a class method");
-           };
-
-           //if classDecl.varRefSuper
-           if (classDecl.varRefSuper) {
-                //#replace name='super' by name = #{SuperClass name}
-               this.name = classDecl.varRefSuper.name;
-           }
-                //#replace name='super' by name = #{SuperClass name}
-           
-           else {
-               this.name = 'Object';// # no superclass means 'Object' is super class
-           };
-
-            //#insert '.prototype.' as first accessor (after super class name)
-           this.insertAccessorAt(0, 'prototype');
-
-            //#if super class is a composed name (x.y.z), we must insert those accessors also
-            //# so 'super.myFunc' turns into 'NameSpace.subName.SuperClass.prototype.myFunc'
-           //if classDecl.varRefSuper and classDecl.varRefSuper.accessors
-           if (classDecl.varRefSuper && classDecl.varRefSuper.accessors) {
-                //#insert super class accessors
-               var position = 0;
-               //for each ac in classDecl.varRefSuper.accessors
-               for( var ac__inx=0,ac ; ac__inx<classDecl.varRefSuper.accessors.length ; ac__inx++){ac=classDecl.varRefSuper.accessors[ac__inx];
-               
-                 //if ac instanceof PropertyAccess
-                 if (ac instanceof PropertyAccess) {
-                   this.insertAccessorAt(position++, ac.name);
-                 };
-               }; // end for each in classDecl.varRefSuper.accessors
-               
-           };
-       };
-
-       //end if super
-
-//Allow 'null' as alias to 'do nothing'
-
-       //if .name is 'null', .executes = true
-       if (this.name === 'null') {
-           this.executes = true};
-
-//Hack: after 'into var', allow :type for simple (no accessor) var names
-
-       //if .getParent(Statement).intoVars and .opt(":")
-       if (this.getParent(Statement).intoVars && this.opt(":")) {
-           this.type = this.req(VariableRef);
-       };
-
-//check for post-fix increment/decrement
-
-       this.postIncDec = this.opt('--', '++');
-
-//If this variable ref has ++ or --, IT IS CONSIDERED a "call to execution" in itself,
-//a "imperative statement", because it has side effects.
-//(`i++` has a "imperative" part, It means: "give me the value of i, and then increment it!")
-
-       //if .preIncDec or .postIncDec
-       if (this.preIncDec || this.postIncDec) {
-         this.executes = true;
-         this.hasSideEffects = true;
-       };
-
-//Note: In LiteScript, *any VariableRef standing on its own line*, it's considered
-//a function call. A VariableRef on its own line means "execute this!",
-//so, when translating to js, it'll be translated as a function call, and `()` will be added.
-//If the VariableRef is marked as 'executes' then it's assumed it is alread a functioncall,
-//so `()` will NOT be added.
-
-//Examples:
-//---------
-    //LiteScript   | Translated js  | Notes
-    //-------------|----------------|-------
-    //start        | start();       | "start", on its own, is considered a function call
-    //start(10,20) | start(10,20);  | Normal function call
-    //start 10,20  | start(10,20);  | function call w/o parentheses
-    //start.data   | start.data();  | start.data, on its own, is considered a function call
-    //i++          | i++;           | i++ is marked "executes", it is a statement in itself
-
-//Keep track of 'require' calls, to import modules (recursive)
-
-       //if .name is 'require'
-       if (this.name === 'require') {
-           this.getParent(Module).requireCallNodes.push(this);
-       };
-     };
-
-//---------------------------------
-//This method is only valid to be used in error reporting.
-//function accessors will be output as "(...)", and index accessors as [...]
-
-     //helper method toString()
-     VariableRef.prototype.toString = function(){
-
-       var result = (this.preIncDec || "") + this.name;
-       //if .accessors
-       if (this.accessors) {
-         //for each ac in .accessors
-         for( var ac__inx=0,ac ; ac__inx<this.accessors.length ; ac__inx++){ac=this.accessors[ac__inx];
-         
-           result += ac.toString();
-         }; // end for each in this.accessors
-         
-       };
-       return result + (this.postIncDec || "");
-     };
-   //export
-   module.exports.VariableRef = VariableRef;
-   //end class VariableRef
-
-//-----------------------
 
 //## Operand
 
-//`Operand: (
+//```
+//Operand: (
   //(NumberLiteral|StringLiteral|RegExpLiteral|ArrayLiteral|ObjectLiteral
                     //|ParenExpression|FunctionDeclaration)[Accessors])
   //|VariableRef)
+//```
 
 //Examples:
-
-//4 + 3 : Operand Oper Operand
-//-4    : UnaryOper Operand
+//<br> 4 + 3 -> `Operand Oper Operand`
+//<br> -4    -> `UnaryOper Operand`
 
 //A `Operand` is the data on which the operator operates.
 //It's the left and right part of a binary operator.
@@ -1430,13 +1513,12 @@
    // Operand (extends|super is) ASTBase
    Operand.prototype.__proto__ = ASTBase.prototype;
 
-     //method parse()
-     Operand.prototype.parse = function(){
-
 //fast-parse: if it's a NUMBER: it is NumberLiteral, if it's a STRING: it is StringLiteral (also for REGEX)
 //or, upon next token, cherry pick which AST nodes to try,
 //'(':ParenExpression,'[':ArrayLiteral,'{':ObjectLiteral,'function': FunctionDeclaration
 
+     //method parse()
+     Operand.prototype.parse = function(){
        this.name = this.parseDirect(this.lexer.token.type, OPERAND_DIRECT_TYPE) || this.parseDirect(this.lexer.token.value, OPERAND_DIRECT_TOKEN);
 
 //if it was a Literal, ParenExpression or FunctionDeclaration
@@ -1453,19 +1535,21 @@
        else {
            this.name = this.req(VariableRef);
        };
+
+       //end if
+       
      };
    //export
    module.exports.Operand = Operand;
    //end class Operand
 
-        //#end if
-
-    //#end Operand
+   //end Operand
 
 
 //## Oper
 
-//`Oper: ('~'|'&'|'^'|'|'|'>>'|'<<'
+//```
+//Oper: ('~'|'&'|'^'|'|'|'>>'|'<<'
         //|'*'|'/'|'+'|'-'|mod
         //|instance of|instanceof
         //|'>'|'<'|'>='|'<='
@@ -1474,9 +1558,10 @@
         //|[not] in
         //|(has|hasnt) property
         //|? true-Expression : false-Expression)`
+//```
 
 //An Oper sits between two Operands ("Oper" is a "Binary Operator",
-//differents from *UnaryOperators* which optionally precede a Operand)
+//different from *UnaryOperators* which optionally precede a Operand)
 
 //If an Oper is found after an Operand, a second Operand is expected.
 
@@ -1503,14 +1588,12 @@
    // Oper (extends|super is) ASTBase
    Oper.prototype.__proto__ = ASTBase.prototype;
 
+//Get token, require an OPER.
+//Note: 'ternary expression with else'. `x? a else b` should be valid alias for `x?a:b`
+
      //method parse()
      Oper.prototype.parse = function(){
-
         //declare valid .getPrecedence
-
-//Get token, require an OPER.
-//Special: v0.3 - 'ternary expression with else'. "x? a else b" should be valid alias for "x?a:b"
-
         //declare valid .parent.ternaryCount
        //if .parent.ternaryCount and .opt('else')
        if (this.parent.ternaryCount && this.opt('else')) {
@@ -1545,15 +1628,15 @@
        }
 
 //A.3) also, check if we got a `not` token.
-//In this case we require the next token to be `in`
-//`not in` is the only valid (not-unary) *Oper* starting with `not`
+//In this case we require the next token to be `in|like`
+//`not in|like` is the only valid (not-unary) *Oper* starting with `not`
        
        else if (this.name === 'not') {
            this.negated = true;// # set the 'negated' flag
            this.name = this.req('in', 'like');// # require 'not in'|'not like'
        };
 
-//A.4) handle 'into [var] x'
+//A.4) handle 'into [var] x', assignment-Expression
 
        //if .name is 'into' and .opt('var')
        if (this.name === 'into' && this.opt('var')) {
@@ -1576,46 +1659,47 @@
          this.name = 'instance of';
        };
 
-        //#end if
+       //end if
 
 //C) Variants on 'is/isnt...'
 
        //if .name is 'is' # note: 'isnt' was converted to 'is {negated:true}' above
        if (this.name === 'is') {// # note: 'isnt' was converted to 'is {negated:true}' above
 
-  //C.1) is not
+  //C.1) is not<br>
   //Check for `is not`, which we treat as `isnt` rather than `is ( not`.
 
-         //if .opt('not') # --> is not/has not...
-         if (this.opt('not')) {// # --> is not/has not...
-             //if .negated, .throwError '"isnt not" is invalid'
-             if (this.negated) {
-                 this.throwError('"isnt not" is invalid')};
-             this.negated = true;// # set the 'negated' flag
-         };
+           //if .opt('not') # --> is not/has not...
+           if (this.opt('not')) {// # --> is not/has not...
+               //if .negated, .throwError '"isnt not" is invalid'
+               if (this.negated) {
+                   this.throwError('"isnt not" is invalid')};
+               this.negated = true;// # set the 'negated' flag
+           };
 
-        //#end if
+           //end if
 
   //C.2) accept 'is/isnt instance of' and 'is/isnt instanceof'
 
-         //if .opt('instance')
-         if (this.opt('instance')) {
-             this.name = 'instance ' + this.req('of');
-         }
-         
-         else if (this.opt('instanceof')) {
-             this.name = 'instance of';
-         };
-       };
+           //if .opt('instance')
+           if (this.opt('instance')) {
+               this.name = 'instance ' + this.req('of');
+           }
+           
+           else if (this.opt('instanceof')) {
+               this.name = 'instance of';
+           };
 
-        //#end if
+           //end if
+           
+       };
 
 //Get operator precedence index
 
        this.getPrecedence();
      };
 
-      //#end Oper parse
+     //end Oper parse
 
 
 //###getPrecedence:
@@ -1643,11 +1727,10 @@
 
 //####Notes for the javascript programmer
 
-
-//In LiteScript, the *boolean negation* `not`,
+//In LiteScript, *the boolean negation* `not`,
 //has LOWER PRECEDENCE than the arithmetic and logical operators.
 
-//In LiteScript: `if not a + 2 is 5` means `if not (a+2 is 5)`
+//In LiteScript:  `if not a + 2 is 5` means `if not (a+2 is 5)`
 
 //In javascript: `if ( ! a + 2 === 5 )` means `if ( (!a)+2 === 5 )`
 
@@ -1657,19 +1740,20 @@
 //UnaryOper
 //---------
 
-//`UnaryOper: ('-'|'+'|new|type of|typeof|not|no|'~') `
+//`UnaryOper: ('-'|'+'|new|type of|typeof|not|no|'~')`
 
 //A Unary Oper is an operator acting on a single operand.
 //Unary Oper extends Oper, so both are `instance of Oper`
 
 //Examples:
-//1) `not`     *boolean negation*     `if not ( a is 3 or b is 4)`
-//2) `-`       *numeric unary minus*  `-(4+3)`
-//2) `+`       *numeric unary plus*   `+4` (can be ignored)
-//3) `new`     *instantiation*        `x = new classes[2]()`
-//4) `type of` *type name access*     `type of x is 'string'`
-//5) `no`      *'falsey' check*       `if no options then options={}`
-//6) `~`       *bit-unary-negation*   `a = ~xC0 + 5`
+
+//1· `not`     *boolean negation*     `if not ( a is 3 or b is 4)`
+//2. `-`       *numeric unary minus*  `-(4+3)`
+//2. `+`       *numeric unary plus*   `+4` (can be ignored)
+//3. `new`     *instantiation*        `x = new classes[2]()`
+//4. `type of` *type name access*     `type of x is 'string'`
+//5. `no`      *'falsey' check*       `if no options then options={}`
+//6. `~`       *bit-unary-negation*   `a = ~xC0 + 5`
 
    var unaryOperators = ['new', '-', 'no', 'not', 'type', 'typeof', '~', '+'];
 
@@ -1682,11 +1766,10 @@
    // UnaryOper (extends|super is) Oper
    UnaryOper.prototype.__proto__ = Oper.prototype;
 
-     //method parse()
-     UnaryOper.prototype.parse = function(){
-
 //require a unaryOperator
 
+     //method parse()
+     UnaryOper.prototype.parse = function(){
          this.name = this.reqOneOf(unaryOperators);
 
 //Check for `type of` - we allow "type" as var name, but recognize "type of" as UnaryOper
@@ -1707,7 +1790,7 @@
 
          this.lock();
 
-//Rename - and + to 'unary -' and 'unary +'
+//Rename - and + to 'unary -' and 'unary +',
 //'typeof' to 'type of'
 
          //if .name is '-'
@@ -1723,17 +1806,18 @@
              this.name = 'type of';
          };
 
-          //#end if
+         //end if
 
 //calculate precedence - Oper.getPrecedence()
 
          this.getPrecedence();
      };
+
+     //end parse
+     
    //export
    module.exports.UnaryOper = UnaryOper;
    //end class UnaryOper
-
-      //#end parse
 
 
 //-----------
@@ -1794,9 +1878,11 @@
                break;
            };
 
-//optional newline **before** Oper
-//To allow a expressions to continue on the next line, we look ahead, and if the first token in the next line is OPER
-//we consume the NEWLINE, allowing multiline expressions. The exception is ArrayLiteral, because in free-form mode
+//optional newline **before** `Oper`
+//to allow a expressions to continue on the next line.
+//We look ahead, and if the first token in the next line is OPER
+//we consume the NEWLINE, allowing multiline expressions.
+//The exception is ArrayLiteral, because in free-form mode
 //the next item in the array on the next line, can start with a unary operator
 
            //if .lexer.token.type is 'NEWLINE' and not (.parent instanceof ArrayLiteral)
@@ -1825,7 +1911,6 @@
            }
            
            else if (oper.name === ':') {
-
                //if no .ternaryCount //":" without '?'. It can be 'case' expression ending ":"
                if (!this.ternaryCount) { //":" without '?'. It can be 'case' expression ending ":"
                    this.lexer.returnToken();
@@ -1906,89 +1991,64 @@
 
 //For example, `not 1 + 2 * 3 is 5`, turns into:
 
-//<pre>
-//>   not
-//>      \
-//>      is
-//>     /  \
-//>   +     5
-//>  / \
-//> 1   *
-//>    / \
-//>    2  3
-//</pre>
+//```
+   //not
+      //\
+      //is
+     ///  \
+   //+     5
+  /// \
+ //1   *
+    /// \
+    //2  3
+//```
 
 
 //`3 in a and not 4 in b`
-//<pre>
-//>      and
-//>     /  \
-//>   in    not
-//>  / \     |
-//> 3   a    in
-//>         /  \
-//>        4   b
-//</pre>
+//```
+      //and
+     ///  \
+   //in    not
+  /// \     |
+ //3   a    in
+         ///  \
+        //4   b
+//```
 
 //`3 in a and 4 not in b`
-//<pre>
-//>      and
-//>     /  \
-//>   in   not-in
-//>  / \    / \
-//> 3   a  4   b
-//>
-//</pre>
+//```
+      //and
+     ///  \
+   //in   not-in
+  /// \    / \
+ //3   a  4   b
+
+//```
+
 
 //`-(4+3)*2`
-//<pre>
-//>   *
-//>  / \
-//> -   2
-//>  \
-//>   +
-//>  / \
-//> 4   3
-//</pre>
+//```
+   //*
+  /// \
+ //-   2
+  //\
+   //+
+  /// \
+ //4   3
+//```
 
 //Expression.growExpressionTree()
 //-------------------------------
 
-     //method growExpressionTree(arr:array)
-     Expression.prototype.growExpressionTree = function(arr){
-
 //while there is more than one operator in the root node...
 
-       //while arr.length > 1
+     //method growExpressionTree(arr:array)
+     Expression.prototype.growExpressionTree = function(arr){
+       //do while arr.length > 1
        while(arr.length > 1){
 
 //find the one with highest precedence (lower number) to push down
 //(on equal precedende, we use the leftmost)
-
-         //compile if inNode
-
-           var d = "Expr.TREE: ";
-           //for each inx,item in arr
-           for( var inx=0,item ; inx<arr.length ; inx++){item=arr[inx];
-           
-              //declare valid item.name.name
-              //declare valid item.pushed
-             //if item instanceof Oper
-             if (item instanceof Oper) {
-               d += " " + item.name;
-               //if item.pushed
-               if (item.pushed) {
-                   d += "-v";
-               };
-               d += " ";
-             }
-             
-             else {
-               d += " " + item.name.name;
-             };
-           }; // end for each in arr
-           debug(d);
-         //end
 
          var pos = -1;
          var minPrecedenceInx = 100;
@@ -2010,7 +2070,7 @@
            };
          }; // end for each in arr
 
-          //#end for
+         //end for
 
           //#control
          //if pos<0, .throwError("can't find highest precedence operator")
@@ -2058,21 +2118,21 @@
            oper.right = arr.splice(pos + 1, 1)[0];
            oper.left = arr.splice(pos - 1, 1)[0];
          };
+
+         //end if
+         
        };//end loop
-
-          //#end if
-
-        //#loop until there's only one operator
 
 //Store the root operator
 
        this.root = arr[0];
      };
+
+     //end method
+     
    //export
    module.exports.Expression = Expression;
    //end class Expression
-
-      //#end method
 
 //-----------------------
 
@@ -2250,7 +2310,6 @@
 
      //method parse()
      ObjectLiteral.prototype.parse = function(){
-
        this.req('{');
        this.lock();
        this.items = this.optSeparatedList(NameValuePair, ',', '}');// # closer "}" required
@@ -2318,27 +2377,27 @@
        };
      };
 
-      //#recursive duet 2 (see ObjectLiteral)
+//recursive duet 2 (see ObjectLiteral)
+
      //helper method forEach(callback)
      NameValuePair.prototype.forEach = function(callback){
 
          callback(this);
 
-//if ObjectLiteral, recurse
-
+          //#if ObjectLiteral, recurse
           //declare valid .value.root.name
-
          //if .value.root.name instanceof ObjectLiteral
          if (this.value.root.name instanceof ObjectLiteral) {
             //declare valid .value.root.name.forEach
            this.value.root.name.forEach(callback);// # recurse
          };
      };
+
+     //end helper recursive functions
+     
    //export
    module.exports.NameValuePair = NameValuePair;
    //end class NameValuePair
-
-    //#end helper recursive functions
 
 
 //## FreeObjectLiteral
@@ -2386,18 +2445,16 @@
    // FreeObjectLiteral (extends|super is) ObjectLiteral
    FreeObjectLiteral.prototype.__proto__ = ObjectLiteral.prototype;
 
+//get items: optional comma separated, closes on de-indent, at least one required
+
      //method parse()
      FreeObjectLiteral.prototype.parse = function(){
        this.lock();
-
-//get items: optional comma separated, closes on de-indent, at least one required
-
        this.items = this.reqSeparatedList(NameValuePair, ',');
      };
    //export
    module.exports.FreeObjectLiteral = FreeObjectLiteral;
    //end class FreeObjectLiteral
-
 
 
 //## ParenExpression
@@ -2470,14 +2527,11 @@
 
       //#end parse
 
-     //method parseParametersAndBody()
+     //helper method parseParametersAndBody()
      FunctionDeclaration.prototype.parseParametersAndBody = function(){
 
-//This method is shared by functions, methods and constructors and
-
-//`()` after `function` are optional
-
-//parse parameter: `'(' [VariableDecl,] ')'`
+//This method is shared by functions, methods and constructors.
+//`()` after `function` are optional. It parses: `['(' [VariableDecl,] ')'] [returns VariableRef] '['DefinePropertyItem']'`
 
        //if .opt("(")
        if (this.opt("(")) {
@@ -2536,8 +2590,8 @@
 //MethodDeclaration derives from FunctionDeclaration, so both are instance of FunctionDeclaration
 
 //Examples:
-  //method concat(a:string, b:string) return string
-  //method remove(element) [not enumerable, not writable, configurable]
+//<br>`method concat(a:string, b:string) return string`
+//<br>`method remove(element) [not enumerable, not writable, configurable]`
 
    //public class MethodDeclaration extends FunctionDeclaration
    //constructor
@@ -2554,10 +2608,11 @@
        this.specifier = this.req('method');
        this.lock();
 
-//require method name
+//require method name. Note: jQuery uses 'not' and 'has' as method names, so here we
+//take any token, and check if it's valid identifier
 
-        //.name = .req('IDENTIFIER') //jQuery uses 'not' and 'has' as method names
-       this.name = this.lexer.token.value; //let's take any token, and check if it's valid identifier
+        //.name = .req('IDENTIFIER')
+       this.name = this.lexer.token.value;
        //if not .name like /^[a-zA-Z$_]+[0-9a-zA-Z$_]*$/, .throwError 'invalid method name: "#{.name}"'
        if (!(/^[a-zA-Z$_]+[0-9a-zA-Z$_]*$/.test(this.name))) {
            this.throwError('invalid method name: "' + this.name + '"')};
@@ -2570,8 +2625,6 @@
    //export
    module.exports.MethodDeclaration = MethodDeclaration;
    //end class MethodDeclaration
-
-      //#end parse
 
 
 //## ClassDeclaration
@@ -2597,10 +2650,8 @@
 
      //method parse()
      ClassDeclaration.prototype.parse = function(){
-
        this.req('class');
        this.lock();
-
        this.name = this.req('IDENTIFIER');
 
 //Control: class names should be Capitalized, except: jQuery
@@ -2610,8 +2661,7 @@
            this.lexer.sayErr("class names should be Capitalized: class " + this.name);
        };
 
-//Now parse optional `,(proto is|extend|inherits from)` setting the super class
-//(aka oop classic:'inherits', or ES6: 'extends')
+//Now parse optional `,(extend|proto is|inherits from)` setting the super class
 
        this.opt(',');
        //if .opt('extends','inherits','proto')
@@ -2781,16 +2831,12 @@
 //-----------------
 
 //`compiler` is a generic entry point to alter LiteScript compiler from source code.
-//It allows conditional complilation, setting compiler options, define macros(*)
-//and also allow the programmer to hook transformations on the compiler process itself(*).
-
-//(*) Not yet.
-
-//`CompilerStatement: (compiler|compile) (set|if|debugger|option) Body`
-
-//`set-CompilerStatement: compiler set (VariableDecl,)`
-
-//`conditional-CompilerStatement: 'compile if IDENTIFIER Body`
+//It allows conditional complilation, setting compiler options, and execute macros
+//to generate code on the fly.
+//Future: allow the programmer to hook transformations on the compiler process itself.
+//<br>`CompilerStatement: (compiler|compile) (set|if|debugger|option) Body`
+//<br>`set-CompilerStatement: compiler set (VariableDecl,)`
+//<br>`conditional-CompilerStatement: 'compile if IDENTIFIER Body`
 
    //public class CompilerStatement extends ASTBase
    //constructor
@@ -2808,15 +2854,11 @@
 
      //method parse()
      CompilerStatement.prototype.parse = function(){
-
-        //declare list:VariableDecl array
-
        this.req('compiler', 'compile');
        this.lock();
+       this.kind = this.lexer.token.value;
 
 //### compiler ImportStatement
-
-       this.kind = this.lexer.token.value;
 
        //if .kind is 'import'
        if (this.kind === 'import') {
@@ -2829,12 +2871,10 @@
        this.kind = this.req('set', 'if', 'debugger', 'options');
 
 //### compiler set
+//get list of declared names, add to root node 'Compiler Vars'
 
        //if .kind is 'set'
        if (this.kind === 'set') {
-
-//get list of declared names, add to root node 'Compiler Vars'
-
            this.list = this.reqSeparatedList(VariableDecl, ',');
        }
 
@@ -2880,9 +2920,9 @@
 
 //`ImportStatement: import (ImportStatementItem,)`
 
-//Example: `import fs, path` ->  js:`var fs=require('fs'),path=require('path')`
+//Example: `global import fs, path` ->  js:`var fs=require('fs'),path=require('path')`
 
-//Example: `import http, wait from 'wait.for'` ->  js:`var http=require('http'),wait=require('wait.for')`
+//Example: `import Args, wait from 'wait.for'` ->  js:`var http=require('./Args'),wait=require('./wait.for')`
 
    //public class ImportStatement extends ASTBase
    //constructor
@@ -2898,7 +2938,6 @@
 
      //method parse()
      ImportStatement.prototype.parse = function(){
-
        this.req('import');
        this.lock();
        this.list = this.reqSeparatedList(ImportStatementItem, ",");
@@ -2931,7 +2970,6 @@
 
      //method parse()
      ImportStatementItem.prototype.parse = function(){
-
        this.name = this.req('IDENTIFIER');
        //if .opt('from')
        if (this.opt('from')) {
@@ -2943,6 +2981,60 @@
    module.exports.ImportStatementItem = ImportStatementItem;
    //end class ImportStatementItem
 
+
+//## DeclareStatement
+
+//Declare statement allows you to forward-declare variable or object members.
+//Also allows to declare the valid properties for externally created objects
+//when you dont want to create a class to use as type.
+//<br>`DeclareStatement: declare ([types]|global|forward|on IDENTIFIER) (VariableDecl,)+`
+//<br>`DeclareStatement: declare name affinity (IDENTIFIER,)+`
+
+//#####Declare types
+//<br>`DeclareStatement: declare [types] (VariableDecl,)+`
+
+//To declare valid types for scope vars:
+
+//Example: `declare types name:string, parent:NameDeclaration`
+
+//#####Declare valid
+//`DeclareStatement: declare valid IDENTIFIER ("."IDENTIFIER|"()"|"[]")*`
+
+//To declare valid chains
+
+//Example: `declare valid .type[].name.name`
+
+//#####Declare name affinity
+//`DeclareStatement: name affinity (IDENTIFIER,)+`
+
+//To be used inside a class declaration, declare var names
+//that will default to Class as type
+
+//Example
+//```
+  //Class NameDeclaration
+    //properties
+      //name: string, sourceLine, column
+      //declare name affinity nameDecl
+//```
+
+//Given the above declaration, any `var` named (or ending in) **"nameDecl"** or **"nameDeclaration"**
+//will assume `:NameDeclaration` as type. (Class name is automatically included in 'name affinity')
+
+//Example:
+//`var nameDecl, parentNameDeclaration, childNameDecl, nameDeclaration`
+
+//all three vars will assume `:NameDeclaration` as type.
+
+//#####global Declare
+//`DeclareStatement: global declare (VariableDecl,)+`
+
+//To declare global, externally created vars. Example: `declare global logMessage, colors`
+
+//#####Declare on
+//`DeclareStatement: declare on IDENTIFIER (VariableDecl,)+` #declare members on vars
+
+//To declare valid members on scope vars.
 
    //export class DeclareStatement extends ASTBase
    //constructor
@@ -3039,6 +3131,9 @@
 
 //The 'default' construct is formed as an ObjectLiteral assignment,
 //but only the 'undfined' properties of the object will be assigned.
+
+
+//Example:
 
 
 //    function theApi(object,options,callback)
@@ -3168,7 +3263,7 @@
         //#end loop
 
 
-//## WaitForAsyncCall
+//## WaitForAsyncCall #-NOT IMPLEMENTED YET-
 
 //`WaitForAsyncCall: wait for fnCall-VariableRef`
 
@@ -3206,7 +3301,7 @@
    //end class WaitForAsyncCall
 
 
-//LaunchStatement
+//LaunchStatement #-NOT IMPLEMENTED YET-
 //---------------
 
 //`LaunchStatement: 'launch' fnCall-VariableRef`
@@ -3230,10 +3325,8 @@
 
      //method parse()
      LaunchStatement.prototype.parse = function(){
-
        this.req('launch');
        this.lock();
-
        this.varRef = this.req(VariableRef);
      };
    //export
@@ -3241,10 +3334,13 @@
    //end class LaunchStatement
 
 
+//--------------
+
 //Adjective
 //---------
-
 //`Adjective: (export|generator|shim|helper|global)`
+
+//Adjectives can precede several statement.
 
    //public class Adjective extends ASTBase
    //constructor
@@ -3260,7 +3356,6 @@
 
        this.name = this.req('public', 'export', 'default', 'global', 'generator', 'shim', 'helper');
     };
-
 
     //helper method validate(statement)
     Adjective.prototype.validate = function(statement){
@@ -3333,7 +3428,6 @@
 
      //method parse(options)
      FunctionCall.prototype.parse = function(options){
-
         //declare valid .parent.preParsedVarRef
         //declare valid .name.executes
 
@@ -3380,14 +3474,15 @@
 //`SwitchStatement: switch [VariableRef] (case (Expression,) ":" Body)* [default Body]`
 
 //Similar to js switch, but:
-//1. no fall-through
-//2. each 'case' can have several expressions, comma separated, then ':'
-//3. if no var specified, select first true expression
+
+ //1. no fall-through
+ //2. each 'case' can have several expressions, comma separated, then ':'
+ //3. if no var specified, select first true expression
 
 //See Also: [CaseWhenExpression]
 
 //Examples:
-
+//```
   //switch a
     //case 2,4,6:
       //print 'even'
@@ -3403,7 +3498,7 @@
       //print 'option 2'
     //default:
       //print 'other'
-
+//```
 
    //public class SwitchStatement extends ASTBase
    //constructor
@@ -3420,19 +3515,15 @@
 
      //method parse()
      SwitchStatement.prototype.parse = function(){
-
        this.req('switch');
        this.lock();
-
        this.varRef = this.opt(VariableRef);
-
        this.cases = [];
 
 //Loop processing: 'NEWLINE','case' or 'default'
 
        //do until .lexer.token.type is 'EOF'
        while(!(this.lexer.token.type === 'EOF')){
-
            var keyword = this.req('case', 'default', 'NEWLINE');
 
 //on 'case', get a comma separated list of expressions, ended by ":"
@@ -3493,7 +3584,7 @@
 //Similar to ANSI-SQL 'CASE', and ruby's 'case'
 
 //Examples:
-
+//```
   //print case b
           //when 2,4,6 then 'even'
           //when 1,3,5 then 'odd'
@@ -3505,7 +3596,7 @@
           //when b >= 10 or a<0 or c is 5 then 'option 2'
           //else 'other'
         //end
-
+//```
 
    //public class CaseWhenExpression extends ASTBase
    //constructor
@@ -3522,19 +3613,15 @@
 
      //method parse()
      CaseWhenExpression.prototype.parse = function(){
-
        this.req('case');
        this.lock();
-
        this.varRef = this.opt(VariableRef);
-
        this.cases = [];
 
 //Loop processing: 'NEWLINE','when' or 'else' until 'end'
 
        //do until .lexer.token.value is 'end'
        while(!(this.lexer.token.value === 'end')){
-
            var keyword = this.req('NEWLINE', 'when', 'else');
 
 //on 'case', get a comma separated list of expressions, ended by ":"
@@ -3588,7 +3675,6 @@
 
        //method parse()
        CaseWhenSection.prototype.parse = function(){
-
            //if .parent.varRef
            if (this.parent.varRef) {
                this.expressions = this.reqSeparatedList(Expression, ",");
@@ -3618,14 +3704,16 @@
 //The generic `Statement` is used to define `Body: (Statement;)`, that is,
 //**Body** is a list of semicolon (or NEWLINE) separated **Statements**.
 
-//`Statement: [Adjective]* (ClassDeclaration|FunctionDeclaration
+//Grammar: ```
+//Statement: [Adjective]* (ClassDeclaration|FunctionDeclaration
  //|IfStatement|ForStatement|WhileUntilLoop|DoLoop
  //|AssignmentStatement
  //|LoopControlStatement|ThrowStatement
  //|TryCatch|ExceptionBlock
- //|ReturnStatement|PrintStatement|DoNothingStatement)`
+ //|ReturnStatement|PrintStatement|DoNothingStatement)
 
-//`Statement: ( AssignmentStatement | fnCall-VariableRef [ ["("] (Expression,) [")"] ] )`
+//Statement: ( AssignmentStatement | fnCall-VariableRef [ ["("] (Expression,) [")"] ] )
+//```
 
    //public class Statement extends ASTBase
    //constructor
@@ -3643,7 +3731,6 @@
 
      //method parse()
      Statement.prototype.parse = function(){
-
         //#debug show line and tokens
        debug("");
        this.lexer.infoLine.dump();
@@ -3655,8 +3742,7 @@
        //if no .statement
        if (!this.statement) {
 
-//If it was not found, try optional adjectives (zero or more). Adjectives precede statement keyword.
-//Recognized adjectives are: `(export|public|generator|shim|helper)`.
+//If it was not found, try optional adjectives (zero or more). Adjectives are: `(export|public|generator|shim|helper)`.
 
          this.adjectives = this.optList(Adjective);
 
@@ -3666,8 +3752,8 @@
          //if no .statement
          if (!this.statement) {
 
-//Last possibilities are: FunctionCall or AssignmentStatement
-//both start with a VariableRef:
+//Last possibilities are: `FunctionCall` or `AssignmentStatement`
+//both start with a `VariableRef`:
 
 //(performance) **require** & pre-parse the VariableRef.
 //Then we require a AssignmentStatement or FunctionCall
@@ -3678,7 +3764,7 @@
          };
        };
 
-        //#end if - statement parse tries
+       //end if - statement parse tries
 
 //If we reached here, we have parsed a valid statement.
 //Check validity of adjective-statement combination
@@ -3827,7 +3913,7 @@
 //based on `token.value`. (instead of parsing by ordered trial & error)
 
 //This table makes a direct parsing of almost all statements, thanks to a core definition of LiteScript:
-//Anything standing aline in it's own line, its an imperative statement (it does something, it produces effects).
+//Anything standing alone in it's own line, its an imperative statement (it does something, it produces effects).
 
    var StatementsDirect = {
      'class': ClassDeclaration, 
@@ -3878,6 +3964,8 @@
        };
 
 
+//##### Helper Functions
+
    //export helper function autoCapitalizeCoreClasses(name:string) returns String
    function autoCapitalizeCoreClasses(name){
       //#auto-capitalize core classes when used as type annotations
@@ -3926,121 +4014,6 @@
 
 
 
-
-//##Free-Form Separated List
-//At every point where a "Separated List" is accepted, also
-//a "**free-form** Separated List" is accepted.
-
-//In *free-form* mode, each item stands on its own line, and separators (comma/semicolon)
-//are optional, and can appear after or before the NEWLINE.
-
-//For example, given the previous example: **VarStatement: (IDENTIFIER ["=" Expression] ,)**,
-//all the following constructions are equivalent and valid in LiteScript:
-
-//Examples:
-
-
-//    //standard js
-//    var a = {prop1:30 prop2: { prop2_1:19, prop2_2:71} arr:["Jan","Feb","Mar"]}
-
-//    //LiteScript: mixed freeForm and comma separated
-//    var a =
-//        prop1: 30
-//        prop2:
-//          prop2_1: 19, prop2_2: 71
-//        arr: [ "Jan",
-//              "Feb", "Mar"]
-
-//    //LiteScript: in freeForm, commas are optional
-//    var a =
-//        prop1: 30
-//        prop2:
-//          prop2_1: 19,
-//          prop2_2: 71,
-//        arr: [
-//            "Jan",
-//            "Feb"
-//            "Mar"
-//            ]
-
-
-//##More about comma separated lists
-
-//The examples above only show Object and List Expressions, but *you can use free-form mode (multiple lines with the same indent), everywhere a comma separated list of items apply.*
-
-//The previous examples were for:
-
-//* Literal Object expression<br>
-  //because a Literal Object expression is:<br>
-  //"{" + a comma separated list of Item:Value pairs + "}"
-
-//and
-//* Literal Array expression<br>
-  //because a Literal Array expression is<br>
-  //"[" + a comma separated list of expressions + "]"
-
-//But the free-form option also applies for:
-
-//* Function parameters declaration<br>
-  //because Function parameters declaration is:<br>
-  //"(" + a comma separated list of paramter names + ")"
-
-//* Arguments, for any function call<br>
-  //because function call arguments are:<br>
-  //"(" + a comma separated list of expressions + ")"
-
-//* Variables declaration<br>
-  //because variables declaration is:<br>
-  //'var' + a comma separated list of: IDENTIFIER ["=" Expression]
-
-//Examples:
-
-
-//  js:
-
-//    Console.log(title,subtitle,line1,line2,value,recommendation)
-
-//  LiteScript available variations:
-
-//    print title,subtitle,
-//          line1,line2,
-//          value,recommendation
-
-//    print
-//      title
-//      subtitle
-//      line1
-//      line2
-//      value
-//      recommendation
-
-//  js:
-
-//    var a=10, b=20, c=30,
-//        d=40;
-
-//    function complexFn( 10, 4, 'sample'
-//       'see 1',
-//       2+2,
-//       null ){
-//      ...function body...
-//    };
-
-//  LiteScript:
-
-//    var
-//      a=10,b=20
-//      c=30,d=40
-
-//    function complexFn(
-//      10       # determines something important to this function
-//      4        # do not pass nulll to this
-//      'sample' # this is original data
-//      'see 1'  # note param
-//      2+2      # useful tip
-//      null     # reserved for extensions ;)
-//      )
-//      ...function body...
 
 //Compiled by LiteScript compiler v0.5.0, source: /home/ltato/LiteScript/devel/source-v0.6.0/Grammar.lite.md
 //# sourceMappingURL=Grammar.js.map

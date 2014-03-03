@@ -884,6 +884,135 @@ require an assignment symbol: ("="|"+="|"-="|"*="|"/=")
 
 -----------------------
 
+### export class VariableRef extends ASTBase
+      
+`VariableRef: ('--'|'++') IDENTIFIER [Accessors] ('--'|'++')`
+
+`VariableRef` is a Variable Reference
+
+a VariableRef can include chained 'Accessors', which do:
+- access a property of the object : `.`-> **PropertyAccess** and `[...]`->**IndexAccess**
+- assume the variable is a function and perform a function call :  `(...)`->**FunctionAccess**
+
+
+      properties 
+        preIncDec
+        postIncDec
+
+      declare name affinity varRef
+
+      method parse()
+        .preIncDec = .opt('--','++')
+        .executes = false
+
+assume 'this.x' on '.x'. 
+get var name
+
+        if .opt('.','SPACE_DOT') # note: DOT has SPACES in front when .property used as parameter
+          #'.name' -> 'this.name'
+          .lock()
+          .name = 'this' 
+          var member = .req('IDENTIFIER')
+          .addAccessor new PropertyAccess(this,member)
+        else
+          .name = .req('IDENTIFIER')
+
+        .lock()
+
+Now we check for accessors: 
+<br>`.`->**PropertyAccess** 
+<br>`[...]`->**IndexAccess** 
+<br>`(...)`->**FunctionAccess**
+
+Note: **.paserAccessors()** will:
+- set .hasSideEffects=true if a function accessor is parsed
+- set .executes=true if the last accessor is a function accessor
+
+        .parseAccessors
+
+Replace lexical `super` by `#{SuperClass name}.prototype`
+    
+        if .name is 'super'
+
+            var classDecl = .getParent(ClassDeclaration)
+            if no classDecl
+              .throwError "can't use 'super' outside a class method"
+
+            if classDecl.varRefSuper
+                #replace name='super' by name = #{SuperClass name}
+                .name = classDecl.varRefSuper.name
+            else
+                .name ='Object' # no superclass means 'Object' is super class
+
+            #insert '.prototype.' as first accessor (after super class name)
+            .insertAccessorAt 0, 'prototype'
+
+            #if super class is a composed name (x.y.z), we must insert those accessors also
+            # so 'super.myFunc' turns into 'NameSpace.subName.SuperClass.prototype.myFunc'
+            if classDecl.varRefSuper and classDecl.varRefSuper.accessors
+                #insert super class accessors
+                var position = 0
+                for each ac in classDecl.varRefSuper.accessors
+                  if ac instanceof PropertyAccess
+                    .insertAccessorAt position++, ac.name
+
+        end if super
+
+Allow 'null' as alias to 'do nothing'
+
+        if .name is 'null', .executes = true
+
+Hack: after 'into var', allow :type for simple (no accessor) var names
+
+        if .getParent(Statement).intoVars and .opt(":")
+            .type = .req(VariableRef)
+
+check for post-fix increment/decrement
+
+        .postIncDec = .opt('--','++')
+
+If this variable ref has ++ or --, IT IS CONSIDERED a "call to execution" in itself, 
+a "imperative statement", because it has side effects. 
+(`i++` has a "imperative" part, It means: "give me the value of i, and then increment it!")
+
+        if .preIncDec or .postIncDec 
+          .executes = true
+          .hasSideEffects = true
+
+Note: In LiteScript, *any VariableRef standing on its own line*, it's considered 
+a function call. A VariableRef on its own line means "execute this!",
+so, when translating to js, it'll be translated as a function call, and `()` will be added.
+If the VariableRef is marked as 'executes' then it's assumed it is alread a functioncall, 
+so `()` will NOT be added.
+
+Examples:
+---------
+    LiteScript   | Translated js  | Notes
+    -------------|----------------|-------
+    start        | start();       | "start", on its own, is considered a function call
+    start(10,20) | start(10,20);  | Normal function call
+    start 10,20  | start(10,20);  | function call w/o parentheses
+    start.data   | start.data();  | start.data, on its own, is considered a function call
+    i++          | i++;           | i++ is marked "executes", it is a statement in itself
+
+Keep track of 'require' calls, to import modules (recursive)
+
+        if .name is 'require'
+            .getParent(Module).requireCallNodes.push this            
+
+---------------------------------
+##### helper method toString()
+This method is only valid to be used in error reporting.
+function accessors will be output as "(...)", and index accessors as [...]
+
+        var result = (.preIncDec or "") + .name
+        if .accessors
+          for each ac in .accessors
+            result += ac.toString()
+        return result + (.postIncDec or "")
+
+-----------------------
+
 ## Accessors
 
 `Accessors: (PropertyAccess|FunctionAccess|IndexAccess)`
@@ -1023,147 +1152,19 @@ if any accessor is a function call, this statement is assumed to have side-effec
 
 
 
-### export class VariableRef extends ASTBase
-      
-`VariableRef: ('--'|'++') IDENTIFIER [Accessors] ('--'|'++')`
-
-`VariableRef` is a Variable Reference
-
-a VariableRef can include chained 'Accessors', which do:
-- access a property of the object : `.`-> **PropertyAccess** and `[...]`->**IndexAccess**
-- assume the variable is a function and perform a function call :  `(...)`->**FunctionAccess**
-
-
-      properties 
-        preIncDec
-        postIncDec
-
-      declare name affinity varRef
-
-      method parse()
-        .preIncDec = .opt('--','++')
-        .executes = false
-
-assume 'this.x' on '.x'. 
-get var name
-
-        if .opt('.','SPACE_DOT') # note: DOT has SPACES in front when .property used as parameter
-          #'.name' -> 'this.name'
-          .lock()
-          .name = 'this' 
-          var member = .req('IDENTIFIER')
-          .addAccessor new PropertyAccess(this,member)
-        else
-          .name = .req('IDENTIFIER')
-
-        .lock()
-
-Now we check for accessors: 
-<br>`.`->**PropertyAccess** 
-<br>`[...]`->**IndexAccess** 
-<br>`(...)`->**FunctionAccess**
-
-Note: **.paserAccessors()** will:
-- set .hasSideEffects=true if a function accessor is parsed
-- set .executes=true if the last accessor is a function accessor
-
-        .parseAccessors
-
-Replace lexical `super` by `#{SuperClass name}.prototype`
-    
-        if .name is 'super'
-
-            var classDecl = .getParent(ClassDeclaration)
-            if no classDecl
-              .throwError "can't use 'super' outside a class method"
-
-            if classDecl.varRefSuper
-                #replace name='super' by name = #{SuperClass name}
-                .name = classDecl.varRefSuper.name
-            else
-                .name ='Object' # no superclass means 'Object' is super class
-
-            #insert '.prototype.' as first accessor (after super class name)
-            .insertAccessorAt 0, 'prototype'
-
-            #if super class is a composed name (x.y.z), we must insert those accessors also
-            # so 'super.myFunc' turns into 'NameSpace.subName.SuperClass.prototype.myFunc'
-            if classDecl.varRefSuper and classDecl.varRefSuper.accessors
-                #insert super class accessors
-                var position = 0
-                for each ac in classDecl.varRefSuper.accessors
-                  if ac instanceof PropertyAccess
-                    .insertAccessorAt position++, ac.name
-
-        end if super
-
-Allow 'null' as alias to 'do nothing'
-
-        if .name is 'null', .executes = true
-
-Hack: after 'into var', allow :type for simple (no accessor) var names
-
-        if .getParent(Statement).intoVars and .opt(":")
-            .type = .req(VariableRef)
-
-check for post-fix increment/decrement
-
-        .postIncDec = .opt('--','++')
-
-If this variable ref has ++ or --, IT IS CONSIDERED a "call to execution" in itself, 
-a "imperative statement", because it has side effects. 
-(`i++` has a "imperative" part, It means: "give me the value of i, and then increment it!")
-
-        if .preIncDec or .postIncDec 
-          .executes = true
-          .hasSideEffects = true
-
-Note: In LiteScript, *any VariableRef standing on its own line*, it's considered 
-a function call. A VariableRef on its own line means "execute this!",
-so, when translating to js, it'll be translated as a function call, and `()` will be added.
-If the VariableRef is marked as 'executes' then it's assumed it is alread a functioncall, 
-so `()` will NOT be added.
-
-Examples:
----------
-    LiteScript   | Translated js  | Notes
-    -------------|----------------|-------
-    start        | start();       | "start", on its own, is considered a function call
-    start(10,20) | start(10,20);  | Normal function call
-    start 10,20  | start(10,20);  | function call w/o parentheses
-    start.data   | start.data();  | start.data, on its own, is considered a function call
-    i++          | i++;           | i++ is marked "executes", it is a statement in itself
-
-Keep track of 'require' calls, to import modules (recursive)
-
-        if .name is 'require'
-            .getParent(Module).requireCallNodes.push this            
-
----------------------------------
-This method is only valid to be used in error reporting.
-function accessors will be output as "(...)", and index accessors as [...]
-
-      helper method toString()
-
-        var result = (.preIncDec or "") + .name
-        if .accessors
-          for each ac in .accessors
-            result += ac.toString()
-        return result + (.postIncDec or "")
-
------------------------
 
 ## Operand
 
-`Operand: (
+```
+Operand: (
   (NumberLiteral|StringLiteral|RegExpLiteral|ArrayLiteral|ObjectLiteral
                     |ParenExpression|FunctionDeclaration)[Accessors])
   |VariableRef) 
+```
 
 Examples:
-
-4 + 3 : Operand Oper Operand
--4    : UnaryOper Operand
+<br> 4 + 3 -> `Operand Oper Operand`
+<br> -4    -> `UnaryOper Operand`
 
 A `Operand` is the data on which the operator operates.
 It's the left and right part of a binary operator.
@@ -1186,14 +1187,13 @@ with exact AST class to call parse() on.
           'case': CaseWhenExpression
     
 
-    public class Operand extends ASTBase
-
-      method parse()
+### public class Operand extends ASTBase
 
 fast-parse: if it's a NUMBER: it is NumberLiteral, if it's a STRING: it is StringLiteral (also for REGEX)
 or, upon next token, cherry pick which AST nodes to try,
 '(':ParenExpression,'[':ArrayLiteral,'{':ObjectLiteral,'function': FunctionDeclaration
 
+      method parse()
         .name = .parseDirect(.lexer.token.type, OPERAND_DIRECT_TYPE) 
           or .parseDirect(.lexer.token.value, OPERAND_DIRECT_TOKEN)
 
@@ -1209,14 +1209,15 @@ it must be a variable ref
         else
             .name = .req(VariableRef)
 
-        #end if
+        end if
 
-    #end Operand
+    end Operand
 
 
 ## Oper
 
-`Oper: ('~'|'&'|'^'|'|'|'>>'|'<<'
+```
+Oper: ('~'|'&'|'^'|'|'|'>>'|'<<'
         |'*'|'/'|'+'|'-'|mod
         |instance of|instanceof
         |'>'|'<'|'>='|'<='
@@ -1225,9 +1226,10 @@ it must be a variable ref
         |[not] in
         |(has|hasnt) property
         |? true-Expression : false-Expression)`
+```
 
 An Oper sits between two Operands ("Oper" is a "Binary Operator", 
-differents from *UnaryOperators* which optionally precede a Operand)
+different from *UnaryOperators* which optionally precede a Operand)
 
 If an Oper is found after an Operand, a second Operand is expected.
 
@@ -1240,7 +1242,7 @@ Operators can include:
 * bit operations (|&)
 * `has property` object property check (js: 'propName in object')
 
-    public class Oper extends ASTBase
+### public class Oper extends ASTBase
 
       properties 
         negated
@@ -1248,13 +1250,11 @@ Operators can include:
         pushed, precedence
         intoVar
 
-      method parse()
-
-        declare valid .getPrecedence
-
 Get token, require an OPER.
-Special: v0.3 - 'ternary expression with else'. "x? a else b" should be valid alias for "x?a:b"
+Note: 'ternary expression with else'. `x? a else b` should be valid alias for `x?a:b`
         
+      method parse()
+        declare valid .getPrecedence
         declare valid .parent.ternaryCount
         if .parent.ternaryCount and .opt('else')
             .name=':' # if there's a open ternaryCount, 'else' is converted to ":"
@@ -1281,14 +1281,14 @@ A.2) validate `has|hasnt property`
             .name += 'has '+.req('property')
 
 A.3) also, check if we got a `not` token.
-In this case we require the next token to be `in` 
-`not in` is the only valid (not-unary) *Oper* starting with `not`
+In this case we require the next token to be `in|like` 
+`not in|like` is the only valid (not-unary) *Oper* starting with `not`
 
         else if .name is 'not'
             .negated = true # set the 'negated' flag
             .name = .req('in','like') # require 'not in'|'not like'
 
-A.4) handle 'into [var] x'
+A.4) handle 'into [var] x', assignment-Expression
 
         if .name is 'into' and .opt('var')
             .intoVar = true
@@ -1307,35 +1307,35 @@ else check for `instanceof`, (old habits die hard)
         else if .name is 'instanceof'
           .name = 'instance of'
 
-        #end if
+        end if
 
 C) Variants on 'is/isnt...'
 
         if .name is 'is' # note: 'isnt' was converted to 'is {negated:true}' above
 
-  C.1) is not
+  C.1) is not<br>
   Check for `is not`, which we treat as `isnt` rather than `is ( not`.
   
-          if .opt('not') # --> is not/has not...
-              if .negated, .throwError '"isnt not" is invalid'
-              .negated = true # set the 'negated' flag
+            if .opt('not') # --> is not/has not...
+                if .negated, .throwError '"isnt not" is invalid'
+                .negated = true # set the 'negated' flag
 
-        #end if
+            end if
 
   C.2) accept 'is/isnt instance of' and 'is/isnt instanceof'
 
-          if .opt('instance')
-              .name = 'instance '+.req('of')
-          else if .opt('instanceof')
-              .name = 'instance of'
+            if .opt('instance')
+                .name = 'instance '+.req('of')
+            else if .opt('instanceof')
+                .name = 'instance of'
 
-        #end if
+            end if
 
 Get operator precedence index
 
         .getPrecedence
 
-      #end Oper parse
+      end Oper parse
 
 
 ###getPrecedence:
@@ -1354,11 +1354,10 @@ Helper method to get Precedence Index (lower number means higher precedende)
 
 ####Notes for the javascript programmer
 
-
-In LiteScript, the *boolean negation* `not`, 
+In LiteScript, *the boolean negation* `not`, 
 has LOWER PRECEDENCE than the arithmetic and logical operators.
 
-In LiteScript: `if not a + 2 is 5` means `if not (a+2 is 5)`
+In LiteScript:  `if not a + 2 is 5` means `if not (a+2 is 5)`
 
 In javascript: `if ( ! a + 2 === 5 )` means `if ( (!a)+2 === 5 )` 
 
@@ -1368,28 +1367,28 @@ so remember **not to** mentally translate `not` to js `!`
 UnaryOper
 ---------
 
-`UnaryOper: ('-'|'+'|new|type of|typeof|not|no|'~') `
+`UnaryOper: ('-'|'+'|new|type of|typeof|not|no|'~')`
 
 A Unary Oper is an operator acting on a single operand.
 Unary Oper extends Oper, so both are `instance of Oper`
 
 Examples:
-1) `not`     *boolean negation*     `if not ( a is 3 or b is 4)`
-2) `-`       *numeric unary minus*  `-(4+3)`
-2) `+`       *numeric unary plus*   `+4` (can be ignored)
-3) `new`     *instantiation*        `x = new classes[2]()`
-4) `type of` *type name access*     `type of x is 'string'` 
-5) `no`      *'falsey' check*       `if no options then options={}` 
-6) `~`       *bit-unary-negation*   `a = ~xC0 + 5`
+
+1· `not`     *boolean negation*     `if not ( a is 3 or b is 4)`
+2. `-`       *numeric unary minus*  `-(4+3)`
+2. `+`       *numeric unary plus*   `+4` (can be ignored)
+3. `new`     *instantiation*        `x = new classes[2]()`
+4. `type of` *type name access*     `type of x is 'string'` 
+5. `no`      *'falsey' check*       `if no options then options={}` 
+6. `~`       *bit-unary-negation*   `a = ~xC0 + 5`
 
     var unaryOperators = ['new','-','no','not','type','typeof','~','+']
 
     public class UnaryOper extends Oper
 
-      method parse()
-
 require a unaryOperator
 
+      method parse()
           .name = .reqOneOf(unaryOperators)
 
 Check for `type of` - we allow "type" as var name, but recognize "type of" as UnaryOper
@@ -1404,7 +1403,7 @@ Lock, we have a unary oper
 
           .lock()
 
-Rename - and + to 'unary -' and 'unary +'
+Rename - and + to 'unary -' and 'unary +', 
 'typeof' to 'type of'
 
           if .name is '-'
@@ -1416,13 +1415,13 @@ Rename - and + to 'unary -' and 'unary +'
           else if .name is 'typeof'
               .name = 'type of'
 
-          #end if
+          end if
 
 calculate precedence - Oper.getPrecedence()
 
           .getPrecedence()
 
-      #end parse 
+      end parse 
 
 
 -----------
@@ -1468,9 +1467,11 @@ Get operand
             if .lexer.token.type is 'ASSIGN' or .lexer.token.value in ',)]' 
                 break
 
-optional newline **before** Oper
-To allow a expressions to continue on the next line, we look ahead, and if the first token in the next line is OPER
-we consume the NEWLINE, allowing multiline expressions. The exception is ArrayLiteral, because in free-form mode
+optional newline **before** `Oper`
+to allow a expressions to continue on the next line.
+We look ahead, and if the first token in the next line is OPER
+we consume the NEWLINE, allowing multiline expressions. 
+The exception is ArrayLiteral, because in free-form mode
 the next item in the array on the next line, can start with a unary operator
 
             if .lexer.token.type is 'NEWLINE' and not (.parent instanceof ArrayLiteral)
@@ -1490,7 +1491,6 @@ keep count on ternaryOpers
                 .ternaryCount++
 
             else if oper.name is ':'
-
                 if no .ternaryCount //":" without '?'. It can be 'case' expression ending ":"
                     .lexer.returnToken
                     break //end of expression
@@ -1556,77 +1556,62 @@ Te process runs until there is only one operator left in the root node
 
 For example, `not 1 + 2 * 3 is 5`, turns into:
 
-<pre>
->   not
->      \
->      is
->     /  \
->   +     5
->  / \   
-> 1   *  
->    / \ 
->    2  3
-</pre>
+```
+   not
+      \
+      is
+     /  \
+   +     5
+  / \   
+ 1   *  
+    / \ 
+    2  3
+```
 
 
 `3 in a and not 4 in b`
-<pre>
->      and
->     /  \
->   in    not
->  / \     |
-> 3   a    in
->         /  \
->        4   b
-</pre>
+```
+      and
+     /  \
+   in    not
+  / \     |
+ 3   a    in
+         /  \
+        4   b
+```
 
 `3 in a and 4 not in b`
-<pre>
->      and
->     /  \
->   in   not-in
->  / \    / \
-> 3   a  4   b
->         
-</pre>
+```
+      and
+     /  \
+   in   not-in
+  / \    / \
+ 3   a  4   b
+
+```
+
 
 `-(4+3)*2`
-<pre>
->   *
->  / \
-> -   2
->  \
->   +
->  / \
-> 4   3
-</pre>
+```
+   *
+  / \
+ -   2
+  \
+   +
+  / \
+ 4   3
+```
 
 Expression.growExpressionTree()
 -------------------------------
 
-      method growExpressionTree(arr:array)
-
 while there is more than one operator in the root node...
 
-        while arr.length > 1
+      method growExpressionTree(arr:array)
+        do while arr.length > 1
 
 find the one with highest precedence (lower number) to push down
 (on equal precedende, we use the leftmost)
-
-          compile if inNode
-            var d="Expr.TREE: "
-            for each inx,item in arr
-              declare valid item.name.name
-              declare valid item.pushed
-              if item instanceof Oper
-                d+=" "+item.name
-                if item.pushed 
-                    d+="-v"
-                d+=" "
-              else
-                d+=" "+item.name.name
-            debug d
-          end 
 
           var pos=-1
           var minPrecedenceInx = 100
@@ -1641,7 +1626,7 @@ find the one with highest precedence (lower number) to push down
                 pos = inx
                 minPrecedenceInx = item.precedence
 
-          #end for
+          end for
           
           #control
           if pos<0, .throwError("can't find highest precedence operator")
@@ -1677,15 +1662,15 @@ Un-flatten: Push down the operands a level down
             oper.right = arr.splice(pos+1,1)[0]
             oper.left = arr.splice(pos-1,1)[0]
 
-          #end if
+          end if
 
-        #loop until there's only one operator
+        loop #until there's only one operator
 
 Store the root operator
 
         .root = arr[0]
 
-      #end method
+      end method
 
 -----------------------
 
@@ -1793,7 +1778,6 @@ Defines an object with a list of key value pairs. This is a JavaScript-style def
         type = 'Object'
 
       method parse()
-
         .req '{'
         .lock()
         .items = .optSeparatedList(NameValuePair,',','}') # closer "}" required
@@ -1836,20 +1820,19 @@ if it's a "dangling assignment", we assume FreeObjectLiteral
           else
               .value = .req(Expression)
 
-      #recursive duet 2 (see ObjectLiteral)
+recursive duet 2 (see ObjectLiteral)
+
       helper method forEach(callback)
 
           callback(this) 
 
-if ObjectLiteral, recurse
-          
+          #if ObjectLiteral, recurse
           declare valid .value.root.name
-  
           if .value.root.name instanceof ObjectLiteral
             declare valid .value.root.name.forEach
             .value.root.name.forEach callback # recurse
 
-    #end helper recursive functions
+      end helper recursive functions
 
 
 ## FreeObjectLiteral
@@ -1891,13 +1874,11 @@ Examples:
 
 ### public class FreeObjectLiteral extends ObjectLiteral
 
-      method parse()
-        .lock()
-
 get items: optional comma separated, closes on de-indent, at least one required
 
+      method parse()
+        .lock()
         .items = .reqSeparatedList(NameValuePair,',') 
-
 
 
 ## ParenExpression
@@ -1949,13 +1930,10 @@ get parameter members, and function body
 
       #end parse
 
-##### method parseParametersAndBody()
+##### helper method parseParametersAndBody()
 
-This method is shared by functions, methods and constructors and 
-
-`()` after `function` are optional
-
-parse parameter: `'(' [VariableDecl,] ')'`
+This method is shared by functions, methods and constructors. 
+`()` after `function` are optional. It parses: `['(' [VariableDecl,] ')'] [returns VariableRef] '['DefinePropertyItem']'`
 
         if .opt("(")
             .paramsDeclarations = .optSeparatedList(VariableDecl,',',')')
@@ -1971,6 +1949,7 @@ now get function body
 
 
 ### public class DefinePropertyItem extends ASTBase
+This Symbol handles property attributes, the same used at js's **Object.DefineProperty()**
 
       declare name affinity definePropItem
 
@@ -1994,8 +1973,8 @@ A `method` has an implicit var `this` pointing to the specific instance the meth
 MethodDeclaration derives from FunctionDeclaration, so both are instance of FunctionDeclaration
 
 Examples:
-  method concat(a:string, b:string) return string
-  method remove(element) [not enumerable, not writable, configurable]
+<br>`method concat(a:string, b:string) return string`
+<br>`method remove(element) [not enumerable, not writable, configurable]`
 
     public class MethodDeclaration extends FunctionDeclaration
 
@@ -2004,18 +1983,17 @@ Examples:
         .specifier = .req('method')
         .lock()
 
-require method name
+require method name. Note: jQuery uses 'not' and 'has' as method names, so here we 
+take any token, and check if it's valid identifier
 
-        //.name = .req('IDENTIFIER') //jQuery uses 'not' and 'has' as method names
-        .name = .lexer.token.value //let's take any token, and check if it's valid identifier
+        //.name = .req('IDENTIFIER') 
+        .name = .lexer.token.value 
         if not .name like /^[a-zA-Z$_]+[0-9a-zA-Z$_]*$/, .throwError 'invalid method name: "#{.name}"'
         .lexer.nextToken
 
 now parse parameters and body (as with any function)
 
         .parseParametersAndBody()
-
-      #end parse
 
 
 ## ClassDeclaration
@@ -2034,10 +2012,8 @@ Defines a new class with an optional parent class. properties and methods go ins
       declare name affinity classDecl
 
       method parse()
-
         .req 'class'
         .lock()
-        
         .name = .req('IDENTIFIER')
 
 Control: class names should be Capitalized, except: jQuery
@@ -2045,8 +2021,7 @@ Control: class names should be Capitalized, except: jQuery
         if not .lexer.options.interfaceMode and not String.isCapitalized(.name)
             .lexer.sayErr "class names should be Capitalized: class #{.name}"
 
-Now parse optional `,(proto is|extend|inherits from)` setting the super class
-(aka oop classic:'inherits', or ES6: 'extends')
+Now parse optional `,(extend|proto is|inherits from)` setting the super class
 
         .opt(',') 
         if .opt('extends','inherits','proto') 
@@ -2157,16 +2132,12 @@ CompilerStatement
 -----------------
 
 `compiler` is a generic entry point to alter LiteScript compiler from source code.
-It allows conditional complilation, setting compiler options, define macros(*)
-and also allow the programmer to hook transformations on the compiler process itself(*).
-
-(*) Not yet.
-
-`CompilerStatement: (compiler|compile) (set|if|debugger|option) Body`
-
-`set-CompilerStatement: compiler set (VariableDecl,)`
-
-`conditional-CompilerStatement: 'compile if IDENTIFIER Body`
+It allows conditional complilation, setting compiler options, and execute macros
+to generate code on the fly. 
+Future: allow the programmer to hook transformations on the compiler process itself.
+<br>`CompilerStatement: (compiler|compile) (set|if|debugger|option) Body`
+<br>`set-CompilerStatement: compiler set (VariableDecl,)`
+<br>`conditional-CompilerStatement: 'compile if IDENTIFIER Body`
 
     public class CompilerStatement extends ASTBase
 
@@ -2177,15 +2148,11 @@ and also allow the programmer to hook transformations on the compiler process it
         endLineInx
 
       method parse()
-
-        //declare list:VariableDecl array 
-
         .req 'compiler','compile'
         .lock()
+        .kind = .lexer.token.value
 
 ### compiler ImportStatement
-
-        .kind = .lexer.token.value
 
         if .kind is 'import'
           .importStatement = .req(ImportStatement)
@@ -2196,11 +2163,9 @@ and also allow the programmer to hook transformations on the compiler process it
         .kind = .req('set','if','debugger','options')
 
 ### compiler set
+get list of declared names, add to root node 'Compiler Vars'
 
         if .kind is 'set'
-
-get list of declared names, add to root node 'Compiler Vars'
-            
             .list = .reqSeparatedList(VariableDecl,',')
 
 ### compiler if conditional compilation
@@ -2231,9 +2196,9 @@ get list of declared names, add to root node 'Compiler Vars'
 
 `ImportStatement: import (ImportStatementItem,)`
 
-Example: `import fs, path` ->  js:`var fs=require('fs'),path=require('path')`
+Example: `global import fs, path` ->  js:`var fs=require('fs'),path=require('path')`
 
-Example: `import http, wait from 'wait.for'` ->  js:`var http=require('http'),wait=require('wait.for')`
+Example: `import Args, wait from 'wait.for'` ->  js:`var http=require('./Args'),wait=require('./wait.for')`
 
     public class ImportStatement extends ASTBase
 
@@ -2242,7 +2207,6 @@ Example: `import http, wait from 'wait.for'` ->  js:`var http=require('http'),wa
         list: ImportStatementItem array
 
       method parse()
-
         .req('import')
         .lock()
         .list = .reqSeparatedList(ImportStatementItem,",")
@@ -2258,62 +2222,56 @@ keep track of `import/require` calls
 
 `ImportStatementItem: IDENTIFIER [from STRING]`
 
-Example: `import http, wait from 'wait.for'` ->  node.js:`var http=require('http'),wait=require('wait.for')`
-
       properties 
         importParameter:StringLiteral
 
       method parse()
-
         .name = .req('IDENTIFIER')
         if .opt('from')
             .lock()
             .importParameter = .req(StringLiteral)
 
 
-### export class DeclareStatement extends ASTBase
-
-#### DeclareStatement
+## DeclareStatement
 
 Declare statement allows you to forward-declare variable or object members. 
 Also allows to declare the valid properties for externally created objects
 when you dont want to create a class to use as type.
-
-`DeclareStatement: declare ([types]|global|forward|on IDENTIFIER) (VariableDecl,)+`
-`DeclareStatement: declare name affinity (IDENTIFIER,)+` 
+<br>`DeclareStatement: declare ([types]|global|forward|on IDENTIFIER) (VariableDecl,)+`
+<br>`DeclareStatement: declare name affinity (IDENTIFIER,)+` 
 
 #####Declare types
-`DeclareStatement: declare [types] (VariableDecl,)+` 
+<br>`DeclareStatement: declare [types] (VariableDecl,)+` 
 
 To declare valid types for scope vars: 
 
-Example:
-    declare types name:string, parent:NameDeclaration
+Example: `declare types name:string, parent:NameDeclaration`
 
 #####Declare valid
 `DeclareStatement: declare valid IDENTIFIER ("."IDENTIFIER|"()"|"[]")*` 
 
 To declare valid chains
 
-Example:
-    declare valid .type[].name.name
+Example: `declare valid .type[].name.name`
 
 #####Declare name affinity
 `DeclareStatement: name affinity (IDENTIFIER,)+` 
 
-To de used inside a class declaration, declare var names that will default to Class as type
+To be used inside a class declaration, declare var names 
+that will default to Class as type
 
 Example
-    Class NameDeclaration
-      properties
-        name: string, sourceLine, column
-      **declare name affinity nameDecl**
+```
+  Class NameDeclaration
+    properties
+      name: string, sourceLine, column
+      declare name affinity nameDecl
+```
 
 Given the above declaration, any `var` named (or ending in) **"nameDecl"** or **"nameDeclaration"** 
 will assume `:NameDeclaration` as type. (Class name is automatically included in 'name affinity')
 
 Example:
-
 `var nameDecl, parentNameDeclaration, childNameDecl, nameDeclaration`
 
 all three vars will assume `:NameDeclaration` as type.
@@ -2328,7 +2286,7 @@ To declare global, externally created vars. Example: `declare global logMessage,
 
 To declare valid members on scope vars. 
 
-#### DeclareStatement body
+### export class DeclareStatement extends ASTBase
 
       properties
         varRef: VariableRef
@@ -2395,7 +2353,9 @@ Litescript provide a 'default' construct as syntax sugar for this common pattern
 
 The 'default' construct is formed as an ObjectLiteral assignment, 
 but only the 'undfined' properties of the object will be assigned.
-/*
+
+
+Example: /*
 
     function theApi(object,options,callback)
 
@@ -2430,7 +2390,7 @@ is equivalent to js's:
     }
 */
 
-    public class DefaultAssignment extends ASTBase
+### public class DefaultAssignment extends ASTBase
   
       properties
         assignment: AssignmentStatement
@@ -2471,7 +2431,7 @@ Usage Examples:
     end loop
 */
 
-    public class EndStatement extends ASTBase
+### public class EndStatement extends ASTBase
   
       properties
         references:string array
@@ -2500,7 +2460,7 @@ for Example: `end for` indentation must match a `for` statement on the same inde
         #end loop
 
 
-## WaitForAsyncCall
+## WaitForAsyncCall #-NOT IMPLEMENTED YET-
 
 `WaitForAsyncCall: wait for fnCall-VariableRef`
 
@@ -2527,7 +2487,7 @@ Example: `contents = wait for fs.readFile('myFile.txt','utf8')`
         .varRef = .req(VariableRef)
 
 
-LaunchStatement
+LaunchStatement #-NOT IMPLEMENTED YET-
 ---------------
 
 `LaunchStatement: 'launch' fnCall-VariableRef`
@@ -2544,24 +2504,24 @@ The `launch` statement will return on the first `wait for` or `yield` of the gen
         varRef
 
       method parse()
-
         .req 'launch'
         .lock()
-
         .varRef = .req(VariableRef)
 
 
+--------------
+
 Adjective
 ---------
-
 `Adjective: (export|generator|shim|helper|global)`
+
+Adjectives can precede several statement.
 
 ### public class Adjective extends ASTBase
 
 #### method parse()
 
         .name = .req('public','export','default','global','generator','shim','helper')
-
 
 #### Helper method validate(statement)
 Check validity of adjective-statement combination 
@@ -2611,7 +2571,6 @@ FunctionCall
           varRef: VariableRef
 
       method parse(options)
-
         declare valid .parent.preParsedVarRef
         declare valid .name.executes
 
@@ -2646,14 +2605,15 @@ else, get parameters, add to varRef as FunctionAccess accessor
 `SwitchStatement: switch [VariableRef] (case (Expression,) ":" Body)* [default Body]`
 
 Similar to js switch, but:
-1. no fall-through 
-2. each 'case' can have several expressions, comma separated, then ':'
-3. if no var specified, select first true expression 
+
+ 1. no fall-through 
+ 2. each 'case' can have several expressions, comma separated, then ':'
+ 3. if no var specified, select first true expression 
 
 See Also: [CaseWhenExpression]
 
 Examples:
-
+```
   switch a
     case 2,4,6:
       print 'even'
@@ -2669,9 +2629,9 @@ Examples:
       print 'option 2'
     default:
       print 'other'
+```
 
-
-    public class SwitchStatement extends ASTBase
+### public class SwitchStatement extends ASTBase
 
       properties
         varRef
@@ -2679,18 +2639,14 @@ Examples:
         defaultBody: Body
 
       method parse()
-
         .req 'switch'
         .lock()
-        
         .varRef = .opt(VariableRef)
-
         .cases=[]
 
 Loop processing: 'NEWLINE','case' or 'default'
 
         do until .lexer.token.type is 'EOF'
-
             var keyword = .req('case','default','NEWLINE')
             
 on 'case', get a comma separated list of expressions, ended by ":"
@@ -2732,7 +2688,7 @@ Helper class to parse each case
 Similar to ANSI-SQL 'CASE', and ruby's 'case'
 
 Examples:
-
+```
   print case b 
           when 2,4,6 then 'even' 
           when 1,3,5 then 'odd'
@@ -2744,9 +2700,9 @@ Examples:
           when b >= 10 or a<0 or c is 5 then 'option 2'
           else 'other' 
         end
+```
 
-
-    public class CaseWhenExpression extends ASTBase
+### public class CaseWhenExpression extends ASTBase
 
       properties
         varRef
@@ -2754,18 +2710,14 @@ Examples:
         elseExpression: Expression
 
       method parse()
-
         .req 'case'
         .lock()
-        
         .varRef = .opt(VariableRef)
-
         .cases=[]
 
 Loop processing: 'NEWLINE','when' or 'else' until 'end'
 
         do until .lexer.token.value is 'end'
-
             var keyword = .req('NEWLINE','when','else')
             
 on 'case', get a comma separated list of expressions, ended by ":"
@@ -2804,7 +2756,6 @@ If there is no var, we allow a single boolean-Expression.
 After: 'then', and the result-Expression
     
         method parse()
-
             if .parent.varRef 
                 .expressions = .reqSeparatedList(Expression, ",")
             else
@@ -2826,14 +2777,16 @@ The `Statement` node is a generic container for all previously defined statement
 The generic `Statement` is used to define `Body: (Statement;)`, that is,
 **Body** is a list of semicolon (or NEWLINE) separated **Statements**.
 
-`Statement: [Adjective]* (ClassDeclaration|FunctionDeclaration
+Grammar: ```
+Statement: [Adjective]* (ClassDeclaration|FunctionDeclaration
  |IfStatement|ForStatement|WhileUntilLoop|DoLoop
  |AssignmentStatement
  |LoopControlStatement|ThrowStatement
  |TryCatch|ExceptionBlock
- |ReturnStatement|PrintStatement|DoNothingStatement)`
+ |ReturnStatement|PrintStatement|DoNothingStatement)
 
-`Statement: ( AssignmentStatement | fnCall-VariableRef [ ["("] (Expression,) [")"] ] )`
+Statement: ( AssignmentStatement | fnCall-VariableRef [ ["("] (Expression,) [")"] ] )
+```
 
     public class Statement extends ASTBase
   
@@ -2844,7 +2797,6 @@ The generic `Statement` is used to define `Body: (Statement;)`, that is,
         intoVars
 
       method parse()
-
         #debug show line and tokens
         debug ""
         .lexer.infoLine.dump()
@@ -2855,8 +2807,7 @@ We look up the token (keyword) in **StatementsDirect** table, and parse the spec
         .statement = .parseDirect(.lexer.token.value, StatementsDirect)
         if no .statement
 
-If it was not found, try optional adjectives (zero or more). Adjectives precede statement keyword.
-Recognized adjectives are: `(export|public|generator|shim|helper)`. 
+If it was not found, try optional adjectives (zero or more). Adjectives are: `(export|public|generator|shim|helper)`. 
 
           .adjectives = .optList(Adjective)
 
@@ -2865,8 +2816,8 @@ Now re-try fast-parse
           .statement = .parseDirect(.lexer.token.value, StatementsDirect)
           if no .statement
 
-Last possibilities are: FunctionCall or AssignmentStatement
-both start with a VariableRef:
+Last possibilities are: `FunctionCall` or `AssignmentStatement`
+both start with a `VariableRef`:
 
 (performance) **require** & pre-parse the VariableRef.
 Then we require a AssignmentStatement or FunctionCall
@@ -2875,7 +2826,7 @@ Then we require a AssignmentStatement or FunctionCall
             .statement = .req(AssignmentStatement,FunctionCall)
             .preParsedVarRef = undefined #clear
 
-        #end if - statement parse tries
+        end if - statement parse tries
 
 If we reached here, we have parsed a valid statement. 
 Check validity of adjective-statement combination 
@@ -2975,7 +2926,7 @@ We look here for fast-statement parsing, selecting the right AST node to call `p
 based on `token.value`. (instead of parsing by ordered trial & error)
 
 This table makes a direct parsing of almost all statements, thanks to a core definition of LiteScript:
-Anything standing aline in it's own line, its an imperative statement (it does something, it produces effects).
+Anything standing alone in it's own line, its an imperative statement (it does something, it produces effects).
 
     var StatementsDirect = 
       'class': ClassDeclaration
@@ -3023,6 +2974,8 @@ Anything standing aline in it's own line, its an imperative statement (it does s
         '[': IndexAccess
         '(': FunctionAccess 
 
+
+##### Helper Functions
 
     export helper function autoCapitalizeCoreClasses(name:string) returns String
       #auto-capitalize core classes when used as type annotations
