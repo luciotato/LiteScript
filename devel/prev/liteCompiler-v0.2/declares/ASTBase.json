@@ -1,0 +1,149 @@
+{
+  "required": [
+    "./Lexer"
+  ],
+  "exported": [
+    {
+      "name": "prototype",
+      "members": [
+        {
+          "name": "constructor",
+          "members": [
+            {
+              "name": "name"
+            }
+          ],
+          "type": "ASTBase"
+        },
+        {
+          "name": "parent",
+          "type": "ASTBase.prototype"
+        },
+        {
+          "name": "name"
+        },
+        {
+          "name": "keyword"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "lexer",
+          "members": [
+            {
+              "name": "softError"
+            }
+          ],
+          "type": "Lexer.prototype"
+        },
+        {
+          "name": "lineInx"
+        },
+        {
+          "name": "sourceLineNum"
+        },
+        {
+          "name": "column"
+        },
+        {
+          "name": "indent"
+        },
+        {
+          "name": "locked"
+        },
+        {
+          "name": "index"
+        },
+        {
+          "name": "outCode",
+          "type": "OutCode.prototype"
+        },
+        {
+          "name": "lock"
+        },
+        {
+          "name": "getParent"
+        },
+        {
+          "name": "positionText"
+        },
+        {
+          "name": "toString"
+        },
+        {
+          "name": "throwError"
+        },
+        {
+          "name": "sayErr"
+        },
+        {
+          "name": "throwParseFailed"
+        },
+        {
+          "name": "parse"
+        },
+        {
+          "name": "produce"
+        },
+        {
+          "name": "parseDirect"
+        },
+        {
+          "name": "opt",
+          "members": [
+            {
+              "name": "apply"
+            }
+          ]
+        },
+        {
+          "name": "req",
+          "members": [
+            {
+              "name": "apply"
+            }
+          ]
+        },
+        {
+          "name": "reqOneOf"
+        },
+        {
+          "name": "optList"
+        },
+        {
+          "name": "optSeparatedList"
+        },
+        {
+          "name": "optFreeFormList"
+        },
+        {
+          "name": "reqSeparatedList"
+        },
+        {
+          "name": "listArgs"
+        },
+        {
+          "name": "out",
+          "members": [
+            {
+              "name": "apply"
+            }
+          ]
+        },
+        {
+          "name": "outLineAsComment"
+        },
+        {
+          "name": "outLinesAsComment"
+        },
+        {
+          "name": "addSourceMap"
+        },
+        {
+          "name": "levelIndent"
+        }
+      ]
+    }
+  ]
+}

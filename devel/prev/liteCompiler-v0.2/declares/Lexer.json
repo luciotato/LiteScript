@@ -1,0 +1,136 @@
+{
+  "required": [
+    "./util"
+  ],
+  "exported": [
+    {
+      "name": "prototype",
+      "members": [
+        {
+          "name": "constructor",
+          "type": "Lexer"
+        },
+        {
+          "name": "filename",
+          "type": "String"
+        },
+        {
+          "name": "lines",
+          "members": [
+            {
+              "name": "length"
+            }
+          ],
+          "type": "String",
+          "itemType": "String"
+        },
+        {
+          "name": "infoLines",
+          "members": [
+            {
+              "name": "push"
+            },
+            {
+              "name": "length"
+            }
+          ],
+          "itemType": "InfoLine.prototype"
+        },
+        {
+          "name": "sourceLineNum"
+        },
+        {
+          "name": "lineInx"
+        },
+        {
+          "name": "line",
+          "type": "String"
+        },
+        {
+          "name": "infoLine",
+          "type": "InfoLine.prototype"
+        },
+        {
+          "name": "token",
+          "type": "Token.prototype"
+        },
+        {
+          "name": "last",
+          "type": "LexerPos.prototype"
+        },
+        {
+          "name": "indent"
+        },
+        {
+          "name": "index"
+        },
+        {
+          "name": "stringInterpolationChar"
+        },
+        {
+          "name": "errCount"
+        },
+        {
+          "name": "hardError"
+        },
+        {
+          "name": "inNode"
+        },
+        {
+          "name": "initSource"
+        },
+        {
+          "name": "process"
+        },
+        {
+          "name": "nextSourceLine"
+        },
+        {
+          "name": "getMultilineSection"
+        },
+        {
+          "name": "parseTripleQuotes"
+        },
+        {
+          "name": "checkMultilineComment"
+        },
+        {
+          "name": "getPos"
+        },
+        {
+          "name": "setPos"
+        },
+        {
+          "name": "posToString"
+        },
+        {
+          "name": "getPrevIndent"
+        },
+        {
+          "name": "consumeToken"
+        },
+        {
+          "name": "nextToken"
+        },
+        {
+          "name": "returnToken"
+        },
+        {
+          "name": "nextCODELine"
+        },
+        {
+          "name": "say"
+        },
+        {
+          "name": "throwErr"
+        },
+        {
+          "name": "sayErr"
+        },
+        {
+          "name": "warn"
+        }
+      ]
+    }
+  ]
+}

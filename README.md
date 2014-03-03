@@ -107,7 +107,9 @@ text processing, class based program written in LiteScript.
 
 ##### On the browser: 
 
-1. [LiteScript_online_playground](https://github.com/luciotato/LiteScript_online_playground.git)
+##### LiteScript_online_playground
+
+[LiteScript_online_playground](https://github.com/luciotato/LiteScript_online_playground.git)
 
 Its a single page browser app. It downloads the entire LiteScript compiler (not minified) 
 and fetch example LiteScript code  via AJAX, then compile on the browser presenting 
@@ -123,7 +125,9 @@ This project has a minimal "Document.interface.md" for the DOM and also minimals
 **Note:** The "Document.interface.md" and "jQuery.interface.md" are partial and incomplete.
 Patches are welcomed.
 
-2. [LiteScript-reception-demo](https://github.com/luciotato/LiteScript-reception-demo.git)
+##### LiteScript-reception-demo
+
+[LiteScript-reception-demo](https://github.com/luciotato/LiteScript-reception-demo.git)
 
 Its a web app *prototype* for IPAD we were commisioned to do. In order to test LiteScript
 with real-world code, I've ported it from pure browser javascript 

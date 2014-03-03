@@ -1,0 +1,9 @@
+        <dict>
+            <key>name</key>
+            <string>meta.paragraph.markdown</string>
+
+            <key>begin</key>
+            <string>^(?=\S)(?![=-]{3,}(?=$))</string>
+
+            <key>end</key>
+            <string>^(?:\s*$|(?=[ ]{,3}&gt;.))|(?=[ \t]*\n)(?&lt;=^===|^====|=====|^---|^----|-----)[ \t]*\n|(?=^#)</string>

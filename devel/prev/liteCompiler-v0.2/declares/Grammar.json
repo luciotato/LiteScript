@@ -1,0 +1,1432 @@
+{
+  "required": [
+    "./ASTBase",
+    "./Lexer"
+  ],
+  "exported": [
+    {
+      "name": "VariableDecl",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "VariableDecl"
+            },
+            {
+              "name": "name"
+            },
+            {
+              "name": "type",
+              "members": [
+                {
+                  "name": "name"
+                }
+              ]
+            },
+            {
+              "name": "itemType",
+              "type": "VariableRef"
+            },
+            {
+              "name": "assignedValue",
+              "type": "Expression"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ASTBase",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "members": [
+                {
+                  "name": "name"
+                }
+              ],
+              "type": "ASTBase"
+            },
+            {
+              "name": "parent",
+              "type": "ASTBase.prototype"
+            },
+            {
+              "name": "name",
+              "members": [
+                {
+                  "name": "slice"
+                }
+              ]
+            },
+            {
+              "name": "keyword"
+            },
+            {
+              "name": "type"
+            },
+            {
+              "name": "lexer",
+              "members": [
+                {
+                  "name": "softError"
+                }
+              ],
+              "type": "Lexer.prototype"
+            },
+            {
+              "name": "lineInx"
+            },
+            {
+              "name": "sourceLineNum"
+            },
+            {
+              "name": "column"
+            },
+            {
+              "name": "indent"
+            },
+            {
+              "name": "locked"
+            },
+            {
+              "name": "index"
+            },
+            {
+              "name": "outCode",
+              "type": "OutCode.prototype"
+            },
+            {
+              "name": "lock"
+            },
+            {
+              "name": "getParent"
+            },
+            {
+              "name": "positionText"
+            },
+            {
+              "name": "toString"
+            },
+            {
+              "name": "throwError"
+            },
+            {
+              "name": "sayErr"
+            },
+            {
+              "name": "throwParseFailed"
+            },
+            {
+              "name": "parse"
+            },
+            {
+              "name": "produce"
+            },
+            {
+              "name": "parseDirect"
+            },
+            {
+              "name": "opt",
+              "members": [
+                {
+                  "name": "apply"
+                }
+              ]
+            },
+            {
+              "name": "req",
+              "members": [
+                {
+                  "name": "apply"
+                }
+              ]
+            },
+            {
+              "name": "reqOneOf"
+            },
+            {
+              "name": "optList"
+            },
+            {
+              "name": "optSeparatedList"
+            },
+            {
+              "name": "optFreeFormList"
+            },
+            {
+              "name": "reqSeparatedList"
+            },
+            {
+              "name": "listArgs"
+            },
+            {
+              "name": "out",
+              "members": [
+                {
+                  "name": "apply"
+                }
+              ]
+            },
+            {
+              "name": "outLineAsComment"
+            },
+            {
+              "name": "outLinesAsComment"
+            },
+            {
+              "name": "addSourceMap"
+            },
+            {
+              "name": "levelIndent"
+            },
+            {
+              "name": "accessors",
+              "members": [
+                {
+                  "name": "splice"
+                },
+                {
+                  "name": "length"
+                }
+              ],
+              "itemType": "Accessor.prototype"
+            },
+            {
+              "name": "executes"
+            },
+            {
+              "name": "hasSideEffects"
+            },
+            {
+              "name": "parseAccessors"
+            },
+            {
+              "name": "insertAccessorAt"
+            },
+            {
+              "name": "addAccessor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Expression",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "Expression"
+            },
+            {
+              "name": "operandCount"
+            },
+            {
+              "name": "root",
+              "type": "Array"
+            },
+            {
+              "name": "parse"
+            },
+            {
+              "name": "growExpressionTree"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "VariableRef",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "VariableRef"
+            },
+            {
+              "name": "preIncDec"
+            },
+            {
+              "name": "postIncDec"
+            },
+            {
+              "name": "parse"
+            },
+            {
+              "name": "toString"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "FunctionCall",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "FunctionCall"
+            },
+            {
+              "name": "varRef",
+              "type": "VariableRef.prototype"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "PropertyAccess",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "PropertyAccess"
+            },
+            {
+              "name": "parse"
+            },
+            {
+              "name": "toString"
+            }
+          ],
+          "type": "Accessor.prototype"
+        }
+      ]
+    },
+    {
+      "name": "FunctionAccess",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "FunctionAccess"
+            },
+            {
+              "name": "args"
+            },
+            {
+              "name": "parse"
+            },
+            {
+              "name": "toString"
+            }
+          ],
+          "type": "Accessor.prototype"
+        }
+      ]
+    },
+    {
+      "name": "IndexAccess",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "IndexAccess"
+            },
+            {
+              "name": "parse"
+            },
+            {
+              "name": "toString"
+            }
+          ],
+          "type": "Accessor.prototype"
+        }
+      ]
+    },
+    {
+      "name": "Module",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "Module"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "Body.prototype"
+        }
+      ]
+    },
+    {
+      "name": "Literal",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "Literal"
+            },
+            {
+              "name": "type"
+            },
+            {
+              "name": "getValue"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "StringLiteral",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "StringLiteral"
+            },
+            {
+              "name": "type"
+            },
+            {
+              "name": "parse"
+            },
+            {
+              "name": "getValue"
+            }
+          ],
+          "type": "Literal.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ObjectLiteral",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ObjectLiteral"
+            },
+            {
+              "name": "items",
+              "itemType": "NameValuePair"
+            },
+            {
+              "name": "type"
+            },
+            {
+              "name": "parse"
+            },
+            {
+              "name": "forEach"
+            }
+          ],
+          "type": "Literal.prototype"
+        }
+      ]
+    },
+    {
+      "name": "FreeObjectLiteral",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "FreeObjectLiteral"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ObjectLiteral.prototype"
+        }
+      ]
+    },
+    {
+      "name": "Body",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "Body"
+            },
+            {
+              "name": "statements",
+              "itemType": "Statement.prototype"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "Statement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "Statement"
+            },
+            {
+              "name": "adjectives",
+              "itemType": "Adjective.prototype"
+            },
+            {
+              "name": "statement",
+              "type": "Statement.prototype"
+            },
+            {
+              "name": "preParsedVarRef"
+            },
+            {
+              "name": "parse"
+            },
+            {
+              "name": "isAdjectivated"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ThrowStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ThrowStatement"
+            },
+            {
+              "name": "specifier"
+            },
+            {
+              "name": "expr"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ClassDeclaration",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ClassDeclaration"
+            },
+            {
+              "name": "name",
+              "type": "String"
+            },
+            {
+              "name": "varRefSuper",
+              "type": "VariableRef.prototype"
+            },
+            {
+              "name": "body"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "VarStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "VarStatement"
+            },
+            {
+              "name": "list",
+              "type": "Array"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "CompilerStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "CompilerStatement"
+            },
+            {
+              "name": "kind"
+            },
+            {
+              "name": "conditional",
+              "type": "String"
+            },
+            {
+              "name": "list"
+            },
+            {
+              "name": "body"
+            },
+            {
+              "name": "endLineInx"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "DeclareStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "DeclareStatement"
+            },
+            {
+              "name": "varRef",
+              "type": "VariableRef.prototype"
+            },
+            {
+              "name": "names",
+              "itemType": "VariableDecl.prototype"
+            },
+            {
+              "name": "specifier"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "AssignmentStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "AssignmentStatement"
+            },
+            {
+              "name": "lvalue",
+              "type": "VariableRef"
+            },
+            {
+              "name": "rvalue",
+              "type": "Expression"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "SingleLineStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "SingleLineStatement"
+            },
+            {
+              "name": "statements",
+              "itemType": "Statement.prototype"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "Statement.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ReturnStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ReturnStatement"
+            },
+            {
+              "name": "expr"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "Operand",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "Operand"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "UnaryOper",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "UnaryOper"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "Oper.prototype"
+        }
+      ]
+    },
+    {
+      "name": "Oper",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "Oper"
+            },
+            {
+              "name": "negated"
+            },
+            {
+              "name": "left",
+              "type": "Operand.prototype"
+            },
+            {
+              "name": "right",
+              "type": "Operand.prototype"
+            },
+            {
+              "name": "pushed"
+            },
+            {
+              "name": "precedence"
+            },
+            {
+              "name": "parse"
+            },
+            {
+              "name": "getPrecedence"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "DefaultAssignment",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "DefaultAssignment"
+            },
+            {
+              "name": "assignment",
+              "type": "AssignmentStatement.prototype"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "IfStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "IfStatement"
+            },
+            {
+              "name": "conditional"
+            },
+            {
+              "name": "body"
+            },
+            {
+              "name": "elseStatement"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ElseIfStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ElseIfStatement"
+            },
+            {
+              "name": "nextIf"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ElseStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ElseStatement"
+            },
+            {
+              "name": "body"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ForStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ForStatement"
+            },
+            {
+              "name": "variant",
+              "type": "ASTBase.prototype"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ForEachProperty",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ForEachProperty"
+            },
+            {
+              "name": "ownOnly"
+            },
+            {
+              "name": "indexVar"
+            },
+            {
+              "name": "iterable"
+            },
+            {
+              "name": "body"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ForIndexNumeric",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ForIndexNumeric"
+            },
+            {
+              "name": "indexVar"
+            },
+            {
+              "name": "startIndex"
+            },
+            {
+              "name": "conditionPrefix"
+            },
+            {
+              "name": "endExpression"
+            },
+            {
+              "name": "increment",
+              "type": "Statement"
+            },
+            {
+              "name": "body"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ForEachInArray",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ForEachInArray"
+            },
+            {
+              "name": "mainVar",
+              "type": "String"
+            },
+            {
+              "name": "indexVar",
+              "type": "String"
+            },
+            {
+              "name": "iterable"
+            },
+            {
+              "name": "body"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "WhileUntilExpression",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "WhileUntilExpression"
+            },
+            {
+              "name": "expr"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "DoLoop",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "DoLoop"
+            },
+            {
+              "name": "preWhileUntilExpression"
+            },
+            {
+              "name": "body"
+            },
+            {
+              "name": "postWhileUntilExpression"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "DoNothingStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "DoNothingStatement"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "LoopControlStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "LoopControlStatement"
+            },
+            {
+              "name": "control"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ParenExpression",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ParenExpression"
+            },
+            {
+              "name": "expr",
+              "type": "Expression.prototype"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ArrayLiteral",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ArrayLiteral"
+            },
+            {
+              "name": "type"
+            },
+            {
+              "name": "items"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "Literal.prototype"
+        }
+      ]
+    },
+    {
+      "name": "NameValuePair",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "NameValuePair"
+            },
+            {
+              "name": "value",
+              "type": "Expression.prototype"
+            },
+            {
+              "name": "parse"
+            },
+            {
+              "name": "forEach"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "FunctionDeclaration",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "FunctionDeclaration"
+            },
+            {
+              "name": "specifier"
+            },
+            {
+              "name": "public"
+            },
+            {
+              "name": "shim"
+            },
+            {
+              "name": "paramsDeclarations",
+              "itemType": "VariableDecl.prototype"
+            },
+            {
+              "name": "returnType",
+              "type": "VariableRef.prototype"
+            },
+            {
+              "name": "body"
+            },
+            {
+              "name": "parse"
+            },
+            {
+              "name": "parseParametersAndBody"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "MethodDeclaration",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "MethodDeclaration"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "FunctionDeclaration.prototype"
+        }
+      ]
+    },
+    {
+      "name": "PrintStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "PrintStatement"
+            },
+            {
+              "name": "args"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "EndStatement",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "EndStatement"
+            },
+            {
+              "name": "references",
+              "members": [
+                {
+                  "name": "push"
+                }
+              ],
+              "itemType": "String"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ConstructorDeclaration",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ConstructorDeclaration"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "MethodDeclaration.prototype"
+        }
+      ]
+    },
+    {
+      "name": "AppendToDeclaration",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "AppendToDeclaration"
+            },
+            {
+              "name": "optClass"
+            },
+            {
+              "name": "varRef",
+              "type": "VariableRef.prototype"
+            },
+            {
+              "name": "body"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ClassDeclaration.prototype"
+        }
+      ]
+    },
+    {
+      "name": "TryCatch",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "TryCatch"
+            },
+            {
+              "name": "body"
+            },
+            {
+              "name": "exceptionBlock"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "ExceptionBlock",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "ExceptionBlock"
+            },
+            {
+              "name": "catchVar",
+              "type": "String"
+            },
+            {
+              "name": "body"
+            },
+            {
+              "name": "finallyBody"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "WaitForAsyncCall",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "WaitForAsyncCall"
+            },
+            {
+              "name": "varRef"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    },
+    {
+      "name": "PropertiesDeclaration",
+      "members": [
+        {
+          "name": "prototype",
+          "members": [
+            {
+              "name": "constructor",
+              "type": "PropertiesDeclaration"
+            },
+            {
+              "name": "toNamespace"
+            },
+            {
+              "name": "list",
+              "itemType": "VariableDecl.prototype"
+            },
+            {
+              "name": "parse"
+            }
+          ],
+          "type": "ASTBase.prototype"
+        }
+      ]
+    }
+  ]
+}

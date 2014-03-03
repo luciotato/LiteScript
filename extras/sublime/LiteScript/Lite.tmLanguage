@@ -1,0 +1,1206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<string>LiteScript</string>
+	<key>fileTypes</key>
+	<array>
+		<string>lite</string>
+		<string>lite.md</string>
+	</array>
+
+	<key>foldingStartMarker</key>
+	<string>^#{1,6}.*</string>
+
+	<key>foldingStopMarker</key>
+	<string>^#{1,6}.*</string>
+
+	<key>patterns</key>
+	<array>
+		
+		<dict>
+			<key>name</key>
+			<string>markup.sourcecode.block</string>
+			<key>begin</key>
+			<string>(?x)^
+				(?=	([ ]{4}|\t)(?!$))</string>
+			<key>end</key>
+			<string>(?x)^
+				(?!	([ ]{4}|\t))</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#LiteScript_Code</string>
+				</dict>
+			</array>
+		</dict>
+
+		<dict>
+			<key>name</key>
+			<string>comment.block.lite</string>
+			<key>begin</key>
+			<string>/\*</string>
+			<key>end</key>
+			<string>\*/</string>
+		</dict>
+
+		<dict>
+			<key>name</key>
+			<string>meta.block-level.markdown</string>
+			<key>begin</key>
+			<string>(?x)^
+				(?=	[ ]{,3}&gt;.
+				|	[#]{1,6}\s*+
+				|	[ ]{,3}(?&lt;marker&gt;[-*_])([ ]{,2}\k&lt;marker&gt;){2,}[ \t]*+$
+				)</string>
+			<key>comment</key>
+			<string>
+				We could also use an empty end match and set
+				applyEndPatternLast, but then we must be sure that the begin
+				pattern will only match stuff matched by the sub-patterns.
+			</string>
+			<key>end</key>
+			<string>(?x)^
+				(?!	[ ]{,3}&gt;.
+				|	[#]{1,6}\s*+
+				|	[ ]{,3}(?&lt;marker&gt;[-*_])([ ]{,2}\k&lt;marker&gt;){2,}[ \t]*+$
+				)</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#block_quote</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#heading1</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#heading2</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#heading3</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#heading</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#separator</string>
+				</dict>
+			</array>
+		</dict>
+
+		<dict>
+			<key>name</key>
+			<string>markup.list.unnumbered.markdown</string>
+			<key>begin</key>
+			<string>^[ ]{0,3}([*+-])(?=\s)</string>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.list_item.markdown</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>^(?=\S)</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#list-paragraph</string>
+				</dict>
+			</array>
+		</dict>
+
+		<dict>
+			<key>name</key>
+			<string>markup.list.numbered.markdown</string>
+			<key>begin</key>
+			<string>^[ ]{0,3}([0-9]+\.)(?=\s)</string>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.list_item.markdown</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>^(?=\S)</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#list-paragraph</string>
+				</dict>
+			</array>
+		</dict>
+
+		<dict>
+			<key>match</key>
+			<string>&lt;\w+&gt;</string>
+			<key>name</key>
+			<string>entity.name.tag</string>
+		</dict>
+
+        <dict>
+            <key>name</key>
+            <string>meta.paragraph.markdown</string>
+
+            <key>begin</key>
+            <string>^\S+.*$</string>
+            
+            <key>end</key>
+            <string>^(?:\s*$)</string>
+
+            <key>patterns</key>
+            <array>
+                <dict>
+                    <key>include</key>
+                    <string>#inline</string>
+                </dict>
+                <dict>
+                    <key>include</key>
+                    <string>text.html.basic</string>
+                </dict>
+
+                <dict>
+                    <key>name</key>
+                    <string>markup.heading.1.markdown</string>
+                    <key>match</key>
+                    <string>^(={3,})(?=[ \t]*$)</string>
+                    <key>captures</key>
+                    <dict>
+                        <key>1</key>
+                        <dict>
+                            <key>name</key>
+                            <string>punctuation.definition.heading.markdown</string>
+                        </dict>
+                    </dict>
+                </dict>
+
+                <dict>
+                    <key>name</key>
+                    <string>markup.heading.2.markdown</string>
+                    <key>match</key>
+                    <string>^(-{3,})(?=[ \t]*$)</string>
+                    <key>captures</key>
+                    <dict>
+                        <key>1</key>
+                        <dict>
+                            <key>name</key>
+                            <string>punctuation.definition.heading.markdown</string>
+                        </dict>
+                    </dict>
+                </dict>
+                
+            </array>
+        </dict>
+
+	</array>
+
+
+	<key>repository</key>
+	<dict>
+
+		<key>ampersand</key>
+		<dict>
+			<key>match</key>
+			<string>&amp;(?!([a-zA-Z0-9]+|#[0-9]+|#x[0-9a-fA-F]+);)</string>
+			<key>name</key>
+			<string>meta.other.valid-ampersand.markdown</string>
+		</dict>
+
+        <key>block_quote</key>
+        <dict>
+            <key>name</key>
+            <string>markup.quote.markdown</string>
+            <key>match</key>
+            <string>^&gt;.*$\n?</string>
+        </dict>
+
+        <key>bold</key>
+        <dict>
+			<key>name</key>
+            <string>markup.bold.markdown</string>
+			<key>match</key>
+			<string>(\*|_){2}.*?(\*|_){2}</string>
+        </dict>
+
+		<key>italic</key>
+        <dict>
+			<key>name</key>
+            <string>markup.italic.markdown</string>
+			<key>match</key>
+			<string>(\*|_){1}(.*?)(\*|_){1}</string>
+        </dict>
+
+		<key>bracket</key>
+		<dict>
+			<key>match</key>
+			<string>&lt;(?![a-z/?\$!])</string>
+			<key>name</key>
+			<string>meta.other.valid-bracket.markdown</string>
+		</dict>
+
+		<key>LiteScript_Code</key>
+		<dict>
+
+			<key>patterns</key>
+			<array>
+
+				<dict>
+					<key>comment</key>
+					<string>"new" call</string>
+					<key>match</key>
+					<string>\b(new)\s+([A-Za-z\$_\.]+)</string>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>keyword.operator.new.lite</string>
+						</dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.class.lite</string>
+						</dict>
+					</dict>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>storage.type.lite</string>
+					<key>match</key>
+					<string>\b(array|string|returns)\b</string>
+				</dict>
+
+				<dict>
+					<key>comment</key>
+					<string>"instance of" used</string>
+					<key>match</key>
+					<string>\b(instanceof|instance of)\s+([A-Za-z\$_\.]+)</string>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>entity.other.inherited-class</string>
+						</dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.class.lite</string>
+						</dict>
+					</dict>
+				</dict>
+
+				<dict>
+					<key>comment</key>
+					<string>declare "name affinity" used</string>
+					<key>match</key>
+					<string>\s+(declare)\s+(name\s+affinity\s+)</string>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>keyword.compiler.lite</string>
+						</dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>entity.other.inherited-class</string>
+						</dict>
+					</dict>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>keyword.compiler.lite</string>
+					<key>match</key>
+					<string>\s+(compiler?|declare)\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>keyword.class</string>
+					<key>match</key>
+					<string>\bconstructor\b</string>
+				</dict>
+
+				<dict>
+					<key>comment</key>
+					<string>class keyword used</string>
+					<key>match</key>
+					<string>\b(class)\s+([A-Za-z\$_]+)</string>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>keyword.class</string>
+						</dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.class</string>
+						</dict>
+					</dict>
+				</dict>
+
+				<dict>
+					<key>comment</key>
+					<string>extends|super is|inherits from</string>
+					<key>match</key>
+					<string>\s+(inherits\s+from|proto\s+is|extends)\s+([A-Za-z\$_]+)</string>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>entity.other.inherited-class</string>
+						</dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>entity.name.class</string>
+						</dict>
+					</dict>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>keyword.properties.lite</string>
+					<key>match</key>
+					<string>\b(properties|namespace)\s</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>keyword.method.lite</string>
+					<key>match</key>
+					<string>\bmethod\s</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>entity.other.attribute-name</string>
+					<key>match</key>
+					<string>(\.)([A-Za-z\$_]+\b)</string>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>punctuation.dot.lite</string>
+						</dict>
+						<key>2</key>
+						<dict>
+							<key>name</key>
+							<string>entity.other.attribute-name</string>
+						</dict>
+					</dict>
+				</dict>
+
+
+				<dict>
+					<key>name</key>
+					<string>string.quoted.heredoc.lite</string>
+					<key>begin</key>
+					<string>"""</string>
+					<key>beginCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>punctuation.definition.string.begin.lite</string>
+						</dict>
+					</dict>
+					<key>end</key>
+					<string>"""</string>
+					<key>endCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>punctuation.definition.string.end.lite</string>
+						</dict>
+					</dict>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>match</key>
+							<string>\\.</string>
+							<key>name</key>
+							<string>constant.character.escape.lite</string>
+						</dict>
+					</array>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>string.backquoted.sourcecode</string>
+					<key>begin</key>
+					<string>`</string>
+					<key>beginCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>punctuation.definition.string.begin.lite</string>
+						</dict>
+					</dict>
+					<key>end</key>
+					<string>`</string>
+					<key>endCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>punctuation.definition.string.end.lite</string>
+						</dict>
+					</dict>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>match</key>
+							<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]|37[0-7]?|[4-7][0-7]?|.)</string>
+							<key>name</key>
+							<string>constant.character.escape.lite</string>
+						</dict>
+					</array>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>comment.block.lite</string>
+					<key>begin</key>
+					<string>\/\*</string>
+					<key>end</key>
+					<string>\*\/</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>comment.lite</string>
+					<key>match</key>
+					<string>(#|//).*</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>string.regexp.lite</string>
+					<key>match</key>
+					<string>/(?![\s=/*+{}?]).*?[^\\]/[igmy]{0,4}(?![a-zA-Z0-9])</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>keyword.control.lite</string>
+					<key>match</key>
+					<string>\b(break|catch|continue|else|finally|for|if|where|return|switch|then|throw|
+raise|fail\s+with|try|print|when|when|while|wait\s+for|until)\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>keyword.declaration.lite</string>
+					<key>match</key>
+					<string>\b(var|let|function|default)\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>storage.modifier.lite</string>
+					<key>match</key>
+					<string>\b(export|helper|global)\s+</string>
+				</dict>
+
+
+				<dict>
+					<key>name</key>
+					<string>keyword.class.lite</string>
+					<key>match</key>
+					<string>\bclass\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>keyword.operator.lite</string>
+					<key>match</key>
+					<string>\^|\*|\/|\-|\+|!==|&lt;=|&gt;=|&lt;&lt;|&gt;&gt;|&lt;&gt;|&lt;|&gt;|&amp;|\?|\||\*=|\/=
+|\b(delete|type of|typeof|in|into|has|property|each|own|is|isnt)\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>keyword.boolean.lite</string>
+					<key>match</key>
+					<string>\b(and|or|not)\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>keyword.symbol.lite</string>
+					<key>match</key>
+					<string>=</string>
+				</dict>
+
+
+				<dict>
+					<key>name</key>
+					<string>constant.uppercase</string>
+					<key>match</key>
+					<string>\b[A-Z]\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>constant.boolean.true.lite</string>
+					<key>match</key>
+					<string>\b(true|on)\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>constant.boolean.false.lite</string>
+					<key>match</key>
+					<string>\b(false|off|no)\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>constant.null.lite</string>
+					<key>match</key>
+					<string>\b(null)\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>storage.this.lite</string>
+					<key>match</key>
+					<string>\b(super|this|me)\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>keyword.other.lite</string>
+					<key>match</key>
+					<string>\b(debugger|\\)\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>constant.language.lite</string>
+					<key>match</key>
+					<string>\b(Infinity|NaN|undefined)\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>punctuation.terminator.statement.lite</string>
+					<key>match</key>
+					<string>\;</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>punctuation.separator.lite</string>
+					<key>match</key>
+					<string>,[ |\t]*</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>punctuation.dot.lite</string>
+					<key>match</key>
+					<string>\.</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>punctuation.semicolon.lite</string>
+					<key>match</key>
+					<string>:</string>
+				</dict>
+
+				<dict>
+					<key>match</key>
+					<string>\{|\}</string>
+					<key>name</key>
+					<string>meta.brace.curly.lite</string>
+				</dict>
+
+				<dict>
+					<key>match</key>
+					<string>\(|\)</string>
+					<key>name</key>
+					<string>punctuation.brace.round.lite</string>
+				</dict>
+
+				<dict>
+					<key>match</key>
+					<string>\[|\]\s*</string>
+					<key>name</key>
+					<string>punctuation.brace.square.lite</string>
+				</dict>
+
+				<dict>
+					<key>include</key>
+					<string>#instance_variable</string>
+				</dict>
+
+				<dict>
+					<key>include</key>
+					<string>#single_quoted_string</string>
+				</dict>
+
+				<dict>
+					<key>include</key>
+					<string>#double_quoted_string</string>
+				</dict>
+
+				<dict>
+					<key>include</key>
+					<string>#numeric</string>
+				</dict>
+
+
+			</array>
+
+		</dict>
+
+		<key>double_quoted_string</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>name</key>
+					<string>string.quoted.double.lite</string>
+					<key>begin</key>
+					<string>"</string>
+					<key>beginCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>punctuation.definition.string.begin.lite</string>
+						</dict>
+					</dict>
+					<key>end</key>
+					<string>"</string>
+					<key>endCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>punctuation.definition.string.end.lite</string>
+						</dict>
+					</dict>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>match</key>
+							<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]|37[0-7]?|[4-7][0-7]?|.)</string>
+							<key>name</key>
+							<string>constant.character.escape.lite</string>
+						</dict>
+						<dict>
+							<key>include</key>
+							<string>#interpolated_lite</string>
+						</dict>
+					</array>
+				</dict>
+			</array>
+		</dict>
+
+		<key>single_quoted_string</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>name</key>
+					<string>string.quoted.single.lite</string>
+					<key>begin</key>
+					<string>'</string>
+					<key>beginCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>punctuation.definition.string.begin.lite</string>
+						</dict>
+					</dict>
+					<key>end</key>
+					<string>'</string>
+					<key>endCaptures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>punctuation.definition.string.end.lite</string>
+						</dict>
+					</dict>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>match</key>
+							<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]|37[0-7]?|[4-7][0-7]?|.)</string>
+							<key>name</key>
+							<string>constant.character.escape.lite</string>
+						</dict>
+						<dict>
+							<key>include</key>
+							<string>#interpolated_lite</string>
+						</dict>
+					</array>
+				</dict>
+			</array>
+		</dict>
+
+		<key>escape</key>
+		<dict>
+			<key>match</key>
+			<string>\\[-`*_#+.!(){}\[\]\\&gt;]</string>
+			<key>name</key>
+			<string>constant.character.escape.markdown</string>
+		</dict>
+
+		<key>heading1</key>
+		<dict>
+			<key>name</key>
+			<string>markup.heading.1.markdown</string>
+			<key>begin</key>
+			<string>^(#)(?!#)\s*(?=\S)</string>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.heading.markdown</string>
+				</dict>
+			</dict>
+			<key>contentName</key>
+			<string>entity.name.section.markdown</string>
+			<key>end</key>
+			<string>\s*(#*)$\n?</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#inline</string>
+				</dict>
+			</array>
+		</dict>
+
+		<key>heading2</key>
+		<dict>
+			<key>name</key>
+			<string>markup.heading.2.markdown</string>
+			<key>begin</key>
+			<string>\G(##)(?!#)\s*(?=\S)</string>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.heading.markdown</string>
+				</dict>
+			</dict>
+			<key>contentName</key>
+			<string>entity.name.section.markdown</string>
+			<key>end</key>
+			<string>\s*(#*)$\n?</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#inline</string>
+				</dict>
+			</array>
+		</dict>
+
+		<key>heading3</key>
+		<dict>
+			<key>name</key>
+			<string>markup.heading.3.markdown</string>
+			<key>begin</key>
+			<string>\G(###)(?!#)\s*(?=\S)</string>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.heading.markdown</string>
+				</dict>
+			</dict>
+			<key>contentName</key>
+			<string>entity.name.section.markdown</string>
+			<key>end</key>
+			<string>\s*(#*)$\n?</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#inline</string>
+				</dict>
+			</array>
+		</dict>
+
+		<key>heading</key>
+		<dict>
+			<key>name</key>
+			<string>markup.heading.markdown</string>
+			<key>begin</key>
+			<string>\G(#{4,6})(?!#)\s*(?=\S)</string>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.heading.markdown</string>
+				</dict>
+			</dict>
+			<key>contentName</key>
+			<string>entity.name.section.markdown</string>
+			<key>end</key>
+			<string>\s*(#*)$\n?</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#inline</string>
+				</dict>
+			</array>
+		</dict>
+
+
+		<key>inline</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#escape</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#ampersand</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#bracket</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#raw</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#bold</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#italic</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#line-break</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#link-inet</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#link-email</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#link-ref-literal</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#link-ref</string>
+				</dict>
+			</array>
+		</dict>
+
+		<key>instance_variable</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>match</key>
+					<string>(@)([a-zA-Z_\$]\w*)?</string>
+					<key>name</key>
+					<string>variable.other.readwrite.instance.lite</string>
+				</dict>
+			</array>
+		</dict>
+
+		<key>interpolated_lite</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>begin</key>
+					<string>(\#\{)|(\$\{)</string>
+					<key>captures</key>
+					<dict>
+						<key>0</key>
+						<dict>
+							<key>name</key>
+							<string>punctuation.section.embedded.lite</string>
+						</dict>
+					</dict>
+					<key>end</key>
+					<string>\}</string>
+					<key>name</key>
+					<string>source.lite.embedded.source</string>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>include</key>
+							<string>#LiteScript_Code</string>
+						</dict>
+					</array>
+				</dict>
+			</array>
+		</dict>
+
+
+		<key>line-break</key>
+		<dict>
+			<key>match</key>
+			<string> {2,}$</string>
+			<key>name</key>
+			<string>meta.dummy.line-break</string>
+		</dict>
+
+		<key>link-email</key>
+		<dict>
+			<key>name</key>
+			<string>meta.link.email.lt-gt.markdown</string>
+			<key>match</key>
+			<string>(&lt;)((?:mailto:)?[-.\w]+@[-a-z0-9]+(\.[-a-z0-9]+)*\.[a-z]+)(&gt;)</string>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.link.markdown</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>markup.underline.link.markdown</string>
+				</dict>
+				<key>4</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.link.markdown</string>
+				</dict>
+			</dict>
+		</dict>
+
+		<key>link-inet</key>
+		<dict>
+			<key>name</key>
+			<string>meta.link.inet.markdown</string>
+			<key>match</key>
+			<string>(&lt;)((?:https?|ftp)://.*?)(&gt;)</string>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.link.markdown</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>markup.underline.link.markdown</string>
+				</dict>
+				<key>3</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.link.markdown</string>
+				</dict>
+			</dict>
+		</dict>
+
+
+		<key>link-ref</key>
+		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.begin.markdown</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>string.other.link.title.markdown</string>
+				</dict>
+				<key>4</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.end.markdown</string>
+				</dict>
+				<key>5</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.constant.begin.markdown</string>
+				</dict>
+				<key>6</key>
+				<dict>
+					<key>name</key>
+					<string>constant.other.reference.link.markdown</string>
+				</dict>
+				<key>7</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.constant.end.markdown</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>(\[)((?&lt;square&gt;[^\[\]\\]|\\.|\[\g&lt;square&gt;*+\])*+)(\])[ ]?(\[)([^\]]*+)(\])</string>
+			<key>name</key>
+			<string>meta.link.reference.markdown</string>
+		</dict>
+
+		<key>link-ref-literal</key>
+		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.begin.markdown</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>string.other.link.title.markdown</string>
+				</dict>
+				<key>4</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.end.markdown</string>
+				</dict>
+				<key>5</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.constant.begin.markdown</string>
+				</dict>
+				<key>6</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.constant.end.markdown</string>
+				</dict>
+			</dict>
+			<key>match</key>
+			<string>(\[)((?&lt;square&gt;[^\[\]\\]|\\.|\[\g&lt;square&gt;*+\])*+)(\])[ ]?(\[)(\])</string>
+			<key>name</key>
+			<string>meta.link.reference.literal.markdown</string>
+		</dict>
+
+		<key>list-paragraph</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>begin</key>
+					<string>\G\s+(?=\S)</string>
+					<key>end</key>
+					<string>^\s*$</string>
+					<key>name</key>
+					<string>meta.paragraph.list.markdown</string>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>include</key>
+							<string>#inline</string>
+						</dict>
+						<dict>
+							<key>captures</key>
+							<dict>
+								<key>1</key>
+								<dict>
+									<key>name</key>
+									<string>punctuation.definition.list_item.markdown</string>
+								</dict>
+							</dict>
+							<key>comment</key>
+							<string>Match the list punctuation</string>
+							<key>match</key>
+							<string>^\s*([*+-]|[0-9]+\.)</string>
+						</dict>
+					</array>
+				</dict>
+			</array>
+		</dict>
+
+		<key>numeric</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>match</key>
+					<string>(?&lt;!\$)\b((0([box])[0-9a-fA-F]+)|([0-9]+(\.[0-9]+)?(e[+\-]?[0-9]+)?))\b</string>
+					<key>name</key>
+					<string>constant.numeric.lite</string>
+				</dict>
+			</array>
+		</dict>
+
+		<key>raw</key>
+		<dict>
+			<key>name</key>
+			<string>string.backquoted</string>
+			<key>match</key>
+			<string>(`+)([^`]|(?!(?&lt;!`)\1(?!`))`)*+(\1)</string>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.raw.markdown</string>
+				</dict>
+				<key>3</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.raw.markdown</string>
+				</dict>
+			</dict>
+		</dict>
+
+		<key>separator</key>
+		<dict>
+			<key>match</key>
+			<string>\G[ ]{,3}([-*_])([ ]{,2}\1){2,}[ \t]*$\n?</string>
+			<key>name</key>
+			<string>meta.separator.markdown</string>
+		</dict>
+
+
+	</dict>
+	<key>scopeName</key>
+	<string>source.litkal</string>
+	<key>uuid</key>
+	<string>70456B1D-AC94-4E9B-81AB-426F0D1ACB85</string>
+</dict>
+</plist>
