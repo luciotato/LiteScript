@@ -28,7 +28,7 @@
 
 ##LiteScript is Literate
 
-LiteScript is literate with a twist. (based on the idea of *Literate CoffeeScript*.  
+LiteScript is literate with a twist. (based on the idea of *Literate CoffeeScript*)  
 You write code and documentation on the same file, using *Github flavored Markdown* syntax.  
 Code blocks, denoted by four spaces of indentation after a blank line, are treated as **code**.
 Every other line not indented at least 4 spaces, is considered Markdown 
@@ -134,8 +134,7 @@ which simulates a database access.
 
 You must clone and host-it locally to test-it.
 
-Development Environment
-=======================
+###Development Environment
 
 It's very useful to have syntax coloring to try a new language. This is what I use:
 
@@ -143,7 +142,7 @@ It's very useful to have syntax coloring to try a new language. This is what I u
 - node.js >= 0.10
 - [Sublime Text 2](http://www.sublimetext.com/2) - Higly recommended 
 - [LiteScript tmLanguage](/extras/sublime) for Sublime Text. 
-- A custom theme for Sublime Text ["Lite Dark"](/extras/sublime) based on "Soda Dark". install from: 
+- A custom theme for Sublime Text ["Lite Dark"](/extras/sublime) based on "Soda Dark". 
 - A very simple Sublime "build system" (Ctrl-B)
 ```
 {
@@ -165,12 +164,11 @@ This environment It's higly recommendable to be productive with the language.
 If you have a windows box, it's time to start using Linux. Node.js works on windows, 
 but some other very useful tools do not work smoothly on windows (like node-inspector). 
 Go now and download "Virtual Box". After installing "Virtual Box" 
-goto http://www.debian.org/distrib/netinst and continue from there 
+try http://www.debian.org/distrib/netinst and continue from there 
 until you've got the above configuration.
 
 ----
-Developing a new version of LiteScript 
-======================================
+###Developing a new version of LiteScript 
 
 The LiteScript compiler is written in LiteScript. 
 
@@ -179,7 +177,7 @@ is used to to develop and compile a newer -unstable- version.
 
 Check the /devel/ dir.
 
-Once the new liteCompiler version passes all tests and can compile itself,
+Once the new liteCompiler version passes all tests and ***can compile itself***,
 it's ready for release.
 
 You can also clone the other repositories: 
