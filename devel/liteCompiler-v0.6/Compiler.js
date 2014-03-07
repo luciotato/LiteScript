@@ -1,9 +1,8 @@
-//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/Compiler.lite.md
 //The LiteScript Compiler Module
 //==============================
 //LiteScript is a highly readable language that compiles to JavaScript.
 
-   var version = '0.6.1';
+   var version = '0.6.3';
    //export
    module.exports.version = version;
 
@@ -165,7 +164,8 @@
         //main: Grammar.Module
         //Producer
         //recurseLevel = 0
-        this.recurseLevel=0;
+    this.recurseLevel=0;
+
 
 //normalize options
 
@@ -176,14 +176,14 @@
        if(options.comments===undefined) options.comments=1;
        if(options.target===undefined) options.target='js';
        if(options.outDir===undefined) options.outDir='.';
-       //options.debug: undefined
-       //options.skip: undefined
-       //options.nomap: undefined
-       //options.single: undefined
-       //options.browser: undefined
+       // options.debug: undefined
+       // options.skip: undefined
+       // options.nomap: undefined
+       // options.single: undefined
+       // options.browser: undefined
        if(options.extraComments===undefined) options.extraComments=true;
        if(options.mainModuleName===undefined) options.mainModuleName=filename;
-       //options.basePath: undefined
+       // options.basePath: undefined
        if(options.outBasePath===undefined) options.outBasePath=options.outDir;
 
 //Initialize this project. Project has a cache for required modules.
@@ -325,6 +325,7 @@
                };
            };
 
+
 //                var exportedArray = moduleNode.exports.toExportArray()
 //                var cacheContents = JSON.stringify({required:[], exported:exportedArray},null,2)
 //                Environment.externalCacheSave(moduleNode.fileInfo.outExportRequired, cacheContents)
@@ -340,6 +341,7 @@
 
        //end for each module cached
 
+       //print "#{log.error.count} errors, #{log.warning.count} warnings."
        console.log("" + log.error.count + " errors, " + log.warning.count + " warnings.");
     };
 
@@ -368,6 +370,7 @@
 
     //method parseOnModule(moduleNode:Grammar.Module, filename, sourceLines)
     Project.prototype.parseOnModule = function(moduleNode, filename, sourceLines){ try{
+
 //This method will initialize lexer & parse  source lines into ModuleNode scope
 
 //set Lexer source code, process lines, tokenize
@@ -490,6 +493,7 @@
 
        //for each node in moduleNode.requireCallNodes
        for( var node__inx=0,node ; node__inx<moduleNode.requireCallNodes.length ; node__inx++){node=moduleNode.requireCallNodes[node__inx];
+       
 
            var requireParameter = undefined;
 
@@ -539,7 +543,7 @@
            if (requireParameter) {
                node.importedModule = this.importModule(moduleNode, requireParameter);
            };
-       };//end for each in moduleNode.requireCallNodes
+       }; // end for each in moduleNode.requireCallNodes
        
     };
 
@@ -704,6 +708,7 @@
 //##Add helper properties and methods to AST node class Module
 
    //append to class Grammar.Module
+   
      //     properties
         //fileInfo #module file info
         //exports: NameDeclaration # holds module.exports as members
@@ -722,11 +727,13 @@
 
 
    //append to class Grammar.VariableRef
+   
      //     properties
         //importedModule: Grammar.Module
     
 
    //append to class Grammar.ImportStatementItem
+   
      //     properties
         //importedModule: Grammar.Module
     
@@ -734,6 +741,7 @@
 
 //----------------
    //append to class NameDeclaration
+   
     //helper method toExportArray()
     NameDeclaration.prototype.toExportArray = function(){
 
@@ -752,6 +760,7 @@
        //for each prop in Object.keys(.members)
        var _list1=Object.keys(this.members);
        for( var prop__inx=0,prop ; prop__inx<_list1.length ; prop__inx++){prop=_list1[prop__inx];
+       
          var item = this.members[prop];
          var membersArr = item.toExportArray();// #recursive
           //# FIX with Ternary
@@ -783,7 +792,7 @@
          };
 
          result.push(arrItem);
-       };//end for each in Object.keys(this.members)
+       }; // end for each in Object.keys(this.members)
        
      };
 
@@ -792,6 +801,7 @@
 
 //----------------
    //append to class NameDeclaration
+   
     //helper method importMembersFromArray(exportedArr: NameDeclaration array) ### Recursive
     NameDeclaration.prototype.importMembersFromArray = function(exportedArr){// ### Recursive
 
@@ -802,6 +812,7 @@
 
        //for each item in exportedArr
        for( var item__inx=0,item ; item__inx<exportedArr.length ; item__inx++){item=exportedArr[item__inx];
+       
          var nameDecl = new NameDeclaration(item.name || '(unnamed)');
          //if item.hasOwnProperty('type')
          if (item.hasOwnProperty('type')) {
@@ -816,7 +827,10 @@
          if (item.members) {
            nameDecl.importMembersFromArray(item.members);// #recursive
          };
-       };//end for each in exportedArr
+       }; // end for each in exportedArr
        
     };
 
+
+//Compiled by LiteScript compiler v0.5.0, source: /home/ltato/LiteScript/devel/source-v0.6/Compiler.lite.md
+//# sourceMappingURL=Compiler.js.map

@@ -3,11 +3,17 @@
     global import path,fs
     import Args
 
+    var VERSION = '0.6.2'
+
 ## usage, module vars
 
     var usage = """
     
-    Usage: lite -c|-r mainModule.lite.md [options]
+    LiteScript v#{VERSION}
+    
+    Usage: 
+            lite -compile mainModule.lite.md [options]
+            lite -run mainModule.lite.md [options]
 
     This command will launch the LiteScript Compiler on mainModule.lite.md
     
@@ -19,6 +25,7 @@
     -v, -verbose     verbose level, default is 1 (0-2)
     -w, -warning     warning level, default is 1 (0-1)
     -comments        comment level on generated files, default is 1 (0-2)
+    -version         print LiteScript version & exit
 
     Advanced options:
     -s,  -single     compile single file. do not follow import/require() calls
@@ -47,10 +54,16 @@ Get & process command line arguments
 
         var defaultVerbose = 1
 
-Check for --help
+Check for -help
 
         if args.option('h','help') 
             print usage
+            process.exit 0
+
+Check for -version
+
+        if args.option('vers','version') 
+            print VERSION
             process.exit 0
 
 Check for --run

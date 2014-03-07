@@ -164,6 +164,7 @@ Initialize module vars
 
         NameDeclaration.allOfThem = []
         nameAffinity= new NameDeclaration('Name Affinity') # project-wide name affinity for classes
+        nameAffinity.addMember 'err','Error'
 
 Now, run passes on the AST
 
@@ -638,6 +639,11 @@ If no type specified, check project.nameAffinity
                     .setMember('**proto**', possibleClassRef.nodeDeclared.nameDecl.members.prototype)
                     return true
 
+                #last option err:Error
+                if normalized is 'err'
+                    .setMember '**proto**', tryGetGlobalPrototype('Error')
+                    return true
+
 
 
 --------------------------------
@@ -1006,6 +1012,17 @@ Examples:
             varDecl.getTypeFromAssignedValue
 
 
+### Append to class Grammar.WithStatement ###
+
+      properties nameDecl
+
+      method declare()  # pass 1
+         .nameDecl = .addToScope(.declareName(.name))
+
+      method evaluateAssignments() # pass 4, determine type from assigned value
+        .nameDecl.assignTypeFromValue .varRef
+      
+
 ### Append to class Grammar.ImportStatementItem ###
 
       properties nameDecl
@@ -1032,6 +1049,9 @@ if it is 'append to', nothing to declare, object must pre-exist
 Add class name, to parent scope. A "class" in js is a function
 
         .nameDecl = .addToScope(.name,{type:globalPrototype('Function')})
+
+If we're in a namespace, add class to namespace, 
+else, if public/export, add to module.exports
         
         if .getParent(Grammar.NamespaceDeclaration) into var namespaceDeclaration
             namespaceDeclaration.nameDecl.addMember .nameDecl
@@ -1445,6 +1465,10 @@ check if we can continue on the chain
 
         return actualVar
 
+#### Helper Method getResultType() returns NameDeclaration
+      
+      return .tryGetReference()
+
 -------
 
 
@@ -1647,7 +1671,7 @@ else: declare (VariableDecl,)
             if .specifier is 'affinity'
                 var classDecl = .getParent(Grammar.ClassDeclaration)
                 if no classDecl
-                    .sayErr "declare affinity must be included in a class declaration"
+                    .sayErr "'declare name affinity' must be included in a class declaration"
                     return
                 #add as member to nameAffinity, referencing class decl (.nodeDeclared)
                 varDecl.nameDecl.nodeDeclared = classDecl

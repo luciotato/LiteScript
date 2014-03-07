@@ -1,8 +1,8 @@
-//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/Grammar.lite.md
+//Compiled by LiteScript compiler v0.6.3, source: /home/ltato/LiteScript/devel/source-v0.6/Grammar.lite.md
    var ASTBase = require('./ASTBase');
    var log = require('./log');
    var debug = log.debug;
-   var RESERVED_WORDS = ['namespace', 'function', 'class', 'method', 'constructor', 'prototype', 'if', 'then', 'else', 'switch', 'when', 'case', 'end', 'null', 'true', 'false', 'undefined', 'and', 'or', 'but', 'no', 'not', 'has', 'hasnt', 'property', 'properties', 'new', 'is', 'isnt', 'do', 'loop', 'while', 'until', 'for', 'to', 'break', 'continue', 'return', 'try', 'catch', 'throw', 'raise', 'fail', 'exception', 'finally', 'with', 'arguments', 'in', 'instanceof', 'typeof', 'var', 'let', 'default', 'delete', 'interface', 'implements', 'yield', 'like', 'this', 'super', 'export', 'compiler', 'compile', 'debugger'];
+   var RESERVED_WORDS = ['namespace', 'function', 'async', 'class', 'method', 'constructor', 'prototype', 'if', 'then', 'else', 'switch', 'when', 'case', 'end', 'null', 'true', 'false', 'undefined', 'and', 'or', 'but', 'no', 'not', 'has', 'hasnt', 'property', 'properties', 'new', 'is', 'isnt', 'do', 'loop', 'while', 'until', 'for', 'to', 'break', 'continue', 'return', 'try', 'catch', 'throw', 'raise', 'fail', 'exception', 'finally', 'with', 'arguments', 'in', 'instanceof', 'typeof', 'var', 'let', 'default', 'delete', 'interface', 'implements', 'yield', 'like', 'this', 'super', 'export', 'compiler', 'compile', 'debugger'];
    var operatorsPrecedence = ['++', '--', 'unary -', 'unary +', '~', '&', '^', '|', '>>', '<<', 'new', 'type of', 'instance of', 'has property', '*', '/', '%', '+', '-', 'into', 'in', '>', '<', '>=', '<=', 'is', '<>', '!==', 'like', 'no', 'not', 'and', 'but', 'or', '?', ':'];
    
    function PrintStatement(){
@@ -84,6 +84,22 @@
    module.exports.PropertiesDeclaration = PropertiesDeclaration;
    PropertiesDeclaration
    
+   function WithStatement(){
+       ASTBase.prototype.constructor.apply(this,arguments)
+   };
+   WithStatement.prototype.__proto__ = ASTBase.prototype;
+   
+     WithStatement.prototype.parse = function(){
+       this.req('with');
+       this.lock();
+       this.name = ASTBase.getUniqueVarName('with');
+       this.varRef = this.req(VariableRef);
+       this.body = this.req(Body);
+     };
+   
+   module.exports.WithStatement = WithStatement;
+   WithStatement
+   
    function TryCatch(){
        ASTBase.prototype.constructor.apply(this,arguments)
    };
@@ -157,6 +173,7 @@
        this.conditional = this.req(Expression);
        if (this.opt(',', 'then')) {
            this.body = this.req(SingleLineStatement);
+           this.req('NEWLINE');
        }
        else {
            this.body = this.req(Body);
@@ -439,13 +456,19 @@
        this.preIncDec = this.opt('--', '++');
        this.executes = false;
        if (this.opt('.', 'SPACE_DOT')) {
-         this.lock();
-         this.name = 'this';
-         var member = this.req('IDENTIFIER');
-         this.addAccessor(new PropertyAccess(this, member));
+           this.lock();
+           var withStatement=undefined;
+           if ((withStatement=this.getParent(WithStatement))) {
+               this.name = withStatement.name;
+           }
+           else {
+               this.name = 'this';
+           };
+           var member = this.req('IDENTIFIER');
+           this.addAccessor(new PropertyAccess(this, member));
        }
        else {
-         this.name = this.req('IDENTIFIER');
+           this.name = this.req('IDENTIFIER');
        };
        this.lock();
        this.parseAccessors();
@@ -599,13 +622,15 @@
    var OPERAND_DIRECT_TYPE = {
          'STRING': StringLiteral, 
          'NUMBER': NumberLiteral, 
-         'REGEX': RegExpLiteral
+         'REGEX': RegExpLiteral, 
+         'SPACE_BRACKET': ArrayLiteral
          };
    var OPERAND_DIRECT_TOKEN = {
          '(': ParenExpression, 
          '[': ArrayLiteral, 
          '{': ObjectLiteral, 
          'function': FunctionDeclaration, 
+         '->': FunctionDeclaration, 
          'case': CaseWhenExpression
          };
    
@@ -911,7 +936,7 @@
    ArrayLiteral.prototype.__proto__ = Literal.prototype;
    
      ArrayLiteral.prototype.parse = function(){
-       this.req('[');
+       this.req('[', 'SPACE_BRACKET');
        this.lock();
        this.items = this.optSeparatedList(Expression, ',', ']');
      };
@@ -1010,25 +1035,45 @@
    FunctionDeclaration.prototype.__proto__ = ASTBase.prototype;
    
      FunctionDeclaration.prototype.parse = function(){
-       this.specifier = this.req('function', 'method');
+       this.specifier = this.req('function', 'method', '->');
        this.lock();
        
-       if (this.specifier === 'function' && this.parent.parent.parent instanceof ClassDeclaration) {
+       if (this.specifier !== 'method' && this.parent.parent.parent instanceof ClassDeclaration) {
            this.throwError("unexpected 'function' in 'class/append' body. You should use 'method'");
        };
-       this.name = this.opt('IDENTIFIER');
+       if (this.specifier !== '->') {
+           this.name = this.opt('IDENTIFIER');
+       };
        this.parseParametersAndBody();
      };
      FunctionDeclaration.prototype.parseParametersAndBody = function(){
        if (this.opt("(")) {
            this.paramsDeclarations = this.optSeparatedList(VariableDecl, ',', ')');
+       }
+       else if (this.specifier === '->') {
+           this.paramsDeclarations = [];
+           while(!(this.lexer.token.type === 'NEWLINE' || ['=', 'return'].indexOf(this.lexer.token.value)>=0)){
+               if (this.paramsDeclarations.length) {
+                   this.req(',')};
+               var varDecl = new VariableDecl(this, this.req('IDENTIFIER'));
+               if (this.opt(":")) {
+                   varDecl.parseType()};
+               this.paramsDeclarations.push(varDecl);
+           };
+           
        };
-       if (this.opt('returns')) {
-           this.parseType()};
-       if (this.opt("[")) {
-           this.definePropItems = this.optSeparatedList(DefinePropertyItem, ',', ']');
+       if (this.opt('=', 'return')) {
+           this.body = this.req(Expression);
+       }
+       else {
+           if (this.opt('returns')) {
+               this.parseType()};
+           if (this.opt('[', 'SPACE_BRACKET')) {
+               this.definePropItems = this.optSeparatedList(DefinePropertyItem, ',', ']');
+           };
+           this.body = this.req(Body);
        };
-       this.body = this.req(Body);
+       
      };
    
    module.exports.FunctionDeclaration = FunctionDeclaration;
@@ -1347,7 +1392,7 @@
    Adjective.prototype.__proto__ = ASTBase.prototype;
    
     Adjective.prototype.parse = function(){
-       this.name = this.req('public', 'export', 'default', 'global', 'generator', 'shim', 'helper');
+       this.name = this.req('public', 'export', 'default', 'global', 'async', 'generator', 'shim', 'helper');
     };
     Adjective.prototype.validate = function(statement){
        var CFVN = ['class', 'function', 'var', 'namespace'];
@@ -1356,6 +1401,7 @@
              public: CFVN, 
              default: CFVN, 
              generator: ['function', 'method'], 
+             async: ['function', 'method'], 
              shim: ['function', 'method', 'class'], 
              helper: ['function', 'method', 'class'], 
              global: ['import', 'declare']
@@ -1403,6 +1449,9 @@
        };
        var functionAccess = new FunctionAccess(this.varRef);
        functionAccess.args = functionAccess.optSeparatedList(Expression, ",");
+       if (this.lexer.token.value === '->') {
+           functionAccess.args.push(this.req(FunctionDeclaration));
+       };
        this.varRef.addAccessor(functionAccess);
      };
    
@@ -1598,6 +1647,7 @@
      'continue': LoopControlStatement, 
      'end': EndStatement, 
      'return': ReturnStatement, 
+     'with': WithStatement, 
      'print': PrintStatement, 
      'throw': ThrowStatement, 
      'raise': ThrowStatement, 

@@ -1,4 +1,3 @@
-//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/Grammar.lite.md
 //LiteScript Grammar
 //==================
 
@@ -87,7 +86,7 @@
 //Words that are reserved in LiteScript and cannot be used as variable or function names
 //(There are no restrictions to object property names)
 
-   var RESERVED_WORDS = ['namespace', 'function', 'class', 'method', 'constructor', 'prototype', 'if', 'then', 'else', 'switch', 'when', 'case', 'end', 'null', 'true', 'false', 'undefined', 'and', 'or', 'but', 'no', 'not', 'has', 'hasnt', 'property', 'properties', 'new', 'is', 'isnt', 'do', 'loop', 'while', 'until', 'for', 'to', 'break', 'continue', 'return', 'try', 'catch', 'throw', 'raise', 'fail', 'exception', 'finally', 'with', 'arguments', 'in', 'instanceof', 'typeof', 'var', 'let', 'default', 'delete', 'interface', 'implements', 'yield', 'like', 'this', 'super', 'export', 'compiler', 'compile', 'debugger'];
+   var RESERVED_WORDS = ['namespace', 'function', 'async', 'class', 'method', 'constructor', 'prototype', 'if', 'then', 'else', 'switch', 'when', 'case', 'end', 'null', 'true', 'false', 'undefined', 'and', 'or', 'but', 'no', 'not', 'has', 'hasnt', 'property', 'properties', 'new', 'is', 'isnt', 'do', 'loop', 'while', 'until', 'for', 'to', 'break', 'continue', 'return', 'try', 'catch', 'throw', 'raise', 'fail', 'exception', 'finally', 'with', 'arguments', 'in', 'instanceof', 'typeof', 'var', 'let', 'default', 'delete', 'interface', 'implements', 'yield', 'like', 'this', 'super', 'export', 'compiler', 'compile', 'debugger'];
 
 
 //Operators precedence
@@ -106,12 +105,13 @@
 
    //export class PrintStatement extends ASTBase
    //constructor
-   function PrintStatement(){//default constructor: call super.constructor
+   function PrintStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //args
    };
-   //PrintStatement (extends|proto is) ASTBase
+   // PrintStatement (extends|super is) ASTBase
    PrintStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -131,13 +131,14 @@
 
    //export class VarStatement extends ASTBase
    //constructor
-   function VarStatement(){//default constructor: call super.constructor
+   function VarStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //list:array
         //export:boolean, default:boolean
    };
-   //VarStatement (extends|proto is) ASTBase
+   // VarStatement (extends|super is) ASTBase
    VarStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -153,7 +154,8 @@
 
    //export class VariableDecl extends ASTBase
    //constructor
-   function VariableDecl(){//default constructor: call super.constructor
+   function VariableDecl(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //name
@@ -161,7 +163,7 @@
         //itemType: VariableRef
         //assignedValue: Expression
    };
-   //VariableDecl (extends|proto is) ASTBase
+   // VariableDecl (extends|super is) ASTBase
    VariableDecl.prototype.__proto__ = ASTBase.prototype;
 
       //declare name affinity varDecl, paramDecl
@@ -221,8 +223,11 @@
 //all the following constructions are equivalent and valid in LiteScript:
 
 //Examples:
+
+
 //    //standard js
 //    var a = {prop1:30 prop2: { prop2_1:19, prop2_2:71} arr:["Jan","Feb","Mar"]}
+
 //    //LiteScript: mixed freeForm and comma separated
 //    var a =
 //        prop1: 30
@@ -230,6 +235,7 @@
 //          prop2_1: 19, prop2_2: 71
 //        arr: [ "Jan",
 //              "Feb", "Mar"]
+
 //    //LiteScript: in freeForm, commas are optional
 //    var a =
 //        prop1: 30
@@ -241,6 +247,7 @@
 //            "Feb"
 //            "Mar"
 //            ]
+
 
 //##More about comma separated lists
 
@@ -272,12 +279,18 @@
   //'var' + a comma separated list of: IDENTIFIER ["=" Expression]
 
 //Examples:
+
+
 //  js:
+
 //    Console.log(title,subtitle,line1,line2,value,recommendation)
+
 //  LiteScript available variations:
+
 //    print title,subtitle,
 //          line1,line2,
 //          value,recommendation
+
 //    print
 //      title
 //      subtitle
@@ -285,19 +298,25 @@
 //      line2
 //      value
 //      recommendation
+
 //  js:
+
 //    var a=10, b=20, c=30,
 //        d=40;
+
 //    function complexFn( 10, 4, 'sample'
 //       'see 1',
 //       2+2,
 //       null ){
 //      ...function body...
 //    };
+
 //  LiteScript:
+
 //    var
 //      a=10,b=20
 //      c=30,d=40
+
 //    function complexFn(
 //      10       # determines something important to this function
 //      4        # do not pass nulll to this
@@ -311,13 +330,14 @@
 
    //export class PropertiesDeclaration extends ASTBase
    //constructor
-   function PropertiesDeclaration(){//default constructor: call super.constructor
+   function PropertiesDeclaration(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //list: VariableDecl array
         //toNamespace: boolean
    };
-   //PropertiesDeclaration (extends|proto is) ASTBase
+   // PropertiesDeclaration (extends|super is) ASTBase
    PropertiesDeclaration.prototype.__proto__ = ASTBase.prototype;
 
       //declare name affinity propDecl
@@ -334,13 +354,38 @@
    //end class PropertiesDeclaration
 
 
+   //export class WithStatement extends ASTBase
+   //constructor
+   function WithStatement(){
+       // default constructor: call super.constructor
+       ASTBase.prototype.constructor.apply(this,arguments)
+      //properties
+        //varRef, body
+   };
+   // WithStatement (extends|super is) ASTBase
+   WithStatement.prototype.__proto__ = ASTBase.prototype;
+
+     //method parse()
+     WithStatement.prototype.parse = function(){
+       this.req('with');
+       this.lock();
+       this.name = ASTBase.getUniqueVarName('with');// #unique 'with' storage var name
+       this.varRef = this.req(VariableRef);
+       this.body = this.req(Body);
+     };
+   //export
+   module.exports.WithStatement = WithStatement;
+   //end class WithStatement
+
+
    //export class TryCatch extends ASTBase
    //constructor
-   function TryCatch(){//default constructor: call super.constructor
+   function TryCatch(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties body,exceptionBlock
    };
-   //TryCatch (extends|proto is) ASTBase
+   // TryCatch (extends|super is) ASTBase
    TryCatch.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -358,13 +403,14 @@
 
    //export class ExceptionBlock extends ASTBase
    //constructor
-   function ExceptionBlock(){//default constructor: call super.constructor
+   function ExceptionBlock(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //catchVar:string
         //body,finallyBody
    };
-   //ExceptionBlock (extends|proto is) ASTBase
+   // ExceptionBlock (extends|super is) ASTBase
    ExceptionBlock.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -393,11 +439,12 @@
 
    //export class ThrowStatement extends ASTBase
    //constructor
-   function ThrowStatement(){//default constructor: call super.constructor
+   function ThrowStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties specifier, expr
    };
-   //ThrowStatement (extends|proto is) ASTBase
+   // ThrowStatement (extends|super is) ASTBase
    ThrowStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -419,11 +466,12 @@
 
    //export class ReturnStatement extends ASTBase
    //constructor
-   function ReturnStatement(){//default constructor: call super.constructor
+   function ReturnStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties expr
    };
-   //ReturnStatement (extends|proto is) ASTBase
+   // ReturnStatement (extends|super is) ASTBase
    ReturnStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -439,11 +487,13 @@
 
    //export class IfStatement extends ASTBase
    //constructor
-   function IfStatement(){//default constructor: call super.constructor
+   function IfStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
-      //properties conditional,body,elseStatement
+      //properties
+        //conditional,body,elseStatement
    };
-   //IfStatement (extends|proto is) ASTBase
+   // IfStatement (extends|super is) ASTBase
    IfStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -454,10 +504,15 @@
        this.conditional = this.req(Expression);
 
 //after `,` or `then`, a statement on the same line is required
+//if we're processing all single-line if's, ',|then' is *required*
+
+//choose same body class as parent:
+//either SingleLineStatement or Body (multiline indented)
 
        //if .opt(',','then')
        if (this.opt(',', 'then')) {
            this.body = this.req(SingleLineStatement);
+           this.req('NEWLINE');
        }
        
        else {
@@ -500,11 +555,13 @@
 
    //export class ElseIfStatement extends ASTBase
    //constructor
-   function ElseIfStatement(){//default constructor: call super.constructor
+   function ElseIfStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
-      //properties nextIf
+      //properties
+        //nextIf
    };
-   //ElseIfStatement (extends|proto is) ASTBase
+   // ElseIfStatement (extends|super is) ASTBase
    ElseIfStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -525,11 +582,12 @@
 
    //export class ElseStatement extends ASTBase
    //constructor
-   function ElseStatement(){//default constructor: call super.constructor
+   function ElseStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties body
    };
-   //ElseStatement (extends|proto is) ASTBase
+   // ElseStatement (extends|super is) ASTBase
    ElseStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -604,14 +662,15 @@
 
    //public class DoLoop extends ASTBase
    //constructor
-   function DoLoop(){//default constructor: call super.constructor
+   function DoLoop(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //preWhileUntilExpression
         //body
         //postWhileUntilExpression
    };
-   //DoLoop (extends|proto is) ASTBase
+   // DoLoop (extends|super is) ASTBase
    DoLoop.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -645,11 +704,12 @@
 
    //export class WhileUntilLoop extends DoLoop
    //constructor
-   function WhileUntilLoop(){//default constructor: call super.constructor
+   function WhileUntilLoop(){
+       // default constructor: call super.constructor
        DoLoop.prototype.constructor.apply(this,arguments)
       //properties preWhileUntilExpression, body
    };
-   //WhileUntilLoop (extends|proto is) DoLoop
+   // WhileUntilLoop (extends|super is) DoLoop
    WhileUntilLoop.prototype.__proto__ = DoLoop.prototype;
 
      //method parse()
@@ -665,11 +725,12 @@
 
    //export helper class WhileUntilExpression extends ASTBase
    //constructor
-   function WhileUntilExpression(){//default constructor: call super.constructor
+   function WhileUntilExpression(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties expr
    };
-   //WhileUntilExpression (extends|proto is) ASTBase
+   // WhileUntilExpression (extends|super is) ASTBase
    WhileUntilExpression.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -685,11 +746,12 @@
 
    //export class LoopControlStatement extends ASTBase
    //constructor
-   function LoopControlStatement(){//default constructor: call super.constructor
+   function LoopControlStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties control
    };
-   //LoopControlStatement (extends|proto is) ASTBase
+   // LoopControlStatement (extends|super is) ASTBase
    LoopControlStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -703,10 +765,11 @@
 
    //export class DoNothingStatement extends ASTBase
    //constructor
-   function DoNothingStatement(){//default constructor: call super.constructor
+   function DoNothingStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
    };
-   //DoNothingStatement (extends|proto is) ASTBase
+   // DoNothingStatement (extends|super is) ASTBase
    DoNothingStatement.prototype.__proto__ = ASTBase.prototype;
 
 //`DoNothingStatement: do nothing`
@@ -725,12 +788,13 @@
 
    //export class ForStatement extends ASTBase
    //constructor
-   function ForStatement(){//default constructor: call super.constructor
+   function ForStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //variant: ASTBase
    };
-   //ForStatement (extends|proto is) ASTBase
+   // ForStatement (extends|super is) ASTBase
    ForStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -764,7 +828,8 @@
 
    //export class ForEachProperty extends ASTBase
    //constructor
-   function ForEachProperty(){//default constructor: call super.constructor
+   function ForEachProperty(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //ownOnly
@@ -772,7 +837,7 @@
         //iterable, where:ForWhereFilter
         //body
    };
-   //ForEachProperty (extends|proto is) ASTBase
+   // ForEachProperty (extends|super is) ASTBase
    ForEachProperty.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -830,14 +895,15 @@
 
    //export class ForEachInArray extends ASTBase
    //constructor
-   function ForEachInArray(){//default constructor: call super.constructor
+   function ForEachInArray(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //indexVar:VariableDecl, mainVar:VariableDecl, iterable:Expression
         //where:ForWhereFilter
         //body
    };
-   //ForEachInArray (extends|proto is) ASTBase
+   // ForEachInArray (extends|super is) ASTBase
    ForEachInArray.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -878,6 +944,7 @@
    module.exports.ForEachInArray = ForEachInArray;
    //end class ForEachInArray
 
+
 //##Variant 3) **for index=...**
 //### to do **numeric loops**
 
@@ -897,7 +964,8 @@
 
    //export class ForIndexNumeric extends ASTBase
    //constructor
-   function ForIndexNumeric(){//default constructor: call super.constructor
+   function ForIndexNumeric(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //indexVar:VariableDecl
@@ -906,7 +974,7 @@
         //increment: Statement
         //body
    };
-   //ForIndexNumeric (extends|proto is) ASTBase
+   // ForIndexNumeric (extends|super is) ASTBase
    ForIndexNumeric.prototype.__proto__ = ASTBase.prototype;
 
 //we require: a variableDecl, with optional assignment
@@ -945,12 +1013,13 @@
 
    //public helper class ForWhereFilter extends ASTBase
    //constructor
-   function ForWhereFilter(){//default constructor: call super.constructor
+   function ForWhereFilter(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //filter
    };
-   //ForWhereFilter (extends|proto is) ASTBase
+   // ForWhereFilter (extends|super is) ASTBase
    ForWhereFilter.prototype.__proto__ = ASTBase.prototype;
 
      //method parse
@@ -978,12 +1047,13 @@
 
    //public class DeleteStatement extends ASTBase
    //constructor
-   function DeleteStatement(){//default constructor: call super.constructor
+   function DeleteStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //varRef
    };
-   //DeleteStatement (extends|proto is) ASTBase
+   // DeleteStatement (extends|super is) ASTBase
    DeleteStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse
@@ -999,11 +1069,12 @@
 
    //export class AssignmentStatement extends ASTBase
    //constructor
-   function AssignmentStatement(){//default constructor: call super.constructor
+   function AssignmentStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties lvalue:VariableRef, rvalue:Expression
    };
-   //AssignmentStatement (extends|proto is) ASTBase
+   // AssignmentStatement (extends|super is) ASTBase
    AssignmentStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -1043,13 +1114,14 @@
 
    //export class VariableRef extends ASTBase
    //constructor
-   function VariableRef(){//default constructor: call super.constructor
+   function VariableRef(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //preIncDec
         //postIncDec
    };
-   //VariableRef (extends|proto is) ASTBase
+   // VariableRef (extends|super is) ASTBase
    VariableRef.prototype.__proto__ = ASTBase.prototype;
 
       //declare name affinity varRef
@@ -1059,20 +1131,33 @@
        this.preIncDec = this.opt('--', '++');
        this.executes = false;
 
-//assume 'this.x' on '.x'.
+//assume 'this.x' on '.x', or if we're in a WithStatement, the 'with' .name
+
 //get var name
 
        //if .opt('.','SPACE_DOT') # note: DOT has SPACES in front when .property used as parameter
        if (this.opt('.', 'SPACE_DOT')) {// # note: DOT has SPACES in front when .property used as parameter
-          //#'.name' -> 'this.name'
-         this.lock();
-         this.name = 'this';
-         var member = this.req('IDENTIFIER');
-         this.addAccessor(new PropertyAccess(this, member));
+
+            //#'.name' -> 'x.name'
+           this.lock();
+
+           //if .getParent(WithStatement) into var withStatement
+           var withStatement=undefined;
+           if ((withStatement=this.getParent(WithStatement))) {
+               this.name = withStatement.name;
+           }
+           
+           else {
+               this.name = 'this';// #default replacement for '.x'
+           };
+
+           var member = this.req('IDENTIFIER');
+           this.addAccessor(new PropertyAccess(this, member));
        }
        
        else {
-         this.name = this.req('IDENTIFIER');
+
+           this.name = this.req('IDENTIFIER');
        };
 
        this.lock();
@@ -1121,11 +1206,12 @@
                var position = 0;
                //for each ac in classDecl.varRefSuper.accessors
                for( var ac__inx=0,ac ; ac__inx<classDecl.varRefSuper.accessors.length ; ac__inx++){ac=classDecl.varRefSuper.accessors[ac__inx];
+               
                  //if ac instanceof PropertyAccess
                  if (ac instanceof PropertyAccess) {
                    this.insertAccessorAt(position++, ac.name);
                  };
-               };//end for each in classDecl.varRefSuper.accessors
+               }; // end for each in classDecl.varRefSuper.accessors
                
            };
        };
@@ -1194,8 +1280,9 @@
        if (this.accessors) {
          //for each ac in .accessors
          for( var ac__inx=0,ac ; ac__inx<this.accessors.length ; ac__inx++){ac=this.accessors[ac__inx];
+         
            result += ac.toString();
-         };//end for each in this.accessors
+         }; // end for each in this.accessors
          
        };
        return result + (this.postIncDec || "");
@@ -1240,10 +1327,11 @@
 
    //export class Accessor extends ASTBase
    //constructor
-   function Accessor(){//default constructor: call super.constructor
+   function Accessor(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
    };
-   //Accessor (extends|proto is) ASTBase
+   // Accessor (extends|super is) ASTBase
    Accessor.prototype.__proto__ = ASTBase.prototype;
      //method parse
      Accessor.prototype.parse = function(){
@@ -1262,10 +1350,11 @@
 
    //export class PropertyAccess extends Accessor
    //constructor
-   function PropertyAccess(){//default constructor: call super.constructor
+   function PropertyAccess(){
+       // default constructor: call super.constructor
        Accessor.prototype.constructor.apply(this,arguments)
    };
-   //PropertyAccess (extends|proto is) Accessor
+   // PropertyAccess (extends|super is) Accessor
    PropertyAccess.prototype.__proto__ = Accessor.prototype;
 
 //`.` -> PropertyAccess: get the property named "n"
@@ -1290,10 +1379,11 @@
 
    //export class IndexAccess extends Accessor
    //constructor
-   function IndexAccess(){//default constructor: call super.constructor
+   function IndexAccess(){
+       // default constructor: call super.constructor
        Accessor.prototype.constructor.apply(this,arguments)
    };
-   //IndexAccess (extends|proto is) Accessor
+   // IndexAccess (extends|super is) Accessor
    IndexAccess.prototype.__proto__ = Accessor.prototype;
 
 //`[n]`-> IndexAccess: get the property named "n" / then nth index of the array
@@ -1321,12 +1411,13 @@
 
    //export class FunctionAccess extends Accessor
    //constructor
-   function FunctionAccess(){//default constructor: call super.constructor
+   function FunctionAccess(){
+       // default constructor: call super.constructor
        Accessor.prototype.constructor.apply(this,arguments)
       //properties
-        //args
+        //args:array
    };
-   //FunctionAccess (extends|proto is) Accessor
+   // FunctionAccess (extends|super is) Accessor
    FunctionAccess.prototype.__proto__ = Accessor.prototype;
 
      //method parse()
@@ -1347,6 +1438,7 @@
 //## Helper Functions to parse accessors on any node
 
    //append to class ASTBase
+   
       //properties
         //accessors: Accessor array
         //executes, hasSideEffects
@@ -1437,7 +1529,8 @@
    var OPERAND_DIRECT_TYPE = {
          'STRING': StringLiteral, 
          'NUMBER': NumberLiteral, 
-         'REGEX': RegExpLiteral
+         'REGEX': RegExpLiteral, 
+         'SPACE_BRACKET': ArrayLiteral
          };
 
 
@@ -1446,16 +1539,18 @@
          '[': ArrayLiteral, 
          '{': ObjectLiteral, 
          'function': FunctionDeclaration, 
+         '->': FunctionDeclaration, 
          'case': CaseWhenExpression
          };
 
 
    //public class Operand extends ASTBase
    //constructor
-   function Operand(){//default constructor: call super.constructor
+   function Operand(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
    };
-   //Operand (extends|proto is) ASTBase
+   // Operand (extends|super is) ASTBase
    Operand.prototype.__proto__ = ASTBase.prototype;
 
 //fast-parse: if it's a NUMBER: it is NumberLiteral, if it's a STRING: it is StringLiteral (also for REGEX)
@@ -1521,7 +1616,8 @@
 
    //public class Oper extends ASTBase
    //constructor
-   function Oper(){//default constructor: call super.constructor
+   function Oper(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //negated
@@ -1529,7 +1625,7 @@
         //pushed, precedence
         //intoVar
    };
-   //Oper (extends|proto is) ASTBase
+   // Oper (extends|super is) ASTBase
    Oper.prototype.__proto__ = ASTBase.prototype;
 
 //Get token, require an OPER.
@@ -1703,10 +1799,11 @@
 
    //public class UnaryOper extends Oper
    //constructor
-   function UnaryOper(){//default constructor: call super.constructor
+   function UnaryOper(){
+       // default constructor: call super.constructor
        Oper.prototype.constructor.apply(this,arguments)
    };
-   //UnaryOper (extends|proto is) Oper
+   // UnaryOper (extends|super is) Oper
    UnaryOper.prototype.__proto__ = Oper.prototype;
 
 //require a unaryOperator
@@ -1773,11 +1870,12 @@
 
    //public class Expression extends ASTBase
    //constructor
-   function Expression(){//default constructor: call super.constructor
+   function Expression(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties operandCount, root, ternaryCount
    };
-   //Expression (extends|proto is) ASTBase
+   // Expression (extends|super is) ASTBase
    Expression.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -1886,6 +1984,7 @@
 
        //for each index,item in arr
        for( var index=0,item ; index<arr.length ; index++){item=arr[index];
+       
           //declare item:UnaryOper
          //if item instanceof UnaryOper and item.name is 'new'
          if (item instanceof UnaryOper && item.name === 'new') {
@@ -1898,7 +1997,7 @@
                    varRef.addAccessor(new FunctionAccess(this))};
            };
          };
-       };//end for each in arr
+       }; // end for each in arr
 
 //Now we create a tree from .arr[], based on operator precedence
 
@@ -1995,6 +2094,7 @@
          var minPrecedenceInx = 100;
          //for each inx,item in arr
          for( var inx=0,item ; inx<arr.length ; inx++){item=arr[inx];
+         
 
             //debug "item at #{inx} #{item.name}, Oper? #{item instanceof Oper}. precedence:",item.precedence
             //declare valid item.precedence
@@ -2008,7 +2108,7 @@
                minPrecedenceInx = item.precedence;
              };
            };
-         };//end for each in arr
+         }; // end for each in arr
 
          //end for
 
@@ -2028,6 +2128,7 @@
 
             //#control
            //compile if debug
+
              //if pos is arr.length
              if (pos === arr.length) {
                this.throwError("can't get RIGHT operand for unary operator '" + oper + "'");
@@ -2042,6 +2143,7 @@
 
             //#control
            //compile if debug
+
              //if pos is arr.length
              if (pos === arr.length) {
                this.throwError("can't get RIGHT operand for binary operator '" + oper + "'");
@@ -2080,13 +2182,14 @@
 
    //public class Literal extends ASTBase
    //constructor
-   function Literal(){//default constructor: call super.constructor
+   function Literal(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //type = '*abstract-Literal*'
-         this.type='*abstract-Literal*';
+     this.type='*abstract-Literal*';
    };
-   //Literal (extends|proto is) ASTBase
+   // Literal (extends|super is) ASTBase
    Literal.prototype.__proto__ = ASTBase.prototype;
 
      //method getValue()
@@ -2107,13 +2210,14 @@
 
    //public class NumberLiteral extends Literal
    //constructor
-   function NumberLiteral(){//default constructor: call super.constructor
+   function NumberLiteral(){
+       // default constructor: call super.constructor
        Literal.prototype.constructor.apply(this,arguments)
       //properties
         //type = 'Number'
-         this.type='Number';
+     this.type='Number';
    };
-   //NumberLiteral (extends|proto is) Literal
+   // NumberLiteral (extends|super is) Literal
    NumberLiteral.prototype.__proto__ = Literal.prototype;
 
      //method parse()
@@ -2134,13 +2238,14 @@
 
    //public class StringLiteral extends Literal
    //constructor
-   function StringLiteral(){//default constructor: call super.constructor
+   function StringLiteral(){
+       // default constructor: call super.constructor
        Literal.prototype.constructor.apply(this,arguments)
       //properties
         //type = 'String'
-         this.type='String';
+     this.type='String';
    };
-   //StringLiteral (extends|proto is) Literal
+   // StringLiteral (extends|super is) Literal
    StringLiteral.prototype.__proto__ = Literal.prototype;
 
      //method parse()
@@ -2164,13 +2269,14 @@
 
    //public class RegExpLiteral extends Literal
    //constructor
-   function RegExpLiteral(){//default constructor: call super.constructor
+   function RegExpLiteral(){
+       // default constructor: call super.constructor
        Literal.prototype.constructor.apply(this,arguments)
       //properties
         //type = 'RegExp'
-         this.type='RegExp';
+     this.type='RegExp';
    };
-   //RegExpLiteral (extends|proto is) Literal
+   // RegExpLiteral (extends|super is) Literal
    RegExpLiteral.prototype.__proto__ = Literal.prototype;
 
      //method parse()
@@ -2199,19 +2305,20 @@
 
    //public class ArrayLiteral extends Literal
    //constructor
-   function ArrayLiteral(){//default constructor: call super.constructor
+   function ArrayLiteral(){
+       // default constructor: call super.constructor
        Literal.prototype.constructor.apply(this,arguments)
       //properties
         //type = 'Array'
         //items
-         this.type='Array';
+     this.type='Array';
    };
-   //ArrayLiteral (extends|proto is) Literal
+   // ArrayLiteral (extends|super is) Literal
    ArrayLiteral.prototype.__proto__ = Literal.prototype;
 
      //method parse()
      ArrayLiteral.prototype.parse = function(){
-       this.req('[');
+       this.req('[', 'SPACE_BRACKET');
        this.lock();
        this.items = this.optSeparatedList(Expression, ',', ']');// # closer "]" required
      };
@@ -2230,14 +2337,15 @@
 
    //public class ObjectLiteral extends Literal
    //constructor
-   function ObjectLiteral(){//default constructor: call super.constructor
+   function ObjectLiteral(){
+       // default constructor: call super.constructor
        Literal.prototype.constructor.apply(this,arguments)
       //properties
         //items: NameValuePair array
         //type = 'Object'
-         this.type='Object';
+     this.type='Object';
    };
-   //ObjectLiteral (extends|proto is) Literal
+   // ObjectLiteral (extends|super is) Literal
    ObjectLiteral.prototype.__proto__ = Literal.prototype;
 
      //method parse()
@@ -2255,8 +2363,9 @@
      ObjectLiteral.prototype.forEach = function(callback){
          //for each nameValue in .items
          for( var nameValue__inx=0,nameValue ; nameValue__inx<this.items.length ; nameValue__inx++){nameValue=this.items[nameValue__inx];
+         
            nameValue.forEach(callback);
-         };//end for each in this.items
+         }; // end for each in this.items
          
      };
    //export
@@ -2273,11 +2382,12 @@
 
    //public class NameValuePair extends ASTBase
    //constructor
-   function NameValuePair(){//default constructor: call super.constructor
+   function NameValuePair(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties value: Expression
    };
-   //NameValuePair (extends|proto is) ASTBase
+   // NameValuePair (extends|super is) ASTBase
    NameValuePair.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -2337,11 +2447,14 @@
 //FreeObjectLiterals are triggered by a "danglin assignment"
 
 //Examples:
+
+
 //    var x =            // <- dangling assignment
 //          a: 1
 //          b:           // <- dangling assignment
 //            b1:"some"
 //            b2:"cofee"
+
 //    var x =
 //     a:1
 //     b:2
@@ -2351,6 +2464,8 @@
 //      "M","A","M","J",
 //      "J","A","S","O",
 //      "N","D" ]
+
+
 //    var y =
 //     c:{d:1}
 //     trimester:[
@@ -2363,10 +2478,11 @@
 
    //public class FreeObjectLiteral extends ObjectLiteral
    //constructor
-   function FreeObjectLiteral(){//default constructor: call super.constructor
+   function FreeObjectLiteral(){
+       // default constructor: call super.constructor
        ObjectLiteral.prototype.constructor.apply(this,arguments)
    };
-   //FreeObjectLiteral (extends|proto is) ObjectLiteral
+   // FreeObjectLiteral (extends|super is) ObjectLiteral
    FreeObjectLiteral.prototype.__proto__ = ObjectLiteral.prototype;
 
 //get items: optional comma separated, closes on de-indent, at least one required
@@ -2389,11 +2505,12 @@
 
    //public class ParenExpression extends ASTBase
    //constructor
-   function ParenExpression(){//default constructor: call super.constructor
+   function ParenExpression(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties expr:Expression
    };
-   //ParenExpression (extends|proto is) ASTBase
+   // ParenExpression (extends|super is) ASTBase
    ParenExpression.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -2417,30 +2534,36 @@
 
    //public class FunctionDeclaration extends ASTBase
    //constructor
-   function FunctionDeclaration(){//default constructor: call super.constructor
+   function FunctionDeclaration(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
-        //specifier, export, default, shim, generator
+        //specifier, export, default, async, shim, generator
         //paramsDeclarations: VariableDecl array
         //definePropItems: DefinePropertyItem array
         //body
    };
-   //FunctionDeclaration (extends|proto is) ASTBase
+   // FunctionDeclaration (extends|super is) ASTBase
    FunctionDeclaration.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
      FunctionDeclaration.prototype.parse = function(){
 
-       this.specifier = this.req('function', 'method');
+       this.specifier = this.req('function', 'method', '->');
        this.lock();
 
         //declare valid .parent.parent.parent
-       //if .specifier is 'function' and .parent.parent.parent instanceof ClassDeclaration
-       if (this.specifier === 'function' && this.parent.parent.parent instanceof ClassDeclaration) {
+       //if .specifier isnt 'method' and .parent.parent.parent instance of ClassDeclaration
+       if (this.specifier !== 'method' && this.parent.parent.parent instanceof ClassDeclaration) {
            this.throwError("unexpected 'function' in 'class/append' body. You should use 'method'");
        };
 
-       this.name = this.opt('IDENTIFIER');
+//'->' are anonymous lambda functions
+
+       //if .specifier isnt '->'
+       if (this.specifier !== '->') {
+           this.name = this.opt('IDENTIFIER');
+       };
 
 //get parameter members, and function body
 
@@ -2458,34 +2581,63 @@
        //if .opt("(")
        if (this.opt("(")) {
            this.paramsDeclarations = this.optSeparatedList(VariableDecl, ',', ')');
+       }
+       
+       else if (this.specifier === '->') {// #we arrive here by: FnCall-param-Expression-Operand-'->'
+            //# after '->' we accept function params w/o parentheses.
+            //# get parameter names (name:type only), up to [NEWLINE],'=' or 'return'
+           this.paramsDeclarations = [];
+           //until .lexer.token.type is 'NEWLINE' or .lexer.token.value in ['=','return']
+           while(!(this.lexer.token.type === 'NEWLINE' || ['=', 'return'].indexOf(this.lexer.token.value)>=0)){
+               //if .paramsDeclarations.length, .req ','
+               if (this.paramsDeclarations.length) {
+                   this.req(',')};
+               var varDecl = new VariableDecl(this, this.req('IDENTIFIER'));
+               //if .opt(":"), varDecl.parseType
+               if (this.opt(":")) {
+                   varDecl.parseType()};
+               this.paramsDeclarations.push(varDecl);
+           };//end loop
+           
        };
 
-       //if .opt('returns'), .parseType
-       if (this.opt('returns')) {
-           this.parseType()};
+       //if .opt('=','return') #one line function. Body is a Expression
+       if (this.opt('=', 'return')) {// #one line function. Body is a Expression
 
-       //if .opt("[")
-       if (this.opt("[")) {
-           this.definePropItems = this.optSeparatedList(DefinePropertyItem, ',', ']');
+           this.body = this.req(Expression);
+       }
+       
+       else {
+
+           //if .opt('returns'), .parseType  #function return type
+           if (this.opt('returns')) {
+               this.parseType()};
+
+           //if .opt('[','SPACE_BRACKET') # property attributes
+           if (this.opt('[', 'SPACE_BRACKET')) {// # property attributes
+               this.definePropItems = this.optSeparatedList(DefinePropertyItem, ',', ']');
+           };
+
+            //#indented function body
+           this.body = this.req(Body);
        };
 
-//now get function body
-
-       this.body = this.req(Body);
+       //end if
+       
      };
    //export
    module.exports.FunctionDeclaration = FunctionDeclaration;
    //end class FunctionDeclaration
 
-
    //public class DefinePropertyItem extends ASTBase
    //constructor
-   function DefinePropertyItem(){//default constructor: call super.constructor
+   function DefinePropertyItem(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //negated:boolean
    };
-   //DefinePropertyItem (extends|proto is) ASTBase
+   // DefinePropertyItem (extends|super is) ASTBase
    DefinePropertyItem.prototype.__proto__ = ASTBase.prototype;
       //declare name affinity definePropItem
 
@@ -2516,10 +2668,11 @@
 
    //public class MethodDeclaration extends FunctionDeclaration
    //constructor
-   function MethodDeclaration(){//default constructor: call super.constructor
+   function MethodDeclaration(){
+       // default constructor: call super.constructor
        FunctionDeclaration.prototype.constructor.apply(this,arguments)
    };
-   //MethodDeclaration (extends|proto is) FunctionDeclaration
+   // MethodDeclaration (extends|super is) FunctionDeclaration
    MethodDeclaration.prototype.__proto__ = FunctionDeclaration.prototype;
 
      //method parse()
@@ -2555,14 +2708,15 @@
 
    //public class ClassDeclaration extends ASTBase
    //constructor
-   function ClassDeclaration(){//default constructor: call super.constructor
+   function ClassDeclaration(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //export:boolean,default:boolean
         //varRefSuper:VariableRef
         //body
    };
-   //ClassDeclaration (extends|proto is) ASTBase
+   // ClassDeclaration (extends|super is) ASTBase
    ClassDeclaration.prototype.__proto__ = ASTBase.prototype;
 
       //declare name affinity classDecl
@@ -2611,10 +2765,11 @@
 
    //public class ConstructorDeclaration extends MethodDeclaration
    //constructor
-   function ConstructorDeclaration(){//default constructor: call super.constructor
+   function ConstructorDeclaration(){
+       // default constructor: call super.constructor
        MethodDeclaration.prototype.constructor.apply(this,arguments)
    };
-   //ConstructorDeclaration (extends|proto is) MethodDeclaration
+   // ConstructorDeclaration (extends|super is) MethodDeclaration
    ConstructorDeclaration.prototype.__proto__ = MethodDeclaration.prototype;
 
      //method parse()
@@ -2653,14 +2808,15 @@
 
    //public class AppendToDeclaration extends ClassDeclaration
    //constructor
-   function AppendToDeclaration(){//default constructor: call super.constructor
+   function AppendToDeclaration(){
+       // default constructor: call super.constructor
        ClassDeclaration.prototype.constructor.apply(this,arguments)
       //properties
         //toNamespace
         //varRef:VariableRef
         //body
    };
-   //AppendToDeclaration (extends|proto is) ClassDeclaration
+   // AppendToDeclaration (extends|super is) ClassDeclaration
    AppendToDeclaration.prototype.__proto__ = ClassDeclaration.prototype;
 
      //method parse()
@@ -2691,10 +2847,11 @@
 
    //public class NamespaceDeclaration extends AppendToDeclaration
    //constructor
-   function NamespaceDeclaration(){//default constructor: call super.constructor
+   function NamespaceDeclaration(){
+       // default constructor: call super.constructor
        AppendToDeclaration.prototype.constructor.apply(this,arguments)
    };
-   //NamespaceDeclaration (extends|proto is) AppendToDeclaration
+   // NamespaceDeclaration (extends|super is) AppendToDeclaration
    NamespaceDeclaration.prototype.__proto__ = AppendToDeclaration.prototype;
 
      //method parse()
@@ -2727,10 +2884,11 @@
 
    //public class DebuggerStatement extends ASTBase
    //constructor
-   function DebuggerStatement(){//default constructor: call super.constructor
+   function DebuggerStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
    };
-   //DebuggerStatement (extends|proto is) ASTBase
+   // DebuggerStatement (extends|super is) ASTBase
    DebuggerStatement.prototype.__proto__ = ASTBase.prototype;
      //method parse()
      DebuggerStatement.prototype.parse = function(){
@@ -2755,7 +2913,8 @@
 
    //public class CompilerStatement extends ASTBase
    //constructor
-   function CompilerStatement(){//default constructor: call super.constructor
+   function CompilerStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //kind, conditional:string
@@ -2763,7 +2922,7 @@
         //importStatement
         //endLineInx
    };
-   //CompilerStatement (extends|proto is) ASTBase
+   // CompilerStatement (extends|super is) ASTBase
    CompilerStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -2840,13 +2999,14 @@
 
    //public class ImportStatement extends ASTBase
    //constructor
-   function ImportStatement(){//default constructor: call super.constructor
+   function ImportStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //global:boolean
         //list: ImportStatementItem array
    };
-   //ImportStatement (extends|proto is) ASTBase
+   // ImportStatement (extends|super is) ASTBase
    ImportStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -2860,8 +3020,9 @@
        var parentModule = this.getParent(Module);
        //for each item in .list
        for( var item__inx=0,item ; item__inx<this.list.length ; item__inx++){item=this.list[item__inx];
+       
            parentModule.requireCallNodes.push(item);
-       };//end for each in this.list
+       }; // end for each in this.list
        
      };
    //export
@@ -2871,12 +3032,13 @@
 
    //export class ImportStatementItem extends ASTBase
    //constructor
-   function ImportStatementItem(){//default constructor: call super.constructor
+   function ImportStatementItem(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //importParameter:StringLiteral
    };
-   //ImportStatementItem (extends|proto is) ASTBase
+   // ImportStatementItem (extends|super is) ASTBase
    ImportStatementItem.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -2949,7 +3111,8 @@
 
    //export class DeclareStatement extends ASTBase
    //constructor
-   function DeclareStatement(){//default constructor: call super.constructor
+   function DeclareStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //varRef: VariableRef
@@ -2958,7 +3121,7 @@
         //global:boolean
         //type: VariableRef
    };
-   //DeclareStatement (extends|proto is) ASTBase
+   // DeclareStatement (extends|super is) ASTBase
    DeclareStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -3016,11 +3179,12 @@
 
        //for each varDecl in .names
        for( var varDecl__inx=0,varDecl ; varDecl__inx<this.names.length ; varDecl__inx++){varDecl=this.names[varDecl__inx];
+       
           //if .specifier is 'affinity' and varDecl.type or varDecl.assignedValue
           if (this.specifier === 'affinity' && varDecl.type || varDecl.assignedValue) {
              this.sayErr("declare name affinity: expected 'name,name,...'");
           };
-       };//end for each in this.names
+       }; // end for each in this.names
 
        return;
      };
@@ -3043,7 +3207,10 @@
 
 
 //Example:
+
+
 //    function theApi(object,options,callback)
+
 //      default options =
 //        log: console.log
 //        encoding: 'utf-8'
@@ -3052,10 +3219,15 @@
 //          enabled: false
 //          level: 2
 //      end default
+
 //      ...function body...
+
 //    end function
 //is equivalent to js's:
+
+
 //    function theApi(object,options,callback) {
+
 //        //defaults
 //        if (!options) options = {};
 //        if (options.log===undefined) options.log = console.log;
@@ -3064,17 +3236,19 @@
 //        if (!options.debug) options.debug = {};
 //        if (options.debug.enabled===undefined) options.debug.enabled=false;
 //        if (options.debug.level===undefined) options.debug.level=2;
+
 //        ...function body...
 //    }
 
    //public class DefaultAssignment extends ASTBase
    //constructor
-   function DefaultAssignment(){//default constructor: call super.constructor
+   function DefaultAssignment(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //assignment: AssignmentStatement
    };
-   //DefaultAssignment (extends|proto is) ASTBase
+   // DefaultAssignment (extends|super is) ASTBase
    DefaultAssignment.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -3105,10 +3279,13 @@
 //Example: `end if` , `end loop`, `end for each item`
 
 //Usage Examples:
+
+
 //    if a is 3 and b is 5
 //      print "a is 3"
 //      print "b is 5"
 //    end if
+
 //    loop while a < 10
 //      a++
 //      b++
@@ -3116,12 +3293,13 @@
 
    //public class EndStatement extends ASTBase
    //constructor
-   function EndStatement(){//default constructor: call super.constructor
+   function EndStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //references:string array
    };
-   //EndStatement (extends|proto is) ASTBase
+   // EndStatement (extends|super is) ASTBase
    EndStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -3173,12 +3351,13 @@
 
    //public class WaitForAsyncCall extends ASTBase
    //constructor
-   function WaitForAsyncCall(){//default constructor: call super.constructor
+   function WaitForAsyncCall(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //varRef
    };
-   //WaitForAsyncCall (extends|proto is) ASTBase
+   // WaitForAsyncCall (extends|super is) ASTBase
    WaitForAsyncCall.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -3208,12 +3387,13 @@
 
    //public class LaunchStatement extends ASTBase
    //constructor
-   function LaunchStatement(){//default constructor: call super.constructor
+   function LaunchStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //varRef
    };
-   //LaunchStatement (extends|proto is) ASTBase
+   // LaunchStatement (extends|super is) ASTBase
    LaunchStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -3237,16 +3417,17 @@
 
    //public class Adjective extends ASTBase
    //constructor
-   function Adjective(){//default constructor: call super.constructor
+   function Adjective(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
    };
-   //Adjective (extends|proto is) ASTBase
+   // Adjective (extends|super is) ASTBase
    Adjective.prototype.__proto__ = ASTBase.prototype;
 
     //method parse()
     Adjective.prototype.parse = function(){
 
-       this.name = this.req('public', 'export', 'default', 'global', 'generator', 'shim', 'helper');
+       this.name = this.req('public', 'export', 'default', 'global', 'async', 'generator', 'shim', 'helper');
     };
 
     //helper method validate(statement)
@@ -3260,6 +3441,7 @@
              public: CFVN, 
              default: CFVN, 
              generator: ['function', 'method'], 
+             async: ['function', 'method'], 
              shim: ['function', 'method', 'class'], 
              helper: ['function', 'method', 'class'], 
              global: ['import', 'declare']
@@ -3309,12 +3491,13 @@
 
    //public class FunctionCall extends ASTBase
    //constructor
-   function FunctionCall(){//default constructor: call super.constructor
+   function FunctionCall(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
           //varRef: VariableRef
    };
-   //FunctionCall (extends|proto is) ASTBase
+   // FunctionCall (extends|super is) ASTBase
    FunctionCall.prototype.__proto__ = ASTBase.prototype;
 
      //method parse(options)
@@ -3352,6 +3535,10 @@
 
        var functionAccess = new FunctionAccess(this.varRef);
        functionAccess.args = functionAccess.optSeparatedList(Expression, ",");
+       //if .lexer.token.value is '->' #add last parameter: callback function
+       if (this.lexer.token.value === '->') {// #add last parameter: callback function
+           functionAccess.args.push(this.req(FunctionDeclaration));
+       };
 
        this.varRef.addAccessor(functionAccess);
      };
@@ -3393,14 +3580,15 @@
 
    //public class SwitchStatement extends ASTBase
    //constructor
-   function SwitchStatement(){//default constructor: call super.constructor
+   function SwitchStatement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //varRef
         //cases: SwitchCase array
         //defaultBody: Body
    };
-   //SwitchStatement (extends|proto is) ASTBase
+   // SwitchStatement (extends|super is) ASTBase
    SwitchStatement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -3445,13 +3633,14 @@
 
    //public helper class SwitchCase extends ASTBase
    //constructor
-   function SwitchCase(){//default constructor: call super.constructor
+   function SwitchCase(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
         //properties
             //expressions: Expression array
             //body
    };
-   //SwitchCase (extends|proto is) ASTBase
+   // SwitchCase (extends|super is) ASTBase
    SwitchCase.prototype.__proto__ = ASTBase.prototype;
 
 //...a comma separated list of expressions, ended by ":", and a "Body"
@@ -3489,14 +3678,15 @@
 
    //public class CaseWhenExpression extends ASTBase
    //constructor
-   function CaseWhenExpression(){//default constructor: call super.constructor
+   function CaseWhenExpression(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //varRef
         //cases: CaseWhenSection array
         //elseExpression: Expression
    };
-   //CaseWhenExpression (extends|proto is) ASTBase
+   // CaseWhenExpression (extends|super is) ASTBase
    CaseWhenExpression.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -3545,7 +3735,8 @@
 
    //public helper class CaseWhenSection extends ASTBase
    //constructor
-   function CaseWhenSection(){//default constructor: call super.constructor
+   function CaseWhenSection(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
         //properties
             //parent:CaseWhenExpression
@@ -3553,7 +3744,7 @@
             //booleanExpression
             //resultExpression
    };
-   //CaseWhenSection (extends|proto is) ASTBase
+   // CaseWhenSection (extends|super is) ASTBase
    CaseWhenSection.prototype.__proto__ = ASTBase.prototype;
 
 //if there is a var, we allow a list of comma separated expressions to compare to.
@@ -3605,7 +3796,8 @@
 
    //public class Statement extends ASTBase
    //constructor
-   function Statement(){//default constructor: call super.constructor
+   function Statement(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //adjectives: Adjective array
@@ -3613,7 +3805,7 @@
         //preParsedVarRef
         //intoVars
    };
-   //Statement (extends|proto is) ASTBase
+   // Statement (extends|super is) ASTBase
    Statement.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -3660,8 +3852,9 @@
        if (this.adjectives) {
          //for each adj in .adjectives
          for( var adj__inx=0,adj ; adj__inx<this.adjectives.length ; adj__inx++){adj=this.adjectives[adj__inx];
+         
            adj.validate(this.statement);
-         };//end for each in this.adjectives
+         }; // end for each in this.adjectives
          
        };
      };
@@ -3682,12 +3875,13 @@
 
    //public class Body extends ASTBase
    //constructor
-   function Body(){//default constructor: call super.constructor
+   function Body(){
+       // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //statements: Statement array
    };
-   //Body (extends|proto is) ASTBase
+   // Body (extends|super is) ASTBase
    Body.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
@@ -3724,12 +3918,13 @@
 
    //public class SingleLineStatement extends Statement
    //constructor
-   function SingleLineStatement(){//default constructor: call super.constructor
+   function SingleLineStatement(){
+       // default constructor: call super.constructor
        Statement.prototype.constructor.apply(this,arguments)
       //properties
         //statements: Statement array
    };
-   //SingleLineStatement (extends|proto is) Statement
+   // SingleLineStatement (extends|super is) Statement
    SingleLineStatement.prototype.__proto__ = Statement.prototype;
 
      //method parse()
@@ -3756,12 +3951,13 @@
 
    //public class Module extends Body
    //constructor
-   function Module(){//default constructor: call super.constructor
+   function Module(){
+       // default constructor: call super.constructor
        Body.prototype.constructor.apply(this,arguments)
       //properties
         //exportDefault: ASTBase
    };
-   //Module (extends|proto is) Body
+   // Module (extends|super is) Body
    Module.prototype.__proto__ = Body.prototype;
 
      //method parse()
@@ -3822,6 +4018,7 @@
      'continue': LoopControlStatement, 
      'end': EndStatement, 
      'return': ReturnStatement, 
+     'with': WithStatement, 
      'print': PrintStatement, 
      'throw': ThrowStatement, 
      'raise': ThrowStatement, 
@@ -3863,6 +4060,7 @@
 
 
    //append to class ASTBase
+   
      //helper method parseType
      ASTBase.prototype.parseType = function(){
 
@@ -3896,3 +4094,6 @@
 
 
 
+
+//Compiled by LiteScript compiler v0.5.0, source: /home/ltato/LiteScript/devel/source-v0.6/Grammar.lite.md
+//# sourceMappingURL=Grammar.js.map

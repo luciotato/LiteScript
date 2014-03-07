@@ -1,4 +1,3 @@
-//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/ASTBase.lite.md
 //The Abstract Syntax Tree (AST) Base class
 //-----------------------------------------
 
@@ -27,6 +26,7 @@
         //sourceLineNum, column
         //indent, locked
         //index
+
 
        this.parent = parent;
        this.name = name;
@@ -210,6 +210,7 @@
 
        //for each searched in arguments
        for( var searched__inx=0,searched ; searched__inx<arguments.length ; searched__inx++){searched=arguments[searched__inx];
+       
 
           //declare on searched
             //toUpperCase #for strings
@@ -316,7 +317,7 @@
              };
            };
          };
-       };//end for each in arguments
+       }; // end for each in arguments
 
               //#end if - type of error
 
@@ -589,6 +590,7 @@
        var msg = [];
        //for each i in args
        for( var i__inx=0,i ; i__inx<args.length ; i__inx++){i=args[i__inx];
+       
 
             //declare valid i.name
 
@@ -611,7 +613,7 @@
            else {
                msg.push("[null]");
            };
-       };//end for each in args
+       }; // end for each in args
 
        return msg.join('|');
     };
@@ -629,6 +631,7 @@
 
        //for each item in arguments
        for( var item__inx=0,item ; item__inx<arguments.length ; item__inx++){item=arguments[item__inx];
+       
 
           //declare on item
             //COMMENT:string, NLI, CSL:array, freeForm
@@ -688,6 +691,7 @@
 
              //for each inx,listItem in item.CSL
              for( var inx=0,listItem ; inx<item.CSL.length ; inx++){listItem=item.CSL[inx];
+             
 
                 //declare valid listItem.out
 
@@ -709,7 +713,7 @@
                };
 
                this.out(item.pre, listItem, item.post);
-             };//end for each in item.CSL
+             }; // end for each in item.CSL
 
              //end for
 
@@ -751,7 +755,7 @@
 
          //end if
          
-       };//end for each in arguments
+       }; // end for each in arguments
        
     };
 
@@ -833,7 +837,7 @@
        //for i=fromLine to toLine
        for( var i=fromLine; i<=toLine; i++) {
          this.outLineAsComment(i);
-       };//end for i
+       }; // end for i
        
     };
 
@@ -953,7 +957,7 @@
                  if(item instanceof ASTBase){
                     //declare item:ASTBase
                    item.callOnSubTree(methodName, classFilter);
-                 }};//end for each in this[name]
+                 }}; // end for each in this[name]
                  
              };
              }
@@ -1022,5 +1026,7 @@
 
 //    module.exports = ASTBase
 
-
 module.exports=ASTBase;
+
+//Compiled by LiteScript compiler v0.5.0, source: /home/ltato/LiteScript/devel/source-v0.6/ASTBase.lite.md
+//# sourceMappingURL=ASTBase.js.map

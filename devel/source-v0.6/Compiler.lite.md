@@ -2,7 +2,7 @@ The LiteScript Compiler Module
 ==============================
 LiteScript is a highly readable language that compiles to JavaScript.
 
-    export var version = '0.6.1'
+    export var version = '0.6.3'
 
 This v0.6 compiler is written in v0.5 syntax. 
 That is, you use the v0.5 compiler to compile this code 

@@ -86,7 +86,7 @@ Words that are reserved in LiteScript and cannot be used as variable or function
 
     var RESERVED_WORDS = [
         'namespace'
-        'function'
+        'function','async'
         ,'class','method','constructor','prototype'
         ,'if','then','else','switch','when','case','end'
         ,'null','true','false','undefined'
@@ -341,6 +341,32 @@ The `properties` keyword is used inside classes to define properties of the clas
         .list = .reqSeparatedList(VariableDecl,',')
 
 
+### export class WithStatement extends ASTBase
+
+`WithStatement: with VariableRef Body`
+
+The WithStatement simplifies calling several methods of the same object:
+Example:
+```    
+with frontDoor
+    .show
+    .open
+    .show
+    .close
+    .show
+```
+
+      properties
+        varRef, body
+
+      method parse()
+        .req 'with'
+        .lock()
+        .name = ASTBase.getUniqueVarName('with')  #unique 'with' storage var name
+        .varRef = .req(VariableRef)
+        .body = .req(Body)
+
+
 ### export class TryCatch extends ASTBase
 
 `TryCatch: 'try' Body ExceptionBlock`
@@ -422,7 +448,8 @@ At this point we lock because it is definitely a `throw` statement
  
 Parses `if` statments and any attached `else` or chained `else if` 
 
-      properties conditional,body,elseStatement
+      properties 
+        conditional,body,elseStatement
 
       method parse()
 
@@ -431,9 +458,14 @@ Parses `if` statments and any attached `else` or chained `else if`
         .conditional = .req(Expression)
 
 after `,` or `then`, a statement on the same line is required 
+if we're processing all single-line if's, ',|then' is *required*
+
+choose same body class as parent:
+either SingleLineStatement or Body (multiline indented)
 
         if .opt(',','then')
             .body = .req(SingleLineStatement)
+            .req 'NEWLINE'
 
         else # and indented block
             .body = .req(Body)
@@ -466,7 +498,8 @@ Now get optional `[ElseIfStatement|ElseStatement]`
 
 This class handles chained else-if statements
 
-      properties nextIf
+      properties 
+        nextIf
 
       method parse()
         .req 'else'
@@ -899,17 +932,26 @@ a VariableRef can include chained 'Accessors', which do:
         .preIncDec = .opt('--','++')
         .executes = false
 
-assume 'this.x' on '.x'. 
+assume 'this.x' on '.x', or if we're in a WithStatement, the 'with' .name
+
 get var name
 
         if .opt('.','SPACE_DOT') # note: DOT has SPACES in front when .property used as parameter
-          #'.name' -> 'this.name'
-          .lock()
-          .name = 'this' 
-          var member = .req('IDENTIFIER')
-          .addAccessor new PropertyAccess(this,member)
+  
+            #'.name' -> 'x.name'
+            .lock()
+
+            if .getParent(WithStatement) into var withStatement 
+                .name = withStatement.name
+            else
+                .name = 'this' #default replacement for '.x'
+
+            var member = .req('IDENTIFIER')
+            .addAccessor new PropertyAccess(this,member)
+
         else
-          .name = .req('IDENTIFIER')
+
+            .name = .req('IDENTIFIER')
 
         .lock()
 
@@ -1086,7 +1128,7 @@ We provide a class Accessor to be super class for the three accessors types.
 `FunctionAccess: '(' [Expression,]* ')'`
 
       properties 
-        args
+        args:array
 
       method parse()
         .req "("
@@ -1171,6 +1213,7 @@ with exact AST class to call parse() on.
           'STRING': StringLiteral
           'NUMBER': NumberLiteral
           'REGEX': RegExpLiteral
+          'SPACE_BRACKET':ArrayLiteral # one or more spaces + "[" 
     
 
     var OPERAND_DIRECT_TOKEN = 
@@ -1178,6 +1221,7 @@ with exact AST class to call parse() on.
           '[':ArrayLiteral
           '{':ObjectLiteral
           'function': FunctionDeclaration
+          '->': FunctionDeclaration
           'case': CaseWhenExpression
     
 
@@ -1752,7 +1796,7 @@ a = [
         items
 
       method parse()
-        .req '['
+        .req '[',' ['
         .lock()
         .items = .optSeparatedList(Expression,',',']') # closer "]" required
 
@@ -1902,21 +1946,24 @@ Functions: parametrized pieces of callable code.
     public class FunctionDeclaration extends ASTBase
 
       properties 
-        specifier, export, default, shim, generator
+        specifier, export, default, async, shim, generator
         paramsDeclarations: VariableDecl array
         definePropItems: DefinePropertyItem array
         body
 
       method parse()
 
-        .specifier = .req('function','method')
+        .specifier = .req('function','method','->')
         .lock()
 
         declare valid .parent.parent.parent
-        if .specifier is 'function' and .parent.parent.parent instanceof ClassDeclaration
+        if .specifier isnt 'method' and .parent.parent.parent instance of ClassDeclaration
             .throwError "unexpected 'function' in 'class/append' body. You should use 'method'"
 
-        .name = .opt('IDENTIFIER') 
+'->' are anonymous lambda functions
+
+        if .specifier isnt '->'
+            .name = .opt('IDENTIFIER') 
 
 get parameter members, and function body
 
@@ -1932,15 +1979,31 @@ This method is shared by functions, methods and constructors.
         if .opt("(")
             .paramsDeclarations = .optSeparatedList(VariableDecl,',',')')
 
-        if .opt('returns'), .parseType
+        else if .specifier is '->' #we arrive here by: FnCall-param-Expression-Operand-'->'
+            # after '->' we accept function params w/o parentheses.
+            # get parameter names (name:type only), up to [NEWLINE],'=' or 'return'
+            .paramsDeclarations=[]
+            until .lexer.token.type is 'NEWLINE' or .lexer.token.value in ['=','return'] 
+                if .paramsDeclarations.length, .req ','
+                var varDecl = new VariableDecl(this, .req('IDENTIFIER'))
+                if .opt(":"), varDecl.parseType
+                .paramsDeclarations.push varDecl
 
-        if .opt("[")
-            .definePropItems = .optSeparatedList(DefinePropertyItem,',',']')
+        if .opt('=','return') #one line function. Body is a Expression
 
-now get function body
-        
-        .body = .req(Body)
+            .body = .req(Expression)
 
+        else # full body function
+
+            if .opt('returns'), .parseType  #function return type
+
+            if .opt("[") # property attributes
+                .definePropItems = .optSeparatedList(DefinePropertyItem,',',']')
+
+            #indented function body
+            .body = .req(Body)
+
+        end if
 
 ### public class DefinePropertyItem extends ASTBase
 This Symbol handles property attributes, the same used at js's **Object.DefineProperty()**
@@ -2515,7 +2578,7 @@ Adjectives can precede several statement.
 
 #### method parse()
 
-        .name = .req('public','export','default','global','generator','shim','helper')
+        .name = .req('public','export','default','global','async','generator','shim','helper')
 
 #### Helper method validate(statement)
 Check validity of adjective-statement combination 
@@ -2525,6 +2588,7 @@ Check validity of adjective-statement combination
         var validCombinations =  
               export: CFVN, public: CFVN, default: CFVN
               generator: ['function','method'] 
+              async: ['function','method'] 
               shim: ['function','method','class'] 
               helper:  ['function','method','class']
               global: ['import','declare']
@@ -2590,6 +2654,8 @@ else, get parameters, add to varRef as FunctionAccess accessor
 
         var functionAccess = new FunctionAccess(.varRef)
         functionAccess.args = functionAccess.optSeparatedList(Expression,",")
+        if .lexer.token.value is '->' #add last parameter: callback function
+            functionAccess.args.push .req(FunctionDeclaration)
 
         .varRef.addAccessor functionAccess
 
@@ -2947,6 +3013,7 @@ Anything standing alone in it's own line, its an imperative statement (it does s
       'continue':LoopControlStatement
       'end':EndStatement
       'return':ReturnStatement
+      'with':WithStatement
       'print':PrintStatement
       'throw':ThrowStatement
       'raise':ThrowStatement

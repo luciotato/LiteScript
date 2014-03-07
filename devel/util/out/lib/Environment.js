@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/Environment.lite.md
+//Compiled by LiteScript compiler v0.6.3, source: /home/ltato/LiteScript/devel/source-v0.6/Environment.lite.md
    var fs = require('fs');
    var path = require('path');
    var mkPath = require('./mkPath');

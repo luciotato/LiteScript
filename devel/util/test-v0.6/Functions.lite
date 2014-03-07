@@ -1,6 +1,8 @@
 Functions Tests
 ---------------
 
+    global declare expect
+
     var Tests = 
 
       'internal function':
@@ -73,3 +75,111 @@ Functions Tests
         expected: [4]
 
 
+      'inline function':
+
+        code: ->
+
+          function square(x) = x*x
+
+# Objects:
+
+          var math =
+            root: Math.sqrt
+            cube: function(x) =  x * square(x)
+
+          expect math.cube(2), 8
+
+
+# Terse Arrow -> callback function
+
+      'arrow function':
+
+        code: ->
+
+verbose callback function:
+
+          var fs =
+            readFile: function(name,callback) = callback(null,name)
+
+          expect type of fs.readFile, 'function'
+
+          fs.readFile 'test', function(err,data)
+              if err
+                  print err.message
+              else 
+                  print 'file contents are: #{data}'
+
+              expect [err,data], [null,'test']
+
+terse arrow:
+`-> x,y` is syntax sugar for `function(x,y)`
+
+          fs.readFile 'test' -> err,data
+              if err
+                  print err.message
+              else 
+                  print 'file contents are: #{data}'
+
+              expect [err,data], [null,'test'] 
+
+
+# Array map, from verbose to terse:
+
+      'Array map, from verbose to terse':
+
+        code: ->
+
+intention: map function math.cube() on list:array, assign result to var cubes:array
+verbose version: 
+
+          function square(x) = x*x
+          function cube(x) = x*square(x)
+
+          var list = [1,2,3]
+
+          var cubes:array = list.map( function(num)
+                                        return cube(num)
+                                    )
+          expect cubes,[1,8,27]
+
+with simple-function...
+
+          list = [2,3]
+          cubes = list.map( function(num) = cube(num) )
+          expect cubes,[8,27]
+
+with terse arrow...
+
+          list = [2,4]
+
+          cubes = list.map(-> num = cube(num))
+
+          #lite:   cubes = list.map(-> num = cube(num))
+          #coffee: cubes = list.map (num) -> cube(num)
+
+          expect cubes,[8,64]
+
+          #alternate syntax
+
+          list = [1,2,3,4]
+
+          var mult = list.map(-> num,inx return num*inx)
+
+          #coffee: mult = list.map (num,inx) -> mult
+
+          expect mult,[0,2,6,12]
+
+Array.filter
+
+          #filter
+          var arr = [1,2,3,4,5]
+
+          #lite:   print arr.filter(->x = x>2) 
+          #coffee: print arr.filter (x) -> x > 5
+
+          expect arr.filter(->x = x>2) , [3,4,5]
+          # => [3,4,5]
+
+          #alternate syntax
+          expect arr.filter(->x return x>2) , [3,4,5]
+          # => [3,4,5]

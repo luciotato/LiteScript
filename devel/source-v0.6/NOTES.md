@@ -1,13 +1,466 @@
+##CoffeeScript ->, great for event emmitters
+## BUT, change position of paramteres, simplify, do not cause MBM
+1. '-> x' just sintactic sugar for ",function(x)"
+
+
+# Assignment:
+    number   = 42
+    opposite = true
+
+# Conditions:
+    if opposite, number = -42 
+
+# Arrays:
+    list = [1, 2, 3, 4, 5]
+
+# One line functions
+
+function body assignment
+
+    function square(x) = x*x
+
+alternative: "return" expression  
+
+    function sqr(x) return x*x
+
+
+# Objects:
+    var math =
+      root: Math.sqrt
+      cube: function(x) = x * square(x)
+
+
+
+# function arrow '-> x,y' introduce callbacks
+
+verbose callback:
+
+    fs.readFile 'test', function(err,data)
+        if err, print err.message
+        else print 'file contents are: #{data}'
+
+function arrow callback:
+"-> x,y" should read "function(x,y)"
+
+    fs.readFile 'test' -> error,data
+        if no error, print 'file contents:',data
+
+
+# Array map, from verbose to terse:
+
+intention: map function math.cube() on list:array, assign result to var cubes:array
+verbose version: 
+
+    var cubes:array = list.map(function(num) return math.cube(num))
+
+with simple-function...
+
+    var cubes = list.map(function(num) = math.cube(num))
+
+with function arrow...
+
+    var cubes = list.map(->num = math.cube(num))
+
+    #filter
+    var arr = [1,2,3,4,5]
+
+    print arr.filter(->x = x>2)
+    # => [3,4,5]
+
+    #alternative syntax
+    print arr.filter(->x return x>2)
+    # => [3,4,5]
+
+#Event Emitters
+
+    var server = http.createServer()
+
+    server.on 'request' -> request,response
+        
+        request.on 'data' -> chunk
+              print chunk.toString()
+            
+        request.on 'end' ->
+              print 'request completed!'
+
+#nice function
+
+Example 1 - get google.com DNS and reverse DNS
+
+    global import dns, nicegen
+
+    nice function resolveAndReverse
+
+          var addresses = yield until dns.resolve4 'google.com'
+
+          for each addr in addresses
+              print "#{addr}, and the reverse for #{addr} is #{yield until dns.reverse addr}"
+
+          Exception err
+              print "#{err.message} during resolveAndReverse"
+
+    end nice function
+
+main:
+
+    resolveAndReverse 
+
+
+js:
+
+   function resolveAndReverse( __callback){
+      return nicegen.launch( __callback)};
+
+   function* resolveAndReverseGoogle__generator(service, ip, userid){ try{
+
+          var addresses = yield [dns,'resolve4', 'google.com'];
+
+          for(inx=0;inx<addresses.length;inx++){ addr=addresses[inx]
+              print ""+addr+", and the reverse for "+addr+" is "+ yield [dns, 'reverse', addr];
+          }
+
+          }catch(err){
+              print "#{err.message} during resolveAndReverse"
+          }
+    }
+
+    resolveAndReverse();
+
+-----
+
+    global import dns, nicegen
+
+    nice function parallelResolveAndReverse
+
+        try
+
+            var addresses = yield until dns.resolve4 'google.com'
+
+            var results = yield parallel addresses map dns.reverse 
+
+            for each index,addr in addresses
+                print "#{addr}, and the reverse for #{addr} is #{results[index]}"
+
+        catch err
+            print "#{err.message} during parallel resolveAndReverse"
+
+    end nice function
+
+main:
+
+    parallelResolveAndReverse
+
+----
+js:
+
+   function parallelResolveAndReverse( __callback){
+      return nicegen.launch(parallelResolveAndReverse__generator,  __callback)};
+
+   function* resolveAndReverseGoogle__generator(service, ip, userid){ try{
+
+          var addresses = yield [dns,'resolve4', 'google.com'];
+
+          var results = yield ['pmap', addresses, dns, 'reverse' ]
+
+          for(inx=0;inx<addresses.length;inx++){ addr=addresses[inx]
+              print ""+addr+", and the reverse for "+addr+" is "+ results[inx];
+          }
+
+          }catch(err){
+              print "#{err.message} during parallel resolveAndReverse"
+          }
+    }
+
+
+-----------
+Event Emitter
+
+    global import http
+
+    http.get { host: 'checkip.dyndns.org' } -> res
+
+        var data = ''
+
+        res.on 'data' -> chunk 
+            data += chunk.toString()
+
+        res.on 'end' -> 
+            print data
+
+
+
+Example 2 - get external public ip
+
+a. with Event.Emitters
+
+    global import http
+
+    print 'GET checkip.dyndns.org'
+
+    http.get { host: 'checkip.dyndns.org' } -> res
+
+        var data = ''
+
+        res.on 'data' -> chunk 
+            data += chunk.toString()
+            if data.length > 500000, res.cancel
+
+        res.on 'end' -> 
+            print data
+
+        res.on 'error' -> err
+            print err.message
+
+
+b. using "wait for"
+
+    global import http
+
+    function getPage(url,callback)
+
+        http.get { host: url } -> res
+
+            var data = ''
+
+            res.on 'data' -> chunk 
+                data += chunk.toString()
+                if data.length > 500000, return callback(new error('page too large'))
+
+            res.on 'end' -> 
+                return callback(null,data)
+
+            res.on 'error' -> err
+                return callback(err)
+
+    nice function getIP
+        print yield until getPage('checkip.dyndns.org')
+
+    getIP
+
+
+BAD - convert on tasks:
+Si usas wait.for no podes usar callbacks (ya que el return que hace?)
+Si usas "async" no podes usar throw
+
+    function getPage(url,callback)
+
+        http.get { host: url } -> res
+
+            var data = ''
+
+            res.on 'data' -> chunk 
+                data += chunk.toString()
+                if data.length > 500000, callback new Error('page too large')
+
+            res.on 'end' -> 
+                callback null,data
+
+            res.on 'error' -> err
+                callback err
+
+
+
+## Fat arrow ES6 compared
+
+ES6:
+
+    var simple = a => a > 15 ? 15 : a; 
+
+LiteScript:
+
+    function simple(a) = a > 15 ? 15 else a
+
+
+## problem with for loops, closures and function creation
+
+Example: -THIS CODE HAS A VERY SUBTLE BUG-
+
+    for each filename in list
+        fs.readFile filename -> err,contents
+            compile filename, contents.toString()
+
+in this case, as '->' CREATES a function, all created anonymous functions will 
+SHARE in their closure the only one "filename" variable, so THIS CODE HAS A BUG, 
+since ALL the async'd calls to "compile" will be made with the last filename in the list.
+
+**LiteScript compiler will warn you when you use '->' inside a loop.**
+
+This problem does not happen with "Array.map", even if several functions are still created, 
+"filename" is a function parameter instead of a shared closure variable.
+
+    list.map -> filename
+        fs.readFile filename ->  err,contents
+            compile filename, contents.toString()
+
+So, use "Array.map" if you're creating functions on each iteration.
+
+
+    for each filename in list
+        async_read filename 
+
+    function async_read(filename)
+        fs.readFile filename -> err,contents
+            compile filename, contents.toString()
+
+
+    async function compileFiles(list)
+        for each filename in list
+            data = wait for fs.readFile filename
+            compile filename, data.toString()
+
+    compileFiles ['asds','sdsd'] -> err 
+          if err, throw err
+
+
+
+
+
+##task  & "wait for"
+
+This is the right scalable combination to:
+* use "wait for" when needed to avoid callback hell
+* keep nodejs & JavaScript higly-responsive async programming style
+
+Rules:
+* you can only use "wait for" inside an "async" function
+* you can "wait for" any other standard async function
+* "async" on a function means:
+  - the last parameter is "callback:function(err,data)"
+  - the function returns as soon as a blocking operation is executed (or another async is called)
+  - any exception inside the function is catched and converted to: "return callback(err)"
+
+so LiteScript code:
+
+   task getUserData(service, ip, userid)
+      ssdlfksdf 
+      asdfasd
+      x = wait for readfile('xxx')
+      asdfasd
+      if y, return z
+      sadfasd
+      resul = wait for DB.conn.query('select * from users where userid=?',userid)
+      return result
+
+
+    launch getUserData service, ip, userid -> err,data 
+          result = err or data
+
+    getUserData service, ip, userid -> err,data 
+          result = err or data
+
+    wait for getUserData(service, ip, userid)
+
+    getUserData service, ip, userid -> err,data
+
+
+gets converted to ES6-js + coroutine ->
+
+    // code valid in server 'node --harmony' AND in browsers supporting ES6-'yield'
+
+   function getUserData(service, ip, userid, __callback){
+      return generator.launch(getUserData__generator, service, ip, userid, __callback)};
+   function* getUserData__generator(service, ip, userid){
+      ssdlfksdf 
+      asdfasd
+      x = yield [this, 'readfile', 'xxx']
+      asdfasd
+      if y, return z;
+      sadfasd
+      result = yield [DB.conn,'query','select * from users where userid=?',userid]
+      return result;
+   }
+
+
+gets converted to node-fibers + wait.for  ->
+
+   // code valid only in server: 'node' 
+
+   function getUserData(service, ip, userid, __callback){
+      return wait.launchFiber(ugDir__generator, service, ip, userid, __callback)};
+   function getUserData__generator(service, ip, userid){
+      var ssdlfksdf = 10
+      var asdfasd = service
+      x = wait.for(this,'readfile','xxx');
+      asdfasd
+      if y, return z;
+      sadfasd
+      resul = wait.for(DB.conn,'query','select * from users where userid=?',userid);
+      return result;
+   }
+
+CANT be directly converted to js: 
+beause of try/catch/finally 
+finally cannot be completelly implemented because scope is lost by the moment of callback.
+Problem are scope vars.
+1. "x = wait for fn" to "fn(...., callback){ if err return callback, x=data" 
+2. "return x" to "return callback(null,x)"
+
+   function getUserData(service, ip, userid, __callback){
+      var scope={self:this}
+      scope.ssdlfksdf =10
+      scope.asdfasd=service;
+      readfile('xxx',scope.callback(function(scope){
+        x=data;
+        asdfasd
+        if (y) return z;
+        sadfasd
+        DB.conn.query('select * from users where userid=?',userid, scope.callback(scope){
+          result=data;
+          return callback(null,result)
+        });
+      });
+   }
+
+
+#other examples
+
+    print 
+    print process.argv
+    print process.cwd()
+
+    var options:
+          beautify : true
+          exclude  : 'README'
+          force    : "-force" in process.argv
+
+
+    var frontDoor = new Door('brown')
+    
+    frontDoor.on 'open', ->
+        print 'ring ring ring'
+
+    frontDoor.open
+
+    var server = http.createServer()
+
+    server.on 'request' -> request,response
+        
+        request.on 'data' -> chunk
+              print chunk.toString()
+            
+        request.on 'end' ->
+              print 'request completed!'
+js:
+
+    var server = http.createServer()
+    server.on('request', function(request, response) {
+      request.on('data', function (chunk) { console.log(chunk.toString()); });
+      request.on('end', function() {
+        response.write('Request Completed!');
+        response.end();
+      })
+    });
+
+
 ##macros & recursive parsing
 
-    compiler macros
-        export function versionNumber
+    compiler function versionNumber(type)
           var baseVersion = module.filename.slice(module.filename.lastIndexOf('.')+2)
           return "'#{baseVersion}.0-#{new Date}'"
 
-    export var version = {{versionNumber}}
+    export var version = {{versionNumber('short')}}
 
-- do 
+do 
 -   lexer pass 1
 -   contar apariciones de "{{" y de 'compiler macros'
 -   si hay 'compiler marcros' -> produce as LiteScript.compilerMacros = Function(module, exports)
@@ -15,8 +468,12 @@
 -   si hay "{{", procesa contenido as function call y reemplaza "{{}}"
         ejemplo: export var version = {{versionNumber}} -> call LiteScript.compilerMacros.versionNumber()
         reemplaza y queda: export var version = 'v0.5.0-20143003-120000'
-- loop
+loop
 
+
+    compiler hook lexer(lineInfo)
+        if lineInfo.tokens.indexOf('->') into var i >= 0
+            lineInfo.tokens.splice i,1,'function'
 
 ------
 

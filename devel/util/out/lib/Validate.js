@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/Validate.lite.md
+//Compiled by LiteScript compiler v0.6.3, source: /home/ltato/LiteScript/devel/source-v0.6/Validate.lite.md
    var log = require('./log');
    var debug = log.debug;
    var ASTBase = require('./ASTBase');
@@ -11,6 +11,7 @@
    function validate(){
        NameDeclaration.allOfThem = [];
        nameAffinity = new NameDeclaration('Name Affinity');
+       nameAffinity.addMember('err', 'Error');
        log.message("- Process Declarations");
        walkAllNodesCalling('declare');
        log.message("- Declare By Assignment");
@@ -332,6 +333,10 @@
                    this.setMember('**proto**', possibleClassRef.nodeDeclared.nameDecl.members.prototype);
                    return true;
                };
+               if (normalized === 'err') {
+                   this.setMember('**proto**', tryGetGlobalPrototype('Error'));
+                   return true;
+               };
            };
        };
     };
@@ -565,6 +570,14 @@
        };
        
     };
+   
+     
+     Grammar.WithStatement.prototype.declare = function(){
+        this.nameDecl = this.addToScope(this.declareName(this.name));
+     };
+     Grammar.WithStatement.prototype.evaluateAssignments = function(){
+       this.nameDecl.assignTypeFromValue(this.varRef);
+     };
    
      
      Grammar.ImportStatementItem.prototype.declare = function(){
@@ -839,6 +852,9 @@
        };
        return actualVar;
     };
+    Grammar.VariableRef.prototype.getResultType = function(){
+     return this.tryGetReference();
+    };
    
     Grammar.AssignmentStatement.prototype.declareByAssignment = function(){
        var varRef = this.lvalue;
@@ -974,7 +990,7 @@
            if (this.specifier === 'affinity') {
                var classDecl = this.getParent(Grammar.ClassDeclaration);
                if (!classDecl) {
-                   this.sayErr("declare affinity must be included in a class declaration");
+                   this.sayErr("'declare name affinity' must be included in a class declaration");
                    return;
                };
                varDecl.nameDecl.nodeDeclared = classDecl;

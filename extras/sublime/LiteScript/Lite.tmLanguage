@@ -538,7 +538,7 @@ raise|fail\s+with|try|print|when|when|while|wait\s+for|until)\b</string>
 					<key>name</key>
 					<string>keyword.operator.lite</string>
 					<key>match</key>
-					<string>\^|\*|\/|\-|\+|!==|&lt;=|&gt;=|&lt;&lt;|&gt;&gt;|&lt;&gt;|&lt;|&gt;|&amp;|\?|\||\*=|\/=
+					<string>\^|\*|\/|\-|\+|!==|&lt;=|=&gt;||&gt;=|&lt;&lt;|&gt;&gt;|&lt;&gt;|&lt;|&gt;|&amp;|\?|\||\*=|\/=
 |\b(delete|type of|typeof|in|into|has|property|each|own|is|isnt)\b</string>
 				</dict>
 

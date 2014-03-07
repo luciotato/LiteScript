@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.3, source: /home/ltato/LiteScript/devel/source-v0.6/lite-cli.lite.md
+//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/lite-cli.lite.md
    var path = require('path');
    var fs = require('fs');
    var Args = require('./Args');
@@ -60,8 +60,6 @@
            console.log('compiler options: ' + (JSON.stringify(options)));
            console.log('cwd: ' + (process.cwd()));
            console.log('compile' + (compileAndRun ? " and run" : "") + ': ' + mainModuleName);
-           if (options.debug) {
-               console.log(color.yellow, "GENERATING COMPILER DEBUG AT out/debug.log", color.normal)};
        };
        var Compiler = require('' + compilerPath + '/Compiler.js');
        

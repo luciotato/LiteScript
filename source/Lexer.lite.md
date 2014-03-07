@@ -402,16 +402,23 @@ Get section between """ and """
         var result = new MultilineSection(this,line, '"""', '"""')
         if result.section
 
-            #discard first and last lines, if empty
-          if not (result.section[0].trim())
+          #discard first and last lines, if empty
+          if no result.section[0].trim()
             result.section.shift()
 
-          if not (result.section[result.section.length-1].trim())
+          if no result.section[result.section.length-1].trim()
             result.section.pop()
 
-            #trim all lines
+          #search min indent
+          var indent = 999
+          for each sectionLine in result.section
+            var lineIndent=sectionLine.search(/\S/)
+            if lineIndent>=0 and lineIndent<indent
+                indent = lineIndent
+
+          #trim indent on the left and extra right spaces
           for each inx,sectionLine in result.section
-            result.section[inx]=sectionLine.trim()
+            result.section[inx] = sectionLine.slice(indent).replace(/\s+$/,"")
 
           line = result.section.join("\\n") #join with (encoded) newline char
           line = line.replace(/'/g,"\\'") #escape quotes
@@ -701,22 +708,24 @@ Strings can be either single or double quoted.
 
 Whitespace is discarded by the lexer, but needs to exist to break up other tokens.
 We recognize ' .' (space+dot) to be able to recognize: 'myFunc .x' as alias to: 'myFunc this.x'
+We recognize ' [' (space+bracket) to be able to recognize between: 'myFunc [x]' and 'myFunc[x]'
 
         ['SPACE_DOT',/^\s+\./],
+        ['SPACE_BRACKET',/^\s+\[/],
         ['WHITESPACE',/^[\f\r\t\v\u00A0\u2028\u2029 ]+/],
 
 ASSIGN are symbols triggering the assignment statements.
-In LiteScript, assignment is a *statement* and not a *expression*
+In LiteScript, assignment is a *statement* not a *expression*
 
         ['ASSIGN',/^=/],
         ['ASSIGN',/^[\+\-\*\/]=/ ], # = += -= *= /=
 
 Postfix and prefix ++ and -- are considered 'LITERAL' 
 They're not considered 'operators' since they do no introduce a new operand.
-Postfix ++ and -- are modifiers for a variable reference
-also puctuation symbols (like `,` `[` `:`) 
+Postfix ++ and -- are modifiers for a variable reference.
+We include here punctuation symbols (like `,` `[` `:`)  and the arrow `->`
 
-        ['LITERAL',/^(\+\+|--)/],
+        ['LITERAL',/^(\+\+|--|->)/],
         ['LITERAL',/^[\(\)\[\]\;\,\.\{\}]/],
 
 

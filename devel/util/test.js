@@ -1,5 +1,5 @@
 
-var DEFAULT_VERSION='0.6.0'
+var DEFAULT_VERSION='0.6'
 
 var fs = require('fs');
 var path = require('path');
@@ -279,6 +279,7 @@ testOptions.verbose>=1 && console.error("compiler options:",JSON.stringify(compi
 
 //get Litescript compiler to compile tests
 compiler = require(compilerPath+'/Compiler');
+console.error('compiler v',compiler.version);
 
 //DEBUG - SINGLE FILE
 //testFile('tests/DoWhileUntil.lite');

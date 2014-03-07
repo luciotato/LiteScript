@@ -1,4 +1,3 @@
-//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/string-shims.md
 //# String namespace helpers
 
 //Helper methods added to String.protoype or String namespace
@@ -7,6 +6,7 @@
 //## Additions (to the prototype)
 
    //append to class String
+   
 
        //shim method startsWith(text:string)
        if (!String.prototype.startsWith)
@@ -64,6 +64,7 @@
 
 
    //append to class Array
+   
 
 //method remove(element)
 
@@ -91,6 +92,7 @@
 
 
    //append to namespace String
+   
 //--------------------------------------
 // Additions to String **as namespace**
 //--------------------------------------
@@ -121,7 +123,7 @@
                    //if text[n] is text[n].toLowerCase(), return true
                    if (text[n] === text[n].toLowerCase()) {
                        return true};
-               };//end for n
+               }; // end for n
                
            };
 
@@ -143,7 +145,7 @@
                //if text[n] is opener, opencount++
                if (text[n] === opener) {
                    opencount++};
-           };//end for n
+           }; // end for n
 
            return -1;
        };
@@ -272,3 +274,6 @@
        };
 
 
+
+//Compiled by LiteScript compiler v0.5.0, source: /home/ltato/LiteScript/devel/source-v0.6/string-shims.md
+//# sourceMappingURL=string-shims.js.map

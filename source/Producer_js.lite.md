@@ -418,6 +418,37 @@ return prefix for item to be appended
 
 
 ---
+### Append to class Grammar.WithStatement ###
+
+`WithStatement: with VariableRef Body`
+
+The WithStatement simplifies calling several methods of the same object:
+Example:
+```    
+with frontDoor
+    .show
+    .open
+    .show
+    .close
+    .show
+```
+to js:
+```
+var with__1=frontDoor;
+  with__1.show;
+  with__1.open
+  with__1.show
+  with__1.close
+  with__1.show
+```
+
+      method produce() 
+
+        .out "var ",.name,'=',.varRef,";"
+        .out .body
+
+
+---
 ### Append to class Grammar.PropertiesDeclaration ###
 
 'var' followed by a list of comma separated: var names and optional assignment
@@ -846,30 +877,39 @@ now produce function parameters declaration
 
 if the function has a exception block, insert 'try{'
 
-      if no .body or no .body.statements, fail with 'function #{.name} has no body'
+      if no .body, .throwError 'function #{.name} has no body'
 
-      for each statement in .body.statements
-        if statement.statement instance of Grammar.ExceptionBlock
-            .out " try{",NL
-            break
+if simple-function, insert implicit return. Example: function square(x) = x*x
+
+      if .body instance of Grammar.Expression
+          .out "return ", .body
+
+      else
+
+          for each statement in .body.statements
+            if statement.statement instance of Grammar.ExceptionBlock
+                .out " try{",NL
+                break
 
 if params defaults where included, we assign default values to arguments 
 (if ES6 enabled, they were included abobve in ParamsDeclarations production )
 
-      if .paramsDeclarations and not .compilerVar('ES6')
-          for each paramDecl in .paramsDeclarations
-            if paramDecl.assignedValue 
-                .body.assignIfUndefined paramDecl.name, paramDecl.assignedValue
-          #end for
-      #end if
+          if .paramsDeclarations and not .compilerVar('ES6')
+              for each paramDecl in .paramsDeclarations
+                if paramDecl.assignedValue 
+                    .body.assignIfUndefined paramDecl.name, paramDecl.assignedValue
+              #end for
+          #end if
+
+if class properties have default values...
+
+          if theProperties
+              for each propDecl in theProperties
+                propDecl.produce('this.') //property assignments
 
 now produce function body
 
-      if theProperties
-          for each propDecl in theProperties
-            propDecl.produce('this.') //property assignments
-
-      .body.produce()
+          .body.produce()
 
 close the function
 

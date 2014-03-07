@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/Producer_js.lite.md
+//Compiled by LiteScript compiler v0.6.3, source: /home/ltato/LiteScript/devel/source-v0.6/Producer_js.lite.md
    var ASTBase = require('./ASTBase');
    var Grammar = require('./Grammar');
    
@@ -228,6 +228,11 @@
        };
        return [ownerName, toPrototype ? ".prototype." : "."];
     };
+   
+     Grammar.WithStatement.prototype.produce = function(){
+       this.out("var ", this.name, '=', this.varRef, ";");
+       this.out(this.body);
+     };
    
      Grammar.PropertiesDeclaration.prototype.produce = function(prefix){
        this.outLinesAsComment(this.lineInx, this.lastLineInxOf(this.list));
@@ -479,32 +484,37 @@
          this.out("function ", this.name, generatorMark);
      };
      this.out("(", {CSL: this.paramsDeclarations}, "){", this.getEOLComment());
-     if (!this.body || !this.body.statements) {
-         throw new Error('function ' + this.name + ' has no body')};
-     for( var statement__inx=0,statement ; statement__inx<this.body.statements.length ; statement__inx++){statement=this.body.statements[statement__inx];
-     
-       if (statement.statement instanceof Grammar.ExceptionBlock) {
-           this.out(" try{", NL);
-           break;
-       };
-     };
-     if (this.paramsDeclarations && !(this.compilerVar('ES6'))) {
-         for( var paramDecl__inx=0,paramDecl ; paramDecl__inx<this.paramsDeclarations.length ; paramDecl__inx++){paramDecl=this.paramsDeclarations[paramDecl__inx];
+     if (!this.body) {
+         this.throwError('function ' + this.name + ' has no body')};
+     if (this.body instanceof Grammar.Expression) {
+         this.out("return ", this.body);
+     }
+     else {
+         for( var statement__inx=0,statement ; statement__inx<this.body.statements.length ; statement__inx++){statement=this.body.statements[statement__inx];
          
-           if (paramDecl.assignedValue) {
-               this.body.assignIfUndefined(paramDecl.name, paramDecl.assignedValue);
+           if (statement.statement instanceof Grammar.ExceptionBlock) {
+               this.out(" try{", NL);
+               break;
            };
          };
-         
-     };
-     if (theProperties) {
-         for( var propDecl__inx=0,propDecl ; propDecl__inx<theProperties.length ; propDecl__inx++){propDecl=theProperties[propDecl__inx];
-         
-           propDecl.produce('this.');
+         if (this.paramsDeclarations && !(this.compilerVar('ES6'))) {
+             for( var paramDecl__inx=0,paramDecl ; paramDecl__inx<this.paramsDeclarations.length ; paramDecl__inx++){paramDecl=this.paramsDeclarations[paramDecl__inx];
+             
+               if (paramDecl.assignedValue) {
+                   this.body.assignIfUndefined(paramDecl.name, paramDecl.assignedValue);
+               };
+             };
+             
          };
-         
+         if (theProperties) {
+             for( var propDecl__inx=0,propDecl ; propDecl__inx<theProperties.length ; propDecl__inx++){propDecl=theProperties[propDecl__inx];
+             
+               propDecl.produce('this.');
+             };
+             
+         };
+         this.body.produce();
      };
-     this.body.produce();
      this.out("}");
      if (this.definePropItems) {
          for( var definePropItem__inx=0,definePropItem ; definePropItem__inx<this.definePropItems.length ; definePropItem__inx++){definePropItem=this.definePropItems[definePropItem__inx];

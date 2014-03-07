@@ -1,7 +1,7 @@
 IF statement Tests
 -------------------
 
-    var Tests = {
+    var Tests = 
 
       'support a block style':
 
@@ -104,5 +104,4 @@ IF statement Tests
 
         expected:[1,2]
 
-    }
 

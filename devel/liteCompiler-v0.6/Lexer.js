@@ -1,4 +1,3 @@
-//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/Lexer.lite.md
 //The Lexer
 //=========
 
@@ -56,6 +55,7 @@
 
         //out:OutCode
 
+
          this.compiler = compiler;// #Compiler.lite.md module.exports
 
 //use same options as compiler
@@ -64,7 +64,7 @@
 
          //default options =
          if(!options) options={};
-         //options.browser: undefined
+         // options.browser: undefined
          if(options.comments===undefined) options.comments=1;
 
 //stringInterpolationChar starts for every file the same: "#"
@@ -283,6 +283,7 @@
 
        //for each item in .infoLines
        for( var item__inx=0,item ; item__inx<this.infoLines.length ; item__inx++){item=this.infoLines[item__inx];
+       
 
            item.dump();// # debug
 
@@ -292,7 +293,7 @@
            };
            //end if
            
-       };//end for each in this.infoLines
+       }; // end for each in this.infoLines
 
        //end loop code lines
 
@@ -367,8 +368,9 @@
 
            //for each i,line in lines
            for( var i=0,line ; i<lines.length ; i++){line=lines[i];
+           
                lines[i] = '    ' + line;
-           };//end for each in lines
+           }; // end for each in lines
 
 //reuse this lexer, call .preParseSource to analyze generated lines.
 //preParseSource() set line type, calculates indent, handle multiline comments, string interpolation, etc.
@@ -383,7 +385,7 @@
            newInfoLines.unshift(index);// #where to start
            Array.prototype.splice.apply(this.infoLines, newInfoLines);// #remove old and insert new
        };
-     }};//end for each in this.infoLines
+     }}; // end for each in this.infoLines
 
 //now continue processing were we left, so the the newly generated lines
 //will be processed, allowing recursion
@@ -444,11 +446,13 @@
 //Mulitple coded-enclosed source lines are converted to one logical infoLine
 
 //Example:
+
 // var c = """
 //   first line
 //   second line
 //   That's all
 //   """.length
+
 //gets converted to:
 //<pre>
 //  var c = 'first line\nsecond line\nThat\'s all\n'.length
@@ -462,22 +466,35 @@
        //if result.section
        if (result.section) {
 
-            //#discard first and last lines, if empty
-         //if not (result.section[0].trim())
-         if (!((result.section[0].trim()))) {
+          //#discard first and last lines, if empty
+         //if no result.section[0].trim()
+         if (!result.section[0].trim()) {
            result.section.shift();
          };
 
-         //if not (result.section[result.section.length-1].trim())
-         if (!((result.section[result.section.length - 1].trim()))) {
+         //if no result.section[result.section.length-1].trim()
+         if (!result.section[result.section.length - 1].trim()) {
            result.section.pop();
          };
 
-            //#trim all lines
+          //#search min indent
+         var indent = 999;
+         //for each sectionLine in result.section
+         for( var sectionLine__inx=0,sectionLine ; sectionLine__inx<result.section.length ; sectionLine__inx++){sectionLine=result.section[sectionLine__inx];
+         
+           var lineIndent = sectionLine.search(/\S/);
+           //if lineIndent>=0 and lineIndent<indent
+           if (lineIndent >= 0 && lineIndent < indent) {
+               indent = lineIndent;
+           };
+         }; // end for each in result.section
+
+          //#trim indent on the left and extra right spaces
          //for each inx,sectionLine in result.section
          for( var inx=0,sectionLine ; inx<result.section.length ; inx++){sectionLine=result.section[inx];
-           result.section[inx] = sectionLine.trim();
-         };//end for each in result.section
+         
+           result.section[inx] = sectionLine.slice(indent).replace(/\s+$/, "");
+         }; // end for each in result.section
 
          line = result.section.join("\\n");// #join with (encoded) newline char
          line = line.replace(/'/g, "\\'");// #escape quotes
@@ -517,8 +534,9 @@
 
          //for each inx,sectionLine in result.section
          for( var inx=0,sectionLine ; inx<result.section.length ; inx++){sectionLine=result.section[inx];
+         
              infoLines.push(new InfoLine(this, LineTypes.COMMENT, 0, sectionLine, startSourceLine + inx));
-         };//end for each in result.section
+         }; // end for each in result.section
 
          //if result.post.trim()
          if (result.post.trim()) {
@@ -578,9 +596,12 @@
     };
 
 
+
 //        if no .last.token
 //            .last.token = {column:0}
+
 //        var col = (.last.token.column or .infoLine.indent or 0 )
+
 //        return "#{.filename}:#{.last.sourceLineNum}:#{col+1}"
 //        
 
@@ -825,7 +846,7 @@
 //Single line comments starts with `#` or `//`, to the end of the line.
 //Comments can also be multiline, starting with starting with ` `//` and ending with `
 
-   var tokenPatterns = [['COMMENT', /^#(.*)$|^\/\/(.*)$/], ['NUMBER', /^0x[a-f0-9]+/i], ['NUMBER', /^[0-9]+(\.[0-9]+)?(e[+-]?[0-9]+)?/i], ['REGEX', /^(\/(?![\s=])[^[\/\n\\]*(?:(?:\\[\s\S]|\[[^\]\n\\]*(?:\\[\s\S][^\]\n\\]*)*])[^[\/\n\\]*)*\/)([imgy]{0,4})(?!\w)/], ['STRING', /^'(?:[^'\\]|\\.)*'/], ['STRING', /^"(?:[^"\\]|\\.)*"/], ['SPACE_DOT', /^\s+\./], ['WHITESPACE', /^[\f\r\t\v\u00A0\u2028\u2029 ]+/], ['ASSIGN', /^=/], ['ASSIGN', /^[\+\-\*\/]=/], ['LITERAL', /^(\+\+|--)/], ['LITERAL', /^[\(\)\[\]\;\,\.\{\}]/], ['OPER', /^(is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt)\b/], ['OPER', /^(\*|\/|\%|\+|-|<>|>=|<=|>>|<<|>|<|!==|\&|\~|\^|\|)/], ['OPER', /^[\?\:]/], ['IDENTIFIER', /^[$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*/]];
+   var tokenPatterns = [['COMMENT', /^#(.*)$|^\/\/(.*)$/], ['NUMBER', /^0x[a-f0-9]+/i], ['NUMBER', /^[0-9]+(\.[0-9]+)?(e[+-]?[0-9]+)?/i], ['REGEX', /^(\/(?![\s=])[^[\/\n\\]*(?:(?:\\[\s\S]|\[[^\]\n\\]*(?:\\[\s\S][^\]\n\\]*)*])[^[\/\n\\]*)*\/)([imgy]{0,4})(?!\w)/], ['STRING', /^'(?:[^'\\]|\\.)*'/], ['STRING', /^"(?:[^"\\]|\\.)*"/], ['SPACE_DOT', /^\s+\./], ['SPACE_BRACKET', /^\s+\[/], ['WHITESPACE', /^[\f\r\t\v\u00A0\u2028\u2029 ]+/], ['ASSIGN', /^=/], ['ASSIGN', /^[\+\-\*\/]=/], ['LITERAL', /^(\+\+|--|->)/], ['LITERAL', /^[\(\)\[\]\;\,\.\{\}]/], ['OPER', /^(is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt)\b/], ['OPER', /^(\*|\/|\%|\+|-|<>|>=|<=|>>|<<|>|<|!==|\&|\~|\^|\|)/], ['OPER', /^[\?\:]/], ['IDENTIFIER', /^[$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*/]];
 
 
 //The Token Class
@@ -841,6 +862,7 @@
           //type:string
           //value:string
           //column
+
 
            this.type = type;
            this.value = tokenText || ' ';// # no text is represened by ' ', since '' is 'falsey'
@@ -876,6 +898,7 @@
           //indent,sourceLineNum
           //text:String
           //tokens: Token array
+
        this.type = type;
        this.indent = indent;
        this.text = text;
@@ -948,6 +971,7 @@
              var tokenType = '';
              //for each typeRegExpPair in tokenPatterns
              for( var typeRegExpPair__inx=0,typeRegExpPair ; typeRegExpPair__inx<tokenPatterns.length ; typeRegExpPair__inx++){typeRegExpPair=tokenPatterns[typeRegExpPair__inx];
+             
                var regex = typeRegExpPair[1];
                var matches = regex.exec(chunk);
                //if matches and matches[0]
@@ -957,7 +981,7 @@
                    //break
                    break;
                };
-             };//end for each in tokenPatterns
+             }; // end for each in tokenPatterns
 
               //#end for checking patterns
 
@@ -1098,6 +1122,7 @@
       //properties
         //lexer, lineInx,sourceLineNum
         //index,token,last
+
        this.lexer = lexer;
        this.lineInx = lexer.lineInx;
        this.index = lexer.index;
@@ -1125,6 +1150,7 @@
 
         //pre:string, section:string array, post:string
         //postIndent
+
 
 //check if startCode is in the line, if not found, exit
 
@@ -1211,7 +1237,7 @@
       //sourceMap
       //browser:boolean
       //exportNamespace
-        this.addSourceAsComment=true;
+    this.addSourceAsComment=true;
    };
 
     //method start(options)
@@ -1330,3 +1356,6 @@
    Lexer.prototype.LineTypes = LineTypes;
 
    module.exports = Lexer;
+
+//Compiled by LiteScript compiler v0.5.0, source: /home/ltato/LiteScript/devel/source-v0.6/Lexer.lite.md
+//# sourceMappingURL=Lexer.js.map

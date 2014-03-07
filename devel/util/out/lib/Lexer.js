@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/Lexer.lite.md
+//Compiled by LiteScript compiler v0.6.3, source: /home/ltato/LiteScript/devel/source-v0.6/Lexer.lite.md
    var LineTypes = {CODE: 0, COMMENT: 1, BLANK: 2};
    var log = require('./log');
    var debug = log.debug;
@@ -155,15 +155,23 @@
     Lexer.prototype.parseTripleQuotes = function(line){
        var result = new MultilineSection(this, line, '"""', '"""');
        if (result.section) {
-         if (!((result.section[0].trim()))) {
+         if (!result.section[0].trim()) {
            result.section.shift();
          };
-         if (!((result.section[result.section.length - 1].trim()))) {
+         if (!result.section[result.section.length - 1].trim()) {
            result.section.pop();
+         };
+         var indent = 999;
+         for( var sectionLine__inx=0,sectionLine ; sectionLine__inx<result.section.length ; sectionLine__inx++){sectionLine=result.section[sectionLine__inx];
+         
+           var lineIndent = sectionLine.search(/\S/);
+           if (lineIndent >= 0 && lineIndent < indent) {
+               indent = lineIndent;
+           };
          };
          for( var inx=0,sectionLine ; inx<result.section.length ; inx++){sectionLine=result.section[inx];
          
-           result.section[inx] = sectionLine.trim();
+           result.section[inx] = sectionLine.slice(indent).replace(/\s+$/, "");
          };
          line = result.section.join("\\n");
          line = line.replace(/'/g, "\\'");
@@ -310,7 +318,7 @@
        log.warning(this.posToString(), msg);
     };
    Lexer
-   var tokenPatterns = [['COMMENT', /^#(.*)$|^\/\/(.*)$/], ['NUMBER', /^0x[a-f0-9]+/i], ['NUMBER', /^[0-9]+(\.[0-9]+)?(e[+-]?[0-9]+)?/i], ['REGEX', /^(\/(?![\s=])[^[\/\n\\]*(?:(?:\\[\s\S]|\[[^\]\n\\]*(?:\\[\s\S][^\]\n\\]*)*])[^[\/\n\\]*)*\/)([imgy]{0,4})(?!\w)/], ['STRING', /^'(?:[^'\\]|\\.)*'/], ['STRING', /^"(?:[^"\\]|\\.)*"/], ['SPACE_DOT', /^\s+\./], ['WHITESPACE', /^[\f\r\t\v\u00A0\u2028\u2029 ]+/], ['ASSIGN', /^=/], ['ASSIGN', /^[\+\-\*\/]=/], ['LITERAL', /^(\+\+|--)/], ['LITERAL', /^[\(\)\[\]\;\,\.\{\}]/], ['OPER', /^(is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt)\b/], ['OPER', /^(\*|\/|\%|\+|-|<>|>=|<=|>>|<<|>|<|!==|\&|\~|\^|\|)/], ['OPER', /^[\?\:]/], ['IDENTIFIER', /^[$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*/]];
+   var tokenPatterns = [['COMMENT', /^#(.*)$|^\/\/(.*)$/], ['NUMBER', /^0x[a-f0-9]+/i], ['NUMBER', /^[0-9]+(\.[0-9]+)?(e[+-]?[0-9]+)?/i], ['REGEX', /^(\/(?![\s=])[^[\/\n\\]*(?:(?:\\[\s\S]|\[[^\]\n\\]*(?:\\[\s\S][^\]\n\\]*)*])[^[\/\n\\]*)*\/)([imgy]{0,4})(?!\w)/], ['STRING', /^'(?:[^'\\]|\\.)*'/], ['STRING', /^"(?:[^"\\]|\\.)*"/], ['SPACE_DOT', /^\s+\./], ['SPACE_BRACKET', /^\s+\[/], ['WHITESPACE', /^[\f\r\t\v\u00A0\u2028\u2029 ]+/], ['ASSIGN', /^=/], ['ASSIGN', /^[\+\-\*\/]=/], ['LITERAL', /^(\+\+|--|->)/], ['LITERAL', /^[\(\)\[\]\;\,\.\{\}]/], ['OPER', /^(is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt)\b/], ['OPER', /^(\*|\/|\%|\+|-|<>|>=|<=|>>|<<|>|<|!==|\&|\~|\^|\|)/], ['OPER', /^[\?\:]/], ['IDENTIFIER', /^[$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*/]];
    
        function Token(type, tokenText, column){
            this.type = type;

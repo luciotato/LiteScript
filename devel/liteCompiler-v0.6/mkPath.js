@@ -1,4 +1,3 @@
-//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/mkPath.lite.md
 //Module mkPath
 //=============
 
@@ -45,6 +44,7 @@
    //helper function dirExists(dirPath)
    function dirExists(dirPath){ try{
 
+
        //if fs.statSync(dirPath).isDirectory
        if (fs.statSync(dirPath).isDirectory) {
            return true; //ok! exists and is a directory
@@ -68,3 +68,6 @@
        };
    };
 
+
+//Compiled by LiteScript compiler v0.5.0, source: /home/ltato/LiteScript/devel/source-v0.6/mkPath.lite.md
+//# sourceMappingURL=mkPath.js.map

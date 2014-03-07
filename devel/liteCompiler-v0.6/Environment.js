@@ -1,4 +1,3 @@
-//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/Environment.lite.md
 //The 'Environment' object, must provide functions to load files,
 //search modules in external cache, load and save from external cache (disk).
 
@@ -36,6 +35,7 @@
         //interfaceFile #: interface file (.[auto-]interface.md) declaring exports cache
         //interfaceFileExists #: if interfaceFileName file exists
         //externalCacheExists
+
 
        this.importParameter = importParameter;
        this.filename = importParameter;
@@ -103,6 +103,7 @@
            //for each ext in ['.lite.md','.md','.interface.md','.js']
            var _list4=['.lite.md', '.md', '.interface.md', '.js'];
            for( var ext__inx=0,ext ; ext__inx<_list4.length ; ext__inx++){ext=_list4[ext__inx];
+           
                full = search + ext;
                //if fs.existsSync(full)
                if (fs.existsSync(full)) {
@@ -110,7 +111,7 @@
                    //break;
                    break;
                };
-           };//end for each in ['.lite.md', '.md', '.interface.md', '.js']
+           }; // end for each in ['.lite.md', '.md', '.interface.md', '.js']
 
             //console.log(basePath);
             //console.log(full);
@@ -322,3 +323,6 @@
 
 
 
+
+//Compiled by LiteScript compiler v0.5.0, source: /home/ltato/LiteScript/devel/source-v0.6/Environment.lite.md
+//# sourceMappingURL=Environment.js.map

@@ -1,4 +1,3 @@
-//Compiled by LiteScript compiler v0.6.1, source: /home/ltato/LiteScript/devel/source-v0.6/SourceMap.lite.md
 //# LiteScript SourceMap
 
 //Source maps allow JavaScript runtimes to match running JavaScript back to
@@ -31,6 +30,7 @@
      function SourceMap(){
       //properties
           //lines: array
+
          this.lines = [];
      };
 
@@ -40,6 +40,7 @@
 
      //method add(sourceLine, sourceCol, line, column, options = {})
      SourceMap.prototype.add = function(sourceLine, sourceCol, line, column, options){if(options===undefined) options={};
+
 
          var lineMap = this.lines[line] || ((this.lines[line]=new LineMap()));
 
@@ -62,7 +63,7 @@
              var lineMap=undefined;
              if ((lineMap=this.lines[line])) {
                  return lineMap.sourceLocation(column)};
-         };//end for lin
+         }; // end for lin
          
      };
 
@@ -77,12 +78,13 @@
      //method generate(options, code = null)
      SourceMap.prototype.generate = function(options, code){if(code===undefined) code=null;
 
+
        //default options =
        if(!options) options={};
        if(options.generatedFile===undefined) options.generatedFile='';
        if(options.sourceRoot===undefined) options.sourceRoot='';
        if(options.sourceFiles===undefined) options.sourceFiles=[''];
-       //options.inline: undefined
+       // options.inline: undefined
 
        var 
        writingline = 0, 
@@ -147,11 +149,11 @@
            buffer += encodeVlq(sourceLocation.col - lastSourceColumn);
            lastSourceColumn = sourceLocation.col;
            needComma = true;
-         }};//end for each in lineMap.columns
+         }}; // end for each in lineMap.columns
 
          //end for
          
-       }};//end for each in this.lines
+       }}; // end for each in this.lines
 
        //end for
 
@@ -182,6 +184,7 @@
    //constructor
      function Location(lin, col){
       //properties lin,col
+
        this.lin = lin;
        this.col = col;
      };
@@ -201,15 +204,17 @@
      function LineMap(){
       //properties
         //columns: Location array
+
        this.columns = [];
      };
 
      //method add(column, source:Location, options={})
      LineMap.prototype.add = function(column, source, options){if(options===undefined) options={};
 
+
        //default options =
        if(!options) options={};
-       //options.noReplace: undefined
+       // options.noReplace: undefined
 
        //if options.noReplace and .columns[column], return
        if (options.noReplace && this.columns[column]) {
@@ -230,7 +235,7 @@
            var foundLocation=undefined;
            if ((foundLocation=this.columns[col])) {
                return foundLocation};
-       };//end for col
+       }; // end for col
        
      };
    //end class LineMap
@@ -297,5 +302,7 @@
      return encoded;
    };
 
-
 module.exports=SourceMap;
+
+//Compiled by LiteScript compiler v0.5.0, source: /home/ltato/LiteScript/devel/source-v0.6/SourceMap.lite.md
+//# sourceMappingURL=SourceMap.js.map
