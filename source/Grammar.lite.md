@@ -1082,6 +1082,9 @@ Examples:
 We provide a class Accessor to be super class for the three accessors types.
 
 ### export class Accessor extends ASTBase
+      properties
+        args:array
+
       method parse
         fail with 'abstract'
       method toString
@@ -1223,6 +1226,7 @@ with exact AST class to call parse() on.
           'function': FunctionDeclaration
           '->': FunctionDeclaration
           'case': CaseWhenExpression
+          'yield': YieldExpression
     
 
 ### public class Operand extends ASTBase
@@ -1796,7 +1800,7 @@ a = [
         items
 
       method parse()
-        .req '[',' ['
+        .req '[','SPACE_BRACKET'
         .lock()
         .items = .optSeparatedList(Expression,',',']') # closer "]" required
 
@@ -1946,7 +1950,7 @@ Functions: parametrized pieces of callable code.
     public class FunctionDeclaration extends ASTBase
 
       properties 
-        specifier, export, default, async, shim, generator
+        specifier, export, default, nice, shim, generator
         paramsDeclarations: VariableDecl array
         definePropItems: DefinePropertyItem array
         body
@@ -1967,7 +1971,7 @@ Functions: parametrized pieces of callable code.
 
 get parameter members, and function body
 
-        .parseParametersAndBody()
+        .parseParametersAndBody
 
       #end parse
 
@@ -1997,7 +2001,7 @@ This method is shared by functions, methods and constructors.
 
             if .opt('returns'), .parseType  #function return type
 
-            if .opt("[") # property attributes
+            if .opt('[','SPACE_BRACKET') # property attributes
                 .definePropItems = .optSeparatedList(DefinePropertyItem,',',']')
 
             #indented function body
@@ -2050,7 +2054,7 @@ take any token, and check if it's valid identifier
 
 now parse parameters and body (as with any function)
 
-        .parseParametersAndBody()
+        .parseParametersAndBody
 
 
 ## ClassDeclaration
@@ -2116,7 +2120,7 @@ ConstructorDeclaration derives from MethodDeclaration, so it is also a instance 
 
 now get parameters and body (as with any function)
 
-        .parseParametersAndBody()
+        .parseParametersAndBody
 
       #end parse
 
@@ -2517,60 +2521,51 @@ for Example: `end for` indentation must match a `for` statement on the same inde
         #end loop
 
 
-## WaitForAsyncCall #-NOT IMPLEMENTED YET-
+## YieldExpression
 
-`WaitForAsyncCall: wait for fnCall-VariableRef`
+`YieldExpression: yield until asyncFnCall-VariableRef`
+`YieldExpression: yield parallel map array-Expression asyncFnCall-VariableRef`
 
-The `wait for` expression calls a normalized async function 
-and `waits` for the async function to execute the callback.
+`yield until` expression calls a 'standard node.js async function'
+and `yield` execution to the caller function until the async completes (callback).
 
-A normalized async function is an async function with the last parameter = callback(err,data)
+A 'standard node.js async function' is an async function 
+with the last parameter = callback(err,data)
 
-The waiting is implemented by exisiting libs.
+The yield-wait is implemented by exisiting lib 'nicegen'.
 
-Example: `contents = wait for fs.readFile('myFile.txt','utf8')`
+Example: `contents = yield until fs.readFile 'myFile.txt','utf8'`
 
-    public class WaitForAsyncCall extends ASTBase
+    public class YieldExpression extends ASTBase
   
       properties
-        varRef
+        specifier
+        fnCall
+        arrExpression
 
       method parse()
 
-        .req 'wait'
+        .req 'yield'
+        .specifier = .req('until','parallel')
+        
         .lock()
 
-        .req 'for'
-        .varRef = .req(VariableRef)
+        if .specifier is 'until'
 
+            .fnCall = .req(FunctionCall)
 
-LaunchStatement #-NOT IMPLEMENTED YET-
----------------
+        else
 
-`LaunchStatement: 'launch' fnCall-VariableRef`
-
-`launch` starts a generator function.
-The generator function rus as a co-routine, (pseudo-parallel), 
-and will be paused on `wait for` statements.
-
-The `launch` statement will return on the first `wait for` or `yield` of the generator
-
-    public class LaunchStatement extends ASTBase
-  
-      properties
-        varRef
-
-      method parse()
-        .req 'launch'
-        .lock()
-        .varRef = .req(VariableRef)
+            .req 'map'
+            .arrExpression = .req(Expression)
+            .fnCall = .req(FunctionCall)
 
 
 --------------
 
 Adjective
 ---------
-`Adjective: (export|generator|shim|helper|global)`
+`Adjective: (public|export|default|nice|generator|shim|helper|global)`
 
 Adjectives can precede several statement.
 
@@ -2578,7 +2573,7 @@ Adjectives can precede several statement.
 
 #### method parse()
 
-        .name = .req('public','export','default','global','async','generator','shim','helper')
+        .name = .req('public','export','default','nice','generator','shim','helper','global')
 
 #### Helper method validate(statement)
 Check validity of adjective-statement combination 
@@ -2588,7 +2583,7 @@ Check validity of adjective-statement combination
         var validCombinations =  
               export: CFVN, public: CFVN, default: CFVN
               generator: ['function','method'] 
-              async: ['function','method'] 
+              nice: ['function','method'] 
               shim: ['function','method','class'] 
               helper:  ['function','method','class']
               global: ['import','declare']
@@ -2625,6 +2620,8 @@ FunctionCall
 
     public class FunctionCall extends ASTBase
       
+      declare name affinity fnCall
+
       properties
           varRef: VariableRef
 
@@ -2826,8 +2823,7 @@ After: 'then', and the result-Expression
 
 
 
-Statement
----------
+##Statement
 
 A `Statement` is an imperative statment (command) or a control construct.
 
@@ -2896,6 +2892,14 @@ Check validity of adjective-statement combination
           for each adj in .adjectives
             adj.validate .statement
 
+
+##### helper method hasAdjective(name) returns boolean
+To check if a statement has an adjective WHILE parsing the statment
+(after the statement, adjectives are assignes as statement properties)
+
+        if .adjectives 
+          for each adjective in .adjectives where adjective.name is name
+            return true
 
 
 ## Body
@@ -3027,8 +3031,7 @@ Anything standing alone in it's own line, its an imperative statement (it does s
       'delete':DeleteStatement
       'compile':CompilerStatement
       'compiler':CompilerStatement
-      'wait':WaitForAsyncCall 
-      'launch':LaunchStatement
+      'yield':YieldExpression
     
 
     var AccessorsDirect = 

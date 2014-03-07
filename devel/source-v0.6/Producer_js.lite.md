@@ -842,9 +842,11 @@ Generators are implemented in ES6 with the "function*" keyword (note the asteris
 
       var generatorMark = .generator and .compilerVar('ES6')? "*" else ""
 
+      var isConstructor = this instance of Grammar.ConstructorDeclaration
+
 check if this is a 'constructor', 'method' or 'function'
 
-      if this instance of Grammar.ConstructorDeclaration
+      if isConstructor
           # class constructor: JS's function-class-object-constructor
           .out "function ",.getParent(Grammar.ClassDeclaration).name
 
@@ -854,7 +856,7 @@ else, method?
 
           #get owner where this method belongs to
           if no .getOwnerPrefix() into var prefix 
-              fail with "method #.name. Can not determine owner object"
+              fail with 'method "#{.name}" Cannot determine owner object'
 
           #if shim, check before define
           if .shim, .out "if (!",prefix,.name,")",NL
@@ -871,7 +873,18 @@ else is a simple function
       else 
           .out "function ",.name, generatorMark
 
-now produce function parameters declaration
+if 'nice', produce default nice body, and then the generator header for real body
+
+      var isNice = .nice and not (isConstructor or .shim or .definePropItems or .generator)
+      if isNice
+          var argsArray = (.paramsDeclarations or []).concat["__callback"]
+          .out "(", {CSL:argsArray},"){", .getEOLComment(),NL
+          .out '  nicegen(this, ',prefix,.name,"_generator, arguments);",NL
+          .out "};",NL
+          .out "function* ",prefix,.name,"_generator"
+      end if
+
+Produce function parameters declaration
        
       .out "(", {CSL:.paramsDeclarations}, "){", .getEOLComment()
 
@@ -885,6 +898,8 @@ if simple-function, insert implicit return. Example: function square(x) = x*x
           .out "return ", .body
 
       else
+
+if it has a "catch" or "exception", insert 'try{'
 
           for each statement in .body.statements
             if statement.statement instance of Grammar.ExceptionBlock
@@ -1164,14 +1179,51 @@ else, it's a var-less case. we code it as chained ternary operators
 
           .out "/* else */ ",.elseExpression or 'undefined'
 
-### Append to class Grammar.WaitForAsyncCall ###
+
+### Append to class Grammar.YieldExpression ###
 
       method produce()
 
-        declare valid .call.funcRef
-        declare valid .call.args
+Check location
+      
+        if no .getParent(Grammar.FunctionDeclaration) into var functionDeclaration 
+            or no functionDeclaration.nice
+                .throwError '"yield" can only be used inside a "nice function/method"'
 
-        .out "wait.for(", {CSL:[.call.funcRef].concat(.call.args)} ,")"
+        var yieldArr=[]
+
+        var varRef = .fnCall.varRef
+        //from .varRef calculate object owner and method name 
+
+        var thisValue='null'
+        var fnName = varRef.name #default if no accessors 
+
+        if varRef.accessors
+
+            var inx=varRef.accessors.length-1
+            if varRef.accessors[inx] instance of Grammar.FunctionAccess
+                yieldArr = varRef.accessors[inx].args
+                inx--
+
+            if inx>=0 
+                if varRef.accessors[inx] isnt instance of Grammar.PropertyAccess
+                    .throwError 'yield needs a clear method name. Example: "yield until obj.method(10)". redefine yield parameter.'
+
+                fnName = "'#{varRef.accessors[inx].name}'"
+                thisValue = [varRef.name].concat(varRef.accessors.slice(0,inx))
+
+
+        if .specifier is 'until'
+
+            yieldArr.unshift fnName
+            yieldArr.unshift thisValue
+
+        else #parallel map
+
+            yieldArr.push "'map'",.arrExpression, thisValue, fnName
+
+
+        .out "yield [ ",{CSL:yieldArr}," ]"
 
 
 

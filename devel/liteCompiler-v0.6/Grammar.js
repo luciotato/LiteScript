@@ -1330,9 +1330,12 @@
    function Accessor(){
        // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
+      //properties
+        //args:array
    };
    // Accessor (extends|super is) ASTBase
    Accessor.prototype.__proto__ = ASTBase.prototype;
+
      //method parse
      Accessor.prototype.parse = function(){
        //fail with 'abstract'
@@ -1540,7 +1543,8 @@
          '{': ObjectLiteral, 
          'function': FunctionDeclaration, 
          '->': FunctionDeclaration, 
-         'case': CaseWhenExpression
+         'case': CaseWhenExpression, 
+         'yield': YieldExpression
          };
 
 
@@ -2538,7 +2542,7 @@
        // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
-        //specifier, export, default, async, shim, generator
+        //specifier, export, default, nice, shim, generator
         //paramsDeclarations: VariableDecl array
         //definePropItems: DefinePropertyItem array
         //body
@@ -3336,82 +3340,65 @@
         //#end loop
 
 
-//## WaitForAsyncCall #-NOT IMPLEMENTED YET-
+//## YieldExpression
 
-//`WaitForAsyncCall: wait for fnCall-VariableRef`
+//`YieldExpression: yield until asyncFnCall-VariableRef`
+//`YieldExpression: yield parallel map array-Expression asyncFnCall-VariableRef`
 
-//The `wait for` expression calls a normalized async function
-//and `waits` for the async function to execute the callback.
+//`yield until` expression calls a 'standard node.js async function'
+//and `yield` execution to the caller function until the async completes (callback).
 
-//A normalized async function is an async function with the last parameter = callback(err,data)
+//A 'standard node.js async function' is an async function
+//with the last parameter = callback(err,data)
 
-//The waiting is implemented by exisiting libs.
+//The yield-wait is implemented by exisiting lib 'nicegen'.
 
-//Example: `contents = wait for fs.readFile('myFile.txt','utf8')`
+//Example: `contents = yield until fs.readFile 'myFile.txt','utf8'`
 
-   //public class WaitForAsyncCall extends ASTBase
+   //public class YieldExpression extends ASTBase
    //constructor
-   function WaitForAsyncCall(){
+   function YieldExpression(){
        // default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       //properties
-        //varRef
+        //specifier
+        //fnCall
+        //arrExpression
    };
-   // WaitForAsyncCall (extends|super is) ASTBase
-   WaitForAsyncCall.prototype.__proto__ = ASTBase.prototype;
+   // YieldExpression (extends|super is) ASTBase
+   YieldExpression.prototype.__proto__ = ASTBase.prototype;
 
      //method parse()
-     WaitForAsyncCall.prototype.parse = function(){
+     YieldExpression.prototype.parse = function(){
 
-       this.req('wait');
+       this.req('yield');
+       this.specifier = this.req('until', 'parallel');
+
        this.lock();
 
-       this.req('for');
-       this.varRef = this.req(VariableRef);
+       //if .specifier is 'until'
+       if (this.specifier === 'until') {
+
+           this.fnCall = this.req(FunctionCall);
+       }
+       
+       else {
+
+           this.req('map');
+           this.arrExpression = this.req(Expression);
+           this.fnCall = this.req(FunctionCall);
+       };
      };
    //export
-   module.exports.WaitForAsyncCall = WaitForAsyncCall;
-   //end class WaitForAsyncCall
-
-
-//LaunchStatement #-NOT IMPLEMENTED YET-
-//---------------
-
-//`LaunchStatement: 'launch' fnCall-VariableRef`
-
-//`launch` starts a generator function.
-//The generator function rus as a co-routine, (pseudo-parallel),
-//and will be paused on `wait for` statements.
-
-//The `launch` statement will return on the first `wait for` or `yield` of the generator
-
-   //public class LaunchStatement extends ASTBase
-   //constructor
-   function LaunchStatement(){
-       // default constructor: call super.constructor
-       ASTBase.prototype.constructor.apply(this,arguments)
-      //properties
-        //varRef
-   };
-   // LaunchStatement (extends|super is) ASTBase
-   LaunchStatement.prototype.__proto__ = ASTBase.prototype;
-
-     //method parse()
-     LaunchStatement.prototype.parse = function(){
-       this.req('launch');
-       this.lock();
-       this.varRef = this.req(VariableRef);
-     };
-   //export
-   module.exports.LaunchStatement = LaunchStatement;
-   //end class LaunchStatement
+   module.exports.YieldExpression = YieldExpression;
+   //end class YieldExpression
 
 
 //--------------
 
 //Adjective
 //---------
-//`Adjective: (export|generator|shim|helper|global)`
+//`Adjective: (public|export|default|nice|generator|shim|helper|global)`
 
 //Adjectives can precede several statement.
 
@@ -3427,7 +3414,7 @@
     //method parse()
     Adjective.prototype.parse = function(){
 
-       this.name = this.req('public', 'export', 'default', 'global', 'async', 'generator', 'shim', 'helper');
+       this.name = this.req('public', 'export', 'default', 'nice', 'generator', 'shim', 'helper', 'global');
     };
 
     //helper method validate(statement)
@@ -3441,7 +3428,7 @@
              public: CFVN, 
              default: CFVN, 
              generator: ['function', 'method'], 
-             async: ['function', 'method'], 
+             nice: ['function', 'method'], 
              shim: ['function', 'method', 'class'], 
              helper: ['function', 'method', 'class'], 
              global: ['import', 'declare']
@@ -3499,6 +3486,7 @@
    };
    // FunctionCall (extends|super is) ASTBase
    FunctionCall.prototype.__proto__ = ASTBase.prototype;
+      //declare name affinity fnCall
 
      //method parse(options)
      FunctionCall.prototype.parse = function(options){
@@ -3771,8 +3759,7 @@
 
 
 
-//Statement
-//---------
+//##Statement
 
 //A `Statement` is an imperative statment (command) or a control construct.
 
@@ -3858,10 +3845,26 @@
          
        };
      };
+
+
+     //helper method hasAdjective(name) returns boolean
+     Statement.prototype.hasAdjective = function(name){
+//To check if a statement has an adjective WHILE parsing the statment
+//(after the statement, adjectives are assignes as statement properties)
+
+       //if .adjectives
+       if (this.adjectives) {
+         //for each adjective in .adjectives where adjective.name is name
+         for( var adjective__inx=0,adjective ; adjective__inx<this.adjectives.length ; adjective__inx++){adjective=this.adjectives[adjective__inx];
+         if(adjective.name === name){
+           return true;
+         }}; // end for each in this.adjectives
+         
+       };
+     };
    //export
    module.exports.Statement = Statement;
    //end class Statement
-
 
 
 //## Body
@@ -4032,8 +4035,7 @@
      'delete': DeleteStatement, 
      'compile': CompilerStatement, 
      'compiler': CompilerStatement, 
-     'wait': WaitForAsyncCall, 
-     'launch': LaunchStatement
+     'yield': YieldExpression
      };
 
 

@@ -1,4 +1,3 @@
-
 var DEFAULT_VERSION='0.6'
 
 var fs = require('fs');

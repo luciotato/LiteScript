@@ -631,7 +631,8 @@
          '{': ObjectLiteral, 
          'function': FunctionDeclaration, 
          '->': FunctionDeclaration, 
-         'case': CaseWhenExpression
+         'case': CaseWhenExpression, 
+         'yield': YieldExpression
          };
    
    function Operand(){
@@ -1357,34 +1358,27 @@
    module.exports.EndStatement = EndStatement;
    EndStatement
    
-   function WaitForAsyncCall(){
+   function YieldExpression(){
        ASTBase.prototype.constructor.apply(this,arguments)
    };
-   WaitForAsyncCall.prototype.__proto__ = ASTBase.prototype;
+   YieldExpression.prototype.__proto__ = ASTBase.prototype;
    
-     WaitForAsyncCall.prototype.parse = function(){
-       this.req('wait');
+     YieldExpression.prototype.parse = function(){
+       this.req('yield');
+       this.specifier = this.req('until', 'parallel');
        this.lock();
-       this.req('for');
-       this.varRef = this.req(VariableRef);
+       if (this.specifier === 'until') {
+           this.fnCall = this.req(FunctionCall);
+       }
+       else {
+           this.req('map');
+           this.arrExpression = this.req(Expression);
+           this.fnCall = this.req(FunctionCall);
+       };
      };
    
-   module.exports.WaitForAsyncCall = WaitForAsyncCall;
-   WaitForAsyncCall
-   
-   function LaunchStatement(){
-       ASTBase.prototype.constructor.apply(this,arguments)
-   };
-   LaunchStatement.prototype.__proto__ = ASTBase.prototype;
-   
-     LaunchStatement.prototype.parse = function(){
-       this.req('launch');
-       this.lock();
-       this.varRef = this.req(VariableRef);
-     };
-   
-   module.exports.LaunchStatement = LaunchStatement;
-   LaunchStatement
+   module.exports.YieldExpression = YieldExpression;
+   YieldExpression
    
    function Adjective(){
        ASTBase.prototype.constructor.apply(this,arguments)
@@ -1392,7 +1386,7 @@
    Adjective.prototype.__proto__ = ASTBase.prototype;
    
     Adjective.prototype.parse = function(){
-       this.name = this.req('public', 'export', 'default', 'global', 'async', 'generator', 'shim', 'helper');
+       this.name = this.req('public', 'export', 'default', 'nice', 'generator', 'shim', 'helper', 'global');
     };
     Adjective.prototype.validate = function(statement){
        var CFVN = ['class', 'function', 'var', 'namespace'];
@@ -1401,7 +1395,7 @@
              public: CFVN, 
              default: CFVN, 
              generator: ['function', 'method'], 
-             async: ['function', 'method'], 
+             nice: ['function', 'method'], 
              shim: ['function', 'method', 'class'], 
              helper: ['function', 'method', 'class'], 
              global: ['import', 'declare']
@@ -1432,6 +1426,7 @@
    };
    FunctionCall.prototype.__proto__ = ASTBase.prototype;
    
+     
      FunctionCall.prototype.parse = function(options){
        
        
@@ -1574,6 +1569,15 @@
          
        };
      };
+     Statement.prototype.hasAdjective = function(name){
+       if (this.adjectives) {
+         for( var adjective__inx=0,adjective ; adjective__inx<this.adjectives.length ; adjective__inx++){adjective=this.adjectives[adjective__inx];
+         if(adjective.name === name){
+           return true;
+         }};
+         
+       };
+     };
    
    module.exports.Statement = Statement;
    Statement
@@ -1661,8 +1665,7 @@
      'delete': DeleteStatement, 
      'compile': CompilerStatement, 
      'compiler': CompilerStatement, 
-     'wait': WaitForAsyncCall, 
-     'launch': LaunchStatement
+     'yield': YieldExpression
      };
    var AccessorsDirect = {
        '.': PropertyAccess, 

@@ -111,16 +111,16 @@ js:
    function resolveAndReverse( __callback){
       return nicegen.launch( __callback)};
 
-   function* resolveAndReverseGoogle__generator(service, ip, userid){ try{
+   function* resolveAndReverse__generator(domain){ try{
 
           var addresses = yield [dns,'resolve4', 'google.com'];
 
-          for(inx=0;inx<addresses.length;inx++){ addr=addresses[inx]
-              print ""+addr+", and the reverse for "+addr+" is "+ yield [dns, 'reverse', addr];
+          for(var inx=0,addr;inx<addresses.length;inx++){ addr=addresses[inx]
+              console.log(""+addr+", and the reverse for "+addr+" is "+ (yield [dns, 'reverse', addr]));
           }
 
           }catch(err){
-              print "#{err.message} during resolveAndReverse"
+              console.log(err.message+"during resolveAndReverse");
           }
     }
 
@@ -130,11 +130,12 @@ js:
 
     global import dns, nicegen
 
-    nice function parallelResolveAndReverse
+    nice function parallelResolveAndReverse(domain)
 
         try
+            print "reslve and reverse for #{domain}"
 
-            var addresses = yield until dns.resolve4 'google.com'
+            var addresses = yield until dns.resolve4 domain
 
             var results = yield parallel addresses map dns.reverse 
 
@@ -148,28 +149,31 @@ js:
 
 main:
 
-    parallelResolveAndReverse
+    parallelResolveAndReverse 'google.com'
 
 ----
 js:
+  
+   var dns=require('dns'), nicegen=require('nicegen')
 
-   function parallelResolveAndReverse( __callback){
-      return nicegen.launch(parallelResolveAndReverse__generator,  __callback)};
+   function parallelResolveAndReverse( domain, __callback){
+      return nicegen(this,parallelResolveAndReverse__generator, arguments)
+   };
 
    function* resolveAndReverseGoogle__generator(service, ip, userid){ try{
 
           var addresses = yield [dns,'resolve4', 'google.com'];
 
-          var results = yield ['pmap', addresses, dns, 'reverse' ]
+          var results = yield ['map', addresses, dns, 'reverse' ];
 
-          for(inx=0;inx<addresses.length;inx++){ addr=addresses[inx]
-              print ""+addr+", and the reverse for "+addr+" is "+ results[inx];
+          for(var inx=0,addr;inx<addresses.length;inx++){ addr=addresses[inx]
+              console.log(addr+", and the reverse for "+addr+" is "+ results[inx]);
           }
 
           }catch(err){
-              print "#{err.message} during parallel resolveAndReverse"
+              console.log(err.message+" during parallel resolveAndReverse");
           }
-    }
+    };
 
 
 -----------

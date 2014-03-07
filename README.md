@@ -3,12 +3,12 @@
 ##Design considerations
 
 - More hours are expended *reading* and *debugging* code, than *writing* it.
-- Code should be easy to read and follow. 
+- Code should be [easy to read and follow](http://luciotato.svbtle.com/keep-your-mind-at-full-speed-avoid-branch-mispredictions).
 - Programmer intention and code effects should be clear and explicit
 - Code flow should be straightforward, top-down, left-right, then:
   - Condition evaluation should precede conditionally executed statements
   - Deviations from expected program flow, should be handled as "exceptions" (try-catch-finally)
-  - Sequential programming with exceptions should be preferred.
+  - Sequential programming with exceptions should be available.
   - Async callbacks and closures should be available to be used when required
   - Async callbacks and closures *should not* break the exception handling logic.
   - Hidden side-effects and global variables should be avoided whenever possible.  
@@ -17,12 +17,12 @@
 
 - Make code as readable and easy to follow as possible.
 - Favor clear, readable code, over terse, hard to read code.
-- Create readable javascript code
+- Genereate readable javascript code.
 - Catch typos in object members **in the compilation phase**. Is too time-expensive to debug subtle bugs caused by mistyped member names in javascript.
 - Allow an easy context-switch in the coder's mind between programming languages.
   - Try to use the same meaning for the same symbols when the symbol is used in javascript, CoffeScript, Phyton, C, C#, JAVA, SQL.
-  - Use js symbols and EcmaScript 6 constructs when appropriated and available.
-  - Embrace javascript prototypal inheritance. "class" is syntax sugar.
+  - Use js and EcmaScript 6 syntax when available.
+  - Embrace javascript prototypal inheritance. "class" is just syntax sugar.
 
 ------
 
@@ -146,11 +146,11 @@ It's very useful to have syntax coloring to try a new language. This is what I u
 - A custom theme for Sublime Text ["Lite Dark"](/extras/sublime) based on "Soda Dark". install from: 
 - A very simple Sublime "build system" (Ctrl-B)
 ```
-  {
-    "working_dir": "$project_path",
-    "cmd": ["sh","build.sh"],
-    "file_regex": "([\\w./_-]+?):([0-9]+):([0-9]+)(.*)"
-  }
+{
+  "working_dir": "$project_path",
+  "cmd": ["sh","build.sh"],
+  "file_regex": "([\\w./_-]+?):([0-9]+):?([0-9]+)?(.*)?"
+}
 ```
 
 

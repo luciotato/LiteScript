@@ -28,7 +28,90 @@ while compiling.
 generates js: Object.defineProperty(...
 
 
-### New syntax, '=' declares function body, when the body is just a Expression
+### New syntax, 'nice function' 'yield until' 'yield parallel map'
+
+A 'nice function' is a function which is nice to others by 'yielding' the execution
+thread to it's caller while it does a blocking operation.
+
+Any standard node.js async function is, by this definition, a 'nice function'. 
+
+One of Node.js basic design choice is 'single process-single thread' (you share
+the thread with node's main event loop) so **all functions** in nodejs **must** be 
+nice async functions.
+
+In LiteScript, you can write a 'nice function' having the following advantages:
+
+1. It's a 'standard node.js async function', last parameter is a 
+(implicit) callback: function(err,data)
+
+2. In the function's body, you can 'yield' while calling other standard async functions, 
+waiting for the result data, until the function completes.
+
+3. You can use 'try/catch' to handle exceptions. You'll catch if any async function returned
+err on callback(err,data).
+
+4. You play nice to node.js standard:
+    - any 'nice function' can be called as a 'standard node.js async function'.
+    - Any unhandled exception in your code, is converted to: "callback(err)"
+
+5. You can use 'yield parallel map' to easily implement parallel execution.
+
+
+#####Example 1 - get google.com DNS and reverse DNS
+
+    global import dns, nicegen
+
+    nice function resolveAndReverse
+
+        try 
+
+          var addresses = yield until dns.resolve4 'google.com'
+
+          for each addr in addresses
+              print "#{addr}, and the reverse for #{addr} is #{yield until dns.reverse addr}"
+
+        catch err
+              print "#{err.message} during resolveAndReverse"
+
+    end nice function
+
+main:
+
+    resolveAndReverse function(err,data)
+        if err, print "oops"
+
+
+#####Example 2 - Same, with parallel reverse
+
+    global import dns, nicegen
+
+    nice function parallelResolveAndReverse
+
+        try
+
+            var addresses = yield until dns.resolve4 'google.com'
+
+            var results = yield parallel map addresses, dns.reverse 
+
+            for each index,addr in addresses
+                print "#{addr}, and the reverse for #{addr} is #{results[index]}"
+
+        catch err
+            print "#{err.message} during parallel resolveAndReverse"
+
+    end nice function
+
+main:
+
+    parallelResolveAndReverse  function(err,data)
+        if err, print "oops"
+
+
+
+
+### New syntax, 'return' and '=' declare function body, when the body is just a Expression
+
+    function square(x) return x*x
 
     function square(x) = x*x
 
@@ -103,7 +186,7 @@ LiteScript:
             print data
 
 
-#####Compelling Reasons to differ from stablished CoffeeScript on '->': 
+#####Compelling Reasons to differ from CoffeeScript on '->': 
 
 Coffescript choice for '->' is a great choice, consistent with Coffescript approach, 
 and with: 'everyting is a expression' and 'implicit return'

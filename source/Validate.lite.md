@@ -364,7 +364,7 @@ Populate the global scope
         addBuiltInObject 'Date' 
         addBuiltInObject 'RegExp'
         addBuiltInObject 'JSON'
-        addBuiltInObject 'Error'
+        addBuiltInObject('Error').addMember('stack')
         addBuiltInObject 'Math'
 
         globalScope.addMember 'true',{value:true}
@@ -383,6 +383,7 @@ Populate the global scope
         else #node.js
           globalScope.addMember 'global',{type:globalScope}
           globalScope.addMember 'require'
+          globalScope.addMember 'setTimeout'
           addBuiltInObject 'process'
 
 

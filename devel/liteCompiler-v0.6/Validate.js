@@ -434,7 +434,7 @@
        addBuiltInObject('Date');
        addBuiltInObject('RegExp');
        addBuiltInObject('JSON');
-       addBuiltInObject('Error');
+       addBuiltInObject('Error').addMember('stack');
        addBuiltInObject('Math');
 
        globalScope.addMember('true', {value: true});
@@ -456,6 +456,7 @@
        else {
          globalScope.addMember('global', {type: globalScope});
          globalScope.addMember('require');
+         globalScope.addMember('setTimeout');
          addBuiltInObject('process');
        };
    };

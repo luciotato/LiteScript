@@ -256,7 +256,7 @@
            this.compileFile(fileInfo.interfaceFile, moduleNode);
            return true;
        }
-       else if (fileInfo.extension === '.js' || fileInfo.isCore) {
+       else if (fileInfo.extension === '.js' || fileInfo.isCore || !(fileInfo.hasPath)) {
            log.message(String.spaces(this.recurseLevel * 2), fileInfo.isCore ? "core module" : "javascript file", "require('" + fileInfo.importParameter + "')");
            if (!(fileInfo.isCore)) {
                

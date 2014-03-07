@@ -65,11 +65,11 @@
         //declare on options
             //basePath,outBasePath
 
-//check if it's a core module like 'fs' or 'path'
+//check if it's a global module (if require() parameter do not start with '.' or './')
 
-       //if no this.hasPath and no this.extension and isBuiltInModule(this.basename)
-       if (!this.hasPath && !this.extension && isBuiltInModule(this.basename)) {
-           this.isCore = true;
+       //if no this.hasPath and no this.extension
+       if (!this.hasPath && !this.extension) {
+           this.isCore = isBuiltInModule(this.basename);// #core module like 'fs' or 'path'
            this.isLite = false;
            return;
        };

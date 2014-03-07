@@ -20,7 +20,7 @@ if [ "$1" = "" -o "$using" != "using" -o "$PREV" = "" ]; then
     exit 1
 fi
 
-cwd=$(pwd) 
+CWD=$(pwd) 
 out='out'
 
 #--------------------------------------
@@ -28,7 +28,7 @@ out='out'
 
 echo Release LiteScript ${VERSION} 
 echo -----------------------
-echo cwd: ${cwd}
+echo cwd: ${CWD}
 echo dest dir: ${out}
 
 mkdir -p ${out}
@@ -39,12 +39,15 @@ node lite-js -use v${PREV} -noval -nomap -comments 0 -compile ../source-v${VERSI
 #compile main Compiler ${VERSION} using ${PREV} version, w/o comments or mapsource
 node lite-js -use v${PREV} -noval -nomap -comments 0 -compile ../source-v${VERSION}/Compiler -o ${out}/lib
 
+#copy if newer: lite (#!/usr/bin/env node), calls lite-cli.js
+cp -u lite ${out}/lib/lite
+chmod 777 ${out}/lib/lite
+
 #test compiler at ${out}/lib
 node test -compiler-path ./${out}/lib
 
-#copy if newer, lite (#!/usr/bin/env node), calls lite-cli.js
-cp -u lite ${out}/lib/lite
-chmod 777 ${out}/lib/lite
+#test-extra - run all files named .lite.md
+${out}/lib/lite -es6 -run test-extras
 
 echo files created at: ${out}/
 

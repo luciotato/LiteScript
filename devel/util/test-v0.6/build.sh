@@ -1,0 +1,1 @@
+lite -run extra-check-version 

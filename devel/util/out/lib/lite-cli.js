@@ -2,8 +2,8 @@
    var path = require('path');
    var fs = require('fs');
    var Args = require('./Args');
-   var VERSION = '0.6.2';
-   var usage = '\nLiteScript v' + VERSION + '\n\nUsage:\n        lite -compile mainModule.lite.md [options]\n        lite -run mainModule.lite.md [options]\n\nThis command will launch the LiteScript Compiler on mainModule.lite.md\n\noptions are:\n-r, -run         compile & run .lite.md file\n-c, -compile     compile project, mainModule & all dependent files\n-o dir           output dir. Default is \'.\'\n-b, -browser     compile for a browser environment (window instead of global, no process, etc)\n-v, -verbose     verbose level, default is 1 (0-2)\n-w, -warning     warning level, default is 1 (0-1)\n-comments        comment level on generated files, default is 1 (0-2)\n-version         print LiteScript version & exit\n\nAdvanced options:\n-s,  -single     compile single file. do not follow import/require() calls\n-nm, -nomap      do not generate sourcemap\n-noval           skip name validation\n-u, -use vX.Y.Z  select LiteScript Compiler Version to use (devel)\n-d, -debug       enable full compiler debug log file at \'out/debug.log\'\n-run -debug      when -run used with -debug, launch compiled file with: node --debug-brk\n';
+   var VERSION = '0.6.3';
+   var usage = '\nLiteScript v' + VERSION + '\n\nUsage:\n        lite -compile mainModule.lite.md [options]\n        lite -run mainModule.lite.md [options]\n\nThis command will launch the LiteScript Compiler on mainModule.lite.md\n\noptions are:\n-r, -run         compile & run .lite.md file\n-c, -compile     compile project, mainModule & all dependent files\n-o dir           output dir. Default is \'.\'\n-b, -browser     compile for a browser environment (window instead of global, no process, etc)\n-v, -verbose     verbose level, default is 1 (0-2)\n-w, -warning     warning level, default is 1 (0-1)\n-comments        comment level on generated files, default is 1 (0-2)\n-version         print LiteScript version & exit\n\nAdvanced options:\n-es6, --harmony  used with -run, uses node --harmony\n-s,  -single     compile single file. do not follow import/require() calls\n-nm, -nomap      do not generate sourcemap\n-noval           skip name validation\n-u, -use vX.Y.Z  select LiteScript Compiler Version to use (devel)\n-d, -debug       enable full compiler debug log file at \'out/debug.log\'\n-run -debug      when -run used with -debug, launch compiled file with: node --debug-brk\n';
    var color = {
            normal: "\x1b[39;49m", 
            red: "\x1b[91m", 
@@ -41,7 +41,8 @@
            skip: args.option('noval', "novalidation"), 
            nomap: args.option('nm', "nomap"), 
            single: args.option('s', "single"), 
-           browser: args.option('b', "browser")
+           browser: args.option('b', "browser"), 
+           es6: args.option('es6', "harmony")
            };
        var compilerPath = use ? '../../liteCompiler-' + use : '.';
        if (!mainModuleName) {
@@ -70,6 +71,7 @@
            console.log('LiteScript compiler version ' + Compiler.version)};
        try{
            if (compileAndRun) {
+               var nodeArgs = options.es6 ? " --harmony" : "" + options.debug ? " --debug-brk" : "";
                var filename = mainModuleName;
                if (!(fs.existsSync(filename))) {
                    filename = mainModuleName + '.md'};
@@ -79,19 +81,32 @@
                    throw new Error('Compile and Run,  File not found: "' + mainModuleName + '"')};
                var sourceLines = fs.readFileSync(filename);
                var compiledCode = Compiler.compile(filename, sourceLines, options);
-               if (options.debug) {
+               if (options.debug || options.es6) {
                    var outFile = path.join(options.outDir, mainModuleName + '.js');
                    fs.writeFileSync(outFile, compiledCode);
                    var exec = require('child_process').exec;
-                   console.log("***LAUNCHING NODE in DEBUG MODE***");
-                   var cmd = 'node --debug-brk ' + outFile + ' ' + (compileAndRunParams.join(" "));
+                   if (options.debug) {
+                       console.log("***LAUNCHING NODE in DEBUG MODE***")};
+                   var cmd = 'node ' + nodeArgs + ' ' + outFile + ' ' + (compileAndRunParams.join(" "));
                    console.log(cmd);
                    exec(cmd, function (error, stdout, stderr){
-                                       
-                                       if (error) {
-                                           console.error(error.message)};
-                                       console.log(stdout);
-                                       console.error(stderr);
+                               
+                               console.log(stdout);
+                               console.log(stderr);
+                               if (!options.debug) {
+                                   try{
+                                       fs.unlink(outFile);
+                                   
+                                   }catch(err){
+                                       console.log(err.message, " at rm", outFile);
+                                   };
+                               };
+                               
+                               if (error) {
+                                   console.log("ERROR", error.code);
+                                   console.log(error.message);
+                                   process.exit(error.code || 1);
+                               };
                    });
                };
            }
@@ -124,7 +139,7 @@
                throw e;
            };
        };
-       if (compileAndRun && !(options.debug)) {
+       if (compileAndRun && !((options.debug || options.es6))) {
            compileAndRunParams.unshift('lite', mainModuleName);
            if (options.verbose) {
                console.log("RUN: " + (compileAndRunParams.join(' ')))};
@@ -135,6 +150,7 @@
            
            module.filename = path.resolve(filename);
            module.paths = module.constructor._nodeModulePaths(path.dirname(module.filename));
+           __dirname = path.dirname(module.filename);
            process.argv = compileAndRunParams;
            eval(compiledCode);
        };

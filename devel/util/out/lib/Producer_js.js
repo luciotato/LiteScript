@@ -462,13 +462,14 @@
    
     Grammar.FunctionDeclaration.prototype.produce = function(theProperties){
      var generatorMark = this.generator && this.compilerVar('ES6') ? "*" : "";
-     if (this instanceof Grammar.ConstructorDeclaration) {
+     var isConstructor = this instanceof Grammar.ConstructorDeclaration;
+     if (isConstructor) {
          this.out("function ", this.getParent(Grammar.ClassDeclaration).name);
      }
      else if (this instanceof Grammar.MethodDeclaration) {
          var prefix=undefined;
          if (!((prefix=this.getOwnerPrefix()))) {
-             throw new Error("method #.name. Can not determine owner object");
+             throw new Error('method "' + this.name + '" Cannot determine owner object');
          };
          if (this.shim) {
              this.out("if (!", prefix, this.name, ")", NL)};
@@ -483,6 +484,15 @@
      else {
          this.out("function ", this.name, generatorMark);
      };
+     var isNice = this.nice && !((isConstructor || this.shim || this.definePropItems || this.generator));
+     if (isNice) {
+         var argsArray = (this.paramsDeclarations || []).concat["__callback"];
+         this.out("(", {CSL: argsArray}, "){", this.getEOLComment(), NL);
+         this.out('  nicegen(this, ', prefix, this.name, "_generator, arguments);", NL);
+         this.out("};", NL);
+         this.out("function* ", prefix, this.name, "_generator");
+     };
+     
      this.out("(", {CSL: this.paramsDeclarations}, "){", this.getEOLComment());
      if (!this.body) {
          this.throwError('function ' + this.name + ' has no body')};
@@ -702,10 +712,37 @@
        };
      };
    
-     Grammar.WaitForAsyncCall.prototype.produce = function(){
-       
-       
-       this.out("wait.for(", {CSL: [this.call.funcRef].concat(this.call.args)}, ")");
+     Grammar.YieldExpression.prototype.produce = function(){
+       var functionDeclaration=undefined;
+       if (!((functionDeclaration=this.getParent(Grammar.FunctionDeclaration))) || !functionDeclaration.nice) {
+               this.throwError('"yield" can only be used inside a "nice function/method"');
+       };
+       var yieldArr = [];
+       var varRef = this.fnCall.varRef;
+       var thisValue = 'null';
+       var fnName = varRef.name;
+       if (varRef.accessors) {
+           var inx = varRef.accessors.length - 1;
+           if (varRef.accessors[inx] instanceof Grammar.FunctionAccess) {
+               yieldArr = varRef.accessors[inx].args;
+               inx--;
+           };
+           if (inx >= 0) {
+               if (!(varRef.accessors[inx] instanceof Grammar.PropertyAccess)) {
+                   this.throwError('yield needs a clear method name. Example: "yield until obj.method(10)". redefine yield parameter.');
+               };
+               fnName = "'" + (varRef.accessors[inx].name) + "'";
+               thisValue = [varRef.name].concat(varRef.accessors.slice(0, inx));
+           };
+       };
+       if (this.specifier === 'until') {
+           yieldArr.unshift(fnName);
+           yieldArr.unshift(thisValue);
+       }
+       else {
+           yieldArr.push("'map'", this.arrExpression, thisValue, fnName);
+       };
+       this.out("yield [ ", {CSL: yieldArr}, " ]");
      };
    var IDENTIFIER_ALIASES = {
      'on': 'true', 

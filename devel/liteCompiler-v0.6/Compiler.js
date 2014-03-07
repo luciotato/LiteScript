@@ -630,9 +630,11 @@
            return true;
        }
 
-//else, for .js file, **require()** the file and generate & cache interface
+//else, for .js file/core/globasl module,
+//call node.js **require()** for parameter
+//and generate & cache interface
        
-       else if (fileInfo.extension === '.js' || fileInfo.isCore) {
+       else if (fileInfo.extension === '.js' || fileInfo.isCore || !(fileInfo.hasPath)) {
 
            log.message(String.spaces(this.recurseLevel * 2), fileInfo.isCore ? "core module" : "javascript file", "require('" + fileInfo.importParameter + "')");
 

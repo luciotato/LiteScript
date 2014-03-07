@@ -3,7 +3,7 @@
     global import path,fs
     import Args
 
-    var VERSION = '0.6.2'
+    var VERSION = '0.6.3'
 
 ## usage, module vars
 
@@ -28,6 +28,7 @@
     -version         print LiteScript version & exit
 
     Advanced options:
+    -es6, --harmony  used with -run, uses node --harmony
     -s,  -single     compile single file. do not follow import/require() calls
     -nm, -nomap      do not generate sourcemap
     -noval           skip name validation
@@ -89,6 +90,7 @@ Check for other options
             nomap   : args.option('nm',"nomap") // do not generate sourcemap
             single  : args.option('s',"single") // single file- do not follow require() calls
             browser : args.option('b',"browser") 
+            es6     : args.option('es6',"harmony") 
 
         var compilerPath = use ? '../../liteCompiler-#{use}' else '.'
 
@@ -133,6 +135,9 @@ if "compile and run", load & compile single file and run it
 
             if compileAndRun
 
+                var nodeArgs = options.es6? " --harmony" else "" +
+                               options.debug? " --debug-brk" else ""
+
                 var filename = mainModuleName
                 if not fs.existsSync(filename), filename=mainModuleName+'.md'
                 if not fs.existsSync(filename), filename=mainModuleName+'.lite.md'
@@ -141,18 +146,29 @@ if "compile and run", load & compile single file and run it
                 var compiledCode = Compiler.compile(filename,sourceLines,options);
 
                 // if options.debug, save compiled file, run node --debug.brk
-                if options.debug
+                if options.debug or options.es6
                     var outFile = path.join(options.outDir,mainModuleName+'.js')
                     fs.writeFileSync outFile,compiledCode
                     var exec = require('child_process').exec;
-                    print "***LAUNCHING NODE in DEBUG MODE***"
-                    var cmd = 'node --debug-brk #{outFile} #{compileAndRunParams.join(" ")}'
+                    if options.debug, print "***LAUNCHING NODE in DEBUG MODE***"
+                    var cmd = 'node #{nodeArgs} #{outFile} #{compileAndRunParams.join(" ")}'
                     print cmd
                     exec cmd, function(error, stdout, stderr) 
-                                        declare error:Error
-                                        if error, console.error error.message
-                                        console.log stdout
-                                        console.error stderr
+                                declare error:Error
+                                print stdout
+                                print stderr
+                                if no options.debug
+                                    try # to delete generated temp file
+                                        fs.unlink outFile
+                                    catch err 
+                                        print err.message," at rm",outFile
+                                end if
+                                if error 
+                                    print "ERROR",error.code
+                                    print error.message
+                                    process.exit error.code or 1
+
+                    
 
 else, launch compile Project
 
@@ -190,7 +206,7 @@ After compilation
 
 if --run, Run
 
-        if compileAndRun and not options.debug 
+        if compileAndRun and not (options.debug or options.es6) #es6 and -debug: save .js & run in a new process
             compileAndRunParams.unshift 'lite',mainModuleName  #add 'lite filename...' to arguments
             if options.verbose, print "RUN: #{compileAndRunParams.join(' ')}"
             
@@ -208,6 +224,7 @@ for require() to look at the same dirs as at runtime
             declare valid module.constructor._nodeModulePaths
             module.filename = path.resolve(filename)
             module.paths = module.constructor._nodeModulePaths(path.dirname(module.filename))
+            __dirname = path.dirname(module.filename)
 
 set process.argv to parameters after --run filename
 

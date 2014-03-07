@@ -1115,10 +1115,12 @@
 
      var generatorMark = this.generator && this.compilerVar('ES6') ? "*" : "";
 
+     var isConstructor = this instanceof Grammar.ConstructorDeclaration;
+
 //check if this is a 'constructor', 'method' or 'function'
 
-     //if this instance of Grammar.ConstructorDeclaration
-     if (this instanceof Grammar.ConstructorDeclaration) {
+     //if isConstructor
+     if (isConstructor) {
           //# class constructor: JS's function-class-object-constructor
          this.out("function ", this.getParent(Grammar.ClassDeclaration).name);
      }
@@ -1131,8 +1133,8 @@
          //if no .getOwnerPrefix() into var prefix
          var prefix=undefined;
          if (!((prefix=this.getOwnerPrefix()))) {
-             //fail with "method #.name. Can not determine owner object"
-             throw new Error("method #.name. Can not determine owner object");
+             //fail with 'method "#{.name}" Cannot determine owner object'
+             throw new Error('method "' + this.name + '" Cannot determine owner object');
          };
 
           //#if shim, check before define
@@ -1157,7 +1159,20 @@
          this.out("function ", this.name, generatorMark);
      };
 
-//now produce function parameters declaration
+//if 'nice', produce default nice body, and then the generator header for real body
+
+     var isNice = this.nice && !((isConstructor || this.shim || this.definePropItems || this.generator));
+     //if isNice
+     if (isNice) {
+         var argsArray = (this.paramsDeclarations || []).concat["__callback"];
+         this.out("(", {CSL: argsArray}, "){", this.getEOLComment(), NL);
+         this.out('  nicegen(this, ', prefix, this.name, "_generator, arguments);", NL);
+         this.out("};", NL);
+         this.out("function* ", prefix, this.name, "_generator");
+     };
+     //end if
+
+//Produce function parameters declaration
 
      this.out("(", {CSL: this.paramsDeclarations}, "){", this.getEOLComment());
 
@@ -1175,6 +1190,8 @@
      }
      
      else {
+
+//if it has a "catch" or "exception", insert 'try{'
 
          //for each statement in .body.statements
          for( var statement__inx=0,statement ; statement__inx<this.body.statements.length ; statement__inx++){statement=this.body.statements[statement__inx];
@@ -1581,16 +1598,66 @@
        };
      };
 
-   //append to class Grammar.WaitForAsyncCall ###
+
+   //append to class Grammar.YieldExpression ###
    
 
      //method produce()
-     Grammar.WaitForAsyncCall.prototype.produce = function(){
+     Grammar.YieldExpression.prototype.produce = function(){
 
-        //declare valid .call.funcRef
-        //declare valid .call.args
+//Check location
 
-       this.out("wait.for(", {CSL: [this.call.funcRef].concat(this.call.args)}, ")");
+       //if no .getParent(Grammar.FunctionDeclaration) into var functionDeclaration
+       var functionDeclaration=undefined;
+       if (!((functionDeclaration=this.getParent(Grammar.FunctionDeclaration))) || !functionDeclaration.nice) {
+               this.throwError('"yield" can only be used inside a "nice function/method"');
+       };
+
+       var yieldArr = [];
+
+       var varRef = this.fnCall.varRef;
+        //from .varRef calculate object owner and method name
+
+       var thisValue = 'null';
+       var fnName = varRef.name;// #default if no accessors
+
+       //if varRef.accessors
+       if (varRef.accessors) {
+
+           var inx = varRef.accessors.length - 1;
+           //if varRef.accessors[inx] instance of Grammar.FunctionAccess
+           if (varRef.accessors[inx] instanceof Grammar.FunctionAccess) {
+               yieldArr = varRef.accessors[inx].args;
+               inx--;
+           };
+
+           //if inx>=0
+           if (inx >= 0) {
+               //if varRef.accessors[inx] isnt instance of Grammar.PropertyAccess
+               if (!(varRef.accessors[inx] instanceof Grammar.PropertyAccess)) {
+                   this.throwError('yield needs a clear method name. Example: "yield until obj.method(10)". redefine yield parameter.');
+               };
+
+               fnName = "'" + (varRef.accessors[inx].name) + "'";
+               thisValue = [varRef.name].concat(varRef.accessors.slice(0, inx));
+           };
+       };
+
+
+       //if .specifier is 'until'
+       if (this.specifier === 'until') {
+
+           yieldArr.unshift(fnName);
+           yieldArr.unshift(thisValue);
+       }
+       
+       else {
+
+           yieldArr.push("'map'", this.arrExpression, thisValue, fnName);
+       };
+
+
+       this.out("yield [ ", {CSL: yieldArr}, " ]");
      };
 
 

@@ -20,8 +20,8 @@
        if(!options) options={};
        if(options.target===undefined) options.target='js';
        
-       if (!this.hasPath && !this.extension && isBuiltInModule(this.basename)) {
-           this.isCore = true;
+       if (!this.hasPath && !this.extension) {
+           this.isCore = isBuiltInModule(this.basename);
            this.isLite = false;
            return;
        };
