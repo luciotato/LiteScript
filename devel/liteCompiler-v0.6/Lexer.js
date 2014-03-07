@@ -355,7 +355,7 @@
 
            var referenceName = '*compiler generate* at line ' + item.sourceLineNum + ' file ' + this.filename;
             //declare valid .compiler.compileModule
-           var moduleNode = this.compiler.compileModule(referenceName, bodyLines, {browser: this.options.browser, target: 'js', verbose: 0});
+           var moduleNode = this.compiler.compileModule(referenceName, bodyLines, {browser: this.options.browser, target: 'js', verbose: 0, skip: true});
 
 //run the body
 

@@ -162,7 +162,6 @@ We start this module once the entire multi-node AST tree has been parsed.
 
 Initialize module vars
 
-        NameDeclaration.allOfThem = []
         nameAffinity= new NameDeclaration('Name Affinity') # project-wide name affinity for classes
         nameAffinity.addMember 'err','Error'
 
@@ -345,6 +344,9 @@ Initialize the global scope
 
         globalScope = project.root.createScope()
         project.globalScope = globalScope
+
+        #clear global NameDeclaration list
+        NameDeclaration.allOfThem = []
 
 Populate the global scope
 

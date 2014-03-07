@@ -304,7 +304,8 @@ compile the body
                                     browser: .options.browser
                                     target:'js' 
                                     verbose:0
-                                    //skip:true #skip validation. Note: problem with NameDeclaration.AllofThem (is global)
+                                    skip:true #skip validation. Note: until fix ERROR: (compiler-defined) DUPLICATED name in scope: 'lines' 
+                                              #test with LiteScript_online_playground - Preprocessor.lite.md
                                 })
 
 run the body

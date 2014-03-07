@@ -165,7 +165,6 @@
 
 //Initialize module vars
 
-       NameDeclaration.allOfThem = [];
        nameAffinity = new NameDeclaration('Name Affinity');// # project-wide name affinity for classes
        nameAffinity.addMember('err', 'Error');
 
@@ -415,6 +414,9 @@
 
        globalScope = project.root.createScope();
        project.globalScope = globalScope;
+
+        //#clear global NameDeclaration list
+       NameDeclaration.allOfThem = [];
 
 //Populate the global scope
 
