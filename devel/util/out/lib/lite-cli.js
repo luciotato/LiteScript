@@ -2,7 +2,7 @@
    var path = require('path');
    var fs = require('fs');
    var Args = require('./Args');
-   var VERSION = '0.6.3';
+   var VERSION = '0.6.4';
    var usage = '\nLiteScript v' + VERSION + '\n\nUsage:\n        lite -compile mainModule.lite.md [options]\n        lite -run mainModule.lite.md [options]\n\nThis command will launch the LiteScript Compiler on mainModule.lite.md\n\noptions are:\n-r, -run         compile & run .lite.md file\n-c, -compile     compile project, mainModule & all dependent files\n-o dir           output dir. Default is \'.\'\n-b, -browser     compile for a browser environment (window instead of global, no process, etc)\n-v, -verbose     verbose level, default is 1 (0-2)\n-w, -warning     warning level, default is 1 (0-1)\n-comments        comment level on generated files, default is 1 (0-2)\n-version         print LiteScript version & exit\n\nAdvanced options:\n-es6, --harmony  used with -run, uses node --harmony\n-s,  -single     compile single file. do not follow import/require() calls\n-nm, -nomap      do not generate sourcemap\n-noval           skip name validation\n-u, -use vX.Y.Z  select LiteScript Compiler Version to use (devel)\n-d, -debug       enable full compiler debug log file at \'out/debug.log\'\n-run -debug      when -run used with -debug, launch compiled file with: node --debug-brk\n';
    var color = {
            normal: "\x1b[39;49m", 
