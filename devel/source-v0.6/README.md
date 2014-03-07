@@ -37,7 +37,7 @@ generates js:
     function square(x){return x*x}
 
 
-### New syntax, '->' terse arrow to declare functions
+### New syntax, '-> x,y' shortcut for 'function(x,y)'
 
 Example:
 
@@ -103,31 +103,51 @@ LiteScript:
             print data
 
 
-In CoffeeScript, '->' declares a function, but it goes *AFTER* the () enclosed parameters.
+#####Compelling Reasons to differ from stablished CoffeeScript on '->': 
 
-In LiteScript, '->' declares a function, but it goes *BEFORE* the parameters, and () is optional.
+Coffescript choice for '->' is a great choice, consistent with Coffescript approach, 
+and with: 'everyting is a expression' and 'implicit return'
+
+LiteScript approach, in order to enhance readability, separates statements and expressions, 
+,has no implicit return, and uses the word 'function' to declare a function.
+The best choice in order to do not confuse programmers would have been 
+to use '->' as in CoffeScript, but sadly is not consistent with LiteScript base design.
+
+1. Be ligth: By making '->' just a shortcut for 'function', it is only a lexical concept, ( 
+syntax sugar), and not another semantical concept. 
+
+2. Enhance readabiliy: '-> x,y' reads as 'function(x,y)' 
+
+3. The following two statements are valid in CoffeeScript, but 
+   have completely different meaning and effects:
+
+    s = map (x) -> square(x)
+    s = map(x) -> square(x)    
+
+#####Details:
+
+In LiteScript, '-> x' is just short for 'function(x)'
+
+In CoffeeScript, '->' is the semantical way to declare a function
+and function params go *BEFORE* the '->', ()-enclosed.
 
 In LiteScript:
 
-1. since '->' *precede* the arguments, '-> x,y' 
-    is easily repalced by 'function(x,y)', so '->' is just syntax sugar 
-    over the verbose "function".
+1. Since '->' *precede* arguments there is no MBM in LiteScript, you see '->',
+    read 'function' and correctly read next tokens as function parameter names.
 
-2. Since '->' *precede* arguments there is no MBM in LiteScript, you know it's
-    a function declaration and correctly parse function parameter names.
+3. Since '->' *precede* arguments, "()" are optional, resulting a cleaner syntax, 
+    specially for Event Emitters, as seen in the examples.
 
-3. Since '->' *precede* arguments, () can be optional, resulting a cleaner syntax, 
-    specially for Array.map, filter and Event Emitters, as seen in the examples.
-
-In CoffeeScript, Since '->' is *after* the arguments, when you read code like: 
+In CoffeeScript, Since '->' appears *after* the arguments, when you read left-to-rigth
+you normally start reading "(somename,someothername)" as a parenthesized Expression: 
 
     var someVar = ( somevalue, someothervalue) -> somevalue * someothervalue + 10
     
-you read `var someVar = ( somevalue `... and parse 
-" var someVar equals a complex Parenthesized Expression..." then read `,` 
+you read `var someVar = ( somevalue `... and initially, your brain parse 
+"var someVar =... complex parenthesized Expression..." then read `,` 
 and get a MBM, scan for the '->', backtrack, and reparse the assignment as 
 a function declaration.
-
 
 
 ###TO DO:
