@@ -93,7 +93,7 @@ go to [LiteScript Online Playground](http://luciotato.github.io/LiteScript_onlin
 
 3. Continue reading the highlights at [/doc](/doc)
 
-4. Check a real-use case [#Real-use-cases-so-far]
+4. Install and start enjoying
 
 ----
 ##Installation
@@ -101,18 +101,17 @@ go to [LiteScript Online Playground](http://luciotato.github.io/LiteScript_onlin
 ```
 sudo npm install -g litescript
 ```
-See [#Development Environment] for a complete installation.
-
+See ***Development Environment*** below for tools installation.
 
 ##Usage
 Primary usage is from the command line, to compile a project, a single file or to run a script:
 
-To compile a project: `lite -compile mainModule.lite.md [options]`
+To compile a project: `lite -compile mainModule.lite.md`
 
-To run a script: `lite -run mainModule.lite.md [options]`
+To run a script: `lite -run mainModule.lite.md`
 
 ###Options:
-
+```
   -r, -run         compile & run .lite.md file
   -c, -compile     compile project, mainModule & all dependent files
   -o dir           output dir. Default is '.'
@@ -130,8 +129,46 @@ To run a script: `lite -run mainModule.lite.md [options]`
   -u, -use vX.Y.Z  select LiteScript Compiler Version to use (devel)
   -d, -debug       enable full compiler debug log file at 'out/debug.log'
   -run -debug      when -run used with -debug, launch compiled file with: node --debug-brk 
+```
 
+###Development Environment
+
+It's very useful to have syntax coloring to try a new language. This is what I use:
+
+- OS: Linux, Debian, with KDE / or the linux distro that pleases you
+- node.js >= 0.10
+- [Sublime Text 2](http://www.sublimetext.com/2) - Higly recommended 
+- [LiteScript tmLanguage](/extras/sublime) for Sublime Text. 
+- A custom theme for Sublime Text ["Lite Dark"](/extras/sublime) based on "Soda Dark". 
+- A very simple Sublime "build system" (Ctrl-B)
+```
+{
+  "working_dir": "$project_path",
+  "cmd": ["sh","build.sh"],
+  "file_regex": "([\\w./_-]+?):([0-9]+):?([0-9]+)?(.*)?"
+}
+```
+
+Install a code example
+```
+git clone https://github.com/luciotato/LiteScript-reception-demo.git
+```
+
+Once you have all that, with Sublime, "open folder" for example: 
+`~/litescript_reception_demo/WebServer`, then open "BareWebServer.lite.md".
+
+- You can now compile (current dir) with Ctrl-B 
+and then use F4 to check each compiler error (Sublime jumps automatically to source pos)
+
+This is a higly recommendable environment to be productive with the language.
+
+If you have a windows box, it's time to start using Linux. Node.js works on windows, 
+but some other very useful tools do not work smoothly on windows (like node-inspector). 
+Go now and download "Virtual Box". After installing "Virtual Box" 
+try http://www.debian.org/distrib/netinst and continue from there 
+until you've got the above configuration.
 ----
+
 ###Real use cases so far 
 
 ##### On the server: LiteScript itself
@@ -170,40 +207,9 @@ which simulates a database access.
 
 You must clone and host-it locally to test-it.
 
-###Development Environment
-
-It's very useful to have syntax coloring to try a new language. This is what I use:
-
-- OS: Linux, Debian, with KDE / or the linux distro that pleases you
-- node.js >= 0.10
-- [Sublime Text 2](http://www.sublimetext.com/2) - Higly recommended 
-- [LiteScript tmLanguage](/extras/sublime) for Sublime Text. 
-- A custom theme for Sublime Text ["Lite Dark"](/extras/sublime) based on "Soda Dark". 
-- A very simple Sublime "build system" (Ctrl-B)
-```
-{
-  "working_dir": "$project_path",
-  "cmd": ["sh","build.sh"],
-  "file_regex": "([\\w./_-]+?):([0-9]+):?([0-9]+)?(.*)?"
-}
-```
-
-
-Once you have all that, with Sublime, "open folder" for example: 
-/litescript_reception_demo/WebServer, then open "BareWebServer.lite.md".
-
-- You can now compile (current dir) with Ctrl-B 
-and then use F4 to check each error (Sublime jumps automatically to source pos)
-
-This environment It's higly recommendable to be productive with the language.
-
-If you have a windows box, it's time to start using Linux. Node.js works on windows, 
-but some other very useful tools do not work smoothly on windows (like node-inspector). 
-Go now and download "Virtual Box". After installing "Virtual Box" 
-try http://www.debian.org/distrib/netinst and continue from there 
-until you've got the above configuration.
 
 ----
+
 ###Developing a new version of LiteScript 
 
 The LiteScript compiler is written in LiteScript. 
