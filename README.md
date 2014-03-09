@@ -165,8 +165,8 @@ This is a higly recommendable environment to be productive with the language.
 If you have a windows box, it's time to start using Linux. Node.js works on windows, 
 but some other very useful tools do not work smoothly on windows (like node-inspector). 
 Go now and download "Virtual Box". After installing "Virtual Box" 
-try http://www.debian.org/distrib/netinst and continue from there 
-until you've got the above configuration.
+try http://www.debian.org/distrib/netinst and continue from there until you've got the above configuration.
+
 ----
 
 ###Real use cases so far 
