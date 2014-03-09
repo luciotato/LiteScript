@@ -4,7 +4,7 @@ Producer JS
 The `producer` module extends Grammar classes, adding a `produce()` method 
 to generate target code for the node.
 
-The comp1iler calls the `.produce()` method of the root 'Module' node 
+The compiler calls the `.produce()` method of the root 'Module' node 
 in order to return the compiled code for the entire tree.
 
 We extend the Grammar classes, so this module require the `Grammar` module.
@@ -34,7 +34,6 @@ as the new 'export default' (instead of 'module.exports')
 
         end if
 
-        //.out firstLine
         for each statement in .statements
           statement.produce()
         .out NL
@@ -147,7 +146,7 @@ called above, pre-declare vars from 'into var x' assignment-expression
 
         .varRef.produce()
         if .varRef.executes, return #if varRef already executes, nothing more to do
-        .out "()" #add (), so JS executes de function call
+        .out "()" #add (), so JS executes the function call
 
 
 ### append to class Grammar.Operand ###

@@ -93,7 +93,43 @@ go to [LiteScript Online Playground](http://luciotato.github.io/LiteScript_onlin
 
 3. Continue reading the highlights at [/doc](/doc)
 
-4. Check a real-use case 
+4. Check a real-use case [#Real-use-cases-so-far]
+
+----
+##Installation
+
+```
+sudo npm install -g litescript
+```
+See [#Development Environment] for a complete installation.
+
+
+##Usage
+Primary usage is from the command line, to compile a project, a single file or to run a script:
+
+To compile a project: `lite -compile mainModule.lite.md [options]`
+
+To run a script: `lite -run mainModule.lite.md [options]`
+
+###Options:
+
+  -r, -run         compile & run .lite.md file
+  -c, -compile     compile project, mainModule & all dependent files
+  -o dir           output dir. Default is '.'
+  -b, -browser     compile for a browser environment (window instead of global, no process, etc)
+  -v, -verbose     verbose level, default is 1 (0-2)
+  -w, -warning     warning level, default is 1 (0-1)
+  -comments        comment level on generated files, default is 1 (0-2)
+  -version         print LiteScript version & exit
+
+  Advanced options:
+  -es6, --harmony  used with -run, uses node --harmony
+  -s,  -single     compile single file. do not follow import/require() calls
+  -nm, -nomap      do not generate sourcemap
+  -noval           skip name validation
+  -u, -use vX.Y.Z  select LiteScript Compiler Version to use (devel)
+  -d, -debug       enable full compiler debug log file at 'out/debug.log'
+  -run -debug      when -run used with -debug, launch compiled file with: node --debug-brk 
 
 ----
 ###Real use cases so far 
