@@ -20,7 +20,7 @@
 - Genereate readable javascript code.
 - Catch typos in object members **in the compilation phase**. Is too time-expensive to debug subtle bugs caused by mistyped member names in javascript.
 - Allow an easy context-switch in the coder's mind between programming languages.
-  - Try to use the same meaning for the same symbols when the symbol is used in javascript, CoffeScript, Phyton, C, C#, JAVA, SQL.
+  - Try to use the same meaning for the same symbols when the symbol is used in javascript, CoffeScript, Python, C, C#, JAVA, SQL.
   - Use js and EcmaScript 6 syntax when available.
   - Embrace javascript prototypal inheritance. "class" is just syntax sugar.
 
