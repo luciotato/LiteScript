@@ -6,10 +6,10 @@ will generate the v0.6 compiler, supporting v0.6 SYNTAX.
 
 Actually, v0.6 compiler is able to compile itself.
 
-##IMPORTANT: development is made at /devel/source-v0.6
+###IMPORTANT: development is made at /devel/source-v0.6
 
-Ig you're reading /source/, it's just a snapshot of the las release.
-Do NOT work on /source/, work on /devel/source-v0.6/.
+If you're reading /source/, it's just a snapshot of the last release.
+Do NOT work on /source/, work on /devel/source-v0.6/
 
 
 v0.6 SYNTAX
@@ -26,7 +26,9 @@ New syntax method x [not enumerable, configurable]-> js:Object.defineProperty
 
 
 ###TO DO:
+
 PropertyDeclaration:
+
     [enumerable][read-only] property IDENTIFIER ["=" value-Expression]
                 [get ":" get-FunctionDeclaration]
                 [set ":" set-FunctionDeclaration]
