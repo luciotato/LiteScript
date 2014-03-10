@@ -43,11 +43,12 @@ node lite-js -use v${PREV} -noval -nomap -comments 0 -compile ../source-v${VERSI
 cp -u lite ${out}/lib/lite
 chmod 777 ${out}/lib/lite
 
+#test-extra - run all files named extra-check*.lite.md
+${out}/lib/lite -es6 -run test-extras
+
 #test compiler at ${out}/lib
 node test -compiler-path ./${out}/lib
 
-#test-extra - run all files named .lite.md
-${out}/lib/lite -es6 -run test-extras
-
 echo files created at: ${out}/
 
+bash ./copy-to-main

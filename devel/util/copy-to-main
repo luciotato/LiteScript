@@ -17,16 +17,17 @@ cd ../source-v${VERSION}
 SRCVRS=$(pwd)
 cd -
 
-echo ---
+echo ---------------
+echo UPDATE MAIN DIR: /source /lib
+echo ---------------
 echo "MAIN ${MAIN}"
 echo "SRC VERSION ${SRCVRS}"
+echo ---------------
 
-echo copy /out/lib to main dir /lib
+echo COPY /out/lib to main dir /lib
 mkdir -p ${MAIN}/lib
 rm ${MAIN}/lib/*
 cp -p out/lib/* ${MAIN}/lib/
-
-echo update main dir/source
 
 # delete deleted
 cd ${MAIN}/source
@@ -40,7 +41,8 @@ for file in *.md; do
 done
 
 # update newer sources
-echo ${SRCVRS}/ to $(pwd)
+echo UPDATE /source 
+echo from ${SRCVRS}/ to $(pwd)
 cp -uvp ${SRCVRS}/*.lite.md .
 
 cd ${CWD}

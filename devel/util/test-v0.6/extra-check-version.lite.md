@@ -3,12 +3,19 @@ check-version.lite.md
     global import fs, path
     global declare __dirname
 
-read version fom package.json and from lib/out/lite -v
+read version fom package.json, compiler.js and from lib/out/lite -v 
 
     print __dirname
     var package = require(path.join(__dirname,'../../../package.json'))
     declare valid package.version
-    print "package version", package.version
+    print "VERSION: |",package.version,"| <-- package.json"
+
+    var requireCompilerVersion = require('../out/lib/Compiler').version;
+    print "VERSION: |",requireCompilerVersion,"| <-- require('litescript') (Compiler.lite.md)"
+
+    if requireCompilerVersion isnt package.version
+        print "VERSION MISMATCH!"
+        process.exit 1
 
     var exec = require('child_process').exec;
 
@@ -18,13 +25,12 @@ read version fom package.json and from lib/out/lite -v
     print cmd
     exec cmd -> err, stdout, stderr
         var cliVersion = stdout.toString().replace(/[\s\n\r]/g,"")
-        print "CLI VERSION: ",cliVersion
+        print "VERSION: |",cliVersion,"| <-- lite-cli.md)"
         if err
             declare valid err.code
             print "exit code", err.code
             process.exit err.code or 1
 
-        print "VERSION: pkg:|",package.version,"|/ cli:|",cliVersion,"|"
         if cliVersion isnt package.version
             print "VERSION MISMATCH!"
             process.exit 1
