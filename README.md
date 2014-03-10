@@ -1,7 +1,6 @@
+<p align=right><img src="https://travis-ci.org/luciotato/LiteScript.png?branch=master" /></p>
 ###LiteScript is a highly-readable language that compiles to javascript
-<img style="float: right" src="https://travis-ci.org/luciotato/LiteScript.png?branch=master" />
 ##Design considerations
-
 - More hours are expended *reading* and *debugging* code, than *writing* it.
 - Code should be [easy to read and follow](http://luciotato.svbtle.com/keep-your-mind-at-full-speed-avoid-branch-mispredictions).
 - Programmer intention and code effects should be clear and explicit
