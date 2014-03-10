@@ -1,9 +1,5 @@
-<p align=right>
-[![Build Status](https://travis-ci.org/luciotato/LiteScript.png?branch=master)](https://travis-ci.org/luciotato/LiteScript)
-</p>
-
 ###LiteScript is a highly-readable language that compiles to javascript
-
+<img style="float: right" src="https://travis-ci.org/luciotato/LiteScript.png?branch=master" />
 ##Design considerations
 
 - More hours are expended *reading* and *debugging* code, than *writing* it.
