@@ -5,22 +5,51 @@ in dir "./src" to dir "./out"
 
 You can use this script as a base to create a Grunt task.
 
-Main API used functions are:
+Main API functions are:
+
+#### compiler.compile 
 
  - `compiler.compile(filepath,sourceLines,options)`
 
-returns: string
+Will compile `sourceLines` returning a string with compiled js code.
 
-input: 
-    - `filepath`: source code filename, to reference it in compiler errors
-    - `sourceLines`: string, string array, or Buffer
-    - `options`:
+Returns: string
+
+Input: 
+
+  - `filepath`: source code filename, only to reference it in compiler errors
+
+  - `sourceLines`: string, string array, or Buffer
+
+  - `options`:
+
+   - verbose: 1 # Additional messages during compilation. set to 0.
+
+   - warning: 1 # show warnings, 0: do not show warnings
+
+   - comments: 1 # add comments to js produced file. set to 0.
+
+   - target: 'js' 
+
+   - single: false # single file: when true dependencies are not compiled. Set to true, for single file compilation.
+
+   - skip: false # Skip validation phase. set to true
+
+   - nomap: false #do nor generate mapSource.
+   
+   - browser:false #compile for browser: "window" instead fo "global"
+
+   - extraComments: true #add 'compiled by' comment
+
+   - es6: false # enable ES6 features. required for 'yield'(nice functions) 
+
     
+#### compiler.getMessages()
 
-Will compile `sourceLines` (can be a string, 
+if `compiler.compile(filepath,sourceLines,options)` throws, use 
+`compiler.getMessages()` to retrieve compiler error & warning messages.
 
-- `compiler.getMessages()`
-
+### Full example:
 
     var fs = require('fs'),path=require('path');
 
