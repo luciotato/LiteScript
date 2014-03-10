@@ -10,11 +10,11 @@ Returns: string
 
 Input: 
 
-  - filename: source code filename, only to include it in compiler errors
+  - filename: source code filename, only to include in compiler errors
 
   - sourceLines: string, string array, or Buffer
 
-  - options:
+  - default options:
 
    - verbose: 1 # Additional messages during compilation. set to 0.
 
@@ -24,13 +24,13 @@ Input:
 
    - target: 'js' 
 
-   - single: false # single file: when true dependencies are not compiled. Set to true, for single file compilation.
+   - single: false # Set to true, for single file compilation (dependencies are not compiled)
 
    - storeMessages: false # set to true to store compiler messages. retrieve messages with *getMessages()*.
 
-   - skip: false # Skip validation phase. set to true
+   - skip: false # Skip validation phase. set to true fro single file compilation.
 
-   - nomap: false #do nor generate mapSource.
+   - nomap: false #do not generate mapSource.
    
    - browser:false #compile for browser: "window" is the global scope instead of "global"
 
@@ -112,7 +112,7 @@ You can use this script as a base to create a Grunt task.
 
 
 
-##Compiling from the browser 
+##Compiling in the browser 
 
 you need to emulate "require()"
 
