@@ -1,15 +1,8 @@
 ##Compiling from javascript (node.js)
 
-Here's a node.js example script you can use to compile all .lite.md files 
-in dir "./src" to dir "./out"
+###Main API functions are:
 
-You can use this script as a base to create a Grunt task.
-
-Main API functions are:
-
-#### compiler.compile 
-
- - `compiler.compile(filepath,sourceLines,options)`
+#### compile (filename,sourceLines,options)
 
 Will compile `sourceLines` returning a string with compiled js code.
 
@@ -17,11 +10,11 @@ Returns: string
 
 Input: 
 
-  - `filepath`: source code filename, only to reference it in compiler errors
+  - filename: source code filename, only to include it in compiler errors
 
-  - `sourceLines`: string, string array, or Buffer
+  - sourceLines: string, string array, or Buffer
 
-  - `options`:
+  - options:
 
    - verbose: 1 # Additional messages during compilation. set to 0.
 
@@ -33,23 +26,32 @@ Input:
 
    - single: false # single file: when true dependencies are not compiled. Set to true, for single file compilation.
 
+   - storeMessages: false # set to true to store compiler messages. retrieve messages with *getMessages()*.
+
    - skip: false # Skip validation phase. set to true
 
    - nomap: false #do nor generate mapSource.
    
-   - browser:false #compile for browser: "window" instead fo "global"
+   - browser:false #compile for browser: "window" is the global scope instead of "global"
 
    - extraComments: true #add 'compiled by' comment
 
    - es6: false # enable ES6 features. required for 'yield'(nice functions) 
 
     
-#### compiler.getMessages()
+#### getMessages()
 
-if `compiler.compile(filepath,sourceLines,options)` throws, use 
-`compiler.getMessages()` to retrieve compiler error & warning messages.
+returns: string array
+
+if `compile(filepath,sourceLines,options)` throws, use 
+`getMessages()` to retrieve compiler error & warning messages.
 
 ### Full example:
+Here's a node.js example script you can use to compile all .lite.md files 
+in dir "./src" to dir "./out"
+
+You can use this script as a base to create a Grunt task.
+
 
     var fs = require('fs'),path=require('path');
 
