@@ -25,6 +25,9 @@
   "bin": {
       "lite": "./lib/lite"
   },
+  "scripts": {
+  "test": "bash test.sh"
+  },
   "preferGlobal": true,
   "dependencies" : {
      "nicegen" : ">=0.1.3" 
