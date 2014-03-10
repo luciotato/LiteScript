@@ -1,7 +1,25 @@
 ##Compiling from javascript (node.js)
 
-Here's a node.js script you can use to compile all .lite.md files 
-in dir ./src to dir ./out
+Here's a node.js example script you can use to compile all .lite.md files 
+in dir "./src" to dir "./out"
+
+You can use this script as a base to create a Grunt task.
+
+Main API used functions are:
+
+ - `compiler.compile(filepath,sourceLines,options)`
+
+returns: string
+
+input: 
+    - `filepath`: source code filename, to reference it in compiler errors
+    - `sourceLines`: string, string array, or Buffer
+    - `options`:
+    
+
+Will compile `sourceLines` (can be a string, 
+
+- `compiler.getMessages()`
 
 
     var fs = require('fs'),path=require('path');
