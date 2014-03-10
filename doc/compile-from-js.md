@@ -28,9 +28,9 @@ Input:
 
    - storeMessages: false # set to true to store compiler messages. retrieve messages with *getMessages()*.
 
-   - skip: false # Skip validation phase. set to true fro single file compilation.
+   - skip: false # Skip validation phase. set to true for single file compilation.
 
-   - nomap: false #do not generate mapSource.
+   - nomap: false #do not generate source map.
    
    - browser:false #compile for browser: "window" is the global scope instead of "global"
 
