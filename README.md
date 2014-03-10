@@ -1,3 +1,7 @@
+<p align=right>
+[![Build Status](https://travis-ci.org/luciotato/LiteScript.png?branch=master)](https://travis-ci.org/luciotato/LiteScript)
+</p>
+
 ###LiteScript is a highly-readable language that compiles to javascript
 
 ##Design considerations
@@ -23,6 +27,18 @@
   - Try to use the same meaning for the same symbols when the symbol is used in javascript, CoffeScript, Python, C, C#, JAVA, SQL.
   - Use js and EcmaScript 6 syntax when available.
   - Embrace javascript prototypal inheritance. "class" is just syntax sugar.
+
+##Why?
+
+I've reached a point, in pure js projects, at which refactoring code gets too risky. 
+It's far too easy to introduce subtle bugs in pure js, just with a typo.
+After hours lost debugging js code. You end up fearing to alter code that's already tested.
+***I needed a tool to ease up javascript production and also to catch common 
+errors in a compilation phase, avoiding long debugging hours.***
+
+**Good Start**: By migrating a few projects to LiteScript I've found bugs lurking in js code I believe was bug-free. 
+Also with LiteScript I found myself coding faster, fearless, trusting LiteScript compiler to catch typos 
+and object misuse. 
 
 ------
 
