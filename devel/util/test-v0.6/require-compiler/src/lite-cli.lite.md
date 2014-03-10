@@ -3,7 +3,7 @@
     global import path,fs
     import Args
 
-    var VERSION = '0.6.5'
+    var VERSION = '0.6.3'
 
 ## usage, module vars
 
@@ -224,7 +224,6 @@ for require() to look at the same dirs as at runtime
             declare valid module.constructor._nodeModulePaths
             module.filename = path.resolve(filename)
             module.paths = module.constructor._nodeModulePaths(path.dirname(module.filename))
-            __dirname = path.dirname(module.filename)
 
 set process.argv to parameters after --run filename
 

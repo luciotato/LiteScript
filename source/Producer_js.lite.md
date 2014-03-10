@@ -83,7 +83,7 @@ To ease reading of compiled code, add original Lite line as comment
         if .lexer.options.comments
           if .lexer.out.lastOriginalCodeComment<.lineInx
             if not (.statement.constructor in [
-                Grammar.PrintStatement, Grammar.VarStatement, Grammar.CompilerStatemendet
+                Grammar.PrintStatement, Grammar.VarStatement, Grammar.CompilerStatement
                 Grammar.DeclareStatement,Grammar.AssignmentStatement, Grammar.ReturnStatement
                 Grammar.PropertiesDeclaration, Grammar.FunctionCall
               ])

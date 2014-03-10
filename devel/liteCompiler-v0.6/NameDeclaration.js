@@ -1,3 +1,5 @@
+//Compiled by LiteScript compiler v0.6.3, source: /home/ltato/LiteScript/devel/source-v0.6/NameDeclaration.lite.md
+
 //Dependencies
 //------------
 
@@ -21,7 +23,6 @@
       //value
       //isForward
       //isDummy
-
 
      this.name = name;
      this.members = {};
@@ -124,9 +125,8 @@
        //for each member in Object.keys(realNameDecl.members)
        var _list2=Object.keys(realNameDecl.members);
        for( var member__inx=0,member ; member__inx<_list2.length ; member__inx++){member=_list2[member__inx];
-       
          this.addMember(member, {replaceSameName: true});
-       }; // end for each in Object.keys(realNameDecl.members)
+       };//end for each in Object.keys(realNameDecl.members)
 
        this.isForward = realNameDecl.isForward;
 
@@ -166,12 +166,11 @@
         //#other nameDecl pointing here are redirected
        //for each other in NameDeclaration.allOfThem
        for( var other__inx=0,other ; other__inx<NameDeclaration.allOfThem.length ; other__inx++){other=NameDeclaration.allOfThem[other__inx];
-       
            //if other.members is thisMembers
            if (other.members === thisMembers) {
                other.members = nameDecl.members;
            };
-       }; // end for each in NameDeclaration.allOfThem
+       };//end for each in NameDeclaration.allOfThem
        
     };
 
@@ -238,7 +237,7 @@
 
        //default options =
        if(!options) options={};
-       // options.scopeCase: undefined
+       //options.scopeCase: undefined
 
        debug("addMember: '" + nameDecl.name + "' to '" + this.name + "'");// #[#{.constructor.name}] name:
 
@@ -349,10 +348,9 @@
 //## Namespace (singleton) properties
 
    //Append to namespace NameDeclaration
-   
       //properties
         //allOfThem: NameDeclaration array = [] #array with all NameDeclarations created
-     NameDeclaration.allOfThem=[];
+         NameDeclaration.allOfThem=[];
      
 
 
@@ -402,7 +400,5 @@
 
 
 
-module.exports=NameDeclaration;
 
-//Compiled by LiteScript compiler v0.5.0, source: /home/ltato/LiteScript/devel/source-v0.6/NameDeclaration.lite.md
-//# sourceMappingURL=NameDeclaration.js.map
+module.exports=NameDeclaration;

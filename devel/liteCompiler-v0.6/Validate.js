@@ -1,3 +1,4 @@
+//Compiled by LiteScript compiler v0.6.3, source: /home/ltato/LiteScript/devel/source-v0.6/Validate.lite.md
 //Name Validation
 //===============
 
@@ -116,46 +117,28 @@
 //`declare on myObj prop1,prop2` statement to dismiss the 'UNDECLARED PROPERTY' warnings.
 
 //Example:
-
-
 //  class ClassA
-
 //    properties
 //      classAProp1, classAProp2
-
 //    method methodA
 //      this.classAProp1 = 11
 //      this.classAProp2 = 12
-
 //  class ClassB
-
 //    properties
 //      classBProp1, classBProp2
-
 //    method methodB
 //      this.classBProp1 = 21
-
 //  var instanceB = new ClassB // implicit type
-
 //  instanceB.classBprop1 = 5 // <-- this **will be caught** as "case mismatch" since classBprop1 is defined as classBProp1
-
 //  var bObj = instanceB // simple assignment, implicit type
-
 //  bObj.classAProp1 = 5 // <-- this **will be caught** as: object 'bObj' has no property 'classAProp1'
-
 //  var xObj = callToFn() // unknown type
-
 //  xObj.classBProp1 = 5 // <-- this trigger a "classBProp1 IS NOT A DECLARED PROPERTY OF xObj"
-
 //  declare on xObj  // <-- this fixes it
 //    classBProp1
-
 //  xObj.classBProp1 = 5 // <-- this is OK now
-
 //  var xObj:ClassB = callToFn() // type annotation, this also fixes it
-
 //  bObj.classBProp1 = 5 // <-- this is ok
-
 
 
    //export function validate()
@@ -199,7 +182,6 @@
 
          //for each node in moduleNode.requireCallNodes
          for( var node__inx=0,node ; node__inx<moduleNode.requireCallNodes.length ; node__inx++){node=moduleNode.requireCallNodes[node__inx];
-         
 
            //if node.importedModule
            if (node.importedModule) {
@@ -268,7 +250,7 @@
                reference.makePointTo(node.importedModule.exports);
              };
            };
-         }; // end for each in moduleNode.requireCallNodes
+         };//end for each in moduleNode.requireCallNodes
          
          }
        //end for each property
@@ -301,7 +283,7 @@
                //if nameDecl.processConvertTypes(), converted++
                if (nameDecl.processConvertTypes()) {
                    converted++};
-           }}; // end for each in NameDeclaration.allOfThem
+           }};//end for each in NameDeclaration.allOfThem
 
            //if no converted, break #exit if no conversions made
            if (!converted) {
@@ -320,7 +302,6 @@
 
          //for each nameDecl in NameDeclaration.allOfThem
          for( var nameDecl__inx=0,nameDecl ; nameDecl__inx<NameDeclaration.allOfThem.length ; nameDecl__inx++){nameDecl=NameDeclaration.allOfThem[nameDecl__inx];
-         
 
            var type = nameDecl.findOwnMember('**proto**');
            //if type and type isnt instanceof NameDeclaration
@@ -331,7 +312,7 @@
                    log.error(type.positionText(), "for reference: type declaration position");
                };
            };
-         }; // end for each in NameDeclaration.allOfThem
+         };//end for each in NameDeclaration.allOfThem
          
        };
 
@@ -354,7 +335,6 @@
 
        //for each nameDecl in NameDeclaration.allOfThem
        for( var nameDecl__inx=0,nameDecl ; nameDecl__inx<NameDeclaration.allOfThem.length ; nameDecl__inx++){nameDecl=NameDeclaration.allOfThem[nameDecl__inx];
-       
 
            //if nameDecl.isForward and not nameDecl.isDummy
            if (nameDecl.isForward && !(nameDecl.isDummy)) {
@@ -370,7 +350,7 @@
                      log.warning("" + (container.positionText()) + " more info: '" + nameDecl.name + "' of '" + (container.varRef.toString()) + "'")};
                };
            };
-       }; // end for each in NameDeclaration.allOfThem
+       };//end for each in NameDeclaration.allOfThem
        
    };
    //export
@@ -542,7 +522,6 @@
 //##Additions to NameDeclaration. Helper methods to do validation
 
    //append to class NameDeclaration
-   
 
     //helper method findMember(name) returns NameDeclaration
     NameDeclaration.prototype.findMember = function(name){
@@ -629,7 +608,7 @@
                              };
                        };
                    };
-           }}; // end for each in Object.getOwnPropertyNames(obj)
+           }};//end for each in Object.getOwnPropertyNames(obj)
            
        };
     };
@@ -830,7 +809,6 @@
 //## Helper methods added to AST Tree
 
    //append to class ASTBase
-   
 
     //helper method declareName(name, options)
     ASTBase.prototype.declareName = function(name, options){
@@ -854,8 +832,8 @@
 
        //default options =
        if(!options) options={};
-       // options.informError: undefined
-       // options.isForward: undefined
+       //options.informError: undefined
+       //options.isForward: undefined
 
        var found = nameDecl.findMember(name);
 
@@ -959,9 +937,9 @@
 
        //default options=
        if(!options) options={};
-       // options.informError: undefined
-       // options.isForward: undefined
-       // options.isDummy: undefined
+       //options.informError: undefined
+       //options.isForward: undefined
+       //options.isDummy: undefined
 
 
 //Search the scope
@@ -1170,7 +1148,7 @@
 
        //default options=
        if(!options) options={};
-       // options.informError: undefined
+       //options.informError: undefined
 
        var toNamespace = undefined, classRef = undefined;
        var ownerDecl = undefined;
@@ -1252,7 +1230,6 @@
 //## Methods added to specific Grammar Classes to handle scope, var & members declaration
 
    //append to class Grammar.VariableDecl ###
-   
 
 //`VariableDecl: Identifier (':' dataType-IDENTIFIER) ('=' assignedValue-Expression)`
 
@@ -1304,18 +1281,16 @@
 
 
    //append to class Grammar.VarStatement ###
-   
 
     //method declare()  # pass 1
     Grammar.VarStatement.prototype.declare = function(){// # pass 1
        //for each varDecl in .list
        for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
-       
            varDecl.declareInScope();
            //if .export, .addToExport varDecl.nameDecl, .default
            if (this.export) {
                this.addToExport(varDecl.nameDecl, this.default)};
-       }; // end for each in this.list
+       };//end for each in this.list
        
     };
 
@@ -1323,15 +1298,13 @@
     Grammar.VarStatement.prototype.evaluateAssignments = function(){// # pass 4, determine type from assigned value
        //for each varDecl in .list
        for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
-       
            varDecl.getTypeFromAssignedValue();
-       }; // end for each in this.list
+       };//end for each in this.list
        
     };
 
 
    //append to class Grammar.WithStatement ###
-   
 
       //properties nameDecl
 
@@ -1347,7 +1320,6 @@
 
 
    //append to class Grammar.ImportStatementItem ###
-   
 
       //properties nameDecl
 
@@ -1363,7 +1335,6 @@
 
 //----------------------------
    //append to class Grammar.ClassDeclaration ### also AppendToDeclaration (child class)
-   
 //Classes contain a code block with properties and methods definitions.
 
      //     properties
@@ -1422,7 +1393,6 @@
 //------------
 
    //append to class Grammar.ObjectLiteral ###
-   
      //properties nameDecl
 
     //method declare
@@ -1438,7 +1408,6 @@
 
 
    //append to class Grammar.NameValuePair ###
-   
 
      //properties nameDecl
 
@@ -1463,7 +1432,6 @@
     };
 
    //append to class Grammar.FunctionDeclaration ###
-   
 //`FunctionDeclaration: '[export][generator] (function|method|constructor) [name] '(' FunctionParameterDecl* ')' Block`
 
      //properties nameDecl, declared:boolean, scope:NameDeclaration
@@ -1535,9 +1503,8 @@
      if (this.paramsDeclarations) {
        //for each varDecl in .paramsDeclarations
        for( var varDecl__inx=0,varDecl ; varDecl__inx<this.paramsDeclarations.length ; varDecl__inx++){varDecl=this.paramsDeclarations[varDecl__inx];
-       
          varDecl.declareInScope();
-       }; // end for each in this.paramsDeclarations
+       };//end for each in this.paramsDeclarations
        
      };
     };
@@ -1632,7 +1599,6 @@
 
 
    //append to class Grammar.PropertiesDeclaration ###
-   
 
      //properties nameDecl, declared:boolean, scope:NameDeclaration
 
@@ -1646,9 +1612,8 @@
 
            //for each varDecl in .list
            for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
-           
                varDecl.nameDecl = varDecl.addMemberTo(owner, varDecl.name, {type: varDecl.type, itemType: varDecl.itemType});
-           }; // end for each in this.list
+           };//end for each in this.list
 
            this.declared = true;
        };
@@ -1669,16 +1634,14 @@
 
        //for each varDecl in .list
        for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
-       
            varDecl.getTypeFromAssignedValue();
-       }; // end for each in this.list
+       };//end for each in this.list
        
     };
 
 
 
    //append to class Grammar.ForStatement ###
-   
 
     //method declare()
     Grammar.ForStatement.prototype.declare = function(){
@@ -1767,7 +1730,6 @@
 
 
    //append to class Grammar.ExceptionBlock
-   
 //`ExceptionBlock: (exception|catch) catchVar-IDENTIFIER Body [finally Body]`
 
      //method declare()
@@ -1781,7 +1743,6 @@
 
 
    //append to class Grammar.NamespaceDeclaration
-   
 
     //method declare()
     Grammar.NamespaceDeclaration.prototype.declare = function(){
@@ -1823,7 +1784,6 @@
 
 
    //append to class Grammar.VariableRef ### Helper methods
-   
 
 //`VariableRef: ['--'|'++']Identifier[Accessors]['--'|'++']`
 
@@ -1848,7 +1808,6 @@
 
        //for each ac in .accessors
        for( var ac__inx=0,ac ; ac__inx<this.accessors.length ; ac__inx++){ac=this.accessors[ac__inx];
-       
             //declare valid ac.name
 
 //for PropertyAccess, check if the property name is valid
@@ -1881,7 +1840,7 @@
            //if no actualVar, break
            if (!actualVar) {
                break};
-       }; // end for each in this.accessors
+       };//end for each in this.accessors
 
        //end for #each accessor
 
@@ -1897,7 +1856,7 @@
 
        //default options=
        if(!options) options={};
-       // options.informError: undefined
+       //options.informError: undefined
 
 //Start with main variable name
 
@@ -1916,7 +1875,6 @@
 
        //for each ac in .accessors
        for( var ac__inx=0,ac ; ac__inx<this.accessors.length ; ac__inx++){ac=this.accessors[ac__inx];
-       
             //declare valid ac.name
 
 //for PropertyAccess
@@ -1952,7 +1910,7 @@
            else {
              partial += ac.toString();
            };
-       }; // end for each in this.accessors
+       };//end for each in this.accessors
 
        //end for #each accessor
 
@@ -1974,7 +1932,6 @@
 
 
    //append to class Grammar.AssignmentStatement ###
-   
 
     //method declareByAssignment()
     Grammar.AssignmentStatement.prototype.declareByAssignment = function(){
@@ -2018,7 +1975,6 @@
 
        //for each index,ac in varRef.accessors
        for( var index=0,ac ; index<varRef.accessors.length ; index++){ac=varRef.accessors[index];
-       
             //declare valid ac.name
 
 //for PropertyAccess
@@ -2053,7 +2009,7 @@
            else {
              return;// #exit
            };
-       }; // end for each in varRef.accessors
+       };//end for each in varRef.accessors
 
        //end for #each accessor in lvalue, look for module.exports=...
 
@@ -2098,7 +2054,6 @@
 
 
    //append to class Grammar.Expression ###
-   
 
     //helper method getResultType() returns NameDeclaration
     Grammar.Expression.prototype.getResultType = function(){
@@ -2110,7 +2065,6 @@
 
 
    //append to class Grammar.Oper ###
-   
 
 //for 'into var x' oper, we declare the var, and we deduce type
 
@@ -2181,7 +2135,6 @@
 
 
    //append to class Grammar.Operand ###
-   
 
     //helper method getResultType() returns NameDeclaration
     Grammar.Operand.prototype.getResultType = function(){
@@ -2207,7 +2160,6 @@
 
 
    //append to class Grammar.DeclareStatement
-   
     //method declare() # pass 1, declare as props
     Grammar.DeclareStatement.prototype.declare = function(){// # pass 1, declare as props
 
@@ -2232,9 +2184,8 @@
 
          //for each varDecl in .names
          for( var varDecl__inx=0,varDecl ; varDecl__inx<this.names.length ; varDecl__inx++){varDecl=this.names[varDecl__inx];
-         
              this.addMemberTo(reference, varDecl.createNameDeclaration());
-         }; // end for each in this.names
+         };//end for each in this.names
          
      }
 
@@ -2244,7 +2195,6 @@
 
          //for each varDecl in .names
          for( var varDecl__inx=0,varDecl ; varDecl__inx<this.names.length ; varDecl__inx++){varDecl=this.names[varDecl__inx];
-         
 
            varDecl.nameDecl = varDecl.createNameDeclaration();
 
@@ -2271,7 +2221,7 @@
                //do nothing
                null;
            };
-         }; // end for each in this.names
+         };//end for each in this.names
          
      };
     };
@@ -2290,7 +2240,6 @@
 
          //for each varDecl in .names
          for( var varDecl__inx=0,varDecl ; varDecl__inx<this.names.length ; varDecl__inx++){varDecl=this.names[varDecl__inx];
-         
              //if .tryGetFromScope(varDecl.name,{informError:true}) into var mainVar
              var mainVar=undefined;
              if ((mainVar=this.tryGetFromScope(varDecl.name, {informError: true}))) {
@@ -2300,7 +2249,7 @@
                      mainVar.setMember('**proto**', declaredType);
                  };
              };
-         }; // end for each in this.names
+         };//end for each in this.names
          
      }
 
@@ -2310,7 +2259,6 @@
          var actualVar = this.tryGetFromScope(this.varRef.name, {informError: true});
          //for each ac in .varRef.accessors
          for( var ac__inx=0,ac ; ac__inx<this.varRef.accessors.length ; ac__inx++){ac=this.varRef.accessors[ac__inx];
-         
             //declare valid ac.name
 
            //if ac isnt instance of Grammar.PropertyAccess, break
@@ -2331,13 +2279,10 @@
                actualVar.setMember('**proto**', this.type);
                actualVar.processConvertTypes();
            };
-         }; // end for each in this.varRef.accessors
+         };//end for each in this.varRef.accessors
          
      };
     };
 
 
 
-
-//Compiled by LiteScript compiler v0.5.0, source: /home/ltato/LiteScript/devel/source-v0.6/Validate.lite.md
-//# sourceMappingURL=Validate.js.map

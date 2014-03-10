@@ -45,7 +45,7 @@ Dependencies:
 ###global declares, valid properties
 
     declare on Error
-        soft, controled, code, stack
+        soft, controled, code
 
 Implementation
 ---------------

@@ -43,6 +43,11 @@ input:
 output: 
 * string, compiled code
 
+        declare valid options.storeMessages
+        if options.storeMessages
+            log.options.storeMessages = true
+            log.getMessages //clear
+
         var moduleNode = compileModule(filename, sourceLines, options)
 
         return moduleNode.getCompiledText()
@@ -168,6 +173,7 @@ normalize options
             mainModuleName: filename
             basePath: undefined
             outBasePath: options.outDir
+
 
 Initialize this project. Project has a cache for required modules. 
 As with node's `require` mechanism, a module, 
@@ -365,10 +371,10 @@ Handle errors, add stage info, and stack
             #show last soft error. Can be useful to pinpoint the problem
             if moduleNode.lexer.softError, log.message "previous soft-error: #{moduleNode.lexer.softError.message}"
 
-            if process #we're in node.js
-                process.exit(1) 
-            else
-                throw err
+            //if process #we're in node.js
+            //    process.exit(1) 
+            //else
+            throw err
 
 #### method createNewModule(fileInfo) returns Grammar.Module
 
@@ -597,6 +603,13 @@ Add the extension for all appropriate file types. Don't overwrite `.md` in case 
           require.extensions['.lite'] = extension_LoadLS
           require.extensions['.md'] = extension_LoadLS
 
+
+##Helper module functions
+
+### public function getMessages() returns string array
+if compile() throws, call getMessages() to retrieve compiler messages
+
+        return log.getMessages();
 
 
 ##Add helper properties and methods to AST node class Module

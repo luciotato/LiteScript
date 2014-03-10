@@ -1,3 +1,4 @@
+//Compiled by LiteScript compiler v0.6.3, source: /home/ltato/LiteScript/devel/source-v0.6/log.lite.md
 //Log Utility
 //============
 //(c) 2014 Lucio M. Tato
@@ -54,7 +55,7 @@
 //###global declares, valid properties
 
     //declare on Error
-        //soft, controled, code, stack
+        //soft, controled, code
 
 //Implementation
 //---------------
@@ -84,7 +85,6 @@
    module.exports.debug=debug;
 
    //append to namespace debug
-   
     //method clear ### clear debug file
     debug.clear = function(){// ### clear debug file
 
@@ -126,10 +126,9 @@
 
 
    //append to namespace error #to the function as namespace
-   
         //properties
             //count = 0  # now we have: log.error.count
-       error.count=0;
+           error.count=0;
        
 
 
@@ -163,10 +162,9 @@
    module.exports.warning=warning;
 
    //append to namespace warning #to the function as namespace
-   
         //properties
             //count = 0  # now we have: log.warning.count
-       warning.count=0;
+           warning.count=0;
        
 
    //export function message
@@ -232,6 +230,3 @@
    //export
    module.exports.throwControled=throwControled;
 
-
-//Compiled by LiteScript compiler v0.5.0, source: /home/ltato/LiteScript/devel/source-v0.6/log.lite.md
-//# sourceMappingURL=log.js.map

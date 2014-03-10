@@ -95,6 +95,10 @@ go to [LiteScript Online Playground](http://luciotato.github.io/LiteScript_onlin
 
 4. Install and start enjoying
 
+5. Check additional documentation
+  
+  - [Javascript API Example] (doc/compile-from-js.md)
+
 ----
 ##Installation
 

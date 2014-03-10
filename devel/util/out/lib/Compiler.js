@@ -12,6 +12,11 @@
    var Environment = require('./Environment');
    var Producer_js = require('./Producer_js');
    function compile(filename, sourceLines, options){
+       
+       if (options.storeMessages) {
+           log.options.storeMessages = true;
+           log.getMessages();
+       };
        var moduleNode = compileModule(filename, sourceLines, options);
        return moduleNode.getCompiledText();
    };
@@ -162,12 +167,7 @@
            log.error(err.message);
            if (moduleNode.lexer.softError) {
                log.message("previous soft-error: " + moduleNode.lexer.softError.message)};
-           if (process) {
-               process.exit(1);
-           }
-           else {
-               throw err;
-           };
+           throw err;
        };
     };
     Project.prototype.createNewModule = function(fileInfo){
@@ -292,6 +292,11 @@
    };
    
    module.exports.registerRequireExtensions=registerRequireExtensions;
+   function getMessages(){
+       return log.getMessages();
+   };
+   
+   module.exports.getMessages=getMessages;
    
     
     Grammar.Module.prototype.getCompiledLines = function(){
