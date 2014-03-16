@@ -286,7 +286,7 @@
            else if (item.COMMENT !== undefined) {
              if (this.lexer.options.comments) {
                  if (typeof item !== 'string' || !(item.COMMENT.startsWith("//"))) {
-                     this.lexer.out.put("//")};
+                     this.lexer.out.put("// ")};
                  this.out(item.COMMENT);
              };
            }
@@ -325,7 +325,7 @@
        };
        var prepend = "";
        if (preComment || !(line.text.startsWith("//"))) {
-           prepend = "//"};
+           prepend = "// "};
        if (!this.lexer.out.currLine) {
            prepend = String.spaces(line.indent) + prepend};
        if (preComment || line.text) {
