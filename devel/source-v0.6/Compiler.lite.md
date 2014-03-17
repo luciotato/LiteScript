@@ -2,7 +2,7 @@ The LiteScript Compiler Module
 ==============================
 LiteScript is a highly readable language that compiles to JavaScript.
 
-    export var version = '0.6.5'
+    export var version = '0.6.6'
 
 This v0.6 compiler is written in v0.5 syntax. 
 That is, you use the v0.5 compiler to compile this code 
@@ -170,7 +170,6 @@ normalize options
             nomap: undefined
             single: undefined
             browser:undefined
-            extraComments: true
 
             mainModuleName: filename
             basePath: undefined
@@ -417,7 +416,6 @@ We create a empty a empty `.requireCallNodes[]`, to hold:
 
 #### method produceModule(moduleNode:Grammar.Module)
 
-        moduleNode.lexer.out.addSourceAsComment = .options.extraComments
         moduleNode.lexer.out.browser = .options.browser
 
         moduleNode.lexer.out.put "//Compiled by LiteScript compiler v#{version}, source: #{moduleNode.fileInfo.filename}"
