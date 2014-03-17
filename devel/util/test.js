@@ -292,12 +292,14 @@ if (!fsUtil.dirExists(testPath)) testPath=testPath.slice(0,testPath.lastIndexOf(
 
 console.error('Starting tests from dir '+testPath+'/*');
 
-fsUtil.recurseDir(testPath, function(filename){
+var files=fs.readdirSync(testPath);
+for(var i=0;i<files.length;i++){
+	filename=path.join(testPath,files[i]);
 	//console.error(filename,path.extname(filename));
 	if (path.extname(filename)==='.lite'
 		&& (filter===undefined || filename.indexOf(filter)>=0))		 
 			testFile(filename);
-});
+};
 
 separ();
 testOptions.verbose>=1 && console.error('End tests from dir test-'+use);

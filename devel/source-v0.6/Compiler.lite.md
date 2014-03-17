@@ -90,6 +90,8 @@ input:
 output: 
 * moduleNode: Grammar.Module: module's code AST root node 
 
+		default filename = 'unnamed'
+
         var project = new Project(filename, options )
 
         var fileInfo = new Environment.FileInfo(filename)
