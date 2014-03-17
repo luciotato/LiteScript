@@ -170,6 +170,7 @@ normalize options
             nomap: undefined
             single: undefined
             browser:undefined
+            extraComments:1
 
             mainModuleName: filename
             basePath: undefined
@@ -418,8 +419,9 @@ We create a empty a empty `.requireCallNodes[]`, to hold:
 
         moduleNode.lexer.out.browser = .options.browser
 
-        moduleNode.lexer.out.put "//Compiled by LiteScript compiler v#{version}, source: #{moduleNode.fileInfo.filename}"
-        moduleNode.lexer.out.startNewLine
+        if .options.extraComments
+        	moduleNode.lexer.out.put "//Compiled by LiteScript compiler v#{version}, source: #{moduleNode.fileInfo.filename}"
+        	moduleNode.lexer.out.startNewLine
 
         moduleNode.produce 
 

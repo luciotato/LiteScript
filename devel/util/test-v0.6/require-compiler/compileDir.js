@@ -13,7 +13,9 @@
             storeMessages: true,
             single : true,
             nomap : true,
-            noval: true
+            noval: true,
+            comments:0
+            //,extraComments:0
             }
 
         var sourceLines = fs.readFileSync(filepath);
