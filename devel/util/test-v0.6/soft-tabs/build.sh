@@ -1,0 +1,1 @@
+lite -es6 -run dns

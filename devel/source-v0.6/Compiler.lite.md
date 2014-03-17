@@ -314,7 +314,7 @@ save to disk / add to external cache
 
         end for each module cached
 
-        print "#{log.error.count} errors, #{log.warning.count} warnings."
+        log.message "#{log.error.count} errors, #{log.warning.count} warnings."
 
 
 #### method compileFile(filename, moduleNode:Grammar.Module)
