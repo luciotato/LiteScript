@@ -16,7 +16,7 @@ Input:
 
   - default options:
 
-   - verbose: 1 # Additional messages during compilation. set to 0.
+   - verbose: 0 # Additional messages during compilation. 
 
    - warning: 1 # show warnings, 0: do not show warnings
 
