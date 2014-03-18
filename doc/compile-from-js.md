@@ -20,7 +20,9 @@ Input:
 
    - warning: 1 # show warnings, 0: do not show warnings
 
-   - comments: 1 # add comments to js produced file. set to 0.
+   - comments: 1 # add comments to produced .js file. set to 0.
+
+   - extraComments: 1 # when 1, add 'compiled by' source reference comment
 
    - target: 'js' 
 
@@ -33,8 +35,6 @@ Input:
    - nomap: false #do not generate source map.
    
    - browser:false #compile for browser: "window" is the global scope instead of "global"
-
-   - extraComments: true #add 'compiled by' comment
 
    - es6: false # enable ES6 features. required for 'yield'(nice functions) 
 
