@@ -5,27 +5,31 @@
 
     function compileLite(filepath) {
 
-        var compiler=require('litescript');
+    	//if litescript is installed -g and NODE_PATH set, use:
+        //var compiler=require('litescript');
+        var compiler=require('../../../../lib/Compiler');
 
         var options = {
             storeMessages: true,
             single : true,
             nomap : true,
-            verbose : 0,
-            noval: true
+            noval: true,
+            comments:0
+            //,extraComments:0
             }
 
-        var sourceLines = fs.readfileSync(filepath);
+        var sourceLines = fs.readFileSync(filepath);
         
         try {
-            return compiler.compile(filepath,sourceLines,options);
+            //return compiler.compile(filepath,sourceLines,options);
+       		return compiler.compile(undefined,sourceLines,options);
        
         } catch(e) {
 
-            console.log('LiteScript failed to compile.');
+            console.log('ERRORS COMPILING');
             console.log(e.message);
 
-            //compiler warnings and error messages
+            //show compiler warnings and error messages
             var messages = compiler.getMessages();
             for(var n=0;n<messages.length;n++){
                  console.log(messages[n]);
@@ -47,7 +51,7 @@
         console.log(file);
         if (path.extname(file)==='.md'){
             var compiled = compileLite(file);
-            var destFile = path.join(destDir,basename(files[n],'.md')+'.js');
+            var destFile = path.join(destDir, path.basename(files[n],'.md')+'.js');
             fs.writeFileSync(destFile, compiled);
         }
             

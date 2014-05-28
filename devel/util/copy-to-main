@@ -49,7 +49,11 @@ cd ${CWD}
 
 #update extras/sublime
 mkdir -p ${MAIN}/extras/sublime/LiteScript
-cp -uvp /home/ltato/.config/sublime-text-2/Packages/LiteScript/* ${MAIN}/extras/sublime/LiteScript
+if [ -d /home/ltato/.config/sublime-text-2/Packages/LiteScript ]; then 
+	cp -uvp /home/ltato/.config/sublime-text-2/Packages/LiteScript/* ${MAIN}/extras/sublime/LiteScript
+fi
 mkdir -p "${MAIN}/extras/sublime/Theme - Lite Dark"
-cp -uvp "/home/ltato/.config/sublime-text-2/Packages/Theme - Lite Dark"/* "${MAIN}/extras/sublime/Theme - Lite Dark"
+if [ -d "/home/ltato/.config/sublime-text-2/Packages/Theme - Lite Dark" ]; then 
+	cp -uvp "/home/ltato/.config/sublime-text-2/Packages/Theme - Lite Dark"/* "${MAIN}/extras/sublime/Theme - Lite Dark"
+fi
 

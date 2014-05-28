@@ -3,7 +3,7 @@
     global import path,fs
     import Args
 
-    var VERSION = '0.6.5'
+    var VERSION = '0.6.6'
 
 ## usage, module vars
 
@@ -22,7 +22,7 @@
     -c, -compile     compile project, mainModule & all dependent files
     -o dir           output dir. Default is '.'
     -b, -browser     compile for a browser environment (window instead of global, no process, etc)
-    -v, -verbose     verbose level, default is 1 (0-2)
+    -v, -verbose     verbose level, default is 0 (0-2)
     -w, -warning     warning level, default is 1 (0-1)
     -comments        comment level on generated files, default is 1 (0-2)
     -version         print LiteScript version & exit
@@ -53,8 +53,6 @@ Get & process command line arguments
 
         var compileAndRun, mainModuleName, compileAndRunParams:array
 
-        var defaultVerbose = 1
-
 Check for -help
 
         if args.option('h','help') 
@@ -72,7 +70,6 @@ Check for --run
         if args.value('r','run') into mainModuleName
             compileAndRun = true
             compileAndRunParams = args.splice(args.lastIndex) #remove params after --run
-            defaultVerbose = 0
 
 get compiler version to --use
 
@@ -82,8 +79,8 @@ Check for other options
 
         var options = 
             outDir  : path.resolve(args.value('o') or '.') //output dir
-            verbose : Number(args.value('v',"verbose")or defaultVerbose) 
-            warning : Number(args.value('w',"warning")or 1)
+            verbose : Number(args.value('v',"verbose") or 0) 
+            warning : Number(args.value('w',"warning") or 1)
             comments: Number(args.value('comment',"comments") or 1) 
             debug   : args.option('d',"debug") 
             skip    : args.option('noval',"novalidation") // skip name validation

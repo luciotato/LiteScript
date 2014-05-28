@@ -1,6 +1,6 @@
 {
   "name": "litescript",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "LiteScript is a highly readable language that compiles to javascript",
   "keywords": ["alt-js", "language", "simple", "PEG", "compiler"],
   "author": {
@@ -28,9 +28,5 @@
   "scripts": {
   "test": "bash test.sh"
   },
-  "preferGlobal": true,
-  "dependencies" : {
-     "nicegen" : ">=0.1.3" 
-  }
-  
+  "preferGlobal": true
 }

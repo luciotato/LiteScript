@@ -1059,7 +1059,6 @@ It also handles SourceMap generation for Chrome Developer Tools debugger and Fir
       lineNum, column
       currLine:string
       lines:string array
-      addSourceAsComment = true
       lastOriginalCodeComment
       lastOutCommentLine
       sourceMap

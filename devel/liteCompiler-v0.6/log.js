@@ -1,11 +1,11 @@
-//Compiled by LiteScript compiler v0.6.3, source: /home/ltato/LiteScript/devel/source-v0.6/log.lite.md
-//Log Utility
-//============
-//(c) 2014 Lucio M. Tato
+//Compiled by LiteScript compiler v0.6.6, source: /home/ltato/LiteScript/devel/source-v0.6/log.lite.md
+// Log Utility
+// ============
+// (c) 2014 Lucio M. Tato
 
 
-//options
-//-------
+// options
+// -------
 
    var options = {
            verbose: 1, 
@@ -16,19 +16,19 @@
                file: 'out/debug.log'
                }
            };
-   //export
+   // export
    module.exports.options = options;
 
-//if options.storeMessages, messages are pused at messages[]
-//instead of console.
+// if options.storeMessages, messages are pused at messages[]
+// instead of console.
 
    var messages = [];
-   //export
+   // export
    module.exports.messages = messages;
 
 
-//Colors
-//------
+// Colors
+// ------
 
    var color = {
      normal: "\x1b[39;49m", 
@@ -36,42 +36,42 @@
      yellow: "\x1b[93m", 
      green: "\x1b[32m"
      };
-   //export
+   // export
    module.exports.color = color;
 
 
-//Dependencies:
-//-------------
+// Dependencies:
+// -------------
 
-   //if type of process isnt 'undefined' #only import if we're on node
+   // if type of process isnt 'undefined' #only import if we're on node
    if (typeof process !== 'undefined') {// #only import if we're on node
-       //global import fs
+       // global import fs
        var fs = require('fs');
-       //import mkPath
+       // import mkPath
        var mkPath = require('./mkPath');
        
    };
 
-//###global declares, valid properties
+// ###global declares, valid properties
 
-    //declare on Error
-        //soft, controled, code
+    // declare on Error
+        // soft, controled, code
 
-//Implementation
-//---------------
+// Implementation
+// ---------------
 
-    //declare valid Array.prototype.slice.apply
-    //declare valid Array.prototype.join.apply
-    //declare valid console.log.apply
-    //declare valid console.error.apply
+    // declare valid Array.prototype.slice.apply
+    // declare valid Array.prototype.join.apply
+    // declare valid console.log.apply
+    // declare valid console.error.apply
 
-   //export function debug
+   // export function debug
    function debug(){
 
-       //if options.debug.enabled
+       // if options.debug.enabled
        if (options.debug.enabled) {
            var args = Array.prototype.slice.apply(arguments);
-           //if options.debug.file
+           // if options.debug.file
            if (options.debug.file) {
                fs.appendFileSync(options.debug.file, args.join(" ") + "\r\n");
            }
@@ -81,11 +81,11 @@
            };
        };
    };
-   //export
+   // export
    module.exports.debug=debug;
 
-   //append to namespace debug
-    //method clear ### clear debug file
+   // append to namespace debug
+    // method clear ### clear debug file
     debug.clear = function(){// ### clear debug file
 
        mkPath.toFile(options.debug.file);
@@ -93,27 +93,27 @@
     };
 
 
-   //export function error
+   // export function error
    function error(){
 
-//increment error count
+// increment error count
 
        error.count++;
        var args = Array.prototype.slice.apply(arguments);
 
-//add "ERROR:", send to debug log
+// add "ERROR:", send to debug log
 
        args.unshift('ERROR:');
        debug.apply(this, args);
 
-//if messages should be stored...
+// if messages should be stored...
 
-       //if options.storeMessages
+       // if options.storeMessages
        if (options.storeMessages) {
            messages.push(args.join(" "));
        }
 
-//else, add red color, send to stderr
+// else, add red color, send to stderr
        
        else {
            args.unshift(color.red);
@@ -121,35 +121,35 @@
            console.error.apply(console, args);
        };
    };
-   //export
+   // export
    module.exports.error=error;
 
 
-   //append to namespace error #to the function as namespace
-        //properties
-            //count = 0  # now we have: log.error.count
+   // append to namespace error #to the function as namespace
+        // properties
+            // count = 0  # now we have: log.error.count
            error.count=0;
        
 
 
-   //export function warning
+   // export function warning
    function warning(){
 
        warning.count++;
        var args = Array.prototype.slice.apply(arguments);
        args.unshift('WARNING:');
        debug.apply(this, args);
-       //if options.warning > 0
+       // if options.warning > 0
        if (options.warning > 0) {
 
-//if messages should be stored...
+// if messages should be stored...
 
-           //if options.storeMessages
+           // if options.storeMessages
            if (options.storeMessages) {
                messages.push(args.join(" "));
            }
 
-//else, add yellow color, send to stderr
+// else, add yellow color, send to stderr
            
            else {
                args.unshift(color.yellow);
@@ -158,75 +158,75 @@
            };
        };
    };
-   //export
+   // export
    module.exports.warning=warning;
 
-   //append to namespace warning #to the function as namespace
-        //properties
-            //count = 0  # now we have: log.warning.count
+   // append to namespace warning #to the function as namespace
+        // properties
+            // count = 0  # now we have: log.warning.count
            warning.count=0;
        
 
-   //export function message
+   // export function message
    function message(){
 
        debug.apply(this, arguments);
-       //if options.verbose >= 1
+       // if options.verbose >= 1
        if (options.verbose >= 1) {
 
-//if messages should be stored...
+// if messages should be stored...
 
-           //if options.storeMessages
+           // if options.storeMessages
            if (options.storeMessages) {
                messages.push(Array.prototype.join.call(arguments, " "));
            }
 
-//else, send to console
+// else, send to console
            
            else {
                console.log.apply(console, arguments);
            };
        };
    };
-   //export
+   // export
    module.exports.message=message;
 
 
-   //export function extra
+   // export function extra
    function extra(){
 
-       //if options.verbose >= 2
+       // if options.verbose >= 2
        if (options.verbose >= 2) {
            message.apply(this, arguments);
        };
    };
-   //export
+   // export
    module.exports.extra=extra;
 
 
-   //export function getMessages
+   // export function getMessages
    function getMessages(){
-//get & clear
+// get & clear
 
        var result = messages;
        messages = [];
        return result;
    };
-   //export
+   // export
    module.exports.getMessages=getMessages;
 
 
-   //export function throwControled
+   // export function throwControled
    function throwControled(){
-//Throws Error, but with a "controled" flag set,
-//to differentiate from unexpected compiler errors
+// Throws Error, but with a "controled" flag set,
+// to differentiate from unexpected compiler errors
 
        var e = new Error(Array.prototype.slice.apply(arguments).join(" "));
        e.controled = true;
        debug("Controled ERROR:", e.message);
-       //throw e
+       // throw e
        throw e;
    };
-   //export
+   // export
    module.exports.throwControled=throwControled;
 

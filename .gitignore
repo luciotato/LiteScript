@@ -4,11 +4,9 @@
 .SyncIgnore
 
 # This project
-/old/
-*/old/
-/out/
-*/out/
-/liteCompiler-v*/
+old/
+out/
+liteCompiler-v*/
 debug.log
 /devel/liteCompiler-manualC/litelib/build/
 /devel/liteCompiler-manualC/litelib/dist/

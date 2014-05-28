@@ -585,7 +585,7 @@ if the object is an array, resolve with a recursive call
               if .lexer.options.comments #comments level > 0
 
                   # prepend // if necessary
-                  if type of item isnt 'string' or not item.COMMENT.startsWith("//"), .lexer.out.put "//"
+                  if type of item isnt 'string' or not item.COMMENT.startsWith("//"), .lexer.out.put "// "
                   .out item.COMMENT
 
 else, unrecognized object
@@ -634,7 +634,7 @@ validate index
 out as comment
 
         var prepend=""
-        if preComment or not line.text.startsWith("//"), prepend="//"
+        if preComment or not line.text.startsWith("//"), prepend="// "
         if no .lexer.out.currLine, prepend=String.spaces(line.indent)+prepend
         if preComment or line.text, .lexer.out.put prepend+preComment+line.text
 
