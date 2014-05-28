@@ -10,3 +10,7 @@
 */out/
 /liteCompiler-v*/
 debug.log
+/devel/liteCompiler-manualC/litelib/build/
+/devel/liteCompiler-manualC/litelib/dist/
+/devel/liteCompiler-manualC/Ctest/build/
+/devel/liteCompiler-manualC/Ctest/dist/

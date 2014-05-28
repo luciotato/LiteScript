@@ -1,0 +1,4 @@
+gcc -W -Wall -O exception.c -L. -c -o exception.o
+exception.c:26:29: fatal error: exception-local.h: No such file or directory
+compilation terminated.
+make: *** [exception.o] Error 1
