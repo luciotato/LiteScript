@@ -172,14 +172,14 @@ Walk the tree, and call function 'declare' on every node having it.
 'declare' will create scopes, and vars in the scope. 
 May inform 'DUPLICATES' and 'CASE MISMATCH' errors.
 
-        log.message "- Process Declarations"
+        log.info "- Process Declarations"
         walkAllNodesCalling 'declare'
 
 #### Pass 1.1 Declare By Assignment
 Walk the tree, and check assignments looking for: 'module.exports.x=x' and 'x.prototype.y = '.
 Treat them as declarations.
 
-        log.message "- Declare By Assignment"
+        log.info "- Declare By Assignment (support .js syntax, .exports.x=..., .prototype.x=...)"
         walkAllNodesCalling 'declareByAssignment'
 
 
@@ -189,7 +189,7 @@ Make var x point to required module 'y' exports
 
         declare valid project.moduleCache
 
-        log.message "- Connecting Imported"
+        log.info "- Connecting Imported"
         for each own property fname in project.moduleCache
           var moduleNode:Grammar.Module = project.moduleCache[fname]
 
@@ -209,13 +209,14 @@ if node is Grammar.ImportStatementItem
                   declare node:Grammar.ImportStatementItem
                   reference = node.nameDecl
 
-if we processed a 'compiler import command' all exported should go to the global scope
+if we processed a 'global declare' command, all exported should go to the global scope
             
-                  if node.getParent(Grammar.CompilerStatement)
+                  if node.getParent(Grammar.DeclareStatement)
                       for each own property key,nameDecl in node.importedModule.exports.members
                           #declare valid project.root.addToScope
                           project.root.addToScope nameDecl
 
+                      #clear moved exports
                       node.importedModule.exports.members = {}
                       reference = undefined
 
@@ -249,7 +250,7 @@ Since 'append to [class|object] x.y.z' statement can add to any object, we delay
 "Append To" declaration to this point, where 'x.y.z' can be analyzed and a reference obtained.
 Walk the tree, and check "Append To" Methods & Properties Declarations
 
-        log.message "- Processing Append-To"
+        log.info "- Processing Append-To"
         walkAllNodesCalling 'processAppendTo'
 
 
@@ -257,41 +258,47 @@ Walk the tree, and check "Append To" Methods & Properties Declarations
 for each NameDeclaration try to find the declared 'type' (string) in the scope. 
 Repeat until no conversions can be made.
 
-        log.message "- Converting Types"
+        log.info "- Converting Types"
 
-        var totalConverted = 0
-        while totalConverted < NameDeclaration.allOfThem.length
+        #first, try to assign type by "name affinity" 
+        #(only applies when type is not specified)
+        for each nameDecl in NameDeclaration.allOfThem 
+            nameDecl.assignTypebyNameAffinity()
 
-            var converted = 0
+        #now try de-referencing types
+        var pass=0, sumConverted=0, sumFailures=0, lastSumFailures=0
+        #repeat until all converted
+        do
+
+            lastSumFailures = sumFailures
+            sumFailures = 0
+            sumConverted = 0
             
+            #process all, sum conversion failures
             for each nameDecl in NameDeclaration.allOfThem 
-              where not nameDecl.converted
-                if nameDecl.processConvertTypes(), converted++
+                var result = nameDecl.processConvertTypes()
+                sumFailures += result.failures
+                sumConverted += result.converted
+            end for
 
-            if no converted, break #exit if no conversions made
-            totalConverted += converted
+            pass++
+            debug "Pass #{pass}, converted:#{sumConverted}, failures:#{sumFailures}"
 
-            debug "converted:#{converted}, totalConverted:#{totalConverted}"
+        #loop unitl no progress is made
+        loop until sumFailures is lastSumFailures
 
-        #loop
 
 Inform unconverted types as errors
 
-        if totalConverted < NameDeclaration.allOfThem.length
-
+        if sumFailures #there was failures, inform al errors
           for each nameDecl in NameDeclaration.allOfThem
+            nameDecl.processConvertTypes({informError:true})
 
-            var type = nameDecl.findOwnMember('**proto**')
-            if type and type isnt instanceof NameDeclaration
-                nameDecl.sayErr "undeclared type: '#{type.toString()}'"
-                if type instanceof ASTBase
-                    log.error type.positionText(),"for reference: type declaration position"
-            
 #### Pass 3 Evaluate Assignments
 Walk the scope tree, and for each assignment, 
 IF L-value has no type, try to guess from R-value's result type
 
-        log.message "- Evaluating Assignments"
+        log.info "- Evaluating Assignments"
         walkAllNodesCalling 'evaluateAssignments'
 
 #### Pass 4 -Final- Validate Property Access
@@ -299,7 +306,7 @@ Once we have all vars declared and typed, walk the AST,
 and for each VariableRef validate property access.
 May inform 'UNDECLARED PROPERTY'.
 
-        log.message "- Validating Property Access"
+        log.info "- Validating Property Access"
         walkAllNodesCalling 'validatePropertyAccess'
 
 Inform forward declarations not fulfilled, as errors
@@ -348,20 +355,31 @@ Initialize the global scope
         #clear global NameDeclaration list
         NameDeclaration.allOfThem = []
 
-Populate the global scope
+Populate the global scope 
 
-        var objProto = addBuiltInObject('Object')
+        var objProto = addBuiltInObject('Object') #first: Object. Order is important
+        objProto.addMember('__proto__')
         declare valid objProto.members.constructor.addMember
         objProto.members.constructor.addMember('name')
 
-        var stringProto = addBuiltInObject('String')
+        addBuiltInObject 'Function' #second: Function. Order is important
+        #Function is declared here so ':function' properties of "array" or "string"
+        #are properly typified
 
+        var stringProto = addBuiltInObject('String')
+        var arrayProto = addBuiltInObject('Array')
+        #state that String.split returns string array
+        stringProto.members["split"].setMember '**return type**', arrayProto
         #state that Obj.toString returns string:
         objProto.members["tostring"].setMember '**return type**', stringProto
 
-        addBuiltInObject 'Function'
+        #ifdef PROD_C
+        globalScope.addMember 'int'
+        globalScope.addMember 'str'
+        globalScope.addMember 'size_t'
+        #endif
+
         addBuiltInObject 'Boolean'
-        addBuiltInObject 'Array'
         addBuiltInObject 'Number' 
         addBuiltInObject 'Date' 
         addBuiltInObject 'RegExp'
@@ -376,6 +394,11 @@ Populate the global scope
         globalScope.addMember 'undefined',{value:undefined}
         globalScope.addMember 'null',{value:null}
 
+        globalScope.addMember 'setTimeout'
+        globalScope.addMember 'clearTimeout'
+        globalScope.addMember 'setInterval'
+        globalScope.addMember 'clearInterval'
+
         declare valid project.options.browser
         if project.options.browser
           do nothing
@@ -385,7 +408,6 @@ Populate the global scope
         else #node.js
           globalScope.addMember 'global',{type:globalScope}
           globalScope.addMember 'require'
-          globalScope.addMember 'setTimeout'
           addBuiltInObject 'process'
 
 
@@ -422,7 +444,7 @@ gets a var from global scope
       return nameDecl.members.prototype
 
 
-### helper function addBuiltInObject(name,node) 
+### helper function addBuiltInObject(name,node) returns NameDeclaration
 Add a built-in class to global scope, return class prototype
 
       var nameDecl = new NameDeclaration( name,{isBuiltIn:true},node )
@@ -443,6 +465,12 @@ Add a built-in class to global scope, return class prototype
 ---------------------------------------
 ----------------------------------------
 ----------------------------------------
+
+### Append to namespace NameDeclaration
+      class ConvertResult
+        properties
+          converted:number=0
+          failures:number=0
 
 ##Additions to NameDeclaration. Helper methods to do validation
 
@@ -502,7 +530,7 @@ Also to load the global scope with built-in objects
                     #if member is a Function-class - dive into
                     declare valid Object.hasOwnProperty.call
                     if prop isnt 'constructor' 
-                        if prop is 'prototype' 
+                        if  prop is 'prototype' 
                             or (typeof obj[prop] is 'function' 
                                 and obj[prop].hasOwnProperty('prototype') 
                                 and not .isInParents(prop) 
@@ -531,76 +559,70 @@ Used to avoid recursing circular properties
           nameDecl = nameDecl.parent
 
 
-#### Helper method processConvertTypes() 
+#### Helper method processConvertTypes(options) returns ConvertResult
 convert possible types stored in NameDeclaration, 
-from string to NameDeclarations in the scope
-returns '**proto**' converted type
+from string/varRef to other NameDeclarations in the scope
 
-        .convertType '**return type**'  #a Function can have **return type**
-        .convertType '**item type**'  #an Array can have **item type** e.g.: 'var list: string array'
+        var result = new ConvertResult
 
-        var converted
-        if .findOwnMember('**proto**')
+        .convertType '**proto**',result,options  #try convert main type
+        .convertType '**return type**',result,options  #a Function can have **return type**
+        .convertType '**item type**',result,options  #an Array can have **item type** e.g.: 'var list: string array'
 
-Try to convert type, from string or VariableRef to a found NameDeclaration in Scope.
-
-          converted = .convertType('**proto**')
-
-else, if no type defined, try by name affinity,e.g., for var 'token', if a Class named 'Token' is
-in scope, var 'token' is assumed type 'Token', return true if type was assigned
-
-        else
-          converted = .assignTypebyNameAffinity()
-
-if converted, mark
-
-        if converted, .converted = true
-
-return true if a conversion was made
-
-        return converted
+        return result
 
 
-#### Helper method convertType(internalName) 
+#### Helper method convertType(internalName,result:ConvertResult,options) 
 convert type from string to NameDeclarations in the scope.
 returns 'true' if converted, 'false' if it has to be tried later
 
-        if no .findOwnMember(internalName) into var type, return  #nothing to process
+        if no .findOwnMember(internalName) into var typeRef
+            #nothing to process
+            return  
 
-        if type instance of NameDeclaration
-            #already converted
+        if typeRef instance of NameDeclaration
+            #already converted, nothing to do
             return 
 
-        # if the type is a varRef, must reference a class
-        if type instanceof Grammar.VariableRef
-            declare type:Grammar.VariableRef
+        default options =
+          informError:undefined
 
-            if type.tryGetReference() into var classFN:NameDeclaration 
+        var converted:NameDeclaration
 
-              if no classFN.members['prototype']
-                .sayErr "TYPE: '#{type}' has no prototype"
-                return 
-            
-              type = classFN.members['prototype']
+        # if the typeRef is a varRef, get reference 
+        if typeRef instanceof Grammar.VariableRef
+            declare typeRef:Grammar.VariableRef
+            converted = typeRef.tryGetReference()
 
-        else if typeof type is 'string'
+        else if typeof typeRef is 'string' #built-in class or local var
 
-            if no .nodeDeclared
-              type = globalPrototype(type)
+            if no .nodeDeclared #converting typeRef for a var not declared in code
+              converted = globalPrototype(typeRef)
             else
-              type = .nodeDeclared.findInScope(type)
-              declare valid type.members.prototype
-              type = type.members.prototype or type
+              converted = .nodeDeclared.findInScope(typeRef)
+            end if
 
         else
-          declare valid type.constructor.name
-          .sayErr "INTERNAL ERROR: UNRECOGNIZED TYPE on #{internalName}: '#{type}' [#{type.constructor.name}] typeof is '#{typeof type}'"
-          return
+            declare valid typeRef.constructor.name
+            .sayErr "INTERNAL ERROR: convertType UNRECOGNIZED type of:'#{typeof typeRef}' on #{internalName}: '#{typeRef}' [#{typeRef.constructor.name}]"
+            return
 
-        #store converted
-        if type, .setMember(internalName,type)
+        end if #check instance of "typeRef"
 
-        return type
+
+        if converted
+            #move to prototype if referenced a class
+            declare valid converted.members.prototype
+            if converted.members.prototype, converted = converted.members.prototype  
+            #store converted
+            .setMember(internalName,converted)
+            result.converted++
+        else
+            result.failures++
+            if options.informError, .sayErr "Undeclared type: '#{typeRef.toString()}'"
+        end if
+
+        return 
 
 
 #### helper method assignTypeFromValue(value) 
@@ -609,10 +631,22 @@ if we can determine assigned value type, set var type
       declare valid value.getResultType
       var valueNameDecl = value.getResultType()
 
-now set var type (unless is "null" or "undefined", they destroy type info)
+now set var type (unless is "null" or "undefined", because they destroy type info)
 
-      if valueNameDecl instance of NameDeclaration and valueNameDecl.name not in ["undefined","null"]
-          .setMember '**proto**', valueNameDecl
+      if valueNameDecl instance of NameDeclaration 
+        and valueNameDecl.name not in ["undefined","null"]
+
+            var theType
+            if valueNameDecl.name is 'prototype' # getResultType me dio el protoype de una class
+                // uso eso directo
+                theType = valueNameDecl
+            else 
+                //asumo valueNameDecl es una var comun, entonces intento obtner **proto**
+                theType = valueNameDecl.findOwnMember('**proto**') or valueNameDecl
+            end if
+
+            // assign type: now both nameDecls points to same type
+            .setMember '**proto**', theType 
 
 
 
@@ -902,7 +936,7 @@ a class inside a function, or a function inside a function, you'll have TWO diff
 'this' "in scope". One in the inner scope, shadowing other in the outer scope. 
 This is technically a scope 'name duplication', but it's allowed fot 'this' & 'arguments'
 
-#### helper method tryGetOwnerDecl(options)
+#### helper method tryGetOwnerDecl(options) returns ASTBase
 Used by properties & methods in the body of ClassDeclaration|AppendToDeclaration
 to get their 'owner', i.e., a NameDeclaration where they'll be added as members
 
@@ -1009,6 +1043,12 @@ Examples:
         for each varDecl in .list
             varDecl.declareInScope
             if .export, .addToExport varDecl.nameDecl, .default
+            if varDecl.aliasVarRef
+                //Example: "public var $ = jQuery" => declare alias $ for jQuery
+                if varDecl.aliasVarRef.tryGetReference({informError:true}) into var ref
+                    # aliases share .members
+                    varDecl.nameDecl.members = ref.members
+                     
 
      method evaluateAssignments() # pass 4, determine type from assigned value
         for each varDecl in .list
@@ -1030,9 +1070,9 @@ Examples:
 
       properties nameDecl
 
-      method declare #pass 1: declare name choosed for imported contents as a scope var
+      method declare #pass 1: declare name choosed for imported(required) contents as a scope var
 
-        if no .getParent(Grammar.CompilerStatement)
+        if no .getParent(Grammar.DeclareStatement) #except for 'global declare'
             .nameDecl = .addToScope(.name)
 
 
@@ -1053,13 +1093,18 @@ Add class name, to parent scope. A "class" in js is a function
 
         .nameDecl = .addToScope(.name,{type:globalPrototype('Function')})
 
-If we're in a namespace, add class to namespace, 
-else, if public/export, add to module.exports
-        
+        #If we're in a namespace, add class to namespace, 
         if .getParent(Grammar.NamespaceDeclaration) into var namespaceDeclaration
             namespaceDeclaration.nameDecl.addMember .nameDecl
-        else
-            if .export, .addToExport .nameDecl, .default
+
+        #else, If we're inside an "Append To",add to referenced 
+        else if .getParent(Grammar.AppendToDeclaration) into var appendToDeclaration
+            var refNameDecl = appendToDeclaration.varRef.tryGetReference()
+            if refNameDecl, refNameDecl.addMember .nameDecl
+
+        #else, if public/export, add to module.exports
+        else if .export
+           .addToExport .nameDecl, .default
 
 We create 'Class.prototype' member
 Class's properties & methods will be added to 'prototype' as valid member members.
@@ -1373,7 +1418,10 @@ restore last accessor
 
 #### method validatePropertyAccess() # Grammar.VariableRef
 
-        if .parent is instance of Grammar.DeclareStatement, return
+        if .parent is instance of Grammar.DeclareStatement
+            declare valid .parent.specifier
+            if .parent.specifier is 'valid'
+                  return #declare valid xx.xx.xx
 
 Start with main variable name, to check property names
 
@@ -1642,9 +1690,11 @@ Try to get return type from this Operand
 ### Append to class Grammar.DeclareStatement
 #### method declare() # pass 1, declare as props
 
+declare [all] x:type
+declare [global] var x
+declare on x
 declare valid x.y.z
 
-declare on x
 
       if .specifier is 'on'
 
@@ -1659,19 +1709,22 @@ declare on x
           for each varDecl in .names
               .addMemberTo reference, varDecl.createNameDeclaration()
 
-else: declare (VariableDecl,)
+else: declare (name affinity|var) (VariableDecl,)
 
-      else
+      else if .specifier in ['affinity','var']
 
           for each varDecl in .names
 
             varDecl.nameDecl = varDecl.createNameDeclaration()
 
-            if .global or .specifier is 'global'
-                declare valid project.root.addToScope
-                project.root.addToScope varDecl.nameDecl
+            if .specifier is 'var'
+                if .globVar
+                    declare valid project.root.addToScope
+                    project.root.addToScope varDecl.nameDecl
+                else
+                    .addToScope varDecl.nameDecl
 
-            if .specifier is 'affinity'
+            else if .specifier is 'affinity'
                 var classDecl = .getParent(Grammar.ClassDeclaration)
                 if no classDecl
                     .sayErr "'declare name affinity' must be included in a class declaration"
@@ -1680,40 +1733,63 @@ else: declare (VariableDecl,)
                 varDecl.nameDecl.nodeDeclared = classDecl
                 nameAffinity.addMember varDecl.nameDecl
 
-            else if .specifier is 'forward'
-                do nothing
+if .specifier is 'on-the-fly', the type will be converted on next passes over the created NameDeclaration.
+On the method validatePropertyAccess(), types will be switched "on the fly" 
+while checking property access.
 
-if .specifier is 'types', the type will be converted on next passes over the created NameDeclaration.
-On the method validatePropertyAccess(), types will be switched "on the fly" while checking property access.
+#### method evaluateAssignments() # Grammar.DeclareStatement ###
+Assign specific type to varRef - for the entire compilation
 
+      if .specifier is 'type'
+          if .varRef.tryGetReference({informError:true}) into var actualVar
+              .setTypes actualVar
+
+#### helper method setTypes(actualVar:NameDeclaration) # Grammar.DeclareStatement ###
+Assign types if it was declared
+
+      #set type if type was declared
+      var doProcess = false
+      if .type #create type on the fly
+          actualVar.setMember '**proto**', .type
+          doProcess = true
+
+      if .itemType #create type on the fly
+          actualVar.setMember '**item type**', .itemType
+          doProcess = true
+
+      if doProcess 
+          actualVar.processConvertTypes({informError:true})
 
 #### method validatePropertyAccess() # Grammar.DeclareStatement ###
 
-declare var:type. alter on the fly scope var "types"
+declare members on the fly, with optional type
 
-      if .specifier is 'types'
+      var actualVar:NameDeclaration
 
-          for each varDecl in .names
-              if .tryGetFromScope(varDecl.name,{informError:true}) into var mainVar
-                  if varDecl.nameDecl.findOwnMember('**proto**') into var declaredType # has type
-                      mainVar.setMember '**proto**', declaredType
+      switch .specifier 
 
-declare members on the fly 
+        case 'valid':
 
-      else if .specifier is 'valid'
-          var actualVar = .tryGetFromScope(.varRef.name,{informError:true})
-          for each ac in .varRef.accessors
-            declare valid ac.name
+            actualVar = .tryGetFromScope(.varRef.name,{informError:true})
 
-            if ac isnt instance of Grammar.PropertyAccess, break
-            
-            if ac.name is 'prototype'
-                actualVar = actualVar.findOwnMember(ac.name) or .addMemberTo(actualVar, ac.name)  
-            else
-                actualVar = actualVar.findMember(ac.name) or .addMemberTo(actualVar, ac.name)
+            for each ac in .varRef.accessors
+                declare valid ac.name
 
-            if this.type #create type on the fly
-                actualVar.setMember '**proto**', this.type
-                actualVar.processConvertTypes
+                if ac isnt instance of Grammar.PropertyAccess 
+                    actualVar = undefined
+                    break
+                
+                if ac.name is 'prototype'
+                    actualVar = actualVar.findOwnMember(ac.name) or .addMemberTo(actualVar, ac.name)  
+                else
+                    actualVar = actualVar.findMember(ac.name) or .addMemberTo(actualVar, ac.name)
 
+            end for
 
+            if actualVar, .setTypes actualVar
+
+        case 'on-the-fly':
+            #set type on-the-fly, from here until next type-assignment
+            #we allow more than one "declare x:type" on the same block
+            if .varRef.tryGetReference({informError:true}) into actualVar
+                .setTypes actualVar

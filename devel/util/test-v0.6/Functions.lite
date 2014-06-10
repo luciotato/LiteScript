@@ -1,7 +1,7 @@
 Functions Tests
 ---------------
 
-    global declare expect
+    declare var expect
 
     var Tests = 
 

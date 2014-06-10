@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.4.0, source: /home/ltato/LiteScript/source-v0.5.0/log.lite.md
+//Compiled by LiteScript compiler v0.4.0, source: /home/ltato/LiteScript/devel/source-v0.5/log.lite.md
 //Log Utility
 //============
 //(c) 2014 Lucio M. Tato

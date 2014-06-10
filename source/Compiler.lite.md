@@ -2,7 +2,7 @@ The LiteScript Compiler Module
 ==============================
 LiteScript is a highly readable language that compiles to JavaScript.
 
-    export var version = '0.6.6'
+    export var version = '0.6.7'
 
 This v0.6 compiler is written in v0.5 syntax. 
 That is, you use the v0.5 compiler to compile this code 
@@ -169,7 +169,9 @@ normalize options
             skip: undefined
             nomap: undefined
             single: undefined
+            compileIfNewer: undefined
             browser:undefined
+            extraComments:1
 
             mainModuleName: filename
             basePath: undefined
@@ -225,7 +227,7 @@ compiler vars, to use at conditional compilation
 
 add 'inNode' and 'inBrowser' as compiler vars
 
-        global declare window
+        declare var window
         var inNode = type of window is 'undefined'
         .root.compilerVars.addMember 'inNode',{value:inNode}
         .root.compilerVars.addMember 'inBrowser',{value: not inNode}
@@ -365,6 +367,7 @@ Handle errors, add stage info, and stack
     
             err = moduleNode.lexer.hardError or err //get important (inner) error
             if not err.controled  //if not 'controled' show lexer pos & call stack (includes err text)
+                declare valid err.stack
                 err.message = "#{moduleNode.lexer.posToString()}\n#{err.stack or err.message}"
 
             log.error err.message
@@ -418,8 +421,9 @@ We create a empty a empty `.requireCallNodes[]`, to hold:
 
         moduleNode.lexer.out.browser = .options.browser
 
-        moduleNode.lexer.out.put "//Compiled by LiteScript compiler v#{version}, source: #{moduleNode.fileInfo.filename}"
-        moduleNode.lexer.out.startNewLine
+        if .options.extraComments
+        	moduleNode.lexer.out.put "//Compiled by LiteScript compiler v#{version}, source: #{moduleNode.fileInfo.filename}"
+        	moduleNode.lexer.out.startNewLine
 
         moduleNode.produce 
 
@@ -441,7 +445,7 @@ get import parameter, and parent Module
 store a pointer to the imported module in 
 the statement AST node
 
-If the origin is: ImportStatement
+If the origin is: ImportStatement/global Declare
 
             if node instance of Grammar.ImportStatementItem
                 declare node:Grammar.ImportStatementItem
@@ -450,10 +454,14 @@ If the origin is: ImportStatement
                 else
                     requireParameter = node.name
 
-if it wansn't 'global import', add './' to the filename
+if it wansn't 'global import'/'global declare', add './' to the filename
 
                 declare valid node.parent.global 
-                if no node.parent.global,  requireParameter = './'+requireParameter
+                if node.parent.global 
+                        do nothing # global import / global declare
+                else
+                    #"local" import, add ./
+                    requireParameter = './'+requireParameter
 
 else, If the origin is a require() call
 
@@ -513,13 +521,17 @@ Check if we can get exports from a "interface.md" file
 
         if .getInterface(importingModule, fileInfo, moduleNode)
             #getInterface also loads and analyze .js interfaces
-            do nothing #getInterface sets moduleNode.exports
+            do nothing
 
 else, we need to compile the file 
     
         else 
-            this.compileFile fileInfo.filename, moduleNode
-            moduleNode.referenceCount++
+
+            if .options.single and .options.compileIfNewer and fileInfo.outFileIsNewer
+                do nothing //do not compile if source didnt change
+            else
+                this.compileFile fileInfo.filename, moduleNode
+                moduleNode.referenceCount++
 
 
 at last, return the parsed Module node
@@ -531,30 +543,37 @@ at last, return the parsed Module node
 
 
 
-#### method getInterface(importingModule,fileInfo, moduleNode:Grammar.Module)
+#### method getInterface(importingModule,fileInfo, moduleNode:Grammar.Module )
 If a 'interface' file exists, compile interface declarations instead of file
 return true if interface (exports) obtained
 
         if fileInfo.interfaceFileExists 
-
+            # compile interface
             this.compileFile fileInfo.interfaceFile, moduleNode
+            return true //got Interface
 
-            return true
+Check if we're compiling for the browser
 
-else, for .js file/core/globasl module, 
+        if .options.browser
+            if fileInfo.extension is '.js'
+                log.throwControled 'Missing #{fileInfo.relPath}/#{fileInfo.basename}.interface.md for '
+            else # assume a .lite.md file
+                return false //getInterface returning false means call "CompileFile"
+
+here, we're compiling for node.js environment
+for .js file/core/global module, 
 call node.js **require()** for parameter
 and generate & cache interface
 
-        else if fileInfo.extension is '.js' or fileInfo.isCore or not fileInfo.hasPath
+        if fileInfo.extension is '.js' or fileInfo.isCore or not fileInfo.hasPath
 
             log.message String.spaces(this.recurseLevel*2),
-                fileInfo.isCore? "core module" : "javascript file",
-                "require('#{fileInfo.importParameter}')"
+                fileInfo.isCore?"core module":"javascript file",
+                "require('#{fileInfo.relFilename}')"
 
             if not fileInfo.isCore
                 #hack for require(). Simulate we're at the importingModule dir
-                #for require() to look at the same dirs as at runtime
-                declare global module
+                #for require() fn to look at the same dirs as at runtime
                 declare on module paths:string array
                 declare valid module.constructor._nodeModulePaths
                 #declare valid module.filename
@@ -569,7 +588,7 @@ and generate & cache interface
             if not fileInfo.isCore #restore
                 module.paths= save.paths
                 module.filename= save.filename
-        
+            
             return true
 
 

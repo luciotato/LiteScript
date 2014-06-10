@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.4.0, source: /home/ltato/LiteScript/source-v0.5.0/Compiler.lite.md
+//Compiled by LiteScript compiler v0.4.0, source: /home/ltato/LiteScript/devel/source-v0.5/Compiler.lite.md
 //The LiteScript Compiler Module
 //==============================
 //LiteScript is a highly readable language that compiles to JavaScript.

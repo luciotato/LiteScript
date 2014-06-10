@@ -1,7 +1,7 @@
 check-version.lite.md
 
     global import fs, path
-    global declare __dirname
+    declare var __dirname
 
 read version fom package.json, compiler.js and from lib/out/lite -v 
 
@@ -11,7 +11,7 @@ read version fom package.json, compiler.js and from lib/out/lite -v
     print "VERSION: |",package.version,"| <-- package.json"
 
     var requireCompilerVersion = require('../out/lib/Compiler').version;
-    print "VERSION: |",requireCompilerVersion,"| <-- require('litescript') (Compiler.lite.md)"
+    print "VERSION: |",requireCompilerVersion,"| <-- require('litescript') (../out/lib/Compiler.lite.md)"
 
     if requireCompilerVersion isnt package.version
         print "VERSION MISMATCH!"

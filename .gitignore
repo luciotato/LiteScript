@@ -12,3 +12,7 @@ debug.log
 /devel/liteCompiler-manualC/litelib/dist/
 /devel/liteCompiler-manualC/Ctest/build/
 /devel/liteCompiler-manualC/Ctest/dist/
+/devel/liteC/Ctest/build/
+/devel/liteC/Ctest/dist/
+/devel/LiteToC/Ctest-BAK/build/
+/devel/LiteToC/Ctest-BAK/dist/

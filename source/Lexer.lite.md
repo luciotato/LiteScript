@@ -50,6 +50,7 @@ The Lexer class turns the input lines into an array of "infoLines"
         stringInterpolationChar: string
 
         last:LexerPos
+        maxSourceLineNum=0 //max source line num in indented block
 
         hardError:Error, softError:Error
 
@@ -117,7 +118,7 @@ prepares a processed infoLines result array
 
 Regexp to match class/method markdown titles, they're considered CODE
 
-        var titleKeyRegexp = /^(#)+ *(?:(?:public|export|default|helper|namespace)\s*)*(class|append to|function|method|constructor|properties)\b/i
+        var titleKeyRegexp = /^(#)+ *(?:(?:public|export|default|helper|namespace)\s*)*(class|namespace|append to|function|method|constructor|properties)\b/i
 
 Loop processing source code lines 
 
@@ -377,12 +378,12 @@ get source line, replace TAB with 4 spaces, remove trailing withespace and remov
 Multiline strings
 -----------------
 
-#### method parseTripleQuotes(line:string)
-
-This method handles `"""` triple quotes multiline strings
-Mulitple coded-enclosed source lines are converted to one logical infoLine
+You can include multi-line string by enclosing a paragraph with
+`"""` (triple quotes). You can also use string interpolation #{}
+  in multline strings.
 
 Example:
+<pre>
 /*
  var c = """
    first line
@@ -391,14 +392,20 @@ Example:
    """.length
 
 gets converted to:
-<pre>
+
   var c = 'first line\nsecond line\nThat\'s all\n'.length
   ^^^^^^^   ^^^^^^^                               ^^^^^
-    pre    |- section                          --| post
-</pre>
-*/
+    pre    |- sections                          --| post
 
-Get section between """ and """
+*/
+</pre>
+
+#### method parseTripleQuotes(line:string)
+
+This method handles `"""` triple quotes multiline strings
+Mulitple `"""`-enclosed lines in the source, are converted to one logical infoLine
+
+Get section between `"""`'s
 
         var result = new MultilineSection(this,line, '"""', '"""')
         if result.section
@@ -1079,7 +1086,7 @@ Initialize output array
         .lastOutCommentLine = 0
 
         #if do generate sourceMap and in node
-        if not options.nomap and type of window is 'undefined' # in node
+        if not options.nomap and type of process isnt 'undefined' # in node
               import SourceMap
               .sourceMap = new SourceMap
 
@@ -1106,13 +1113,13 @@ Start New Line into produced code
 send the current line
 
           if .currLine or .currLine is ""
-              .lines.push .currLine
               debug  .lineNum, .currLine
+              .lines.push .currLine
+              .lineNum++
 
 clear current line
 
           .currLine = undefined
-          .lineNum++
           .column = 1
 
 #### Method ensureNewLine()
@@ -1136,12 +1143,22 @@ get result and clear memory
         .lines = []
         return result
 
-#### helper method addSourceMap(sourceLin, sourceCol)
+#### helper method markSourceMap(indent) returns object
+        var col = .column 
+        if not .currLine, col += indent-1
+        return {
+              col:col        
+              lin:.lineNum-1
+        }
+
+#### helper method addSourceMap(mark, sourceLin, sourceCol, indent)
 
         if .sourceMap
-            .sourceMap.add ( (sourceLin or 1)-1, (sourceCol or 1)-1,   
-                             .lineNum-1, .column-1 )
-
+            declare on mark 
+                lin,col
+            #.sourceMap.add ( (sourceLin or 1)-1, (sourceCol or 1)-1,   
+            #                 mark.lin, mark.col )
+            .sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
 
 ------------------------
 Exports

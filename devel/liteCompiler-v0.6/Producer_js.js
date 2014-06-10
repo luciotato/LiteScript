@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.6, source: /home/ltato/LiteScript/devel/source-v0.6/Producer_js.lite.md
+//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.7/Producer_js.lite.md
 // Producer JS
 // ===========
 
@@ -31,8 +31,7 @@
             // declare valid .exportDefault.list.length
             // declare valid .exportDefault.throwError
            // if .exportDefault.list.length > 1, .exportDefault.throwError "only one var:Object alllowed for 'export default'"
-           if (this.exportDefault.list.length > 1) {
-               this.exportDefault.throwError("only one var:Object alllowed for 'export default'")};
+           if (this.exportDefault.list.length > 1) {this.exportDefault.throwError("only one var:Object alllowed for 'export default'")};
            this.lexer.out.exportNamespace = this.exportDefault.list[0].name;
        }
        
@@ -80,7 +79,6 @@
        };// end for each in this.statements
 
        this.out(NL);
-       this.addSourceMap();
      };
 
 
@@ -127,7 +125,7 @@
 
 // call the specific statement (if,for,print,if,function,class,etc) .produce()
 
-       this.addSourceMap();
+       var mark = this.lexer.out.markSourceMap(this.indent);
        this.out(this.statement);
 
 // add ";" after the statement
@@ -136,6 +134,7 @@
 
        // if not .statement.skipSemiColon
        if (!(this.statement.skipSemiColon)) {
+         this.addSourceMap(mark);
          this.out(";");
          // if not .statement.body
          if (!(this.statement.body)) {
@@ -191,8 +190,7 @@
 
        this.varRef.produce();
        // if .varRef.executes, return #if varRef already executes, nothing more to do
-       if (this.varRef.executes) {
-           return};
+       if (this.varRef.executes) {return};
        this.out("()");// #add (), so JS executes the function call
      };
 
@@ -509,8 +507,7 @@
        var parent = this.getParent(Grammar.ClassDeclaration);
 
        // if no parent, return
-       if (!parent) {
-           return};
+       if (!parent) {return};
 
        var ownerName = undefined, toPrototype = undefined;
        // if parent instance of Grammar.AppendToDeclaration
@@ -575,16 +572,14 @@
        this.outLinesAsComment(this.lineInx, this.lastLineInxOf(this.list));
 
        // if no prefix, prefix = .getOwnerPrefix()
-       if (!prefix) {
-           prefix = this.getOwnerPrefix()};
+       if (!prefix) {prefix = this.getOwnerPrefix()};
 
        // for each varDecl in .list
        for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
          // if varDecl.assignedValue #is not valid to assign to .prototype. - creates subtle errors later
          if (varDecl.assignedValue) {// #is not valid to assign to .prototype. - creates subtle errors later
            // if prefix instance of Array and prefix[1] and prefix[1] isnt '.', .throwError 'cannot assign values to instance properties in "Append to"'
-           if (prefix instanceof Array && prefix[1] && prefix[1] !== '.') {
-               this.throwError('cannot assign values to instance properties in "Append to"')};
+           if (prefix instanceof Array && prefix[1] && prefix[1] !== '.') {this.throwError('cannot assign values to instance properties in "Append to"')};
            this.out('    ', prefix, varDecl.name, "=", varDecl.assignedValue, ";", NL);
          };
        };// end for each in this.list
@@ -599,7 +594,6 @@
      // method produce()
      Grammar.VarStatement.prototype.produce = function(){
 
-        // declare valid .keyword
         // declare valid .compilerVar
         // declare valid .export
 
@@ -701,7 +695,8 @@
        for( var statement__inx=0,statement ; statement__inx<this.statements.length ; statement__inx++){statement=this.statements[statement__inx];
            bare.push(statement.statement);
        };// end for each in this.statements
-       this.out(NL, "    ", {CSL: bare, separator: ";"});
+        // #.out NL,"    ",{CSL:bare, separator:";"}
+       this.out({CSL: bare, separator: ";"});
      };
 
 
@@ -1088,8 +1083,7 @@
 
           // #if shim, check before define
          // if .shim, .out "if (!",prefix,.name,")",NL
-         if (this.shim) {
-             this.out("if (!", prefix, this.name, ")", NL)};
+         if (this.shim) {this.out("if (!", prefix, this.name, ")", NL)};
 
          // if .definePropItems #we should code Object.defineProperty
          if (this.definePropItems) {// #we should code Object.defineProperty
@@ -1128,8 +1122,7 @@
 // if the function has a exception block, insert 'try{'
 
      // if no .body, .throwError 'function #{.name} has no body'
-     if (!this.body) {
-         this.throwError('function ' + this.name + ' has no body')};
+     if (!this.body) {this.throwError('function ' + this.name + ' has no body')};
 
 // if simple-function, insert implicit return. Example: function square(x) = x*x
 
@@ -1185,9 +1178,13 @@
          this.body.produce();
      };
 
-// close the function
+// close the function, add source map for function default "return undefined".
 
      this.out("}");
+     // if .lexer.out.sourceMap
+     if (this.lexer.out.sourceMap) {
+         this.lexer.out.sourceMap.add(this.EndFnLineNum, 0, this.lexer.out.lineNum - 1, 0);
+     };
 
 // if we were coding .definePropItems , close Object.defineProperty
 
@@ -1276,7 +1273,7 @@
      // method produce()
      Grammar.DeclareStatement.prototype.produce = function(){
 
-       this.outLinesAsComment(this.lineInx, this.lastLineInxOf(this.names));
+       this.outLinesAsComment(this.lineInx, this.names ? this.lastLineInxOf(this.names) : this.lineInx);
        this.skipSemiColon = true;
      };
 
@@ -1462,8 +1459,7 @@
            };// end for each in this.cases
 
            // if .defaultBody, .out "default:",.defaultBody
-           if (this.defaultBody) {
-               this.out("default:", this.defaultBody)};
+           if (this.defaultBody) {this.out("default:", this.defaultBody)};
            this.out(NL, "}");
        }
 
@@ -1482,8 +1478,7 @@
          };// end for each in this.cases
 
          // if .defaultBody, .out NL,"else {",.defaultBody,"}"
-         if (this.defaultBody) {
-             this.out(NL, "else {", this.defaultBody, "}")};
+         if (this.defaultBody) {this.out(NL, "else {", this.defaultBody, "}")};
        };
      };
 
@@ -1506,8 +1501,7 @@
            };// end for each in this.cases
 
            // if .elseExpression, .out "    return ",.elseExpression,";",NL
-           if (this.elseExpression) {
-               this.out("    return ", this.elseExpression, ";", NL)};
+           if (this.elseExpression) {this.out("    return ", this.elseExpression, ";", NL)};
            this.out("        }(", this.varRef, "))");
        }
 

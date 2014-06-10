@@ -60,7 +60,7 @@ Once locked, any **req**uired token not present causes compilation to fail.
 #### helper method getParent(searchedClass)
 **getParent** method searchs up the AST tree until a specfied node class is found
 
-        var node = this
+        var node = this.parent
         while node and not(node instanceof searchedClass)
             node = node.parent # move to parent
         return node
@@ -68,7 +68,7 @@ Once locked, any **req**uired token not present causes compilation to fail.
 
 #### helper method positionText() 
 
-        if not .lexer, return "(compiler-defined)"    
+        if not .lexer or no .sourceLineNum, return "(compiler-defined)"    
         return "#{.lexer.filename}:#{.sourceLineNum}:#{.column or 0}"
   
 #### helper method toString()
@@ -142,17 +142,13 @@ try parse (call .opt) Accept Array as param.
               else .opt(param)
             end
 
-if parsed ok, assign keyword for reference
-
-            if statement, statement.keyword = key
-          
 return parsed statement or nothing
 
             return statement
 
 
 
-#### Method opt()
+#### Method opt() returns ASTBase
 **opt** (optional) is for optional parts of a grammar. It attempts to parse 
 the token stream using one of the classes or token types specified.
 This method takes a variable number of arguments.
@@ -220,7 +216,7 @@ Advance a token, .lexer.token always has next token
 
           else
 
-"searched" is a AST class
+"searched" is an AST class
 
             debug spaces, .constructor.name,'TRY',searched.name, 'on', .lexer.token.toString()
 
@@ -229,7 +225,16 @@ if the argument is an AST node class, we instantiate the class and try the `pars
 
             try
 
-                var astNode:ASTBase = new searched(this)
+                var astNode:ASTBase = new searched(this) # create required ASTNode, to try parse
+
+                #if there was adjectives on the parent, apply as properties
+                # so they're available during parse
+                declare valid .adjectives:array
+                if .adjectives 
+                    for each adj in .adjectives
+                        declare valid adj.name
+                        astNode[adj.name]=true
+
                 astNode.parse() # if it can't parse, will raise an exception
 
                 debug spaces, 'Parsed OK!->',searched.name
@@ -282,7 +287,7 @@ No more arguments.
       #end method opt
 
 
-#### method req()
+#### method req() returns ASTBase
 
 **req** (required) if for required symbols of the grammar. It works the same way as `opt` 
 except that it throws an error if none of the arguments can be used to parse the stream.
@@ -373,7 +378,7 @@ Any token other than 'separator' means 'end of list'
             if no .opt(separator)
               # any token other than comma/semicolon means 'end of comma separated list'
               # but if a closer was required, then "other" token is an error
-              if closer, .throwError "Expected '#{closer}' to end list started at line #{startLine}"
+              if closer, .throwError "Expected '#{closer}' to end list started at line #{startLine}, got '#{.lexer.token.value}'"
               if consumedNewLine, .lexer.returnToken()
               break # else ok, end of list
             end if
@@ -453,6 +458,7 @@ add item to result
 
 newline after item (before comma or closer) is optional
 
+            if item.sourceLineNum>.lexer.maxSourceLineNum, .lexer.maxSourceLineNum=item.sourceLineNum
             .opt('NEWLINE')
 
 separator (comma|semicolon) is optional, 
@@ -515,10 +521,6 @@ It evaluates and output its arguments. uses .lexer.out
 
         for each item in arguments
 
-          declare on item
-            COMMENT:string, NLI, CSL:array, freeForm
-            name, lexer, produce, out
-          
 skip empty items
 
           if no item, continue
@@ -530,7 +532,8 @@ if it is the first thing in the line, out indentation
 if it is an AST node, call .produce()
 
           if item instance of ASTBase 
-            item.produce()
+              declare item:ASTBase 
+              item.produce()
 
 New line char means "start new line"
 
@@ -546,6 +549,9 @@ else, Object codes
 
           else if type of item is 'object'
 
+            declare on item
+              COMMENT:string, NLI, CSL:array, freeForm
+            
 if the object is an array, resolve with a recursive call
 
             if item instance of Array
@@ -701,9 +707,9 @@ such as `a = 1 #comment`. We want to try to add these at the end of the current 
             if lastToken.type is 'COMMENT'
                 return "#{lastToken.value.startsWith('//')? '' else '//'} #{lastToken.value}"
 
-#### helper method addSourceMap()
+#### helper method addSourceMap(mark)
 
-        .lexer.out.addSourceMap .sourceLineNum, .column
+        .lexer.out.addSourceMap mark, .sourceLineNum, .column, .indent
 
 
 #### helper method levelIndent()

@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.4.0, source: /home/ltato/LiteScript/source-v0.5.0/Validate.lite.md
+//Compiled by LiteScript compiler v0.4.0, source: /home/ltato/LiteScript/devel/source-v0.5/Validate.lite.md
 //Name Validation
 //===============
 
@@ -2204,8 +2204,8 @@
 
            varDecl.nameDecl = varDecl.createNameDeclaration();
 
-           //if .global or .specifier is 'global'
-           if (this.global || this.specifier === 'global') {
+           //if .specifier is 'var'
+           if (this.specifier === 'var') {
                 //declare valid project.root.addToScope
                project.root.addToScope(varDecl.nameDecl);
            };

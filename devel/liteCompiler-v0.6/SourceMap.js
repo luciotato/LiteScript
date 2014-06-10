@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.6, source: /home/ltato/LiteScript/devel/source-v0.6/SourceMap.lite.md
+//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.7/SourceMap.lite.md
 // # LiteScript SourceMap
 
 // Source maps allow JavaScript runtimes to match running JavaScript back to
@@ -16,15 +16,11 @@
 // https://github.com/jashkenas/coffee-script/blob/master/src/sourcemap.litcoffee
 
 // ### Changes:
-// - removed stored generated column and line, since they're the array indexes
 // - added class "Location:{lin,col}"
 // - moved support encode functions from class methods to module functions
 
-
    // import log
    var log = require('./log');
-   var debug = log.debug;
-
 
    // public default class SourceMap
    // constructor
@@ -41,7 +37,9 @@
      // method add(sourceLine, sourceCol, line, column, options = {})
      SourceMap.prototype.add = function(sourceLine, sourceCol, line, column, options){if(options===undefined) options={};
 
-         var lineMap = this.lines[line] || ((this.lines[line]=new LineMap()));
+         log.debug("gen " + line + "," + column + " -> src " + sourceLine + "," + sourceCol);
+
+         var lineMap = this.lines[line] || ((this.lines[line]=new LineMap(line)));
 
          lineMap.add(column, new Location(sourceLine, sourceCol), options);
      };
@@ -56,12 +54,10 @@
 // Search for the closest line, when found, return closest column location
 
          // for lin=line, while lin>=0, lin--
-         for( var lin=line; lin >= 0; 
-             lin--) {
+         for( var lin=line; lin >= 0; lin--) {
              // if .lines[line] into var lineMap, return lineMap.sourceLocation(column)
              var lineMap=undefined;
-             if ((lineMap=this.lines[line])) {
-                 return lineMap.sourceLocation(column)};
+             if ((lineMap=this.lines[line])) {return lineMap.sourceLocation(column)};
          };// end for lin
          
      };
@@ -86,7 +82,7 @@
 
        var 
        writingline = 0, 
-       lastColumn = 0, 
+       lastGenColumn = 0, 
        lastSourceLine = 0, 
        lastSourceColumn = 0, 
        needComma = false, 
@@ -94,27 +90,31 @@
        ;
 
 
-       // for each lineNumber,lineMap in .lines where lineMap
-       for( var lineNumber=0,lineMap ; lineNumber<this.lines.length ; lineNumber++){lineMap=this.lines[lineNumber];
+        // #for each line in the generated
+       // for each lineInx,lineMap in .lines where lineMap
+       for( var lineInx=0,lineMap ; lineInx<this.lines.length ; lineInx++){lineMap=this.lines[lineInx];
        if(lineMap){
 
-         debug("line:", lineNumber);
+         // for each column,SourceLoc in lineMap.columns where SourceLoc
+         for( var column=0,SourceLoc ; column<lineMap.columns.length ; column++){SourceLoc=lineMap.columns[column];
+         if(SourceLoc){
 
-         // for each column,sourceLocation in lineMap.columns where sourceLocation
-         for( var column=0,sourceLocation ; column<lineMap.columns.length ; column++){sourceLocation=lineMap.columns[column];
-         if(sourceLocation){
+           log.debug("line:" + lineMap.line + " ->", SourceLoc.lin);
+           log.debug("column:" + column, SourceLoc.col);
 
+// advance to LineMap.line
 
-           debug("column:", column, "->", sourceLocation.lin, sourceLocation.col);
-
-           // while writingline < lineNumber
-           while(writingline < lineNumber){
-
-               lastColumn = 0;
+           // if writingline < lineMap.line
+           if (writingline < lineMap.line) {
+               lastGenColumn = 0;
                needComma = false;
-               buffer += ";";
-               writingline++;
-           };// end loop
+               // while writingline < lineMap.line
+               while(writingline < lineMap.line){
+                   buffer += ";";
+                   writingline++;
+               };// end loop
+               
+           };
 
 // Write a comma if we've already written a segment on this line.
 
@@ -130,8 +130,8 @@
 // The starting column in the generated source, relative to any previous recorded
 // column for the current line:
 
-           buffer += encodeVlq(column - lastColumn);
-           lastColumn = column;
+           buffer += encodeVlq(column - lastGenColumn);
+           lastGenColumn = column;
 
 // The index into the list of sources:
 
@@ -139,13 +139,13 @@
 
 // The starting line in the original source, relative to the previous source line.
 
-           buffer += encodeVlq(sourceLocation.lin - lastSourceLine);
-           lastSourceLine = sourceLocation.lin;
+           buffer += encodeVlq(SourceLoc.lin - lastSourceLine);
+           lastSourceLine = SourceLoc.lin;
 
 // The starting column in the original source, relative to the previous column.
 
-           buffer += encodeVlq(sourceLocation.col - lastSourceColumn);
-           lastSourceColumn = sourceLocation.col;
+           buffer += encodeVlq(SourceLoc.col - lastSourceColumn);
+           lastSourceColumn = SourceLoc.col;
            needComma = true;
          }};// end for each in lineMap.columns
 
@@ -168,8 +168,7 @@
 
         // declare valid v3.sourcesContent
        // if options.inline, v3.sourcesContent = [code]
-       if (options.inline) {
-           v3.sourcesContent = [code]};
+       if (options.inline) {v3.sourcesContent = [code]};
 
        return JSON.stringify(v3, null, 2);
      };
@@ -198,9 +197,11 @@
 
    // class LineMap
    // constructor
-     function LineMap(){
+     function LineMap(line){
       // properties
+        // line
         // columns: Location array
+       this.line = line;
        this.columns = [];
      };
 
@@ -212,8 +213,7 @@
        // options.noReplace: undefined
 
        // if options.noReplace and .columns[column], return
-       if (options.noReplace && this.columns[column]) {
-           return};
+       if (options.noReplace && this.columns[column]) {return};
 
        this.columns[column] = source;
      };
@@ -224,12 +224,10 @@
 // returns closest source location, for a js column in this line
 
        // for col=column, while col>=0, col--
-       for( var col=column; col >= 0; 
-           col--) {
+       for( var col=column; col >= 0; col--) {
            // if .columns[col] into var foundLocation, return foundLocation
            var foundLocation=undefined;
-           if ((foundLocation=this.columns[col])) {
-               return foundLocation};
+           if ((foundLocation=this.columns[col])) {return foundLocation};
        };// end for col
        
      };
@@ -270,8 +268,7 @@
          var nextChunk = valueToEncode & VLQ_VALUE_MASK;
          valueToEncode = valueToEncode >> VLQ_SHIFT;
          // if valueToEncode, nextChunk = nextChunk|VLQ_CONTINUATION_BIT
-         if (valueToEncode) {
-             nextChunk = nextChunk | VLQ_CONTINUATION_BIT};
+         if (valueToEncode) {nextChunk = nextChunk | VLQ_CONTINUATION_BIT};
          answer += encodeBase64(nextChunk);
        };// end loop
 

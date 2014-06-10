@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.6, source: /home/ltato/LiteScript/devel/source-v0.6/log.lite.md
+//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.7/log.lite.md
 // Log Utility
 // ============
 // (c) 2014 Lucio M. Tato
@@ -192,11 +192,22 @@
    module.exports.message=message;
 
 
-   // export function extra
-   function extra(){
+   // export function info
+   function info(){
 
        // if options.verbose >= 2
        if (options.verbose >= 2) {
+           message.apply(this, arguments);
+       };
+   };
+   // export
+   module.exports.info=info;
+
+   // export function extra
+   function extra(){
+
+       // if options.verbose >= 3
+       if (options.verbose >= 3) {
            message.apply(this, arguments);
        };
    };

@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.6, source: /home/ltato/LiteScript/devel/source-v0.6/Lexer.lite.md
+//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.7/Lexer.lite.md
 // The Lexer
 // =========
 
@@ -31,10 +31,11 @@
 
    // class Lexer
    // constructor
-    function Lexer(compiler, options){
+    function Lexer(compiler, project, options){
      //      properties
 
         // compiler
+        // project
         // filename:string
         // options
 
@@ -51,12 +52,15 @@
         // stringInterpolationChar: string
 
         // last:LexerPos
+        // maxSourceLineNum=0 //max source line num in indented block
 
         // hardError:Error, softError:Error
 
         // out:OutCode
+        this.maxSourceLineNum=0;
 
          this.compiler = compiler;// #Compiler.lite.md module.exports
+         this.project = project;// #Compiler.lite.md class Project
 
 // use same options as compiler
 
@@ -108,8 +112,7 @@
 // then to lines array
 
            // if typeof source isnt 'string', source = source.toString()
-           if (typeof source !== 'string') {
-               source = source.toString()};
+           if (typeof source !== 'string') {source = source.toString()};
 
            this.lines = source.split('\n');
            this.lines.push("");// # add extra empty line
@@ -126,7 +129,7 @@
 
 // Regexp to match class/method markdown titles, they're considered CODE
 
-       var titleKeyRegexp = /^(#)+ *(?:(?:public|export|default|helper|namespace)\s*)*(class|append to|function|method|constructor|properties)\b/i;
+       var titleKeyRegexp = /^(#)+ *(?:(?:public|export|default|helper|namespace)\s*)*(class|namespace|append to|function|method|constructor|properties)\b/i;
 
 // Loop processing source code lines
 
@@ -175,8 +178,7 @@
                // if indent >= 4
                if (indent >= 4) {
                    // if lastLineWasBlank,inCodeBlock = true
-                   if (lastLineWasBlank) {
-                       inCodeBlock = true};
+                   if (lastLineWasBlank) {inCodeBlock = true};
                }
 
 // else, (not indented 4) probably a literate comment,
@@ -203,8 +205,7 @@
 
                          indent = line.search(/\S/);
                          // if indent<4, .throwErr "MarkDown Title-keyword, expected at least indent 4 ('\#\#\# ')"
-                         if (indent < 4) {
-                             this.throwErr("MarkDown Title-keyword, expected at least indent 4 ('\#\#\# ')")};
+                         if (indent < 4) {this.throwErr("MarkDown Title-keyword, expected at least indent 4 ('\#\#\# ')")};
                          inCodeBlock = true;
                        };
                    };
@@ -238,7 +239,7 @@
             // #end if line wasnt blank
 
 // parse multi-line string (triple quotes) and convert to one logical line:
-// Example: var a = 'first line\nsecond line\nThat\'s all\n'
+// Example result: var a = 'first line\nsecond line\nThird line\n'
 
            // if type is LineTypes.CODE
            if (type === LineTypes.CODE) {
@@ -246,11 +247,17 @@
            };
 
 // check for multi-line comment, C and js style //.... 
+// then check for #ifdef/#else/#endif
 
            // if .checkMultilineComment(infoLines, type, indent, line )
            if (this.checkMultilineComment(infoLines, type, indent, line)) {
                // continue #found and pushed multiline comment, continue with next line
                continue;// #found and pushed multiline comment, continue with next line
+           }
+           
+           else if (this.checkConditionalCompilation(line)) {
+               // continue #processed, continue with next line
+               continue;// #processed, continue with next line
            };
 
 // Create infoLine, with computed indent, text, and source code line num reference
@@ -341,8 +348,7 @@
            while(bodyInx < this.infoLines.length && ((bodyLine=this.infoLines[bodyInx])).indent > item.indent){
                bodyLines.push(String.spaces(bodyLine.indent) + bodyLine.text);
                // if bodyIndent is 0, bodyIndent = bodyLine.indent #first indent
-               if (bodyIndent === 0) {
-                   bodyIndent = bodyLine.indent};
+               if (bodyIndent === 0) {bodyIndent = bodyLine.indent};
                bodyInx++;
            };// end loop
 
@@ -430,6 +436,11 @@
        this.sourceLineNum++;// # note: source files line numbers are 1-based
 
        return true;
+    };
+
+    // method replaceSourceLine(newLine)
+    Lexer.prototype.replaceSourceLine = function(newLine){
+       this.lines[this.sourceLineNum - 1] = newLine;
     };
 
 
@@ -541,6 +552,111 @@
        return true;// #OK, lines processed
     };
 
+// ----------------------------
+    // method checkConditionalCompilation(line:string)
+    Lexer.prototype.checkConditionalCompilation = function(line){
+
+// This method handles #ifdef/#else/#endif as multiline comments
+
+       var startSourceLine = this.sourceLineNum;
+
+       var words = undefined;
+
+        // declare valid .project.compilerVar
+        // declare valid .project.setCompilerVar
+
+       var isDefine = line.indexOf("#define ");
+       // if isDefine>=0
+       if (isDefine >= 0) {
+           words = line.trim().split(' ');
+           this.project.setCompilerVar(words[1], true);
+           return false;
+       };
+
+       var isUndef = line.indexOf("#undef ");
+       // if isUndef>=0
+       if (isUndef >= 0) {
+           words = line.trim().split(' ');
+           this.project.setCompilerVar(words[1], false);
+           return false;
+       };
+
+       var startCol = line.indexOf("#ifdef ");
+       // if startCol<0, startCol = line.indexOf("#if def ")
+       if (startCol < 0) {startCol = line.indexOf("#if def ")};
+       // if startCol<0, return
+       if (startCol < 0) {return};
+
+        //get rid of quoted strings. Still there?
+       // if String.replaceQuoted(line,"").indexOf("#if")<0
+       if (String.replaceQuoted(line, "").indexOf("#if") < 0) {
+           return;// #no
+       };
+
+       var startRef = "while processing #ifdef started on line " + startSourceLine;
+
+       words = line.slice(startCol).split(' ');
+       var conditional = words[1];
+       // if no conditional, .throwErr "#ifdef; missing conditional"
+       if (!conditional) {this.throwErr("#ifdef; missing conditional")};
+       var defValue = this.project.compilerVar(conditional);
+
+       var endFound = false;
+       // do
+       do{
+            // #get next line
+           // if no .nextSourceLine(),.throwErr "EOF #{startRef}"
+           if (!this.nextSourceLine()) {this.throwErr("EOF " + startRef)};
+           line = this.line;
+
+           // if line.search(/\S/) into var indent >= 0
+           var indent=undefined;
+           if ((indent=line.search(/\S/)) >= 0) {
+               line = line.trim();
+               // if line[0] is '#' //expected: #else, #endif #end if
+               if (line[0] === '#') { //expected: #else, #endif #end if
+                   words = line.split(' ');
+                   // switch words[0]
+                   switch(words[0]){
+                   
+                   case '#else':
+                           defValue = !(defValue);
+                           break;
+                           
+                   case "#end":
+                           // if words[1] isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
+                           if (words[1] !== 'if') {this.throwErr("expected '#end if', read '" + line + "' " + startRef)};
+                           endFound = true;
+                           break;
+                           
+                   case "#endif":
+                           endFound = true;
+                           break;
+                           
+                   default:
+                           this.throwErr("expected '#else/#end if', read '" + line + "' " + startRef);
+                   
+                   };
+                   // end switch
+                   
+               }
+               
+               else {
+                    // comment line if .compilerVar not defined (or processing #else)
+                   // if not defValue, .replaceSourceLine String.spaces(indent)+"//"+line
+                   if (!(defValue)) {this.replaceSourceLine(String.spaces(indent) + "//" + line)};
+               };
+               // end if
+               
+           };
+           // end if
+           
+       } while (!endFound);// end loop
+
+        // #rewind position after #ifdef, reprocess lines
+       this.sourceLineNum = startSourceLine;
+       return true;// #OK, lines processed
+    };
 
 
 // ----------------------------
@@ -583,8 +699,7 @@
 // Create a full string with last position. Useful to inform errors
 
        // if .last, return .last.toString()
-       if (this.last) {
-           return this.last.toString()};
+       if (this.last) {return this.last.toString()};
        return this.getPos().toString();
     };
 
@@ -1079,14 +1194,11 @@
                this.type = LineTypes.COMMENT;// # is a COMMENT line
                var char = undefined;
                // if words[5] into char is 'is' then char = words[6] #get it (skip optional 'is')
-               if ((char=words[5]) === 'is') {
-                   char = words[6]};
+               if ((char=words[5]) === 'is') {char = words[6]};
                // if char[0] in ['"',"'"], char = char.slice(1,-1) #optionally quoted, remove quotes
-               if (['"', "'"].indexOf(char[0])>=0) {
-                   char = char.slice(1, -1)};
+               if (['"', "'"].indexOf(char[0])>=0) {char = char.slice(1, -1)};
                // if no char then lexer.throwErr "missing string interpolation char"  #check
-               if (!char) {
-                   lexer.throwErr("missing string interpolation char")};
+               if (!char) {lexer.throwErr("missing string interpolation char")};
                lexer.stringInterpolationChar = char;
              };
            };
@@ -1120,8 +1232,7 @@
      // method toString()
      LexerPos.prototype.toString = function(){
        // if no .token, .token = {column:0}
-       if (!this.token) {
-           this.token = {column: 0}};
+       if (!this.token) {this.token = {column: 0}};
        return "" + this.lexer.filename + ":" + this.sourceLineNum + ":" + ((this.token.column || 0) + 1);
      };
    // end class LexerPos
@@ -1238,8 +1349,8 @@
        this.lastOutCommentLine = 0;
 
         // #if do generate sourceMap and in node
-       // if not options.nomap and type of window is 'undefined' # in node
-       if (!(options.nomap) && typeof window === 'undefined') {// # in node
+       // if not options.nomap and type of process isnt 'undefined' # in node
+       if (!(options.nomap) && typeof process !== 'undefined') {// # in node
              // import SourceMap
              var SourceMap = require('./SourceMap');
              this.sourceMap = new SourceMap();
@@ -1277,14 +1388,14 @@
 
          // if .currLine or .currLine is ""
          if (this.currLine || this.currLine === "") {
-             this.lines.push(this.currLine);
              debug(this.lineNum, this.currLine);
+             this.lines.push(this.currLine);
+             this.lineNum++;
          };
 
 // clear current line
 
          this.currLine = undefined;
-         this.lineNum++;
          this.column = 1;
     };
 
@@ -1293,8 +1404,7 @@
 // if there's something on the line, start a new one
 
          // if .currLine, .startNewLine
-         if (this.currLine) {
-             this.startNewLine()};
+         if (this.currLine) {this.startNewLine()};
     };
 
 
@@ -1317,18 +1427,29 @@
        return result;
     };
 
-    // helper method addSourceMap(sourceLin, sourceCol)
-    OutCode.prototype.addSourceMap = function(sourceLin, sourceCol){
+    // helper method markSourceMap(indent) returns object
+    OutCode.prototype.markSourceMap = function(indent){
+       var col = this.column;
+       // if not .currLine, col += indent-1
+       if (!(this.currLine)) {col += indent - 1};
+       return {col: col, lin: this.lineNum - 1};
+    };
+
+    // helper method addSourceMap(mark, sourceLin, sourceCol, indent)
+    OutCode.prototype.addSourceMap = function(mark, sourceLin, sourceCol, indent){
 
        // if .sourceMap
        if (this.sourceMap) {
-           this.sourceMap.add((sourceLin || 1) - 1, (sourceCol || 1) - 1, this.lineNum - 1, this.column - 1);
+            // declare on mark
+                // lin,col
+            // #.sourceMap.add ( (sourceLin or 1)-1, (sourceCol or 1)-1,
+            // #                 mark.lin, mark.col )
+           this.sourceMap.add((sourceLin || 1) - 1, 0, mark.lin, 0);
        };
     };
    // export
    module.exports.OutCode = OutCode;
    // end class OutCode
-
 
 // ------------------------
 // Exports

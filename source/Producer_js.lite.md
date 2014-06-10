@@ -61,7 +61,6 @@ A "Body" is an ordered list of statements.
           statement.produce()
 
         .out NL
-        .addSourceMap
 
 
 -------------------------------------
@@ -102,7 +101,7 @@ declare vars before statement (exclude body of FunctionDeclaration)
 
 call the specific statement (if,for,print,if,function,class,etc) .produce()
 
-        .addSourceMap
+        var mark = .lexer.out.markSourceMap(.indent)
         .out .statement
 
 add ";" after the statement
@@ -110,6 +109,7 @@ then EOL comment (if it isnt a multiline statement)
 then NEWLINE
 
         if not .statement.skipSemiColon
+          .addSourceMap mark
           .out ";"
           if not .statement.body
             .out .getEOLComment()
@@ -471,7 +471,6 @@ var with__1=frontDoor;
 
       method produce() 
 
-        declare valid .keyword
         declare valid .compilerVar
         declare valid .export
 
@@ -550,7 +549,8 @@ if it has AssginedValue, we out assignment if ES6 is available.
         var bare=[]
         for each statement in .statements
             bare.push statement.statement
-        .out NL,"    ",{CSL:bare, separator:";"}
+        #.out NL,"    ",{CSL:bare, separator:";"}
+        .out {CSL:bare, separator:";"}
 
 
 ### Append to class Grammar.IfStatement ###
@@ -560,7 +560,7 @@ if it has AssginedValue, we out assignment if ES6 is available.
         declare valid .elseStatement.produce
 
         if .body instanceof Grammar.SingleLineStatement
-            .out "if (", .conditional,") {",.body, "}"
+            .out "if (", .conditional,") {",.body,"}"
         else
             .out "if (", .conditional, ") {", .getEOLComment()
             .out  .body, "}"
@@ -925,9 +925,11 @@ now produce function body
 
           .body.produce()
 
-close the function
+close the function, add source map for function default "return undefined".
 
       .out "}"
+      if .lexer.out.sourceMap
+          .lexer.out.sourceMap.add ( .EndFnLineNum, 0, .lexer.out.lineNum-1, 0)
 
 if we were coding .definePropItems , close Object.defineProperty
 
@@ -994,7 +996,7 @@ Out as comments
 
       method produce()
 
-        .outLinesAsComment .lineInx, .lastLineInxOf(.names)
+        .outLinesAsComment .lineInx, .names? .lastLineInxOf(.names) : .lineInx
         .skipSemiColon = true
 
 

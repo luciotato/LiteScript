@@ -1,7 +1,7 @@
 For Statement
 -------------
 
-    declare global expect
+    declare var expect
 
     var Tests = 
 

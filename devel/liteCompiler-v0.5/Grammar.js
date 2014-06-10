@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.4.0, source: /home/ltato/LiteScript/source-v0.5.0/Grammar.lite.md
+//Compiled by LiteScript compiler v0.4.0, source: /home/ltato/LiteScript/devel/source-v0.5/Grammar.lite.md
 //LiteScript Grammar
 //==================
 
@@ -3213,7 +3213,7 @@
 //Also allows to declare the valid properties for externally created objects
 //when you dont want to create a class to use as type.
 
-//`DeclareStatement: declare ([types]|global|forward|on IDENTIFIER) (VariableDecl,)+`
+//`DeclareStatement: declare ([types]|var|forward|on IDENTIFIER) (VariableDecl,)+`
 //`DeclareStatement: declare name affinity (IDENTIFIER,)+`
 
 //#####Declare types
@@ -3252,10 +3252,10 @@
 
 //all three vars will assume `:NameDeclaration` as type.
 
-//#####global Declare
-//`DeclareStatement: global declare (VariableDecl,)+`
+//#####Declare var
+//`DeclareStatement: declare var (VariableDecl,)+`
 
-//To declare global, externally created vars. Example: `declare global logMessage, colors`
+//To declare global, externally created vars. Example: `declare var window, logMessage, colors`
 
 //#####Declare on
 //`DeclareStatement: declare on IDENTIFIER (VariableDecl,)+` #declare members on vars
@@ -3315,7 +3315,7 @@
        }
        
        else {
-         this.specifier = this.opt('global') || 'types';
+         this.specifier = this.opt('var') || 'types';
        };
 
 //all of them get a (VariableDecl,)+
@@ -3748,8 +3748,8 @@
 
 //Loop processing: 'NEWLINE','case' or 'default'
 
-       //do until .lexer.token.type is 'EOF'
-       while(!(this.lexer.token.type === 'EOF')){
+       //do until .lexer.token.type is 'EOF' or .lexer.indent<=.indent
+       while(!(this.lexer.token.type === 'EOF' || this.lexer.indent <= this.indent)){
 
            var keyword = this.req('case', 'default', 'NEWLINE');
 

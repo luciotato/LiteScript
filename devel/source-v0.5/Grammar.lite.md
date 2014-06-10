@@ -2316,7 +2316,7 @@ Declare statement allows you to forward-declare variable or object members.
 Also allows to declare the valid properties for externally created objects
 when you dont want to create a class to use as type.
 
-`DeclareStatement: declare ([types]|global|forward|on IDENTIFIER) (VariableDecl,)+`
+`DeclareStatement: declare ([types]|var|forward|on IDENTIFIER) (VariableDecl,)+`
 `DeclareStatement: declare name affinity (IDENTIFIER,)+` 
 
 #####Declare types
@@ -2355,10 +2355,10 @@ Example:
 
 all three vars will assume `:NameDeclaration` as type.
 
-#####global Declare 
-`DeclareStatement: global declare (VariableDecl,)+` 
+#####Declare var
+`DeclareStatement: declare var (VariableDecl,)+` 
 
-To declare global, externally created vars. Example: `declare global logMessage, colors`
+To declare global, externally created vars. Example: `declare var window, logMessage, colors`
 
 #####Declare on 
 `DeclareStatement: declare on IDENTIFIER (VariableDecl,)+` #declare members on vars
@@ -2406,7 +2406,7 @@ check 'name affinity', if not, must be: global|forward|types(default)
         if .opt('name')
           .specifier = .req('affinity')
         else 
-          .specifier = .opt('global') or 'types' 
+          .specifier = .opt('var') or 'types' 
 
 all of them get a (VariableDecl,)+
 
@@ -2726,7 +2726,7 @@ Examples:
 
 Loop processing: 'NEWLINE','case' or 'default'
 
-        do until .lexer.token.type is 'EOF'
+        do until .lexer.token.type is 'EOF' or .lexer.indent<=.indent
 
             var keyword = .req('case','default','NEWLINE')
             

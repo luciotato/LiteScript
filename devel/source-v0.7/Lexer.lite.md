@@ -34,6 +34,7 @@ The Lexer class turns the input lines into an array of "infoLines"
 #### properties 
 
         compiler
+        project
         filename:string
         options 
 
@@ -50,14 +51,16 @@ The Lexer class turns the input lines into an array of "infoLines"
         stringInterpolationChar: string
 
         last:LexerPos
+        maxSourceLineNum=0 //max source line num in indented block
 
         hardError:Error, softError:Error
 
         out:OutCode
 
-#### Constructor new Lexer(compiler, options)
+#### Constructor new Lexer(compiler, project, options)
 
           .compiler = compiler #Compiler.lite.md module.exports
+          .project = project #Compiler.lite.md class Project
 
 use same options as compiler
 
@@ -117,7 +120,7 @@ prepares a processed infoLines result array
 
 Regexp to match class/method markdown titles, they're considered CODE
 
-        var titleKeyRegexp = /^(#)+ *(?:(?:public|export|default|helper|namespace)\s*)*(class|append to|function|method|constructor|properties)\b/i
+        var titleKeyRegexp = /^(#)+ *(?:(?:public|export|default|helper|namespace)\s*)*(class|namespace|append to|function|method|constructor|properties)\b/i
 
 Loop processing source code lines 
 
@@ -206,15 +209,19 @@ After applying rules: if we're in a Code Block, is CODE, else is a COMMENT
             #end if line wasnt blank
 
 parse multi-line string (triple quotes) and convert to one logical line: 
-Example: var a = 'first line\nsecond line\nThat\'s all\n'
+Example result: var a = 'first line\nsecond line\nThird line\n'
 
             if type is LineTypes.CODE 
               line = .parseTripleQuotes( line )
 
 check for multi-line comment, C and js style /* .... */ 
+then check for #ifdef/#else/#endif
 
             if .checkMultilineComment(infoLines, type, indent, line )
                 continue #found and pushed multiline comment, continue with next line
+
+            else if .checkConditionalCompilation(line)
+                continue #processed, continue with next line
 
 Create infoLine, with computed indent, text, and source code line num reference 
 
@@ -372,6 +379,9 @@ get source line, replace TAB with 4 spaces, remove trailing withespace and remov
 
         return true
 
+#### method replaceSourceLine(newLine)
+        .lines[.sourceLineNum-1] = newLine
+
 
 ----------------------------
 Multiline strings
@@ -457,6 +467,76 @@ This method handles multiline comments: `/*` `*/`
 
         return true #OK, lines processed
 
+----------------------------
+#### method checkConditionalCompilation(line:string)
+
+This method handles #ifdef/#else/#endif as multiline comments
+
+        var startSourceLine = .sourceLineNum
+
+        var words: string array
+
+        declare valid .project.compilerVar
+        declare valid .project.setCompilerVar
+
+        var isDefine = line.indexOf("#define ")
+        if isDefine>=0
+            words = line.trim().split(' ')
+            .project.setCompilerVar words[1],true
+            return false
+
+        var isUndef = line.indexOf("#undef ")
+        if isUndef>=0
+            words = line.trim().split(' ')
+            .project.setCompilerVar words[1],false
+            return false
+
+        var startCol = line.indexOf("#ifdef ")
+        if startCol<0, startCol = line.indexOf("#if def ")
+        if startCol<0, return 
+
+        //get rid of quoted strings. Still there?
+        if String.replaceQuoted(line,"").indexOf("#if")<0
+            return #no 
+
+        var startRef = "while processing #ifdef started on line #{startSourceLine}"
+
+        words = line.slice(startCol).split(' ')
+        var conditional = words[1]
+        if no conditional, .throwErr "#ifdef; missing conditional"
+        var defValue = .project.compilerVar(conditional)
+
+        var endFound=false
+        do
+            #get next line
+            if no .nextSourceLine(),.throwErr "EOF #{startRef}"
+            line = .line
+            
+            if line.search(/\S/) into var indent >= 0
+                line = line.trim()
+                if line[0] is '#' //expected: #else, #endif #end if
+                    words = line.split(' ')
+                    switch words[0] 
+                        case '#else':
+                            defValue = not defValue
+                        case "#end":
+                            if words[1] isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
+                            endFound = true
+                        case "#endif":
+                            endFound = true
+                        default
+                            .throwErr "expected '#else/#end if', read '#{line}' #{startRef}"
+                    end switch
+                else
+                    // comment line if .compilerVar not defined (or processing #else)
+                    if not defValue, .replaceSourceLine String.spaces(indent)+"//"+line
+                end if
+            end if              
+        loop until endFound
+
+        #rewind position after #ifdef, reprocess lines
+        .sourceLineNum = startSourceLine
+        return true #OK, lines processed
 
 
 ----------------------------
@@ -788,7 +868,7 @@ Each "infoLine" has:
           text:String
           tokens: Token array
 
-      constructor(lexer,type,indent,text,sourceLineNum)
+      constructor new InfoLine(lexer,type,indent,text,sourceLineNum)
         .type = type
         .indent = indent
         .text = text
@@ -1059,7 +1139,6 @@ It also handles SourceMap generation for Chrome Developer Tools debugger and Fir
       lineNum, column
       currLine:string
       lines:string array
-      addSourceAsComment = true
       lastOriginalCodeComment
       lastOutCommentLine
       sourceMap
@@ -1080,7 +1159,7 @@ Initialize output array
         .lastOutCommentLine = 0
 
         #if do generate sourceMap and in node
-        if not options.nomap and type of window is 'undefined' # in node
+        if not options.nomap and type of process isnt 'undefined' # in node
               import SourceMap
               .sourceMap = new SourceMap
 
@@ -1107,13 +1186,13 @@ Start New Line into produced code
 send the current line
 
           if .currLine or .currLine is ""
-              .lines.push .currLine
               debug  .lineNum, .currLine
+              .lines.push .currLine
+              .lineNum++
 
 clear current line
 
           .currLine = undefined
-          .lineNum++
           .column = 1
 
 #### Method ensureNewLine()
@@ -1137,12 +1216,22 @@ get result and clear memory
         .lines = []
         return result
 
-#### helper method addSourceMap(sourceLin, sourceCol)
+#### helper method markSourceMap(indent) returns object
+        var col = .column 
+        if not .currLine, col += indent-1
+        return {
+              col:col        
+              lin:.lineNum-1
+        }
+
+#### helper method addSourceMap(mark, sourceLin, sourceCol, indent)
 
         if .sourceMap
-            .sourceMap.add ( (sourceLin or 1)-1, (sourceCol or 1)-1,   
-                             .lineNum-1, .column-1 )
-
+            declare on mark 
+                lin,col
+            #.sourceMap.add ( (sourceLin or 1)-1, (sourceCol or 1)-1,   
+            #                 mark.lin, mark.col )
+            .sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
 
 ------------------------
 Exports

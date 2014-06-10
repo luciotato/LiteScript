@@ -1,7 +1,7 @@
 Classes and Inheritance
 -----------------------
 
-    declare global expect
+    declare var expect
 
     var Tests = 
 

@@ -14,7 +14,6 @@ Dependencies
       nodeDeclared: ASTBase
       parent: NameDeclaration
       type, itemType
-      converted
       value
       isForward
       isDummy
@@ -53,10 +52,21 @@ keep a list of all NameDeclarations
 #### Helper method setMember(name,nameDecl)
 force set a member
 
-        if name is '**proto**' #setting type
-          if nameDecl is this, return  #avoid circular type defs
+        var normalized=normalizePropName(name)
 
-        .members[normalizePropName(name)]=nameDecl
+        if name is '**proto**' #setting type
+
+            # walk all the **proto** chain to avoid circular references
+            var actual = nameDecl
+            do 
+                if no actual or no actual.members, break #end of chain
+                if actual is this, return #circular ref, abort setting 
+            loop while actual.members[normalized] into actual #next in chain
+
+        end if #avoid circular references
+
+        #set member
+        .members[normalized]=nameDecl
 
 #### Helper method findOwnMember(name) returns NameDeclaration
 this method looks for 'name' in NameDeclaration members
@@ -184,6 +194,7 @@ returns: Identifier
           return nameDecl
 
 else, found.
+
 If the found item has a different case than the name we're adding, emit error & return
 
         if found.caseMismatch(nameDecl.name, nodeDeclared or nameDecl.nodeDeclared)
@@ -239,7 +250,7 @@ else, if it wasnt a forward declaration, then is a duplicated error
         return "'#{.composedName()}:#{type}'"
 
 
-## Namespace (singleton) properties
+## NameDeclaration properties as namespace (singleton) 
 
     Append to namespace NameDeclaration
       properties

@@ -1,7 +1,7 @@
 Switch Statement Test
 -----------------------
 
-    declare global expect
+    declare var expect
 
     var Tests = 
 

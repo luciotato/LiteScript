@@ -1,7 +1,7 @@
 Strings
 -------
 
-    declare global expect #provided by test framework
+    declare var expect #provided by test framework
 
 Triple Quoted Strings
 

@@ -1,6 +1,33 @@
-##CoffeeScript ->, great for event emmitters
-## BUT, change position of paramteres, simplify, do not cause MBM
-1. '-> x' just sintactic sugar for ",function(x)"
+## NO ANDA PUBLIC NAMESPACE, en .interface
+## era var titleKeyRegexp = /^(#)... 
+## ==> HACERLO MAS INCLUSIVO para evitar
+## errores dificiles de descubrir. que tome CODE con cquier palabra incluso similar
+
+## NO ANDA with new Popup()...
+
+
+##Introduced "->" as alias for 'function'. 
+ Great for event emmitters
+ similar to Cofeescript BUT, change position of paramteres, 
+ simplify, do not cause MBM
+1. '-> x' is just sintactic sugar for ",function(x)"
+
+Example:
+
+      $.ajax({
+
+        url:"/dataserver?q=select * from arrivals"
+
+        success: -> data
+                //set table elements
+                $("#arrivals tbody").html data
+                //on click, show popup
+                $("#arrivals tbody tr").noClickDelay().click arrivalPopup
+
+        error: -> jqxhr,textStatus,errorThrown
+                alert jqxhr.responseText
+      })
+
 
 
 # Assignment:
@@ -28,7 +55,6 @@ alternative: "return" expression
     var math =
       root: Math.sqrt
       cube: function(x) = x * square(x)
-
 
 
 # function arrow '-> x,y' introduce callbacks

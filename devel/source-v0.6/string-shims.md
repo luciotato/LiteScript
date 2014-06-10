@@ -143,27 +143,27 @@ split expressions
                     
                 
                 //clear start and end quotes
-                var str:string = text.substr(1,text.length-2)
+                var s:string = text.substr(1,text.length-2)
 
                 var lastDelimiterPos=0;
                 
                 do
 
-                    delimiterPos = str.indexOf(delimiter+"{",lastDelimiterPos);
+                    delimiterPos = s.indexOf(delimiter+"{",lastDelimiterPos);
                     if delimiterPos<0 then break
 
                     // first part - text upto first delimiter
-                    push str.slice(lastDelimiterPos,delimiterPos),quotes 
+                    push s.slice(lastDelimiterPos,delimiterPos),quotes 
                     
                     var start = delimiterPos + 1
 
-                    closerPos = String.findMatchingPair(str,start,"}")
+                    closerPos = String.findMatchingPair(s,start,"}")
 
                     if closerPos<0
                         fail with 'unmatched "'+ delimiter +'{" at string: '+ text
                    
 
-                    item = str.slice(start+1, closerPos);
+                    item = s.slice(start+1, closerPos);
                     // add parens if expression
                     if item not like /^[A-Za-z0-9_$.]+$/ then item = '('+item+')';
 
@@ -177,7 +177,7 @@ split expressions
                 if items.length and items[0][0] isnt quotes then items.unshift(quotes+quotes)
                 
                 // remainder
-                push str.slice(lastDelimiterPos),quotes
+                push s.slice(lastDelimiterPos),quotes
 
                 return items
             

@@ -1631,7 +1631,7 @@ else: declare (VariableDecl,)
 
             varDecl.nameDecl = varDecl.createNameDeclaration()
 
-            if .global or .specifier is 'global'
+            if .specifier is 'var'
                 declare valid project.root.addToScope
                 project.root.addToScope varDecl.nameDecl
 

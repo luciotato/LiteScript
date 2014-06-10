@@ -15,14 +15,10 @@ This code was translated from CoffeScritp's sourcemap at
 https://github.com/jashkenas/coffee-script/blob/master/src/sourcemap.litcoffee
 
 ### Changes: 
-- removed stored generated column and line, since they're the array indexes
 - added class "Location:{lin,col}"
 - moved support encode functions from class methods to module functions
 
-
     import log
-    var debug = log.debug
-
 
 ### Public default Class SourceMap
 
@@ -45,7 +41,9 @@ for the specified `line` and `column`, this will have no effect.
 
       method add(sourceLine, sourceCol, line, column, options = {}) 
 
-          var lineMap = .lines[line] or (new LineMap() into .lines[line])
+          log.debug "gen #{line},#{column} -> src #{sourceLine},#{sourceCol}"
+
+          var lineMap = .lines[line] or (new LineMap(line) into .lines[line])
 
           lineMap.add column, new Location(sourceLine, sourceCol), options
 
@@ -78,28 +76,29 @@ set "sources" and "file", respectively.
 
         var
           writingline       = 0
-          lastColumn        = 0
+          lastGenColumn     = 0
           lastSourceLine    = 0
           lastSourceColumn  = 0
           needComma         = false
           buffer            = ""
 
 
-        for each lineNumber,lineMap in .lines where lineMap
+        #for each line in the generated 
+        for each lineInx,lineMap in .lines where lineMap
 
-          debug "line:",lineNumber
+          for each column,SourceLoc in lineMap.columns where SourceLoc
 
-          for each column,sourceLocation in lineMap.columns where sourceLocation
+            log.debug "line:#{lineMap.line} ->", SourceLoc.lin
+            log.debug "column:#{column}", SourceLoc.col
 
+advance to LineMap.line
 
-            debug "column:",column, "->", sourceLocation.lin, sourceLocation.col
-
-            while writingline < lineNumber
-
-                lastColumn = 0
+            if writingline < lineMap.line
+                lastGenColumn = 0
                 needComma = false
-                buffer += ";"
-                writingline++
+                while writingline < lineMap.line
+                    buffer += ";"
+                    writingline++
 
 Write a comma if we've already written a segment on this line.
 
@@ -113,8 +112,8 @@ is a generated column which doesn't match anything in the source code.
 The starting column in the generated source, relative to any previous recorded
 column for the current line:
 
-            buffer += encodeVlq(column - lastColumn)
-            lastColumn = column
+            buffer += encodeVlq(column - lastGenColumn)
+            lastGenColumn = column
 
 The index into the list of sources:
 
@@ -122,13 +121,13 @@ The index into the list of sources:
 
 The starting line in the original source, relative to the previous source line.
 
-            buffer += encodeVlq(sourceLocation.lin - lastSourceLine)
-            lastSourceLine = sourceLocation.lin
+            buffer += encodeVlq(SourceLoc.lin - lastSourceLine)
+            lastSourceLine = SourceLoc.lin
 
 The starting column in the original source, relative to the previous column.
 
-            buffer += encodeVlq(sourceLocation.col - lastSourceColumn)
-            lastSourceColumn = sourceLocation.col
+            buffer += encodeVlq(SourceLoc.col - lastSourceColumn)
+            lastSourceColumn = SourceLoc.col
             needComma = true
 
           end for
@@ -167,9 +166,11 @@ positions for a single line of output JavaScript code.
 
     class LineMap
       properties 
+        line
         columns: Location array
 
-      constructor()
+      constructor(line)
+        .line = line
         .columns = []
 
       method add(column, source:Location, options={})

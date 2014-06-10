@@ -2,7 +2,11 @@ The LiteScript Compiler Module
 ==============================
 LiteScript is a highly readable language that compiles to JavaScript.
 
-    export var version = '0.6.6'
+    export var version = '0.6.7'
+
+    //compiler generate(lines:string array)
+    //    lines.push "export var buildDate = '#{new Date.toISOString()}'"
+    export var buildDate = '20140606'
 
 This v0.6 compiler is written in v0.5 syntax. 
 That is, you use the v0.5 compiler to compile this code 
@@ -30,7 +34,7 @@ The `Environment` abstraction allows us to support compile on server(node) or th
 Require the Producer (to include it in the dependency tree)
 
     import Producer_js
-
+    
 ## Main API functions: LiteScript.compile & LiteScript.compileProject
 
 ### export Function compile (filename, sourceLines, options) returns string
@@ -94,7 +98,7 @@ output:
 
         var project = new Project(filename, options )
 
-        var fileInfo = new Environment.FileInfo(filename)
+        var fileInfo = new Environment.FileInfo({name:filename})
 
         var moduleNode = project.createNewModule(fileInfo)
 
@@ -113,11 +117,11 @@ validate var & property names
         if no project.options.skip
 
             Validate.validate project
-            if log.error.count is 0, log.message "Validation OK"
+            if log.error.count is 0, log.info "Validation OK"
 
 initialize out buffer & produce target code 
     
-        log.message "Generating #{project.options.target}"
+        log.info "Generating #{project.options.target}"
         project.produceModule moduleNode
         # the produced code will be at: moduleNode.lexer.out.getResult() :string array
 
@@ -149,8 +153,8 @@ The Modules dependency tree is the *Project tree*.
         name
         moduleCache
         root: Grammar.Module
+        compilerVars: NameDeclaration
         globalScope: NameDeclaration
-        mainModuleFileInfo
         main: Grammar.Module
         Producer
         recurseLevel = 0
@@ -169,8 +173,10 @@ normalize options
             skip: undefined
             nomap: undefined
             single: undefined
+            compileIfNewer: undefined
             browser:undefined
             extraComments:1
+            defines:[]
 
             mainModuleName: filename
             basePath: undefined
@@ -195,15 +201,15 @@ set basePath from main module path
 
         Environment.setBasePath filename,options
 
-        log.message 'Base Path:',.options.basePath
-        log.message 'Main Module:',.options.mainModuleName
-        log.message 'Out Base Path:',.options.outBasePath
+        log.info 'Base Path:',.options.basePath
+        log.info 'Main Module:',.options.mainModuleName
+        log.info 'Out Base Path:',.options.outBasePath
 
 create a 'root' dummy-module to hold global scope
 
         .root = new Grammar.Module(this)
         .root.name = 'Project Root'
-        .root.fileInfo = new Environment.FileInfo('./Project') 
+        .root.fileInfo = new Environment.FileInfo({name:'Project'}) 
         .root.fileInfo.relFilename='Project'
         .root.fileInfo.dirname = options.basePath
 
@@ -220,19 +226,21 @@ In 'string-shims' we add methods to core's String & Array
 
 compiler vars, to use at conditional compilation
         
-        declare valid this.root.compilerVars.addMember
-        .root.compilerVars = new NameDeclaration("Compiler Vars")
-        .root.compilerVars.addMember 'debug',{value:true}
+        .compilerVars = new NameDeclaration("Compiler Vars")
+        .compilerVars.addMember 'debug',{value:true}
+
+        for each def in options.defines
+            .compilerVars.addMember def,{value:true}
 
 add 'inNode' and 'inBrowser' as compiler vars
 
-        global declare window
+        declare var window
         var inNode = type of window is 'undefined'
-        .root.compilerVars.addMember 'inNode',{value:inNode}
-        .root.compilerVars.addMember 'inBrowser',{value: not inNode}
+        .compilerVars.addMember 'inNode',{value:inNode}
+        .compilerVars.addMember 'inBrowser',{value: not inNode}
 
-        //log.message .root.compilerVars
-        //log.message ""
+        //log.info .root.compilerVars
+        //log.info ""
 
 in 'options' we receive also the target code to generate. (default is 'js')
 
@@ -250,28 +258,28 @@ which generates target code for the AST class
 Import & compile the main module. The main module will, in turn, 'import' and 'compile' 
 -if not cached-, all dependent modules. 
 
-        .main = .importModule(.root, .options.mainModuleName)
+        .main = .importModule(.root, {name:.options.mainModuleName})
 
         if log.error.count is 0
-            log.message "\nParsed OK"
+            log.info "\nParsed OK"
 
 Validate
 
         if no .options.skip 
-            log.message "Validating"
+            log.info "Validating"
             Validate.validate this
             if log.error.count, log.throwControled log.error.count,"errors"
 
 Produce, for each module
 
-        log.message "\nProducing #{.options.target} at #{.options.outDir}\n"
+        log.info "\nProducing #{.options.target} at #{.options.outDir}\n"
 
         for each own property filename in .moduleCache
           var moduleNode:Grammar.Module = .moduleCache[filename]
 
           if not moduleNode.fileInfo.isCore and moduleNode.referenceCount 
 
-            log.extra "source:", moduleNode.fileInfo.importParameter
+            log.extra "source:", moduleNode.fileInfo.importInfo.name
             var result:string
 
             if not moduleNode.fileInfo.isLite 
@@ -324,7 +332,7 @@ save to disk / add to external cache
 Compilation:
 Load source -> Lexer/Tokenize -> Parse/create AST 
 
-        log.message String.spaces(this.recurseLevel*2),"compile: '#{Environment.relName(filename,.options.basePath)}'"
+        log.info String.spaces(this.recurseLevel*2),"compile: '#{Environment.relName(filename,.options.basePath)}'"
 
 Load source code, parse
 
@@ -366,6 +374,7 @@ Handle errors, add stage info, and stack
     
             err = moduleNode.lexer.hardError or err //get important (inner) error
             if not err.controled  //if not 'controled' show lexer pos & call stack (includes err text)
+                declare valid err.stack
                 err.message = "#{moduleNode.lexer.posToString()}\n#{err.stack or err.message}"
 
             log.error err.message
@@ -391,7 +400,7 @@ create a **new Module** and then create a **new lexer** for the Module
 create a Lexer for the module. The Lexer receives this module exports as a "compiler"
 because the lexer preprocessor can compile marcros and generate code in the fly via 'compiler generate'
 
-        moduleNode.lexer = new Lexer(module.exports, .options)
+        moduleNode.lexer = new Lexer(module.exports, this, .options)
 
 Now create the module scope, with two local scope vars: 
 'module' and 'exports = module.exports'. 'exports' will hold all exported members.
@@ -437,25 +446,28 @@ Check if this module 'imported other modules'. Process Imports (recursive)
 
         for each node in moduleNode.requireCallNodes
 
-            var requireParameter 
+            var importInfo = new Environment.ImportParameterInfo
 
 get import parameter, and parent Module
 store a pointer to the imported module in 
 the statement AST node
 
-If the origin is: ImportStatement
+If the origin is: ImportStatement/global Declare
 
             if node instance of Grammar.ImportStatementItem
                 declare node:Grammar.ImportStatementItem
                 if node.importParameter
-                    requireParameter = node.importParameter.getValue()                        
+                    importInfo.name = node.importParameter.getValue()                        
                 else
-                    requireParameter = node.name
+                    importInfo.name = node.name
 
-if it wansn't 'global import', add './' to the filename
+if it was 'global import, inform, else search will be local '.','./lib' and '../lib'
 
                 declare valid node.parent.global 
-                if no node.parent.global,  requireParameter = './'+requireParameter
+                if node.parent instanceof Grammar.DeclareStatement
+                    importInfo.interface = true
+                else if node.parent instanceof Grammar.ImportStatement 
+                    importInfo.globalImport = node.parent.global 
 
 else, If the origin is a require() call
 
@@ -464,17 +476,17 @@ else, If the origin is a require() call
                 if node.accessors and node.accessors[0] instanceof Grammar.FunctionAccess
                     var requireCall:Grammar.FunctionAccess = node.accessors[0]
                     if requireCall.args[0].root.name instanceof Grammar.StringLiteral
-                        requireParameter = requireCall.args[0].root.name.getValue()
+                        importInfo.name = requireCall.args[0].root.name.getValue()
 
 if found a valid filename to import
 
-            if requireParameter
-                node.importedModule = .importModule(moduleNode, requireParameter)
+            if importInfo.name
+                node.importedModule = .importModule(moduleNode, importInfo)
 
         #loop
 
 
-#### method importModule(importingModule:Grammar.Module, importParameter)
+#### method importModule(importingModule:Grammar.Module, importInfo: Environment.ImportParameterInfo)
 
 importParameter is the raw string passed to `import/require` statements,
 
@@ -485,12 +497,12 @@ importParameter is the raw string passed to `import/require` statements,
         .recurseLevel++
         var indent = String.spaces(.recurseLevel*2)
 
-        log.message ""
-        log.message indent,"'#{importingModule.fileInfo.relFilename}' imports '#{importParameter}'"
+        log.info ""
+        log.info indent,"'#{importingModule.fileInfo.relFilename}' imports '#{importInfo.name}'"
 
 Determine the full module filename. Search for the module in the environment.
 
-        var fileInfo = new Environment.FileInfo(importParameter)
+        var fileInfo = new Environment.FileInfo(importInfo)
 
         fileInfo.searchModule importingModule.fileInfo, .options
 
@@ -499,7 +511,7 @@ Before compiling the module, check internal, and external cache
 Check Internal Cache: if it is already compiled, return cached Module node
 
         if .moduleCache.hasOwnProperty(fileInfo.filename) #registered
-            log.message indent,'cached: ',fileInfo.filename
+            log.info indent,'cached: ',fileInfo.filename
             .recurseLevel--
             return .moduleCache[fileInfo.filename]
 
@@ -515,13 +527,17 @@ Check if we can get exports from a "interface.md" file
 
         if .getInterface(importingModule, fileInfo, moduleNode)
             #getInterface also loads and analyze .js interfaces
-            do nothing #getInterface sets moduleNode.exports
+            do nothing
 
 else, we need to compile the file 
     
         else 
-            this.compileFile fileInfo.filename, moduleNode
-            moduleNode.referenceCount++
+
+            if importingModule is .root and .options.compileIfNewer and fileInfo.outFileIsNewer 
+                do nothing //do not compile if source didnt change
+            else
+                this.compileFile fileInfo.filename, moduleNode
+                moduleNode.referenceCount++
 
 
 at last, return the parsed Module node
@@ -533,30 +549,37 @@ at last, return the parsed Module node
 
 
 
-#### method getInterface(importingModule,fileInfo, moduleNode:Grammar.Module)
+#### method getInterface(importingModule,fileInfo, moduleNode:Grammar.Module )
 If a 'interface' file exists, compile interface declarations instead of file
 return true if interface (exports) obtained
 
         if fileInfo.interfaceFileExists 
-
+            # compile interface
             this.compileFile fileInfo.interfaceFile, moduleNode
+            return true //got Interface
 
-            return true
+Check if we're compiling for the browser
 
-else, for .js file/core/globasl module, 
+        if .options.browser
+            if fileInfo.extension is '.js'
+                log.throwControled 'Missing #{fileInfo.relPath}/#{fileInfo.basename}.interface.md for '
+            else # assume a .lite.md file
+                return false //getInterface returning false means call "CompileFile"
+
+here, we're compiling for node.js environment
+for .js file/core/global module, 
 call node.js **require()** for parameter
 and generate & cache interface
 
-        else if fileInfo.extension is '.js' or fileInfo.isCore or not fileInfo.hasPath
+        if fileInfo.isCore or fileInfo.importInfo.globalImport or fileInfo.extension is '.js' 
 
-            log.message String.spaces(this.recurseLevel*2),
-                fileInfo.isCore? "core module" : "javascript file",
-                "require('#{fileInfo.importParameter}')"
+            log.info String.spaces(this.recurseLevel*2),
+                fileInfo.isCore?"core module":"javascript file",
+                "require('#{fileInfo.relFilename}')"
 
             if not fileInfo.isCore
                 #hack for require(). Simulate we're at the importingModule dir
-                #for require() to look at the same dirs as at runtime
-                declare global module
+                #for require() fn to look at the same dirs as at runtime
                 declare on module paths:string array
                 declare valid module.constructor._nodeModulePaths
                 #declare valid module.filename
@@ -565,15 +588,31 @@ and generate & cache interface
                 module.filename = importingModule.fileInfo.filename
                 debug "importingModule", module.filename
 
-            var requiredNodeJSModule = require(fileInfo.importParameter)
+            var requiredNodeJSModule = require(fileInfo.importInfo.name)
             moduleNode.exports.getMembersFromObjProperties(requiredNodeJSModule)
 
             if not fileInfo.isCore #restore
                 module.paths= save.paths
                 module.filename= save.filename
-        
+            
             return true
 
+#### helper method compilerVar(name) 
+helper compilerVar(name)
+return root.compilerVars.members[name].value
+
+        var compVar = .compilerVars.findOwnMember(name) 
+        if compVar, return compVar.findOwnMember("**value**")
+
+#### helper method setCompilerVar(name,value) 
+helper compilerVar(name)
+set root.compilerVars.members[name].value
+
+        var compVar = .compilerVars.findOwnMember(name) 
+        if no compVar, compVar = .compilerVars.addMember(name)
+        compVar.setMember "**value**",value
+
+    end class Project
 
 Require Extensions
 ------------------
@@ -612,7 +651,6 @@ Add the extension for all appropriate file types. Don't overwrite `.md` in case 
 if compile() throws, call getMessages() to retrieve compiler messages
 
         return log.getMessages();
-
 
 ##Add helper properties and methods to AST node class Module
 

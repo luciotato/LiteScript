@@ -5,9 +5,9 @@
 
 #set -e
 
-VERSION=0.6.0
+VERSION=0.6
 using=using
-PREV=0.6.0
+PREV=0.6
 
 if [ ! "$using" = "using" ]; then 
     echo usage: ./release 0.6.0 using 0.5.0
@@ -15,18 +15,25 @@ if [ ! "$using" = "using" ]; then
 fi
 
 cwd=$(pwd) 
-out='out'
+out='../../'
 
 #--------------------------------------
 # MAIN
 
-echo Release LiteScript ${VERSION} 
+echo compile lite-cli ${VERSION} 
 echo -----------------------
 echo cwd: ${cwd}
 echo dest dir: ${out}
 
-mkdir -p ${out}
+if [ ! -e "${out}/lib" ]; then 
+    echo cant find /lib at ${out}
+    exit 1
+fi
 
 #compile lite-cli (command line interface) v${VERSION} using ${PREV} version, w/o comments or mapsource
 #node --debug-brk lite-js -use v${PREV} -noval -nomap -comments 1 -compile ../source-v${VERSION}/lite-cli -o ${out}/lib
-node lite-js -use v${PREV} -noval -nomap -comments 0 -compile ../source-v${VERSION}/lite-cli -o ${out}/lib
+node lite-js -use v${PREV} -noval -nomap -single -comments 0 -compile ../source-v${VERSION}/lite-cli -o ${out}lib
+
+# lo copio al dir que usa debug-compiler
+echo cp ${out}lib/lite-cli.js out/lib/lite-cli.js
+cp ${out}lib/lite-cli.js out/lib/lite-cli.js

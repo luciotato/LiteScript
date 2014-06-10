@@ -1,7 +1,7 @@
 Classes: .x -> this.x
 ---------------------
 
-    declare global expect #provided by test framework
+    declare var expect #provided by test framework
 
     var Tests = 
 

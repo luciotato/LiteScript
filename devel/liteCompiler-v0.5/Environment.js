@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.4.0, source: /home/ltato/LiteScript/source-v0.5.0/Environment.lite.md
+//Compiled by LiteScript compiler v0.4.0, source: /home/ltato/LiteScript/devel/source-v0.5/Environment.lite.md
 //The 'Environment' object, must provide functions to load files,
 //search modules in external cache, load and save from external cache (disk).
 

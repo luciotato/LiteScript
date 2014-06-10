@@ -1,7 +1,7 @@
 Case When Expression
 --------------------
 
-    declare global expect
+    declare var expect
 
     var Tests = 
 

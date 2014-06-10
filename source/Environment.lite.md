@@ -26,6 +26,7 @@ Dependencies
         outFilename #: output file for code production
         outRelFilename # path.relative(options.outBasePath, this.outFilename); //relative to basePath
         outExtension
+        outFileIsNewer # true if generated file is newer than source
         interfaceFile #: interface file (.[auto-]interface.md) declaring exports cache
         interfaceFileExists #: if interfaceFileName file exists
         externalCacheExists
@@ -52,15 +53,18 @@ Dependencies
 // to use to locate modules for the `import/require` statement
 //------------------
 
+        #log.debug "searchModule #{JSON.stringify(this)}"
+
         default options = 
             target: 'js'
         
         declare on options
-            basePath,outBasePath
+            basePath,outBasePath,browser
 
-check if it's a global module (if require() parameter do not start with '.' or './') 
+check if it's a node global module (if require() parameter do not start with '.' or './') 
+if compiling for node, and "global import" and no extension, asume global lib or core module
 
-        if no this.hasPath and no this.extension 
+        if no options.browser and no this.hasPath and no this.extension 
             this.isCore = isBuiltInModule(this.basename) #core module like 'fs' or 'path'
             this.isLite = false
             return 
@@ -73,28 +77,35 @@ we search the module
             //search the file
             var search;
             if this.hasPath #specific path indicated
-                search = path.resolve(importingModuleFileInfo.dirname,this.importParameter)
+                search = [ path.resolve(importingModuleFileInfo.dirname,this.importParameter) ]
             else
-                //search in node_modules, unless we're already in node_modules:
-                if path.basename(importingModuleFileInfo.dirname) is 'node_modules'
-                    search = path.join(importingModuleFileInfo.dirname, this.importParameter)
+                if options.browser
+                    #compiling for browser, search local & ../lib
+                    search = [ 
+                        path.join(importingModuleFileInfo.dirname,this.importParameter)
+                        path.join(importingModuleFileInfo.dirname,'../lib',this.importParameter)
+                        ]
                 else
-                    search = path.join(importingModuleFileInfo.dirname,'node_modules',this.importParameter)
+                    //search in node_modules, unless we're already in node_modules:
+                    if path.basename(importingModuleFileInfo.dirname) is 'node_modules'
+                        search = [ path.join(importingModuleFileInfo.dirname, this.importParameter) ]
+                    else
+                        search = [ path.join(importingModuleFileInfo.dirname,'node_modules',this.importParameter) ]
 
-            var full,found;
-            for each ext in ['.lite.md','.md','.interface.md','.js']
-                full = search+ext;
-                if fs.existsSync(full)
-                    found=full;
-                    break;
+            var full,found = undefined;
+
+            for each item in search where not found
+                for each ext in ['.lite.md','.md','.interface.md','.js'] where not found
+                    if fs.existsSync(item+ext into full)
+                        found=full;
                 
             //console.log(basePath);
-            //console.log(full);
+            //log.debug full
 
             if not found
                 log.throwControled '#{importingModuleFileInfo.relFilename}: Module not found: #{this.importParameter}\n'
-                                    +'\tSearched as:\n'
-                                    +'\t#{search}(.lite.md|.md|.js)]'
+                                    +'\tSearched as: #{this.importParameter} (options.browser=#{options.browser})\n'
+                                    +'\t#{search}(.lite.md|.md|.interface.md|.js)]'
             
             //set filename & Recalc extension
             this.filename =  path.resolve(full); //full path
@@ -120,10 +131,24 @@ we search the module
         this.outFilename = path.join(options.outBasePath, this.relPath, this.basename+this.outExtension);
         this.outRelFilename = path.relative(options.outBasePath, this.outFilename); //relative to basePath
 
+Check if outFile exists, but is older than Source
+
+        //get source date & time 
+        var sourceStat = fs.statSync(this.filename);
+        declare on sourceStat mtime
+
+        if fs.existsSync(this.outFilename)
+            //get generated date & time 
+            var statGenerated = fs.statSync(this.outFilename);
+            declare on statGenerated mtime
+            //if source is older
+            this.outFileIsNewer = (statGenerated.mtime > sourceStat.mtime ); 
+
 Also calculate this.interfaceFile (cache of module exported names), 
 check if the file exists, and if it is updated
 
         this.interfaceFile = path.join(this.dirname,this.basename+'.interface.md');
+        #log.debug this.interfaceFile 
         var isCacheFile
         if fs.existsSync(this.interfaceFile)
             this.interfaceFileExists = true
@@ -137,17 +162,12 @@ check if the file exists, and if it is updated
 Check if interface cache is updated
 
         if this.interfaceFileExists and isCacheFile
-            //get source date & time 
-            var stat = fs.statSync(this.filename);
-            declare on stat mtime
             //get interface date & time 
             var statInterface = fs.statSync(this.interfaceFile);
             declare on statInterface mtime
             //cache exists if source is older
-            this.interfaceFileExists = (statInterface.mtime > stat.mtime ); 
+            this.interfaceFileExists = (statInterface.mtime > sourceStat.mtime ); 
             if not this.interfaceFileExists, externalCacheSave this.interfaceFile,null //delete cache file if outdated
-
-        debug this
         
         return
     
@@ -242,6 +262,7 @@ Check if interface cache is updated
         
         catch e
             log.error "Environment.getGlobalObject '#{name}'"
+            declare valid e.stack
             log.error e.stack
             debugger
 

@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.4.0, source: /home/ltato/LiteScript/source-v0.5.0/SourceMap.lite.md
+//Compiled by LiteScript compiler v0.4.0, source: /home/ltato/LiteScript/devel/source-v0.5/SourceMap.lite.md
 //# LiteScript SourceMap
 
 //Source maps allow JavaScript runtimes to match running JavaScript back to

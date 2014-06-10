@@ -1,6 +1,7 @@
-#if node  ../util/lite-js -use v0.5 -compile Compiler -o ../liteCompiler-v0.6 -nomap; then 
-if lite -compile Compiler -nomap -o ../liteCompiler-v0.6 -v 1; then 
-    echo compiled v0.6 OK
-    echo copy to ../../lib
-    cp -u ../liteCompiler-v0.6/* ../../lib/
+OUT=../liteC/lib
+if node  ../util/lite-js -use v0.6 -D PROD_C -compile Compiler -o $OUT -nomap; then 
+    echo compiled OK $(pwd) 
+    echo compiled at $OUT
 fi
+
+#node  ../util/lite-js -use v0.6 -D PROD_C -compile producer_c.lite.md -single -o $OUT -nomap

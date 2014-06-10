@@ -1,6 +1,7 @@
 Default Assignment Tests
 ------------------------
 
+    declare var expect 
 
     function aFn(x,y, options)
 
@@ -33,8 +34,6 @@ Default Assignment Tests
 
       return options
 
-
-    declare global expect 
 
     var Tests = 
 

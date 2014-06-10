@@ -21,6 +21,22 @@ added meta-statement 'compiler generate' to generate LiteScript code on the fly
 while compiling.
 
 
+### Changed syntax
+
+#### global declare
+
+`global declare (IDENTIFIER as 'file-name',)` 
+now reads a .interface. declaration and add all public declarations in the global scope.
+It's used for browser code, for example:
+
+    global declare jQuery, Document
+
+will compile "./jQuery.interface.md" and "./Document.interface.md"
+and add all public declarations in the global scope during compilation.
+You must include <script src=jquery-min></script> in your HTML to include
+the file during execution.
+
+
 ### New syntax, property attributes for methods
 
      method x [not enumerable, configurable]
@@ -166,12 +182,12 @@ LiteScript:
     var someVar = function(somevalue, someothervalue) = somevalue * someothervalue + 10    
 
     #terse arrow
-    someVar = -> somevalue, someothervalue = somevalue * someothervalue + 10
+    someVar = ->(somevalue, someothervalue) return somevalue * someothervalue + 10
 
     #filter
     var array = [1,2,3,4,5,6,7,8,9,10]
 
-    print array.filter ->x: x > 5
+    print array.filter ->(x) return x > 5
     # => [6,7,8,9,10]
 
     #Event Emitters
@@ -192,12 +208,12 @@ Coffescript choice for '->' is a great choice, consistent with Coffescript appro
 and with: 'everyting is a expression' and 'implicit return'
 
 LiteScript approach, in order to enhance readability, separates statements and expressions, 
-,has no implicit return, and uses the word 'function' to declare a function.
-The best choice in order to do not confuse programmers would have been 
-to use '->' as in CoffeScript, but sadly is not consistent with LiteScript base design.
+has no implicit return, and uses the word 'function' to declare a function.
+The best choice in order to do not confuse programmers comming from CoffeScript would have been 
+to use '->' as in CoffeScript, but sadly this is not consistent with LiteScript base design.
 
-1. Be ligth: By making '->' just a shortcut for 'function', it is only a lexical concept, ( 
-syntax sugar), and not another semantical concept. 
+1. Be ligth: By making '->' just a shortcut for 'function', it is only a lexical concept, 
+( syntax sugar), and not another semantical concept. 
 
 2. Enhance readabiliy: '-> x,y' reads as 'function(x,y)' 
 

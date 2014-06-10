@@ -1,0 +1,460 @@
+enum TYPE_ID
+    TYPE_UNDEFINED = 1,
+    TYPE_BOOLEAN,
+    TYPE_INT32,
+    TYPE_UINT32,
+    TYPE_INT64,
+    TYPE_UINT64,
+    TYPE_DOUBLE,
+    TYPE_STRING,
+    TYPE_OBJECT_PTR,
+    TYPE_ARRAY_PTR,
+    TYPE_FUNCTION_PTR,
+
+    TYPE_Object,
+    TYPE_Function,
+    _USER_DEFINED_START_TYPES_
+    ...
+
+C2 PREPROCESSOR
+
+    C2 to C CONVERSIONS: 
+    --------------------
+
+    . means -> (. dereferences)
+
+    | means .  (| member access)
+
+    struct Xx means struct Xx{...} + typedef (struct Xx *) Xx
+        so defining a "struct X" means definig X as a "pointer to struct X"
+
+    // all "struct" names are CamelCased
+    // default usage for all CamelCased names is then: "pointer to struct"
+    // e.g.: ASTBase is a pointer to a struct ASTBase
+
+    "with" syntax construction added
+
+    "namespace Xx" defines the name to use for anonymous functions
+    when generating C code
+
+    pointer.member = function(...) means: create function pointer_member
+    and then assign to pointer.member
+
+#define false 0
+#define true 1
+#define bool int
+
+// str is char*
+typedef char* str
+
+// "method" is a pointer to a function(Object this,...)
+typedef (function(Object this))* method
+    
+    struct Object 
+        TYPE_ID           __type //que tipo de objeto es (int)
+        struct Function*  constructor //ptr to struct Function, also Class-ID
+        // la info es redundante y permite saber si un puntero apunta a un objeto valido. 
+        // Si (constructor == _GOR[__type]) es un objeto valido
+        struct Object*    __proto__ //ptr to __proto__
+
+    struct Function 
+        +Object+
+        str        name //function name
+        function*  call //executable
+        int        length //arity
+        TYPE_ID    created__type //que tipo de objeto crea esta funcion (also index in _GOR[])
+        size_t     created__size // size de la struct que crea
+
+    #define var Object
+
+----------
+Global Object-Class Registry
+-------
+Holds all class constructors
+a class is a Function, and also a Object
+
+    struct Function _GOR[1.. defined types] // _GOR = Global Object-Function-Class Registry
+
+---
+    // register a type in GOR
+
+    function __register (str name, function* executableCode, int arity
+                         ,Object parentProto
+                         ,TYPE_ID createdType, size_t size
+                         ) returns Function
+    {
+
+        with _GOR[createdType]
+            |__type = TYPE_Function //all items in _GOR are Functions
+            |constructor = _GOR[createdType] // boxed constructor
+            |__proto__ = parentProto
+            |name = name
+            |call = executableCode //un-boxed constructor
+            |length = arity
+            |created_type = createdType
+            |created_size = size
+    
+        return &(_GOR[createdType]) //returns registered "struct Function" 
+    }
+
+--  TYPE_OBJECT
+
+    function Object__ctor(Object this, Object proto){
+        if (!this) this = __new(TYPE_Object);
+        this.__proto__ = proto;
+    };
+
+    Object_BOXED = 
+        __register('Object', Object__ctor, 1
+                   ,null
+                   ,TYPE_Object, sizeof(struct Object))
+
+--  TYPE_FUNCTION
+
+    function Function__ctor(Function this)
+        {throw 'cant create dyn functions in C'}; // 
+
+    Function_BOXED = 
+        __register('Function', Function__ctor, 1
+                   ,Object_BOXED
+                   ,TYPE_Function, sizeof(struct Function))
+
+--  TYPE_STRING
+
+    function String__ctor(Function this)
+        {   throw 'cant create dyn functions in C'}; // 
+
+    Function_BOXED = 
+        __register('Function', Function__ctor, 1
+                   ,Object_BOXED
+                   ,TYPE_Function, sizeof(struct Function))
+
+----------------------------
+Helper functions
+
+    function __new(TYPE_ID type){
+        Object o = alloc(_GOR[type]|__size)
+        o.__type = type
+        o.constructor = _GOR[type]
+        o.__proto__ = _GOR[type]|__proto__
+        return o
+    }
+
+    function new ( function* Class__ctor ){
+        (*Class__ctor)(null)
+        Object o = alloc(_GOR[type]|__size)
+        o.__type = type
+        o.constructor = _GOR[type]
+        o.__proto__ = _GOR[type]|__proto__
+        return o
+    }
+
+    // "new"
+    // cuando en lite o js, se hace: a = new ASTBase(10)
+    // se codifica como:  a = ASTBase__ctor(null,10)
+    // y ASTBase__ctor debe hacer el alloc. El __ctor se encarga de los allocs. "new" es un no-op.
+    // Dado esto, no se puede llamar a una Function-Class sin "new"
+    // por ejemplo: a = ASTBase(5) se codificaria
+    //  a = ASTBase__ctor(5) y falla la cantidad de parametros
+
+    // pase como parametro:
+    // cuando en lite o js, se pasa una funcion-class como parametro, se usa el mismo nombre
+    // por ej: var statement:ASTBase = .req(LoopStatement,ForStatement)
+    // al pasarlo hay que pasar el __ctor, que es quien representa a la clase
+    // ASTBase statement = .req(LoopStatement__ctor,ForStatement__ctor)
+
+    // en resumen, cuando la clase se usa como parametro o con new se translitera como: "Clase__ctor"
+
+----------------------------
+-register TYPE_Object
+
+    function Object__constructor(Object this){} //do nothing
+
+    //boxed Object constructor = class
+    struct Function Object__CLASS;
+
+    with Object__CLASS
+        |__type  = TYPE_Function
+        |__proto = Function_proto
+        |__asClass = TYPE_Object //cuando es usado como clase
+        |name = 'Object'
+        |__asFn = Object__constructor
+        |length = 1
+        
+
+    reg_GOR( TYPE_Object, sizeof(struct Object)
+            , null
+            ,'Object',Object__constructor, 1 )
+
+----------------------------
+
+-create Object__proto to serve as root of proto chain (Object__proto.__proto=null)
+
+    Object Object__proto = __new(TYPE_Object);
+
+----------------------------
+
+----------
+-register all "boxed" scalars in GOR
+----------
+
+----------------------------
+-register TYPE_Function
+
+    function Function__constructor(Function this, TYPE_ID classType, str name, int length){
+        this.__classTYPE = classType;
+        this.name = name;
+        this.length = length;
+    } 
+
+    reg_GOR ( TYPE_Function, sizeof(struct Function)
+            , Object__proto
+            , 'Function', Function__constructor, 3 )
+
+
+---------------------------
+add typeID TYPE_ASTBase
+
+struct ASTBase
+    +Object+
+    Object  parent
+    str     name, keyword, type, itemType
+    Lexer   lexer
+    int64   lineInx, sourceLineNum, column, indent, locked, index
+
+    method lock,getParent,etc...
+
+-declare constructor executable code
+    function ASTBase__constructor(ASTBase this, ASTBase parent, str name)
+
+        this.parent = parent
+        this.name = name
+
+        this.lexer = parent.lexer
+
+        if this.lexer 
+            this.sourceLineNum = this.lexer.sourceLineNum
+            this.column = this.lexer.token.column
+            this.indent = this.lexer.indent
+            this.lineInx = this.lexer.lineInx    
+
+-box constructor as Function
+
+-declare "new" helper, copying constructor params
+
+    function new__ASTBase(ASTBase parent, str name)
+        ASTBase this = __new(TYPE_ASTBase);
+        return ASTBase__constructor(this,parent,name);
+
+----------------------------
+-register on GOR, get boxed constructor
+
+    reg_GOR ( TYPE_ASTBase, sizeof(struct ASTBase)
+            , Object__proto
+            , 'ASTBase', ASTBase__constructor, 3 )
+
+-create ASTBase__proto, to store methods
+
+    ASTBase ASTBase__proto = __new(TYPE_ASTBase)
+
+-declare other methods & store at proto
+
+    ASTBase__proto.lock = function (ASTBase this)
+        this.locked = true
+
+#### helper method getParent(searchedClass)
+**getParent** method searchs up the AST tree until a specfied node class is found
+    
+    ASTBase__proto.getParent = function(ASTBase this, var searchedClass)
+
+        var node = this.parent
+        while(node && !(isInstanceof(node,searchedClass)){
+            node = node.parent // move to parent
+        }
+        return node;
+
+
+#### helper method positionText() returns string
+
+    ASTBase__proto.positionText = function(ASTBase this) returns str
+        if (!(this.lexer || !this.sourceLineNum)) {return "(compiler-defined)"};
+        //return this.lexer.filename + ":" + this.sourceLineNum + ":" + (this.column||0)
+        return strConcat(this.lexer.filename, ":" , this.sourceLineNum , ":" , intToString(this.column||0))
+
+#### helper method toString()
+
+    ASTBase__proto.toString = function(ASTBase this) returns str
+        return strConcat("[",this.constructor.name,"]");
+
+#### method throwError(msg)
+**throwError** add node position info and throws a 'controled' error.
+
+A 'controled' error, shows only err.message
+
+A 'un-controled' error is an unhandled exception in the compiler code itself, 
+and it shows error message *and stack trace*.
+
+    ASTBase__proto.throwError = function(ASTBase this, str msg)
+        // var err = new CompilerError(...
+        var err = new__CompilerError( strConcat("", this.positionText(),". ",msg) );
+        err.controled = true
+        throw err
+
+#### helper method sayErr(msg)
+
+    ASTBase__proto.sayErr = function( ASTBase this, msg)
+        log.error( this.positionText(), msg );
+
+#### Method opt() returns ASTBase
+
+    ASTBase__proto.opt = function( ASTBase this, Array arguments)
+
+        var startPos = this.lexer.getPos()
+
+        #debug
+        int spaces = this.levelIndent()
+
+For each argument, -a class or a string-, we will attempt to parse the token stream 
+with the class, or match the token type to the string.
+
+        //for each searched in arguments
+        var searched;
+        for(int inx=0;inx<arguments.length;inx++){ 
+            searched=arguments[inx];
+
+            if (!searched){continue;}
+
+            if isTypeOf(searched,'string'){
+                bool isTYPE = isAllUPPER(searched);
+                bool found
+
+                if (isTYPE)
+                  //found = .lexer.token.type is searched 
+                  // a is b - string comparision -> strcmp
+                  found = (strcmp(this.lexer.token.type,searched)==0)
+                else
+                  //found = .lexer.token.value is searched 
+                  found = (strcmp(this.lexer.token.value,searched)==0)
+
+            if(found)
+
+              //debug spaces, .constructor.name,'TRY',searched.name, 'on', .lexer.token.toString()
+              // las llamadas con varargs, se convierten en una llam
+              debug(ARGS(5,
+                , spaces, TYPE_Int
+                , this.constructor.name, TYPE_String
+                , 'matched OK:', TYPE_String
+                , searched, , TYPE_String
+                , this.lexer.token.value, TYPE_String ))
+
+              str result = this.lexer.token.value;
+
+Advance a token, .lexer.token always has next token
+
+              this.lexer.nextToken()
+              return result
+
+          else
+
+"searched" is an AST class
+
+            //debug spaces, .constructor.name,'TRY',searched.name, 'on', .lexer.token.toString()
+            debug(ARGS(...
+
+if the argument is an AST node class, we instantiate the class and try the `parse()` method.
+`parse()` can fail with `ParseFailed` if the syntax do not match
+
+            try
+
+
+        ASTBase this = __new(TYPE_ASTBase);
+        return ASTBase__constructor(this,parent,name);
+
+
+
+                //var astNode:ASTBase = new searched(this) # create required ASTNode, to try parse
+
+                ASTBase astNode = __new(searched.__type);
+                return ASTBase__constructor(this,parent,name);
+
+                ASTBase astNode = new searched(this) # create required ASTNode, to try parse
+
+                #if there was adjectives on the parent, apply as properties
+                # so they're available during parse
+                declare valid .adjectives:array
+                if .adjectives 
+                    for each adj in .adjectives
+                        declare valid adj.name
+                        astNode[adj.name]=true
+
+                astNode.parse() # if it can't parse, will raise an exception
+
+                debug spaces, 'Parsed OK!->',searched.name
+
+                return astNode # parsed ok!, return instance
+
+            catch err
+
+If parsing fail, but the AST node were not 'locked' on target, (a soft-error),
+we will try other AST nodes.
+
+              if err.soft
+                  .lexer.softError = err
+                  debug spaces, searched.name,'parse failed.',err.message
+
+rewind the token stream, to try other AST nodes
+
+                  debug "<<REW to", "#{startPos.sourceLineNum}:#{startPos.token.column or 0} [#{startPos.index}]", startPos.token.toString()
+                  .lexer.setPos startPos
+
+              else
+
+else: it's a hard-error. The AST node were locked-on-target.
+We abort parsing and throw.
+
+                  # debug
+
+                  # the first hard-error is the most informative, the others are cascading ones
+                  if .lexer.hardError is null 
+                      .lexer.hardError = err
+                  #end if
+
+raise up, abort parsing
+
+                  raise err
+
+              #end if - type of error
+
+            #end catch
+            
+          #end if - string or class
+
+        #loop - try the next argument
+
+No more arguments.
+`opt` returns `undefined` if none of the arguments could be use to parse the stream.
+
+        return undefined
+
+      #end method opt
+
+
+
+#### method req() returns ASTBase
+
+**req** (required) if for required symbols of the grammar. It works the same way as `opt` 
+except that it throws an error if none of the arguments can be used to parse the stream.
+
+We first call `opt` to see what we get. If a value is returned, the function was successful,
+so we just return the node that `opt` found.
+
+else, If `opt` returned nothing, we give the user a useful error.
+
+    ASTBase__proto.req = function( ASTBase this, Array arguments)
+
+        var result = .opt.apply(this,arguments)
+
+        if no result 
+          .throwParseFailed "#{.constructor.name}: found #{.lexer.token.toString()} but #{.listArgs(arguments)} required"
+
+        return result

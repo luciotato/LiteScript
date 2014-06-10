@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.6.6, source: /home/ltato/LiteScript/devel/source-v0.6/NameDeclaration.lite.md
+//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.7/NameDeclaration.lite.md
 
 // Dependencies
 // ------------
@@ -19,7 +19,6 @@
       // nodeDeclared: ASTBase
       // parent: NameDeclaration
       // type, itemType
-      // converted
       // value
       // isForward
       // isDummy
@@ -44,22 +43,17 @@
        
        else {
          // if options.type, .setMember('**proto**',options.type)
-         if (options.type) {
-             this.setMember('**proto**', options.type)};
+         if (options.type) {this.setMember('**proto**', options.type)};
          // if options.itemType, .setMember('**item type**',options.itemType)
-         if (options.itemType) {
-             this.setMember('**item type**', options.itemType)};
+         if (options.itemType) {this.setMember('**item type**', options.itemType)};
          // if options.hasOwnProperty('value'), .setMember('**value**',options.value)
-         if (options.hasOwnProperty('value')) {
-             this.setMember('**value**', options.value)};
+         if (options.hasOwnProperty('value')) {this.setMember('**value**', options.value)};
        };
 
        // if options.isForward, .isForward = true
-       if (options.isForward) {
-           this.isForward = true};
+       if (options.isForward) {this.isForward = true};
        // if options.isDummy, .isDummy = true
-       if (options.isDummy) {
-           this.isDummy = true};
+       if (options.isDummy) {this.isDummy = true};
      };
 
 // keep a list of all NameDeclarations
@@ -73,14 +67,27 @@
     NameDeclaration.prototype.setMember = function(name, nameDecl){
 // force set a member
 
+       var normalized = normalizePropName(name);
+
        // if name is '**proto**' #setting type
        if (name === '**proto**') {// #setting type
-         // if nameDecl is this, return  #avoid circular type defs
-         if (nameDecl === this) {
-             return};
+
+            // # walk all the **proto** chain to avoid circular references
+           var actual = nameDecl;
+           // do
+           do{
+               // if no actual or no actual.members, break #end of chain
+               if (!actual || !actual.members) {break};
+               // if actual is this, return #circular ref, abort setting
+               if (actual === this) {return};
+           } while ((actual=actual.members[normalized]));// end loop
+           
        };
 
-       this.members[normalizePropName(name)] = nameDecl;
+       // end if #avoid circular references
+
+        // #set member
+       this.members[normalized] = nameDecl;
     };
 
     // helper method findOwnMember(name) returns NameDeclaration
@@ -145,8 +152,7 @@
     NameDeclaration.prototype.makePointTo = function(nameDecl){
 
        // if nameDecl isnt instance of NameDeclaration, fail with "makePointTo: not a NameDeclaration"
-       if (!(nameDecl instanceof NameDeclaration)) {
-           throw new Error("makePointTo: not a NameDeclaration")};
+       if (!(nameDecl instanceof NameDeclaration)) {throw new Error("makePointTo: not a NameDeclaration")};
 
         // # remove existing members from nameDeclarations[]
        this.isForward = false;
@@ -263,6 +269,7 @@
        };
 
 // else, found.
+
 // If the found item has a different case than the name we're adding, emit error & return
 
        // if found.caseMismatch(nameDecl.name, nodeDeclared or nameDecl.nodeDeclared)
@@ -288,8 +295,7 @@
            log.error("" + (nameDecl.positionText()) + ". DUPLICATED property name: '" + nameDecl.name + "'");
            log.error(found.originalDeclarationPosition());// #add extra information line
            // if no nameDecl.nodeDeclared, console.trace
-           if (!nameDecl.nodeDeclared) {
-               console.trace()};
+           if (!nameDecl.nodeDeclared) {console.trace()};
        };
 
        return nameDecl;
@@ -345,7 +351,7 @@
    // end class NameDeclaration
 
 
-// ## Namespace (singleton) properties
+// ## NameDeclaration properties as namespace (singleton)
 
    // Append to namespace NameDeclaration
       // properties

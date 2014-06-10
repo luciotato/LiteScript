@@ -45,11 +45,9 @@ Code blocks, denoted by four spaces of indentation after a blank line, are treat
 Every other line not indented at least 4 spaces, is considered Markdown 
 and treated as comments by the compiler, *with some exceptions*. (the twist)
 
-The exception are: MarkDown *Titles* **(###, ####, #####)** 
-introducing classes, methods and functions.
+The exception are: MarkDown *Titles* **(###, ####, #####)** introducing classes, methods and functions.
 
-This exception exists to allow markdown titles to act as block starters (class, function, method), 
-and then keep literate markdown comment paragraphs *inside classes and functions*. 
+This exception exists to allow markdown titles to act as block starters (class, function, method), and then keep literate markdown comment paragraphs *inside classes and functions*. 
 Comments, if left outside the class or function, tend to get detached from their 
 code on reorganizations.
 Anything else not indented 4 spaces is a literate comment, Github flavor MarkDown syntax.
@@ -100,7 +98,7 @@ OK, now you can:
 1. Go cowboy-style, get hands-on and try it online, 
 go to [LiteScript Online Playground](http://luciotato.github.io/LiteScript_online_playground/playground/)
 
-2. Be more academic, and read the whole [LiteScript Grammar](/source/Grammar.lite.md)
+2. Be more academic, and read the whole [LiteScript Grammar](/source/Grammar.lite.md) (is also the code)
 
 3. Continue reading the highlights at [/doc](/doc)
 

@@ -177,6 +177,7 @@ Example:
         name 
         type: VariableRef
         itemType: VariableRef
+        aliasVarRef: VariableRef
         assignedValue: Expression
 
       declare name affinity varDecl, paramDecl
@@ -200,7 +201,10 @@ optional assigned value
             if .lexer.token.type is 'NEWLINE' #dangling assignment "="[NEWLINE]
                 dangling=true
             else
-                .assignedValue   = .req(Expression)
+                if .lexer.interfaceMode //assignment => declare alias
+                    .aliasVarRef = .req(VariableRef)
+                else
+                  .assignedValue = .req(Expression)
                 return
 
         if dangling #dangling assignment :/= assume free-form object literal
@@ -1518,9 +1522,9 @@ the next item in the array on the next line, can start with a unary operator
 
             if .lexer.token.type is 'NEWLINE' and not (.parent instanceof ArrayLiteral)
               .opt 'NEWLINE' #consume newline
-              if .lexer.indent<=.indent or .lexer.token.type isnt 'OPER' # the first token in the next line isnt OPER (+,and,or,...)
-                .lexer.returnToken() # return NEWLINE
-                break #end Expression
+              if .lexer.token.type isnt 'OPER' # the first token in the next line isnt OPER (+,and,or,...)
+                  .lexer.returnToken() # return NEWLINE
+                  break #end Expression
 
 Try to parse next token as an operator
 
@@ -1950,10 +1954,12 @@ Functions: parametrized pieces of callable code.
     public class FunctionDeclaration extends ASTBase
 
       properties 
-        specifier, export, default, nice, shim, generator
+        specifier
+        export,default,shim,generator,nice //adjectives
         paramsDeclarations: VariableDecl array
         definePropItems: DefinePropertyItem array
         body
+        EndFnLineNum
 
       method parse()
 
@@ -1979,6 +1985,10 @@ get parameter members, and function body
 
 This method is shared by functions, methods and constructors. 
 `()` after `function` are optional. It parses: `['(' [VariableDecl,] ')'] [returns VariableRef] '['DefinePropertyItem']'`
+
+        .EndFnLineNum = .sourceLineNum+1 //default value
+
+
 
         if .opt("(")
             .paramsDeclarations = .optSeparatedList(VariableDecl,',',')')
@@ -2007,7 +2017,11 @@ This method is shared by functions, methods and constructors.
             #indented function body
             .body = .req(Body)
 
+            # get function exit point source line number
+            .EndFnLineNum = .lexer.maxSourceLineNum
+
         end if
+
 
 ### public class DefinePropertyItem extends ASTBase
 This Symbol handles property attributes, the same used at js's **Object.DefineProperty()**
@@ -2165,7 +2179,7 @@ creates a object with methods, properties and classes
       method parse()
 
         .req 'namespace','Namespace'
-        if .opt('properties'), .throwParseFailed "is properties"
+        //if .opt('properties'), .throwParseFailed "is properties"
 
         .lock()
         .toNamespace = true
@@ -2269,7 +2283,10 @@ Example: `import Args, wait from 'wait.for'` ->  js:`var http=require('./Args'),
 
       method parse()
         .req('import')
-        .lock()
+        .lock
+
+        if .lexer.options.browser, .throwError "'import' statement invalid in browser-mode. Do you mean 'global declare'?"
+
         .list = .reqSeparatedList(ImportStatementItem,",")
 
 keep track of `import/require` calls
@@ -2295,25 +2312,36 @@ keep track of `import/require` calls
 
 ## DeclareStatement
 
-Declare statement allows you to forward-declare variable or object members. 
-Also allows to declare the valid properties for externally created objects
-when you dont want to create a class to use as type.
-<br>`DeclareStatement: declare ([types]|global|forward|on IDENTIFIER) (VariableDecl,)+`
-<br>`DeclareStatement: declare name affinity (IDENTIFIER,)+` 
+Declare allows you to define a variable and/or its type 
+*for the type-checker (at compile-time)*
 
-#####Declare types
-<br>`DeclareStatement: declare [types] (VariableDecl,)+` 
+#####Declare variable:type
+`DeclareStatement: declare VariableRef:type-VariableRef` 
 
-To declare valid types for scope vars: 
+Declare a variable type on the fly, from declaration point onward
 
-Example: `declare types name:string, parent:NameDeclaration`
+Example: `declare name:string, parent:NameDeclaration` #on the fly, from declaration point onward
 
-#####Declare valid
-`DeclareStatement: declare valid IDENTIFIER ("."IDENTIFIER|"()"|"[]")*` 
 
-To declare valid chains
+#####Global Declare
+`global declare (ImportStatementItem+)`
+Browser-mode: Import a *.interface.md* file to declare a global pre-existent complex objects 
+Example: `global declare jQuery,Document,Window`
 
-Example: `declare valid .type[].name.name`
+#####Declare [global] var
+`DeclareStatement: declare [global] var (VariableDecl,)+`
+
+Allows you to declare a preexistent [global] variable
+Example: `declare global var window:object`
+
+#####Declare global type for VariableRef
+
+Allows you to set the type on a existing variable
+globally for the entire compilation.
+
+Example: 
+`declare global type for LocalData.user: Models.userData` #set type globally for the entire compilation
+    
 
 #####Declare name affinity
 `DeclareStatement: name affinity (IDENTIFIER,)+` 
@@ -2330,77 +2358,116 @@ Example
 ```
 
 Given the above declaration, any `var` named (or ending in) **"nameDecl"** or **"nameDeclaration"** 
-will assume `:NameDeclaration` as type. (Class name is automatically included in 'name affinity')
+will assume `:NameDeclaration` as type. (Classname is automatically included in 'name affinity')
 
 Example:
 `var nameDecl, parentNameDeclaration, childNameDecl, nameDeclaration`
 
 all three vars will assume `:NameDeclaration` as type.
 
-#####global Declare 
-`DeclareStatement: global declare (VariableDecl,)+` 
+#####Declare valid
+`DeclareStatement: declare valid IDENTIFIER("."(IDENTIFIER|"()"|"[]"))* [:type-VariableRef]` 
 
-To declare global, externally created vars. Example: `declare global logMessage, colors`
+To declare, on the fly, known-valid property chains for local variables.
+Example: 
+  `declare valid data.user.name`
+  `declare valid node.parent.parent.text:string`
+  `declare valid node.parent.items[].name:string`
 
 #####Declare on 
-`DeclareStatement: declare on IDENTIFIER (VariableDecl,)+` #declare members on vars
+`DeclareStatement: declare on IDENTIFIER (VariableDecl,)+` 
 
 To declare valid members on scope vars. 
+Allows you to declare the valid properties for a local variable or parameter
+Example: 
+/*
+    function startServer(options)
+        declare on options 
+            name:string, useHeaders:boolean, port:number
+*/
+
 
 ### export class DeclareStatement extends ASTBase
 
       properties
+        global //adjective
         varRef: VariableRef
-        names: VariableDecl array
-        specifier
-        global:boolean
         type: VariableRef
+        names: VariableDecl array
+        list: ImportStatementItem array
+        specifier
+        globVar: boolean
 
       method parse()
 
         .req 'declare'
         .lock()
 
-        .names = []
+if it was 'global declare', treat as import statement
 
-check 'on|valid|forward|global'
+        if .global
+              .list = .reqSeparatedList(ImportStatementItem,",")
+              //keep track of `import/require` calls
+              var parentModule = .getParent(Module)
+              for each item in .list
+                  parentModule.requireCallNodes.push item
+              return
+        end if
 
-        .specifier = .opt('on')
-        if .specifier
+get specifier 'on|valid|name|all'
 
-Find the main name where this properties are being declared. Read names
+        .specifier = .opt('on','valid','name','global','var')
+        if .lexer.token.value is ':' #it was used as a var name
+            .specifier='on-the-fly'
+            .lexer.returnToken
+        else if no .specifier
+            .specifier='on-the-fly' #no specifier => assume on-the-fly type assignment
+        end if
 
-            .name = .req('IDENTIFIER')
-            .names = .reqSeparatedList(VariableDecl,',')
-            return
+        #handle '...global var..' & '...global type for..'
+        if .specifier is 'global' #declare global (var|type for)... 
+            .specifier = .req('var','type') #require 'var|type'
+            if .specifier is 'var'
+                  .globVar = true
+            else # .specifier is 'type' require 'for'
+                  .req('for')
+        end if
 
-check 'valid' 
+        switch .specifier
 
-        .specifier = .opt('valid')
-        if .specifier
+          case 'on-the-fly','type':
+            #declare VarRef:Type
+            .varRef = .req(VariableRef)
+            .req(':') //type expected
+            .parseType 
+
+          case 'valid':
             .varRef = .req(VariableRef)
             if no .varRef.accessors, .sayErr "declare valid: expected accesor chain. Example: 'declare valid name.member.member'"
             if .opt(':'), .parseType //optional type
-            return
 
-check 'name affinity', if not, must be: global|forward|types(default)
+          case 'name':
+            .specifier = .req('affinity')
+            .names = .reqSeparatedList(VariableDecl,',')
+            for each varDecl in .names
+               if varDecl.type or varDecl.assignedValue
+                  .sayErr "declare name affinity: expected 'name,name,...'"
 
-        if .opt('name')
-          .specifier = .req('affinity')
-        else 
-          .specifier = .opt('global') or 'types' 
+          case 'var': 
+            .names = .reqSeparatedList(VariableDecl,',')
+            for each varDecl in .names
+               if varDecl.assignedValue
+                  .sayErr "declare var. Cannot assign value in .interface file."
 
-all of them get a (VariableDecl,)+
+          case 'on':
+            .name = .req('IDENTIFIER')
+            .names = .reqSeparatedList(VariableDecl,',')
 
-        .names = .reqSeparatedList(VariableDecl,',')
-        
-check syntax
+        //end switch
 
-        for each varDecl in .names
-           if .specifier is 'affinity' and varDecl.type or varDecl.assignedValue
-              .sayErr "declare name affinity: expected 'name,name,...'"
+        return 
 
-        return
+      end method parse
 
 
 ## DefaultAssignment
@@ -2574,43 +2641,9 @@ Adjectives can precede several statement.
 #### method parse()
 
         .name = .req('public','export','default','nice','generator','shim','helper','global')
+        #'public' is just alias for 'export'
+        if .name is 'public', .name='export'
 
-#### Helper method validate(statement)
-Check validity of adjective-statement combination 
-
-        var CFVN = ['class','function','var','namespace'] 
-
-        var validCombinations =  
-              export: CFVN, public: CFVN, default: CFVN
-              generator: ['function','method'] 
-              nice: ['function','method'] 
-              shim: ['function','method','class'] 
-              helper:  ['function','method','class']
-              global: ['import','declare']
-
-        //declare valid:array
-        declare valid statement.keyword
-
-        var valid:array = validCombinations[.name] or ['-*none*-']
-        if not (statement.keyword in valid)
-            .throwError "'#{.name}' can only apply to #{valid.join('|')} not to '#{statement.keyword}'"
-        
-Also convert adjectives to Statement node properties to ease code generation.
-
-        statement[.name] = true
-
-'public' is just alias for 'export'
-
-        declare valid statement.export
-        if .name is 'public', statement.export = true
-
-set module.exportDefault if 'export default' or 'public default' was parsed
-
-        declare valid statement.default
-        if statement.export and statement.default
-            var moduleNode:Module = .getParent(Module)
-            if moduleNode.exportDefault, .throwError "only one 'export default' can be defined"
-            moduleNode.exportDefault = statement
 
 
 FunctionCall
@@ -2703,7 +2736,7 @@ Examples:
 
 Loop processing: 'NEWLINE','case' or 'default'
 
-        do until .lexer.token.type is 'EOF'
+        do until .lexer.token.type is 'EOF' or .lexer.indent<=.indent
             var keyword = .req('case','default','NEWLINE')
             
 on 'case', get a comma separated list of expressions, ended by ":"
@@ -2848,12 +2881,16 @@ Statement: ( AssignmentStatement | fnCall-VariableRef [ ["("] (Expression,) [")"
     public class Statement extends ASTBase
   
       properties
+        keyword
         adjectives: Adjective array
         statement
         preParsedVarRef
         intoVars
 
       method parse()
+
+        var key
+
         #debug show line and tokens
         debug ""
         .lexer.infoLine.dump()
@@ -2861,7 +2898,8 @@ Statement: ( AssignmentStatement | fnCall-VariableRef [ ["("] (Expression,) [")"
 First, fast-parse the statement by using a table.
 We look up the token (keyword) in **StatementsDirect** table, and parse the specific AST node
 
-        .statement = .parseDirect(.lexer.token.value, StatementsDirect)
+        key = .lexer.token.value
+        .statement = .parseDirect(key, StatementsDirect)
         if no .statement
 
 If it was not found, try optional adjectives (zero or more). Adjectives are: `(export|public|generator|shim|helper)`. 
@@ -2870,7 +2908,8 @@ If it was not found, try optional adjectives (zero or more). Adjectives are: `(e
 
 Now re-try fast-parse
 
-          .statement = .parseDirect(.lexer.token.value, StatementsDirect)
+          key = .lexer.token.value
+          .statement = .parseDirect(key, StatementsDirect)
           if no .statement
 
 Last possibilities are: `FunctionCall` or `AssignmentStatement`
@@ -2879,6 +2918,7 @@ both start with a `VariableRef`:
 (performance) **require** & pre-parse the VariableRef.
 Then we require a AssignmentStatement or FunctionCall
 
+            key = 'varref'
             .preParsedVarRef = .req(VariableRef)
             .statement = .req(AssignmentStatement,FunctionCall)
             .preParsedVarRef = undefined #clear
@@ -2888,9 +2928,38 @@ Then we require a AssignmentStatement or FunctionCall
 If we reached here, we have parsed a valid statement. 
 Check validity of adjective-statement combination 
         
+        key = key.toLowerCase()
+        .keyword = key
+        
         if .adjectives
           for each adj in .adjectives
-            adj.validate .statement
+
+Check validity of adjective-statement combination 
+
+              var CFVN = ['class','function','var','namespace'] 
+
+              var validCombinations =  
+                    export: CFVN, default: CFVN
+                    generator: ['function','method'] 
+                    nice: ['function','method'] 
+                    shim: ['function','method','class'] 
+                    helper:  ['function','method','class']
+                    global: ['import','declare']
+
+              var valid:array = validCombinations[adj.name] or ['-*none*-']
+              if key not in valid, .throwError "'#{adj.name}' can only apply to #{valid.join('|')} not to '#{key}'"
+
+          end for
+                          
+set module.exportDefault if 'export default' or 'public default' was parsed
+
+          declare valid .statement.default
+          declare valid .statement.export
+          if .statement.export and .statement.default
+              var moduleNode:Module = .getParent(Module)
+              if moduleNode.exportDefault, .throwError "only one 'export default' can be defined"
+              moduleNode.exportDefault = .statement
+
 
 
 ##### helper method hasAdjective(name) returns boolean

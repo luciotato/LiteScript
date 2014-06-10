@@ -3,7 +3,7 @@
     global import path,fs
     import Args
 
-    var VERSION = '0.6.6'
+    var VERSION = '0.6.7'
 
 ## usage, module vars
 
@@ -30,6 +30,8 @@
     Advanced options:
     -es6, --harmony  used with -run, uses node --harmony
     -s,  -single     compile single file. do not follow import/require() calls
+    -ifn, -ifnew     compile single file, only if source is newer
+    -watch           watch current dir for source changes and compile
     -nm, -nomap      do not generate sourcemap
     -noval           skip name validation
     -u, -use vX.Y.Z  select LiteScript Compiler Version to use (devel)
@@ -39,10 +41,10 @@
     """
 
     var color=
-            normal:   "\x1b[39;49m"
-            red:      "\x1b[91m"
-            yellow:   "\x1b[93m"
-            green:    "\x1b[32m" 
+        normal:   "\x1b[39;49m"
+        red:      "\x1b[91m"
+        yellow:   "\x1b[93m"
+        green:    "\x1b[32m" 
 
 
 ### public Function main
@@ -51,7 +53,10 @@ Get & process command line arguments
 
         var args = new Args(process.argv)
 
-        var compileAndRun, mainModuleName, compileAndRunParams:array
+        var 
+            mainModuleName
+            compileAndRunOption:boolean
+            compileAndRunParams:array
 
 Check for -help
 
@@ -68,7 +73,7 @@ Check for -version
 Check for --run
 
         if args.value('r','run') into mainModuleName
-            compileAndRun = true
+            compileAndRunOption = true
             compileAndRunParams = args.splice(args.lastIndex) #remove params after --run
 
 get compiler version to --use
@@ -86,10 +91,15 @@ Check for other options
             skip    : args.option('noval',"novalidation") // skip name validation
             nomap   : args.option('nm',"nomap") // do not generate sourcemap
             single  : args.option('s',"single") // single file- do not follow require() calls
+            ifnew   : args.option('ifn',"ifnew") // single file, compile if source is newer
             browser : args.option('b',"browser") 
             es6     : args.option('es6',"harmony") 
 
-        var compilerPath = use ? '../../liteCompiler-#{use}' else '.'
+        var compilerPath = case 
+            when use like /^v.*/ then '../../liteCompiler-#{use}' 
+            when no use then '.'
+            else use
+        end 
 
         if no mainModuleName, mainModuleName = args.value('c',"compile") 
 
@@ -110,7 +120,7 @@ show args
             print '\n\ncompiler path: #{compilerPath}'
             print 'compiler options: #{JSON.stringify(options)}'
             print 'cwd: #{process.cwd()}'
-            print 'compile#{compileAndRun?" and run":""}: #{mainModuleName}'
+            print 'compile#{compileAndRunOption?" and run":""}: #{mainModuleName}'
             if options.debug, print color.yellow,"GENERATING COMPILER DEBUG AT out/debug.log",color.normal
 
 load required version of LiteScript compiler
@@ -120,64 +130,22 @@ load required version of LiteScript compiler
 
         var Compiler = require('#{compilerPath}/Compiler.js');
 
-launch project compilation
-
         declare valid Compiler.version
-        declare valid Compiler.compile
         if options.verbose, print 'LiteScript compiler version #{Compiler.version}'
+
+launch project compilation
 
         try
 
 if "compile and run", load & compile single file and run it
 
-            if compileAndRun
-
-                var nodeArgs = options.es6? " --harmony" else "" +
-                               options.debug? " --debug-brk" else ""
-
-                var filename = mainModuleName
-                if not fs.existsSync(filename), filename=mainModuleName+'.md'
-                if not fs.existsSync(filename), filename=mainModuleName+'.lite.md'
-                if not fs.existsSync(filename), fail with 'Compile and Run,  File not found: "#{mainModuleName}"'
-                var sourceLines = fs.readFileSync(filename)
-                var compiledCode = Compiler.compile(filename,sourceLines,options);
-
-                // if options.debug, save compiled file, run node --debug.brk
-                if options.debug or options.es6
-                    var outFile = path.join(options.outDir,mainModuleName+'.js')
-                    fs.writeFileSync outFile,compiledCode
-                    var exec = require('child_process').exec;
-                    if options.debug, print "***LAUNCHING NODE in DEBUG MODE***"
-                    var cmd = 'node #{nodeArgs} #{outFile} #{compileAndRunParams.join(" ")}'
-                    print cmd
-                    exec cmd, function(error, stdout, stderr) 
-                                declare error:Error
-                                print stdout
-                                print stderr
-                                if no options.debug
-                                    try # to delete generated temp file
-                                        fs.unlink outFile
-                                    catch err 
-                                        print err.message," at rm",outFile
-                                end if
-                                if error 
-                                    print "ERROR",error.code
-                                    print error.message
-                                    process.exit error.code or 1
-
-                    
+            if compileAndRunOption
+                compileAndRun compileAndRunParams, Compiler, mainModuleName, options
 
 else, launch compile Project
 
             else
-                if Compiler has property 'compileProject' #v0.4
-                    declare valid Compiler.compileProject
-                    Compiler.compileProject(mainModuleName, options);
-
-                else # v0.3 and lower
-                    Compiler.compile(mainModuleName, options);
-                
-                end if
+                launchCompilation Compiler, mainModuleName, options
 
 Compile Exception handler
 
@@ -199,16 +167,66 @@ Compile Exception handler
                 console.log(e);
                 throw e;
         
-After compilation
+        end exception
 
-if --run, Run
+    end main function
 
-        if compileAndRun and not (options.debug or options.es6) #es6 and -debug: save .js & run in a new process
+
+### function launchCompilation(Compiler, mainModuleName, options)
+
+        declare valid Compiler.compile
+
+        if Compiler has property 'compileProject' #v0.4
+            declare valid Compiler.compileProject
+            Compiler.compileProject(mainModuleName, options);
+
+        else # v0.3 and lower
+            Compiler.compile(mainModuleName, options);
+        
+        end if
+
+### function compileAndRun(compileAndRunParams,Compiler,mainModuleName,options)
+
+        var nodeArgs = options.es6?" --harmony":"" +
+                       options.debug?" --debug-brk":""
+
+        var filename = mainModuleName
+        if not fs.existsSync(filename), filename=mainModuleName+'.md'
+        if not fs.existsSync(filename), filename=mainModuleName+'.lite.md'
+        if not fs.existsSync(filename), fail with 'Compile and Run,  File not found: "#{mainModuleName}"'
+        var sourceLines = fs.readFileSync(filename)
+        var compiledCode = Compiler.compile(filename,sourceLines,options);
+
+        // if options.debug, save compiled file, run node --debug.brk
+        if options.debug or options.es6
+            var outFile = path.join(options.outDir,mainModuleName+'.js')
+            fs.writeFileSync outFile,compiledCode
+            var exec = require('child_process').exec;
+            if options.debug, print "***LAUNCHING NODE in DEBUG MODE***"
+            var cmd = 'node #{nodeArgs} #{outFile} #{compileAndRunParams.join(" ")}'
+            print cmd
+            exec cmd, function(error, stdout, stderr) 
+                        declare error:Error
+                        print stdout
+                        print stderr
+                        if no options.debug
+                            try # to delete generated temp file
+                                fs.unlink outFile
+                            catch err 
+                                print err.message," at rm",outFile
+                        end if
+                        if error 
+                            print "ERROR",error.code
+                            print error.message
+                            process.exit error.code or 1
+
+        else //run here
+
             compileAndRunParams.unshift 'lite',mainModuleName  #add 'lite filename...' to arguments
             if options.verbose, print "RUN: #{compileAndRunParams.join(' ')}"
             
-register require() extensions, so .lite and .md LiteScript files are recognized,
-loaded and compiled
+register require() extensions, so if .lite and .md LiteScript 
+files can be required() from node
 
             declare valid Compiler.registerRequireExtensions
             Compiler.registerRequireExtensions
@@ -216,14 +234,14 @@ loaded and compiled
 hack for require(). Simulate we're at the run module dir,
 for require() to look at the same dirs as at runtime
 
-            declare global module
+            declare var module
             declare on module paths:string array
             declare valid module.constructor._nodeModulePaths
             module.filename = path.resolve(filename)
             module.paths = module.constructor._nodeModulePaths(path.dirname(module.filename))
             __dirname = path.dirname(module.filename)
 
-set process.argv to parameters after --run filename
+set process.argv to parameters after "--run filename"
 
             process.argv = compileAndRunParams
 
@@ -231,3 +249,30 @@ run code
 
             eval compiledCode
 
+### function watchDir(Compiler, options)
+
+Watch a directory and compile when files change
+    
+        options.single = true //compile single file, do not follow "import/require()" calls
+        options.ifnew = true //compile only if source is newer
+
+        var mainDir = path.resolve('.')
+
+        var watcher = fs.watch(mainDir)
+
+        watcher.on 'error' -> err
+          watcher.close
+          throw err
+
+        watcher.on 'change' ->
+          clearTimeout readdirTimeout
+          console.log "DIR CHANGE"
+          readdirTimeout = setTimeout(
+                function
+                    compileDir(Compiler, mainDir, options) 
+                ,25)
+
+### function compileDir(Compiler, dir, options)
+      var files:array = fs.readdirSync(dir)
+      for each file in files where file like /\.(lite|lite\.md)$/
+            launchCompilation Compiler, file, options
