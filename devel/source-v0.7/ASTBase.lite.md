@@ -550,7 +550,7 @@ else, Object codes
           else if type of item is 'object'
 
             declare on item
-              COMMENT:string, NLI, CSL:array, freeForm
+              COMMENT:string, NLI, CSL:array, freeForm, h
             
 if the object is an array, resolve with a recursive call
 
@@ -593,6 +593,11 @@ if the object is an array, resolve with a recursive call
                   # prepend // if necessary
                   if type of item isnt 'string' or not item.COMMENT.startsWith("//"), .lexer.out.put "// "
                   .out item.COMMENT
+
+{h:1/0} --> enable/disabe output to header file
+ 
+            else if item.h isnt undefined
+                .lexer.out.toHeader = item.h
 
 else, unrecognized object
 

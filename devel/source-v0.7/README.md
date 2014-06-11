@@ -21,6 +21,20 @@ When compiled with "-D PROD_C", this source will incorporate
 "producer_c.js" and will hace as default target ".C"
 see: build-PRODC.sh
 
+#### Removed:
+- "namespace properties": were confusing. Better is to create
+    "append to namespace xx" after the class PropertyDeclaration
+
+#### requirement to a valid c-conversion
+
+- not supported yet:
+    - untyped vars
+    - Regexp
+    - JSON
+    - append to namespace
+
+
+
 
 ###TO DO:
 PropertyDeclaration:

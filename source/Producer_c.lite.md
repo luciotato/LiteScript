@@ -35,15 +35,6 @@ as the new 'export default' (instead of 'module.exports')
 
         end if
 
-default #includes:
-"LiteC-core.h" at the header, the header at the .c
-
-        .out {h:1},NL
-        .out '#include "LiteC-core.h"',NL
-
-        .out {h:0},NL
-        .out '#include "#{.fileInfo.basename}.h"',NL,NL
-
         for each statement in .statements
           statement.produce()
         .out NL
@@ -71,6 +62,7 @@ A "Body" is an ordered list of statements.
           statement.produce()
 
         .out NL
+        //.addSourceMap
 
 
 -------------------------------------
@@ -111,7 +103,7 @@ declare vars before statement (exclude body of FunctionDeclaration)
 
 call the specific statement (if,for,print,if,function,class,etc) .produce()
 
-        var mark = .lexer.out.markSourceMap(.indent)
+        //.addSourceMap
         .out .statement
 
 add ";" after the statement
@@ -119,7 +111,6 @@ then EOL comment (if it isnt a multiline statement)
 then NEWLINE
 
         if not .statement.skipSemiColon
-          .addSourceMap mark
           .out ";"
           if not .statement.body
             .out .getEOLComment()
@@ -316,54 +307,8 @@ produce the expression body
 
 Prefix ++/--, varName, Accessors and postfix ++/--
 
-        .out .preIncDec, .expandAccessors(), .postIncDec
+        .out .preIncDec, .name.translate(IDENTIFIER_ALIASES), .accessors, .postIncDec
 
-
-      helper method expandAccessors(upto:Number) returns array
-
-          var result = [.name]
-          if .accessors
-              for each inx,ac in .accessors
-                  if upto>=0 and inx is upto, break
-                  if ac instanceof Grammar.PropertyAccess
-                      if inx+1<.accessors.length //is not the last
-                          and .accessors[inx+1] instanceof Grammar.FunctionAccess
-                            result.push '->call'
-                      end if
-                      result.push '->#{ac.name}'
-                  else if ac instanceof Grammar.FunctionAccess
-                      result.push '('
-                      result.push {CSL:ac.args}
-                      result.push ')'
-                  else if ac instanceof Grammar.IndexAccess
-                      result.push '['
-                      result.push ac.name //expression
-                      result.push ']'
-
-          return result
-
-      end helper method
-
-
-      helper method getInstanceAccessors() returns array
-
-This method will get all the accessors up to a method call
-returns an array, to send to .out
-
-        var upto = 0
-        if .accessors
-          // search from the end of the accessor chain, upto the function call
-          upto = .accessors.length
-          while --upto>=0
-              if .accessors[upto] instanceof Grammar.FunctionAccess
-                //found the function call ()
-                upto-- //move one back
-                if .accessors[upto] instanceof Grammar.PropertyAccess
-                    //is the function name, remove it to get the instance
-                    upto-- //move one back
-          end while
-
-        return .expandAccessors(upto) //prop chain upto instance on which the function is called
 
 ### append to class Grammar.AssignmentStatement ###
 
@@ -414,30 +359,19 @@ else, simple value (Expression)
 
 -----------
 ## Accessors
-1) Property access "." translates to pointer dereference "->"
-2) Function access "()", if it's a method, we must add "->call" to access
-the class jmp table. Also we must add the object as first parameter (this)
-3) IndexAccess: we use C's built in `[ ]` accessor
+We just defer to JavaScript's built in `.` `[ ]` and `( )` accessors
 
 ### append to class Grammar.PropertyAccess ##
       method produce() 
-        .out "->",.name
-
-### append to class Grammar.FunctionAccess
-      method produce() 
-        declare .parent:Grammar.VariableRef
-        if .parent.accessors[0] is this //simple function call
-            .out "("
-        else
-            //member?
-            .out "->call("
-            .out .parent.getInstanceAccessors(),", " //value for "this" param
-        end if
-        .out {CSL:.args},")"
+        .out ".",.name
 
 ### append to class Grammar.IndexAccess
       method produce() 
         .out "[",.name,"]"
+
+### append to class Grammar.FunctionAccess
+      method produce() 
+        .out "(",{CSL:.args},")"
 
 -----------
 
@@ -472,11 +406,10 @@ return prefix for item to be appended
         
         else # in a ClassDeclaration
           declare valid .toNamespace
-          toPrototype = true
+          toPrototype = not .toNamespace #if it's a "namespace properties" or "namespace method"
           ownerName = parent.name
 
-        //return [ownerName, toPrototype? "->prototype->" else "->" ]
-        return ownerName
+        return [ownerName, toPrototype? ".prototype." else "." ]
 
 
 ---
@@ -513,20 +446,19 @@ var with__1=frontDoor;
 ---
 ### Append to class Grammar.PropertiesDeclaration ###
 
-'properties' followed by a list of comma separated: var names and optional assignment
+'var' followed by a list of comma separated: var names and optional assignment
 
       method produce(prefix) 
 
-        //.outLinesAsComment .lineInx, .lastLineInxOf(.list)
+        .outLinesAsComment .lineInx, .lastLineInxOf(.list)
 
-        //if no prefix, prefix = .getOwnerPrefix()
+        if no prefix, prefix = .getOwnerPrefix()
 
         for each varDecl in .list
-          .out varDecl,";",NL
-/*          if varDecl.assignedValue #is not valid to assign to .prototype. - creates subtle errors later
+          if varDecl.assignedValue #is not valid to assign to .prototype. - creates subtle errors later
             if prefix instance of Array and prefix[1] and prefix[1] isnt '.', .throwError 'cannot assign values to instance properties in "Append to"'
             .out '    ',prefix, varDecl.name,"=",varDecl.assignedValue,";",NL
-*/
+
         .skipSemiColon = true
 
 ### Append to class Grammar.VarStatement ###
@@ -535,16 +467,15 @@ var with__1=frontDoor;
 
       method produce() 
 
+        declare valid .keyword
         declare valid .compilerVar
         declare valid .export
 
-        /*
         if .keyword is 'let' and .compilerVar('ES6')
           .out 'let '
 
         else
           .out 'var '
-        */
 
 Now, after 'var' or 'let' out one or more comma separated VariableDecl 
   
@@ -587,23 +518,23 @@ variable name and optionally assign a value
 It's a `var` keyword or we're declaring function parameters.
 In any case starts with the variable name
       
-          .out .type or 'void',' ', .name
+          .out .name
 
           declare valid .keyword
 
 If this VariableDecl come from a 'var' statement, we force assignment (to avoid subtle bugs,
 in LiteScript, 'var' declaration assigns 'undefined')
 
-          if .parent instanceof Grammar.VarStatement and .assignedValue
-              .out ' = ',.assignedValue 
+          if .parent instanceof Grammar.VarStatement 
+              .out ' = ',.assignedValue or 'undefined'
 
 else, this VariableDecl come from function parameters decl, 
 if it has AssginedValue, we out assignment if ES6 is available. 
 (ES6 implements 'default' for parameters, so `function myFunc(a=3)` is valid in ES6)
 
-          //else
-          //  if .assignedValue and .compilerVar('ES6')
-          //      .out ' = ',.assignedValue
+          else
+            if .assignedValue and .compilerVar('ES6')
+                .out ' = ',.assignedValue
 
     #end VariableDecl
 
@@ -615,8 +546,7 @@ if it has AssginedValue, we out assignment if ES6 is available.
         var bare=[]
         for each statement in .statements
             bare.push statement.statement
-        #.out NL,"    ",{CSL:bare, separator:";"}
-        .out {CSL:bare, separator:";"},";"
+        .out NL,"    ",{CSL:bare, separator:";"}
 
 
 ### Append to class Grammar.IfStatement ###
@@ -626,7 +556,7 @@ if it has AssginedValue, we out assignment if ES6 is available.
         declare valid .elseStatement.produce
 
         if .body instanceof Grammar.SingleLineStatement
-            .out "if (", .conditional,") {",.body,"}"
+            .out "if (", .conditional,") {",.body, "}"
         else
             .out "if (", .conditional, ") {", .getEOLComment()
             .out  .body, "}"
@@ -669,7 +599,7 @@ var in order to avoid calling it twice. Else, we use it as is.
         if iterable 
           if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
             iterable = ASTBase.getUniqueVarName('list')  #unique temp iterable var name
-            .out "Object ",iterable,"=",.variant.iterable,";",NL
+            .out "var ",iterable,"=",.variant.iterable,";",NL
 
         .variant.produce(iterable)
 
@@ -719,7 +649,7 @@ Create a default index var name if none was provided
         if no indexVar
           indexVar = {name:.mainVar.name+'__inx', assignedValue:0} #default index var name
 
-        .out "for(int "
+        .out "for( var "
                 , indexVar.name,"=",indexVar.assignedValue or "0",",",.mainVar.name
                 ," ; ",indexVar.name,"<",iterable,".length"
                 ," ; ",indexVar.name,"++){"
@@ -745,7 +675,7 @@ Handle by using a js/C standard for(;;){} loop
 
         declare valid .endExpression.produce
 
-        .out "for(int ",.indexVar.name, "=", .indexVar.assignedValue or "0", "; "
+        .out "for( var ",.indexVar.name, "=", .indexVar.assignedValue or "0", "; "
 
         if .conditionPrefix is 'to'
             #'for n=0 to 10' -> for(n=0;n<=10;...
@@ -901,72 +831,45 @@ A `FreeObjectLiteral` is an object definition using key/value pairs, but in free
 `export` prefix causes the function to be included in `module.exports`
 `generator` prefix marks a 'generator' function that can be paused by `yield` (js/ES6 function*)
 
-     method produce(options)
+     method produce(theProperties:array)
 
-      default options = 
-          typeSignature:false
+Generators are implemented in ES6 with the "function*" keyword (note the asterisk)
 
       var generatorMark = .generator and .compilerVar('ES6')? "*" else ""
+
       var isConstructor = this instance of Grammar.ConstructorDeclaration
-      var addThis = false
-      var className:string
 
 check if this is a 'constructor', 'method' or 'function'
 
       if isConstructor
-          .out "//class _init fn",NL
-          className = .getParent(Grammar.ClassDeclaration).name
-          .out "void ",className,"__init"
-          addThis = true
+          # class constructor: JS's function-class-object-constructor
+          .out "function ",.getParent(Grammar.ClassDeclaration).name
 
 else, method?
 
       else if this instance of Grammar.MethodDeclaration
 
-          //if no options.typeSignature, .out "//function ",.name,NL
-      
           #get owner where this method belongs to
-          if no .getOwnerPrefix() into className 
+          if no .getOwnerPrefix() into var prefix 
               fail with 'method "#{.name}" Cannot determine owner object'
 
           #if shim, check before define
-          //if .shim, .out "if (!",className,.name,")",NL
+          if .shim, .out "if (!",prefix,.name,")",NL
 
-          //if .definePropItems #we should code Object.defineProperty
-          //    className[1] = className[1].replace(/\.$/,"") #remove extra dot
-          //    .out "Object.defineProperty(",NL,
-          //          className, ",'",.name,"',{value:function",generatorMark
-          //else
-          .out .type or 'void',' '
-          if options.typeSignature
-              .out "(*",.name,")" 
+          if .definePropItems #we should code Object.defineProperty
+              prefix[1] = prefix[1].replace(/\.$/,"") #remove extra dot
+              .out "Object.defineProperty(",NL,
+                    prefix, ",'",.name,"',{value:function",generatorMark
           else
-              .out className,'__',.name //," = function",generatorMark
-
-          addThis = true
+              .out prefix,.name," = function",generatorMark
 
 else is a simple function
 
       else 
-          .out .type or 'void',' ',.name //, generatorMark
-
-Now, funtion parameters
-
-      if addThis
-          //method parameters declaration, add "[ClassName] this" is first param
-          .out "(",className," this"
-          if .paramsDeclarations.length
-              .out ',',{CSL:.paramsDeclarations}
-          .out ")"
-      
-      else
-          //just function parameters declaration
-          .out "(", {CSL:.paramsDeclarations}, ")" 
-
+          .out "function ",.name, generatorMark
 
 if 'nice', produce default nice body, and then the generator header for real body
 
-      /*
       var isNice = .nice and not (isConstructor or .shim or .definePropItems or .generator)
       if isNice
           var argsArray = (.paramsDeclarations or []).concat["__callback"]
@@ -975,16 +878,10 @@ if 'nice', produce default nice body, and then the generator header for real bod
           .out "};",NL
           .out "function* ",prefix,.name,"_generator"
       end if
-      */
 
-
-      if options.typeSignature //close & exit
-          .out ";", .getEOLComment(),NL
-          return
-
-start body
-
-      .out "{", .getEOLComment()
+Produce function parameters declaration
+       
+      .out "(", {CSL:.paramsDeclarations}, "){", .getEOLComment()
 
 if the function has a exception block, insert 'try{'
 
@@ -1006,28 +903,31 @@ if it has a "catch" or "exception", insert 'try{'
 
 if params defaults where included, we assign default values to arguments 
 (if ES6 enabled, they were included abobve in ParamsDeclarations production )
-/* no on C
+
           if .paramsDeclarations and not .compilerVar('ES6')
               for each paramDecl in .paramsDeclarations
                 if paramDecl.assignedValue 
                     .body.assignIfUndefined paramDecl.name, paramDecl.assignedValue
               #end for
           #end if
-*/
+
+if class properties have default values...
+
+          if theProperties
+              for each propDecl in theProperties
+                propDecl.produce('this.') //property assignments
 
 now produce function body
 
           .body.produce()
 
-close the function, add source map for function default "return undefined".
+close the function
 
       .out "}"
-      if .lexer.out.sourceMap
-          .lexer.out.sourceMap.add ( .EndFnLineNum, 0, .lexer.out.lineNum-1, 0)
 
 if we were coding .definePropItems , close Object.defineProperty
 
-/*      if .definePropItems 
+      if .definePropItems 
           for each definePropItem in .definePropItems 
             .out NL,",",definePropItem.name,":", definePropItem.negated? 'false':'true'
           end for
@@ -1040,32 +940,13 @@ If the function was adjectivated 'export', add to module.exports
           .out ";",NL,{COMMENT:'export'},NL
           .out .lexer.out.exportNamespace,'.',.name,'=',.name,";"
           .skipSemiColon = true
-*/
 
 --------------------
 ### Append to class Grammar.PrintStatement ###
 `print` is an alias for console.log
 
       method produce()
-
-        var format:string array = []
-
-        for each inx,arg:Grammar.Expression in .args
-            var nameDecl = arg.getResultType() 
-            if no nameDecl
-                .sayErr "can't determine type of expr ##{inx+1}: #{arg}"
-            else if nameDecl.name is 'int'
-                format.push "%d"
-            else if nameDecl.name is 'str'
-                format.push "%s"
-            else if nameDecl.name is 'float'
-                format.push "%f"
-            else
-                .sayErr "don't know format code for type '#{nameDecl.composedName()}' of expr ##{inx+1}: #{arg}"
-            end if
-        end of
-
-        .out 'printf("',format.join(' '),'",',{'CSL':.args},');'
+        .out "console.log(",{"CSL":.args},")"
 
 
 --------------------
@@ -1109,17 +990,7 @@ Out as comments
 
       method produce()
 
-        if .global
-
-          .out {h:1},NL
-
-          for each item in .list
-            .out '#include "',item.name,'.h"',NL
-
-          .out {h:0},NL
-         
-
-        .outLinesAsComment .lineInx, .names? .lastLineInxOf(.names) : .lineInx
+        .outLinesAsComment .lineInx, .lastLineInxOf(.names)
         .skipSemiColon = true
 
 
@@ -1130,15 +1001,19 @@ Classes contain a code block with properties and methods definitions.
 
       method produce()
 
-1st, split body into: a) properties b) constructor c) methods
+        .out {COMMENT:"constructor"},NL
+      
+First, since in JS we have a object-class-function-constructor  all-in-one
+we need to get the class constructor, and separate other class items.
 
         declare theConstructor:Grammar.FunctionDeclaration
         declare valid .produce_AssignObjectProperties
         declare valid .export
 
         var theConstructor = null
-        var theMethods: Grammar.Statement array = []
-        var PropertiesDeclarationStatements = []
+        var theMethods = []
+        var theProperties = []
+        var theNamespaceProperties = []
 
         if .body
           for each index,item in .body.statements
@@ -1151,127 +1026,55 @@ Classes contain a code block with properties and methods definitions.
               theConstructor = item.statement
 
             else if item.statement instanceof Grammar.PropertiesDeclaration
-               PropertiesDeclarationStatements.push item.statement
+              declare valid item.statement.toNamespace
+              if item.statement.toNamespace
+                 theNamespaceProperties.push item.statement
+              else
+                  theProperties.push item.statement
 
             else 
               theMethods.push item
 
-        end if body
-
-In C we need to create a struct for "methods jmp table type" in the .h
-where each member is a function with the correct type signature
-
-        .out {h:1},NL //start header output
-
-        .out {COMMENT:"class"},.name
-        if .varRefSuper
-          .out {COMMENT:[' extends ',.varRefSuper]},NL
-        else 
-          .out NL
-
-        .out "// #{.name} is the type for: ptr to instance of struct #{.name}_t",NL
-        .out NL,"typedef struct ",.name,"_t * ",.name,";",NL,NL
-
-        .out {COMMENT:"methods jmp table type"},NL
-        .out "struct ",.name,"__METHODS_t {",NL
-
-        for each item in theMethods
-            item.statement.produce {typeSignature:true}
-        .out "};",NL,NL
-
-Then a struct for the instance properties, preceded by
-  1) Class pointer: "Class class" 
-  2) "methods jmp table" pointer: "struct [name]__METHODS_t * call"
-Theese are the commont properties for all Object-derived classes (all)
-
-        .out {COMMENT:"#{.name} instance properties"},NL
-        .out "struct ",.name,"_t {",NL
-        .out "    Class class;",NL
-        .out "    struct ",.name,"__METHODS_t * call;",NL
-        .out "    //#{.name} specific properties",NL
-        for each propertiesDeclaration in PropertiesDeclarationStatements
-            propertiesDeclaration.produce
-        .out "};",NL,NL
-
-Then we expose a instantiated struct Class_t, with the specific
-values for this class (created in the .c file)
-and a "const ptr to it", (also created in the .c file)
-
-        .out {COMMENT:"instantiated class info (_I) and a const ptr to it (_CLASS)"},NL
-        .out "extern struct Class_t ",.name,"__CLASS_I;",NL
-        .out "extern const Class ",.name,"__CLASS;",NL
-
-        .out {h:0},NL //end header output
-      
-Now on the .c file:
-
-a) the constructor ( void function [name]__init)
-
-        //.out {COMMENT:"constructor"},NL
+        #end if body
 
         if theConstructor
-          theConstructor.produce 
+          theConstructor.produce theProperties
           .out ";",NL
         
-        else // a default constructor
-          .out "//default __init",NL
-          .out "void ",.name,"__init(",.name," this){"
+        else
+          #out a default "constructor"
+          .out "function ",.name,"(){"
           if .varRefSuper
-              .out NL,"    ",{COMMENT:["//auto call super__init, to initialize first part of space at *this"]}
-              .out NL,"    ",.varRefSuper,"__init(this);",NL
-          for each propDecl in PropertiesDeclarationStatements
+              .out {COMMENT:["default constructor: call super.constructor"]}
+              .out NL,"    ",.varRefSuper,".prototype.constructor.apply(this,arguments)",NL
+          for each propDecl in theProperties
               propDecl.produce('this.') //property assignments
           .out "};",NL
-        end if
+        #end if
 
+Set parent class if we have one indicated
 
-b) the methods
+        if .varRefSuper
+          .out {COMMENT:[.name,' (extends|proto is) ',.varRefSuper,NL]}
+          .out .name,'.prototype.__proto__ = ', .varRefSuper,'.prototype;',NL 
 
-now out methods, which means create functions
-named: class__fnName
+now out namespace properties, which means create properties in the object-function-class
+
+        for each propDecl in theNamespaceProperties
+          propDecl.produce(.name+'.') //namespace property assignments
+
+now out methods, which means create properties in the object-function-class prototype
 
         .out theMethods
 
-c) the instantiation of the jmp table
-
-        .out NL,NL,{COMMENT:'#{.name}__Methods: Instantiated jmp table'},NL
-        .out 'struct ',.name,'__METHODS_t ',.name,'__METHODS_I = {',NL
-        for each inx,item in theMethods
-            .out '   ',.name,'__',item.statement.name
-            .out inx < theMethods.length-1?',':'', NL
-        .out '};',NL,NL
-
-
-d) the instantiation of the clas info (__CLASS_I), and a const ptr to it
-
-        .out {COMMENT:'#{.name}__CLASS_I: Instantiated class info'},NL
-        .out {COMMENT:'instantiated class info and a const ptr to it'},NL
-        .out 'struct ',.name,'t ',.name,'__CLASS_I = {',NL
-        .out '   &Class__CLASS_I',', //type of this object (a class info)',NL
-        .out '   &#{.name}__METHODS_I',', //call = methods of this class',NL
-        .out '   "#{.name}", //class name',NL
-        .out '   #{.name}__init, //fn __init',NL
-        .out '   sizeof(struct #{.name}_t), //each instance memory size',NL
-        .out '   #{.name}__METHODS_I, //methods jmp table',NL
-        if .varRefSuper
-            .out'    &',.varRefSuper,' // super class',NL
-        else
-            .out'    NULL // no super class',NL
-        .out '};',NL,NL
-
-        .out 'const Class',NL
-        .out ' #{.name}__CLASS = &#{.name}__CLASS_I;',NL
-
-
 If the class was adjectivated 'export', add to module.exports
-      /*
+
         if not .lexer.out.browser
           if .export and not .default
             .out NL,{COMMENT:'export'},NL
-            .out .lexer.out.exportNamespace,'.',.name,' = ', .name,';'
-      */
+            .out .lexer.out.exportNamespace,'.',.name,' = ', .name,";"
 
-        .out NL,{COMMENT:'end class '},.name,NL
+        .out NL,{COMMENT:"end class "},.name,NL
         .skipSemiColon = true
 
 
@@ -1299,16 +1102,16 @@ Append-to body contains properties and methods definitions.
 
       method produce() 
 
-        .out 'try{', .body, .exceptionBlock
+        .out "try{", .body, .exceptionBlock
 
 ### Append to class Grammar.ExceptionBlock ###
 
       method produce() 
 
-        .out NL,'}catch(',.catchVar,'){', .body, '}'
+        .out NL,"}catch(",.catchVar,"){", .body, "}"
 
         if .finallyBody
-          .out NL,'finally{', .finallyBody, '}'
+          .out NL,"finally{", .finallyBody, "}"
 
 
 ### Append to class Grammar.SwitchStatement ###
@@ -1319,14 +1122,14 @@ if we have a varRef, is a switch over a value
 
         if .varRef
 
-            .out 'switch(', .varRef, '){',NL,NL
+            .out "switch(", .varRef, "){",NL,NL
             for each switchCase in .cases
-                .out {pre:'case ', CSL:switchCase.expressions, post:':', separator:' '}
+                .out {pre:"case ", CSL:switchCase.expressions, post:":", separator:' '}
                 .out switchCase.body
-                switchCase.body.out 'break;',NL,NL
+                switchCase.body.out "break;",NL,NL
 
-            if .defaultBody, .out 'default:',.defaultBody
-            .out NL,'}'
+            if .defaultBody, .out "default:",.defaultBody
+            .out NL,"}"
 
 else, it's a swtich over true-expression, we produce as chained if-else
 
@@ -1334,13 +1137,13 @@ else, it's a swtich over true-expression, we produce as chained if-else
 
           for each index,switchCase in .cases
               .outLineAsComment switchCase.lineInx
-              .out index>0? 'else ':'', 'if ('
-              .out {pre:'(', CSL:switchCase.expressions, post:')', separator:'||'}
-              .out '){'
+              .out index>0? "else ":"", "if ("
+              .out {pre:"(", CSL:switchCase.expressions, post:")", separator:"||"}
+              .out "){"
               .out switchCase.body
-              .out NL,'}'
+              .out NL,"}"
 
-          if .defaultBody, .out NL,'else {',.defaultBody,'}'
+          if .defaultBody, .out NL,"else {",.defaultBody,"}"
 
 
 ### Append to class Grammar.CaseWhenExpression ###
@@ -1352,14 +1155,14 @@ if we have a varRef, is a case over a value
         if .varRef
 
             var caseVar = ASTBase.getUniqueVarName('caseVar')
-            .out '(function(',caseVar,'){',NL
+            .out "(function(",caseVar,"){",NL
             for each caseWhenSection in .cases
-                caseWhenSection.out 'if('
-                    ,{pre:'#{caseVar}===(',CSL:caseWhenSection.expressions, post:')', separator:'||'}
-                    ,') return ',caseWhenSection.resultExpression,';',NL
+                caseWhenSection.out "if("
+                    ,{pre:"#{caseVar}===(",CSL:caseWhenSection.expressions, post:")", separator:'||'}
+                    ,") return ",caseWhenSection.resultExpression,";",NL
 
-            if .elseExpression, .out '    return ',.elseExpression,';',NL
-            .out '        }(',.varRef,'))'
+            if .elseExpression, .out "    return ",.elseExpression,";",NL
+            .out "        }(",.varRef,"))"
 
 else, it's a var-less case. we code it as chained ternary operators
 
@@ -1367,9 +1170,9 @@ else, it's a var-less case. we code it as chained ternary operators
 
           for each caseWhenSection in .cases
               .outLineAsComment caseWhenSection.lineInx
-              caseWhenSection.out '(',caseWhenSection.booleanExpression,') ? (', caseWhenSection.resultExpression,') :',NL
+              caseWhenSection.out "(",caseWhenSection.booleanExpression,") ? (", caseWhenSection.resultExpression,") :",NL
 
-          .out '/* else */ ',.elseExpression or 'undefined'
+          .out "/* else */ ",.elseExpression or 'undefined'
 
 
 ### Append to class Grammar.YieldExpression ###
@@ -1475,11 +1278,10 @@ Helper methods and properties, valid for all nodes
           declare valid value.root.name.name
           #do nothing if value is 'undefined'
           if value.root.name.name is 'undefined' #Expression->Operand->VariableRef->name
-            .out NL,{COMMENT:[name,": undefined",NL]}
+            .out {COMMENT:[name,": undefined",NL]}
             return
 
-          .out NL,"//TO DO - default for ",name,'=',value,";"
-          .out NL,"//if(",name,'===undefined) ',name,"=",value,";",NL
+          .out "if(",name,'===undefined) ',name,"=",value,";",NL
 
 
 --------------------------------

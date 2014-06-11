@@ -1327,11 +1327,13 @@
       // lineNum, column
       // currLine:string
       // lines:string array
+      // hLines:string array
       // lastOriginalCodeComment
       // lastOutCommentLine
       // sourceMap
       // browser:boolean
       // exportNamespace
+      // toHeader:boolean
    };
 
     // method start(options)
@@ -1344,6 +1346,7 @@
        this.lineNum = 1;
        this.column = 1;
        this.lines = [];
+       this.hLines = []; //header file lines
 
        this.lastOriginalCodeComment = 0;
        this.lastOutCommentLine = 0;
@@ -1389,8 +1392,15 @@
          // if .currLine or .currLine is ""
          if (this.currLine || this.currLine === "") {
              debug(this.lineNum, this.currLine);
-             this.lines.push(this.currLine);
-             this.lineNum++;
+             // if .toHeader
+             if (this.toHeader) {
+               this.hLines.push(this.currLine);
+             }
+             
+             else {
+               this.lines.push(this.currLine);
+               this.lineNum++;
+             };
          };
 
 // clear current line
@@ -1417,13 +1427,25 @@
     };
 
 
-    // method getResult()
-    OutCode.prototype.getResult = function(){
+    // method getResult(header:boolean)
+    OutCode.prototype.getResult = function(header){
 // get result and clear memory
 
+       this.toHeader = header;
        this.startNewLine();// #close last line
-       var result = this.lines;
-       this.lines = [];
+       var result = undefined;
+       // if header
+       if (header) {
+           result = this.hLines;
+           this.hLines = [];
+       }
+       
+       else {
+           result = this.lines;
+           this.lines = [];
+       };
+
+       this.toHeader = false;
        return result;
     };
 

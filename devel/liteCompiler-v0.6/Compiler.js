@@ -1,15 +1,15 @@
-//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.7/Compiler.lite.md
+//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.6/Compiler.lite.md
 // The LiteScript Compiler Module
 // ==============================
 // LiteScript is a highly readable language that compiles to JavaScript.
 
-   var version = '0.7.0';
+   var version = '0.6.7';
    // export
    module.exports.version = version;
 
     //compiler generate(lines:string array)
     //    lines.push "export var buildDate = '#{new Date.toISOString()}'"
-   var buildDate = '20140609';
+   var buildDate = '20140606';
    // export
    module.exports.buildDate = buildDate;
 
@@ -42,11 +42,8 @@
 
 // Require the Producer (to include it in the dependency tree)
 
-    //import Producer_c
-    // #else
    // import Producer_js
    var Producer_js = require('./Producer_js');
-    // #endif
 
 // ## Main API functions: LiteScript.compile & LiteScript.compileProject
 
@@ -86,15 +83,10 @@
 // The main module is the root of the module dependency tree, and can reference
 // another modules via import|require.
 
-        //default options =
-            //outDir: 'out'
-            //target: 'c'
-        // #else
        // default options =
        if(!options) options={};
        if(options.outDir===undefined) options.outDir='.';
        if(options.target===undefined) options.target='js';
-        // #endif
 
        log.extra("Out Dir: " + options.outDir);
 
@@ -191,17 +183,12 @@
 
 // normalize options
 
-        //var DEFAULT_TARGET="c"
-        // #else
-       var DEFAULT_TARGET = "js";
-        // #end if
-
        // default options =
        if(!options) options={};
        if(options.verbose===undefined) options.verbose=1;
        if(options.warning===undefined) options.warning=1;
        if(options.comments===undefined) options.comments=1;
-       if(options.target===undefined) options.target=DEFAULT_TARGET;
+       if(options.target===undefined) options.target='js';
        if(options.outDir===undefined) options.outDir='.';
        // options.debug: undefined
        // options.skip: undefined
@@ -541,7 +528,7 @@
                    importInfo.name = node.name;
                };
 
-// if it was 'global import, inform, els search will be local '.','./lib' and '../lib'
+// if it was 'global import, inform, else search will be local '.','./lib' and '../lib'
 
                 // declare valid node.parent.global
                // if node.parent instanceof Grammar.DeclareStatement

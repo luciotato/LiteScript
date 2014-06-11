@@ -350,6 +350,13 @@
                Environment.externalCacheSave(moduleNode.fileInfo.outFilename, resultLines);
                result = "" + resultLines.length + " lines";
 
+               resultLines = moduleNode.lexer.out.getResult(1); //get .h file contents
+               // if resultLines.length
+               if (resultLines.length) {
+                   Environment.externalCacheSave(moduleNode.fileInfo.outFilename.slice(0, -1) + 'h', resultLines);
+               };
+                // #endif
+
                // if moduleNode.lexer.out.sourceMap
                if (moduleNode.lexer.out.sourceMap) {
 

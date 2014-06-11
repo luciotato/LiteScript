@@ -319,6 +319,12 @@ save to disk / add to external cache
                 Environment.externalCacheSave moduleNode.fileInfo.outFilename,resultLines
                 result = "#{resultLines.length} lines"
 
+                #ifdef PROD_C
+                resultLines =  moduleNode.lexer.out.getResult(1) //get .h file contents
+                if resultLines.length
+                    Environment.externalCacheSave moduleNode.fileInfo.outFilename.slice(0,-1)+'h',resultLines
+                #endif
+
                 if moduleNode.lexer.out.sourceMap
 
                     Environment.externalCacheSave moduleNode.fileInfo.outFilename+'.map',

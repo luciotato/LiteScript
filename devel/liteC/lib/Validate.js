@@ -1232,8 +1232,8 @@
 
        // if toNamespace
        if (toNamespace) {
-           // do nothing #'namespace properties' and 'append to namespace' are added directly to rerenced class-function
-           null;// #'namespace properties' and 'append to namespace' are added directly to rerenced class-function
+           // do nothing #'append to namespace' are added directly to rerenced class-function
+           null;// #'append to namespace' are added directly to rerenced class-function
        }
        
        else {

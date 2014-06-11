@@ -10,7 +10,7 @@
 #ifndef EXCEPTIONS4C_LITE
 #define EXCEPTIONS4C_LITE
 
-#include "ScriptyC-core1.h"
+#include "LiteC-core.h"
 #include <setjmp.h>
 
 /* Maximum number of nested `try` blocks */

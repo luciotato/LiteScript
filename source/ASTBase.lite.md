@@ -762,7 +762,7 @@ recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
 helper function compilerVar(name)
 return root.compilerVars.members[name].value
 
-        if .getRootNode().compilerVars.findOwnMember(name) into var asked
+        if .getRootNode().parent.compilerVars.findOwnMember(name) into var asked
           declare valid asked.findOwnMember
           return asked.findOwnMember("**value**")
 

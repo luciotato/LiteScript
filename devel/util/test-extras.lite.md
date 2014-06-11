@@ -1,7 +1,6 @@
 test-extra.lite.md
 
     global import fs, path
-    import fsUtil 
 
 run all files .lite.md at dir test-v0.6
 

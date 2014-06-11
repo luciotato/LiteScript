@@ -22,18 +22,19 @@
     -c, -compile     compile project, mainModule & all dependent files
     -o dir           output dir. Default is '.'
     -b, -browser     compile for a browser environment (window instead of global, no process, etc)
-    -v, -verbose     verbose level, default is 0 (0-2)
+    -v, -verbose     verbose level, default is 0 (0-3)
     -w, -warning     warning level, default is 1 (0-1)
     -comments        comment level on generated files, default is 1 (0-2)
     -version         print LiteScript version & exit
 
     Advanced options:
-    -es6, --harmony  used with -run, uses node --harmony
     -s,  -single     compile single file. do not follow import/require() calls
-    -ifn, -ifnew     compile single file, only if source is newer
-    -watch           watch current dir for source changes and compile
+    -ifn, -ifnew     compile only if source is newer
+    -wa, -watch      watch current dir for source changes and compile
+    -es6, --harmony  used with -run, uses node --harmony
     -nm, -nomap      do not generate sourcemap
-    -noval           skip name validation
+    -noval           skip property name validation
+    -D NAME -D NAME  Defines names for preprocessing with #ifdef
     -u, -use vX.Y.Z  select LiteScript Compiler Version to use (devel)
     -d, -debug       enable full compiler debug log file at 'out/debug.log'
     -run -debug      when -run used with -debug, launch compiled file with: node --debug-brk 
@@ -70,7 +71,7 @@ Check for -version
             print VERSION
             process.exit 0
 
-Check for --run
+Check for -run
 
         if args.value('r','run') into mainModuleName
             compileAndRunOption = true
@@ -87,19 +88,43 @@ Check for other options
             verbose : Number(args.value('v',"verbose") or 0) 
             warning : Number(args.value('w',"warning") or 1)
             comments: Number(args.value('comment',"comments") or 1) 
+            target  : args.value('target') or 'js' //target
             debug   : args.option('d',"debug") 
             skip    : args.option('noval',"novalidation") // skip name validation
             nomap   : args.option('nm',"nomap") // do not generate sourcemap
             single  : args.option('s',"single") // single file- do not follow require() calls
-            ifnew   : args.option('ifn',"ifnew") // single file, compile if source is newer
+            compileIfNewer: args.option('ifn',"ifnew") // single file, compile if source is newer
             browser : args.option('b',"browser") 
             es6     : args.option('es6',"harmony") 
+            defines : []
 
         var compilerPath = case 
             when use like /^v.*/ then '../../liteCompiler-#{use}' 
             when no use then '.'
             else use
         end 
+
+        while args.value('D') into var newDef
+            options.defines.push newDef
+
+load required version of LiteScript compiler
+
+        #declare global __dirname
+        #print "at: #{__dirname}, require '#{compilerPath}/Compiler.js'"
+
+        var Compiler = require('#{compilerPath}/Compiler.js');
+
+        declare valid Compiler.version
+        declare valid Compiler.buildDate
+        if options.verbose, print 'LiteScript compiler version #{Compiler.version}  #{Compiler.buildDate}'
+
+Check for -watch dir
+
+        if args.option('wa','watch')
+            watchDir Compiler,options
+            return //EXIT
+
+get mainModuleName
 
         if no mainModuleName, mainModuleName = args.value('c',"compile") 
 
@@ -116,22 +141,13 @@ Check for other options
 show args
 
         //console.log(process.cwd());
-        if options.verbose
+        if options.verbose>1
             print '\n\ncompiler path: #{compilerPath}'
             print 'compiler options: #{JSON.stringify(options)}'
             print 'cwd: #{process.cwd()}'
             print 'compile#{compileAndRunOption?" and run":""}: #{mainModuleName}'
             if options.debug, print color.yellow,"GENERATING COMPILER DEBUG AT out/debug.log",color.normal
 
-load required version of LiteScript compiler
-
-        #declare global __dirname
-        #print "at: #{__dirname}, require '#{compilerPath}/Compiler.js'"
-
-        var Compiler = require('#{compilerPath}/Compiler.js');
-
-        declare valid Compiler.version
-        if options.verbose, print 'LiteScript compiler version #{Compiler.version}'
 
 launch project compilation
 
@@ -234,7 +250,6 @@ files can be required() from node
 hack for require(). Simulate we're at the run module dir,
 for require() to look at the same dirs as at runtime
 
-            declare var module
             declare on module paths:string array
             declare valid module.constructor._nodeModulePaths
             module.filename = path.resolve(filename)
@@ -253,26 +268,37 @@ run code
 
 Watch a directory and compile when files change
     
-        options.single = true //compile single file, do not follow "import/require()" calls
-        options.ifnew = true //compile only if source is newer
+        options.compileIfNewer = true //compile only if source is newer
 
         var mainDir = path.resolve('.')
-
+        console.log "watching dir #{mainDir}"
         var watcher = fs.watch(mainDir)
+        var readdirTimeout
 
         watcher.on 'error' -> err
           watcher.close
           throw err
 
-        watcher.on 'change' ->
+        watcher.on 'change' -> event,file
           clearTimeout readdirTimeout
-          console.log "DIR CHANGE"
           readdirTimeout = setTimeout(
                 function
-                    compileDir(Compiler, mainDir, options) 
-                ,25)
+                    //console.log "DIR CHANGE"
+                    compileOnChange(file, Compiler, mainDir, options) 
+                ,250)
 
-### function compileDir(Compiler, dir, options)
-      var files:array = fs.readdirSync(dir)
-      for each file in files where file like /\.(lite|lite\.md)$/
-            launchCompilation Compiler, file, options
+### function compileOnChange(file, Compiler, dir, options)
+    
+        if file # we have specific file information
+            if file like /\.(lite|lite\.md)$/
+                launchCompilation Compiler, file, options
+        else
+            # check entire dir
+            var files:array = fs.readdirSync(dir)
+            for each dirFile in files where dirFile like /\.(lite|lite\.md)$/
+                try
+                    launchCompilation Compiler, dirFile, options
+
+            
+        exception err
+            console.log err.message

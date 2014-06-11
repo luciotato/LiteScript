@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.7/Grammar.lite.md
+//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.6/Grammar.lite.md
 // LiteScript Grammar
 // ==================
 
@@ -1206,6 +1206,7 @@
          this.executes = true;
          this.hasSideEffects = true;
        };
+     };
 
 // Note: In LiteScript, *any VariableRef standing on its own line*, it's considered
 // a function call. A VariableRef on its own line means "execute this!",
@@ -1224,12 +1225,9 @@
     // i++          | i++;           | i++ is marked "executes", it is a statement in itself
 
 // Keep track of 'require' calls, to import modules (recursive)
-
-       // if .name is 'require'
-       if (this.name === 'require') {
-           this.getParent(Module).requireCallNodes.push(this);
-       };
-     };
+// Note: commented 2014-6-11
+//        if .name is 'require'
+//            .getParent(Module).requireCallNodes.push this
 
 // ---------------------------------
      // helper method toString()

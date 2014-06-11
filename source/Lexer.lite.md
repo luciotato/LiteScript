@@ -34,6 +34,7 @@ The Lexer class turns the input lines into an array of "infoLines"
 #### properties 
 
         compiler
+        project
         filename:string
         options 
 
@@ -56,9 +57,10 @@ The Lexer class turns the input lines into an array of "infoLines"
 
         out:OutCode
 
-#### Constructor new Lexer(compiler, options)
+#### Constructor new Lexer(compiler, project, options)
 
           .compiler = compiler #Compiler.lite.md module.exports
+          .project = project #Compiler.lite.md class Project
 
 use same options as compiler
 
@@ -207,15 +209,19 @@ After applying rules: if we're in a Code Block, is CODE, else is a COMMENT
             #end if line wasnt blank
 
 parse multi-line string (triple quotes) and convert to one logical line: 
-Example: var a = 'first line\nsecond line\nThat\'s all\n'
+Example result: var a = 'first line\nsecond line\nThird line\n'
 
             if type is LineTypes.CODE 
               line = .parseTripleQuotes( line )
 
 check for multi-line comment, C and js style /* .... */ 
+then check for #ifdef/#else/#endif
 
             if .checkMultilineComment(infoLines, type, indent, line )
                 continue #found and pushed multiline comment, continue with next line
+
+            else if .checkConditionalCompilation(line)
+                continue #processed, continue with next line
 
 Create infoLine, with computed indent, text, and source code line num reference 
 
@@ -373,17 +379,20 @@ get source line, replace TAB with 4 spaces, remove trailing withespace and remov
 
         return true
 
+#### method replaceSourceLine(newLine)
+        .lines[.sourceLineNum-1] = newLine
+
 
 ----------------------------
 Multiline strings
 -----------------
 
-You can include multi-line string by enclosing a paragraph with
-`"""` (triple quotes). You can also use string interpolation #{}
-  in multline strings.
+#### method parseTripleQuotes(line:string)
+
+This method handles `"""` triple quotes multiline strings
+Mulitple coded-enclosed source lines are converted to one logical infoLine
 
 Example:
-<pre>
 /*
  var c = """
    first line
@@ -392,20 +401,14 @@ Example:
    """.length
 
 gets converted to:
-
+<pre>
   var c = 'first line\nsecond line\nThat\'s all\n'.length
   ^^^^^^^   ^^^^^^^                               ^^^^^
-    pre    |- sections                          --| post
-
-*/
+    pre    |- section                          --| post
 </pre>
+*/
 
-#### method parseTripleQuotes(line:string)
-
-This method handles `"""` triple quotes multiline strings
-Mulitple `"""`-enclosed lines in the source, are converted to one logical infoLine
-
-Get section between `"""`'s
+Get section between """ and """
 
         var result = new MultilineSection(this,line, '"""', '"""')
         if result.section
@@ -464,6 +467,76 @@ This method handles multiline comments: `/*` `*/`
 
         return true #OK, lines processed
 
+----------------------------
+#### method checkConditionalCompilation(line:string)
+
+This method handles #ifdef/#else/#endif as multiline comments
+
+        var startSourceLine = .sourceLineNum
+
+        var words: string array
+
+        declare valid .project.compilerVar
+        declare valid .project.setCompilerVar
+
+        var isDefine = line.indexOf("#define ")
+        if isDefine>=0
+            words = line.trim().split(' ')
+            .project.setCompilerVar words[1],true
+            return false
+
+        var isUndef = line.indexOf("#undef ")
+        if isUndef>=0
+            words = line.trim().split(' ')
+            .project.setCompilerVar words[1],false
+            return false
+
+        var startCol = line.indexOf("#ifdef ")
+        if startCol<0, startCol = line.indexOf("#if def ")
+        if startCol<0, return 
+
+        //get rid of quoted strings. Still there?
+        if String.replaceQuoted(line,"").indexOf("#if")<0
+            return #no 
+
+        var startRef = "while processing #ifdef started on line #{startSourceLine}"
+
+        words = line.slice(startCol).split(' ')
+        var conditional = words[1]
+        if no conditional, .throwErr "#ifdef; missing conditional"
+        var defValue = .project.compilerVar(conditional)
+
+        var endFound=false
+        do
+            #get next line
+            if no .nextSourceLine(),.throwErr "EOF #{startRef}"
+            line = .line
+            
+            if line.search(/\S/) into var indent >= 0
+                line = line.trim()
+                if line[0] is '#' //expected: #else, #endif #end if
+                    words = line.split(' ')
+                    switch words[0] 
+                        case '#else':
+                            defValue = not defValue
+                        case "#end":
+                            if words[1] isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
+                            endFound = true
+                        case "#endif":
+                            endFound = true
+                        default
+                            .throwErr "expected '#else/#end if', read '#{line}' #{startRef}"
+                    end switch
+                else
+                    // comment line if .compilerVar not defined (or processing #else)
+                    if not defValue, .replaceSourceLine String.spaces(indent)+"//"+line
+                end if
+            end if              
+        loop until endFound
+
+        #rewind position after #ifdef, reprocess lines
+        .sourceLineNum = startSourceLine
+        return true #OK, lines processed
 
 
 ----------------------------
@@ -795,7 +868,7 @@ Each "infoLine" has:
           text:String
           tokens: Token array
 
-      constructor(lexer,type,indent,text,sourceLineNum)
+      constructor new InfoLine(lexer,type,indent,text,sourceLineNum)
         .type = type
         .indent = indent
         .text = text

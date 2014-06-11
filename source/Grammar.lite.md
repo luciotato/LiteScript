@@ -1036,9 +1036,9 @@ Examples:
     i++          | i++;           | i++ is marked "executes", it is a statement in itself
 
 Keep track of 'require' calls, to import modules (recursive)
-
-        if .name is 'require'
-            .getParent(Module).requireCallNodes.push this            
+Note: commented 2014-6-11
+//        if .name is 'require'
+//            .getParent(Module).requireCallNodes.push this            
 
 ---------------------------------
 ##### helper method toString()
@@ -2130,7 +2130,8 @@ ConstructorDeclaration derives from MethodDeclaration, so it is also a instance 
           # to ease reading, and to find the constructor when you search for "new Person"
           var className = .req('IDENTIFIER')
           var classDeclaration = .getParent(ClassDeclaration)
-          if classDeclaration and classDeclaration.name isnt className, .sayErr "Class Name mismatch #{className}/#{.parent.name}"
+          if classDeclaration and classDeclaration.name isnt className
+              .sayErr "Class Name mismatch #{className}/#{classDeclaration.name}"
 
 now get parameters and body (as with any function)
 

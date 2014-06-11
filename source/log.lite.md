@@ -141,9 +141,14 @@ else, send to console
                 console.log.apply(console,arguments)
 
 
-### export function extra
+### export function info
 
         if options.verbose >= 2
+            message.apply(this,arguments)
+
+### export function extra
+
+        if options.verbose >= 3
             message.apply(this,arguments)
 
 

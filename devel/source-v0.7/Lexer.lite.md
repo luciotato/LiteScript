@@ -1139,11 +1139,13 @@ It also handles SourceMap generation for Chrome Developer Tools debugger and Fir
       lineNum, column
       currLine:string
       lines:string array
+      hLines:string array
       lastOriginalCodeComment
       lastOutCommentLine
       sourceMap
       browser:boolean
       exportNamespace
+      toHeader:boolean
 
 #### Method start(options)
 Initialize output array
@@ -1154,6 +1156,7 @@ Initialize output array
         .lineNum=1
         .column=1
         .lines=[]
+        .hLines=[] //header file lines
         
         .lastOriginalCodeComment = 0
         .lastOutCommentLine = 0
@@ -1187,8 +1190,11 @@ send the current line
 
           if .currLine or .currLine is ""
               debug  .lineNum, .currLine
-              .lines.push .currLine
-              .lineNum++
+              if .toHeader
+                .hLines.push .currLine
+              else
+                .lines.push .currLine
+                .lineNum++
 
 clear current line
 
@@ -1208,12 +1214,20 @@ if there's something on the line, start a new one
           .startNewLine
 
 
-#### method getResult()
+#### method getResult(header:boolean)
 get result and clear memory      
 
+        .toHeader = header
         .startNewLine() #close last line
-        var result = .lines
-        .lines = []
+        var result
+        if header
+            result = .hLines
+            .hLines = []
+        else
+            result = .lines
+            .lines = []
+
+        .toHeader = false
         return result
 
 #### helper method markSourceMap(indent) returns object

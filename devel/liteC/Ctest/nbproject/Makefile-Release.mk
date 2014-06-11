@@ -35,11 +35,9 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/Core2.o \
-	${OBJECTDIR}/ScriptyC-core1.o \
+	${OBJECTDIR}/LiteC-core.o \
 	${OBJECTDIR}/exceptions.o \
 	${OBJECTDIR}/main.o \
-	${OBJECTDIR}/newfile.o \
 	${OBJECTDIR}/util.o
 
 
@@ -67,15 +65,10 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/ctest: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/ctest ${OBJECTFILES} ${LDLIBSOPTIONS}
 
-${OBJECTDIR}/Core2.o: Core2.c 
+${OBJECTDIR}/LiteC-core.o: LiteC-core.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Core2.o Core2.c
-
-${OBJECTDIR}/ScriptyC-core1.o: ScriptyC-core1.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ScriptyC-core1.o ScriptyC-core1.c
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/LiteC-core.o LiteC-core.c
 
 ${OBJECTDIR}/exceptions.o: exceptions.c 
 	${MKDIR} -p ${OBJECTDIR}
@@ -86,11 +79,6 @@ ${OBJECTDIR}/main.o: main.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.c
-
-${OBJECTDIR}/newfile.o: newfile.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/newfile.o newfile.c
 
 ${OBJECTDIR}/util.o: util.c 
 	${MKDIR} -p ${OBJECTDIR}

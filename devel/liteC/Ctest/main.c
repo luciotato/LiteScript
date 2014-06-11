@@ -5,7 +5,7 @@
  * Created on March 12, 2014, 8:48 AM
  */
 
-#include "ScriptyC-core1.h"
+#include "LiteC-core.h"
 #include "exceptions.h"
 
 //Module Specific
@@ -18,38 +18,38 @@
 
 //ASTBase (prototype/this) properties
 
-void print(str s){
-    printf("%s\n",s);
+void print(String s){
+    printf("%s\n",s->value);
 }
+
 
 int main(int argc, char** argv) {
 
     void* e;
 
-    print("START");
-
-    TEST_METHODS a = &TEST_METHODS_I;
+    print(mkStr("START"));
 
     Object b = new( Object__CLASS );
+    String s = mkStr(b->class->name);
 
     try{
-        print("TRY");
-        print(b->call->toString(b));
-        a->func0();
-        a->func1();
+        print(mkStr("TRY"));
+        //print(b->value);
+        print(toString(b));
+        print(s);
         throw("throw GenericException");
-        print("AFTER THROW");
+        print(mkStr("AFTER THROW"));
     }
     catch(e) {
         //fprintf(stderr,"caught %s",e.message);
-        print("caught!");
+        print(mkStr("caught!"));
         //print(_s((str)e4c.err.object));
         //print(e.message);
     }
     finally {
         //fprintf(stdout,"e4c.frames %d, e4c.frame[e4c.frames].stage %d is_catch %d\n");
         //fprintf(stderr,"caught %s",e.message);
-        print("finally");
+        print(mkStr("finally"));
     }
 
     return EXIT_SUCCESS;

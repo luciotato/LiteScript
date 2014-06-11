@@ -43,6 +43,15 @@
 
        // end if
 
+// default #includes:
+// "LiteC-core.h" at the header, the header at the .c
+
+       this.out({h: 1}, NL);
+       this.out('#include "LiteC-core.h"', NL);
+
+       this.out({h: 0}, NL);
+       this.out('#include "' + this.fileInfo.basename + '.h"', NL, NL);
+
        // for each statement in .statements
        for( var statement__inx=0,statement ; statement__inx<this.statements.length ; statement__inx++){statement=this.statements[statement__inx];
          statement.produce();
@@ -386,8 +395,49 @@
 
 // Prefix ++/--, varName, Accessors and postfix ++/--
 
-       this.out(this.preIncDec, this.name.translate(IDENTIFIER_ALIASES), this.accessors, this.postIncDec);
+       this.out(this.preIncDec, this.expandAccessors(), this.postIncDec);
      };
+
+
+     // helper method expandAccessors(upto:Number) returns array
+     Grammar.VariableRef.prototype.expandAccessors = function(upto){
+
+         var result = [this.name];
+         // if .accessors
+         if (this.accessors) {
+             // for each inx,ac in .accessors
+             for( var inx=0,ac ; inx<this.accessors.length ; inx++){ac=this.accessors[inx];
+                 // if upto>=0 and inx is upto, break
+                 if (upto >= 0 && inx === upto) {break};
+                 // if ac instanceof Grammar.PropertyAccess
+                 if (ac instanceof Grammar.PropertyAccess) {
+                     // if inx+1<.accessors.length //is not the last
+                     if (inx + 1 < this.accessors.length && this.accessors[inx + 1] instanceof Grammar.FunctionAccess) { //is not the last
+                           result.push('->call');
+                     };
+                     // end if
+                     result.push('->' + ac.name);
+                 }
+                 
+                 else if (ac instanceof Grammar.FunctionAccess) {
+                     result.push('(');
+                     result.push({CSL: ac.args});
+                     result.push(')');
+                 }
+                 
+                 else if (ac instanceof Grammar.IndexAccess) {
+                     result.push('[');
+                     result.push(ac.name); //expression
+                     result.push(']');
+                 };
+             };// end for each in this.accessors
+             
+         };
+
+         return result;
+     };
+
+     // end helper method
 
 
      // helper method getInstanceAccessors() returns array
@@ -396,31 +446,29 @@
 // This method will get all the accessors up to a method call
 // returns an array, to send to .out
 
-       var result = [this.name];
+       var upto = 0;
        // if .accessors
        if (this.accessors) {
-         // for each ac in .accessors
-         for( var ac__inx=0,ac ; ac__inx<this.accessors.length ; ac__inx++){ac=this.accessors[ac__inx];
-             // if ac instanceof Grammar.PropertyAccess
-             if (ac instanceof Grammar.PropertyAccess) {
-               result.push('->' + ac.name);
-             }
-             
-             else if (ac instanceof Grammar.IndexAccess) {
-               result.push('[');
-               result.push(ac.name); //expression
-               result.push(']');
-             }
-             
-             else {
-               // break;
-               break;
+          // search from the end of the accessor chain, upto the function call
+         upto = this.accessors.length;
+         // while --upto>=0
+         while(--upto >= 0){
+             // if .accessors[upto] instanceof Grammar.FunctionAccess
+             if (this.accessors[upto] instanceof Grammar.FunctionAccess) {
+                //found the function call ()
+               upto--; //move one back
+               // if .accessors[upto] instanceof Grammar.PropertyAccess
+               if (this.accessors[upto] instanceof Grammar.PropertyAccess) {
+                    //is the function name, remove it to get the instance
+                   upto--; //move one back
+               };
              };
-         };// end for each in this.accessors
+         };// end loop
+         // end while
          
        };
 
-       return result;
+       return this.expandAccessors(upto); //prop chain upto instance on which the function is called
      };
 
    // append to class Grammar.AssignmentStatement ###
@@ -564,11 +612,12 @@
        
        else {
           // declare valid .toNamespace
-         toPrototype = !(this.toNamespace);// #if it's a "namespace properties" or "namespace method"
+         toPrototype = true;
          ownerName = parent.name;
        };
 
-       return [ownerName, toPrototype ? "->prototype->" : "->"];
+        //return [ownerName, toPrototype? "->prototype->" else "->" ]
+       return ownerName;
     };
 
 
@@ -608,28 +657,25 @@
 // ---
    // append to class Grammar.PropertiesDeclaration ###
 
-// 'var' followed by a list of comma separated: var names and optional assignment
+// 'properties' followed by a list of comma separated: var names and optional assignment
 
      // method produce(prefix)
      Grammar.PropertiesDeclaration.prototype.produce = function(prefix){
 
-       this.outLinesAsComment(this.lineInx, this.lastLineInxOf(this.list));
+        //.outLinesAsComment .lineInx, .lastLineInxOf(.list)
 
-       // if no prefix, prefix = .getOwnerPrefix()
-       if (!prefix) {prefix = this.getOwnerPrefix()};
+        //if no prefix, prefix = .getOwnerPrefix()
 
        // for each varDecl in .list
        for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
-         // if varDecl.assignedValue #is not valid to assign to .prototype. - creates subtle errors later
-         if (varDecl.assignedValue) {// #is not valid to assign to .prototype. - creates subtle errors later
-           // if prefix instance of Array and prefix[1] and prefix[1] isnt '.', .throwError 'cannot assign values to instance properties in "Append to"'
-           if (prefix instanceof Array && prefix[1] && prefix[1] !== '.') {this.throwError('cannot assign values to instance properties in "Append to"')};
-           this.out('    ', prefix, varDecl.name, "=", varDecl.assignedValue, ";", NL);
-         };
+         this.out(varDecl, ";", NL);
        };// end for each in this.list
-
-       this.skipSemiColon = true;
+       
      };
+// if varDecl.assignedValue #is not valid to assign to .prototype. - creates subtle errors later
+//             if prefix instance of Array and prefix[1] and prefix[1] isnt '.', .throwError 'cannot assign values to instance properties in "Append to"'
+//             .out '    ',prefix, varDecl.name,"=",varDecl.assignedValue,";",NL
+        // .skipSemiColon = true
 
    // append to class Grammar.VarStatement ###
 
@@ -734,7 +780,7 @@
            bare.push(statement.statement);
        };// end for each in this.statements
         // #.out NL,"    ",{CSL:bare, separator:";"}
-       this.out({CSL: bare, separator: ";"});
+       this.out({CSL: bare, separator: ";"}, ";");
      };
 
 
@@ -803,7 +849,7 @@
          // if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
          if (iterable.operandCount > 1 || iterable.root.name.hasSideEffects || iterable.root.name instanceof Grammar.Literal) {
            iterable = ASTBase.getUniqueVarName('list');// #unique temp iterable var name
-           this.out("int ", iterable, "=", this.variant.iterable, ";", NL);
+           this.out("Object ", iterable, "=", this.variant.iterable, ";", NL);
          };
        };
 
@@ -869,7 +915,7 @@
          indexVar = {name: this.mainVar.name + '__inx', assignedValue: 0};// #default index var name
        };
 
-       this.out("for( var ", indexVar.name, "=", indexVar.assignedValue || "0", ",", this.mainVar.name, " ; ", indexVar.name, "<", iterable, ".length", " ; ", indexVar.name, "++){");
+       this.out("for(int ", indexVar.name, "=", indexVar.assignedValue || "0", ",", this.mainVar.name, " ; ", indexVar.name, "<", iterable, ".length", " ; ", indexVar.name, "++){");
 
        this.body.out(this.mainVar.name, "=", iterable, "[", indexVar.name, "];", NL);
 
@@ -898,7 +944,7 @@
 
         // declare valid .endExpression.produce
 
-       this.out("for( var ", this.indexVar.name, "=", this.indexVar.assignedValue || "0", "; ");
+       this.out("for(int ", this.indexVar.name, "=", this.indexVar.assignedValue || "0", "; ");
 
        // if .conditionPrefix is 'to'
        if (this.conditionPrefix === 'to') {
@@ -1090,47 +1136,60 @@
 // `export` prefix causes the function to be included in `module.exports`
 // `generator` prefix marks a 'generator' function that can be paused by `yield` (js/ES6 function*)
 
-    // method produce(theProperties:array)
-    Grammar.FunctionDeclaration.prototype.produce = function(theProperties){
+    // method produce(options)
+    Grammar.FunctionDeclaration.prototype.produce = function(options){
 
-// Generators are implemented in ES6 with the "function*" keyword (note the asterisk)
+     // default options =
+     if(!options) options={};
+     if(options.typeSignature===undefined) options.typeSignature=false;
 
      var generatorMark = this.generator && this.compilerVar('ES6') ? "*" : "";
-
      var isConstructor = this instanceof Grammar.ConstructorDeclaration;
+     var addThis = false;
+     var className = undefined;
 
 // check if this is a 'constructor', 'method' or 'function'
 
-
      // if isConstructor
      if (isConstructor) {
-         this.out("//class _init fn");
-         this.out("void ", this.getParent(Grammar.ClassDeclaration).name, "__init");
+         this.out("//class _init fn", NL);
+         className = this.getParent(Grammar.ClassDeclaration).name;
+         this.out("void ", className, "__init");
+         addThis = true;
      }
 
 // else, method?
      
      else if (this instanceof Grammar.MethodDeclaration) {
 
-         this.out("//function ", this.name, NL);
+          //if no options.typeSignature, .out "//function ",.name,NL
 
           // #get owner where this method belongs to
-         // if no .getOwnerPrefix() into var prefix
-         var prefix=undefined;
-         if (!((prefix=this.getOwnerPrefix()))) {
+         // if no .getOwnerPrefix() into className
+         if (!((className=this.getOwnerPrefix()))) {
              // fail with 'method "#{.name}" Cannot determine owner object'
              throw new Error('method "' + this.name + '" Cannot determine owner object');
          };
 
           // #if shim, check before define
-          //if .shim, .out "if (!",prefix,.name,")",NL
+          //if .shim, .out "if (!",className,.name,")",NL
 
           //if .definePropItems #we should code Object.defineProperty
-          //    prefix[1] = prefix[1].replace(/\.$/,"") #remove extra dot
+          //    className[1] = className[1].replace(/\.$/,"") #remove extra dot
           //    .out "Object.defineProperty(",NL,
-          //          prefix, ",'",.name,"',{value:function",generatorMark
+          //          className, ",'",.name,"',{value:function",generatorMark
           //else
-         this.out(this.type || 'void', ' ', prefix, this.name); //," = function",generatorMark
+         this.out(this.type || 'void', ' ');
+         // if options.typeSignature
+         if (options.typeSignature) {
+             this.out("(*", this.name, ")");
+         }
+         
+         else {
+             this.out(className, '__', this.name); //," = function",generatorMark
+         };
+
+         addThis = true;
      }
 
 // else is a simple function
@@ -1138,6 +1197,25 @@
      else {
          this.out(this.type || 'void', ' ', this.name); //, generatorMark
      };
+
+// Now, funtion parameters
+
+     // if addThis
+     if (addThis) {
+          //method parameters declaration, add "[ClassName] this" is first param
+         this.out("(", className, " this");
+         // if .paramsDeclarations.length
+         if (this.paramsDeclarations.length) {
+             this.out(',', {CSL: this.paramsDeclarations});
+         };
+         this.out(")");
+     }
+     
+     else {
+          //just function parameters declaration
+         this.out("(", {CSL: this.paramsDeclarations}, ")");
+     };
+
 
 // if 'nice', produce default nice body, and then the generator header for real body
 
@@ -1151,9 +1229,16 @@
 //       end if
 //       
 
-// Produce function parameters declaration
 
-     this.out("(", {CSL: this.paramsDeclarations}, "){", this.getEOLComment());
+     // if options.typeSignature //close & exit
+     if (options.typeSignature) { //close & exit
+         this.out(";", this.getEOLComment(), NL);
+         return;
+     };
+
+// start body
+
+     this.out("{", this.getEOLComment());
 
 // if the function has a exception block, insert 'try{'
 
@@ -1183,31 +1268,13 @@
 
 // if params defaults where included, we assign default values to arguments
 // (if ES6 enabled, they were included abobve in ParamsDeclarations production )
-
-         // if .paramsDeclarations and not .compilerVar('ES6')
-         if (this.paramsDeclarations && !(this.compilerVar('ES6'))) {
-             // for each paramDecl in .paramsDeclarations
-             for( var paramDecl__inx=0,paramDecl ; paramDecl__inx<this.paramsDeclarations.length ; paramDecl__inx++){paramDecl=this.paramsDeclarations[paramDecl__inx];
-               // if paramDecl.assignedValue
-               if (paramDecl.assignedValue) {
-                   this.body.assignIfUndefined(paramDecl.name, paramDecl.assignedValue);
-               };
-             };// end for each in this.paramsDeclarations
-             
-         };
-              // #end for
-          // #end if
-
-// if class properties have default values...
-
-         // if theProperties
-         if (theProperties) {
-             // for each propDecl in theProperties
-             for( var propDecl__inx=0,propDecl ; propDecl__inx<theProperties.length ; propDecl__inx++){propDecl=theProperties[propDecl__inx];
-               propDecl.produce('this.'); //property assignments
-             };// end for each in theProperties
-             
-         };
+// no on C
+//           if .paramsDeclarations and not .compilerVar('ES6')
+//               for each paramDecl in .paramsDeclarations
+//                 if paramDecl.assignedValue
+//                     .body.assignIfUndefined paramDecl.name, paramDecl.assignedValue
+//               #end for
+//           #end if
 
 // now produce function body
 
@@ -1221,31 +1288,21 @@
      if (this.lexer.out.sourceMap) {
          this.lexer.out.sourceMap.add(this.EndFnLineNum, 0, this.lexer.out.lineNum - 1, 0);
      };
+    };
 
 // if we were coding .definePropItems , close Object.defineProperty
 
-     // if .definePropItems
-     if (this.definePropItems) {
-         // for each definePropItem in .definePropItems
-         for( var definePropItem__inx=0,definePropItem ; definePropItem__inx<this.definePropItems.length ; definePropItem__inx++){definePropItem=this.definePropItems[definePropItem__inx];
-           this.out(NL, ",", definePropItem.name, ":", definePropItem.negated ? 'false' : 'true');
-         };// end for each in this.definePropItems
-         // end for
-         this.out(NL, "})");
-     };
-
+// if .definePropItems
+//           for each definePropItem in .definePropItems
+//             .out NL,",",definePropItem.name,":", definePropItem.negated? 'false':'true'
+//           end for
+//           .out NL,"})"
 // If the function was adjectivated 'export', add to module.exports
-
-     // if not .lexer.out.browser
-     if (!(this.lexer.out.browser)) {
-       // if .export and not .default
-       if (this.export && !(this.default)) {
-         this.out(";", NL, {COMMENT: 'export'}, NL);
-         this.out(this.lexer.out.exportNamespace, '.', this.name, '=', this.name, ";");
-         this.skipSemiColon = true;
-       };
-     };
-    };
+//       if not .lexer.out.browser
+//         if .export and not .default
+//           .out ";",NL,{COMMENT:'export'},NL
+//           .out .lexer.out.exportNamespace,'.',.name,'=',.name,";"
+//           .skipSemiColon = true
 
 // --------------------
    // append to class Grammar.PrintStatement ###
@@ -1253,7 +1310,38 @@
 
      // method produce()
      Grammar.PrintStatement.prototype.produce = function(){
-       this.out("console.log(", {"CSL": this.args}, ")");
+
+       var format = [];
+
+       // for each inx,arg:Grammar.Expression in .args
+       for( var inx=0,arg ; inx<this.args.length ; inx++){arg=this.args[inx];
+           var nameDecl = arg.getResultType();
+           // if no nameDecl
+           if (!nameDecl) {
+               this.sayErr("can't determine type of expr #" + (inx + 1) + ": " + arg);
+           }
+           
+           else if (nameDecl.name === 'int') {
+               format.push("%d");
+           }
+           
+           else if (nameDecl.name === 'str') {
+               format.push("%s");
+           }
+           
+           else if (nameDecl.name === 'float') {
+               format.push("%f");
+           }
+           
+           else {
+               this.sayErr("don't know format code for type '" + (nameDecl.composedName()) + "' of expr #" + (inx + 1) + ": " + arg);
+           };
+           // end if
+           
+       };// end for each in this.args
+       // end of
+
+       this.out('printf("', format.join(' '), '",', {'CSL': this.args}, ');');
      };
 
 
@@ -1309,6 +1397,20 @@
      // method produce()
      Grammar.DeclareStatement.prototype.produce = function(){
 
+       // if .global
+       if (this.global) {
+
+         this.out({h: 1}, NL);
+
+         // for each item in .list
+         for( var item__inx=0,item ; item__inx<this.list.length ; item__inx++){item=this.list[item__inx];
+           this.out('#include "', item.name, '.h"', NL);
+         };// end for each in this.list
+
+         this.out({h: 0}, NL);
+       };
+
+
        this.outLinesAsComment(this.lineInx, this.names ? this.lastLineInxOf(this.names) : this.lineInx);
        this.skipSemiColon = true;
      };
@@ -1322,10 +1424,7 @@
      // method produce()
      Grammar.ClassDeclaration.prototype.produce = function(){
 
-       this.out({COMMENT: "constructor"}, NL);
-
-// First, since in JS we have a object-class-function-constructor  all-in-one
-// we need to get the class constructor, and separate other class items.
+// 1st, split body into: a) properties b) constructor c) methods
 
         // declare theConstructor:Grammar.FunctionDeclaration
         // declare valid .produce_AssignObjectProperties
@@ -1333,8 +1432,7 @@
 
        var theConstructor = null;
        var theMethods = [];
-       var theProperties = [];
-       var theNamespaceProperties = [];
+       var PropertiesDeclarationStatements = [];
 
        // if .body
        if (this.body) {
@@ -1353,15 +1451,7 @@
            }
            
            else if (item.statement instanceof Grammar.PropertiesDeclaration) {
-              // declare valid item.statement.toNamespace
-             // if item.statement.toNamespace
-             if (item.statement.toNamespace) {
-                theNamespaceProperties.push(item.statement);
-             }
-             
-             else {
-                 theProperties.push(item.statement);
-             };
+              PropertiesDeclarationStatements.push(item.statement);
            }
            
            else {
@@ -1371,11 +1461,70 @@
          
        };
 
-        // #end if body
+       // end if body
+
+// In C we need to create a struct for "methods jmp table type" in the .h
+// where each member is a function with the correct type signature
+
+       this.out({h: 1}, NL); //start header output
+
+       this.out({COMMENT: "class"}, this.name);
+       // if .varRefSuper
+       if (this.varRefSuper) {
+         this.out({COMMENT: [' extends ', this.varRefSuper]}, NL);
+       }
+       
+       else {
+         this.out(NL);
+       };
+
+       this.out("// " + this.name + " is the type for: ptr to instance of struct " + this.name + "_t", NL);
+       this.out(NL, "typedef struct ", this.name, "_t * ", this.name, ";", NL, NL);
+
+       this.out({COMMENT: "methods jmp table type"}, NL);
+       this.out("struct ", this.name, "__METHODS_t {", NL);
+
+       // for each item in theMethods
+       for( var item__inx=0,item ; item__inx<theMethods.length ; item__inx++){item=theMethods[item__inx];
+           item.statement.produce({typeSignature: true});
+       };// end for each in theMethods
+       this.out("};", NL, NL);
+
+// Then a struct for the instance properties, preceded by
+  // 1) Class pointer: "Class class"
+  // 2) "methods jmp table" pointer: "struct [name]__METHODS_t * call"
+// Theese are the commont properties for all Object-derived classes (all)
+
+       this.out({COMMENT: "" + this.name + " instance properties"}, NL);
+       this.out("struct ", this.name, "_t {", NL);
+       this.out("    Class class;", NL);
+       this.out("    struct ", this.name, "__METHODS_t * call;", NL);
+       this.out("    //" + this.name + " specific properties", NL);
+       // for each propertiesDeclaration in PropertiesDeclarationStatements
+       for( var propertiesDeclaration__inx=0,propertiesDeclaration ; propertiesDeclaration__inx<PropertiesDeclarationStatements.length ; propertiesDeclaration__inx++){propertiesDeclaration=PropertiesDeclarationStatements[propertiesDeclaration__inx];
+           propertiesDeclaration.produce();
+       };// end for each in PropertiesDeclarationStatements
+       this.out("};", NL, NL);
+
+// Then we expose a instantiated struct Class_t, with the specific
+// values for this class (created in the .c file)
+// and a "const ptr to it", (also created in the .c file)
+
+       this.out({COMMENT: "instantiated class info (_I) and a const ptr to it (_CLASS)"}, NL);
+       this.out("extern struct Class_t ", this.name, "__CLASS_I;", NL);
+       this.out("extern const Class ", this.name, "__CLASS;", NL);
+
+       this.out({h: 0}, NL); //end header output
+
+// Now on the .c file:
+
+// a) the constructor ( void function [name]__init)
+
+        //.out {COMMENT:"constructor"},NL
 
        // if theConstructor
        if (theConstructor) {
-         theConstructor.produce(theProperties);
+         theConstructor.produce();
          this.out(";", NL);
        }
        
@@ -1387,45 +1536,67 @@
              this.out(NL, "    ", {COMMENT: ["//auto call super__init, to initialize first part of space at *this"]});
              this.out(NL, "    ", this.varRefSuper, "__init(this);", NL);
          };
-         // for each propDecl in theProperties
-         for( var propDecl__inx=0,propDecl ; propDecl__inx<theProperties.length ; propDecl__inx++){propDecl=theProperties[propDecl__inx];
+         // for each propDecl in PropertiesDeclarationStatements
+         for( var propDecl__inx=0,propDecl ; propDecl__inx<PropertiesDeclarationStatements.length ; propDecl__inx++){propDecl=PropertiesDeclarationStatements[propDecl__inx];
              propDecl.produce('this.'); //property assignments
-         };// end for each in theProperties
+         };// end for each in PropertiesDeclarationStatements
          this.out("};", NL);
        };
-        // #end if
+       // end if
 
-// Set parent class if we have one indicated
 
-       // if .varRefSuper
-       if (this.varRefSuper) {
-         this.out({COMMENT: [this.name, ' extends ', this.varRefSuper, NL]});
-       };
-          //.out .name,'.prototype.__proto__ = ', .varRefSuper,'.prototype;',NL
+// b) the methods
 
-// now out namespace properties, which means create properties in the object-function-class
-
-       // for each propDecl in theNamespaceProperties
-       for( var propDecl__inx=0,propDecl ; propDecl__inx<theNamespaceProperties.length ; propDecl__inx++){propDecl=theNamespaceProperties[propDecl__inx];
-         propDecl.produce(this.name + '.'); //namespace property assignments
-       };// end for each in theNamespaceProperties
-
-// now out methods, which means create properties in the object-function-class prototype
+// now out methods, which means create functions
+// named: class__fnName
 
        this.out(theMethods);
 
-// If the class was adjectivated 'export', add to module.exports
+// c) the instantiation of the jmp table
 
-       // if not .lexer.out.browser
-       if (!(this.lexer.out.browser)) {
-         // if .export and not .default
-         if (this.export && !(this.default)) {
-           this.out(NL, {COMMENT: 'export'}, NL);
-           this.out(this.lexer.out.exportNamespace, '.', this.name, ' = ', this.name, ";");
-         };
+       this.out(NL, NL, {COMMENT: '' + this.name + '__Methods: Instantiated jmp table'}, NL);
+       this.out('struct ', this.name, '__METHODS_t ', this.name, '__METHODS_I = {', NL);
+       // for each inx,item in theMethods
+       for( var inx=0,item ; inx<theMethods.length ; inx++){item=theMethods[inx];
+           this.out('   ', this.name, '__', item.statement.name);
+           this.out(inx < theMethods.length - 1 ? ',' : '', NL);
+       };// end for each in theMethods
+       this.out('};', NL, NL);
+
+
+// d) the instantiation of the clas info (__CLASS_I), and a const ptr to it
+
+       this.out({COMMENT: '' + this.name + '__CLASS_I: Instantiated class info'}, NL);
+       this.out({COMMENT: 'instantiated class info and a const ptr to it'}, NL);
+       this.out('struct ', this.name, 't ', this.name, '__CLASS_I = {', NL);
+       this.out('   &Class__CLASS_I', ', //type of this object (a class info)', NL);
+       this.out('   &' + this.name + '__METHODS_I', ', //call = methods of this class', NL);
+       this.out('   "' + this.name + '", //class name', NL);
+       this.out('   ' + this.name + '__init, //fn __init', NL);
+       this.out('   sizeof(struct ' + this.name + '_t), //each instance memory size', NL);
+       this.out('   ' + this.name + '__METHODS_I, //methods jmp table', NL);
+       // if .varRefSuper
+       if (this.varRefSuper) {
+           this.out('    &', this.varRefSuper, ' // super class', NL);
+       }
+       
+       else {
+           this.out('    NULL // no super class', NL);
        };
+       this.out('};', NL, NL);
 
-       this.out(NL, {COMMENT: "end class "}, this.name, NL);
+       this.out('const Class', NL);
+       this.out(' ' + this.name + '__CLASS = &' + this.name + '__CLASS_I;', NL);
+
+
+// If the class was adjectivated 'export', add to module.exports
+//         if not .lexer.out.browser
+//           if .export and not .default
+//             .out NL,{COMMENT:'export'},NL
+//             .out .lexer.out.exportNamespace,'.',.name,' = ', .name,';'
+//       
+
+       this.out(NL, {COMMENT: 'end class '}, this.name, NL);
        this.skipSemiColon = true;
      };
 
@@ -1459,7 +1630,7 @@
      // method produce()
      Grammar.TryCatch.prototype.produce = function(){
 
-       this.out("try{", this.body, this.exceptionBlock);
+       this.out('try{', this.body, this.exceptionBlock);
      };
 
    // append to class Grammar.ExceptionBlock ###
@@ -1467,11 +1638,11 @@
      // method produce()
      Grammar.ExceptionBlock.prototype.produce = function(){
 
-       this.out(NL, "}catch(", this.catchVar, "){", this.body, "}");
+       this.out(NL, '}catch(', this.catchVar, '){', this.body, '}');
 
        // if .finallyBody
        if (this.finallyBody) {
-         this.out(NL, "finally{", this.finallyBody, "}");
+         this.out(NL, 'finally{', this.finallyBody, '}');
        };
      };
 
@@ -1486,17 +1657,17 @@
        // if .varRef
        if (this.varRef) {
 
-           this.out("switch(", this.varRef, "){", NL, NL);
+           this.out('switch(', this.varRef, '){', NL, NL);
            // for each switchCase in .cases
            for( var switchCase__inx=0,switchCase ; switchCase__inx<this.cases.length ; switchCase__inx++){switchCase=this.cases[switchCase__inx];
-               this.out({pre: "case ", CSL: switchCase.expressions, post: ":", separator: ' '});
+               this.out({pre: 'case ', CSL: switchCase.expressions, post: ':', separator: ' '});
                this.out(switchCase.body);
-               switchCase.body.out("break;", NL, NL);
+               switchCase.body.out('break;', NL, NL);
            };// end for each in this.cases
 
-           // if .defaultBody, .out "default:",.defaultBody
-           if (this.defaultBody) {this.out("default:", this.defaultBody)};
-           this.out(NL, "}");
+           // if .defaultBody, .out 'default:',.defaultBody
+           if (this.defaultBody) {this.out('default:', this.defaultBody)};
+           this.out(NL, '}');
        }
 
 // else, it's a swtich over true-expression, we produce as chained if-else
@@ -1506,15 +1677,15 @@
          // for each index,switchCase in .cases
          for( var index=0,switchCase ; index<this.cases.length ; index++){switchCase=this.cases[index];
              this.outLineAsComment(switchCase.lineInx);
-             this.out(index > 0 ? "else " : "", "if (");
-             this.out({pre: "(", CSL: switchCase.expressions, post: ")", separator: "||"});
-             this.out("){");
+             this.out(index > 0 ? 'else ' : '', 'if (');
+             this.out({pre: '(', CSL: switchCase.expressions, post: ')', separator: '||'});
+             this.out('){');
              this.out(switchCase.body);
-             this.out(NL, "}");
+             this.out(NL, '}');
          };// end for each in this.cases
 
-         // if .defaultBody, .out NL,"else {",.defaultBody,"}"
-         if (this.defaultBody) {this.out(NL, "else {", this.defaultBody, "}")};
+         // if .defaultBody, .out NL,'else {',.defaultBody,'}'
+         if (this.defaultBody) {this.out(NL, 'else {', this.defaultBody, '}')};
        };
      };
 
@@ -1530,15 +1701,15 @@
        if (this.varRef) {
 
            var caseVar = ASTBase.getUniqueVarName('caseVar');
-           this.out("(function(", caseVar, "){", NL);
+           this.out('(function(', caseVar, '){', NL);
            // for each caseWhenSection in .cases
            for( var caseWhenSection__inx=0,caseWhenSection ; caseWhenSection__inx<this.cases.length ; caseWhenSection__inx++){caseWhenSection=this.cases[caseWhenSection__inx];
-               caseWhenSection.out("if(", {pre: "" + caseVar + "===(", CSL: caseWhenSection.expressions, post: ")", separator: '||'}, ") return ", caseWhenSection.resultExpression, ";", NL);
+               caseWhenSection.out('if(', {pre: '' + caseVar + '===(', CSL: caseWhenSection.expressions, post: ')', separator: '||'}, ') return ', caseWhenSection.resultExpression, ';', NL);
            };// end for each in this.cases
 
-           // if .elseExpression, .out "    return ",.elseExpression,";",NL
-           if (this.elseExpression) {this.out("    return ", this.elseExpression, ";", NL)};
-           this.out("        }(", this.varRef, "))");
+           // if .elseExpression, .out '    return ',.elseExpression,';',NL
+           if (this.elseExpression) {this.out('    return ', this.elseExpression, ';', NL)};
+           this.out('        }(', this.varRef, '))');
        }
 
 // else, it's a var-less case. we code it as chained ternary operators
@@ -1548,10 +1719,10 @@
          // for each caseWhenSection in .cases
          for( var caseWhenSection__inx=0,caseWhenSection ; caseWhenSection__inx<this.cases.length ; caseWhenSection__inx++){caseWhenSection=this.cases[caseWhenSection__inx];
              this.outLineAsComment(caseWhenSection.lineInx);
-             caseWhenSection.out("(", caseWhenSection.booleanExpression, ") ? (", caseWhenSection.resultExpression, ") :", NL);
+             caseWhenSection.out('(', caseWhenSection.booleanExpression, ') ? (', caseWhenSection.resultExpression, ') :', NL);
          };// end for each in this.cases
 
-         this.out("/* else */ ", this.elseExpression || 'undefined');
+         this.out('/* else */ ', this.elseExpression || 'undefined');
        };
      };
 

@@ -668,7 +668,7 @@
          else if (typeof item === 'object') {
 
             // declare on item
-              // COMMENT:string, NLI, CSL:array, freeForm
+              // COMMENT:string, NLI, CSL:array, freeForm, h
 
 // if the object is an array, resolve with a recursive call
 
@@ -729,6 +729,12 @@
                  if (typeof item !== 'string' || !(item.COMMENT.startsWith("//"))) {this.lexer.out.put("// ")};
                  this.out(item.COMMENT);
              };
+           }
+
+// {h:1/0} --> enable/disabe output to header file
+           
+           else if (item.h !== undefined) {
+               this.lexer.out.toHeader = item.h;
            }
 
 // else, unrecognized object

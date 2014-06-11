@@ -130,7 +130,7 @@ for each syntax construction the compiler accepts.
 This handles `print` followed by an optional comma separated list of expressions
 
       properties
-        args
+        args: Expression array
 
       method parse()
         this.req 'print'
@@ -339,7 +339,6 @@ The `properties` keyword is used inside classes to define properties of the clas
       declare name affinity propDecl
       
       method parse()
-        .toNamespace = .opt('namespace')? true else false
         .req('properties')
         .lock()
         .list = .reqSeparatedList(VariableDecl,',')
@@ -2180,7 +2179,6 @@ creates a object with methods, properties and classes
       method parse()
 
         .req 'namespace','Namespace'
-        //if .opt('properties'), .throwParseFailed "is properties"
 
         .lock()
         .toNamespace = true
@@ -2571,6 +2569,14 @@ Usage Examples:
 
         .lock()
         .references=[]
+
+        var bodyparent:ASTBase
+        if .parent.parent is instanceof Body, bodyparent = .parent.parent.parent
+        if no bodyparent
+            .lexer.throwErr "'end' statement found outside a block"
+        if .indent isnt bodyparent.indent
+            .lexer.throwErr "'end' statement misaligned indent: #{.indent}. Expected #{bodyparent.indent} to close block started at line #{bodyparent.sourceLineNum}"
+            
  
 The words after `end` are just 'loose references' to the block intended to be closed
 We pick all the references up to EOL (or EOF)

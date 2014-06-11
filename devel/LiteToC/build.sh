@@ -1,1 +1,0 @@
-lite -use $HOME/LiteScript/devel/liteCompiler-v0.6 -target C -v 1 -b -c $1

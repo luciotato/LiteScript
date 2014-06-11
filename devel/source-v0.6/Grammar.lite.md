@@ -1036,9 +1036,9 @@ Examples:
     i++          | i++;           | i++ is marked "executes", it is a statement in itself
 
 Keep track of 'require' calls, to import modules (recursive)
-
-        if .name is 'require'
-            .getParent(Module).requireCallNodes.push this            
+Note: commented 2014-6-11
+//        if .name is 'require'
+//            .getParent(Module).requireCallNodes.push this            
 
 ---------------------------------
 ##### helper method toString()

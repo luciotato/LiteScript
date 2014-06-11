@@ -172,14 +172,14 @@ Walk the tree, and call function 'declare' on every node having it.
 'declare' will create scopes, and vars in the scope. 
 May inform 'DUPLICATES' and 'CASE MISMATCH' errors.
 
-        log.message "- Process Declarations"
+        log.info "- Process Declarations"
         walkAllNodesCalling 'declare'
 
 #### Pass 1.1 Declare By Assignment
 Walk the tree, and check assignments looking for: 'module.exports.x=x' and 'x.prototype.y = '.
 Treat them as declarations.
 
-        log.message "- Declare By Assignment (support .js syntax, .exports.x=..., .prototype.x=...)"
+        log.info "- Declare By Assignment (support .js syntax, .exports.x=..., .prototype.x=...)"
         walkAllNodesCalling 'declareByAssignment'
 
 
@@ -189,7 +189,7 @@ Make var x point to required module 'y' exports
 
         declare valid project.moduleCache
 
-        log.message "- Connecting Imported"
+        log.info "- Connecting Imported"
         for each own property fname in project.moduleCache
           var moduleNode:Grammar.Module = project.moduleCache[fname]
 
@@ -250,7 +250,7 @@ Since 'append to [class|object] x.y.z' statement can add to any object, we delay
 "Append To" declaration to this point, where 'x.y.z' can be analyzed and a reference obtained.
 Walk the tree, and check "Append To" Methods & Properties Declarations
 
-        log.message "- Processing Append-To"
+        log.info "- Processing Append-To"
         walkAllNodesCalling 'processAppendTo'
 
 
@@ -258,7 +258,7 @@ Walk the tree, and check "Append To" Methods & Properties Declarations
 for each NameDeclaration try to find the declared 'type' (string) in the scope. 
 Repeat until no conversions can be made.
 
-        log.message "- Converting Types"
+        log.info "- Converting Types"
 
         #first, try to assign type by "name affinity" 
         #(only applies when type is not specified)
@@ -298,7 +298,7 @@ Inform unconverted types as errors
 Walk the scope tree, and for each assignment, 
 IF L-value has no type, try to guess from R-value's result type
 
-        log.message "- Evaluating Assignments"
+        log.info "- Evaluating Assignments"
         walkAllNodesCalling 'evaluateAssignments'
 
 #### Pass 4 -Final- Validate Property Access
@@ -306,7 +306,7 @@ Once we have all vars declared and typed, walk the AST,
 and for each VariableRef validate property access.
 May inform 'UNDECLARED PROPERTY'.
 
-        log.message "- Validating Property Access"
+        log.info "- Validating Property Access"
         walkAllNodesCalling 'validatePropertyAccess'
 
 Inform forward declarations not fulfilled, as errors
@@ -367,14 +367,17 @@ Populate the global scope
         #are properly typified
 
         var stringProto = addBuiltInObject('String')
-
         var arrayProto = addBuiltInObject('Array')
-
         #state that String.split returns string array
         stringProto.members["split"].setMember '**return type**', arrayProto
-
         #state that Obj.toString returns string:
         objProto.members["tostring"].setMember '**return type**', stringProto
+
+        #ifdef PROD_C
+        globalScope.addMember 'int'
+        globalScope.addMember 'str'
+        globalScope.addMember 'size_t'
+        #endif
 
         addBuiltInObject 'Boolean'
         addBuiltInObject 'Number' 

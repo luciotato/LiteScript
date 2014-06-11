@@ -4,10 +4,10 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>ScriptyC-core1.h</itemPath>
+      <itemPath>CoreC.h</itemPath>
+      <itemPath>LiteC-core.h</itemPath>
       <itemPath>exceptions.h</itemPath>
       <itemPath>include/gc/gc.h</itemPath>
-      <itemPath>newfile.c</itemPath>
       <itemPath>util.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
@@ -17,8 +17,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>Core2.c</itemPath>
-      <itemPath>ScriptyC-core1.c</itemPath>
+      <itemPath>LiteC-core.c</itemPath>
       <itemPath>exceptions.c</itemPath>
       <itemPath>main.c</itemPath>
       <itemPath>util.c</itemPath>
@@ -56,11 +55,11 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
-      <item path="Core2.c" ex="false" tool="0" flavor2="0">
+      <item path="CoreC.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="ScriptyC-core1.c" ex="false" tool="0" flavor2="0">
+      <item path="LiteC-core.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="ScriptyC-core1.h" ex="false" tool="3" flavor2="0">
+      <item path="LiteC-core.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="exceptions.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -76,8 +75,6 @@
       <item path="include/gc/gc.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="main.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="newfile.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="util.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -104,11 +101,11 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
-      <item path="Core2.c" ex="false" tool="0" flavor2="0">
+      <item path="CoreC.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="ScriptyC-core1.c" ex="false" tool="0" flavor2="0">
+      <item path="LiteC-core.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="ScriptyC-core1.h" ex="false" tool="3" flavor2="0">
+      <item path="LiteC-core.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="exceptions.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -117,8 +114,6 @@
       <item path="include/gc/gc.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="main.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="newfile.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="util.c" ex="false" tool="0" flavor2="0">
       </item>

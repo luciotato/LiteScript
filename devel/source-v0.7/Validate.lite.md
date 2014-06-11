@@ -986,7 +986,7 @@ Append to class|namespace
 check if owner is class (namespace) or class.prototype (class)
 
         if toNamespace 
-            do nothing #'namespace properties' and 'append to namespace' are added directly to rerenced class-function
+            do nothing #'append to namespace' are added directly to rerenced class-function
         else
           # move to class prototype
           declare valid ownerDecl.members.prototype

@@ -29,14 +29,14 @@
         // isLite #: true is extension is '.lite'|'.lite.md'
         // filename:string #: found full module filename
         // relPath:string # path.relative(basePath, this.dirname); //relative to basePath
-        // relFilename
-        // outFilename #: output file for code production
-        // outRelFilename # path.relative(options.outBasePath, this.outFilename); //relative to basePath
-        // outExtension
-        // outFileIsNewer # true if generated file is newer than source
-        // interfaceFile #: interface file (.[auto-]interface.md) declaring exports cache
-        // interfaceFileExists #: if interfaceFileName file exists
-        // externalCacheExists
+        // relFilename: string
+        // outFilename: string # output file for code production
+        // outRelFilename: string # path.relative(options.outBasePath, this.outFilename); //relative to basePath
+        // outExtension: string
+        // outFileIsNewer: boolean # true if generated file is newer than source
+        // interfaceFile: string #: interface file (.[auto-]interface.md) declaring exports cache
+        // interfaceFileExists: boolean #: if interfaceFileName file exists
+        // externalCacheExists: boolean
 
        var name = info.name;
        this.importInfo = info;

@@ -409,8 +409,7 @@ return prefix for item to be appended
           ownerName = parent.varRef
         
         else # in a ClassDeclaration
-          declare valid .toNamespace
-          toPrototype = not .toNamespace #if it's a "namespace properties" or "namespace method"
+          toPrototype = true
           ownerName = parent.name
 
         return [ownerName, toPrototype? ".prototype." else "." ]
@@ -1019,7 +1018,6 @@ we need to get the class constructor, and separate other class items.
         var theConstructor = null
         var theMethods = []
         var theProperties = []
-        var theNamespaceProperties = []
 
         if .body
           for each index,item in .body.statements
@@ -1032,11 +1030,7 @@ we need to get the class constructor, and separate other class items.
               theConstructor = item.statement
 
             else if item.statement instanceof Grammar.PropertiesDeclaration
-              declare valid item.statement.toNamespace
-              if item.statement.toNamespace
-                 theNamespaceProperties.push item.statement
-              else
-                  theProperties.push item.statement
+              theProperties.push item.statement
 
             else 
               theMethods.push item

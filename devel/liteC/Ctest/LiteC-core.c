@@ -12,80 +12,74 @@
  *
  */
 
-#include "ScriptyC-core1.h"
-
-//---
-//Object
-//--------------------
-
-    // Object methods bodies
-    str Object__toString(Object this){
-        return "[Object]";
-    };
-
-    //Object__Methods: Instantiated jmp table
-    struct Object__METHODS_t
-        Object__METHODS_I = {
-            Object__toString
-    };
-
-    //Object__CLASS_I: Instantiated class info
-    //instantiated Object class info and a const ptr to it
-    struct Class_t
-    Object__CLASS_I = {
-        &Class__CLASS_I, // Class class = type of this object
-        &Object__METHODS_I, // METHODS call = methods of this object
-        "Object", // str name
-        NULL, // function __init
-        sizeof(struct Object_t), //size_t instanceSize
-        &Object__METHODS_I, //methods
-        NULL // super =
-    };
-    const Class
-    Object__CLASS = &Object__CLASS_I;
-
-//----------------------
-    // test functions body
-    void func1 (void) { printf( "1\n" ); }
-    void func0 (void) { printf( "0\n" ); }
-
-    //instantiated jmp table
-    struct TEST_METHODS TEST_METHODS_I = { func0, func1 };
-//----------------------
+    #include "LiteC-core.h"
 
 //Class
 
-    //init Fn
+    //init Fn for Class Objects
     void Class__init(Class this
             ,str name
             ,initFn_t initFn
             ,size_t instanceSize
-            ,void* methods
             ,Class super
             ){
                 this->name = name;
                 this->__init = initFn;
                 this->instanceSize = instanceSize;
-                this->methods = methods;
                 this->super = super;
     };
 
+    //forward
+    struct Class Object__CLASS_DATA;
 
-    //Class__CLASS_I: Instantiated class info
-    //instantiated class info and a const ptr to it
-    struct Class_t
-    Class__CLASS_I = {
-        &Class__CLASS_I, // Class class = type of this object
-        &Object__METHODS_I, // METHODS call = methods of this object
-        "Class", // str name
+    //Class__CLASS_DATA: Instantiated class info
+    struct Class Class__CLASS_DATA = {
+        &Class__CLASS_DATA , // always &Class__CLASS_DATA, class of this object
+        "Class", // str class name
         (initFn_t)Class__init, // function __init
-        sizeof(struct Class_t), //size_t instanceSize
-        &Object__METHODS_I, //methods (none of his own)
-        &Object__CLASS_I// super =
+        sizeof(struct Class), //size_t instanceSize
+        &Object__CLASS_DATA // super class
     };
-    const Class
-        Class__CLASS = &Class__CLASS_I;
 
+    const Class const Class__CLASS = &Class__CLASS_DATA;
+
+//---
+//Object
+//--------------------
+
+    //Object__CLASS: Instantiated class info
+    //instantiated Object class info and a const ptr to it
+    struct Class Object__CLASS_DATA = {
+        &Class__CLASS_DATA, // always &Class__CLASS_DATA, class of this object
+        "Object", // str class name
+        NULL, // function __init
+        sizeof(struct Object), //size_t instanceSize
+        NULL // super class
+    };
+     const Class const Object__CLASS = &Object__CLASS_DATA;
+
+
+//---
+//String
+//--------------------
+
+    //init Fn for String Objects
+    String String__init(String this, str value){
+                this->value = value;
+                this->length = strlen(value);
+                return this;
+    };
+
+    //String__CLASS: Instantiated class info
+    //instantiated Object class info and a const ptr to it
+    struct Class String__CLASS_DATA = {
+        &Class__CLASS_DATA, // always &Class__CLASS_DATA, class of this object
+        "String", // str class name
+        (initFn_t)Class__init, // function __init
+        sizeof(struct String), //size_t instanceSize
+        &Object__CLASS_DATA    // super class
+    };
+     const Class const String__CLASS = &String__CLASS_DATA;
 
 //-------------------
 // helper functions
@@ -97,7 +91,41 @@
         // use info at classInfo to allocate memory space. set type & constructor
         Object o = alloc(classInfo->instanceSize);
         o->class = classInfo; // class of this instance
-        o->call = classInfo->methods; // address of CALL struct with all methods
         return o;
     }
 
+    String mkStr(str value) {
+       return String__init((String)new(String__CLASS),value);
+    }
+
+// .toString
+
+    String Object_toString(Object this){
+        return String__init((String)new(String__CLASS),this->class->name);
+        //return __concat_String(3,"[",this->class->name,"]");
+    }
+
+    //dispatcher
+    String toString(Object this){
+        if (this->class == String__CLASS){
+                return (String)this;
+        }
+        else { //default
+            return Object_toString(this);
+        }
+    }
+
+
+    /*String Number_toString(Number this){
+        char buffer[256];
+        snprintf(buffer,sizeof(buffer),"%d",this->value);
+        return String__init__(new(String_CLASS),buffer);
+    }
+    */
+
+    /*
+    __concat_String(int arglen,...){
+        ...
+        return String__init__(new(String_CLASS),buffer);
+    }
+    */

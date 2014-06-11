@@ -109,7 +109,7 @@
    function PrintStatement(){// default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       // properties
-        // args
+        // args: Expression array
    };
    // PrintStatement (extends|proto is) ASTBase
    PrintStatement.prototype.__proto__ = ASTBase.prototype;
@@ -332,7 +332,6 @@
 
      // method parse()
      PropertiesDeclaration.prototype.parse = function(){
-       this.toNamespace = this.opt('namespace') ? true : false;
        this.req('properties');
        this.lock();
        this.list = this.reqSeparatedList(VariableDecl, ',');
@@ -2784,7 +2783,6 @@
      NamespaceDeclaration.prototype.parse = function(){
 
        this.req('namespace', 'Namespace');
-        //if .opt('properties'), .throwParseFailed "is properties"
 
        this.lock();
        this.toNamespace = true;
@@ -3284,6 +3282,19 @@
 
        this.lock();
        this.references = [];
+
+       var bodyparent = undefined;
+       // if .parent.parent is instanceof Body, bodyparent = .parent.parent.parent
+       if (this.parent.parent instanceof Body) {bodyparent = this.parent.parent.parent};
+       // if no bodyparent
+       if (!bodyparent) {
+           this.lexer.throwErr("'end' statement found outside a block");
+       };
+       // if .indent isnt bodyparent.indent
+       if (this.indent !== bodyparent.indent) {
+           this.lexer.throwErr("'end' statement misaligned indent: " + this.indent + ". Expected " + bodyparent.indent + " to close block started at line " + bodyparent.sourceLineNum);
+       };
+
 
 // The words after `end` are just 'loose references' to the block intended to be closed
 // We pick all the references up to EOL (or EOF)
