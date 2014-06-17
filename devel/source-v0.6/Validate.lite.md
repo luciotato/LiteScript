@@ -373,11 +373,9 @@ Populate the global scope
         #state that Obj.toString returns string:
         objProto.members["tostring"].setMember '**return type**', stringProto
 
-        #ifdef PROD_C
-        globalScope.addMember 'int'
-        globalScope.addMember 'str'
-        globalScope.addMember 'size_t'
-        #endif
+        globalScope.addMember 'int' #  js: Number / c:int
+        globalScope.addMember 'str' #  js: String / c:const char*
+        globalScope.addMember 'size_t' #  js: Number /c:size_t
 
         addBuiltInObject 'Boolean'
         addBuiltInObject 'Number' 
@@ -1356,14 +1354,14 @@ ForEachInArray: check if the iterable has a .length property.
 
         if .variant instanceof Grammar.ForEachInArray
 
-            declare valid .variant.iterable.getResultType
+            declare .variant:Grammar.ForEachInArray
 
             var iterableType:NameDeclaration = .variant.iterable.getResultType()
 
             if no iterableType 
               #.sayErr "ForEachInArray: no type declared for: '#{.variant.iterable}'"
               do nothing
-            else if no iterableType.findMember('length')
+            else if not .variant.isMap and no iterableType.findMember('length')
               .sayErr "ForEachInArray: no .length property declared in '#{.variant.iterable}' type:'#{iterableType.toString()}'"
               log.error iterableType.originalDeclarationPosition()
 

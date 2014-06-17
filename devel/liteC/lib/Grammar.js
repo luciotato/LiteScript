@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.7/Grammar.lite.md
+//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.8/Grammar.lite.md
 // LiteScript Grammar
 // ==================
 
@@ -134,7 +134,7 @@
    function VarStatement(){// default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       // properties
-        // list:array
+        // list:VariableDecl array
         // export:boolean, default:boolean
    };
    // VarStatement (extends|proto is) ASTBase
@@ -581,8 +581,8 @@
 // Loops
 // =====
 
-// LiteScript provides the standard js and C `while` loop, but also provides a `until` loop
-// and a versatil `do loop while|until`
+// LiteScript provides the standard js and C `while` loop, a `until` loop
+// and a `do... loop while|until`
 
 
 // DoLoop
@@ -603,7 +603,7 @@
 // do:
   // x++
   // print x
-  // when x is 10, break
+  // if x is 10, break
 // loop
 // ```
 
@@ -871,6 +871,7 @@
         // indexVar:VariableDecl, mainVar:VariableDecl, iterable:Expression
         // where:ForWhereFilter
         // body
+        // isMap: boolean
    };
    // ForEachInArray (extends|proto is) ASTBase
    ForEachInArray.prototype.__proto__ = ASTBase.prototype;
@@ -899,6 +900,7 @@
 
        this.req('in');
        this.lock();
+       this.isMap = this.opt('map');
        this.iterable = this.req(Expression);
 
 // optional where expression
@@ -1205,6 +1207,7 @@
          this.executes = true;
          this.hasSideEffects = true;
        };
+     };
 
 // Note: In LiteScript, *any VariableRef standing on its own line*, it's considered
 // a function call. A VariableRef on its own line means "execute this!",
@@ -1223,12 +1226,9 @@
     // i++          | i++;           | i++ is marked "executes", it is a statement in itself
 
 // Keep track of 'require' calls, to import modules (recursive)
-
-       // if .name is 'require'
-       if (this.name === 'require') {
-           this.getParent(Module).requireCallNodes.push(this);
-       };
-     };
+// Note: commented 2014-6-11
+//        if .name is 'require'
+//            .getParent(Module).requireCallNodes.push this
 
 // ---------------------------------
      // helper method toString()
@@ -1290,7 +1290,7 @@
    function Accessor(){// default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       // properties
-        // args:array
+        // args:ASTBase array
    };
    // Accessor (extends|proto is) ASTBase
    Accessor.prototype.__proto__ = ASTBase.prototype;
@@ -1374,7 +1374,7 @@
    function FunctionAccess(){// default constructor: call super.constructor
        Accessor.prototype.constructor.apply(this,arguments)
       // properties
-        // args:array
+        // args:Expression array
    };
    // FunctionAccess (extends|proto is) Accessor
    FunctionAccess.prototype.__proto__ = Accessor.prototype;
@@ -2026,7 +2026,7 @@
 
 // while there is more than one operator in the root node...
 
-     // method growExpressionTree(arr:array)
+     // method growExpressionTree(arr:ASTBase array)
      Expression.prototype.growExpressionTree = function(arr){
        // do while arr.length > 1
        while(arr.length > 1){
@@ -3283,16 +3283,19 @@
        this.lock();
        this.references = [];
 
-       var bodyparent = undefined;
-       // if .parent.parent is instanceof Body, bodyparent = .parent.parent.parent
-       if (this.parent.parent instanceof Body) {bodyparent = this.parent.parent.parent};
-       // if no bodyparent
-       if (!bodyparent) {
+       var block = undefined;
+       // if .parent.parent is instanceof Body or .parent.parent is instanceof Module
+       if (this.parent.parent instanceof Body || this.parent.parent instanceof Module) {
+           block = this.parent.parent;
+       };
+       // if no block
+       if (!block) {
            this.lexer.throwErr("'end' statement found outside a block");
        };
-       // if .indent isnt bodyparent.indent
-       if (this.indent !== bodyparent.indent) {
-           this.lexer.throwErr("'end' statement misaligned indent: " + this.indent + ". Expected " + bodyparent.indent + " to close block started at line " + bodyparent.sourceLineNum);
+       var expectedIndent = block.indent || 4;
+       // if .indent isnt expectedIndent
+       if (this.indent !== expectedIndent) {
+           this.lexer.throwErr("'end' statement misaligned indent: " + this.indent + ". Expected " + expectedIndent + " to close block started at line " + block.sourceLineNum);
        };
 
 
@@ -4025,36 +4028,68 @@
 
 
    // append to class ASTBase
+      // properties
+            // isMap: boolean
+
      // helper method parseType
      ASTBase.prototype.parseType = function(){
 
-        // #parse type declaration: type-IDENTIFIER [array]
+// parse type declaration:
+  // function [(VariableDecl,)]
+  // type-IDENTIFIER [array]
+  // [array of] type-IDENTIFIER
+  // map type-IDENTIFIER to type-IDENTIFIER
 
-       // if .opt('function') #function as type declaration
-       if (this.opt('function')) {// #function as type declaration
+       // if .opt('function','Function') #function as type declaration
+       if (this.opt('function', 'Function')) {// #function as type declaration
            // if .opt('(')
            if (this.opt('(')) {
                 // declare valid .paramsDeclarations
                this.paramsDeclarations = this.optSeparatedList(VariableDecl, ',', ')');
            };
-           this.type = new VariableRef(this, 'function');
+           this.type = new VariableRef(this, 'Function');
+           return;
+       };
+
+// check for 'array', e.g.: `var list : array of NameDeclaration`
+
+       // if .opt('array')
+       if (this.opt('array')) {
+           this.type = 'Array';
+           this.req('of');
+           this.itemType = this.req(VariableRef);// #reference to an existing class
+            // #auto-capitalize core classes
+            // declare .itemType:VariableRef
+           this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
+           return;
+       };
+
+// Check for 'map', e.g.: `var list : map string to NameDeclaration`
+
+       this.isMap = this.opt('map');
+
+       this.type = this.req(VariableRef);// #KEYS: reference to an existing class
+        // #auto-capitalize core classes
+        // declare .type:VariableRef
+       this.type.name = autoCapitalizeCoreClasses(this.type.name);
+
+       // if .isMap
+       if (this.isMap) {
+           this.req('to');
+           this.itemType = this.req(VariableRef);// #VALUES: reference to an existing class
+            // #auto-capitalize core classes
+            // declare .itemType:VariableRef
+           this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
        }
        
        else {
-         this.type = this.req(VariableRef);// #reference to an existing class
-       };
-
-        // #auto-capitalize core classes
-        // declare valid .type.name
-       this.type.name = autoCapitalizeCoreClasses(this.type.name);
-
-        // # check for 'array', e.g.: `var list : string array`
-       // if .opt('Array','array')
-       if (this.opt('Array', 'array')) {
-           this.itemType = this.type;// #assign as sub-type
-           this.type = 'Array';
+            // #check for 'type array', e.g.: `var list : string array`
+           // if .opt('Array','array')
+           if (this.opt('Array', 'array')) {
+               this.itemType = this.type;// #assign as sub-type
+               this.type = 'Array';
+           };
        };
      };
-
 
 

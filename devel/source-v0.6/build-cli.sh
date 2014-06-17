@@ -1,6 +1,6 @@
 #compile lite-cli (command line interface) w/o comments or mapsource
 
-if lite -c lite-cli -o ../liteCompiler-v0.6 -single -noval -nomap -comments 0; then 
+if lite -c lite-cli -v 1 -o ../liteCompiler-v0.6 -single -noval -nomap -comments 0; then 
     echo copy to [home]/lib
     cp -u ../liteCompiler-v0.6/lite-cli.js ../../lib/
     cp -u ../liteCompiler-v0.6/Args.js ../../lib/

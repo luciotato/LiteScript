@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.7/Environment.lite.md
+//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.8/Environment.lite.md
 // The 'Environment' object, must provide functions to load files,
 // search modules in external cache, load and save from external cache (disk).
 
@@ -64,7 +64,10 @@
 
        // default options =
        if(!options) options={};
-       if(options.target===undefined) options.target='js';
+       if(options.target===undefined) options.target='c';
+            // #else
+            //target: 'js'
+            // #endif
 
         // declare on options
             // basePath,outBasePath,browser
@@ -82,44 +85,51 @@
 // if parameter has no extension or extension is [.lite].md
 // we search the module
 
-        //if no this.extension or this.extension is '.md'
+       var full = undefined, found = undefined;
 
-        //search the file
-       var search = undefined;
-       // if this.hasPath #specific path indicated
-       if (this.hasPath) {// #specific path indicated
-           search = [path.resolve(importingModuleFileInfo.dirname, this.importInfo.name)];
+       // if this.importInfo.createFile
+       if (this.importInfo.createFile) {
+           full = path.join(options.basePath, this.importInfo.name);
        }
        
        else {
-            // #normal: search local ./lib & ../lib
-           search = [path.join(importingModuleFileInfo.dirname, this.importInfo.name), path.join(importingModuleFileInfo.dirname, '/lib', this.importInfo.name), path.join(importingModuleFileInfo.dirname, '../lib', this.importInfo.name)];
-       };
-
-       var full = undefined, found = undefined;
-
-       // for each item in search where not found
-       for( var item__inx=0,item ; item__inx<search.length ; item__inx++){item=search[item__inx];
-       if(!(found)){
-           // for each ext in ['.lite.md','.md','.interface.md','.js'] where not found
-           var _list4=['.lite.md', '.md', '.interface.md', '.js'];
-           for( var ext__inx=0,ext ; ext__inx<_list4.length ; ext__inx++){ext=_list4[ext__inx];
-           if(!(found)){
-               // if fs.existsSync(item+ext into full)
-               if (fs.existsSync((full=item + ext))) {
-                   found = full;
-               };
-           }};// end for each in ['.lite.md', '.md', '.interface.md', '.js']
+            //search the file
+           var search = undefined;
+           // if this.hasPath #specific path indicated
+           if (this.hasPath) {// #specific path indicated
+               search = [path.resolve(importingModuleFileInfo.dirname, this.importInfo.name)];
+           }
            
-       }};// end for each in search
+           else {
+                // #normal: search local ./lib & ../lib
+               search = [path.join(importingModuleFileInfo.dirname, this.importInfo.name), path.join(importingModuleFileInfo.dirname, '/lib', this.importInfo.name), path.join(importingModuleFileInfo.dirname, '../lib', this.importInfo.name)];
+           };
 
-        //console.log(basePath);
-        //log.debug full
+           // for each item in search where not found
+           for( var item__inx=0,item ; item__inx<search.length ; item__inx++){item=search[item__inx];
+           if(!(found)){
+               // for each ext in ['.lite.md','.md','.interface.md','.js'] where not found
+               var _list3=['.lite.md', '.md', '.interface.md', '.js'];
+               for( var ext__inx=0,ext ; ext__inx<_list3.length ; ext__inx++){ext=_list3[ext__inx];
+               if(!(found)){
+                   // if fs.existsSync(item+ext into full)
+                   if (fs.existsSync((full=item + ext))) {
+                       found = full;
+                   };
+               }};// end for each in ['.lite.md', '.md', '.interface.md', '.js']
+               
+           }};// end for each in search
 
-       // if not found
-       if (!(found)) {
-           log.throwControled('' + importingModuleFileInfo.relFilename + ': Module not found: ' + this.importInfo.name + '\n' + '\tSearched as: ' + this.importInfo.name + ' (options.browser=' + options.browser + ')\n' + '\t' + search + '(.lite.md|.md|.interface.md|.js)]');
+            //console.log(basePath);
+            //log.debug full
+
+           // if not found
+           if (!(found)) {
+               log.throwControled('' + importingModuleFileInfo.relFilename + ': Module not found: ' + this.importInfo.name + '\n' + '\tSearched as: ' + this.importInfo.name + ' (options.browser=' + options.browser + ')\n' + '\t' + search + '(.lite.md|.md|.interface.md|.js)]');
+           };
        };
+
+       // end if
 
         //set filename & Recalc extension
        this.filename = path.resolve(full); //full path
@@ -140,12 +150,15 @@
 
         // based on result extension
        this.isLite = ['.md', '.lite'].indexOf(this.extension)>=0;
-       this.outExtension = this.isLite ? "." + options.target : (this.extension || '.js');
+       this.outExtension = !(this.isLite) && this.extension ? this.extension : "." + options.target;
 
        this.outFilename = path.join(options.outBasePath, this.relPath, this.basename + this.outExtension);
        this.outRelFilename = path.relative(options.outBasePath, this.outFilename); //relative to basePath
 
         //print JSON.stringify(this,null,2)
+
+       // if this.importInfo.createFile, return #we're creating this file
+       if (this.importInfo.createFile) {return};
 
 // Check if outFile exists, but is older than Source
 
@@ -225,7 +238,7 @@
    module.exports.setBasePath=setBasePath;
 
 
-   // export helper export function relName(filename,basePath)
+   // export helper function relName(filename,basePath)
    function relName(filename, basePath){
         //relative to basePath
        return path.relative(basePath, filename);
@@ -235,7 +248,7 @@
 
 // ----------
 
-   // export function loadFile(filename)
+   // export helper function loadFile(filename)
    function loadFile(filename){
     //------------------
     //provide a loadFile function to the LiteScript environment.
@@ -247,7 +260,7 @@
    module.exports.loadFile=loadFile;
 
 
-   // export function externalCacheSave(filename, fileLines)
+   // export helper function externalCacheSave(filename, fileLines)
    function externalCacheSave(filename, fileLines){
     //------------------
     //provide a externalCacheSave (disk) function to the LiteScript environment
@@ -282,12 +295,13 @@
    module.exports.externalCacheSave=externalCacheSave;
 
 
+   // export helper function isBuiltInModule (name,prop)
+   function isBuiltInModule(name, prop){
+
     //------------------
     // Check for built in and global names
     //------------------
 
-   // export function isBuiltInModule (name,prop)
-   function isBuiltInModule(name, prop){
     //
     // return true if 'name' is a built-in node module
     //
@@ -308,7 +322,7 @@
    module.exports.isBuiltInModule=isBuiltInModule;
 
 
-   // export function isBuiltInObject(name)
+   // export helper function isBuiltInObject(name)
    function isBuiltInObject(name){
     //
     // return true if 'name' is a javascript built-in object
@@ -320,7 +334,7 @@
    module.exports.isBuiltInObject=isBuiltInObject;
 
 
-   // export function getGlobalObject(name)
+   // export helper function getGlobalObject(name)
    function getGlobalObject(name){
        // try
        try{
@@ -337,6 +351,20 @@
    // export
    module.exports.getGlobalObject=getGlobalObject;
 
+
+   // export helper function fileInfoNewFile(name,options) returns FileInfo
+   function fileInfoNewFile(name, options){
+
+// create a fileInfo with paths and data for a file to be created
+
+       var fileInfo = new FileInfo({name: name, createFile: true});
+       fileInfo.searchModule(null, options);
+       return fileInfo;
+   };
+   // export
+   module.exports.fileInfoNewFile=fileInfoNewFile;
+
+
    // export class ImportParameterInfo
    // constructor
    function ImportParameterInfo(){
@@ -344,11 +372,11 @@
             // name: string
             // interface: boolean
             // globalImport: boolean
+            // createFile: boolean
    };
    
    // export
    module.exports.ImportParameterInfo = ImportParameterInfo;
    // end class ImportParameterInfo
-
 
 

@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.6/Validate.lite.md
+//Compiled by LiteScript compiler v0.6.7, source: /home/ltato/LiteScript/devel/source-v0.6/Validate.lite.md
 // Name Validation
 // ===============
 
@@ -418,10 +418,9 @@
         // #state that Obj.toString returns string:
        objProto.members["tostring"].setMember('**return type**', stringProto);
 
-        //globalScope.addMember 'int'
-        //globalScope.addMember 'str'
-        //globalScope.addMember 'size_t'
-        // #endif
+       globalScope.addMember('int');// #  js: Number / c:int
+       globalScope.addMember('str');// #  js: String / c:const char*
+       globalScope.addMember('size_t');// #  js: Number /c:size_t
 
        addBuiltInObject('Boolean');
        addBuiltInObject('Number');
@@ -1740,7 +1739,7 @@
        // if .variant instanceof Grammar.ForEachInArray
        if (this.variant instanceof Grammar.ForEachInArray) {
 
-            // declare valid .variant.iterable.getResultType
+            // declare .variant:Grammar.ForEachInArray
 
            var iterableType = this.variant.iterable.getResultType();
 
@@ -1752,7 +1751,7 @@
            }
               // #.sayErr "ForEachInArray: no type declared for: '#{.variant.iterable}'"
            
-           else if (!iterableType.findMember('length')) {
+           else if (!(this.variant.isMap) && !iterableType.findMember('length')) {
              this.sayErr("ForEachInArray: no .length property declared in '" + this.variant.iterable + "' type:'" + (iterableType.toString()) + "'");
              log.error(iterableType.originalDeclarationPosition());
            };

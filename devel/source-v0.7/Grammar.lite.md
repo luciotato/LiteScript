@@ -175,8 +175,6 @@ Example:
 
       properties
         name 
-        type: VariableRef
-        itemType: VariableRef
         aliasVarRef: VariableRef
         assignedValue: Expression
 
@@ -532,8 +530,8 @@ This class handles closing "else" statements
 Loops
 =====
 
-LiteScript provides the standard js and C `while` loop, but also provides a `until` loop
-and a versatil `do loop while|until`
+LiteScript provides the standard js and C `while` loop, a `until` loop
+and a `do... loop while|until`
 
 
 DoLoop
@@ -554,7 +552,7 @@ var x=1
 do:
   x++
   print x
-  when x is 10, break
+  if x is 10, break
 loop
 ```
 
@@ -763,6 +761,7 @@ and `array-VariableRef` is the array to iterate over
         indexVar:VariableDecl, mainVar:VariableDecl, iterable:Expression
         where:ForWhereFilter
         body
+        isMap: boolean
 
       method parse()
       
@@ -785,6 +784,7 @@ we now *require* `in` and the iterable (array)
 
         .req 'in'
         .lock()
+        .isMap = .opt('map')
         .iterable = .req(Expression)
 
 optional where expression
@@ -1035,9 +1035,9 @@ Examples:
     i++          | i++;           | i++ is marked "executes", it is a statement in itself
 
 Keep track of 'require' calls, to import modules (recursive)
-
-        if .name is 'require'
-            .getParent(Module).requireCallNodes.push this            
+Note: commented 2014-6-11
+//        if .name is 'require'
+//            .getParent(Module).requireCallNodes.push this            
 
 ---------------------------------
 ##### helper method toString()
@@ -2569,13 +2569,15 @@ Usage Examples:
 
         .lock()
         .references=[]
-
-        var bodyparent:ASTBase
-        if .parent.parent is instanceof Body, bodyparent = .parent.parent.parent
-        if no bodyparent
+ 
+        var block:ASTBase
+        if .parent.parent is instanceof Body or .parent.parent is instanceof Module
+            block = .parent.parent
+        if no block
             .lexer.throwErr "'end' statement found outside a block"
-        if .indent isnt bodyparent.indent
-            .lexer.throwErr "'end' statement misaligned indent: #{.indent}. Expected #{bodyparent.indent} to close block started at line #{bodyparent.sourceLineNum}"
+        var expectedIndent = block.indent or 4
+        if .indent isnt expectedIndent
+            .lexer.throwErr "'end' statement misaligned indent: #{.indent}. Expected #{expectedIndent} to close block started at line #{block.sourceLineNum}"
             
  
 The words after `end` are just 'loose references' to the block intended to be closed
@@ -3126,26 +3128,54 @@ Anything standing alone in it's own line, its an imperative statement (it does s
 
 
     append to class ASTBase
+      properties
+            isMap: boolean
+
       helper method parseType
 
-        #parse type declaration: type-IDENTIFIER [array]
+parse type declaration: 
+  function [(VariableDecl,)]
+  type-IDENTIFIER [array]
+  [array of] type-IDENTIFIER 
+  map type-IDENTIFIER to type-IDENTIFIER
 
-        if .opt('function') #function as type declaration
+        if .opt('function','Function') #function as type declaration
             if .opt('(')
                 declare valid .paramsDeclarations
                 .paramsDeclarations = .optSeparatedList(VariableDecl,',',')')
-            .type= new VariableRef(this, 'function')
+            .type= new VariableRef(this, 'Function')
+            return
 
-        else
-          .type = .req(VariableRef) #reference to an existing class
+check for 'array', e.g.: `var list : array of NameDeclaration`
 
+        if .opt('array')
+            .type = 'Array'
+            .req('of')
+            .itemType = .req(VariableRef) #reference to an existing class
+            #auto-capitalize core classes
+            declare .itemType:VariableRef
+            .itemType.name = autoCapitalizeCoreClasses(.itemType.name)
+            return
+
+Check for 'map', e.g.: `var list : map string to NameDeclaration`
+
+        .isMap = .opt('map')
+
+        .type = .req(VariableRef) #KEYS: reference to an existing class
         #auto-capitalize core classes
-        declare valid .type.name
+        declare .type:VariableRef
         .type.name = autoCapitalizeCoreClasses(.type.name)
 
-        # check for 'array', e.g.: `var list : string array`
-        if .opt('Array','array')
-            .itemType = .type #assign as sub-type
-            .type = 'Array'
+        if .isMap
+            .req('to')
+            .itemType = .req(VariableRef) #VALUES: reference to an existing class
+            #auto-capitalize core classes
+            declare .itemType:VariableRef
+            .itemType.name = autoCapitalizeCoreClasses(.itemType.name)
+        else
+            #check for 'type array', e.g.: `var list : string array`
+            if .opt('Array','array')
+                .itemType = .type #assign as sub-type
+                .type = 'Array'
 
 

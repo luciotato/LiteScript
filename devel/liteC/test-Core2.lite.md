@@ -1,20 +1,20 @@
-Core2
+test Core2
 
-    global declare CoreC, Core2
+    global declare Core2
 
     function test
 
-        var c=0
+        var c:int=0
 
         print inRange(1,c,10)
 
-        var a = "murcielago"
+        var a = new TestClass("murcielago")
 
         print a.indexOf('e')
 
         print a.indexOf('lago')
 
-        print a.slice(2,3)
+        print a.sliceJoin(2,3)
 
-        print a.slice(-4)    
+        print a.sliceJoin(-4)    
 

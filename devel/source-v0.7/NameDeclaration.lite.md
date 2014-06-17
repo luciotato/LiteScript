@@ -10,7 +10,7 @@ Dependencies
 #### properties
 
       name: string
-      members
+      members: NameDeclaration array
       nodeDeclared: ASTBase
       parent: NameDeclaration
       type, itemType

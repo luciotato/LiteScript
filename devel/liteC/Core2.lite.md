@@ -1,7 +1,5 @@
 Core2
 
-    global declare CoreC
-
     public function inRange(min:int, value:int, max:int) returns int
         return case 
                 when value<min then min
@@ -9,26 +7,24 @@ Core2
                 else value
                end
 
-    public class String2 extends Object
+    public class TestClass
 
         properties
-            value: str
-            length: int
+            value
+            myArr:string array
 
-        constructor new String2(initStr:str)
-            .value = initStr
-            .length = strlen(initStr)
+        constructor new TestClass(initValue:Object)
+            .value = initValue
+            
+        method indexOf(searched:string, fromIndex:int=0) returns int
 
-        method indexOf(searched:String2, fromIndex:int=0) returns int
-            var sl:size_t = searched.length;
-            for start=fromIndex while start<.length-sl
-                if memcmp(this.value[start],searched.value,sl) is 0
-                    return start;
+            for n=fromIndex while n<.myArr.length
+                if .myArr[n] is searched, return n;
             return -1
             
-        method slice(start:int, endPos:int=-1) returns String2
+        method sliceJoin(start:int, endPos:int=-1) returns string
 
-            var len = .length
+            var len:int = .myArr.length
 
             start = inRange( 0, start<0?len+start:start , len)
 
@@ -36,11 +32,10 @@ Core2
 
             if start>=endPos, return ''
 
-            var size=endPos-start;
-            var newstr = alloc(size+1)
-            memcpy(newstr, this.value[start], size)
-            newstr[size]='\0'
+            var result:string
+            for n=start to endPos 
+                result += .myArr[n] + ' '
 
-            return new String2(newstr)
+            return result
 
 

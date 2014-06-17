@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.7/Validate.lite.md
+//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.8/Validate.lite.md
 // Name Validation
 // ===============
 
@@ -159,14 +159,22 @@
 // May inform 'DUPLICATES' and 'CASE MISMATCH' errors.
 
        log.info("- Process Declarations");
-       walkAllNodesCalling('declare');
+        // declare global var declare
+       walkAllNodesCalling(declare);
+        // #else
+        //walkAllNodesCalling 'declare'
+        // #endif
 
 // #### Pass 1.1 Declare By Assignment
 // Walk the tree, and check assignments looking for: 'module.exports.x=x' and 'x.prototype.y = '.
 // Treat them as declarations.
 
        log.info("- Declare By Assignment (support .js syntax, .exports.x=..., .prototype.x=...)");
-       walkAllNodesCalling('declareByAssignment');
+        // declare global var declareByAssignment
+       walkAllNodesCalling(declareByAssignment);
+        // #else
+        //walkAllNodesCalling 'declareByAssignment'
+        // #endif
 
 
 // #### Pass 1.2 connectImportRequire
@@ -176,12 +184,14 @@
         // declare valid project.moduleCache
 
        log.info("- Connecting Imported");
-       // for each own property fname in project.moduleCache
-       for ( var fname in project.moduleCache)if (project.moduleCache.hasOwnProperty(fname)){
-         var moduleNode = project.moduleCache[fname];
+       // for each fname,moduleNode in map project.moduleCache
+       for( var fname=0,moduleNode ; fname<project.moduleCache.length ; fname++){moduleNode=project.moduleCache[fname];
+          // declare moduleNode:Grammar.Module
 
          // for each node in moduleNode.requireCallNodes
          for( var node__inx=0,node ; node__inx<moduleNode.requireCallNodes.length ; node__inx++){node=moduleNode.requireCallNodes[node__inx];
+
+            // declare valid node.importedModule.exports.members
 
            // if node.importedModule
            if (node.importedModule) {
@@ -253,8 +263,7 @@
            };
          };// end for each in moduleNode.requireCallNodes
          
-         }
-       // end for each property
+       };// end for each in project.moduleCache
 
 
 // #### Pass 1.3 Process "Append To" Declarations
@@ -263,7 +272,12 @@
 // Walk the tree, and check "Append To" Methods & Properties Declarations
 
        log.info("- Processing Append-To");
-       walkAllNodesCalling('processAppendTo');
+        // declare global var processAppendTo
+       walkAllNodesCalling(processAppendTo);
+        // #else
+        //walkAllNodesCalling 'processAppendTo'
+        // #endif
+
 
 
 // #### Pass 2. Convert Types
@@ -324,7 +338,11 @@
 // IF L-value has no type, try to guess from R-value's result type
 
        log.info("- Evaluating Assignments");
-       walkAllNodesCalling('evaluateAssignments');
+        // declare global var evaluateAssignments
+       walkAllNodesCalling(evaluateAssignments);
+        // #else
+        //walkAllNodesCalling 'evaluateAssignments'
+        // #endif
 
 // #### Pass 4 -Final- Validate Property Access
 // Once we have all vars declared and typed, walk the AST,
@@ -332,7 +350,11 @@
 // May inform 'UNDECLARED PROPERTY'.
 
        log.info("- Validating Property Access");
-       walkAllNodesCalling('validatePropertyAccess');
+        // declare global var validatePropertyAccess
+       walkAllNodesCalling(validatePropertyAccess);
+        // #else
+        //walkAllNodesCalling 'validatePropertyAccess'
+        // #endif
 
 // Inform forward declarations not fulfilled, as errors
 
@@ -360,18 +382,19 @@
 
    // end function validate
 
-
-   // export function walkAllNodesCalling(methodName)
-   function walkAllNodesCalling(methodName){
+   // export function walkAllNodesCalling(method:function)
+   function walkAllNodesCalling(method){
+    // #else
+//### export function walkAllNodesCalling(methodName:string)
+    // #endif
 
 // For all modules, for each node, if the specific AST node has methodName, call it
 
-       // for each own property filename in project.moduleCache
-       for ( var filename in project.moduleCache)if (project.moduleCache.hasOwnProperty(filename)){
-           var moduleNode = project.moduleCache[filename];
-           moduleNode.callOnSubTree(methodName);
-           }
-       // end for each property
+       // for each filename,moduleNode in map project.moduleCache
+       for( var filename=0,moduleNode ; filename<project.moduleCache.length ; filename++){moduleNode=project.moduleCache[filename];
+            // declare moduleNode:Grammar.Module
+           moduleNode.callOnSubTree(method);
+       };// end for each in project.moduleCache
        
    };
    // export
@@ -418,10 +441,8 @@
         // #state that Obj.toString returns string:
        objProto.members["tostring"].setMember('**return type**', stringProto);
 
+        // #int equals 'number'
        globalScope.addMember('int');
-       globalScope.addMember('str');
-       globalScope.addMember('size_t');
-        // #endif
 
        addBuiltInObject('Boolean');
        addBuiltInObject('Number');
@@ -606,8 +627,8 @@
        if (obj instanceof Object || obj === Object.prototype) {
 
            // for each prop in Object.getOwnPropertyNames(obj) #even not enumerables
-           var _list3=Object.getOwnPropertyNames(obj);
-           for( var prop__inx=0,prop ; prop__inx<_list3.length ; prop__inx++){prop=_list3[prop__inx];
+           var _list2=Object.getOwnPropertyNames(obj);
+           for( var prop__inx=0,prop ; prop__inx<_list2.length ; prop__inx++){prop=_list2[prop__inx];
            if(prop !== '__proto__'){
 
                    var type = Grammar.autoCapitalizeCoreClasses(typeof obj[prop]);
@@ -1479,6 +1500,7 @@
     Grammar.FunctionDeclaration.prototype.declare = function(){// ## function, methods and constructors
 
      var owner = undefined;
+     var isMethod = undefined;
 
 // 1st: Grammar.FunctionDeclaration
 
@@ -1521,13 +1543,15 @@
          // if owner and .name
          if (owner && this.name) {
              this.addMethodToOwner(owner);
+             isMethod = true;
          };
      };
+
      // end if
 
 // Define function's return type from parsed text
 
-     this.createReturnType();
+     var returnType = this.createReturnType();
 
 // Now create function's scope, using found owner as function's scope var this's **proto**
 
@@ -1594,7 +1618,7 @@
     };
 
 
-    // method createReturnType() ## functions & methods
+    // method createReturnType() returns string ## functions & methods
     Grammar.FunctionDeclaration.prototype.createReturnType = function(){// ## functions & methods
 
      // if no .nameDecl, return #nowhere to put definitions
@@ -1613,13 +1637,19 @@
 
 // check if it alerady exists, if not found, create one. Type is 'Array'
 
-         var intermediateNameDecl = globalScope.members[composedName] || globalScope.addMember(composedName, {type: globalPrototype('Array')});
+         // if not globalScope.findMember(composedName) into var intermediateNameDecl
+         var intermediateNameDecl=undefined;
+         if (!((intermediateNameDecl=globalScope.findMember(composedName)))) {
+             intermediateNameDecl = globalScope.addMember(composedName, {type: globalPrototype('Array')});
+         };
 
 // item type, is each array member's type
 
          intermediateNameDecl.setMember("**item type**", this.itemType);
 
          this.nameDecl.setMember('**return type**', intermediateNameDecl);
+
+         return intermediateNameDecl;
      }
 
 // else, it's a simple type
@@ -1628,6 +1658,7 @@
 
          // if .type then .nameDecl.setMember('**return type**', .type)
          if (this.type) {this.nameDecl.setMember('**return type**', this.type)};
+         return this.type;
      };
     };
 
@@ -1752,7 +1783,7 @@
            }
               // #.sayErr "ForEachInArray: no type declared for: '#{.variant.iterable}'"
            
-           else if (!iterableType.findMember('length')) {
+           else if (!this.variant.isMap && !iterableType.findMember('length')) {
              this.sayErr("ForEachInArray: no .length property declared in '" + this.variant.iterable + "' type:'" + (iterableType.toString()) + "'");
              log.error(iterableType.originalDeclarationPosition());
            };
@@ -2349,4 +2380,3 @@
      
      };
     };
-

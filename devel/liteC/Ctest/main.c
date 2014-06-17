@@ -6,7 +6,7 @@
  */
 
 #include "LiteC-core.h"
-#include "exceptions.h"
+#include "_dispatcher.h"
 
 //Module Specific
 
@@ -25,31 +25,33 @@ void print(String s){
 
 int main(int argc, char** argv) {
 
+    LiteC__init();
+
     void* e;
 
-    print(mkStr("START"));
+    print(mkString("START"));
 
     Object b = new( Object__CLASS );
-    String s = mkStr(b->class->name);
+    String s = mkString(CLASSES[b->class]->name);
 
     try{
-        print(mkStr("TRY"));
+        print(mkString("TRY"));
         //print(b->value);
         print(toString(b));
         print(s);
         throw("throw GenericException");
-        print(mkStr("AFTER THROW"));
+        print(mkString("AFTER THROW"));
     }
     catch(e) {
         //fprintf(stderr,"caught %s",e.message);
-        print(mkStr("caught!"));
+        print(mkString("caught!"));
         //print(_s((str)e4c.err.object));
         //print(e.message);
     }
     finally {
         //fprintf(stdout,"e4c.frames %d, e4c.frame[e4c.frames].stage %d is_catch %d\n");
         //fprintf(stderr,"caught %s",e.message);
-        print(mkStr("finally"));
+        print(mkString("finally"));
     }
 
     return EXIT_SUCCESS;

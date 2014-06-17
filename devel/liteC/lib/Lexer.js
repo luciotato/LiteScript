@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.7/Lexer.lite.md
+//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.8/Lexer.lite.md
 // The Lexer
 // =========
 
@@ -613,8 +613,8 @@
            var indent=undefined;
            if ((indent=line.search(/\S/)) >= 0) {
                line = line.trim();
-               // if line[0] is '#' //expected: #else, #endif #end if
-               if (line[0] === '#') { //expected: #else, #endif #end if
+               // if line[0] is '#' and line[1] isnt '#' //expected: #else, #endif #end if
+               if (line[0] === '#' && line[1] !== '#') { //expected: #else, #endif #end if
                    words = line.split(' ');
                    // switch words[0]
                    switch(words[0]){
@@ -1351,14 +1351,16 @@
        this.lastOriginalCodeComment = 0;
        this.lastOutCommentLine = 0;
 
-        // #if do generate sourceMap and in node
-       // if not options.nomap and type of process isnt 'undefined' # in node
-       if (!(options.nomap) && typeof process !== 'undefined') {// # in node
-             // import SourceMap
-             var SourceMap = require('./SourceMap');
-             this.sourceMap = new SourceMap();
-       };
+// if sourceMap option is set, and we're in node generating .js
+
+       // do nothing
+       null;
     };
+        // #else
+        //if not options.nomap and type of process isnt 'undefined' # in node
+              //import SourceMap
+              //.sourceMap = new SourceMap
+        // #end if
 
     // method put(text:string)
     OutCode.prototype.put = function(text){
@@ -1460,18 +1462,18 @@
     // helper method addSourceMap(mark, sourceLin, sourceCol, indent)
     OutCode.prototype.addSourceMap = function(mark, sourceLin, sourceCol, indent){
 
-       // if .sourceMap
-       if (this.sourceMap) {
-            // declare on mark
-                // lin,col
-            // #.sourceMap.add ( (sourceLin or 1)-1, (sourceCol or 1)-1,
-            // #                 mark.lin, mark.col )
-           this.sourceMap.add((sourceLin || 1) - 1, 0, mark.lin, 0);
-       };
+       // do nothing
+       null;
     };
    // export
    module.exports.OutCode = OutCode;
    // end class OutCode
+        // #else
+        //if .sourceMap
+            //declare on mark
+                //lin,col
+            //.sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
+        // #endif
 
 // ------------------------
 // Exports

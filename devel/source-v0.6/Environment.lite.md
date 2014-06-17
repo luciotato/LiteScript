@@ -22,14 +22,14 @@ Dependencies
         isLite #: true is extension is '.lite'|'.lite.md' 
         filename:string #: found full module filename
         relPath:string # path.relative(basePath, this.dirname); //relative to basePath
-        relFilename
-        outFilename #: output file for code production
-        outRelFilename # path.relative(options.outBasePath, this.outFilename); //relative to basePath
-        outExtension
-        outFileIsNewer # true if generated file is newer than source
-        interfaceFile #: interface file (.[auto-]interface.md) declaring exports cache
-        interfaceFileExists #: if interfaceFileName file exists
-        externalCacheExists
+        relFilename: string
+        outFilename: string # output file for code production
+        outRelFilename: string # path.relative(options.outBasePath, this.outFilename); //relative to basePath
+        outExtension: string
+        outFileIsNewer: boolean # true if generated file is newer than source
+        interfaceFile: string #: interface file (.[auto-]interface.md) declaring exports cache
+        interfaceFileExists: boolean #: if interfaceFileName file exists
+        externalCacheExists: boolean
 
 
 #### constructor (info:ImportParameterInfo)
@@ -73,35 +73,39 @@ if compiling for node, and "global import" and no extension, asume global lib or
 if parameter has no extension or extension is [.lite].md
 we search the module 
 
-        //if no this.extension or this.extension is '.md'
-
-        //search the file
-        var search;
-        if this.hasPath #specific path indicated
-            search = [ path.resolve(importingModuleFileInfo.dirname,this.importInfo.name)]
-        else
-            #normal: search local ./lib & ../lib
-            search = [ 
-                path.join(importingModuleFileInfo.dirname, this.importInfo.name)
-                path.join(importingModuleFileInfo.dirname,'/lib',this.importInfo.name)
-                path.join(importingModuleFileInfo.dirname,'../lib',this.importInfo.name)
-                ]
-
         var full,found = undefined;
 
-        for each item in search where not found
-            for each ext in ['.lite.md','.md','.interface.md','.js'] where not found
-                if fs.existsSync(item+ext into full)
-                    found=full;
-            
-        //console.log(basePath);
-        //log.debug full
+        if this.importInfo.createFile
+            full = path.join(options.basePath, this.importInfo.name)
 
-        if not found
-            log.throwControled '#{importingModuleFileInfo.relFilename}: Module not found: #{this.importInfo.name}\n'
-                                +'\tSearched as: #{this.importInfo.name} (options.browser=#{options.browser})\n'
-                                +'\t#{search}(.lite.md|.md|.interface.md|.js)]'
-        
+        else
+            //search the file
+            var search;
+            if this.hasPath #specific path indicated
+                search = [ path.resolve(importingModuleFileInfo.dirname,this.importInfo.name)]
+            else
+                #normal: search local ./lib & ../lib
+                search = [ 
+                    path.join(importingModuleFileInfo.dirname, this.importInfo.name)
+                    path.join(importingModuleFileInfo.dirname,'/lib',this.importInfo.name)
+                    path.join(importingModuleFileInfo.dirname,'../lib',this.importInfo.name)
+                    ]
+
+            for each item in search where not found
+                for each ext in ['.lite.md','.md','.interface.md','.js'] where not found
+                    if fs.existsSync(item+ext into full)
+                        found=full;
+                
+            //console.log(basePath);
+            //log.debug full
+
+            if not found
+                log.throwControled '#{importingModuleFileInfo.relFilename}: Module not found: #{this.importInfo.name}\n'
+                                    +'\tSearched as: #{this.importInfo.name} (options.browser=#{options.browser})\n'
+                                    +'\t#{search}(.lite.md|.md|.interface.md|.js)]'
+
+        end if
+
         //set filename & Recalc extension
         this.filename =  path.resolve(full); //full path
         this.extension = path.extname(this.filename);
@@ -121,12 +125,14 @@ we search the module
 
         // based on result extension                
         this.isLite = this.extension in ['.md','.lite']
-        this.outExtension = this.isLite? ".#{options.target}" else (this.extension or '.js');
+        this.outExtension = not this.isLite and this.extension? this.extension else ".#{options.target}"
             
         this.outFilename = path.join(options.outBasePath, this.relPath, this.basename+this.outExtension);
         this.outRelFilename = path.relative(options.outBasePath, this.outFilename); //relative to basePath
 
         //print JSON.stringify(this,null,2)
+
+        if this.importInfo.createFile, return #we're creating this file
 
 Check if outFile exists, but is older than Source
 
@@ -190,13 +196,13 @@ Check if interface cache is updated
         options.outBasePath = path.resolve(options.outDir)
 
     
-### export helper export function relName(filename,basePath)
+### export helper function relName(filename,basePath)
         //relative to basePath
         return path.relative(basePath, filename)
     
 ----------
 
-    export function loadFile(filename)
+### export helper function loadFile(filename)
     //------------------
     //provide a loadFile function to the LiteScript environment.
     //return file contents
@@ -204,7 +210,7 @@ Check if interface cache is updated
         return fs.readFileSync(filename);
     
 
-    export function externalCacheSave(filename, fileLines)
+### export helper function externalCacheSave(filename, fileLines)
     //------------------
     //provide a externalCacheSave (disk) function to the LiteScript environment
     // receive a filename and an array of lines
@@ -228,11 +234,12 @@ Check if interface cache is updated
             fs.writeFileSync filename,fileLines
 
 
+### export helper function isBuiltInModule (name,prop)
+
     //------------------
     // Check for built in and global names
     //------------------
     
-    export function isBuiltInModule (name,prop)
     //
     // return true if 'name' is a built-in node module
     //
@@ -249,7 +256,7 @@ Check if interface cache is updated
             if r has property prop, return true; //is the member there?
             
      
-    export function isBuiltInObject(name)
+### export helper function isBuiltInObject(name)
     //
     // return true if 'name' is a javascript built-in object
     //
@@ -261,7 +268,7 @@ Check if interface cache is updated
             ,'process','require']
 
 
-    export function getGlobalObject(name)
+### export helper function getGlobalObject(name)
         try 
             return global[name]
         
@@ -271,10 +278,21 @@ Check if interface cache is updated
             log.error e.stack
             debugger
 
+    
+### export helper function fileInfoNewFile(name,options) returns FileInfo
+
+create a fileInfo with paths and data for a file to be created
+
+        var fileInfo = new FileInfo({name:name,createFile:true})
+        fileInfo.searchModule null, options
+        return fileInfo
+
+
 ### export Class ImportParameterInfo
         properties
             name: string
             interface: boolean
             globalImport: boolean
+            createFile: boolean
 
 

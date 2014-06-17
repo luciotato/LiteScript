@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.6/mkPath.lite.md
+//Compiled by LiteScript compiler v0.6.7, source: /home/ltato/LiteScript/devel/source-v0.6/mkPath.lite.md
 // Module mkPath
 // =============
 

@@ -88,7 +88,6 @@ Check for other options
             verbose : Number(args.value('v',"verbose") or 0) 
             warning : Number(args.value('w',"warning") or 1)
             comments: Number(args.value('comment',"comments") or 1) 
-            target  : args.value('target') or 'js' //target
             debug   : args.option('d',"debug") 
             skip    : args.option('noval',"novalidation") // skip name validation
             nomap   : args.option('nm',"nomap") // do not generate sourcemap

@@ -491,8 +491,14 @@ This method handles #ifdef/#else/#endif as multiline comments
             .project.setCompilerVar words[1],false
             return false
 
+        var invert = false
+
         var startCol = line.indexOf("#ifdef ")
-        if startCol<0, startCol = line.indexOf("#if def ")
+
+        if startCol<0 
+            startCol = line.indexOf("#ifndef ")
+            invert = true
+
         if startCol<0, return 
 
         //get rid of quoted strings. Still there?
@@ -505,6 +511,7 @@ This method handles #ifdef/#else/#endif as multiline comments
         var conditional = words[1]
         if no conditional, .throwErr "#ifdef; missing conditional"
         var defValue = .project.compilerVar(conditional)
+        if invert, defValue = not defValue //if it was "#ifndef"
 
         var endFound=false
         do
@@ -514,7 +521,7 @@ This method handles #ifdef/#else/#endif as multiline comments
             
             if line.search(/\S/) into var indent >= 0
                 line = line.trim()
-                if line[0] is '#' //expected: #else, #endif #end if
+                if line[0] is '#' and line[1] isnt '#' //expected: #else, #endif #end if
                     words = line.split(' ')
                     switch words[0] 
                         case '#else':

@@ -48,3 +48,9 @@ another modules via import|require.
 
     print "Out Dir: #{options.outDir}"
 
+    if options.target
+        do nothing
+    else
+        do nothing
+    end if
+    

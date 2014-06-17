@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.6/Compiler.lite.md
+//Compiled by LiteScript compiler v0.6.7, source: /home/ltato/LiteScript/devel/source-v0.6/Compiler.lite.md
 // The LiteScript Compiler Module
 // ==============================
 // LiteScript is a highly readable language that compiles to JavaScript.
@@ -243,7 +243,8 @@
 // to avoid tainting core classes in the compiled module global scope.
 // In 'string-shims' we add methods to core's String & Array
 
-       require('./string-shims');
+       // import StringShims from './string-shims'
+       var StringShims = require('././string-shims');
 
 // compiler vars, to use at conditional compilation
 

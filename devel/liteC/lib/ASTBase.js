@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.7/ASTBase.lite.md
+//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.8/ASTBase.lite.md
 // The Abstract Syntax Tree (AST) Base class
 // -----------------------------------------
 
@@ -19,14 +19,19 @@
    // constructor
     function ASTBase(parent, name){
      //      properties
-        // parent,
-
+        // parent:ASTBase
         // name, keyword, type, itemType
-
         // lexer:Lexer, lineInx
         // sourceLineNum, column
         // indent, locked
         // index
+
+// To compile to C, we must surrender js dynamic "reflection". We can not treat
+// any instance as a "map string to any".
+// In order to walk the AST, we create a "children" array, where we put all AST nodes
+// created as childs of this node
+
+        // children: ASTBase array // of ASTBase
 
        this.parent = parent;
        this.name = name;
@@ -204,10 +209,6 @@
        // for each searched in arguments
        for( var searched__inx=0,searched ; searched__inx<arguments.length ; searched__inx++){searched=arguments[searched__inx];
 
-          // declare on searched
-            // toUpperCase #for strings
-            // name #for AST nodes
-
 // skip empty, null & undefined
 
          // if no searched, continue
@@ -218,6 +219,9 @@
 
          // if typeof searched is 'string'
          if (typeof searched === 'string') {
+
+            // declare on searched
+              // toUpperCase #for strings
 
             // #debug spaces, .constructor.name,'TRY',searched, 'on', .lexer.token.toString()
 
@@ -256,6 +260,9 @@
 
 // "searched" is an AST class
 
+            // declare on searched
+              // name #for AST nodes
+
            debug(spaces, this.constructor.name, 'TRY', searched.name, 'on', this.lexer.token.toString());
 
 // if the argument is an AST node class, we instantiate the class and try the `parse()` method.
@@ -268,7 +275,7 @@
 
                 // #if there was adjectives on the parent, apply as properties
                 // # so they're available during parse
-                // declare valid .adjectives:array
+                // declare valid .adjectives:ASTBase array
                // if .adjectives
                if (this.adjectives) {
                    // for each adj in .adjectives
@@ -282,6 +289,11 @@
                astNode.parse();// # if it can't parse, will raise an exception
 
                debug(spaces, 'Parsed OK!->', searched.name);
+
+               // if no .children, .children = []
+               if (!this.children) {this.children = []};
+               this.children.push(astNode);
+                // #endif
 
                return astNode;// # parsed ok!, return instance
            
@@ -584,7 +596,7 @@
     };
 
 
-    // helper method listArgs(args:array)
+    // helper method listArgs(args:Object array)
     ASTBase.prototype.listArgs = function(args){
 // listArgs list arguments (from opt or req). used for debugging
 // and syntax error reporting
@@ -630,6 +642,8 @@
 // *out* is a helper function for code generation
 // It evaluates and output its arguments. uses .lexer.out
 
+       var out = this.lexer.out;
+
        // for each item in arguments
        for( var item__inx=0,item ; item__inx<arguments.length ; item__inx++){item=arguments[item__inx];
 
@@ -640,8 +654,10 @@
 
 // if it is the first thing in the line, out indentation
 
-         // if not .lexer.out.currLine, .lexer.out.put String.spaces(.indent-1)
-         if (!(this.lexer.out.currLine)) {this.lexer.out.put(String.spaces(this.indent - 1))};
+         // if not out.currLine and .indent > 1
+         if (!(out.currLine) && this.indent > 1) {
+             out.put(String.spaces(this.indent - 1));
+         };
 
 // if it is an AST node, call .produce()
 
@@ -654,13 +670,13 @@
 // New line char means "start new line"
          
          else if (item === '\n') {
-           this.lexer.out.startNewLine();
+           out.startNewLine();
          }
 
 // a simple string, out the string
          
          else if (typeof item === 'string') {
-           this.lexer.out.put(item);
+           out.put(item);
          }
 
 // else, Object codes
@@ -668,7 +684,7 @@
          else if (typeof item === 'object') {
 
             // declare on item
-              // COMMENT:string, NLI, CSL:array, freeForm, h
+              // COMMENT:string, NLI, CSL:Object array, freeForm, h
 
 // if the object is an array, resolve with a recursive call
 
@@ -693,7 +709,7 @@
 
                // if inx>0
                if (inx > 0) {
-                 this.lexer.out.put(item.separator || ', ');
+                 out.put(item.separator || ', ');
                };
 
                // if item.freeForm
@@ -721,12 +737,12 @@
            
            else if (item.COMMENT !== undefined) {
 
-             // if .lexer.options.comments #comments level > 0
-             if (this.lexer.options.comments) {// #comments level > 0
+             // if no .lexer or .lexer.options.comments #comments level > 0
+             if (!this.lexer || this.lexer.options.comments) {// #comments level > 0
 
                   // # prepend // if necessary
-                 // if type of item isnt 'string' or not item.COMMENT.startsWith("//"), .lexer.out.put "// "
-                 if (typeof item !== 'string' || !(item.COMMENT.startsWith("//"))) {this.lexer.out.put("// ")};
+                 // if type of item isnt 'string' or not item.COMMENT.startsWith("//"), out.put "// "
+                 if (typeof item !== 'string' || !(item.COMMENT.startsWith("//"))) {out.put("// ")};
                  this.out(item.COMMENT);
              };
            }
@@ -734,7 +750,7 @@
 // {h:1/0} --> enable/disabe output to header file
            
            else if (item.h !== undefined) {
-               this.lexer.out.toHeader = item.h;
+               out.toHeader = item.h;
            }
 
 // else, unrecognized object
@@ -750,7 +766,7 @@
 // Last option, out item.toString()
          
          else {
-           this.lexer.out.put(item.toString());// # try item.toString()
+           out.put(item.toString());// # try item.toString()
          };
 
          // end if
@@ -918,41 +934,44 @@
     };
 
 
-    // helper method callOnSubTree(methodName,classFilter) # recursive
-    ASTBase.prototype.callOnSubTree = function(methodName, classFilter){// # recursive
-
-// This is instance has the method, call it
-
-     // if this has property methodName, this[methodName]()
-     if (methodName in this) {this[methodName]()};
-
-     // if classFilter and this is instance of classFilter, return #do not recurse on filtered's childs
-     if (classFilter && this instanceof classFilter) {return};
-
-// recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
-
-     // for each own property name in this
-     for ( var name in this)if (this.hasOwnProperty(name))if(['parent', 'importedModule', 'requireCallNodes', 'exportDefault'].indexOf(name)===-1){
-
-             // if this[name] instance of ASTBase
-             if (this[name] instanceof ASTBase) {
-                 this[name].callOnSubTree(methodName, classFilter);// #recurse
-             }
-             
-             else if (this[name] instanceof Array) {
-                 // for each item in this[name] where item instance of ASTBase
-                 for( var item__inx=0,item ; item__inx<this[name].length ; item__inx++){item=this[name][item__inx];
-                 if(item instanceof ASTBase){
-                    // declare item:ASTBase
-                   item.callOnSubTree(methodName, classFilter);
-                 }};// end for each in this[name]
-                 
-             };
-             }
-     // end for each property
-     // end for
-     
+    // helper method callOnSubTree(dispatcher:function)
+    ASTBase.prototype.callOnSubTree = function(dispatcher){
+       dispatcher(this); //call method dispatcher on this instance
+       // if .children
+       if (this.children) {
+           // for each child in .children
+           for( var child__inx=0,child ; child__inx<this.children.length ; child__inx++){child=this.children[child__inx];
+               child.callOnSubTree(dispatcher); // call on all children and children's children
+           };// end for each in this.children
+           
+       };
     };
+
+    // #else
+
+//#### helper method callOnSubTree(methodName,classFilter) # recursive
+
+//This is instance has the method, call it
+
+      //if this has property methodName, this[methodName]()
+
+      //if classFilter and this is instance of classFilter, return #do not recurse on filtered's childs
+
+//recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
+
+      //for each own property name in this
+        //where name not in ['parent','importedModule','requireCallNodes','exportDefault']
+
+              //if this[name] instance of ASTBase
+                  //this[name].callOnSubTree methodName,classFilter #recurse
+
+              //else if this[name] instance of Array
+                  //for each item in this[name] where item instance of ASTBase
+                    //declare item:ASTBase
+                    //item.callOnSubTree methodName,classFilter
+      //end for
+
+    // #endif
 
 
     // helper method getRootNode()
@@ -987,9 +1006,18 @@
 
 // ----------------------------------------------------------------------------------------------
 
-   // export helper function getUniqueVarName(prefix)
-   function getUniqueVarName(prefix){
-// Generate unique variable names
+   // export helper function setUniqueID(prefix, value)
+   function setUniqueID(prefix, value){
+// Generate unique numbers, starting at 1
+
+       uniqueIds[prefix] = value - 1;
+   };
+   // export
+   ASTBase.setUniqueID=setUniqueID;
+
+   // export helper function getUniqueID(prefix) returns int
+   function getUniqueID(prefix){
+// Generate unique numbers, starting at 1
 
        var id = uniqueIds[prefix] || 0;
 
@@ -997,7 +1025,16 @@
 
        uniqueIds[prefix] = id;
 
-       return '_' + prefix + id;
+       return id;
+   };
+   // export
+   ASTBase.getUniqueID=getUniqueID;
+
+   // export helper function getUniqueVarName(prefix) returns string
+   function getUniqueVarName(prefix){
+// Generate unique variable names
+
+       return ('_' + prefix) + getUniqueID(prefix);
    };
    // export
    ASTBase.getUniqueVarName=getUniqueVarName;

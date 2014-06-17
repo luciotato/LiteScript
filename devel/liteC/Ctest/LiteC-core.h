@@ -1,11 +1,9 @@
 /*
- * File:   main.c
  * Author: ltato
- *
  */
 
-#ifndef LITEC_CORE
-#define LITEC_CORE
+#ifndef LITEC_CORE_H
+#define LITEC_CORE_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,10 +13,19 @@
 
 #include "util.h"
 
-//-------
-// forward declare
-// Class is a ptr to 'struct-Class'
-    typedef struct Class * Class;
+#include "exceptions.h"
+
+typedef enum ClassID {
+
+    NO__CLASS = 0,
+    Object__CLASS,
+    Class__CLASS,
+    String__CLASS,
+    Array__CLASS,
+    Error__CLASS
+
+} ClassID;
+
 
 //-------
 // Object
@@ -27,8 +34,7 @@
     // struct-Object = struct with instance properties
     // Object = ptr to struct-Object
     typedef struct Object {
-        Class class;
-
+        ClassID class;
     } * Object;
 
 // initFn_t is a ptr to: void function(Object)
@@ -41,11 +47,11 @@
     // struct-Class = struct with instance properties
     // Class = ptr to struct-Class
     typedef struct Class {
-        Class     class;            // asObject: always Class_CLASS_I
+        ClassID   class;            // asObject: always ClassInfo_CLASS
         str       name;         // class name
         initFn_t  __init;       // executable initialization code
         size_t    instanceSize; // size de la struct que crea
-        Class     super;        // super class
+        ClassID   super;        // super class
 
     } * Class;
 
@@ -56,7 +62,7 @@
     // struct-String = struct with instance properties
     // String = ptr to struct-String
     typedef struct String {
-        Class     class;        // asObject: always Class_CLASS_I
+        ClassID   class;        // asObject: always String_CLASS
         str       value;        // str contents
         size_t    length;       // size
 
@@ -64,27 +70,60 @@
 
 
 //-------
-//export ptrs to instantiated class info
+// Array
 
-    extern const Class Object__CLASS;
-    extern const Class Class__CLASS;
+    //declare:
+    // struct-Array = struct with instance properties
+    // String = ptr to struct-Array
+    typedef struct Array {
+        ClassID   class;       // asObject: always Array_CLASS
+        Object*   item;        // Object items base pointer
+        size_t    size;        // array memory size
+        size_t    length;      // # of elements
+        ClassID   itemClass;   // Class_ID of each item
 
-    extern struct Class String__CLASS_DATA;
-    extern const Class String__CLASS;
+    } * Array;
+
+//-------
+// Error
+
+    //declare:
+    // struct-Error = struct with instance properties
+    // Error = ptr to struct-Error
+    typedef struct Error_s {
+        ClassID   class;       // asObject: always Array_CLASS
+        str         message;
+        str         name;
+
+    } * Error;
+
 
 //------------------------
 // export helper functions
 // new - alloc mem space
 // and init Object properties (first part of memory space)
 
-    extern Object new(const Class classInfo);
+    extern Object new(ClassID classID);
 
     //create a String from a const char *
-    extern String mkStr(str value);
+    extern String mkString(str value);
+
+    extern int __is(void* a,void* b); //js ===
+
+    extern void LiteC_registerCoreClasses();
+    extern uint32_t __registerClass(
+                str name,
+                ClassID super, //proto class ID. Which class this class extends
+                void* initFn,
+                size_t instanceSize
+                );
 
 //------------------------
 // export core dispatchers
 
     extern String toString(Object this);
+
+    extern struct Array CLASSES_ARRAY;
+    extern Class* CLASSES;
 
 # endif

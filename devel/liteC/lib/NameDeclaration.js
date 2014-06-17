@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.7/NameDeclaration.lite.md
+//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.8/NameDeclaration.lite.md
 
 // Dependencies
 // ------------
@@ -9,13 +9,16 @@
    var log = require('./log');
    var debug = log.debug;
 
+   // import Map
+   var Map = require('./Map');
+
    // export default class NameDeclaration
    // constructor
     function NameDeclaration(name, options, node){
      //      properties
 
       // name: string
-      // members
+      // members: Map //Map string to NameDeclaration
       // nodeDeclared: ASTBase
       // parent: NameDeclaration
       // type, itemType
@@ -24,7 +27,7 @@
       // isDummy
 
      this.name = name;
-     this.members = {};
+     this.members = {}; // {}, JSON, is "Map string to any" literal notation
      this.nodeDeclared = node;
 
       // declare on options
@@ -80,25 +83,21 @@
                if (!actual || !actual.members) {break};
                // if actual is this, return #circular ref, abort setting
                if (actual === this) {return};
-           } while ((actual=actual.members[normalized]));// end loop
+           } while ((actual=actual.members.get(normalized)));// end loop
            
        };
 
        // end if #avoid circular references
 
         // #set member
-       this.members[normalized] = nameDecl;
+       this.members.set(normalized, nameDecl);
     };
 
     // helper method findOwnMember(name) returns NameDeclaration
     NameDeclaration.prototype.findOwnMember = function(name){
 // this method looks for 'name' in NameDeclaration members
 
-       var normalized = normalizePropName(name);
-       // if .members.hasOwnProperty(normalized)
-       if (this.members.hasOwnProperty(normalized)) {
-         return this.members[normalized];
-       };
+       return this.members.get(normalizePropName(name));
     };
 
 
@@ -107,13 +106,13 @@
     NameDeclaration.prototype.ownMember = function(name){
 // this method looks for a specific member, throws if not found
 
-       var normalized = normalizePropName(name);
-       // if .members.hasOwnProperty(normalized)
-       if (this.members.hasOwnProperty(normalized)) {
-         return this.members[normalized];
+       // if no .findOwnMember(name) into var result
+       var result=undefined;
+       if (!((result=this.findOwnMember(name)))) {
+         this.sayErr("No member named '" + name + "' on " + (this.info()));
        };
 
-       this.sayErr("No member named '" + name + "' on " + (this.info()));
+       return result;
     };
 
 
@@ -127,13 +126,14 @@
         // declare on realNameDecl
           // members
 
-// mix in members
+// mix in found namedecl here
 
-       // for each member in Object.keys(realNameDecl.members)
-       var _list2=Object.keys(realNameDecl.members);
-       for( var member__inx=0,member ; member__inx<_list2.length ; member__inx++){member=_list2[member__inx];
-         this.addMember(member, {replaceSameName: true});
-       };// end for each in Object.keys(realNameDecl.members)
+       // for each key,member in map realNameDecl.members
+       for( var key=0,member ; key<realNameDecl.members.length ; key++){member=realNameDecl.members[key];
+          // declare member:NameDeclaration
+         member.parent = this;
+         this.members.set(key, member);
+       };// end for each in realNameDecl.members
 
        this.isForward = realNameDecl.isForward;
 
@@ -156,12 +156,10 @@
 
         // # remove existing members from nameDeclarations[]
        this.isForward = false;
-       // for each property name in .members
-       for ( var name in this.members){
-         var memberDecl = this.members[name];
+       // for each memberDecl in map .members
+       for( var memberDecl__inx=0,memberDecl ; memberDecl__inx<this.members.length ; memberDecl__inx++){memberDecl=this.members[memberDecl__inx];
          NameDeclaration.allOfThem.remove(memberDecl);
-         }
-       // end for each property
+       };// end for each in this.members
 
         // #save a copy of this.members pointer
        var thisMembers = this.members;
@@ -226,7 +224,7 @@
 
     // helper method addMember(nameDecl:NameDeclaration, options, nodeDeclared)
     NameDeclaration.prototype.addMember = function(nameDecl, options, nodeDeclared){
-// Adds passed NameDeclaration to .members[].
+// Adds passed NameDeclaration to .members
 // Reports duplicated.
 // returns: Identifier
 
@@ -256,14 +254,10 @@
 
        var normalized = options.scopeCase ? normalizeVarName(nameDecl.name) : normalizePropName(nameDecl.name);
 
-       // if dest.members.hasOwnProperty(normalized)
-       if (dest.members.hasOwnProperty(normalized)) {
-         var found = dest.members[normalized];
-       };
-
-       // if not found
-       if (!(found)) {
-         dest.members[normalized] = nameDecl;
+       // if not dest.members.get(normalized) into var found
+       var found=undefined;
+       if (!((found=dest.members.get(normalized)))) {
+         dest.members.set(normalized, nameDecl);
          nameDecl.parent = dest;
          return nameDecl;
        };
@@ -278,7 +272,7 @@
 
 // if replaceSameName option set, replace found item with new item
 
-           dest.members[normalized] = nameDecl;
+           dest.members.set(normalized, nameDecl);
        }
 
 // else, if the previously defined found item was a "forward" declaration, we add the nameDecl

@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.6/Lexer.lite.md
+//Compiled by LiteScript compiler v0.6.7, source: /home/ltato/LiteScript/devel/source-v0.6/Lexer.lite.md
 // The Lexer
 // =========
 
@@ -581,9 +581,16 @@
            return false;
        };
 
+       var invert = false;
+
        var startCol = line.indexOf("#ifdef ");
-       // if startCol<0, startCol = line.indexOf("#if def ")
-       if (startCol < 0) {startCol = line.indexOf("#if def ")};
+
+       // if startCol<0
+       if (startCol < 0) {
+           startCol = line.indexOf("#ifndef ");
+           invert = true;
+       };
+
        // if startCol<0, return
        if (startCol < 0) {return};
 
@@ -600,6 +607,8 @@
        // if no conditional, .throwErr "#ifdef; missing conditional"
        if (!conditional) {this.throwErr("#ifdef; missing conditional")};
        var defValue = this.project.compilerVar(conditional);
+       // if invert, defValue = not defValue //if it was "#ifndef"
+       if (invert) {defValue = !(defValue)};
 
        var endFound = false;
        // do
@@ -613,8 +622,8 @@
            var indent=undefined;
            if ((indent=line.search(/\S/)) >= 0) {
                line = line.trim();
-               // if line[0] is '#' //expected: #else, #endif #end if
-               if (line[0] === '#') { //expected: #else, #endif #end if
+               // if line[0] is '#' and line[1] isnt '#' //expected: #else, #endif #end if
+               if (line[0] === '#' && line[1] !== '#') { //expected: #else, #endif #end if
                    words = line.split(' ');
                    // switch words[0]
                    switch(words[0]){

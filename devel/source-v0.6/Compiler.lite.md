@@ -222,7 +222,7 @@ Note: we defer requiring utility string functions to *after* **createGlobalScope
 to avoid tainting core classes in the compiled module global scope.
 In 'string-shims' we add methods to core's String & Array
 
-        require './string-shims'
+        import StringShims from './string-shims'
 
 compiler vars, to use at conditional compilation
         

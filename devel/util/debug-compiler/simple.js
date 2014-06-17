@@ -52,5 +52,17 @@
 
    console.log("Out Dir: " + options.outDir);
 
+   // if options.target
+   if (options.target) {
+       // do nothing
+       null;
+   }
+   
+   else {
+       // do nothing
+       null;
+   };
+   // end if
+   
 
 //# sourceMappingURL=simple.js.map

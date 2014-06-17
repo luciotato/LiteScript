@@ -1,4 +1,4 @@
-//Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.6/Grammar.lite.md
+//Compiled by LiteScript compiler v0.6.7, source: /home/ltato/LiteScript/devel/source-v0.6/Grammar.lite.md
 // LiteScript Grammar
 // ==================
 
@@ -872,6 +872,7 @@
         // indexVar:VariableDecl, mainVar:VariableDecl, iterable:Expression
         // where:ForWhereFilter
         // body
+        // isMap: boolean
    };
    // ForEachInArray (extends|proto is) ASTBase
    ForEachInArray.prototype.__proto__ = ASTBase.prototype;
@@ -900,6 +901,7 @@
 
        this.req('in');
        this.lock();
+       this.isMap = this.opt('map');
        this.iterable = this.req(Expression);
 
 // optional where expression

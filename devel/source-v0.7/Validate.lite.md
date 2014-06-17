@@ -373,11 +373,8 @@ Populate the global scope
         #state that Obj.toString returns string:
         objProto.members["tostring"].setMember '**return type**', stringProto
 
-        #ifdef PROD_C
+        #int equals 'number'
         globalScope.addMember 'int'
-        globalScope.addMember 'str'
-        globalScope.addMember 'size_t'
-        #endif
 
         addBuiltInObject 'Boolean'
         addBuiltInObject 'Number' 
@@ -1163,6 +1160,7 @@ if we do, set type (unless is "null" or "undefined", they destroy type info)
 #### Method declare() ## function, methods and constructors
 
       var owner
+      var isMethod:boolean
 
 1st: Grammar.FunctionDeclaration
 
@@ -1195,11 +1193,13 @@ Note: Constructors have no "name". Constructors are the class itself.
           owner = .tryGetOwnerDecl()
           if owner and .name 
               .addMethodToOwner owner
+              isMethod = true
+
       end if
 
 Define function's return type from parsed text
 
-      .createReturnType
+      var returnType = .createReturnType()
 
 Now create function's scope, using found owner as function's scope var this's **proto**
 
@@ -1250,7 +1250,7 @@ Add to owner, type is 'Function'
       .addMemberTo owner, .nameDecl
 
 
-#### method createReturnType() ## functions & methods
+#### method createReturnType() returns string ## functions & methods
 
       if no .nameDecl, return #nowhere to put definitions
 
@@ -1266,8 +1266,8 @@ and set this new nameDecl as function's **return type**
 
 check if it alerady exists, if not found, create one. Type is 'Array'
         
-          var intermediateNameDecl = globalScope.members[composedName] 
-                or globalScope.addMember(composedName,{type:globalPrototype('Array')})
+          if not globalScope.findMember(composedName) into var intermediateNameDecl
+              intermediateNameDecl = globalScope.addMember(composedName,{type:globalPrototype('Array')})
 
 item type, is each array member's type 
 
@@ -1275,11 +1275,14 @@ item type, is each array member's type
 
           .nameDecl.setMember '**return type**', intermediateNameDecl
 
+          return intermediateNameDecl
+
 else, it's a simple type
 
       else 
 
           if .type then .nameDecl.setMember('**return type**', .type)
+          return .type
 
 
 ### Append to class Grammar.PropertiesDeclaration ###
@@ -1363,7 +1366,7 @@ ForEachInArray: check if the iterable has a .length property.
             if no iterableType 
               #.sayErr "ForEachInArray: no type declared for: '#{.variant.iterable}'"
               do nothing
-            else if no iterableType.findMember('length')
+            else if no .variant.isMap and no iterableType.findMember('length')
               .sayErr "ForEachInArray: no .length property declared in '#{.variant.iterable}' type:'#{iterableType.toString()}'"
               log.error iterableType.originalDeclarationPosition()
 

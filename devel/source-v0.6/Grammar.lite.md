@@ -764,6 +764,7 @@ and `array-VariableRef` is the array to iterate over
         indexVar:VariableDecl, mainVar:VariableDecl, iterable:Expression
         where:ForWhereFilter
         body
+        isMap: boolean
 
       method parse()
       
@@ -786,6 +787,7 @@ we now *require* `in` and the iterable (array)
 
         .req 'in'
         .lock()
+        .isMap = .opt('map')
         .iterable = .req(Expression)
 
 optional where expression
