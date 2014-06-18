@@ -359,8 +359,7 @@ Populate the global scope
 
         var objProto = addBuiltInObject('Object') #first: Object. Order is important
         objProto.addMember('__proto__')
-        declare valid objProto.members.constructor.addMember
-        objProto.members.constructor.addMember('name')
+        objProto.ownMember("constructor").addMember('name')
 
         addBuiltInObject 'Function' #second: Function. Order is important
         #Function is declared here so ':function' properties of "array" or "string"

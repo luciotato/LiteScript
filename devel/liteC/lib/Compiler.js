@@ -3,13 +3,13 @@
 // ==============================
 // LiteScript is a highly readable language that compiles to JavaScript.
 
-   var version = '0.7.0';
+   var version = '0.8.0';
    // export
    module.exports.version = version;
 
     //compiler generate(lines:string array)
     //    lines.push "export var buildDate = '#{new Date.toISOString()}'"
-   var buildDate = '20140609';
+   var buildDate = '20140617';
    // export
    module.exports.buildDate = buildDate;
 
@@ -78,6 +78,7 @@
 // The main module is the root of the module dependency tree, and can reference
 // another modules via import|require.
 
+        //ifdef PROD_C
        // default options =
        if(!options) options={};
        if(options.outDir===undefined) options.outDir='out';
@@ -131,7 +132,7 @@
 // parse source lines & store in moduleCache for validation
 
        project.parseOnModule(moduleNode, filename, sourceLines);
-       project.moduleCache[filename] = moduleNode;
+       project.moduleCache.set(filename, moduleNode);
 
 // import dependencies
 

@@ -17,3 +17,5 @@ Map string to object shim
             for each own property propName,value in .members
                 callb(propName,value)
 
+        method clear()
+            .members = new Object

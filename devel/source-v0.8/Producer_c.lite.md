@@ -99,7 +99,7 @@ register user classes
 now all method dispatchers
 
         .out {COMMENT: 'method dispatchers'},NL,NL
-        for each own property propName,dispatcherNameDecl in allDispatchersNameDecl.members
+        for each dispatcherNameDecl in map allDispatchersNameDecl.members
             with dispatcherNameDecl.funcDecl
 
                 .out 'void* ', .name
@@ -107,7 +107,7 @@ now all method dispatchers
                 .out "{",NL
                 .out "    switch(((Object)this)->class){",NL
                 
-                for each own property caseName,caseNameDecl in dispatcherNameDecl.members            
+                for each caseNameDecl in map dispatcherNameDecl.members
                     with caseNameDecl.funcDecl
                         .out "      case ",caseNameDecl.name,"__CLASS:",NL
                         // call specific class_method
@@ -152,7 +152,7 @@ methods dispatchers extern declaration
 
         .out {COMMENT: 'method dispatchers'},NL,NL
 
-        for each own property propName,dispatcherNameDecl in allDispatchersNameDecl.members
+        for each dispatcherNameDecl in map allDispatchersNameDecl.members
           with dispatcherNameDecl.funcDecl
             .out 'extern void* ',.name
             .produceParameters 'void*' //type for implicit parameter "this"
@@ -262,9 +262,13 @@ if there are one or more 'into var x' in a expression in this statement,
 declare vars before statement (exclude body of FunctionDeclaration)
 Note: producer_js uses: callOnSubTree
 
+        #ifdef TARGET_C
         for each child in .children where child.constructor isnt Grammar.Body
-            declare global var declareIntoVar
-            declareIntoVar child
+            declare valid child.declareIntoVar
+            child.declareIntoVar
+        #else
+        this.callOnSubTree "declareIntoVar",Grammar.Body
+        #endif
 
 call the specific statement (if,for,print,if,function,class,etc) .produce()
 
@@ -338,7 +342,12 @@ or the only Operand of a unary oper.
                 strValue = strValue.replace(/"/g,'\\"') // escape internal \"
                 strValue = '"'+strValue+'"' // enclose in ""
 
-            .out "mkStr(",strValue,")", .accessors
+            if strValue is '""' 
+                .out "EMPTY_STR"
+            else
+                .out strValue
+
+            .out .accessors
 
         else        
             .out .name, .accessors
@@ -749,11 +758,8 @@ If 'var' was adjectivated 'export', add to exportNamespace
       method produce() 
 
         for each item:Grammar.ImportStatementItem in .list
-          
           var requireParam = item.importParameter? item.importParameter.getValue() else item.name 
-
-          .out "var ",item.name," = require('",
-                  .global or requireParam[0] is '/'? "" else "./", requireParam, "');", NL
+          .out '#include "', requireParam, '.h"', NL
 
         .skipSemiColon = true
 
@@ -767,15 +773,19 @@ variable name and optionally assign a value
 It's a `var` keyword or we're declaring function parameters.
 In any case starts with the variable name
       
+          if no .nameDecl, .sayErr "INTERNAL ERROR: var '#{.name}' has no .nameDecl"
           var typeNameDecl = .nameDecl.findMember("**proto**")
           var typeStr
           if no typeNameDecl
-              .sayErr "can't determine type for var '#{.name}'"
-              typeStr = 'Object'
+              //.sayErr "can't determine type for var '#{.name}'"
+              // if no explicit type assume "any"
+              typeStr = 'any'
           else
               typeStr = typeNameDecl.name
               if typeNameDecl.name is 'prototype'
-                  typeStr = typeNameDecl.parent.name
+                  var parentName = typeNameDecl.parent.name
+                  typeStr = parentName is 'String'?'str' else "#{parentName}_ptr";
+              end if
               
           .out typeStr ,' ', .name
 
@@ -784,8 +794,8 @@ In any case starts with the variable name
 If this VariableDecl come from a 'var' statement, we force assignment (to avoid subtle bugs,
 in LiteScript, 'var' declaration assigns 'undefined')
 
-          if .parent instanceof Grammar.VarStatement and .assignedValue
-              .out ' = ',.assignedValue 
+          //if .parent instanceof Grammar.VarStatement and .assignedValue
+          //    .out ' = ',.assignedValue 
 
 else, this VariableDecl come from function parameters decl, 
 if it has AssginedValue, we out assignment if ES6 is available. 
@@ -806,7 +816,7 @@ if it has AssginedValue, we out assignment if ES6 is available.
         for each statement in .statements
             bare.push statement.statement
         #.out NL,"    ",{CSL:bare, separator:";"}
-        .out {CSL:bare, separator:";"},";"
+        .out "{",{CSL:bare, separator:";"},";","}"
 
 
 ### Append to class Grammar.IfStatement ###
@@ -816,7 +826,7 @@ if it has AssginedValue, we out assignment if ES6 is available.
         declare valid .elseStatement.produce
 
         if .body instanceof Grammar.SingleLineStatement
-            .out "if (", .conditional,") {",.body,"}"
+            .out "if (", .conditional,") ",.body
         else
             .out "if (", .conditional, ") {", .getEOLComment()
             .out  .body, "}"
@@ -844,24 +854,8 @@ There are 3 variants of `ForStatement` in LiteScript
 
       method produce() 
 
-        declare valid .variant.iterable
         declare valid .variant.produce
-
-Pre-For code. If required, store the iterable in a temp var.
-(prettier generated code) Only if the iterable is a complex expression, 
-(if it can have side-effects) we store it in a temp 
-var in order to avoid calling it twice. Else, we use it as is.
-
-        var iterable:Grammar.Expression = .variant.iterable
-
-        declare valid iterable.root.name.hasSideEffects
-
-        if iterable 
-          if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
-            iterable = ASTBase.getUniqueVarName('list')  #unique temp iterable var name
-            .out "Object ",iterable,"=",.variant.iterable,";",NL
-
-        .variant.produce(iterable)
+        .variant.produce()
 
 Since al 3 cases are closed with '}; //comment', we skip statement semicolon
 
@@ -873,18 +867,25 @@ Since al 3 cases are closed with '}; //comment', we skip statement semicolon
 
 `ForEachProperty: for each [own] property name-VariableDecl in object-VariableRef`
 
-      method produce(iterable) 
+      method produce() 
+
+        .sayErr "'for each property' not supported for C production"
+        /*
+        //declare valid iterable.root.name.hasSideEffects
+        //if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
+          var listName:string = ASTBase.getUniqueVarName('list')  #unique temp listName var name
+          .out "any * ",listName,"=",.iterable,"->base;",NL
 
           if .mainVar
             .out "var ", .mainVar.name,"=undefined;",NL
 
-          .out "for ( var ", .indexVar.name, " in ", iterable, ")"
+          .out "for ( var ", .indexVar.name, " in ", listName, ")"
 
           if .ownOnly
-              .out "if (",iterable,".hasOwnProperty(",.indexVar,"))"
+              .out "if (",listName,".hasOwnProperty(",.indexVar,"))"
 
           if .mainVar
-              .body.out "{", .mainVar.name,"=",iterable,"[",.indexVar,"];",NL
+              .body.out "{", .mainVar.name,"=",listName,"[",.indexVar,"];",NL
 
           .out .where
 
@@ -894,27 +895,45 @@ Since al 3 cases are closed with '}; //comment', we skip statement semicolon
             .body.out NL, "}"
 
           .out {COMMENT:"end for each property"},NL
-
+        */
 
 ### Append to class Grammar.ForEachInArray
 ### Variant 2) 'for each index' to loop over *Array indexes and items*
 
 `ForEachInArray: for each [index-VariableDecl,]item-VariableDecl in array-VariableRef`
 
-      method produce(iterable)
+      method produce()
 
 Create a default index var name if none was provided
 
-        var indexVar = .indexVar
-        if no indexVar
-          indexVar = {name:.mainVar.name+'__inx', assignedValue:0} #default index var name
+        var listName
+        declare valid .iterable.root.name.hasSideEffects
+        if .iterable.operandCount>1 or .iterable.root.name.hasSideEffects or .iterable.root.name instanceof Grammar.Literal
+            listName = ASTBase.getUniqueVarName('list')  #unique temp listName var name
+            .out "Array_ptr ",listName,"=",.iterable,";",NL
+        else
+            listName = .iterable
+
+        if .isMap, .out "any ",.indexVar,";",NL
+        .out "any ",.mainVar.name,";",NL
+
+        var intIndexVarName
+        if no .indexVar or .isMap
+          intIndexVarName = {name:.mainVar.name+'__inx', assignedValue:0} #default index var name
+        else
+          intIndexVarName = .indexVar
 
         .out "for(int "
-                , indexVar.name,"=",indexVar.assignedValue or "0",",",.mainVar.name
-                ," ; ",indexVar.name,"<",iterable,".length"
-                ," ; ",indexVar.name,"++){"
+                , intIndexVarName,"=",.indexVar.assignedValue or "0"
+                ," ; ",intIndexVarName,"<",listName,"->length"
+                ," ; ",intIndexVarName,"++){"
 
-        .body.out .mainVar.name,"=",iterable,"[",indexVar.name,"];",NL
+        if .isMap
+            .body.out .indexVar,"=",listName,"->base[",intIndexVarName,"]->key;",NL
+            .body.out .mainVar.name,"=",listName,"->base[",intIndexVarName,"]->value;",NL
+        else
+            #Array
+            .body.out .mainVar.name,"=",listName,"->base[",intIndexVarName,"];",NL
 
         if .where 
           .out .where,"{",.body,"}"
@@ -1105,7 +1124,7 @@ check if this is a 'constructor', 'method' or 'function'
           .out "//class _init fn",NL
           ownerClass = .getParent(Grammar.ClassDeclaration)
           className = ownerClass.name
-          .out className," ",className,"__init"
+          .out "any ",className,"__init"
           addThis = true
 
 else, method?
@@ -1127,20 +1146,20 @@ else, method?
           //          className, ",'",.name,"',{value:function",generatorMark
           //else
           .out .type or 'void',' '
-          .out className,'__',.name //," = function",generatorMark
+          .out className,'__',.name 
 
           addThis = true
 
 For C production, we're using a dispatcher for each method name
 
           // look in existing dispatchers
-          if not allDispatchersNameDecl.findOwnMember(.name) into var dipatcherNameDecl 
-              dipatcherNameDecl = allDispatchersNameDecl.addMember(.name)
-              dipatcherNameDecl.funcDecl = this // first method found makes parameters model
+          if not allDispatchersNameDecl.findOwnMember(.name) into var dispatcherNameDecl 
+              dispatcherNameDecl = allDispatchersNameDecl.addMember(.name)
+              dispatcherNameDecl.funcDecl = this // first method found makes parameters model
           //create a case for the class in the dispatcher
-          if dipatcherNameDecl.findOwnMember(className) 
+          if dispatcherNameDecl.findOwnMember(className) 
               .throwError "DUPLICATED METHOD: a method named '#{.name}' already exists for class '#{className}'"
-          var caseNameDecl = dipatcherNameDecl.addMember(className)
+          var caseNameDecl = dispatcherNameDecl.addMember(className)
           #store a pointer to this FunctonDeclaration, to later code case call w parameters
           caseNameDecl.funcDecl = this 
 
@@ -1232,7 +1251,7 @@ If the function was adjectivated 'export/public', add to .h
 
       //if .export and not .default and this isnt instance of Grammar.ConstructorDeclaration
       if true and this isnt instance of Grammar.ConstructorDeclaration
-          .out NL,{h:1},NL
+          .out {h:1},NL
           .out "extern "
           if this is instance of Grammar.MethodDeclaration
               .out .type or 'void',' '
@@ -1242,16 +1261,17 @@ If the function was adjectivated 'export/public', add to .h
 
           .produceParameters className
 
-          .out ";",NL,{h:0},NL
+          .out ";",NL,{h:0}
 
 #### method produceParameters(className)
 
 if this is a class method, add "this" as first parameter
 
-        if this is instance of Grammar.ConstructorDeclaration 
+        var isConstructor = this is instance of Grammar.ConstructorDeclaration 
+        if isConstructor
           or this is instance of Grammar.MethodDeclaration
 
-            .out "(",className," this"
+            .out "(", (isConstructor?"any":"#{className}_ptr") ," this"
             if .paramsDeclarations.length
                 .out ',',{CSL:.paramsDeclarations}
             .out ")"
@@ -1401,21 +1421,23 @@ In C we create a struct for "instance properties" of each class
         .out "#define #{.name}__CLASS ",ASTBase.getUniqueID('CLASS'),NL
 
         .out NL,"// declare:",NL
-        .out "// struct-#{.name} = struct with instance properties",NL
-        .out "// #{.name} : type = ptr to said struct",NL
-        .out "typedef struct ",.name," {",NL
-        .out "    ClassID class;",NL
+        .out "// #{.name}_ptr : type = ptr to instance",NL
+        .out "typedef struct ",.name,"_s * ",.name,"_ptr;",NL
+        .out "// struct #{.name}_s = struct with instance properties",NL
+        .out "struct ",.name,"_s {",NL
+        .out "    TypeID constructor;",NL
         for each propertiesDeclaration in PropertiesDeclarationStatements
             propertiesDeclaration.produce
-        .out NL,"} * ",.name,";",NL,NL
+        .out "};",NL,NL
 
 export class__init (constructor)
 
-        .out "extern ",.name," ",.name,"__init"
+        .out "extern any ",.name,"__init"
         if theConstructor
             theConstructor.produceParameters .name
-        else
-            .out "(",.name," this)"
+        else 
+            //default constructor
+            .out "( any this)"
         end if
         .out ";",NL,NL
 
@@ -1437,7 +1459,7 @@ a) the __init constructor ( void function [name]__init)
         
         else // a default constructor
             .out "//default __init",NL
-            .out .name," ",.name,"__init(",.name," this){"
+            .out "any ",.name,"__init(any this){"
             if .varRefSuper and .varRefSuper.toString() isnt 'Object'
                 .out NL,"    ",{COMMENT:["//auto call super__init, to initialize first part of space at *this"]}
                 .out NL,"    ",.varRefSuper,"__init(this);",NL

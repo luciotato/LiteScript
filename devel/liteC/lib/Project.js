@@ -16,6 +16,11 @@
    var Validate = require('./Validate');
    var log = require('./log');
 
+    //ifdef PROD_C
+   // import Map
+   var Map = require('./Map');
+    // #endif
+
    var debug = log.debug;
 
 // Get the 'Environment' object for the compiler to use.
@@ -28,6 +33,7 @@
 
 // Require the Producer (to include it in the dependency tree)
 
+    //ifdef PROD_C
    // import Producer_c
    var Producer_c = require('./Producer_c');
     // #else
@@ -42,7 +48,7 @@
 
         // options
         // name
-        // moduleCache
+        // moduleCache: Map
         // root: Grammar.Module
         // compilerVars: NameDeclaration
         // globalScope: NameDeclaration
@@ -53,6 +59,7 @@
 
 // normalize options
 
+        //ifdef PROD_C
        var DEFAULT_TARGET = "c";
         // #else
         //var DEFAULT_TARGET="js"
@@ -84,7 +91,7 @@
 
        this.name = 'Project';
        this.options = options;
-       this.moduleCache = {};
+       this.moduleCache = new Map(); //{}
 
        log.error.count = 0;
        log.options.verbose = options.verbose;
@@ -179,12 +186,14 @@
 
        log.info("\nProducing " + this.options.target + " at " + this.options.outDir + "\n");
 
+        //ifdef PROD_C
        Producer_c.preProduction(this);
         // #endif
 
-       // for each own property filename in .moduleCache
-       for ( var filename in this.moduleCache)if (this.moduleCache.hasOwnProperty(filename)){
-         var moduleNode = this.moduleCache[filename];
+       // for each moduleNode:Grammar.Module in map .moduleCache
+       var moduleNode=undefined;
+       for ( var moduleNode__propName in this.moduleCache.members) if (this.moduleCache.members.hasOwnProperty(moduleNode__propName)){moduleNode=this.moduleCache.members[moduleNode__propName];
+         {
 
          // if not moduleNode.fileInfo.isCore and moduleNode.referenceCount
          if (!(moduleNode.fileInfo.isCore) && moduleNode.referenceCount) {
@@ -215,6 +224,7 @@
                Environment.externalCacheSave(moduleNode.fileInfo.outFilename, resultLines);
                result = "" + resultLines.length + " lines";
 
+                //ifdef PROD_C
                resultLines = moduleNode.lexer.out.getResult(1); //get .h file contents
                // if resultLines.length
                if (resultLines.length) {
@@ -246,12 +256,14 @@
            log.extra();// #blank line
          };
          }
-       // end for each property
+         
+         }// end for each property
 
        // end for each module cached
 
        log.message("" + log.error.count + " errors, " + log.warning.count + " warnings.");
 
+        //ifdef PROD_C
        // if no log.error.count, Producer_c.postProduction this
        if (!log.error.count) {Producer_c.postProduction(this)};
     };
@@ -489,11 +501,11 @@
 
 // Check Internal Cache: if it is already compiled, return cached Module node
 
-       // if .moduleCache.hasOwnProperty(fileInfo.filename) #registered
-       if (this.moduleCache.hasOwnProperty(fileInfo.filename)) {// #registered
+       // if .moduleCache.has(fileInfo.filename) #registered
+       if (this.moduleCache.has(fileInfo.filename)) {// #registered
            log.info(indent, 'cached: ', fileInfo.filename);
            this.recurseLevel--;
-           return this.moduleCache[fileInfo.filename];
+           return this.moduleCache.get(fileInfo.filename);
        };
 
 // It isn't on internal cache, then create a **new Module**.
@@ -502,7 +514,7 @@
 
 // early add to local cache, to cut off circular references
 
-       this.moduleCache[fileInfo.filename] = moduleNode;
+       this.moduleCache.set(fileInfo.filename, moduleNode);
 
 // Check if we can get exports from a "interface.md" file
 
@@ -607,15 +619,17 @@
 // helper compilerVar(name)
 // return root.compilerVars.members[name].value
 
-       var compVar = this.compilerVars.findOwnMember(name);
-       // if compVar, return compVar.findOwnMember("**value**")
-       if (compVar) {return compVar.findOwnMember("**value**")};
+       // if .compilerVars.findOwnMember(name) into var compVar:NameDeclaration
+       var compVar=undefined;
+       if ((compVar=this.compilerVars.findOwnMember(name))) {
+           return compVar.findOwnMember("**value**");
+       };
     };
 
     // helper method setCompilerVar(name,value)
     Project.prototype.setCompilerVar = function(name, value){
 // helper compilerVar(name)
-// set root.compilerVars.members[name].value
+// root.compilerVars.members.set(name,value)
 
        var compVar = this.compilerVars.findOwnMember(name);
        // if no compVar, compVar = .compilerVars.addMember(name)
@@ -626,12 +640,14 @@
     // helper method redirectOutput(newOut)
     Project.prototype.redirectOutput = function(newOut){
 
-       // for each own property filename in .moduleCache
-       for ( var filename in this.moduleCache)if (this.moduleCache.hasOwnProperty(filename)){
-             var moduleNode = this.moduleCache[filename];
+       // for each moduleNode:Grammar.Module in map .moduleCache
+       var moduleNode=undefined;
+       for ( var moduleNode__propName in this.moduleCache.members) if (this.moduleCache.members.hasOwnProperty(moduleNode__propName)){moduleNode=this.moduleCache.members[moduleNode__propName];
+             {
              moduleNode.lexer.out = newOut;
              }
-       // end for each property
+             
+             }// end for each property
        
     };
    // end class Project

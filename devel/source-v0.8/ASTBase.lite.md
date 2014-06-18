@@ -30,7 +30,7 @@ any instance as a "map string to any".
 In order to walk the AST, we create a "children" array, where we put all AST nodes
 created as childs of this node
 
-        #ifdef PROD_C
+        #ifdef TARGET_C
         children: ASTBase array // of ASTBase 
         #endif
 
@@ -247,7 +247,7 @@ if the argument is an AST node class, we instantiate the class and try the `pars
 
                 debug spaces, 'Parsed OK!->',searched.name
 
-                #ifdef PROD_C
+                #ifdef TARGET_C
                 if no .children, .children = []
                 .children.push astNode
                 #endif
@@ -654,7 +654,7 @@ validate index
         var line = .lexer.infoLines[lineInx]
         if no line, return log.error("ASTBase.outLineAsComment #{lineInx}: NO LINE")
 
-        if line.type is .lexer.LineTypes.BLANK
+        if line.type is Lexer.LineTypes.BLANK
             .lexer.out.blankLine
             return
 
@@ -701,7 +701,7 @@ find comment lines in the previous lines of code.
       var preInx = inx
       while preInx and preInx>.lexer.out.lastOutCommentLine 
           preInx--
-          if .lexer.infoLines[preInx].type is .lexer.LineTypes.CODE 
+          if .lexer.infoLines[preInx].type is Lexer.LineTypes.CODE 
               preInx++
               break
 
@@ -743,7 +743,7 @@ show indented messaged for debugging
           indent += '  '
         return indent
 
-    #ifdef PROD_C
+    #ifdef TARGET_C
 
 #### helper method callOnSubTree(dispatcher:function)
         dispatcher this //call method dispatcher on this instance
@@ -792,7 +792,7 @@ recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
 #### helper method compilerVar(name) 
 
 helper function compilerVar(name)
-return root.compilerVars.members[name].value
+return root.compilerVars.members.get(name).value
 
         if .getRootNode().parent.compilerVars.findOwnMember(name) into var asked
           declare valid asked.findOwnMember
@@ -824,12 +824,4 @@ Generate unique variable names
 Support Module Var:
 
     var uniqueIds={}
-
-
-
-
-------------------------------------------------------------------------
-##Export
-
-//    module.exports = ASTBase
 

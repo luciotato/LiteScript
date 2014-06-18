@@ -262,7 +262,7 @@ exported as members of export default class NameDeclaration
 
 ### export helper function fixSpecialNames(text:string)
 
-      if text in ['__proto__','NaN','Infinity','undefined','null','false','true'] # not good names
+      if text in ['__proto__','NaN','Infinity','undefined','null','false','true','constructor'] # not good names
         return '|'+text+'|'
       else
         return text

@@ -25,7 +25,7 @@ Dependencies
 #### constructor(name, options, node)
       
       .name = name
-      .members = {} // {}, JSON, is "Map string to any" literal notation
+      .members = new Map //{} // {}, JSON, is "Map string to any" literal notation
       .nodeDeclared = node
 
       declare on options
@@ -259,7 +259,7 @@ exported as members of export default class NameDeclaration
 
 ### export helper function fixSpecialNames(text:string)
 
-      if text in ['__proto__','NaN','Infinity','undefined','null','false','true'] # not good names
+      if text in ['__proto__','NaN','Infinity','undefined','null','false','true','constructor','prototype'] # not good names
         return '|'+text+'|'
       else
         return text

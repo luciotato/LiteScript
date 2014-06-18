@@ -630,6 +630,8 @@
 // *out* is a helper function for code generation
 // It evaluates and output its arguments. uses .lexer.out
 
+       var out = this.lexer.out;
+
        // for each item in arguments
        for( var item__inx=0,item ; item__inx<arguments.length ; item__inx++){item=arguments[item__inx];
 
@@ -640,8 +642,10 @@
 
 // if it is the first thing in the line, out indentation
 
-         // if not .lexer.out.currLine, .lexer.out.put String.spaces(.indent-1)
-         if (!(this.lexer.out.currLine)) {this.lexer.out.put(String.spaces(this.indent - 1))};
+         // if not out.currLine and .indent > 1
+         if (!(out.currLine) && this.indent > 1) {
+             out.put(String.spaces(this.indent - 1));
+         };
 
 // if it is an AST node, call .produce()
 
@@ -654,13 +658,13 @@
 // New line char means "start new line"
          
          else if (item === '\n') {
-           this.lexer.out.startNewLine();
+           out.startNewLine();
          }
 
 // a simple string, out the string
          
          else if (typeof item === 'string') {
-           this.lexer.out.put(item);
+           out.put(item);
          }
 
 // else, Object codes
@@ -668,7 +672,7 @@
          else if (typeof item === 'object') {
 
             // declare on item
-              // COMMENT:string, NLI, CSL:array, freeForm
+              // COMMENT:string, NLI, CSL:array, freeForm, h
 
 // if the object is an array, resolve with a recursive call
 
@@ -693,7 +697,7 @@
 
                // if inx>0
                if (inx > 0) {
-                 this.lexer.out.put(item.separator || ', ');
+                 out.put(item.separator || ', ');
                };
 
                // if item.freeForm
@@ -721,14 +725,20 @@
            
            else if (item.COMMENT !== undefined) {
 
-             // if .lexer.options.comments #comments level > 0
-             if (this.lexer.options.comments) {// #comments level > 0
+             // if no .lexer or .lexer.options.comments #comments level > 0
+             if (!this.lexer || this.lexer.options.comments) {// #comments level > 0
 
                   // # prepend // if necessary
-                 // if type of item isnt 'string' or not item.COMMENT.startsWith("//"), .lexer.out.put "// "
-                 if (typeof item !== 'string' || !(item.COMMENT.startsWith("//"))) {this.lexer.out.put("// ")};
+                 // if type of item isnt 'string' or not item.COMMENT.startsWith("//"), out.put "// "
+                 if (typeof item !== 'string' || !(item.COMMENT.startsWith("//"))) {out.put("// ")};
                  this.out(item.COMMENT);
              };
+           }
+
+// {h:1/0} --> enable/disabe output to header file
+           
+           else if (item.h !== undefined) {
+               out.toHeader = item.h;
            }
 
 // else, unrecognized object
@@ -744,7 +754,7 @@
 // Last option, out item.toString()
          
          else {
-           this.lexer.out.put(item.toString());// # try item.toString()
+           out.put(item.toString());// # try item.toString()
          };
 
          // end if
@@ -981,9 +991,18 @@
 
 // ----------------------------------------------------------------------------------------------
 
-   // export helper function getUniqueVarName(prefix)
-   function getUniqueVarName(prefix){
-// Generate unique variable names
+   // export helper function setUniqueID(prefix, value)
+   function setUniqueID(prefix, value){
+// Generate unique numbers, starting at 1
+
+       uniqueIds[prefix] = value - 1;
+   };
+   // export
+   ASTBase.setUniqueID=setUniqueID;
+
+   // export helper function getUniqueID(prefix) returns int
+   function getUniqueID(prefix){
+// Generate unique numbers, starting at 1
 
        var id = uniqueIds[prefix] || 0;
 
@@ -991,7 +1010,16 @@
 
        uniqueIds[prefix] = id;
 
-       return '_' + prefix + id;
+       return id;
+   };
+   // export
+   ASTBase.getUniqueID=getUniqueID;
+
+   // export helper function getUniqueVarName(prefix) returns string
+   function getUniqueVarName(prefix){
+// Generate unique variable names
+
+       return ('_' + prefix) + getUniqueID(prefix);
    };
    // export
    ASTBase.getUniqueVarName=getUniqueVarName;

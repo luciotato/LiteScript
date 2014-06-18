@@ -491,9 +491,15 @@ This method handles #ifdef/#else/#endif as multiline comments
             .project.setCompilerVar words[1],false
             return false
 
-        var startCol = line.indexOf("#ifdef ")
-        if startCol<0, startCol = line.indexOf("#if def ")
-        if startCol<0, return 
+        var invert = false
+
+        var pos = line.indexOf("#ifdef ")
+
+        if pos<0 
+            pos = line.indexOf("#ifndef ")
+            invert = true
+
+        if pos<0, return 
 
         //get rid of quoted strings. Still there?
         if String.replaceQuoted(line,"").indexOf("#if")<0
@@ -501,10 +507,13 @@ This method handles #ifdef/#else/#endif as multiline comments
 
         var startRef = "while processing #ifdef started on line #{startSourceLine}"
 
-        words = line.slice(startCol).split(' ')
+        words = line.slice(pos).split(' ')
         var conditional = words[1]
         if no conditional, .throwErr "#ifdef; missing conditional"
         var defValue = .project.compilerVar(conditional)
+        if invert, defValue = not defValue //if it was "#ifndef"
+
+        .replaceSourceLine .line.replace(/\#if/g,"//if")
 
         var endFound=false
         do
@@ -535,7 +544,7 @@ This method handles #ifdef/#else/#endif as multiline comments
         loop until endFound
 
         #rewind position after #ifdef, reprocess lines
-        .sourceLineNum = startSourceLine
+        .sourceLineNum = startSourceLine -1 
         return true #OK, lines processed
 
 

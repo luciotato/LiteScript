@@ -2,11 +2,11 @@ The LiteScript Compiler Module
 ==============================
 LiteScript is a highly readable language that compiles to JavaScript.
 
-    export var version = '0.7.0'
+    export var version = '0.8.0'
 
     //compiler generate(lines:string array)
     //    lines.push "export var buildDate = '#{new Date.toISOString()}'"
-    export var buildDate = '20140609'
+    export var buildDate = '20140617'
 
 This v0.6 compiler is written in v0.5 syntax. 
 That is, you use the v0.5 compiler to compile this code 
@@ -112,7 +112,7 @@ output:
 parse source lines & store in moduleCache for validation
         
         project.parseOnModule moduleNode, filename, sourceLines
-        project.moduleCache[filename] = moduleNode
+        project.moduleCache.set filename,moduleNode
 
 import dependencies
 

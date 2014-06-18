@@ -194,6 +194,9 @@ optional assigned value
         if .opt(':')
             if .lexer.token.type is 'NEWLINE' #dangling assignment ":"[NEWLINE]
                 dangling=true
+                #ifdef PROD_C
+                .type = "Map"
+                #endif
             else
                 .parseType
 
@@ -204,13 +207,15 @@ optional assigned value
                 if .lexer.interfaceMode //assignment => declare alias
                     .aliasVarRef = .req(VariableRef)
                 else
-                  .assignedValue = .req(Expression)
-                return
+                    .assignedValue = .req(Expression)
 
         if dangling #dangling assignment :/= assume free-form object literal
             .assignedValue   = .req(FreeObjectLiteral)
 
-
+        #ifdef PROD_C
+        if no .type and no .assignedValue
+            .type = "any"
+        #end if
 
 ##FreeObjectLiteral and Free-Form Separated List
 
@@ -2001,7 +2006,16 @@ This method is shared by functions, methods and constructors.
             until .lexer.token.type is 'NEWLINE' or .lexer.token.value in ['=','return'] 
                 if .paramsDeclarations.length, .req ','
                 var varDecl = new VariableDecl(this, .req('IDENTIFIER'))
-                if .opt(":"), varDecl.parseType
+                if .opt(":")
+                    varDecl.parseType
+                else
+                    #ifdef PROD_C
+                    varDecl.type = 'any'
+                    #else
+                    do nothing
+                    #endif
+                end if
+
                 .paramsDeclarations.push varDecl
 
         if .opt('=','return') #one line function. Body is a Expression
@@ -2010,7 +2024,8 @@ This method is shared by functions, methods and constructors.
 
         else # full body function
 
-            if .opt('returns'), .parseType  #function return type
+            if .opt('returns')
+                .parseType  #function return type
 
             if .opt('[','SPACE_BRACKET') # property attributes
                 .definePropItems = .optSeparatedList(DefinePropertyItem,',',']')
@@ -2445,7 +2460,15 @@ get specifier 'on|valid|name|all'
           case 'valid':
             .varRef = .req(VariableRef)
             if no .varRef.accessors, .sayErr "declare valid: expected accesor chain. Example: 'declare valid name.member.member'"
-            if .opt(':'), .parseType //optional type
+            if .opt(':') 
+                .parseType //optional type
+            else
+                #ifdef PROD_C
+                .type = 'any'
+                #else
+                do nothing
+                #endif
+            end if
 
           case 'name':
             .specifier = .req('affinity')
@@ -3129,11 +3152,11 @@ Anything standing alone in it's own line, its an imperative statement (it does s
       return name
 
 
-    append to class ASTBase
+### append to class ASTBase
       properties
             isMap: boolean
 
-      helper method parseType
+##### helper method parseType
 
 parse type declaration: 
   function [(VariableDecl,)]
@@ -3152,11 +3175,12 @@ check for 'array', e.g.: `var list : array of NameDeclaration`
 
         if .opt('array')
             .type = 'Array'
-            .req('of')
-            .itemType = .req(VariableRef) #reference to an existing class
-            #auto-capitalize core classes
-            declare .itemType:VariableRef
-            .itemType.name = autoCapitalizeCoreClasses(.itemType.name)
+            if .opt('of')
+                .itemType = .req(VariableRef) #reference to an existing class
+                //auto-capitalize core classes
+                declare .itemType:VariableRef
+                .itemType.name = autoCapitalizeCoreClasses(.itemType.name)
+            end if
             return
 
 Check for 'map', e.g.: `var list : map string to NameDeclaration`
@@ -3164,9 +3188,13 @@ Check for 'map', e.g.: `var list : map string to NameDeclaration`
         .isMap = .opt('map')
 
         .type = .req(VariableRef) #KEYS: reference to an existing class
-        #auto-capitalize core classes
+        //auto-capitalize core classes
         declare .type:VariableRef
         .type.name = autoCapitalizeCoreClasses(.type.name)
+        
+        #ifdef PROD_C
+        if .type.name is 'String', .type.name = 'str'
+        #endif
 
         if .isMap
             .req('to')

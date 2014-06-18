@@ -1151,6 +1151,7 @@ It also handles SourceMap generation for Chrome Developer Tools debugger and Fir
       sourceMap
       browser:boolean
       exportNamespace
+      toHeader
 
 #### Method start(options)
 Initialize output array

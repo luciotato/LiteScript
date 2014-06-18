@@ -32,7 +32,7 @@ PARAMS="-compile simple.lite.md $*"
 #PARAMS="-use $DIR/lib -compile test-Core2 -o Ctest $*"
 
 cd ~/LiteScript/devel/source-v0.8
-PARAMS="-compile Compiler $*"
+PARAMS="-D PROD_C  -compile Compiler $*"
 
 CALL="node --debug-brk $LOCAL/lite-debug -v 1 $PARAMS"
 echo $CALL 

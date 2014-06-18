@@ -36,7 +36,11 @@
                }// end for each property
            
        };
-   // end class Map
 
+       // method clear()
+       Map.prototype.clear = function(){
+           this.members = new Object();
+       };
+   // end class Map
 
 module.exports=Map;

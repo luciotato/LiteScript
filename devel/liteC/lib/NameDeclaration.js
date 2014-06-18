@@ -27,7 +27,7 @@
       // isDummy
 
      this.name = name;
-     this.members = {}; // {}, JSON, is "Map string to any" literal notation
+     this.members = new Map(); //{} // {}, JSON, is "Map string to any" literal notation
      this.nodeDeclared = node;
 
       // declare on options
@@ -129,11 +129,15 @@
 // mix in found namedecl here
 
        // for each key,member in map realNameDecl.members
-       for( var key=0,member ; key<realNameDecl.members.length ; key++){member=realNameDecl.members[key];
+       var member=undefined;
+       for ( var key in realNameDecl.members.members) if (realNameDecl.members.members.hasOwnProperty(key)){member=realNameDecl.members.members[key];
+         {
           // declare member:NameDeclaration
          member.parent = this;
          this.members.set(key, member);
-       };// end for each in realNameDecl.members
+         }
+         
+         }// end for each property
 
        this.isForward = realNameDecl.isForward;
 
@@ -157,9 +161,13 @@
         // # remove existing members from nameDeclarations[]
        this.isForward = false;
        // for each memberDecl in map .members
-       for( var memberDecl__inx=0,memberDecl ; memberDecl__inx<this.members.length ; memberDecl__inx++){memberDecl=this.members[memberDecl__inx];
+       var memberDecl=undefined;
+       for ( var memberDecl__propName in this.members.members) if (this.members.members.hasOwnProperty(memberDecl__propName)){memberDecl=this.members.members[memberDecl__propName];
+         {
          NameDeclaration.allOfThem.remove(memberDecl);
-       };// end for each in this.members
+         }
+         
+         }// end for each property
 
         // #save a copy of this.members pointer
        var thisMembers = this.members;
@@ -360,8 +368,8 @@
    // export helper function fixSpecialNames(text:string)
    function fixSpecialNames(text){
 
-     // if text in ['__proto__','NaN','Infinity','undefined','null','false','true'] # not good names
-     if (['__proto__', 'NaN', 'Infinity', 'undefined', 'null', 'false', 'true'].indexOf(text)>=0) {// # not good names
+     // if text in ['__proto__','NaN','Infinity','undefined','null','false','true','constructor','prototype'] # not good names
+     if (['__proto__', 'NaN', 'Infinity', 'undefined', 'null', 'false', 'true', 'constructor', 'prototype'].indexOf(text)>=0) {// # not good names
        return '|' + text + '|';
      }
      

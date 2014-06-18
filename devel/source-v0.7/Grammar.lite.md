@@ -949,7 +949,14 @@ get var name
             else
                 .name = 'this' #default replacement for '.x'
 
-            var member = .req('IDENTIFIER')
+            var member: string
+            #we must allow 'not' and 'has' as method names, (jQuery uses "not", Map uses "has").
+            #They're classsified as "Opers", but they're valid identifiers in this context
+            if .lexer.token.value in ['not','has']
+                member = .lexer.nextToken() //get not|has as identifier
+            else
+                member = .req('IDENTIFIER')
+
             .addAccessor new PropertyAccess(this,member)
 
         else
@@ -1103,7 +1110,13 @@ We provide a class Accessor to be super class for the three accessors types.
       method parse()
         .req('.')
         .lock()
-        .name = .req('IDENTIFIER') 
+        #we must allow 'not' and 'has' as method names, (jQuery uses "not", Map uses "has").
+        #They're classsified as "Opers", but they're valid identifiers in this context
+        if .lexer.token.value in ['not','has']
+            .name = .lexer.token.value //get "not"|"has" as identifier
+            .lexer.nextToken() //advance
+        else
+            .name = .req('IDENTIFIER')
 
       method toString()
         return '.'+.name

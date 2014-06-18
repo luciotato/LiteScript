@@ -10,10 +10,10 @@ Core2
     public class TestClass
 
         properties
-            value
-            myArr:string array
+            value //if type left unstated, get assigned as "initValue"????
+            myArr: string array
 
-        constructor new TestClass(initValue:Object)
+        constructor new TestClass(initValue)
             .value = initValue
             
         method indexOf(searched:string, fromIndex:int=0) returns int

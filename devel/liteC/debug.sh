@@ -1,1 +1,1 @@
-node --debug-brk  lite-js -compile Core2 -o out -nomap
+node --debug-brk  lite-js -compile Core2 -o Ctest2 

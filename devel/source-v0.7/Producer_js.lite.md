@@ -596,10 +596,8 @@ Pre-For code. If required, store the iterable in a temp var.
 var in order to avoid calling it twice. Else, we use it as is.
 
         var iterable:Grammar.Expression = .variant.iterable
-
-        declare valid iterable.root.name.hasSideEffects
-
         if iterable 
+          declare valid iterable.root.name.hasSideEffects
           if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
             iterable = ASTBase.getUniqueVarName('list')  #unique temp iterable var name
             .out "var ",iterable,"=",.variant.iterable,";",NL
@@ -648,6 +646,9 @@ Since al 3 cases are closed with '}; //comment', we skip statement semicolon
 
 Create a default index var name if none was provided
 
+        if .isMap //new syntax "for each in map xx"
+            return .produceInMap(iterable)
+
         var indexVar = .indexVar
         if no indexVar
           indexVar = {name:.mainVar.name+'__inx', assignedValue:0} #default index var name
@@ -665,6 +666,35 @@ Create a default index var name if none was provided
           .out .body
 
         .out "};",{COMMENT:["end for each in ",.iterable]},NL
+
+
+method: produceInMap
+When Map is implemented using js "Object"
+
+      method produceInMap(iterable)
+
+          var indexVarName:string
+          if no .indexVar
+            indexVarName = .mainVar.name+'__propName'
+          else
+            indexVarName = .indexVar.name
+
+          .out "var ", .mainVar.name,"=undefined;",NL
+
+          .out "for ( var ", indexVarName, " in ", iterable, ".members)"
+          .out " if (",iterable,".members.hasOwnProperty(",indexVarName,"))"
+
+          if .mainVar
+              .body.out "{", .mainVar.name,"=",iterable,".members[",indexVarName,"];",NL
+
+          .out .where
+
+          .body.out "{", .body, "}",NL
+
+          if .mainVar
+            .body.out NL, "}"
+
+          .out {COMMENT:"end for each property"},NL
 
 ### Append to class Grammar.ForIndexNumeric
 ### Variant 3) 'for index=...' to create *numeric loops* 

@@ -26,13 +26,6 @@
         // indent, locked
         // index
 
-// To compile to C, we must surrender js dynamic "reflection". We can not treat
-// any instance as a "map string to any".
-// In order to walk the AST, we create a "children" array, where we put all AST nodes
-// created as childs of this node
-
-        // children: ASTBase array // of ASTBase
-
        this.parent = parent;
        this.name = name;
 
@@ -290,9 +283,9 @@
 
                debug(spaces, 'Parsed OK!->', searched.name);
 
-               // if no .children, .children = []
-               if (!this.children) {this.children = []};
-               this.children.push(astNode);
+                //ifdef TARGET_C
+                //if no .children, .children = []
+                //.children.push astNode
                 // #endif
 
                return astNode;// # parsed ok!, return instance
@@ -807,8 +800,8 @@
        // if no line, return log.error("ASTBase.outLineAsComment #{lineInx}: NO LINE")
        if (!line) {return log.error("ASTBase.outLineAsComment " + lineInx + ": NO LINE")};
 
-       // if line.type is .lexer.LineTypes.BLANK
-       if (line.type === this.lexer.LineTypes.BLANK) {
+       // if line.type is Lexer.LineTypes.BLANK
+       if (line.type === Lexer.LineTypes.BLANK) {
            this.lexer.out.blankLine();
            return;
        };
@@ -873,8 +866,8 @@
      // while preInx and preInx>.lexer.out.lastOutCommentLine
      while(preInx && preInx > this.lexer.out.lastOutCommentLine){
          preInx--;
-         // if .lexer.infoLines[preInx].type is .lexer.LineTypes.CODE
-         if (this.lexer.infoLines[preInx].type === this.lexer.LineTypes.CODE) {
+         // if .lexer.infoLines[preInx].type is Lexer.LineTypes.CODE
+         if (this.lexer.infoLines[preInx].type === Lexer.LineTypes.CODE) {
              preInx++;
              // break
              break;
@@ -933,43 +926,51 @@
        return indent;
     };
 
+    //ifdef TARGET_C
 
-    // helper method callOnSubTree(dispatcher:function)
-    ASTBase.prototype.callOnSubTree = function(dispatcher){
-       dispatcher(this); //call method dispatcher on this instance
-       // if .children
-       if (this.children) {
-           // for each child in .children
-           for( var child__inx=0,child ; child__inx<this.children.length ; child__inx++){child=this.children[child__inx];
-               child.callOnSubTree(dispatcher); // call on all children and children's children
-           };// end for each in this.children
-           
-       };
-    };
+//#### helper method callOnSubTree(dispatcher:function)
+        //dispatcher this //call method dispatcher on this instance
+        //if .children
+            //for each child in .children
+                //child.callOnSubTree dispatcher // call on all children and children's children
 
     // #else
 
-//#### helper method callOnSubTree(methodName,classFilter) # recursive
+    // helper method callOnSubTree(methodName,classFilter) # recursive
+    ASTBase.prototype.callOnSubTree = function(methodName, classFilter){// # recursive
 
-//This is instance has the method, call it
+// This is instance has the method, call it
 
-      //if this has property methodName, this[methodName]()
+     // if this has property methodName, this[methodName]()
+     if (methodName in this) {this[methodName]()};
 
-      //if classFilter and this is instance of classFilter, return #do not recurse on filtered's childs
+     // if classFilter and this is instance of classFilter, return #do not recurse on filtered's childs
+     if (classFilter && this instanceof classFilter) {return};
 
-//recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
+// recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
 
-      //for each own property name in this
-        //where name not in ['parent','importedModule','requireCallNodes','exportDefault']
+     // for each own property name in this
+     for ( var name in this)if (this.hasOwnProperty(name))if(['parent', 'importedModule', 'requireCallNodes', 'exportDefault'].indexOf(name)===-1){
 
-              //if this[name] instance of ASTBase
-                  //this[name].callOnSubTree methodName,classFilter #recurse
-
-              //else if this[name] instance of Array
-                  //for each item in this[name] where item instance of ASTBase
-                    //declare item:ASTBase
-                    //item.callOnSubTree methodName,classFilter
-      //end for
+             // if this[name] instance of ASTBase
+             if (this[name] instanceof ASTBase) {
+                 this[name].callOnSubTree(methodName, classFilter);// #recurse
+             }
+             
+             else if (this[name] instanceof Array) {
+                 // for each item in this[name] where item instance of ASTBase
+                 for( var item__inx=0,item ; item__inx<this[name].length ; item__inx++){item=this[name][item__inx];
+                 if(item instanceof ASTBase){
+                    // declare item:ASTBase
+                   item.callOnSubTree(methodName, classFilter);
+                 }};// end for each in this[name]
+                 
+             };
+             }
+     // end for each property
+     // end for
+     
+    };
 
     // #endif
 
@@ -993,7 +994,7 @@
     ASTBase.prototype.compilerVar = function(name){
 
 // helper function compilerVar(name)
-// return root.compilerVars.members[name].value
+// return root.compilerVars.members.get(name).value
 
        // if .getRootNode().parent.compilerVars.findOwnMember(name) into var asked
        var asked=undefined;
@@ -1042,14 +1043,6 @@
 // Support Module Var:
 
    var uniqueIds = {};
-
-
-
-
-// ------------------------------------------------------------------------
-// ##Export
-
-//    module.exports = ASTBase
 
 
 module.exports=ASTBase;

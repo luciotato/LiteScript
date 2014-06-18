@@ -118,9 +118,9 @@
 // now all method dispatchers
 
        this.out({COMMENT: 'method dispatchers'}, NL, NL);
-       // for each own property propName,dispatcherNameDecl in allDispatchersNameDecl.members
+       // for each dispatcherNameDecl in map allDispatchersNameDecl.members
        var dispatcherNameDecl=undefined;
-       for ( var propName in allDispatchersNameDecl.members)if (allDispatchersNameDecl.members.hasOwnProperty(propName)){dispatcherNameDecl=allDispatchersNameDecl.members[propName];
+       for ( var dispatcherNameDecl__propName in allDispatchersNameDecl.members.members) if (allDispatchersNameDecl.members.members.hasOwnProperty(dispatcherNameDecl__propName)){dispatcherNameDecl=allDispatchersNameDecl.members.members[dispatcherNameDecl__propName];
            {
            // with dispatcherNameDecl.funcDecl
            var _with1=dispatcherNameDecl.funcDecl;
@@ -130,9 +130,9 @@
                _with1.out("{", NL);
                _with1.out("    switch(((Object)this)->class){", NL);
 
-               // for each own property caseName,caseNameDecl in dispatcherNameDecl.members
+               // for each caseNameDecl in map dispatcherNameDecl.members
                var caseNameDecl=undefined;
-               for ( var caseName in dispatcherNameDecl.members)if (dispatcherNameDecl.members.hasOwnProperty(caseName)){caseNameDecl=dispatcherNameDecl.members[caseName];
+               for ( var caseNameDecl__propName in dispatcherNameDecl.members.members) if (dispatcherNameDecl.members.members.hasOwnProperty(caseNameDecl__propName)){caseNameDecl=dispatcherNameDecl.members.members[caseNameDecl__propName];
                    {
                    // with caseNameDecl.funcDecl
                    var _with2=caseNameDecl.funcDecl;
@@ -196,9 +196,9 @@
 
        this.out({COMMENT: 'method dispatchers'}, NL, NL);
 
-       // for each own property propName,dispatcherNameDecl in allDispatchersNameDecl.members
+       // for each dispatcherNameDecl in map allDispatchersNameDecl.members
        var dispatcherNameDecl=undefined;
-       for ( var propName in allDispatchersNameDecl.members)if (allDispatchersNameDecl.members.hasOwnProperty(propName)){dispatcherNameDecl=allDispatchersNameDecl.members[propName];
+       for ( var dispatcherNameDecl__propName in allDispatchersNameDecl.members.members) if (allDispatchersNameDecl.members.members.hasOwnProperty(dispatcherNameDecl__propName)){dispatcherNameDecl=allDispatchersNameDecl.members.members[dispatcherNameDecl__propName];
          {
          // with dispatcherNameDecl.funcDecl
          var _with3=dispatcherNameDecl.funcDecl;
@@ -332,12 +332,13 @@
 // declare vars before statement (exclude body of FunctionDeclaration)
 // Note: producer_js uses: callOnSubTree
 
-       // for each child in .children where child.constructor isnt Grammar.Body
-       for( var child__inx=0,child ; child__inx<this.children.length ; child__inx++){child=this.children[child__inx];
-       if(child.constructor !== Grammar.Body){
-            // declare global var declareIntoVar
-           declareIntoVar(child);
-       }};// end for each in this.children
+        //ifdef TARGET_C
+        //for each child in .children where child.constructor isnt Grammar.Body
+            //declare valid child.declareIntoVar
+            //child.declareIntoVar
+        // #else
+       this.callOnSubTree("declareIntoVar", Grammar.Body);
+        // #endif
 
 // call the specific statement (if,for,print,if,function,class,etc) .produce()
 
@@ -437,7 +438,16 @@
                strValue = '"' + strValue + '"'; // enclose in ""
            };
 
-           this.out("mkStr(", strValue, ")", this.accessors);
+           // if strValue is '""'
+           if (strValue === '""') {
+               this.out("EMPTY_STR");
+           }
+           
+           else {
+               this.out(strValue);
+           };
+
+           this.out(this.accessors);
        }
        
        else {
@@ -961,10 +971,8 @@
 
        // for each item:Grammar.ImportStatementItem in .list
        for( var item__inx=0,item ; item__inx<this.list.length ; item__inx++){item=this.list[item__inx];
-
          var requireParam = item.importParameter ? item.importParameter.getValue() : item.name;
-
-         this.out("var ", item.name, " = require('", this.global || requireParam[0] === '/' ? "" : "./", requireParam, "');", NL);
+         this.out('#include "', requireParam, '.h"', NL);
        };// end for each in this.list
 
        this.skipSemiColon = true;
@@ -981,34 +989,40 @@
 // It's a `var` keyword or we're declaring function parameters.
 // In any case starts with the variable name
 
+         // if no .nameDecl, .sayErr "INTERNAL ERROR: var '#{.name}' has no .nameDecl"
+         if (!this.nameDecl) {this.sayErr("INTERNAL ERROR: var '" + this.name + "' has no .nameDecl")};
          var typeNameDecl = this.nameDecl.findMember("**proto**");
          var typeStr = undefined;
          // if no typeNameDecl
          if (!typeNameDecl) {
-             this.sayErr("can't determine type for var '" + this.name + "'");
-             typeStr = 'Object';
+              //.sayErr "can't determine type for var '#{.name}'"
+              // if no explicit type assume "any"
+             typeStr = 'any';
          }
+              // if no explicit type assume "any"
          
          else {
              typeStr = typeNameDecl.name;
              // if typeNameDecl.name is 'prototype'
              if (typeNameDecl.name === 'prototype') {
-                 typeStr = typeNameDecl.parent.name;
+                 var parentName = typeNameDecl.parent.name;
+                 typeStr = parentName === 'String' ? 'str' : "" + parentName + "_ptr";
              };
+             // end if
+             
          };
 
          this.out(typeStr, ' ', this.name);
 
           // declare valid .keyword
+         
+     };
 
 // If this VariableDecl come from a 'var' statement, we force assignment (to avoid subtle bugs,
 // in LiteScript, 'var' declaration assigns 'undefined')
 
-         // if .parent instanceof Grammar.VarStatement and .assignedValue
-         if (this.parent instanceof Grammar.VarStatement && this.assignedValue) {
-             this.out(' = ', this.assignedValue);
-         };
-     };
+          //if .parent instanceof Grammar.VarStatement and .assignedValue
+          //    .out ' = ',.assignedValue
 
 // else, this VariableDecl come from function parameters decl,
 // if it has AssginedValue, we out assignment if ES6 is available.
@@ -1032,7 +1046,7 @@
            bare.push(statement.statement);
        };// end for each in this.statements
         // #.out NL,"    ",{CSL:bare, separator:";"}
-       this.out({CSL: bare, separator: ";"}, ";");
+       this.out("{", {CSL: bare, separator: ";"}, ";", "}");
      };
 
 
@@ -1045,7 +1059,7 @@
 
        // if .body instanceof Grammar.SingleLineStatement
        if (this.body instanceof Grammar.SingleLineStatement) {
-           this.out("if (", this.conditional, ") {", this.body, "}");
+           this.out("if (", this.conditional, ") ", this.body);
        }
        
        else {
@@ -1084,28 +1098,8 @@
      // method produce()
      Grammar.ForStatement.prototype.produce = function(){
 
-        // declare valid .variant.iterable
         // declare valid .variant.produce
-
-// Pre-For code. If required, store the iterable in a temp var.
-// (prettier generated code) Only if the iterable is a complex expression,
-// (if it can have side-effects) we store it in a temp
-// var in order to avoid calling it twice. Else, we use it as is.
-
-       var iterable = this.variant.iterable;
-
-        // declare valid iterable.root.name.hasSideEffects
-
-       // if iterable
-       if (iterable) {
-         // if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
-         if (iterable.operandCount > 1 || iterable.root.name.hasSideEffects || iterable.root.name instanceof Grammar.Literal) {
-           iterable = ASTBase.getUniqueVarName('list');// #unique temp iterable var name
-           this.out("Object ", iterable, "=", this.variant.iterable, ";", NL);
-         };
-       };
-
-       this.variant.produce(iterable);
+       this.variant.produce();
 
 // Since al 3 cases are closed with '}; //comment', we skip statement semicolon
 
@@ -1118,58 +1112,77 @@
 
 // `ForEachProperty: for each [own] property name-VariableDecl in object-VariableRef`
 
-     // method produce(iterable)
-     Grammar.ForEachProperty.prototype.produce = function(iterable){
+     // method produce()
+     Grammar.ForEachProperty.prototype.produce = function(){
 
-         // if .mainVar
-         if (this.mainVar) {
-           this.out("var ", this.mainVar.name, "=undefined;", NL);
-         };
-
-         this.out("for ( var ", this.indexVar.name, " in ", iterable, ")");
-
-         // if .ownOnly
-         if (this.ownOnly) {
-             this.out("if (", iterable, ".hasOwnProperty(", this.indexVar, "))");
-         };
-
-         // if .mainVar
-         if (this.mainVar) {
-             this.body.out("{", this.mainVar.name, "=", iterable, "[", this.indexVar, "];", NL);
-         };
-
-         this.out(this.where);
-
-         this.body.out("{", this.body, "}", NL);
-
-         // if .mainVar
-         if (this.mainVar) {
-           this.body.out(NL, "}");
-         };
-
-         this.out({COMMENT: "end for each property"}, NL);
+       this.sayErr("'for each property' not supported for C production");
      };
-
+//         //declare valid iterable.root.name.hasSideEffects
+//         //if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
+//           var listName:string = ASTBase.getUniqueVarName('list')  #unique temp listName var name
+//           .out "any * ",listName,"=",.iterable,"->base;",NL
+//           if .mainVar
+//             .out "var ", .mainVar.name,"=undefined;",NL
+//           .out "for ( var ", .indexVar.name, " in ", listName, ")"
+//           if .ownOnly
+//               .out "if (",listName,".hasOwnProperty(",.indexVar,"))"
+//           if .mainVar
+//               .body.out "{", .mainVar.name,"=",listName,"[",.indexVar,"];",NL
+//           .out .where
+//           .body.out "{", .body, "}",NL
+//           if .mainVar
+//             .body.out NL, "}"
+//           .out {COMMENT:"end for each property"},NL
+//         
 
    // append to class Grammar.ForEachInArray
 // ### Variant 2) 'for each index' to loop over *Array indexes and items*
 
 // `ForEachInArray: for each [index-VariableDecl,]item-VariableDecl in array-VariableRef`
 
-     // method produce(iterable)
-     Grammar.ForEachInArray.prototype.produce = function(iterable){
+     // method produce()
+     Grammar.ForEachInArray.prototype.produce = function(){
 
 // Create a default index var name if none was provided
 
-       var indexVar = this.indexVar;
-       // if no indexVar
-       if (!indexVar) {
-         indexVar = {name: this.mainVar.name + '__inx', assignedValue: 0};// #default index var name
+       var listName = undefined;
+        // declare valid .iterable.root.name.hasSideEffects
+       // if .iterable.operandCount>1 or .iterable.root.name.hasSideEffects or .iterable.root.name instanceof Grammar.Literal
+       if (this.iterable.operandCount > 1 || this.iterable.root.name.hasSideEffects || this.iterable.root.name instanceof Grammar.Literal) {
+           listName = ASTBase.getUniqueVarName('list');// #unique temp listName var name
+           this.out("Array_ptr ", listName, "=", this.iterable, ";", NL);
+       }
+       
+       else {
+           listName = this.iterable;
        };
 
-       this.out("for(int ", indexVar.name, "=", indexVar.assignedValue || "0", ",", this.mainVar.name, " ; ", indexVar.name, "<", iterable, ".length", " ; ", indexVar.name, "++){");
+       // if .isMap, .out "any ",.indexVar,";",NL
+       if (this.isMap) {this.out("any ", this.indexVar, ";", NL)};
+       this.out("any ", this.mainVar.name, ";", NL);
 
-       this.body.out(this.mainVar.name, "=", iterable, "[", indexVar.name, "];", NL);
+       var intIndexVarName = undefined;
+       // if no .indexVar or .isMap
+       if (!this.indexVar || this.isMap) {
+         intIndexVarName = {name: this.mainVar.name + '__inx', assignedValue: 0};// #default index var name
+       }
+       
+       else {
+         intIndexVarName = this.indexVar;
+       };
+
+       this.out("for(int ", intIndexVarName, "=", this.indexVar.assignedValue || "0", " ; ", intIndexVarName, "<", listName, "->length", " ; ", intIndexVarName, "++){");
+
+       // if .isMap
+       if (this.isMap) {
+           this.body.out(this.indexVar, "=", listName, "->base[", intIndexVarName, "]->key;", NL);
+           this.body.out(this.mainVar.name, "=", listName, "->base[", intIndexVarName, "]->value;", NL);
+       }
+       
+       else {
+            // #Array
+           this.body.out(this.mainVar.name, "=", listName, "->base[", intIndexVarName, "];", NL);
+       };
 
        // if .where
        if (this.where) {
@@ -1404,7 +1417,7 @@
          this.out("//class _init fn", NL);
          ownerClass = this.getParent(Grammar.ClassDeclaration);
          className = ownerClass.name;
-         this.out(className, " ", className, "__init");
+         this.out("any ", className, "__init");
          addThis = true;
      }
 
@@ -1430,25 +1443,25 @@
           //          className, ",'",.name,"',{value:function",generatorMark
           //else
          this.out(this.type || 'void', ' ');
-         this.out(className, '__', this.name); //," = function",generatorMark
+         this.out(className, '__', this.name);
 
          addThis = true;
 
 // For C production, we're using a dispatcher for each method name
 
           // look in existing dispatchers
-         // if not allDispatchersNameDecl.findOwnMember(.name) into var dipatcherNameDecl
-         var dipatcherNameDecl=undefined;
-         if (!((dipatcherNameDecl=allDispatchersNameDecl.findOwnMember(this.name)))) {
-             dipatcherNameDecl = allDispatchersNameDecl.addMember(this.name);
-             dipatcherNameDecl.funcDecl = this; // first method found makes parameters model
+         // if not allDispatchersNameDecl.findOwnMember(.name) into var dispatcherNameDecl
+         var dispatcherNameDecl=undefined;
+         if (!((dispatcherNameDecl=allDispatchersNameDecl.findOwnMember(this.name)))) {
+             dispatcherNameDecl = allDispatchersNameDecl.addMember(this.name);
+             dispatcherNameDecl.funcDecl = this; // first method found makes parameters model
          };
           //create a case for the class in the dispatcher
-         // if dipatcherNameDecl.findOwnMember(className)
-         if (dipatcherNameDecl.findOwnMember(className)) {
+         // if dispatcherNameDecl.findOwnMember(className)
+         if (dispatcherNameDecl.findOwnMember(className)) {
              this.throwError("DUPLICATED METHOD: a method named '" + this.name + "' already exists for class '" + className + "'");
          };
-         var caseNameDecl = dipatcherNameDecl.addMember(className);
+         var caseNameDecl = dispatcherNameDecl.addMember(className);
           // #store a pointer to this FunctonDeclaration, to later code case call w parameters
          caseNameDecl.funcDecl = this;
      }
@@ -1530,6 +1543,7 @@
 // close the function, add source map for function default "return undefined".
 
      this.out("}");
+      //ifdef PROD_C
      // do nothing
      null;
       // #else
@@ -1550,7 +1564,7 @@
       //if .export and not .default and this isnt instance of Grammar.ConstructorDeclaration
      // if true and this isnt instance of Grammar.ConstructorDeclaration
      if (true && !(this instanceof Grammar.ConstructorDeclaration)) {
-         this.out(NL, {h: 1}, NL);
+         this.out({h: 1}, NL);
          this.out("extern ");
          // if this is instance of Grammar.MethodDeclaration
          if (this instanceof Grammar.MethodDeclaration) {
@@ -1564,7 +1578,7 @@
 
          this.produceParameters(className);
 
-         this.out(";", NL, {h: 0}, NL);
+         this.out(";", NL, {h: 0});
      };
     };
 
@@ -1573,10 +1587,11 @@
 
 // if this is a class method, add "this" as first parameter
 
-       // if this is instance of Grammar.ConstructorDeclaration
-       if (this instanceof Grammar.ConstructorDeclaration || this instanceof Grammar.MethodDeclaration) {
+       var isConstructor = this instanceof Grammar.ConstructorDeclaration;
+       // if isConstructor
+       if (isConstructor || this instanceof Grammar.MethodDeclaration) {
 
-           this.out("(", className, " this");
+           this.out("(", (isConstructor ? "any" : "" + className + "_ptr"), " this");
            // if .paramsDeclarations.length
            if (this.paramsDeclarations.length) {
                this.out(',', {CSL: this.paramsDeclarations});
@@ -1783,26 +1798,28 @@
        this.out("#define " + this.name + "__CLASS ", ASTBase.getUniqueID('CLASS'), NL);
 
        this.out(NL, "// declare:", NL);
-       this.out("// struct-" + this.name + " = struct with instance properties", NL);
-       this.out("// " + this.name + " : type = ptr to said struct", NL);
-       this.out("typedef struct ", this.name, " {", NL);
-       this.out("    ClassID class;", NL);
+       this.out("// " + this.name + "_ptr : type = ptr to instance", NL);
+       this.out("typedef struct ", this.name, "_s * ", this.name, "_ptr;", NL);
+       this.out("// struct " + this.name + "_s = struct with instance properties", NL);
+       this.out("struct ", this.name, "_s {", NL);
+       this.out("    TypeID constructor;", NL);
        // for each propertiesDeclaration in PropertiesDeclarationStatements
        for( var propertiesDeclaration__inx=0,propertiesDeclaration ; propertiesDeclaration__inx<PropertiesDeclarationStatements.length ; propertiesDeclaration__inx++){propertiesDeclaration=PropertiesDeclarationStatements[propertiesDeclaration__inx];
            propertiesDeclaration.produce();
        };// end for each in PropertiesDeclarationStatements
-       this.out(NL, "} * ", this.name, ";", NL, NL);
+       this.out("};", NL, NL);
 
 // export class__init (constructor)
 
-       this.out("extern ", this.name, " ", this.name, "__init");
+       this.out("extern any ", this.name, "__init");
        // if theConstructor
        if (theConstructor) {
            theConstructor.produceParameters(this.name);
        }
        
        else {
-           this.out("(", this.name, " this)");
+            //default constructor
+           this.out("( any this)");
        };
        // end if
        this.out(";", NL, NL);
@@ -1827,7 +1844,7 @@
        
        else {
            this.out("//default __init", NL);
-           this.out(this.name, " ", this.name, "__init(", this.name, " this){");
+           this.out("any ", this.name, "__init(any this){");
            // if .varRefSuper and .varRefSuper.toString() isnt 'Object'
            if (this.varRefSuper && this.varRefSuper.toString() !== 'Object') {
                this.out(NL, "    ", {COMMENT: ["//auto call super__init, to initialize first part of space at *this"]});

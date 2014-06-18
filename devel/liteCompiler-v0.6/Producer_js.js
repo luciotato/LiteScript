@@ -757,11 +757,9 @@
 // var in order to avoid calling it twice. Else, we use it as is.
 
        var iterable = this.variant.iterable;
-
-        // declare valid iterable.root.name.hasSideEffects
-
        // if iterable
        if (iterable) {
+          // declare valid iterable.root.name.hasSideEffects
          // if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
          if (iterable.operandCount > 1 || iterable.root.name.hasSideEffects || iterable.root.name instanceof Grammar.Literal) {
            iterable = ASTBase.getUniqueVarName('list');// #unique temp iterable var name
@@ -1647,7 +1645,6 @@
 
          this.out("if(", name, '===undefined) ', name, "=", value, ";", NL);
     };
-
 
 
 // --------------------------------

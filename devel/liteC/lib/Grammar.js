@@ -182,6 +182,8 @@
            // if .lexer.token.type is 'NEWLINE' #dangling assignment ":"[NEWLINE]
            if (this.lexer.token.type === 'NEWLINE') {// #dangling assignment ":"[NEWLINE]
                dangling = true;
+                //ifdef PROD_C
+               this.type = "Map";
            }
            
            else {
@@ -203,9 +205,8 @@
                }
                
                else {
-                 this.assignedValue = this.req(Expression);
+                   this.assignedValue = this.req(Expression);
                };
-               return;
            };
        };
 
@@ -213,12 +214,17 @@
        if (dangling) {// #dangling assignment :/= assume free-form object literal
            this.assignedValue = this.req(FreeObjectLiteral);
        };
+
+        //ifdef PROD_C
+       // if no .type and no .assignedValue
+       if (!this.type && !this.assignedValue) {
+           this.type = "any";
+       };
      };
    // export
    module.exports.VariableDecl = VariableDecl;
    // end class VariableDecl
-
-
+        // #end if
 
 // ##FreeObjectLiteral and Free-Form Separated List
 
@@ -2522,8 +2528,20 @@
                // if .paramsDeclarations.length, .req ','
                if (this.paramsDeclarations.length) {this.req(',')};
                var varDecl = new VariableDecl(this, this.req('IDENTIFIER'));
-               // if .opt(":"), varDecl.parseType
-               if (this.opt(":")) {varDecl.parseType()};
+               // if .opt(":")
+               if (this.opt(":")) {
+                   varDecl.parseType();
+               }
+               
+               else {
+                    //ifdef PROD_C
+                   varDecl.type = 'any';
+               };
+                    // #else
+                    //do nothing
+                    // #endif
+               // end if
+
                this.paramsDeclarations.push(varDecl);
            };// end loop
            
@@ -2537,8 +2555,10 @@
        
        else {
 
-           // if .opt('returns'), .parseType  #function return type
-           if (this.opt('returns')) {this.parseType()};
+           // if .opt('returns')
+           if (this.opt('returns')) {
+               this.parseType();// #function return type
+           };
 
            // if .opt('[','SPACE_BRACKET') # property attributes
            if (this.opt('[', 'SPACE_BRACKET')) {// # property attributes
@@ -3131,8 +3151,20 @@
            this.varRef = this.req(VariableRef);
            // if no .varRef.accessors, .sayErr "declare valid: expected accesor chain. Example: 'declare valid name.member.member'"
            if (!this.varRef.accessors) {this.sayErr("declare valid: expected accesor chain. Example: 'declare valid name.member.member'")};
-           // if .opt(':'), .parseType //optional type
-           if (this.opt(':')) {this.parseType()};
+           // if .opt(':')
+           if (this.opt(':')) {
+               this.parseType(); //optional type
+           }
+           
+           else {
+                //ifdef PROD_C
+               this.type = 'any';
+           };
+                // #else
+                //do nothing
+                // #endif
+           // end if
+           
            break;
            
        case 'name':
@@ -4056,11 +4088,14 @@
        // if .opt('array')
        if (this.opt('array')) {
            this.type = 'Array';
-           this.req('of');
-           this.itemType = this.req(VariableRef);// #reference to an existing class
-            // #auto-capitalize core classes
-            // declare .itemType:VariableRef
-           this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
+           // if .opt('of')
+           if (this.opt('of')) {
+               this.itemType = this.req(VariableRef);// #reference to an existing class
+                //auto-capitalize core classes
+                // declare .itemType:VariableRef
+               this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
+           };
+           // end if
            return;
        };
 
@@ -4069,9 +4104,14 @@
        this.isMap = this.opt('map');
 
        this.type = this.req(VariableRef);// #KEYS: reference to an existing class
-        // #auto-capitalize core classes
+        //auto-capitalize core classes
         // declare .type:VariableRef
        this.type.name = autoCapitalizeCoreClasses(this.type.name);
+
+        //ifdef PROD_C
+       // if .type.name is 'String', .type.name = 'str'
+       if (this.type.name === 'String') {this.type.name = 'str'};
+        // #endif
 
        // if .isMap
        if (this.isMap) {

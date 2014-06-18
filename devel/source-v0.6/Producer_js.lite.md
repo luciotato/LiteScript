@@ -597,10 +597,8 @@ Pre-For code. If required, store the iterable in a temp var.
 var in order to avoid calling it twice. Else, we use it as is.
 
         var iterable:Grammar.Expression = .variant.iterable
-
-        declare valid iterable.root.name.hasSideEffects
-
         if iterable 
+          declare valid iterable.root.name.hasSideEffects
           if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
             iterable = ASTBase.getUniqueVarName('list')  #unique temp iterable var name
             .out "var ",iterable,"=",.variant.iterable,";",NL

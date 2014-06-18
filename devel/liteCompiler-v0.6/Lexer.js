@@ -1341,6 +1341,7 @@
       // sourceMap
       // browser:boolean
       // exportNamespace
+      // toHeader
    };
 
     // method start(options)

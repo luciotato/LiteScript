@@ -13,8 +13,6 @@ All the parts of the lexer work with "arrays" of lines.
 The first lexer pass analyzes entire lines. 
 Each line of the array is classified with a 'Line Type':
 
-    var LineTypes = {CODE:0, COMMENT:1, BLANK:2}
-
 then each CODE line is *Tokenized*, getting a `tokens[]` array
 
 -------------------------
@@ -27,7 +25,7 @@ then each CODE line is *Tokenized*, getting a `tokens[]` array
 The Lexer Class
 ===============
 
-### Class Lexer
+### export default Class Lexer
 
 The Lexer class turns the input lines into an array of "infoLines"
 
@@ -1126,9 +1124,14 @@ text before endCode, goes into multiline section
 
         this.postIndent = endCol+endCode.length
 
+    end class Lexer
 
 ------------------------
-----------------------------------------------------------------------------------------------
+
+Exported Module vars
+------------------------
+
+    export var LineTypes = {CODE:0, COMMENT:1, BLANK:2}
 
 ### Public Helper Class OutCode
 This class contains helper methods for AST nodes's `produce()` methods
@@ -1254,12 +1257,3 @@ get result and clear memory
             .sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
         #endif
 
-------------------------
-Exports
-=======
-
-    
-    #make LineTypes const available as .lexer.LineTypes
-    Lexer.prototype.LineTypes = LineTypes
-
-    module.exports = Lexer 

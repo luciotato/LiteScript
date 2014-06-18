@@ -12,6 +12,10 @@ compile LiteScript code.
         NameDeclaration, Validate
         log
 
+    #ifdef PROD_C
+    import Map
+    #endif
+
     var debug = log.debug
 
 Get the 'Environment' object for the compiler to use.
@@ -48,7 +52,7 @@ The Modules dependency tree is the *Project tree*.
 
         options
         name
-        moduleCache
+        moduleCache: Map
         root: Grammar.Module
         compilerVars: NameDeclaration
         globalScope: NameDeclaration
@@ -92,7 +96,7 @@ when imported|required is only compiled once and then cached.
     
         .name = 'Project'
         .options = options
-        .moduleCache = {}
+        .moduleCache = new Map //{}
 
         log.error.count = 0
         log.options.verbose = options.verbose
@@ -180,8 +184,7 @@ Produce, for each module
         Producer_c.preProduction this
         #endif
 
-        for each own property filename in .moduleCache
-          var moduleNode:Grammar.Module = .moduleCache[filename]
+        for each moduleNode:Grammar.Module in map .moduleCache
 
           if not moduleNode.fileInfo.isCore and moduleNode.referenceCount 
 
@@ -430,10 +433,10 @@ Before compiling the module, check internal, and external cache
 
 Check Internal Cache: if it is already compiled, return cached Module node
 
-        if .moduleCache.hasOwnProperty(fileInfo.filename) #registered
+        if .moduleCache.has(fileInfo.filename) #registered
             log.info indent,'cached: ',fileInfo.filename
             .recurseLevel--
-            return .moduleCache[fileInfo.filename]
+            return .moduleCache.get(fileInfo.filename)
 
 It isn't on internal cache, then create a **new Module**.
 
@@ -441,7 +444,7 @@ It isn't on internal cache, then create a **new Module**.
 
 early add to local cache, to cut off circular references
 
-        .moduleCache[fileInfo.filename] = moduleNode
+        .moduleCache.set fileInfo.filename, moduleNode
 
 Check if we can get exports from a "interface.md" file
 
@@ -521,12 +524,12 @@ and generate & cache interface
 helper compilerVar(name)
 return root.compilerVars.members[name].value
 
-        var compVar = .compilerVars.findOwnMember(name) 
-        if compVar, return compVar.findOwnMember("**value**")
+        if .compilerVars.findOwnMember(name) into var compVar:NameDeclaration
+            return compVar.findOwnMember("**value**")
 
 #### helper method setCompilerVar(name,value) 
 helper compilerVar(name)
-set root.compilerVars.members[name].value
+root.compilerVars.members.set(name,value)
 
         var compVar = .compilerVars.findOwnMember(name) 
         if no compVar, compVar = .compilerVars.addMember(name)
@@ -534,8 +537,7 @@ set root.compilerVars.members[name].value
 
 #### helper method redirectOutput(newOut)
 
-        for each own property filename in .moduleCache
-              var moduleNode:Grammar.Module = .moduleCache[filename]
+        for each moduleNode:Grammar.Module in map .moduleCache
               moduleNode.lexer.out = newOut
 
     end class Project

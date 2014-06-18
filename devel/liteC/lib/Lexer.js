@@ -14,8 +14,6 @@
 // The first lexer pass analyzes entire lines.
 // Each line of the array is classified with a 'Line Type':
 
-   var LineTypes = {CODE: 0, COMMENT: 1, BLANK: 2};
-
 // then each CODE line is *Tokenized*, getting a `tokens[]` array
 
 // -------------------------
@@ -29,7 +27,7 @@
 // The Lexer Class
 // ===============
 
-   // class Lexer
+   // export default class Lexer
    // constructor
     function Lexer(compiler, project, options){
      //      properties
@@ -1315,9 +1313,16 @@
    
    // end class MultilineSection
 
+   // end class Lexer
 
 // ------------------------
-// ----------------------------------------------------------------------------------------------
+
+// Exported Module vars
+// ------------------------
+
+   var LineTypes = {CODE: 0, COMMENT: 1, BLANK: 2};
+   // export
+   Lexer.LineTypes = LineTypes;
 
    // public helper class OutCode
    // constructor
@@ -1353,6 +1358,7 @@
 
 // if sourceMap option is set, and we're in node generating .js
 
+        //ifdef PROD_C
        // do nothing
        null;
     };
@@ -1462,11 +1468,12 @@
     // helper method addSourceMap(mark, sourceLin, sourceCol, indent)
     OutCode.prototype.addSourceMap = function(mark, sourceLin, sourceCol, indent){
 
+        //ifdef PROD_C
        // do nothing
        null;
     };
    // export
-   module.exports.OutCode = OutCode;
+   Lexer.OutCode = OutCode;
    // end class OutCode
         // #else
         //if .sourceMap
@@ -1475,12 +1482,5 @@
             //.sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
         // #endif
 
-// ------------------------
-// Exports
-// =======
 
-
-    // #make LineTypes const available as .lexer.LineTypes
-   Lexer.prototype.LineTypes = LineTypes;
-
-   module.exports = Lexer;
+module.exports=Lexer;

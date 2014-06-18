@@ -39,6 +39,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/FIXES.o \
 	${OBJECTDIR}/LiteC-core.o \
 	${OBJECTDIR}/_dispatcher.o \
+	${OBJECTDIR}/any.o \
 	${OBJECTDIR}/exceptions.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/test-Core2.o \
@@ -88,6 +89,11 @@ ${OBJECTDIR}/_dispatcher.o: _dispatcher.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -g -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_dispatcher.o _dispatcher.c
+
+${OBJECTDIR}/any.o: any.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -g -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/any.o any.c
 
 ${OBJECTDIR}/exceptions.o: exceptions.c 
 	${MKDIR} -p ${OBJECTDIR}
