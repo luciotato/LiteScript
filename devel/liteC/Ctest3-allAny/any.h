@@ -16,13 +16,13 @@ extern "C" {
 
     typedef const char* str;
 
-    typedef uint32_t TypeID;
+    typedef uint16_t TypeID;
+    typedef uint32_t length_t;
 
     enum TypeID_enum {
 
         UNDEFINED = 0,
         TYPE_NULL,
-        TYPE_0_STR, /* empty string, "", falsey */
         TYPE_BOOLEAN,
         TYPE_TypeID, /*use value.typeID, TypeID, uint32_t*/
         TYPE_INT32,
@@ -30,56 +30,92 @@ extern "C" {
         TYPE_INT64,
         TYPE_UINT64,
         Number, /*js "number" */
-        String, /* use value.str, const char*, C string */
+
+        String, /* use lenght, const char* value.str -> C string */
+        Array, /* use lenght, any* value.item */
 
         /* start of classes */
 
-        Object, /* bag of properties, map string=>any */
+        Error,
         Function,
-        Array,
-        Error
+        Map,
+        Object      /* bag of properties, map string=>any */
     };
     #define LAST_CORE_CLASS Error
 
     //forward - shortcuts for core
-    typedef struct Array_s * Array_ptr;
+    typedef struct any_s * any_ptr;
     typedef struct Error_s * Error_ptr;
 
     typedef union anyValue_union {
+
         int32_t int32;
         uint32_t uint32;
         int64_t int64;
         uint64_t uint64;
         int boolean;
         double number;
-        char* ptr;
-        str str;
+
         TypeID type; /*type ID*/
-        Array_ptr array;
-        Error_ptr error;
+
+        str str; //String's C str
+        any_ptr item; //array items
+        char* ptr;
+
     } anyValue;
 
-    typedef struct any_struct {
+    typedef struct any_s {
         TypeID constructor;
+        length_t length;
         anyValue value;
-    } 
+    }
         any;
 
-    #define thruty(a) a.value.int64
-    #define falsey(a) !a.value.int64
+    typedef any var;
 
-    #define any_str(S) (any){String,{.str=S}}
-    #define any_int(S) (any){TYPE_INT32,{.int32=S}}
-    #define any_typeID(S) (any){TYPE_TypeID,{.type=S}}
-    #define any_obj(S) (any){Object,{.ptr=S}}
+    typedef any any_arr[];
 
-    //defines to ease reading of generated code
-    #define AS(Type,propAny) ((Type ## _ptr)propAny ## .value.ptr)
-    #define TO_ANY(Type,paramPtr) (any){Type,.value.ptr=paramPtr}
+    // function_ptr is a ptr to: any function(any this,any args)
+    typedef any (*function_ptr)(any this,any args);
+
+    //declare:
+    // struct-Error = struct with instance properties
+    // Error = ptr to struct-Error
+    typedef struct Error_s {
+        any message;
+        any name;
+
+    } * Error_ptr;
+
+
+    #define thruty(a) (a.value.int64)
+    #define falsey(a) (a.value.int64)
+
+    #define any_isInt(a) (a.constructor>=TYPE_INT32 && a.constructor<=TYPE_UINT64)
+    #define any_isNumeric(a) (a.constructor>=TYPE_INT32 && a.constructor<=Number)
 
     extern str EMPTY_STR;
+
     extern const any undefined;
-    extern const any any_0_str;
+    extern const any any_EMPTY_STR;
+    extern const any EMPTY_ARGS;
+
+    extern any any_str(str s);
+
+    #define any_int(S) (any){TYPE_INT32,0,{.int32=S}}
+    #define any_uint(S) (any){TYPE_UINT32,0,{.uint32=S}}
+    #define any_number(S) (any){Number,0,{.number=S}}
+    #define any_typeID(S) (any){TYPE_TypeID,0,{.type=S}}
+    #define any_function(S) (any){Function,0,{.func=S}}
+
+    //defines to ease reading of generated code
+    #define AS(Type,propAny) ((Type##_ptr)propAny.value.ptr)
+    #define TO_ANY(Type,paramPtr) (any){Type,0,.value.ptr=paramPtr}
+
+    extern size_t utf8len(str s);
+    extern size_t utf8indexFromPtr(str s, str ptr);
+    extern size_t utf8indexOf(str source, str searched, size_t fromIndex);
+    extern str utf8slice(str s, int64_t startPos, int64_t endPos);
 
     extern bool __is(any a,any b); //js ===
 
@@ -90,6 +126,11 @@ extern "C" {
     extern str _numberToStr(double a);
 
     #define _intToStr _int32ToStr
+
+    extern int64_t anyToInt64(any a);
+    extern double anyToNumber(any a);
+
+    extern str anyToStr(any this);
 
     extern str __concatToNULL(str first,...);
 

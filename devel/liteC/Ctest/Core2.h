@@ -1,11 +1,12 @@
-#ifndef CORE2_H
-#define CORE2_H
-#include "LiteC-core.h"
+#ifndef CORE2_C_H
+#define CORE2_C_H
+#include "_dispatcher.h"
    
-   extern int inRange(int min, int value, int max);
+   extern any  inRange(any this, any arguments);
+   
    
    // classTestClass
-   #define TestClass__CLASS 6
+   #define TestClass 16
    
    // declare:
    // TestClass_ptr : type = ptr to instance
@@ -14,13 +15,16 @@
    struct TestClass_s {
        TypeID constructor;
        any value;
-       Array_ptr myArr;
+       any myArr;
    };
    
    extern any TestClass__init(any this,any initValue);
    
+   
        
-       extern int TestClass__indexOf(TestClass_ptr this,str searched, int fromIndex);
+       extern any TestClass_indexOf(any this, any arguments);
        
-       extern String TestClass__sliceJoin(TestClass_ptr this,int start, int endPos);
+       
+       extern any TestClass_sliceJoin(any this, any arguments);
+       
 #endif

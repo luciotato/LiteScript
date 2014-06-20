@@ -441,7 +441,7 @@ At this point we lock because it is definitely a `throw` statement
 
 `ReturnStatement: return Expression`
 
-      properties expr
+      properties expr:Expression
 
       method parse()
         .req 'return'
@@ -731,6 +731,7 @@ next we require: 'property', and lock.
 Get index variable name (to store property names)
 
         .indexVar = .req(VariableDecl)
+        .indexVar.type="string"
 
 if comma present, get main variable name (to store property value)
 
@@ -3193,7 +3194,7 @@ Check for 'map', e.g.: `var list : map string to NameDeclaration`
         .type.name = autoCapitalizeCoreClasses(.type.name)
         
         #ifdef PROD_C
-        if .type.name is 'String', .type.name = 'str'
+        //if .type.name is 'String', .type.name = 'str'
         #endif
 
         if .isMap

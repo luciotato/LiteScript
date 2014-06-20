@@ -2,7 +2,7 @@ test Core2
 
     global declare Core2
 
-    function test
+    function testCore2
 
         var c:int=0
 

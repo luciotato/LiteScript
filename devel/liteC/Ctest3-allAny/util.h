@@ -21,9 +21,8 @@ extern "C" {
 
     #include "gc.h"
 
-    extern void* alloc(size_t size);
-    extern void* realloc(void* ptr, size_t size);
-
+    extern void* mem_alloc(size_t size);
+    extern void* mem_realloc(void* ptr, size_t size);
 
 #ifdef	__cplusplus
 }

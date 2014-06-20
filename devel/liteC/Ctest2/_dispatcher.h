@@ -4,6 +4,6 @@
 // LIBRARY INIT
 extern void LiteC__init();
 // method dispatchers
-       extern void* indexOf(void* this,String_ptr searched, int fromIndex);
-       extern void* sliceJoin(void* this,int start, int endPos);
+       extern any indexOf(any this, any arguments);
+       extern any sliceJoin(any this, any arguments);
 #endif

@@ -613,6 +613,7 @@ if the object is an array, resolve with a recursive call
 {h:1/0} --> enable/disabe output to header file
  
             else if item.h isnt undefined
+                out.startNewLine
                 out.toHeader = item.h
 
 else, unrecognized object

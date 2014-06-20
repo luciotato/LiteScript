@@ -3,22 +3,20 @@
 void LiteC__init(){
     LiteC_registerCoreClasses();
     if (CLASSES_ARRAY.length!=6) fatal("CHECK USER_CLASSES_START_ID on LiteC compiler");
-    __registerClass("TestClass", Object__CLASS, TestClass__init, sizeof(struct TestClass));
+    __registerClass("TestClass", UNDEFINED, TestClass__init, sizeof(struct TestClass_s));
 };
 // method dispatchers
-       void* indexOf(void* this,String_ptr searched, int fromIndex){
-           switch(((Object)this)->class){
-             case TestClass__CLASS:
-                return TestClass__indexOf(this,searched,fromIndex);
-       
+       any indexOf(any this, any arguments){
+           switch(this.constructor){
+             case TestClass:
+                return TestClass_indexOf(this,arguments);
            };
        };
        
-       void* sliceJoin(void* this,int start, int endPos){
-           switch(((Object)this)->class){
-             case TestClass__CLASS:
-                return TestClass__sliceJoin(this,start,endPos);
-       
+       any sliceJoin(any this, any arguments){
+           switch(this.constructor){
+             case TestClass:
+                return TestClass_sliceJoin(this,arguments);
            };
        };
        

@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=Ctest2
+PROJECTNAME=Ctest3-allAny
 
 # Active Configuration
 DEFAULTCONF=Debug

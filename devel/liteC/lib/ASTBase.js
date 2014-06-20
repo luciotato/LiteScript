@@ -743,6 +743,7 @@
 // {h:1/0} --> enable/disabe output to header file
            
            else if (item.h !== undefined) {
+               out.startNewLine();
                out.toHeader = item.h;
            }
 

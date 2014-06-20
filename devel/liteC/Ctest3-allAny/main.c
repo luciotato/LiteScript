@@ -35,10 +35,6 @@
 
 
 
-
-
-
-
  */
 
 #include "LiteC-core.h"
@@ -53,14 +49,11 @@
     typedef struct ASTBase_s * ASTBase_ptr;
 
     struct ASTBase_s {
-
-        ASTBase_ptr parent;
-
-        any name, keyword, type, itemType;
-
-        //Lexer_ptr lexer;
-
-        any lineInx,
+        any
+            parent,
+            name, keyword, type, itemType,
+            lexer,
+            lineInx,
             sourceLineNum, column,
             indent, locked,
             index;
@@ -69,29 +62,32 @@
 
     #define ASTBase 32
 
-    any ASTBase__init(any anyThis, any args /*parent:ASTBase, optional name*/){
+    any ASTBase__init(any this, any arguments /*parent:ASTBase, optional name*/){
         // validate param types, define as typecast
-        assert(anyThis.constructor==ASTBase);
-        #define this ((ASTBase_ptr)anyThis.value.ptr)
-        assert(args.constructor==Array);
-        assert(args.value.array->length>=1); //required params
-        assert(args.value.array->item[0].constructor==ASTBase);
+        assert(this.constructor==ASTBase);
+        assert(arguments.constructor==Array);
         //---------
         // define named params
-        #define PARAM_parent (ASTBase_ptr)(args.value.array->item[0].value.ptr)
-        #define PARAM_name args.value.array->item[1] //any, optional, maybe undefined
+        any parent,name;
+        parent=name=undefined;
+        switch(arguments.length){
+            case 2:name=arguments.value.item[1];
+            case 1:parent=arguments.value.item[0];
+        }
         //---------
-
-        this->parent = PARAM_parent;
-        this->name = PARAM_name;
-
-        #undef this
-        #undef PARAM_parent
-        #undef PARAM_name
+        AS(ASTBase,this)->parent = parent;
+        AS(ASTBase,this)->name = name;
+        return this;
     };
 
-    str ASTBase_toString(ASTBase_ptr a){
-        return _toStr(a->name);
+    any ASTBase_toString(any anyThis, any arguments){
+        // validate param types, define as typecast
+        assert(anyThis.constructor==ASTBase);
+        assert(arguments.constructor==Array);
+        #define this ((ASTBase_ptr)anyThis.value.ptr)
+        //---------
+        return this->name;
+        #undef this
     }
 
 
@@ -99,24 +95,15 @@
 //ASTBase (prototype/this) properties
 
     // *GENERATED*
-    str toString(any o){
+    any toString(any anyThis, any arguments){
         // Core types
-        if (o.constructor<=String) return _toStr(o);
-        switch(o.constructor){
-            case Array:
-                return Array_toString(o.value.array);
-            case Error:
-                return Error_toString(o.value.error);
+        if (anyThis.constructor<=Function) return any_str(anyToStr(anyThis));
+        switch(anyThis.constructor){
             case ASTBase:
-                return ASTBase_toString((ASTBase_ptr)o.value.ptr);
+                return ASTBase_toString(anyThis,arguments);
             default:
-                return Object_toString(o);
+                return any_str("[object]"); //Object_toString(anyThis,arguments);
         }
-    }
-
-    void print(any o){
-        printf(toString(o));
-        printf("\n");
     }
 
     struct args {
@@ -124,9 +111,9 @@
         any* item;
     };
 
-    void test(Array_ptr arguments){
-        for(int n=0;n<arguments->length;n++){
-            print(arguments->item[n]);
+    void test(any arguments){
+        for(int n=0;n<arguments.length;n++){
+            print(arguments.value.item[n]);
         }
     }
 
@@ -141,20 +128,34 @@ int main(int argc, char** argv) {
     //register user classes
     __registerClass(ASTBase,"ASTBase",Object,ASTBase__init,sizeof(struct ASTBase_s));
 
-    any err;
+    var err;
 
     print(any_str("START"));
 
-    test( &(struct Array_s){2,(any[]){any_str("positionText"), new(Error,any_str("errmsg"))}});
+    test( (any){Array,2,.value.item=(any_arr){any_str("positionText"), _newErr("errmsg")}});
 
-    any b = any_str("test");
-    any s = new(Error,any_str("test new Error"));
+    var b = any_str("test");
+    var s = _newErr("test new Error");
+    var c = any_int(10012);
+    var d = any_number(1012341234234342430.12);
 
     try{
         print(any_str("TRY"));
         print(b);
+        print(c);
+        print(d);
         print(s);
-        throw(new(Error,any_str("GenericException")));
+        print((any){Array,3,.value.item=(any_arr){c,d,s}});
+        print(String_concat(b,(any){Array,3,.value.item=(any_arr){c,d,s}}));
+
+        any s= any_str("GénericException");
+        print(String_slice(s,(any){Array,2,.value.item=(any_arr){any_int(0),any_int(6)}}));
+        print(String_slice(s,(any){Array,2,.value.item=(any_arr){any_int(6),any_int(-2)}}));
+
+        print(String_indexOf(s,(any){Array,1,.value.item=(any_arr){any_str("r")}}));
+        print(any_number(strstr(s.value.str,"r")-s.value.str));
+
+        throwErr("GenericException");
         print(any_str("AFTER THROW"));
     }
     catch(err) {

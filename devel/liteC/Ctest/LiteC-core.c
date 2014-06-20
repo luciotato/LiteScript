@@ -12,74 +12,117 @@
 
     #include "LiteC-core.h"
 
-    any String__init(any this, any args){
-        switch(args.constructor){
-            case TYPE_0_STR:
-                this.constructor = TYPE_0_STR;
-                return this;
-            case String:
-                this.value.str = args.value.str;
-                return this;
-            default:
-                throw(new(Error,any_str("invalid init value for String")));
-        }
-
-    }
-
- // .toString methods
-
-    str Object_toString(any this){
-        return __concatToNULL("[",CLASSES[this.constructor].name,"]",NULL);
-    }
-
-    str Error_toString(Error_ptr this){
-        return  __concatToNULL(this->name,": ",this->message,NULL);
-    }
-
-    str Array_toString(Array_ptr this){
-        return  "[object Array]";
-    }
-
-    // can be called with any &prop if you know the type
-    // example _toStr((anyValue*)&this->column,TYPE_INT);
-    str _anyValuePtr_toStr(anyValue* this, TypeID type){
-        switch(type){
-            case UNDEFINED:
-                return "undefined";
-            case TYPE_NULL:
-                return "null";
-            case TYPE_0_STR:
-                return EMPTY_STR;
-            case String:
-                return this->str;
-            case TYPE_BOOLEAN:
-                return this->boolean?"true":"false";
-            case TYPE_INT32:
-                return _int32ToStr(this->int32); //expected: C compiler to optimize tail-call into JMP
-            case TYPE_UINT32:
-                return _uint32ToStr(this->uint32);
-            case TYPE_INT64:
-                return _int64ToStr(this->int64);
-            case TYPE_UINT64:
-                return _uint64ToStr(this->uint64);
-            case Number:
-                return _numberToStr(this->number);
-            case Function: case TYPE_TypeID: /* to be js-consistent */
-                return "function";
-            case Error:
-                return Error_toString(this->error);
-            default:
-                return "[object]"; //to be js-consistent
-        }
-    }
-
-    str _toStr(any o){ //converts core values only - rest is "[object]"
-        return _anyValuePtr_toStr(&o.value, o.constructor);
-    };
+//--- module vars
 
     struct ClassInfo* CLASSES;
     int CLASSES_size; //alloc'd
-    int CLASSES_length; //used
+
+
+//--- Helper throw error functions
+
+    any _newErr(str message){
+        return new(Error,(any){Array,1,.value.item=(any_arr){any_str(message)}});
+    }
+
+    void throwErr(str msg){
+        throw(_newErr(msg));
+    }
+
+    void _throw_RangeError(str message) {
+        var err=_newErr(message);
+        AS(Error,err)->name = any_str("RangeError");
+        throw(err);
+    }
+
+    void _throw_noMethod(TypeID type, str method) {
+        throwErr(__concatToNULL(
+               "no method:'",method,"' in type: ",CLASSES[type].name, NULL
+               ));
+    }
+
+
+// --------------------
+// Class__init core functions
+
+    any String__init(any anyThis, any arguments){
+        // validate param types, define as typecast
+        assert(anyThis.constructor==String);
+        assert(arguments.constructor==Array);
+        //assert(arguments.value.array->length>=1); //required params
+        //assert(arguments.value.array->item[0].constructor==ASTBase);
+        //---------
+        //define this
+        // string is a pseudo-class (no mutable *ptr)
+        #define this anyThis
+        //define named params
+        any initValue;
+        switch(arguments.length){
+            case 1: initValue=arguments.value.item[0];
+        };
+        //---------
+        if (arguments.length){
+            switch(initValue.constructor){
+                case String:
+                    this.value = initValue.value;
+                    this.length = initValue.length;
+                    return this;
+                default:
+                    throwErr("invalid init value for String");
+            }
+        }
+
+    #undef this
+    }
+
+    any Error__init(any anyThis, any arguments){
+        // validate param types, define as typecast
+        assert(anyThis.constructor==Error);
+        assert(arguments.constructor==Array);
+        //
+        //---------
+        //define this
+        #define this ((Error_ptr)anyThis.value.ptr)
+        //define named params
+        any message;
+        switch(arguments.length){
+            case 1: message=arguments.value.item[0];
+        };
+        //---------
+        this->message = message;
+        this->name = any_str("Error");
+        return  anyThis;
+        #undef this
+    }
+
+    any Array__newFrom(any arguments){
+        assert(arguments.constructor==Array);
+        any result={Array,arguments.length};
+        size_t size;
+        result.value.item = mem_alloc((size = arguments.length*sizeof(any)));
+        memcpy(result.value.item, arguments.value.item, size);
+        return result;
+    };
+
+
+    //init Fn for Array Objects
+    any Array__init(any this, any arguments){
+        size_t size;
+        switch(arguments.length){
+            case 0: break;
+            case 1:
+                if (any_isNumeric(arguments.value.item[0])){
+                    //init with length
+                    int64_t length = anyToInt64(arguments.value.item[0]);
+                    if (length>UINT32_MAX) _throw_RangeError("Array__init length>UINT32_MAX");
+                    this.length=(length_t)length;
+                    this.value.item = mem_alloc(length*sizeof(any));
+                    break;
+                };
+            default: // >0, items
+                this = Array__newFrom(arguments);
+        }
+        return this;
+    };
 
 //-------------------
 // helper functions
@@ -87,112 +130,120 @@
 // new - alloc mem space
 // and init Object properties (first part of memory space)
 
-    any new(TypeID type, any args){
+    any new(TypeID type, any arguments){
 
-        any a = {type,.value.uint64=0}; //set type
+        any a = {type,0,.value.uint64=0}; //set type
 
-        if (type<=String) {
-            // simpler cases, no alloc required upto String
-            if (type==String) return String__init(a,args);
-            return a;
+        // valid type?
+        if (type<0||type>CLASSES_size) fatal("new: invalid typeID");
+
+        size_t size;
+        if (size=CLASSES[type].instanceSize) {
+            //alloc required memory
+            a.value.ptr = mem_alloc(size);
+        }
+
+        if (CLASSES[type].__init) {
+            //calls Class__init(a,arguments)
+            return CLASSES[type].__init(a,arguments);
         }
         else {
-            // valid type?
-            if (type>=CLASSES_length) fatal("new: invalid typeID");
+            return a;
         }
 
-        //calls Class__init(a,args)
-        a.value.ptr = alloc(CLASSES[type].instanceSize);
-        return CLASSES[type].__init(a,args);
     }
-
-
-    //init Fn for Error Objects
-    any Error__init(any this, any args){
-        this.value.error->name = "Error";
-        this.value.error->message = _toStr(args);
-        return this;
-    };
-
-    void _throw_noMethod(TypeID type, str method) {
-        throw ( new(Error, any_str(__concatToNULL(
-               "no method:'",method,"' in type: ",CLASSES[type].name, NULL
-               ))));
-    }
-
-    // Object_toString
-
-
-//----------------------
-// Array
-
-    //init Fn for Array Objects
-    any Array__init(any this, any args){
-        this.value.array->itemClass = UNDEFINED;
-        uint32_t size=32;
-        this.value.array->size=size; //alloc initial size 32 elements
-        this.value.array->item = alloc(size * sizeof(any));
-        this.value.array->length = 0;
-    };
-
-// Array_push
-// core push dispatcher,
-// should be added at generated .push dispatcher
-    // , case Array: return Array_push(this, value);
-    // default:
-    //    _throw_noMethod(this.type,"push");
-
-    int Array_push(Array_ptr this, any value){
-        if (this->length == this->size){
-            this->size+=32;
-            this->item=realloc(this->item, this->size * sizeof(any));
-        }
-        this->item[this->length++] = value;
-        return this->length;
-    }
-
-
-    /*String Number_toString(Number this){
-        char buffer[256];
-        snprintf(buffer,sizeof(buffer),"%d",this->value);
-        return String__init__(new(String_CLASS),buffer);
-    }
-    */
-
-    /*
-    __concat_String(int arglen,...){
-        ...
-        return String__init__(new(String_CLASS),buffer);
-    }
-    */
 
 
 //-------------------
-// init
+// init lib
 //--------------------
     void LiteC_registerCoreClasses(){
 
-        CLASSES_length = Error+1; //last enum in LiteC-core.h
         CLASSES_size = 64;
-        CLASSES = alloc(CLASSES_size * sizeof(struct ClassInfo));
+        CLASSES = mem_alloc(CLASSES_size * sizeof(struct ClassInfo));
 
-        struct ClassInfo Array_CLASS_INFO = {
+        CLASSES[UNDEFINED] = (struct ClassInfo){
+            "undefined", // str type name
+            NULL, // function __init
+            0, //size_t instanceSize
+            UNDEFINED}; // super type
+
+        CLASSES[TYPE_NULL] = (struct ClassInfo){
+            "null", // str type name
+            NULL, // function __init
+            0, //size_t instanceSize
+            UNDEFINED}; // super type
+
+        CLASSES[TYPE_BOOLEAN] = (struct ClassInfo){
+            "boolean", // str type name
+            NULL, // function __init
+            0, //size_t instanceSize
+            UNDEFINED}; // super type
+
+        CLASSES[TYPE_TypeID] = (struct ClassInfo){
+            "TypeID", // str type name
+            NULL, // function __init
+            0, //size_t instanceSize
+            UNDEFINED}; // super type
+
+        CLASSES[TYPE_INT32] = (struct ClassInfo){
+            "int32", // str type name
+            NULL, // function __init
+            0, //size_t instanceSize
+            UNDEFINED}; // super type
+
+        CLASSES[TYPE_INT64] = (struct ClassInfo){
+            "int64", // str type name
+            NULL, // function __init
+            0, //size_t instanceSize
+            UNDEFINED}; // super type
+
+        //TYPE_UINT32,
+        //TYPE_UINT64,
+
+        CLASSES[Number] = (struct ClassInfo){
+            "Number", // str type name
+            NULL, // function __init
+            0, //size_t instanceSize
+            UNDEFINED}; // super type
+
+        CLASSES[String] = (struct ClassInfo){
+            "String", // str type name
+            String__init, // function __init
+            0, //size_t instanceSize
+            UNDEFINED}; // super type
+
+
+        CLASSES[Array] = (struct ClassInfo){
             "Array", // str type name
             Array__init, // function __init
-            sizeof(struct Array_s), //size_t instanceSize
-            UNDEFINED // super type
-        };
+            0, //size_t instanceSize
+            UNDEFINED}; // super type
 
-        CLASSES[Array] = Array_CLASS_INFO;
-
-        struct ClassInfo Error_CLASS_INFO = {
+        CLASSES[Error] = (struct ClassInfo) {
             "Error", // str type name
             Error__init, // function __init
             sizeof(struct Error_s), //size_t instanceSize
-            UNDEFINED // super type
-        };
+            UNDEFINED}; // super type
 
-        CLASSES[Error] = Error_CLASS_INFO;
+        CLASSES[Function] = (struct ClassInfo) {
+            "Function", // str type name
+            NULL, // function __init
+            0, //size_t instanceSize
+            UNDEFINED}; // super type
+
+        CLASSES[Map] = (struct ClassInfo) {
+            "Map", // str type name
+            Array__init, // function __init
+            0, //size_t instanceSize
+            Array}; // super type
+
+        /* bag of properties, map string=>any */
+        CLASSES[Object] = (struct ClassInfo) {
+            "Object", // str type name
+            NULL, // function __init
+            0, //size_t instanceSize
+            Map}; // super type
 
     };
 
@@ -201,14 +252,16 @@
             TypeID requiredID,
             str name,
             TypeID super, //proto type ID. Which type this type extends
-            initFn_t initFn,
+            function_ptr initFn,
             size_t instanceSize
              ) {
             //create type info
 
+        if (requiredID<=Object) fatal("__registerClass: id can't be <= Object class ID");
+
         if (requiredID>=CLASSES_size){
             CLASSES_size=requiredID+32;
-            CLASSES = realloc(CLASSES, CLASSES_size*sizeof(struct ClassInfo));
+            CLASSES = mem_realloc(CLASSES, CLASSES_size*sizeof(struct ClassInfo));
         }
 
         if (CLASSES[requiredID].name!=NULL) fatal("__registerClass: id already taken");
@@ -225,3 +278,222 @@
         // return new index in CLASSES => TypeID
     };
 
+
+//----------------------
+// Core Classes Methods
+//----------------------
+//----------------------
+//----------------------
+// String
+
+   any String_indexOf(any this, any arguments) {
+       // validate param types
+       assert(this.constructor==String);
+       assert(arguments.constructor==Array);
+       if (arguments.length==0||this.value.str==NULL) return any_number(-1);
+       //---------
+       // define named params
+       str searched = anyToStr(arguments.value.item[0]);
+       size_t fromIndex = arguments.length>=2? anyToInt64(arguments.value.item[1]):0;
+       //---------
+       return any_number(utf8indexOf(this.value.str,searched,fromIndex));
+   }
+
+   any String_slice(any this, any arguments) {
+       // validate param types
+       assert(this.constructor==String);
+       assert(arguments.constructor==Array);
+       if (arguments.length==0) return this;
+       //---------
+       // define named params
+       int64_t startPos = anyToInt64(arguments.value.item[0]);
+       int64_t endPos = arguments.length>=2? anyToInt64(arguments.value.item[1]): this.length;
+       //---------
+       return any_str(utf8slice(this.value.str,startPos,endPos));
+    }
+
+    any String_toString(any this, any arguments) {
+        return this;
+    }
+
+    any String_concat(any this, any arguments) {
+        return _uptoString_concat(this,arguments);
+    }
+
+    any String_split(any this, any arguments) {
+        _throw_noMethod(String,"split not implemented");
+    }
+
+//----------
+// Error class
+
+
+    any Error_toString(any this, any arguments) {
+        return AS(Error,this)->message;
+    }
+
+//----------------------
+// Array
+
+    any Array_toString(any this, any arguments) {
+        return any_str("[object Array]");
+    }
+
+    any Array_concat(any this, any arguments) {
+        assert(this.constructor==Array);
+        any result = Array__newFrom(this);
+        for(int n=0;n<arguments.length;n++){
+            if(arguments.value.item[n].constructor==Array){
+                //recurse
+                Array_concat(result,arguments.value.item[n]);
+            }
+            else { //single item
+                Array_push(result,(any){Array,1,.value.item = &(arguments.value.item[n])});
+            }
+        }
+        return result;
+    }
+
+    any Array_indexOf(any this, any arguments) {
+        // validate param types
+        assert(this.constructor==Array);
+        assert(arguments.constructor==Array);
+        if (arguments.length==0) return any_number(-1);
+        //---------
+        // define named params
+        any searched = arguments.value.item[0];
+        size_t fromIndex = arguments.length>=2? anyToInt64(arguments.value.item[1]):0;
+        //---------
+        for(int64_t inx=fromIndex;inx<this.length;inx++){
+            if (__is(searched,this.value.item[inx])) return any_number(inx);
+        }
+        return any_number(-1);
+   }
+
+   any Array_slice(any this, any arguments) {
+       // validate param types
+       assert(this.constructor==Array);
+       assert(arguments.constructor==Array);
+       if (arguments.length==0) return this;
+       //---------
+       // define named params
+       int64_t startPos = anyToInt64(arguments.value.item[0]);
+       int64_t endPos = arguments.length>=2? anyToInt64(arguments.value.item[1]): this.length;
+       //---------
+       return Array__newFrom((any){Array,endPos-startPos,.value.item=this.value.item+startPos});
+    }
+
+    any Array_splice(any this, any arguments) {
+       // validate param types
+       assert(this.constructor==Array);
+       assert(arguments.constructor==Array);
+       if (arguments.length==0) return this;
+       //---------
+       // define named params
+       int64_t startPos = anyToInt64(arguments.value.item[0]);
+       int64_t howMany = arguments.length>=2? anyToInt64(arguments.value.item[1]): 0;
+       any result={Array,0,.value.item=NULL};
+       if (howMany>0){
+            result=Array__newFrom((any){Array,howMany,.value.item=&this.value.item[startPos]});
+            int64_t moveFromPos = startPos+howMany;
+            if (moveFromPos>this.length) moveFromPos=this.length;
+            if (moveFromPos<this.length){
+                memcpy(this.value.item+startPos,this.value.item+moveFromPos, (this.length-moveFromPos)*sizeof(any));
+                memset(this.value.item+this.length-howMany,0,howMany*sizeof(any));
+            }
+            this.length-=howMany;
+       };
+       //---------
+       if (arguments.length>=3){ // push rest of params
+            Array_push(this,(any){Array,arguments.length-2,.value.item=&arguments.value.item[2]});
+       }
+       return result;
+   }
+
+
+// Array_push
+// core push dispatcher,
+// should be added at generated .push dispatcher
+    // , case Array: return Array_push(this, value);
+    // default:
+    //    _throw_noMethod(this.type,"push");
+
+    any Array_push(any this, any arguments){
+
+        size_t args_size;
+        any* newSpaceStart;
+
+        switch(arguments.length){
+            case 0: break;
+            default: // >0, items
+                if (!this.length){
+                    this.value.item = newSpaceStart = mem_alloc((args_size = (this.length=arguments.length)*sizeof(any)));
+                }
+                else {
+                    newSpaceStart = &this.value.item[this.length];
+                    this.value.item = mem_realloc(this.value.item, this.length*sizeof(any) + (args_size =(arguments.length*sizeof(any))));
+                }
+                memcpy(newSpaceStart,arguments.value.item,args_size );
+        }
+        return any_uint(this.length+=arguments.length);
+
+    }
+
+
+    any _uptoString_concat(any this, any arguments){
+        if ((this.constructor==UNDEFINED||this.constructor==TYPE_NULL) && arguments.length==0){return any_EMPTY_STR;}
+        str startStr;
+        if (this.constructor==String) {
+            if (arguments.length==0){return this;}
+            startStr = this.value.str? this.value.str : EMPTY_STR;
+        }
+        else {
+            startStr = anyToStr(this);
+            if (arguments.length==0){return any_str(startStr);}
+        }
+
+        size_t size=strlen(startStr); // startStr[size]->'/0' char
+        size_t bufSize = size + arguments.length*128;
+        char * result = (char*)mem_alloc(bufSize);
+        memcpy(result,startStr,size+1);
+
+        int pos=size; // result[pos] is '/0' char
+        assert(result[pos]=='\0');
+
+        for(int n=0;n<arguments.length;n++){
+            any item = arguments.value.item[n];
+            str arg = anyToStr(item);
+            size_t arglen = strlen(arg);
+            size += arglen;
+            if (size>=bufSize){
+                result = (char*)mem_realloc(result, bufSize=size+1024);
+            }
+            memcpy(&result[pos],arg,arglen+1);
+            pos+=arglen; // points to '/0' char
+        };
+        return any_str((str)mem_realloc(result,size)); //cut down to size, convert to any
+    }
+
+
+//----------------------
+// Map
+
+    any Map_toString(any this, any arguments){
+        //return __concatToNULL("[",CLASSES[this.constructor].name,"]",NULL);
+        return any_str("[object]");
+    }
+
+// ------------
+// Print
+
+    void print(any arguments){
+        if (arguments.constructor==Array){
+            for(int n=0;n<arguments.length;n++){
+                printf("%s ",anyToStr(arguments.value.item[n]));
+            }
+        }
+        else {
+            printf(anyToStr(arguments));
+        }
+        printf("\n");
+    }

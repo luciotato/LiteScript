@@ -2,25 +2,29 @@
 #define CORE2_H
 #include "LiteC-core.h"
    
-   extern int inRange(int min, int value, int max);
+   extern any  inRange(any this, any arguments);
+   
    
    // classTestClass
-   #define TestClass__CLASS 6
+   #define TestClass 16
    
    // declare:
-   // struct-TestClass = struct with instance properties
-   // TestClass : type = ptr to said struct
-   typedef struct TestClass {
-       ClassID class;
-       Object_ptr value;
-       Array_ptr myArr;
+   // TestClass_ptr : type = ptr to instance
+   typedef struct TestClass_s * TestClass_ptr;
+   // struct TestClass_s = struct with instance properties
+   struct TestClass_s {
+       TypeID constructor;
+       any value;
+       any myArr;
+   };
    
-   } * TestClass;
+   extern any TestClass__init(any this,any initValue);
    
-   extern TestClass TestClass__init(TestClass this,Object_ptr initValue);
    
        
-       extern int TestClass__indexOf(TestClass this,String_ptr searched, int fromIndex);
+       extern any TestClass_indexOf(any this, any arguments);
        
-       extern String TestClass__sliceJoin(TestClass this,int start, int endPos);
+       
+       extern any TestClass_sliceJoin(any this, any arguments);
+       
 #endif

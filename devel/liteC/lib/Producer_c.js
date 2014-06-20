@@ -18,11 +18,19 @@
    var Lexer = require('./Lexer');
    var Environment = require('./Environment');
    var log = require('./log');
+   var Map = require('./Map');
 
 // "C" Producer Functions
 // ==========================
 
 // module vars
+
+    // # list of classes, to call __registerclass
+   var classes = [];
+
+    // # USER_CLASSES_START_ID
+    // # must be kept in sync with hand-coded LiteC-core.c
+   var USER_CLASSES_START_ID = 16;
 
     // #store info to create a dispatcher for each method name (globally)
    var allDispatchersNameDecl = new NameDeclaration();
@@ -30,12 +38,6 @@
    // export
    module.exports.dispatcherModule = dispatcherModule;
 
-    // # list of classes, to call __registerclass
-   var classes = [];
-
-    // # USER_CLASSES_START_ID = 3 (NO_CLASS=0, Object=1, Class=2) + __CORE_CLASSES_INFO_LENGTH=3
-    // # must be kept in sync with hand-coded LiteC-core.c
-   var USER_CLASSES_START_ID = 6;
 
    // append to class NameDeclaration ###
       // properties
@@ -86,12 +88,43 @@
 
    // end function
 
+   // helper function normalizeDefine(name:string)
+   function normalizeDefine(name){
+       return name.replace(/[\s\W]/g, "_").toUpperCase();
+   };
+
    // append to class Grammar.Module ###
 
     // method produceDispatcher()
     Grammar.Module.prototype.produceDispatcher = function(){
 
        var requiredHeaders = [];
+
+// Add core-supported dispatchers & methods
+
+
+        // to do: produce dispatchers and cases for core methods
+        //e.g.: concat, toString, join, slice, push, pop, ...
+       var supportedCoreMethods = new Map();
+       supportedCoreMethods.members = {
+           Error: ["toString"], 
+           String: ["toString", "concat", "slice", "indexOf", "split"], 
+           Array: ["toString", "concat", "slice", "indexOf", "push"]
+           };
+            //Map: ["get", "has", "set", "clear", "delete"]
+
+       // for each className, methods:array in map supportedCoreMethods
+       var methods=undefined;
+       for ( var className in supportedCoreMethods.members) if (supportedCoreMethods.members.hasOwnProperty(className)){methods=supportedCoreMethods.members[className];
+             {
+             // for each methodName in methods
+             for( var methodName__inx=0,methodName ; methodName__inx<methods.length ; methodName__inx++){methodName=methods[methodName__inx];
+                   this.addMethodDispatcher(methodName, className);
+             };// end for each in methods
+             
+             }
+             
+             }// end for each property
 
 // _dispatcher.c
 
@@ -103,15 +136,13 @@
        this.out('void LiteC__init(){', NL, NL, NL);
 
        this.out('    LiteC_registerCoreClasses();', NL);
-       this.out('    if (CLASSES_ARRAY.length!=', USER_CLASSES_START_ID, ') fatal("CHECK USER_CLASSES_START_ID on LiteC compiler");', NL, NL);
 
 // register user classes
 
        // for each classDeclaration in classes
        for( var classDeclaration__inx=0,classDeclaration ; classDeclaration__inx<classes.length ; classDeclaration__inx++){classDeclaration=classes[classDeclaration__inx];
-           this.out('    __registerClass(', '"', classDeclaration.name, '", ', classDeclaration.varRefSuper || 'Object__CLASS', ', ', classDeclaration.name, '__init', ', ', 'sizeof(struct ', classDeclaration.name, '));', NL);
+           this.out('    __registerClass(', classDeclaration.name, ',', '"', classDeclaration.name, '", ', classDeclaration.varRefSuper || 'UNDEFINED', ', ', classDeclaration.name, '__init', ', ', 'sizeof(struct ', classDeclaration.name, '_s));', NL);
        };// end for each in classes
-
 
        this.out(NL, '};', NL, NL);
 
@@ -122,51 +153,42 @@
        var dispatcherNameDecl=undefined;
        for ( var dispatcherNameDecl__propName in allDispatchersNameDecl.members.members) if (allDispatchersNameDecl.members.members.hasOwnProperty(dispatcherNameDecl__propName)){dispatcherNameDecl=allDispatchersNameDecl.members.members[dispatcherNameDecl__propName];
            {
-           // with dispatcherNameDecl.funcDecl
-           var _with1=dispatcherNameDecl.funcDecl;
 
-               _with1.out('void* ', _with1.name);
-               _with1.produceParameters('void*'); //type for implicit parameter "this"
-               _with1.out("{", NL);
-               _with1.out("    switch(((Object)this)->class){", NL);
+           this.out('any ', dispatcherNameDecl.name, "(any this, any arguments)");
+            //.produceParameters 'void*' //type for implicit parameter "this"
+           this.out("{", NL);
+           this.out("    switch(this.constructor){", NL);
 
-               // for each caseNameDecl in map dispatcherNameDecl.members
-               var caseNameDecl=undefined;
-               for ( var caseNameDecl__propName in dispatcherNameDecl.members.members) if (dispatcherNameDecl.members.members.hasOwnProperty(caseNameDecl__propName)){caseNameDecl=dispatcherNameDecl.members.members[caseNameDecl__propName];
-                   {
-                   // with caseNameDecl.funcDecl
-                   var _with2=caseNameDecl.funcDecl;
-                       _with2.out("      case ", caseNameDecl.name, "__CLASS:", NL);
-                        // call specific class_method
-                       _with2.out("         return ", caseNameDecl.name, "__", _with2.name, "(this");
-                        // passs same parameters, same order as dispatcher
-                        // C-compiler should optimize this tail-call to a JMP instead of CALL
-                       // if .paramsDeclarations.length
-                       if (_with2.paramsDeclarations.length) {
-                           // for each varDecl in .paramsDeclarations
-                           for( var varDecl__inx=0,varDecl ; varDecl__inx<_with2.paramsDeclarations.length ; varDecl__inx++){varDecl=_with2.paramsDeclarations[varDecl__inx];
-                               _with2.out(',', varDecl.name);
-                           };// end for each in _with2.paramsDeclarations
-                           
-                       };
-                       _with2.out(");", NL, NL);
+           // for each caseNameDecl in map dispatcherNameDecl.members
+           var caseNameDecl=undefined;
+           for ( var caseNameDecl__propName in dispatcherNameDecl.members.members) if (dispatcherNameDecl.members.members.hasOwnProperty(caseNameDecl__propName)){caseNameDecl=dispatcherNameDecl.members.members[caseNameDecl__propName];
+               {
+               this.out("      case ", caseNameDecl.name, ":", NL);
+                // call specific class_method
+               this.out("         return ", caseNameDecl.name, "_", dispatcherNameDecl.name, "(this,arguments);", NL);
+                // passs same parameters, same order as dispatcher
+                // C-compiler should optimize this tail-call to a JMP instead of CALL
 
-                        // keep a list of required Headers
-                       var classModule = _with2.getParent(Grammar.Module);
-                       // if classModule not in requiredHeaders
-                       if (requiredHeaders.indexOf(classModule)===-1) {
-                           requiredHeaders.push(classModule);
-                       };
-                   ;
-                   }
-                   
-                   }// end for each property
+                // keep a list of required Headers
+               // if caseNameDecl.funcDecl
+               if (caseNameDecl.funcDecl) {
+                   var classModule = caseNameDecl.funcDecl.getParent(Grammar.Module);
+                   // if classModule not in requiredHeaders
+                   if (requiredHeaders.indexOf(classModule)===-1) {
+                       requiredHeaders.push(classModule);
+                   };
+               };
+               }
+               
+               }// end for each property
 
-               // end for each case
+           // end for each case
 
-               _with1.out("    };", NL);
-               _with1.out("};", NL, NL);
-           ;
+           this.out(NL, '      default:', NL);
+           this.out('         _throw_noMethod(this.constructor,"' + dispatcherNameDecl.name + '");', NL);
+
+           this.out("    };", NL);
+           this.out("};", NL, NL);
            }
            
            }// end for each property
@@ -177,8 +199,12 @@
 
        this.out({h: 1}, NL);
 
-       this.out('#ifndef ' + (this.fileInfo.basename.toUpperCase()) + '_H', NL);
-       this.out('#define ' + (this.fileInfo.basename.toUpperCase()) + '_H', NL, NL);
+       this.out('#ifndef ' + (normalizeDefine(this.fileInfo.outRelFilename)) + '_H', NL);
+       this.out('#define ' + (normalizeDefine(this.fileInfo.outRelFilename)) + '_H', NL, NL);
+
+// include LiteC-core
+
+       this.out('#include "LiteC-core.h"', NL);
 
 // include requiredHeaders from classes used in the dispatcher
 
@@ -199,16 +225,13 @@
        // for each dispatcherNameDecl in map allDispatchersNameDecl.members
        var dispatcherNameDecl=undefined;
        for ( var dispatcherNameDecl__propName in allDispatchersNameDecl.members.members) if (allDispatchersNameDecl.members.members.hasOwnProperty(dispatcherNameDecl__propName)){dispatcherNameDecl=allDispatchersNameDecl.members.members[dispatcherNameDecl__propName];
-         {
-         // with dispatcherNameDecl.funcDecl
-         var _with3=dispatcherNameDecl.funcDecl;
-           _with3.out('extern void* ', _with3.name);
-           _with3.produceParameters('void*'); //type for implicit parameter "this"
-           _with3.out(";", NL);
-         ;
-         }
-         
-         }// end for each property
+           {
+           this.out('extern any ', dispatcherNameDecl.name, "(any this, any arguments);", NL);
+           }
+           
+           }// end for each property
+            //.produceParameters 'void*' //type for implicit parameter "this"
+            //.out ";",NL
 
        this.out(NL, NL, "#endif", NL, NL);
     };
@@ -242,10 +265,10 @@
 // "LiteC-core.h" at the header, the header at the .c
 
        this.out({h: 1}, NL);
-       this.out('#ifndef ' + (this.fileInfo.basename.toUpperCase()) + '_H', NL);
-       this.out('#define ' + (this.fileInfo.basename.toUpperCase()) + '_H', NL, NL);
+       this.out('#ifndef ' + (normalizeDefine(this.fileInfo.outRelFilename)) + '_H', NL);
+       this.out('#define ' + (normalizeDefine(this.fileInfo.outRelFilename)) + '_H', NL, NL);
 
-       this.out('#include "LiteC-core.h"', NL);
+       this.out('#include "_dispatcher.h"', NL);
 
        this.out({h: 0}, NL);
        this.out('#include "' + this.fileInfo.basename + '.h"', NL, NL);
@@ -379,11 +402,11 @@
      Grammar.ThrowStatement.prototype.produce = function(){
          // if .specifier is 'fail'
          if (this.specifier === 'fail') {
-           this.out("throw _new(Error(", this.expr, "))");
+           this.out("throw(new(Error,(any){Array,1,.value.item=(any_arr){", this.expr, "}}));");
          }
          
          else {
-           this.out("throw ", this.expr);
+           this.out("throw(", this.expr, ")");
          };
      };
 
@@ -395,7 +418,8 @@
        this.out("return");
        // if .expr
        if (this.expr) {
-         this.out(" ", this.expr);
+         this.expr.produceType = 'any';
+         this.out(' ', this.expr);
        };
      };
 
@@ -422,8 +446,13 @@
 // A `Operand` is the left or right part of a binary oper
 // or the only Operand of a unary oper.
 
+      // properties
+        // produceType: string #default'number'
+
      // method produce()
      Grammar.Operand.prototype.produce = function(){
+
+       var pre = undefined, post = undefined;
 
        // if .name instance of Grammar.StringLiteral
        if (this.name instanceof Grammar.StringLiteral) {
@@ -438,21 +467,45 @@
                strValue = '"' + strValue + '"'; // enclose in ""
            };
 
+           // if .produceType is 'any'
+           if (this.produceType === 'any') {
+               pre = "any_str(";
+               post = ")";
+           };
+
            // if strValue is '""'
            if (strValue === '""') {
-               this.out("EMPTY_STR");
+               this.out("any_EMPTY_STR");
            }
            
            else {
-               this.out(strValue);
+               this.out(pre, strValue, post);
            };
 
            this.out(this.accessors);
        }
        
+       else if (this.name instanceof Grammar.NumberLiteral) {
+
+           // if .produceType is 'any'
+           if (this.produceType === 'any') {
+               pre = "any_number(";
+               post = ")";
+           };
+
+           this.out(pre, this.name, post, this.accessors);
+       }
+       
+       else if (this.name instanceof Grammar.VariableRef) {
+            // declare .name:Grammar.VariableRef
+           this.name.produceType = this.produceType;
+           this.out(this.name);
+       }
+       
        else {
            this.out(this.name, this.accessors);
        };
+
        // end if
        
      };
@@ -475,6 +528,9 @@
 // 5) `no`      *'falsey' check*       `if no options then options={}`
 // 6) `~`       *bit-unary-negation*   `a = ~xC0 + 5`
 
+      // properties
+        // produceType: string #default'number'
+
      // method produce()
      Grammar.UnaryOper.prototype.produce = function(){
 
@@ -491,19 +547,39 @@
                prepend = "(";
                append = ")";
            };
-       }
-
-// add a space if the unary operator is a word. Example `typeof`
-       
-       else if (/\w/.test(translated)) {
-           translated += " ";
        };
 
-       this.out(translated, prepend, this.right, append);
+
+       // if translated is "new" and .right.name instance of Grammar.VariableRef
+       if (translated === "new" && this.right.name instanceof Grammar.VariableRef) {
+            // declare .right.name:Grammar.VariableRef
+           this.out(this.right.name.calcReference({nameReplace: "new", thisValue: this.right.name.name}));
+       }
+       
+       else {
+           var pre = undefined, post = undefined;
+           // if .produceType is 'any'
+           if (this.produceType === 'any') {
+               pre = "any_number(";
+               post = ")";
+           };
+
+           this.right.produceType = 'number'; //unary opers require numbers
+
+// add a space if the unary operator is a word. Example `typeof`
+
+           // if /\w/.test(translated), translated+=" "
+           if (/\w/.test(translated)) {translated += " "};
+
+           this.out(pre, translated, prepend, this.right, append, post);
+       };
      };
 
 
    // append to class Grammar.Oper ###
+
+      // properties
+          // produceType: string
 
      // method produce()
      Grammar.Oper.prototype.produce = function(){
@@ -535,19 +611,19 @@
 // Check for special cases:
 
 // 1) 'in' operator, requires swapping left and right operands and to use `.indexOf(...)>=0`
-// example: `x in [1,2,3]` -> `_indexOf(x,_literalArray(1,2,3))>=0`
-// example: `x not in [1,2,3]` -> `_indexOf(x,_literalArray(1,2,3))==-1`
-// example: `char not in myString` -> `_indexOf(char,myString)==-1`
+// example: `x in [1,2,3]` -> `indexOf(x,_literalArray(1,2,3))>=0`
+// example: `x not in [1,2,3]` -> `indexOf(x,_literalArray(1,2,3))==-1`
+// example: `char not in myString` -> `indexOf(char,myString)==-1`
 
        // if .name is 'in'
        if (this.name === 'in') {
-           this.out("_indexOf(", this.left, ",", this.right, ")", this.negated ? "==-1" : ">=0");
+           this.out("indexOf(", this.left, ",(any){Array,1,.value.item=(any_arr){", this.right, "}}).value.number", this.negated ? "==-1" : ">=0");
        }
 
 // 2) *'has property'* operator, requires swapping left and right operands and to use js: `in`
        
        else if (this.name === 'has property') {
-           this.out(prepend, "_hasProperty(", this.right, ",", this.left, ")", append);
+           this.out("indexOf(", this.right, ",(any){Array,1,.value.item=(any_arr){", this.left, "}}).value.number", this.negated ? "==-1" : ">=0");
        }
 
 // 3) *'into'* operator (assignment-expression), requires swapping left and right operands and to use: `=`
@@ -566,18 +642,55 @@
 // We out: left,operator,right
        
        else {
-           this.out(prepend, this.left, ' ', operTranslate(oper), ' ', this.right, append);
+
+           var operC = operTranslate(oper);
+           this.left.produceType = [':'].indexOf(operC)>=0 ? 'any' : 'number';
+           this.right.produceType = [':', '?'].indexOf(operC)>=0 ? 'any' : 'number';
+
+           var extra = '', preExtra = '';
+           // if operC isnt '?'
+           if (operC !== '?') {
+               // if .produceType is 'any'
+               if (this.produceType === 'any') {
+                   // if .left.produceType is 'any' and .right.produceType is 'any'
+                   if (this.left.produceType === 'any' && this.right.produceType === 'any') {
+                       // do nothing
+                       null;
+                   }
+                   
+                   else {
+                     preExtra = 'any_number(';
+                     extra = ")";
+                   };
+               }
+               
+               else if (this.produceType === 'number') {
+                   // if .left.produceType is 'number' and .right.produceType is 'number'
+                   if (this.left.produceType === 'number' && this.right.produceType === 'number') {
+                       // do nothing
+                       null;
+                   }
+                   
+                   else {
+                     preExtra = '';
+                     extra = ".value.number";
+                   };
+               };
+           };
+
+
+           this.out(preExtra, prepend, this.left, ' ', operC, ' ', this.right, append, extra);
        };
      };
 
 
    // append to class Grammar.Expression ###
 
+      // properties
+          // produceType: string
+
      // method produce(options)
      Grammar.Expression.prototype.produce = function(options){
-
-        // declare on options
-          // negated
 
 // Produce the expression body, negated if options={negated:true}
 
@@ -612,8 +725,11 @@
 
 // produce the expression body
 
+        // declare valid .root.produceType
+       this.root.produceType = this.produceType;
        this.out(prepend, this.root, append);
      };
+        //.out preExtra, prepend, .root, append, extra
 
 
    // append to class Grammar.VariableRef ###
@@ -626,95 +742,219 @@
  // *access a property of the object : `.`-> PropertyAccess `[`->IndexAccess
  // *assume the variable is a function and perform a function call :  `(`-> FunctionAccess
 
+      // properties
+          // produceType: string # undef = 'number'
+          // isAny: boolean
+
      // method produce()
      Grammar.VariableRef.prototype.produce = function(){
 
 // Prefix ++/--, varName, Accessors and postfix ++/--
 
-       this.out(this.preIncDec, this.varRefToArray(), this.postIncDec);
-     };
+       var result = this.calcReference();
 
-
-     // helper method varRefToArray(upto:Number) returns Object array
-     Grammar.VariableRef.prototype.varRefToArray = function(upto){
-
-         var lastPropAcess = 0;
-         var result = [this.name];
-         // if .accessors
-         if (this.accessors) {
-             // for each inx,ac in .accessors
-             for( var inx=0,ac ; inx<this.accessors.length ; inx++){ac=this.accessors[inx];
-                 // if upto>=0 and inx is upto, break
-                 if (upto >= 0 && inx === upto) {break};
-                 // if ac instanceof Grammar.FunctionAccess
-                 if (ac instanceof Grammar.FunctionAccess) {
-                     // if inx-1 is lastPropAcess  //method call
-                     if (inx - 1 === lastPropAcess) { //method call
-                         var methodName = result.pop();
-                         result.pop();// # remove "->"
-                         result.unshift("" + methodName + "("); //put "methodname(" first - call to dispatcher
-                          // #now at result, we have the instance reference, it stays as value for method's "this"
-                         result.push(','); // add comma and other method's call args
-                         result.push({CSL: ac.args}); // add method args
-                         result.push(')');
-                     }
-                     
-                     else {
-                          // simple fn call (no object method)
-                         result.push('(', {CSL: ac.args}, ')'); // add method args
-                     };
-                 }
-                 
-                 else if (ac instanceof Grammar.PropertyAccess) { // prop access
-                     result.push('->');
-                     result.push(ac.name);
-                     lastPropAcess = inx;
-                 }
-                 
-                 else if (ac instanceof Grammar.IndexAccess) {
-                     result.push('->item[');
-                     result.push(ac.name); //expression
-                     result.push(']');
-                 };
-             };// end for each in this.accessors
-             
-         };
-
-         return result;
-     };
-
-     // end helper method
-
-
-     // helper method getInstanceAccessors() returns Object array
-     Grammar.VariableRef.prototype.getInstanceAccessors = function(){
-
-// This method will get all the accessors up to a method call
-// returns an array, to send to .out
-
-       var upto = 0;
-       // if .accessors
-       if (this.accessors) {
-          // search from the end of the accessor chain, upto the function call
-         upto = this.accessors.length;
-         // while --upto>=0
-         while(--upto >= 0){
-             // if .accessors[upto] instanceof Grammar.FunctionAccess
-             if (this.accessors[upto] instanceof Grammar.FunctionAccess) {
-                //found the function call ()
-               upto--; //move one back
-               // if .accessors[upto] instanceof Grammar.PropertyAccess
-               if (this.accessors[upto] instanceof Grammar.PropertyAccess) {
-                    //is the function name, remove it to get the instance
-                   upto--; //move one back
-               };
-             };
-         };// end loop
-         // end while
-         
+       var 
+       extra = undefined, 
+       pre = undefined, 
+       post = undefined
+       ;
+       // if .produceType is 'number' and .isAny
+       if (this.produceType === 'number' && this.isAny) {
+           extra = '.value.number';
        };
 
-       return this.varRefToArray(upto); //prop chain upto instance on which the function is called
+       // if .produceType is 'any' and not .isAny
+       if (this.produceType === 'any' && !(this.isAny)) {
+           pre = 'any_number(';
+           post = ')';
+       };
+
+       this.out(pre, this.preIncDec, result, extra, this.postIncDec, post);
+     };
+
+     // helper method calcReference(options) returns array of array
+     Grammar.VariableRef.prototype.calcReference = function(options){
+
+       var result = []; //array of arrays
+       var partial = undefined;
+
+       // default options=
+       if(!options) options={};
+       // options.nameReplace: undefined
+       // options.thisValue: undefined
+
+// Start with main variable name, to check property names
+
+       partial = options.nameReplace || this.name;
+       result.push([partial]);
+       this.isAny = true;
+       var actualVar = this.tryGetFromScope(this.name, {informError: true, isForward: true, isDummy: true});
+
+       // if no actualVar, .throwError("var '#{partial}' not found in scope")
+       if (!actualVar) {this.throwError("var '" + partial + "' not found in scope")};
+       // if actualVar.findOwnMember("**proto**") is '**nativeNumber**', .isAny=false
+       if (actualVar.findOwnMember("**proto**") === '**nativeNumber**') {this.isAny = false};
+
+       // if no .accessors, return result
+       if (!this.accessors) {return result};
+
+// now follow each accessor
+
+       var avType = undefined;
+
+       // for each inx,ac in .accessors
+       for( var inx=0,ac ; inx<this.accessors.length ; inx++){ac=this.accessors[inx];
+            // declare valid ac.name
+
+           // if no actualVar
+           if (!actualVar) {
+               this.throwError("processing '" + partial + "', cant follow property chain types");
+           };
+
+// for FunctionAccess
+
+           // if ac.constructor is Grammar.FunctionAccess
+           if (ac.constructor === Grammar.FunctionAccess) {
+
+               partial += "(...)";
+               this.isAny = true;
+
+               // if inx>1 and .accessors[inx-1].constructor isnt Grammar.PropertyAccess
+               if (inx > 1 && this.accessors[inx - 1].constructor !== Grammar.PropertyAccess) {
+                   this.throwError("'" + partial + ".apply' must be used to call a function on a variable");
+               };
+
+               var prevNameArr = result.pop(); //take fn name
+               prevNameArr.push("("); //add "("
+               result.unshift(prevNameArr); // put "methodname(" first - call to dispatcher
+
+               var callParams = undefined;
+               // if inx is 0 //first accessor is function access, is a call to a global function
+               if (inx === 0) { //first accessor is function access, is a call to a global function
+                   callParams = [options.thisValue || "undefined"]; //"this" for global fn call 1st param (this)
+               }
+               
+               else {
+                   callParams = result.pop(); //take instance reference as 1st param (this)
+               };
+
+                //add arguments[]
+               // if ac.args
+               if (ac.args) {
+                   // for each expression in ac.args
+                   for( var expression__inx=0,expression ; expression__inx<ac.args.length ; expression__inx++){expression=ac.args[expression__inx];
+                       expression.produceType = 'any';
+                   };// end for each in ac.args
+                   callParams.push(",(any){Array," + ac.args.length + ",.value.item=(any_arr){", {CSL: ac.args}, "}}");
+               }
+               
+               else {
+                   callParams.push(",EMPTY_ARGS");
+               };
+               callParams.push(")");
+
+               result.push(callParams);
+
+               actualVar = actualVar.findMember('**return type**');
+           }
+                // #the actualVar is now function's return type'
+                // #and next property access should be on defined members of the return type
+
+// for PropertyAccess, we must apply AS(type...) to prev item
+           
+           else if (ac instanceof Grammar.PropertyAccess) {
+
+               partial += "." + ac.name;
+
+               // if ac.name in ['length','constructor'] //native int, part of any_s
+               if (['length', 'constructor'].indexOf(ac.name)>=0) { //native int, part of any_s
+                   result.push([".", ac.name]);
+                   this.isAny = false;
+               }
+               
+               else if (inx + 1 < this.accessors.length && this.accessors[inx + 1].constructor === Grammar.FunctionAccess) {
+                    // next is function access,
+                    // we do not need to derefence this as a pointer. Keep it as "any"
+                   result.push([ac.name]);
+                   this.isAny = true;
+               }
+               
+               else {
+
+                   this.isAny = true;
+                   avType = actualVar.findOwnMember('**proto**');
+                   // if no avType
+                   if (!avType) {
+                       this.sayErr("Can't determine type of '" + partial + "'. Can't code Property Access(.)");
+                       return;
+                   };
+
+                    // #get type name
+                   var typeStr = avType.name;
+                   // if typeStr is 'prototype'
+                   if (typeStr === 'prototype') {
+                       typeStr = avType.parent.name;
+                   };
+                   // end if
+
+                   prevNameArr = result.pop();
+                   prevNameArr.unshift("AS(", typeStr, ",");
+                   prevNameArr.push(")->");
+
+                   result.push(prevNameArr, [ac.name]);
+               };
+
+                //get prop definition
+               actualVar = this.tryGetMember(actualVar, ac.name, {informError: true});
+           }
+
+// else, for IndexAccess, the varRef type is now 'name.value.item[...]'
+// and next property access should be on defined members of the type
+           
+           else if (ac.constructor === Grammar.IndexAccess) {
+
+               partial += "[...]";
+               this.isAny = true;
+
+                // declare ac:Grammar.IndexAccess
+
+                //add .value.item[...]
+               var prevName = result.pop();
+
+               prevName.push(".value.item[", ac.name, "]"); //ac.name is Expression
+               result.push(prevName);
+
+               actualVar = actualVar.findMember('**item type**');
+           };
+
+           // end if //type of accessor
+
+           // if actualVar instanceof Grammar.VariableRef
+           if (actualVar instanceof Grammar.VariableRef) {
+                // declare actualVar:Grammar.VariableRef
+               actualVar = actualVar.tryGetReference({informError: true, isForward: true, isDummy: true});
+           };
+       };// end for each in this.accessors
+
+       // end for #each accessor
+
+       return result;
+     };
+
+
+     // method getTypeName() returns string
+     Grammar.VariableRef.prototype.getTypeName = function(){
+
+         var avType = this.tryGetReference({informError: true, isForward: true, isDummy: true});
+          // #get type name
+         var typeStr = avType.name;
+         // if typeStr is 'prototype'
+         if (typeStr === 'prototype') {
+             typeStr = avType.parent.name;
+         };
+         // end if
+
+         return typeStr;
      };
 
    // append to class Grammar.AssignmentStatement ###
@@ -722,7 +962,10 @@
      // method produce()
      Grammar.AssignmentStatement.prototype.produce = function(){
 
-       this.out(this.lvalue, ' ', operTranslate(this.name), ' ', this.rvalue);
+       this.out(this.lvalue, ' ', operTranslate(this.name), ' ');
+       // if .lvalue.isAny, .rvalue.produceType = 'any'
+       if (this.lvalue.isAny) {this.rvalue.produceType = 'any'};
+       this.out(this.rvalue);
      };
 
 
@@ -776,44 +1019,6 @@
 
 
     // #end helper recursive functions
-
-
-// -----------
-// ## Accessors
-// 1) Property access "." translates to pointer dereference "->"
-// 2) Function access "()", if it's a method, we must add "->call" to access
-// the class jmp table. Also we must add the object as first parameter (this)
-// 3) IndexAccess: we use C's built in `[ ]` accessor
-
-   // append to class Grammar.PropertyAccess ##
-     // method produce()
-     Grammar.PropertyAccess.prototype.produce = function(){
-       this.out("->", this.name);
-     };
-
-   // append to class Grammar.FunctionAccess
-     // method produce()
-     Grammar.FunctionAccess.prototype.produce = function(){
-        // declare .parent:Grammar.VariableRef
-       // if .parent.accessors[0] is this //simple function call
-       if (this.parent.accessors[0] === this) { //simple function call
-           this.out("(");
-       }
-       
-       else {
-            //member?
-           this.out("->call(");
-           this.out(this.parent.getInstanceAccessors(), ", "); //value for "this" param
-       };
-       // end if
-       this.out({CSL: this.args}, ")");
-     };
-
-   // append to class Grammar.IndexAccess
-     // method produce()
-     Grammar.IndexAccess.prototype.produce = function(){
-       this.out("[", this.name, "]");
-     };
 
 // -----------
 
@@ -971,8 +1176,8 @@
 
        // for each item:Grammar.ImportStatementItem in .list
        for( var item__inx=0,item ; item__inx<this.list.length ; item__inx++){item=this.list[item__inx];
-         var requireParam = item.importParameter ? item.importParameter.getValue() : item.name;
-         this.out('#include "', requireParam, '.h"', NL);
+           var requireParam = item.importParameter ? item.importParameter.getValue() : item.name;
+           this.out('#include "', requireParam, '.h"', NL);
        };// end for each in this.list
 
        this.skipSemiColon = true;
@@ -989,40 +1194,36 @@
 // It's a `var` keyword or we're declaring function parameters.
 // In any case starts with the variable name
 
-         // if no .nameDecl, .sayErr "INTERNAL ERROR: var '#{.name}' has no .nameDecl"
-         if (!this.nameDecl) {this.sayErr("INTERNAL ERROR: var '" + this.name + "' has no .nameDecl")};
-         var typeNameDecl = this.nameDecl.findMember("**proto**");
-         var typeStr = undefined;
-         // if no typeNameDecl
-         if (!typeNameDecl) {
-              //.sayErr "can't determine type for var '#{.name}'"
-              // if no explicit type assume "any"
-             typeStr = 'any';
-         }
-              // if no explicit type assume "any"
-         
-         else {
-             typeStr = typeNameDecl.name;
-             // if typeNameDecl.name is 'prototype'
-             if (typeNameDecl.name === 'prototype') {
-                 var parentName = typeNameDecl.parent.name;
-                 typeStr = parentName === 'String' ? 'str' : "" + parentName + "_ptr";
-             };
-             // end if
-             
-         };
+         this.out('any ', this.name);
 
-         this.out(typeStr, ' ', this.name);
+//           if no .nameDecl, .sayErr "INTERNAL ERROR: var '#{.name}' has no .nameDecl"
+//           var typeNameDecl = .nameDecl.findMember("**proto**")
+//           var typeStr
+//           if no typeNameDecl
+//               //.sayErr "can't determine type for var '#{.name}'"
+//               // if no explicit type assume "any"
+//               typeStr = 'any'
+//           else
+//               typeStr = typeNameDecl.name
+//               if typeNameDecl.name is 'prototype'
+//                   var parentName = typeNameDecl.parent.name
+//                   typeStr = parentName is 'String'?'str' else "#{parentName}_ptr";
+//               end if
+//           .out typeStr ,' ', .name
+//           
 
           // declare valid .keyword
-         
-     };
 
 // If this VariableDecl come from a 'var' statement, we force assignment (to avoid subtle bugs,
 // in LiteScript, 'var' declaration assigns 'undefined')
 
-          //if .parent instanceof Grammar.VarStatement and .assignedValue
-          //    .out ' = ',.assignedValue
+         // if .parent instanceof Grammar.VarStatement
+         if (this.parent instanceof Grammar.VarStatement) {
+             // if .assignedValue, .assignedValue.produceType='any'
+             if (this.assignedValue) {this.assignedValue.produceType = 'any'};
+             this.out(' = ', this.assignedValue || 'undefined');
+         };
+     };
 
 // else, this VariableDecl come from function parameters decl,
 // if it has AssginedValue, we out assignment if ES6 is available.
@@ -1150,28 +1351,28 @@
        // if .iterable.operandCount>1 or .iterable.root.name.hasSideEffects or .iterable.root.name instanceof Grammar.Literal
        if (this.iterable.operandCount > 1 || this.iterable.root.name.hasSideEffects || this.iterable.root.name instanceof Grammar.Literal) {
            listName = ASTBase.getUniqueVarName('list');// #unique temp listName var name
-           this.out("Array_ptr ", listName, "=", this.iterable, ";", NL);
+           this.out("any ", listName, "=", this.iterable, ";", NL);
        }
        
        else {
            listName = this.iterable;
        };
 
-       // if .isMap, .out "any ",.indexVar,";",NL
-       if (this.isMap) {this.out("any ", this.indexVar, ";", NL)};
-       this.out("any ", this.mainVar.name, ";", NL);
+       // if .isMap, .out "any ",.indexVar,"=undefined;",NL
+       if (this.isMap) {this.out("any ", this.indexVar, "=undefined;", NL)};
+       this.out("any ", this.mainVar.name, "=undefined;", NL);
 
        var intIndexVarName = undefined;
        // if no .indexVar or .isMap
        if (!this.indexVar || this.isMap) {
-         intIndexVarName = {name: this.mainVar.name + '__inx', assignedValue: 0};// #default index var name
+         intIndexVarName = this.mainVar.name + '__inx';
        }
        
        else {
-         intIndexVarName = this.indexVar;
+         intIndexVarName = this.indexVar.name;
        };
 
-       this.out("for(int ", intIndexVarName, "=", this.indexVar.assignedValue || "0", " ; ", intIndexVarName, "<", listName, "->length", " ; ", intIndexVarName, "++){");
+       this.out("for(int ", intIndexVarName, "=", this.indexVar.assignedValue || "0", " ; ", intIndexVarName, "<", listName, ".length", " ; ", intIndexVarName, "++){");
 
        // if .isMap
        if (this.isMap) {
@@ -1209,11 +1410,17 @@
 
         // declare valid .endExpression.produce
 
-       this.out("for(int ", this.indexVar.name, "=", this.indexVar.assignedValue || "0", "; ");
+        // indicate .indexVar is a native number, so no ".value.number" required to produce a number
+       this.indexVar.nameDecl.members.set('**proto**', '**nativeNumber**');
+
+       this.indexVar.assignedValue.produceType = 'number';
+
+       this.out("for(int64_t ", this.indexVar.name, "=", this.indexVar.assignedValue || "0", "; ");
 
        // if .conditionPrefix is 'to'
        if (this.conditionPrefix === 'to') {
             // #'for n=0 to 10' -> for(n=0;n<=10;...
+           this.endExpression.produceType = 'number';
            this.out(this.indexVar.name, "<=", this.endExpression);
        }
        
@@ -1442,40 +1649,27 @@
           //    .out "Object.defineProperty(",NL,
           //          className, ",'",.name,"',{value:function",generatorMark
           //else
-         this.out(this.type || 'void', ' ');
-         this.out(className, '__', this.name);
+          //.out .type or 'void',' '
+         this.out('any ', className, '_', this.name);
 
          addThis = true;
 
 // For C production, we're using a dispatcher for each method name
 
-          // look in existing dispatchers
-         // if not allDispatchersNameDecl.findOwnMember(.name) into var dispatcherNameDecl
-         var dispatcherNameDecl=undefined;
-         if (!((dispatcherNameDecl=allDispatchersNameDecl.findOwnMember(this.name)))) {
-             dispatcherNameDecl = allDispatchersNameDecl.addMember(this.name);
-             dispatcherNameDecl.funcDecl = this; // first method found makes parameters model
-         };
-          //create a case for the class in the dispatcher
-         // if dispatcherNameDecl.findOwnMember(className)
-         if (dispatcherNameDecl.findOwnMember(className)) {
-             this.throwError("DUPLICATED METHOD: a method named '" + this.name + "' already exists for class '" + className + "'");
-         };
-         var caseNameDecl = dispatcherNameDecl.addMember(className);
-          // #store a pointer to this FunctonDeclaration, to later code case call w parameters
-         caseNameDecl.funcDecl = this;
+         this.addMethodDispatcher(this.name, className);
      }
-
 
 // else is a simple function
      
      else {
-         this.out(this.type || 'void', ' ', this.name);
+          //.out .type or 'void',' ',.name
+         this.out('any ', ' ', this.name);
      };
 
-// Now, funtion parameters
+// Now, function parameters
 
-     this.produceParameters(className);
+     this.out('(any this, any arguments)');
+      //.produceParameters className
 
 // if 'nice', produce default nice body, and then the generator header for real body
 
@@ -1492,10 +1686,37 @@
 
 // start body
 
-     this.out("{", this.getEOLComment());
-
      // if no .body, .throwError 'function #{.name} has no body'
      if (!this.body) {this.throwError('function ' + this.name + ' has no body')};
+
+     this.out("{", this.getEOLComment());
+     this.out(NL, "// validate param types", NL);
+     // if className, .out "assert(this.constructor==",className,");",NL
+     if (className) {this.out("assert(this.constructor==", className, ");", NL)};
+     this.out("assert(arguments.constructor==Array);", NL);
+     this.out("//---------", NL);
+     // if .paramsDeclarations and .paramsDeclarations.length
+     if (this.paramsDeclarations && this.paramsDeclarations.length) {
+         this.out("// define named params", NL);
+         var namedParams = [];
+         // if .paramsDeclarations and not .compilerVar('ES6')
+         if (this.paramsDeclarations && !(this.compilerVar('ES6'))) {
+             // for each paramDecl in .paramsDeclarations
+             for( var paramDecl__inx=0,paramDecl ; paramDecl__inx<this.paramsDeclarations.length ; paramDecl__inx++){paramDecl=this.paramsDeclarations[paramDecl__inx];
+               namedParams.push(paramDecl.name);
+             };// end for each in this.paramsDeclarations
+             
+         };
+         this.out("any ", {CSL: namedParams}, ";", NL);
+         this.out(namedParams.join("="), "=undefined;", NL);
+         this.out("switch(arguments.length){", NL);
+         // for inx=namedParams.length-1, while inx>=0, inx--
+         for( var inx=namedParams.length - 1; inx >= 0; inx--) {
+             this.out("  case " + (inx + 1) + ":" + (namedParams[inx]) + "=arguments.value.item[" + inx + "];", NL);
+         };// end for inx
+         this.out("}", NL);
+         this.out("//---------", NL);
+     };
 
 // if is __init, assign initial values for properties
 
@@ -1527,6 +1748,7 @@
 
 // if params defaults where included, we assign default values to arguments
 // (if ES6 enabled, they were included abobve in ParamsDeclarations production )
+
 // no on C
 //           if .paramsDeclarations and not .compilerVar('ES6')
 //               for each paramDecl in .paramsDeclarations
@@ -1534,6 +1756,7 @@
 //                     .body.assignIfUndefined paramDecl.name, paramDecl.assignedValue
 //               #end for
 //           #end if
+//     
 
 // now produce function body
 
@@ -1568,15 +1791,17 @@
          this.out("extern ");
          // if this is instance of Grammar.MethodDeclaration
          if (this instanceof Grammar.MethodDeclaration) {
-             this.out(this.type || 'void', ' ');
-             this.out(className, '__', this.name);
+              //.out .type or 'void',' '
+             this.out('any ', className, '_', this.name);
          }
+              //.out .type or 'void',' '
          
          else {
-             this.out(this.type || 'void', ' ', this.name);
+             this.out('any ', ' ', this.name);
          };
 
-         this.produceParameters(className);
+         this.out('(any this, any arguments)');
+          //.produceParameters className
 
          this.out(";", NL, {h: 0});
      };
@@ -1614,52 +1839,23 @@
      // method produce()
      Grammar.PrintStatement.prototype.produce = function(){
 
-       var format = [];
-       var callToString = [];
-
-       // for each inx,arg:Grammar.Expression in .args
-       for( var inx=0,arg ; inx<this.args.length ; inx++){arg=this.args[inx];
-           var nameDecl = arg.getResultType();
-           // if no nameDecl
-           if (!nameDecl) {
-               this.sayErr("print: can't determine type of expr #" + (inx + 1) + ": " + arg);
-           }
-           
-           else if (nameDecl.name === 'int') {
-               format.push("%d");
-           }
-           
-           else if (nameDecl.name === 'float') {
-               format.push("%f");
-           }
-            //else if nameDecl.name is 'str'
-           
-           else if (nameDecl.name === 'prototype') {
-               format.push("%s");
-               callToString[inx] = true;
-           }
-           
-           else {
-               this.sayErr("don't know format code for type '" + (nameDecl.composedName()) + "' of expr #" + (inx + 1) + ": " + arg);
-           };
-           // end if
-           
+       // for each expression in .args
+       for( var expression__inx=0,expression ; expression__inx<this.args.length ; expression__inx++){expression=this.args[expression__inx];
+           expression.produceType = 'any';
        };// end for each in this.args
-       // end for
 
-       this.out('printf("', format.join(' '), '",');
-       // for each inx,arg:Grammar.Expression in .args
-       for( var inx=0,arg ; inx<this.args.length ; inx++){arg=this.args[inx];
-           // if callToString[inx]
-           if (callToString[inx]) {
-               this.out("toString(", arg, ")");
-           }
-           
-           else {
-               this.out(arg);
-           };
-       };// end for each in this.args
-       this.out(')');
+       // if .args.length > 1
+       if (this.args.length > 1) {
+           this.out('print((any){Array,' + this.args.length + ',.value.item=(any_arr){', {CSL: this.args}, '}})');
+       }
+       
+       else if (this.args.length === 1) {
+           this.out('print(', {CSL: this.args}, ')');
+       }
+       
+       else {
+           this.out('printf("\\n")');
+       };
      };
 
 // --------------------
@@ -1795,7 +1991,7 @@
        };
 
         // generate unique class id
-       this.out("#define " + this.name + "__CLASS ", ASTBase.getUniqueID('CLASS'), NL);
+       this.out("#define " + this.name + " ", ASTBase.getUniqueID('CLASS'), NL);
 
        this.out(NL, "// declare:", NL);
        this.out("// " + this.name + "_ptr : type = ptr to instance", NL);
@@ -2159,5 +2355,30 @@
          this.out(NL, "//if(", name, '==NULL) ', name, "=", value, ";", NL);
     };
 
+
+    // helper method addMethodDispatcher(methodName,className)
+    ASTBase.prototype.addMethodDispatcher = function(methodName, className){
+
+// For C production, we're using a dispatcher for each method name
+
+          // look in existing dispatchers
+         // if not allDispatchersNameDecl.findOwnMember(methodName) into var dispatcherNameDecl
+         var dispatcherNameDecl=undefined;
+         if (!((dispatcherNameDecl=allDispatchersNameDecl.findOwnMember(methodName)))) {
+             dispatcherNameDecl = allDispatchersNameDecl.addMember(methodName);
+         };
+          //create a case for the class in the dispatcher
+         // if dispatcherNameDecl.findOwnMember(className)
+         if (dispatcherNameDecl.findOwnMember(className)) {
+             this.throwError("DUPLICATED METHOD: a method named '" + methodName + "' already exists for class '" + className + "'");
+         };
+         var caseNameDecl = dispatcherNameDecl.addMember(className);
+
+          // #store a pointer to this FunctonDeclaration, to later code case call w parameters
+         // if this is instance of Grammar.FunctionDeclaration
+         if (this instanceof Grammar.FunctionDeclaration) {
+             caseNameDecl.funcDecl = this;
+         };
+    };
 
 // --------------------------------

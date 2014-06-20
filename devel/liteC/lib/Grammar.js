@@ -455,7 +455,7 @@
    // constructor
    function ReturnStatement(){// default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
-      // properties expr
+      // properties expr:Expression
    };
    // ReturnStatement (extends|proto is) ASTBase
    ReturnStatement.prototype.__proto__ = ASTBase.prototype;
@@ -832,6 +832,7 @@
 // Get index variable name (to store property names)
 
        this.indexVar = this.req(VariableDecl);
+       this.indexVar.type = "string";
 
 // if comma present, get main variable name (to store property value)
 
@@ -4109,8 +4110,7 @@
        this.type.name = autoCapitalizeCoreClasses(this.type.name);
 
         //ifdef PROD_C
-       // if .type.name is 'String', .type.name = 'str'
-       if (this.type.name === 'String') {this.type.name = 'str'};
+        //if .type.name is 'String', .type.name = 'str'
         // #endif
 
        // if .isMap

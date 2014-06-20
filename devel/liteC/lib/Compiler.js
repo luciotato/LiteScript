@@ -3,13 +3,13 @@
 // ==============================
 // LiteScript is a highly readable language that compiles to JavaScript.
 
-   var version = '0.8.0';
+   var version = '0.8.1';
    // export
    module.exports.version = version;
 
     //compiler generate(lines:string array)
     //    lines.push "export var buildDate = '#{new Date.toISOString()}'"
-   var buildDate = '20140617';
+   var buildDate = '20140618';
    // export
    module.exports.buildDate = buildDate;
 

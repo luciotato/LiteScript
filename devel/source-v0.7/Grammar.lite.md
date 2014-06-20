@@ -3163,11 +3163,12 @@ check for 'array', e.g.: `var list : array of NameDeclaration`
 
         if .opt('array')
             .type = 'Array'
-            .req('of')
-            .itemType = .req(VariableRef) #reference to an existing class
-            #auto-capitalize core classes
-            declare .itemType:VariableRef
-            .itemType.name = autoCapitalizeCoreClasses(.itemType.name)
+            if .opt('of')
+                .itemType = .req(VariableRef) #reference to an existing class
+                //auto-capitalize core classes
+                declare .itemType:VariableRef
+                .itemType.name = autoCapitalizeCoreClasses(.itemType.name)
+            end if
             return
 
 Check for 'map', e.g.: `var list : map string to NameDeclaration`
@@ -3175,9 +3176,13 @@ Check for 'map', e.g.: `var list : map string to NameDeclaration`
         .isMap = .opt('map')
 
         .type = .req(VariableRef) #KEYS: reference to an existing class
-        #auto-capitalize core classes
+        //auto-capitalize core classes
         declare .type:VariableRef
         .type.name = autoCapitalizeCoreClasses(.type.name)
+        
+        #ifdef PROD_C
+        if .type.name is 'String', .type.name = 'str'
+        #endif
 
         if .isMap
             .req('to')
@@ -3190,5 +3195,3 @@ Check for 'map', e.g.: `var list : map string to NameDeclaration`
             if .opt('Array','array')
                 .itemType = .type #assign as sub-type
                 .type = 'Array'
-
-

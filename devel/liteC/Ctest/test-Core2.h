@@ -1,8 +1,10 @@
-#ifndef TEST-CORE2_H
-#define TEST-CORE2_H
-#include "LiteC-core.h"
+#ifndef TEST_CORE2_C_H
+#define TEST_CORE2_C_H
+#include "_dispatcher.h"
    
    #include "Core2.h"
    
-   extern void test();
+   
+   extern any  testCore2(any this, any arguments);
+   
 #endif

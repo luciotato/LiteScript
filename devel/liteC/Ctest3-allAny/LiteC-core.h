@@ -1,12 +1,6 @@
 /*
  * Author: ltato
  *
- * Name of Class = TypeID
- * instance = Class_s (struct)
- * ptr = Class_ptr (pointer)
- *
- * When mentioned in code/passed as params, means TypeID (uint32)
- * When used as type => Class_t
  *
  */
 
@@ -18,49 +12,22 @@
 #include "exceptions.h"
 
 
-// initFn_t is a ptr to: void function(Object)
-    typedef any (*initFn_t)(any this,any args);
-
     extern any String__init(any this, any args);
 
     extern str _toStr(any o); //converts core values only
     extern str _anyValuePtr_toStr(anyValue* this, TypeID type); //to call on any native prop
 
 
-//-------
-// Array
-
-    //declare:
-    // struct-Array = struct with instance properties
-    // String = ptr to struct-Array
-    typedef struct Array_s {
-        int32_t   length;     // # of elements
-        any *     item;       // Object items base pointer
-        size_t    size;       // elements alloc'd
-        TypeID    itemClass;  // Class_ID of each item / UNDEFINED
-
-    } * Array_ptr;
-
-//-------
-// Error
-
-    //declare:
-    // struct-Error = struct with instance properties
-    // Error = ptr to struct-Error
-    typedef struct Error_s {
-        str         message;
-        str         name;
-
-    } * Error_ptr;
-
-
 //------------------------
 // export helper functions
-// new - alloc mem space
+// new - mem_alloc mem space
 // and init Object properties (first part of memory space)
 
     extern any new(TypeID type, any args);
 
+    extern any _newErr(str message);
+
+    extern void throwErr(str message);
     extern void _throw_noMethod(TypeID type, str methodName);
 
     extern void LiteC_registerCoreClasses();
@@ -69,22 +36,37 @@
                 TypeID requiredID,
                 str name,
                 TypeID super, //proto type ID. Which type this type extends
-                initFn_t initFn,
+                function_ptr initFn,
                 size_t instanceSize
                 );
 
 //------------------------
-// export core dispatchers
+// export core class methods
 
-    extern int _push(any o, any value);
+    extern any _uptoString_concat(any this, any arguments);
 
-    extern str Object_toString(any this);
+    extern any String_toString(any this, any arguments);
+    extern any String_indexOf(any this, any arguments);
+    extern any String_split(any this, any arguments);
+    extern any String_slice(any this, any arguments);
+    extern any String_concat(any this, any arguments);
 
-    extern str Error_toString(Error_ptr this);
+    extern any Array_toString(any this, any arguments);
+    extern any Array_push(any anyThis, any anyArgs);
+    extern any Array_indexOf(any this, any arguments);
+    extern any Array_slice(any this, any arguments);
+    extern any Array_concat(any this, any arguments);
 
-    extern str Array_toString(Array_ptr this);
+    extern any Map_toString(any anyThis, any anyArgs); //Map = js Object, array of props
+    extern any Map_get(any anyThis, any anyArgs); //Map = js Object, array of props
+    extern any Map_has(any anyThis, any anyArgs); //Map = js Object, array of props
+    extern any Map_set(any anyThis, any anyArgs); //Map = js Object, array of props
+    extern any Map_delete(any anyThis, any anyArgs); //Map = js Object, array of props
+    extern any Map_clear(any anyThis, any anyArgs); //Map = js Object, array of props
 
-    extern int Array_push(Array_ptr this, any value);
+    extern any Error_toString(any anyThis, any anyArgs);
+
+    extern void print(any arguments);
 
 
 //-------
@@ -92,7 +74,7 @@
 
     struct ClassInfo {
         str       name;         // type name
-        initFn_t  __init;       // executable initialization code
+        function_ptr  __init;       // executable initialization code
         size_t    instanceSize; // size de la struct que crea
         TypeID   super;        // super type
 

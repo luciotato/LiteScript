@@ -34,7 +34,7 @@ Core2
 
             var result:string
             for n=start to endPos 
-                result += .myArr[n] + ' '
+                result.concat .myArr[n],' '
 
             return result
 

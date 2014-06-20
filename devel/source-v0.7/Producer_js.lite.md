@@ -713,6 +713,7 @@ Handle by using a js/C standard for(;;){} loop
         if .conditionPrefix is 'to'
             #'for n=0 to 10' -> for(n=0;n<=10;...
             .out .indexVar.name,"<=",.endExpression
+            if .increment, .sayErr "Do not use 'for... to' and a increment statement. Use 'while|until'"
 
         else # is while|until
 
