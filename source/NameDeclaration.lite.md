@@ -10,7 +10,7 @@ Dependencies
 #### properties
 
       name: string
-      members
+      members: NameDeclaration array
       nodeDeclared: ASTBase
       parent: NameDeclaration
       type, itemType
@@ -160,7 +160,7 @@ If this item has a different case than the name we're adding, emit error
             return true
 
 
-#### helper method addMember(nameDecl:NameDeclaration, options, nodeDeclared) 
+#### helper method addMember(nameDecl:NameDeclaration, options, nodeDeclared) returns NameDeclaration
 Adds passed NameDeclaration to .members[].
 Reports duplicated.
 returns: Identifier
@@ -262,7 +262,7 @@ exported as members of export default class NameDeclaration
 
 ### export helper function fixSpecialNames(text:string)
 
-      if text in ['__proto__','NaN','Infinity','undefined','null','false','true'] # not good names
+      if text in ['__proto__','NaN','Infinity','undefined','null','false','true','constructor'] # not good names
         return '|'+text+'|'
       else
         return text

@@ -13,8 +13,6 @@ All the parts of the lexer work with "arrays" of lines.
 The first lexer pass analyzes entire lines. 
 Each line of the array is classified with a 'Line Type':
 
-    var LineTypes = {CODE:0, COMMENT:1, BLANK:2}
-
 then each CODE line is *Tokenized*, getting a `tokens[]` array
 
 -------------------------
@@ -27,7 +25,7 @@ then each CODE line is *Tokenized*, getting a `tokens[]` array
 The Lexer Class
 ===============
 
-### Class Lexer
+### export default Class Lexer
 
 The Lexer class turns the input lines into an array of "infoLines"
 
@@ -491,9 +489,15 @@ This method handles #ifdef/#else/#endif as multiline comments
             .project.setCompilerVar words[1],false
             return false
 
-        var startCol = line.indexOf("#ifdef ")
-        if startCol<0, startCol = line.indexOf("#if def ")
-        if startCol<0, return 
+        var invert = false
+
+        var pos = line.indexOf("#ifdef ")
+
+        if pos<0 
+            pos = line.indexOf("#ifndef ")
+            invert = true
+
+        if pos<0, return 
 
         //get rid of quoted strings. Still there?
         if String.replaceQuoted(line,"").indexOf("#if")<0
@@ -501,10 +505,13 @@ This method handles #ifdef/#else/#endif as multiline comments
 
         var startRef = "while processing #ifdef started on line #{startSourceLine}"
 
-        words = line.slice(startCol).split(' ')
+        words = line.slice(pos).split(' ')
         var conditional = words[1]
         if no conditional, .throwErr "#ifdef; missing conditional"
         var defValue = .project.compilerVar(conditional)
+        if invert, defValue = not defValue //if it was "#ifndef"
+
+        .replaceSourceLine .line.replace(/\#if/g,"//if")
 
         var endFound=false
         do
@@ -514,7 +521,7 @@ This method handles #ifdef/#else/#endif as multiline comments
             
             if line.search(/\S/) into var indent >= 0
                 line = line.trim()
-                if line[0] is '#' //expected: #else, #endif #end if
+                if line[0] is '#' and line[1] isnt '#' //expected: #else, #endif #end if
                     words = line.split(' ')
                     switch words[0] 
                         case '#else':
@@ -535,7 +542,7 @@ This method handles #ifdef/#else/#endif as multiline comments
         loop until endFound
 
         #rewind position after #ifdef, reprocess lines
-        .sourceLineNum = startSourceLine
+        .sourceLineNum = startSourceLine -1 
         return true #OK, lines processed
 
 
@@ -974,16 +981,29 @@ If its a string constant, and it has `#{`|`${`, process the **Interpolated Expre
 
                     declare parsed:Array
 
-                    #parse the string, splitting at #{...}, return array 
+                    #parse the quoted string, splitting at #{...}, return array 
                     var parsed = String.splitExpressions(match, lexer.stringInterpolationChar)
 
-                    #if the first expression starts with "(", we add `"" + ` so the parentheses
-                    # can't be mis-parsed as a "function call"
-                    if parsed.length and parsed[0].startsWith("(")
-                      parsed.unshift('""')
+For C generation, replace string interpolation
+with a call to core function "concat"
 
-                    #join expressions using +, so we have a valid composed expression, evaluating to a string.
+                #ifdef PROD_C
+                    
+                    // code a call to "concat" to handle string interpolation
+                    var composed = new InfoLine(lexer, LineTypes.CODE, token.column, 
+                        "any_concat(#{parsed.join(',')})", .sourceLineNum  )
+
+                #else //-> JavaScript
+                    //if the first expression isnt a quoted string constant
+                    // we add `"" + ` so: we get string concatenation from javascript.
+                    // Also: if the first expression starts with `(`, LiteScript can 
+                    // mis-parse the expression as a "function call"
+                    if parsed.length and parsed[0][0] isnt match[0] //match[0] is the quote: ' or "
+                        parsed.unshift "''" // prepend ''
+
+                    //join expressions using +, so we have a valid composed expression, evaluating to a string.
                     var composed = new InfoLine(lexer, LineTypes.CODE, token.column, parsed.join(' + '), .sourceLineNum  )
+                #end if
 
                     #Now we 'tokenize' the new composed expression
                     composed.tokenize(lexer)
@@ -1126,9 +1146,14 @@ text before endCode, goes into multiline section
 
         this.postIndent = endCol+endCode.length
 
+    end class Lexer
 
 ------------------------
-----------------------------------------------------------------------------------------------
+
+Exported Module vars
+------------------------
+
+    export var LineTypes = {CODE:0, COMMENT:1, BLANK:2}
 
 ### Public Helper Class OutCode
 This class contains helper methods for AST nodes's `produce()` methods
@@ -1139,11 +1164,13 @@ It also handles SourceMap generation for Chrome Developer Tools debugger and Fir
       lineNum, column
       currLine:string
       lines:string array
+      hLines:string array
       lastOriginalCodeComment
       lastOutCommentLine
       sourceMap
       browser:boolean
       exportNamespace
+      toHeader:boolean
 
 #### Method start(options)
 Initialize output array
@@ -1154,14 +1181,20 @@ Initialize output array
         .lineNum=1
         .column=1
         .lines=[]
+        .hLines=[] //header file lines
         
         .lastOriginalCodeComment = 0
         .lastOutCommentLine = 0
 
-        #if do generate sourceMap and in node
+if sourceMap option is set, and we're in node generating .js
+
+        #ifdef PROD_C
+        do nothing
+        #else
         if not options.nomap and type of process isnt 'undefined' # in node
               import SourceMap
               .sourceMap = new SourceMap
+        #end if
 
 #### Method put(text:string)
 put a string into produced code
@@ -1187,8 +1220,11 @@ send the current line
 
           if .currLine or .currLine is ""
               debug  .lineNum, .currLine
-              .lines.push .currLine
-              .lineNum++
+              if .toHeader
+                .hLines.push .currLine
+              else
+                .lines.push .currLine
+                .lineNum++
 
 clear current line
 
@@ -1208,12 +1244,20 @@ if there's something on the line, start a new one
           .startNewLine
 
 
-#### method getResult()
+#### method getResult(header:boolean)
 get result and clear memory      
 
+        .toHeader = header
         .startNewLine() #close last line
-        var result = .lines
-        .lines = []
+        var result
+        if header
+            result = .hLines
+            .hLines = []
+        else
+            result = .lines
+            .lines = []
+
+        .toHeader = false
         return result
 
 #### helper method markSourceMap(indent) returns object
@@ -1226,19 +1270,12 @@ get result and clear memory
 
 #### helper method addSourceMap(mark, sourceLin, sourceCol, indent)
 
+        #ifdef PROD_C
+        do nothing
+        #else
         if .sourceMap
             declare on mark 
                 lin,col
-            #.sourceMap.add ( (sourceLin or 1)-1, (sourceCol or 1)-1,   
-            #                 mark.lin, mark.col )
             .sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
+        #endif
 
-------------------------
-Exports
-=======
-
-    
-    #make LineTypes const available as .lexer.LineTypes
-    Lexer.prototype.LineTypes = LineTypes
-
-    module.exports = Lexer 

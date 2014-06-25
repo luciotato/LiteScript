@@ -20,7 +20,6 @@
 
    // import log
    var log = require('./log');
-   var debug = log.debug;
 
 // We extend the Grammar classes, so this module require the `Grammar` module.
 
@@ -178,15 +177,17 @@
 
 
 // #### Pass 1.2 connectImportRequire
-// check `x=require('y')` calls.
-// Make var x point to required module 'y' exports
+// handle: import x
+// also check `x=require('x')` calls.
+// Make var x point to required module 'x' exports
 
         // declare valid project.moduleCache
 
        log.info("- Connecting Imported");
        // for each moduleNode:Grammar.Module in map project.moduleCache
        var moduleNode=undefined;
-       for ( var moduleNode__propName in project.moduleCache.members) if (project.moduleCache.members.hasOwnProperty(moduleNode__propName)){moduleNode=project.moduleCache.members[moduleNode__propName];
+       if(!project.moduleCache.map_members) throw(new Error("for each in map: not a Map, no .map_members"));
+       for ( var moduleNode__propName in project.moduleCache.map_members) if (project.moduleCache.map_members.hasOwnProperty(moduleNode__propName)){moduleNode=project.moduleCache.map_members[moduleNode__propName];
          {
 
          // for each node in moduleNode.requireCallNodes
@@ -198,9 +199,9 @@
            if (node.importedModule) {
 
              var parent = undefined;
-             var reference = undefined;
+             var referenceNameDecl = undefined; //var where to import exported module members
 
-              // declare valid parent.lvalue.tryGetReference
+              // declare valid parent.lvalue.tryGetReferenceNameDecl
               // declare valid parent.nameDecl
 
 // if node is Grammar.ImportStatementItem
@@ -208,28 +209,48 @@
              // if node instance of Grammar.ImportStatementItem
              if (node instanceof Grammar.ImportStatementItem) {
                   // declare node:Grammar.ImportStatementItem
-                 reference = node.nameDecl;
+                 referenceNameDecl = node.nameDecl;
 
-// if we processed a 'global declare' command, all exported should go to the global scope
+// if we process a 'global declare' command (interface)
+// all exported should go to the global scope.
 
-                 // if node.getParent(Grammar.DeclareStatement)
-                 if (node.getParent(Grammar.DeclareStatement)) {
-                     // for each nameDecl in map node.importedModule.exports.members
-                     var nameDecl=undefined;
-                     for ( var nameDecl__propName in node.importedModule.exports.members.members) if (node.importedModule.exports.members.members.hasOwnProperty(nameDecl__propName)){nameDecl=node.importedModule.exports.members.members[nameDecl__propName];
-                         {
-                          // #declare valid project.root.addToScope
-                         project.root.addToScope(nameDecl);
-                         }
+// If the imported module exports a class, e.g.: "export default class Args",
+// 'importedModule.exports' points to the class 'protoype'. To add to global scope
+// we need to use the class-name, but lowercased, acting as a singleton
+// which is the same effect of node-js: var fs=require('fs')
+
+                 // if node.getParent(Grammar.DeclareStatement) isnt undefined
+                 if (node.getParent(Grammar.DeclareStatement) !== undefined) {
+                     var moveWhat = node.importedModule.exports;
+                      // #if the module exports a "class-function", move to global with class name
+                     // if moveWhat.findOwnMember('prototype') into var protoExportNameDecl
+                     var protoExportNameDecl=undefined;
+                     if ((protoExportNameDecl=moveWhat.findOwnMember('prototype'))) {
+                          //if it has a 'prototype'
+                          //replace 'prototype' with the class name, and add as the class
+                         protoExportNameDecl.name = protoExportNameDecl.parent.name;
+                         project.root.addToScope(protoExportNameDecl);
+                     }
+                     
+                     else {
+                          // a "declare global x", but "x.lite.md" do not export a class
+                          // move all exported (namespace members) to global scope
+                         // for each nameDecl in map moveWhat.members
+                         var nameDecl=undefined;
+                         if(!moveWhat.members.map_members) throw(new Error("for each in map: not a Map, no .map_members"));
+                         for ( var nameDecl__propName in moveWhat.members.map_members) if (moveWhat.members.map_members.hasOwnProperty(nameDecl__propName)){nameDecl=moveWhat.members.map_members[nameDecl__propName];
+                             {
+                             project.root.addToScope(nameDecl);
+                             }
+                             
+                             }// end for each property
                          
-                         }// end for each property
+                     };
 
-                      // #clear moved exports
-                     node.importedModule.exports.members.clear();
-                     reference = undefined;
+                      //we moved all to the global scope, e.g.:"declare global jQuery" do not assign to referenceNameDecl
+                     referenceNameDecl = undefined;
                  };
              }
-
 
 // else is a "require" call (VariableRef).
 // Get parent node.
@@ -245,21 +266,39 @@
 
                  // if parent instance of Grammar.AssignmentStatement
                  if (parent instanceof Grammar.AssignmentStatement) {
-                   reference = parent.lvalue.tryGetReference({informError: true});
+                   referenceNameDecl = parent.lvalue.tryGetReferenceNameDecl({informError: true});
                  }
                  
                  else if (parent instanceof Grammar.VariableDecl) {
-                   reference = parent.nameDecl;
+                   referenceNameDecl = parent.nameDecl;
                  };
              };
 
              // end if
 
-// make reference point to importedModule.exports
+// After determining referenceNameDecl where imported items go,
+// make referenceNameDecl point to importedModule.exports
 
-             // if reference
-             if (reference) {
-               reference.makePointTo(node.importedModule.exports);
+             // if referenceNameDecl
+             if (referenceNameDecl) {
+
+               // if node.importedModule.exports.findOwnMember('prototype')
+               if (node.importedModule.exports.findOwnMember('prototype')) {
+                    // if it has a 'prototype' => it's a Function-Class
+                    // make var = Function-Class
+                   referenceNameDecl.makePointTo(node.importedModule.exports);
+               }
+                    // make var = Function-Class
+               
+               else {
+                    // if it does not have a 'prototype' => it's not a Function-Class
+                    // we assume all exported from module is a namespace (object/singleton)
+                    // e.g.: import x
+                    // we make var = x, as in: var x=require('./x')
+
+                   referenceNameDecl.makePointTo(node.importedModule.exports);
+                   referenceNameDecl.setMember('*namespace*', referenceNameDecl);
+               };
              };
            };
          };// end for each in moduleNode.requireCallNodes
@@ -267,6 +306,12 @@
          }
          
          }// end for each property
+
+// var protoNameDecl = referenceNameDecl.addMember('**proto**')
+//                     protoNameDecl.name = node.name // type name is import name used
+//                     protoNameDecl.makePointTo node.importedModule.exports
+//                     
+                    //referenceNameDecl.setMember '**proto**', node.importedModule.exports
 
 
 // #### Pass 1.3 Process "Append To" Declarations
@@ -321,7 +366,7 @@
            // end for
 
            pass++;
-           debug("Pass " + pass + ", converted:" + sumConverted + ", failures:" + sumFailures);
+           log.debug("Pass " + pass + ", converted:" + sumConverted + ", failures:" + sumFailures);
        } while (!(sumFailures === lastSumFailures));// end loop
 
 
@@ -374,7 +419,7 @@
                   // declare container:Grammar.ClassDeclaration
                   // declare valid container.varRef.toString
                  // if container.varRef, log.warning "#{container.positionText()} more info: '#{nameDecl.name}' of '#{container.varRef.toString()}'"
-                 if (container.varRef) {log.warning("" + (container.positionText()) + " more info: '" + nameDecl.name + "' of '" + (container.varRef.toString()) + "'")};
+                 if (container.varRef) {log.warning("" + (container.positionText()) + " more info: '" + nameDecl.name + "' of '" + (container.varRef.toString()) + "'");};
                };
            };
        };// end for each in NameDeclaration.allOfThem
@@ -386,19 +431,20 @@
    // end function validate
 
     //ifdef TARGET_C
-//### export function walkAllNodesCalling(method:function)
+//### export function walkAllNodesCalling(methodFn:function)
     // #else
-   // export function walkAllNodesCalling(method:string)
-   function walkAllNodesCalling(method){
+   // export function walkAllNodesCalling(methodFn:string)
+   function walkAllNodesCalling(methodFn){
     // #endif
 
 // For all modules, for each node, if the specific AST node has methodName, call it
 
        // for each moduleNode:Grammar.Module in map project.moduleCache
        var moduleNode=undefined;
-       for ( var moduleNode__propName in project.moduleCache.members) if (project.moduleCache.members.hasOwnProperty(moduleNode__propName)){moduleNode=project.moduleCache.members[moduleNode__propName];
+       if(!project.moduleCache.map_members) throw(new Error("for each in map: not a Map, no .map_members"));
+       for ( var moduleNode__propName in project.moduleCache.map_members) if (project.moduleCache.map_members.hasOwnProperty(moduleNode__propName)){moduleNode=project.moduleCache.map_members[moduleNode__propName];
            {
-           moduleNode.callOnSubTree(method);
+           moduleNode.callOnSubTree(methodFn);
            }
            
            }// end for each property
@@ -438,7 +484,7 @@
         //objProto.ownMember("constructor").addMember('name')
         // #endif
 
-       addBuiltInObject('Function');// #second: Function. Order is important
+       var functionProto = addBuiltInObject('Function');// #second: Function. Order is important
         // #Function is declared here so ':function' type properties of "array" or "string"
         // #are properly typified
 
@@ -451,18 +497,47 @@
 
         // int equals 'number'
        globalScope.addMember('int');
-        //ifdef PROD_C
-       globalScope.addMember('any'); //any means "any value", default for .js
-        // #endif
-
 
        addBuiltInObject('Boolean');
        addBuiltInObject('Number');
        addBuiltInObject('Date');
        addBuiltInObject('RegExp');
        addBuiltInObject('JSON');
-       addBuiltInObject('Error').addMember('stack');
+       var ErrProto = addBuiltInObject('Error');
+       ErrProto.addMember('stack');
        addBuiltInObject('Math');
+
+        // "arguments" is a local var to any function, with only a method: arguments.toArray()
+       var argumentsType = globalScope.addMember('any*'); //  any pointer, type for "arguments"
+       argumentsType.addMember('length'); //
+       argumentsType.addMember('toArray', {type: functionProto, returnType: arrayProto}); //
+
+        //ifdef PROD_C
+       var anyType = globalScope.addMember('any'); // all vars and props are type:any - see LiteC core, any.h
+       var anyTypeProto = anyType.addMember('prototype');
+       anyTypeProto.addMember('constructor', {type: "any"}); //hack, constructor = typeID
+       anyTypeProto.addMember('length', {type: "int"}); //hack convert property 'length' to a fn call length(this)
+
+       var MapType = globalScope.addMember('Map'); // Map is like a js-ES6 Map. Should be used to have dyn props
+       var MapProto = MapType.addMember('prototype');
+       MapProto.addMember('get', {type: functionProto, returnType: anyTypeProto});
+       MapProto.addMember('set', {type: functionProto, returnType: anyTypeProto});
+       MapProto.addMember('has', {type: functionProto, returnType: anyTypeProto});
+
+       var console = globalScope.addMember('console');
+       console.addMember('log', {type: functionProto});
+       console.addMember('error', {type: functionProto});
+
+       var proc = globalScope.addMember('process'); // node "process" global var emulation
+       proc.addMember('exit', {type: functionProto});
+       proc.addMember('cwd', {type: functionProto});
+       proc.addMember('argv', {type: arrayProto});
+
+       globalScope.addMember('any_concat', {type: functionProto}); //used for string interpolation
+
+       ErrProto.addMember('extra', {type: MapProto}); // added property to "Error" for extra Error info
+
+        // #endif
 
        globalScope.addMember('true', {value: true});
        globalScope.addMember('false', {value: false});
@@ -475,25 +550,22 @@
        globalScope.addMember('clearTimeout');
        globalScope.addMember('setInterval');
        globalScope.addMember('clearInterval');
-
-        // declare valid project.options.browser
-       // if project.options.browser
-       if (project.options.browser) {
-         // do nothing
-         null;
-       }
-          //globalScope.addMember 'window',{type:globalScope}
-          //globalScope.addMember 'document'
-       
-       else {
-         globalScope.addMember('global', {type: globalScope});
-         globalScope.addMember('require');
-         addBuiltInObject('process');
-       };
    };
    // export
    module.exports.createGlobalScope=createGlobalScope;
 
+        //ifndef PROD_C
+        //declare valid project.options.browser
+        //if project.options.browser
+          //do nothing
+          ////globalScope.addMember 'window',{type:globalScope}
+          ////globalScope.addMember 'document'
+
+        //else #node.js
+          //globalScope.addMember 'global',{type:globalScope}
+          //globalScope.addMember 'require'
+          //addBuiltInObject 'process'
+        // #endif
 
 // ----------
 // ----------
@@ -517,10 +589,9 @@
 // gets a var from global scope
 
      // if name instanceof NameDeclaration, return name #already converted type
-     if (name instanceof NameDeclaration) {return name};
+     if (name instanceof NameDeclaration) {return name;};
 
      var normalized = NameDeclaration.normalizeVarName(name);
-
 
      // if not globalScope.members.get(normalized) into var nameDecl
      var nameDecl=undefined;
@@ -532,8 +603,8 @@
      // if no nameDecl.findOwnMember("prototype") into var protoNameDecl
      var protoNameDecl=undefined;
      if (!((protoNameDecl=nameDecl.findOwnMember("prototype")))) {
-       // fail with "global scope '#{name}' has no 'prototype' property"
-       throw new Error("global scope '" + name + "' has no 'prototype' property");
+       // fail with "global scope type '#{name}' must have a 'prototype' property"
+       throw new Error("global scope type '" + name + "' must have a 'prototype' property");
      };
 
      return protoNameDecl;
@@ -639,12 +710,12 @@
            // for each prop in Object.getOwnPropertyNames(obj) #even not enumerables
            var _list2=Object.getOwnPropertyNames(obj);
            for( var prop__inx=0,prop ; prop__inx<_list2.length ; prop__inx++){prop=_list2[prop__inx];
-           if(['__proto__', 'arguments', 'caller'].indexOf(prop)===-1){
+             if(['__proto__', 'arguments', 'caller'].indexOf(prop)===-1){
 
                    var type = Grammar.autoCapitalizeCoreClasses(typeof obj[prop]);
                    type = tryGetGlobalPrototype(type);// #core classes: Function, Object, String
                    // if type is this, type = undefined #avoid circular references
-                   if (type === this) {type = undefined};
+                   if (type === this) {type = undefined;};
 
                    newMember = this.addMember(prop, {type: type});
 
@@ -686,7 +757,7 @@
        // while nameDecl
        while(nameDecl){
          // if nameDecl.findOwnMember(name), return true
-         if (nameDecl.findOwnMember(name)) {return true};
+         if (nameDecl.findOwnMember(name)) {return true;};
          nameDecl = nameDecl.parent;
        };// end loop
        
@@ -778,7 +849,7 @@
        else {
            result.failures++;
            // if options.informError, .sayErr "Undeclared type: '#{typeRef.toString()}'"
-           if (options.informError) {this.sayErr("Undeclared type: '" + (typeRef.toString()) + "'")};
+           if (options.informError) {this.sayErr("Undeclared type: '" + (typeRef.toString()) + "'");};
        };
        // end if
 
@@ -840,7 +911,8 @@
                if (!(possibleClassRef) && normalized.length >= 6) {
                    // for each affinityName,classRef in map nameAffinity.members
                    var classRef=undefined;
-                   for ( var affinityName in nameAffinity.members.members) if (nameAffinity.members.members.hasOwnProperty(affinityName)){classRef=nameAffinity.members.members[affinityName];
+                   if(!nameAffinity.members.map_members) throw(new Error("for each in map: not a Map, no .map_members"));
+                   for ( var affinityName in nameAffinity.members.map_members) if (nameAffinity.members.map_members.hasOwnProperty(affinityName)){classRef=nameAffinity.members.map_members[affinityName];
                        {
                        // if normalized.endsWith(affinityName)
                        if (normalized.endsWith(affinityName)) {
@@ -887,7 +959,7 @@
        return new NameDeclaration(name, options, this);
     };
 
-    // method addMemberTo(nameDecl, memberName, options)
+    // method addMemberTo(nameDecl, memberName, options) returns NameDeclaration
     ASTBase.prototype.addMemberTo = function(nameDecl, memberName, options){
 // a Helper method ASTBase.*addMemberTo*
 // Adds a member to a NameDecl, referencing this node as nodeDeclared
@@ -913,10 +985,14 @@
        }
        
        else {
-         // if options.informError, log.warning "#{.positionText()}. No member named '#{name}' on #{nameDecl.info()}"
-         if (options.informError) {log.warning("" + (this.positionText()) + ". No member named '" + name + "' on " + (nameDecl.info()))};
+
+         // if options.informError
+         if (options.informError) {
+               log.warning("" + (this.positionText()) + ". No member named '" + name + "' on " + (nameDecl.info()));
+         };
+
          // if options.isForward, found = .addMemberTo(nameDecl,name,options)
-         if (options.isForward) {found = this.addMemberTo(nameDecl, name, options)};
+         if (options.isForward) {found = this.addMemberTo(nameDecl, name, options);};
        };
 
        return found;
@@ -998,7 +1074,7 @@
 // if it's already a NameDeclaration, no need to search
 
        // if name instanceof NameDeclaration, return name
-       if (name instanceof NameDeclaration) {return name};
+       if (name instanceof NameDeclaration) {return name;};
 
        // default options=
        if(!options) options={};
@@ -1069,7 +1145,7 @@
 // return: NameDeclaration
 
        // if no item, return # do nothing on undefined params
-       if (!item) {return};
+       if (!item) {return;};
 
        var scope = this.getScopeNode().scope;
 
@@ -1084,7 +1160,7 @@
         // declare valid item.name
        var name = typeof item === 'string' ? item : item.name;
 
-       debug("addToScope: '" + name + "' to '" + scope.name + "'");// #[#{.constructor.name}] name:
+       log.debug("addToScope: '" + name + "' to '" + scope.name + "'");// #[#{.constructor.name}] name:
 
        // if .findInScope(name) into var found
        var found=undefined;
@@ -1151,7 +1227,7 @@
      var isInterface = parentModule.lexer.interfaceMode;
 
      // if isInterface, options.scopeCase = true #keep 1st letter case
-     if (isInterface) {options.scopeCase = true};
+     if (isInterface) {options.scopeCase = true;};
 
      // if asDefault and not isInterface  #export "asDefault" means replace "module.exports"
      if (asDefault && !(isInterface)) {// #export "asDefault" means replace "module.exports"
@@ -1194,7 +1270,7 @@
 
        var scope = this.createScope();
 
-       this.addMemberTo(scope, 'arguments').addMember('length');
+       this.addMemberTo(scope, 'arguments', {type: 'any*'});
 
        var varThis = this.addMemberTo(scope, 'this', {type: scopeThisProto});
     };
@@ -1242,7 +1318,7 @@
            // if no classRef.tryGetReference() into ownerDecl
            if (!((ownerDecl=classRef.tryGetReference()))) {
              // if options.informError, .sayErr "Append to: '#{classRef}'. Reference is not fully declared"
-             if (options.informError) {this.sayErr("Append to: '" + classRef + "'. Reference is not fully declared")};
+             if (options.informError) {this.sayErr("Append to: '" + classRef + "'. Reference is not fully declared");};
              return;
            };
        }
@@ -1276,7 +1352,7 @@
          // if no ownerDecl.findOwnMember("prototype") into ownerDecl
          if (!((ownerDecl=ownerDecl.findOwnMember("prototype")))) {
              // if options.informError, .sayErr "Class '#{classRef}' has no .prototype"
-             if (options.informError) {this.sayErr("Class '" + classRef + "' has no .prototype")};
+             if (options.informError) {this.sayErr("Class '" + classRef + "' has no .prototype");};
              return;
          };
        };
@@ -1347,8 +1423,9 @@
        // for each varDecl in .list
        for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
            varDecl.declareInScope();
-           // if .export, .addToExport varDecl.nameDecl, .default
-           if (this.export) {this.addToExport(varDecl.nameDecl, this.default)};
+            // declare .parent: Grammar.Statement
+           // if .hasAdjective('export'), .addToExport varDecl.nameDecl, .hasAdjective('default')
+           if (this.hasAdjective('export')) {this.addToExport(varDecl.nameDecl, this.hasAdjective('default'));};
            // if varDecl.aliasVarRef
            if (varDecl.aliasVarRef) {
                 //Example: "public var $ = jQuery" => declare alias $ for jQuery
@@ -1416,7 +1493,7 @@
 // if it is 'append to', nothing to declare, object must pre-exist
 
        // if this instanceof Grammar.AppendToDeclaration, return
-       if (this instanceof Grammar.AppendToDeclaration) {return};
+       if (this instanceof Grammar.AppendToDeclaration) {return;};
 
 // Add class name, to parent scope. A "class" in js is a function
 
@@ -1434,12 +1511,12 @@
        else if ((appendToDeclaration=this.getParent(Grammar.AppendToDeclaration))) {
            var refNameDecl = appendToDeclaration.varRef.tryGetReference();
            // if refNameDecl, refNameDecl.addMember .nameDecl
-           if (refNameDecl) {refNameDecl.addMember(this.nameDecl)};
+           if (refNameDecl) {refNameDecl.addMember(this.nameDecl);};
        }
 
        
-       else if (this.export) {
-          this.addToExport(this.nameDecl, this.default);
+       else if (this.hasAdjective('export')) {
+          this.addToExport(this.nameDecl, this.hasAdjective('default'));
        };
 
 // We create 'Class.prototype' member
@@ -1448,7 +1525,7 @@
 
        var prtypeNameDecl = this.nameDecl.findOwnMember('prototype') || this.addMemberTo(this.nameDecl, 'prototype');
        // if .varRefSuper, prtypeNameDecl.setMember('**proto**',.varRefSuper)
-       if (this.varRefSuper) {prtypeNameDecl.setMember('**proto**', this.varRefSuper)};
+       if (this.varRefSuper) {prtypeNameDecl.setMember('**proto**', this.varRefSuper);};
        prtypeNameDecl.addMember('constructor', {pointsTo: this.nameDecl});
 
 // return type of the class-function, is the prototype
@@ -1526,8 +1603,9 @@
          // if .name
          if (this.name) {
            this.nameDecl = this.addToScope(this.name, {type: 'Function'});
-           // if .export, .addToExport .nameDecl, .default
-           if (this.export) {this.addToExport(this.nameDecl, this.default)};
+            // declare .parent:Grammar.Statement
+           // if .hasAdjective('export'), .addToExport .nameDecl, .hasAdjective('default')
+           if (this.hasAdjective('export')) {this.addToExport(this.nameDecl, this.hasAdjective('default'));};
          };
 
 // determine 'owner' (where 'this' points to for this function)
@@ -1591,7 +1669,7 @@
 // For undeclared methods only
 
      // if .constructor isnt Grammar.MethodDeclaration or .declared, return
-     if (this.constructor !== Grammar.MethodDeclaration || this.declared) {return};
+     if (this.constructor !== Grammar.MethodDeclaration || this.declared) {return;};
 
 // tryGetOwnerDecl will evaluate 'append to' varRef to get object where this method belongs
 
@@ -1614,15 +1692,16 @@
     Grammar.FunctionDeclaration.prototype.addMethodToOwner = function(owner){// ## methods
 
      var actual = owner.findOwnMember(this.name);
-     // if actual and .shim #shim for an exising method, do nothing
-     if (actual && this.shim) {// #shim for an exising method, do nothing
+
+     // if actual and .hasAdjective('shim') #shim for an exising method, do nothing
+     if (actual && this.hasAdjective('shim')) {// #shim for an exising method, do nothing
        return;
      };
 
 // Add to owner, type is 'Function'
 
      // if no .nameDecl, .nameDecl = .declareName(.name,{type:globalPrototype('Function')})
-     if (!this.nameDecl) {this.nameDecl = this.declareName(this.name, {type: globalPrototype('Function')})};
+     if (!this.nameDecl) {this.nameDecl = this.declareName(this.name, {type: globalPrototype('Function')});};
 
      this.declared = true;
 
@@ -1634,7 +1713,7 @@
     Grammar.FunctionDeclaration.prototype.createReturnType = function(){// ## functions & methods
 
      // if no .nameDecl, return #nowhere to put definitions
-     if (!this.nameDecl) {return};
+     if (!this.nameDecl) {return;};
 
 // Define function's return type from parsed text
 
@@ -1669,7 +1748,7 @@
      else {
 
          // if .type then .nameDecl.setMember('**return type**', .type)
-         if (this.type) {this.nameDecl.setMember('**return type**', this.type)};
+         if (this.type) {this.nameDecl.setMember('**return type**', this.type);};
          return this.type;
      };
     };
@@ -1702,7 +1781,7 @@
 // For undeclared properties only
 
        // if not .declared, .declare({informError:true})
-       if (!(this.declared)) {this.declare({informError: true})};
+       if (!(this.declared)) {this.declare({informError: true});};
     };
 
     // method evaluateAssignments() # determine type from assigned value on properties declaration
@@ -1730,13 +1809,13 @@
 
        this.createScope();
        // if .variant.indexVar, .variant.indexVar.declareInScope
-       if (this.variant.indexVar) {this.variant.indexVar.declareInScope()};
+       if (this.variant.indexVar) {this.variant.indexVar.declareInScope();};
 
        // if .variant.mainVar
        if (this.variant.mainVar) {
            // if .variant.iterable, default .variant.mainVar.type = .variant.iterable.itemType
            if (this.variant.iterable) {if(this.variant.mainVar.type===undefined) this.variant.mainVar.type=this.variant.iterable.itemType;
-           };
+           ;};
            this.variant.mainVar.declareInScope();
        };
     };
@@ -1848,12 +1927,13 @@
            this.varRef.accessors.push(lastAccessor);
        };
 
-       // if .export and .nameDecl, .addToExport .nameDecl, .default
-       if (this.export && this.nameDecl) {this.addToExport(this.nameDecl, this.default)};
+       // if .hasAdjective('export') and .nameDecl, .addToExport .nameDecl, .hasAdjective('default')
+       if (this.hasAdjective('export') && this.nameDecl) {this.addToExport(this.nameDecl, this.hasAdjective('default'));};
 
        this.createScope();
-    };
 
+       this.nameDecl.setMember('*namespace*', this.nameDecl);
+    };
 
 
    // append to class Grammar.VariableRef ### Helper methods
@@ -1881,7 +1961,7 @@
 // now follow each accessor
 
        // if no actualVar or no .accessors, return
-       if (!actualVar || !this.accessors) {return};
+       if (!actualVar || !this.accessors) {return;};
 
        // for each ac in .accessors
        for( var ac__inx=0,ac ; ac__inx<this.accessors.length ; ac__inx++){ac=this.accessors[ac__inx];
@@ -1915,7 +1995,7 @@
            };
 
            // if no actualVar, break
-           if (!actualVar) {break};
+           if (!actualVar) {break;};
        };// end for each in this.accessors
 
        // end for #each accessor
@@ -1938,12 +2018,12 @@
 
        var actualVar = this.tryGetFromScope(this.name, options);
        // if no actualVar, return
-       if (!actualVar) {return};
+       if (!actualVar) {return;};
 
 // now check each accessor
 
        // if no .accessors, return actualVar
-       if (!this.accessors) {return actualVar};
+       if (!this.accessors) {return actualVar;};
 
        var partial = this.name;
 
@@ -2040,7 +2120,7 @@
 
        var actualVar = this.findInScope(varRef.name);
        // if no actualVar, return
-       if (!actualVar) {return};
+       if (!actualVar) {return;};
 
 // now check each accessor
 
@@ -2073,7 +2153,7 @@
 
              actualVar = actualVar.findMember(ac.name);
              // if no actualVar, break
-             if (!actualVar) {break};
+             if (!actualVar) {break;};
            }
 
 // else, if IndexAccess or function access, we exit analysis
@@ -2112,9 +2192,9 @@
 
      var reference = this.lvalue.tryGetReference();
      // if reference isnt instanceof NameDeclaration, return
-     if (!(reference instanceof NameDeclaration)) {return};
+     if (!(reference instanceof NameDeclaration)) {return;};
      // if reference.findOwnMember('**proto**'), return #has a type already
-     if (reference.findOwnMember('**proto**')) {return};
+     if (reference.findOwnMember('**proto**')) {return;};
 
 // check if we've got a clear rvalue.
 // if we do, set type for lvalue (unless is "null" or "undefined", they destroy type info)
@@ -2176,9 +2256,9 @@
              var nameDecl = this.right.name.tryGetReference();
 
              // if nameDecl isnt instanceof NameDeclaration, return
-             if (!(nameDecl instanceof NameDeclaration)) {return};
+             if (!(nameDecl instanceof NameDeclaration)) {return;};
              // if nameDecl.findOwnMember('**proto**'), return #has a type already
-             if (nameDecl.findOwnMember('**proto**')) {return};
+             if (nameDecl.findOwnMember('**proto**')) {return;};
 
 // check if we've got a clear .left (value to be assigned) type
 // if we do, set type for .rigth ('into var x') (unless is "null" or "undefined", they destroy type info)
@@ -2242,14 +2322,11 @@
 
          var reference = this.tryGetFromScope(this.name, {isForward: true});
 
-         // if String.isCapitalized(reference.name)
-         if (String.isCapitalized(reference.name)) {
-              // declare valid reference.members.prototype
-             // if no reference.members.prototype
-             if (!reference.members.prototype) {
-                 reference.addMember('prototype');
-             };
-             reference = reference.members.prototype;
+         // if String.isCapitalized(reference.name) //let's assume is a Class
+         if (String.isCapitalized(reference.name)) { //let's assume is a Class
+             // if no reference.findOwnMember('prototype'), reference.addMember('prototype')
+             if (!reference.findOwnMember('prototype')) {reference.addMember('prototype');};
+             reference = reference.findOwnMember('prototype');
          };
 
          // for each varDecl in .names
@@ -2319,23 +2396,24 @@
     Grammar.DeclareStatement.prototype.setTypes = function(actualVar){// # Grammar.DeclareStatement ###
 // Assign types if it was declared
 
-      // #set type if type was declared
-     var doProcess = false;
-     // if .type #create type on the fly
-     if (this.type) {// #create type on the fly
-         actualVar.setMember('**proto**', this.type);
-         doProcess = true;
-     };
+      // #create type on the fly, overwrite existing type
 
-     // if .itemType #create type on the fly
-     if (this.itemType) {// #create type on the fly
-         actualVar.setMember('**item type**', this.itemType);
-         doProcess = true;
-     };
+     this.setSubType(actualVar, this.type, '**proto**');
+     this.setSubType(actualVar, this.itemType, '**item type**');
+    };
 
-     // if doProcess
-     if (doProcess) {
-         actualVar.processConvertTypes({informError: true});
+    // helper method setSubType(actualVar:NameDeclaration, toSet, propName )
+    Grammar.DeclareStatement.prototype.setSubType = function(actualVar, toSet, propName){
+// Assign type if it was declared
+
+     // if toSet #create type on the fly
+     if (toSet) {// #create type on the fly
+          //var act=actualVar.findMember(propName)
+          //print "set *type* was #{act} set to #{toSet}"
+         actualVar.setMember(propName, toSet);
+         var result = actualVar.processConvertTypes();
+         // if result.failures, .sayErr "can't find type '#{toSet}' in scope"
+         if (result.failures) {this.sayErr("can't find type '" + toSet + "' in scope");};
      };
     };
 
@@ -2352,6 +2430,8 @@
      case 'valid':
 
            actualVar = this.tryGetFromScope(this.varRef.name, {informError: true});
+           // if no actualVar, return
+           if (!actualVar) {return;};
 
            // for each ac in .varRef.accessors
            for( var ac__inx=0,ac ; ac__inx<this.varRef.accessors.length ; ac__inx++){ac=this.varRef.accessors[ac__inx];
@@ -2377,7 +2457,7 @@
            // end for
 
            // if actualVar, .setTypes actualVar
-           if (actualVar) {this.setTypes(actualVar)};
+           if (actualVar) {this.setTypes(actualVar);};
            break;
            
      case 'on-the-fly':

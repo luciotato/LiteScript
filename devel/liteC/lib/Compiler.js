@@ -29,8 +29,6 @@
 
    Project.version = version;
 
-   var debug = log.debug;
-
 // Get the 'Environment' object for the compiler to use.
 // The 'Environment' object, must provide functions to load files, search modules,
 // and a optional external cache (disk).
@@ -147,8 +145,8 @@
        if (!project.options.skip) {
 
            Validate.validate(project);
-           // if log.error.count is 0, log.info "Validation OK"
-           if (log.error.count === 0) {log.info("Validation OK")};
+           // if log.errorCount is 0, log.info "Validation OK"
+           if (log.errorCount === 0) {log.info("Validation OK");};
        };
 
 // initialize out buffer & produce target code
@@ -158,8 +156,8 @@
        project.produceModule(moduleNode);
         // # the produced code will be at: moduleNode.lexer.out.getResult() :string array
 
-       // if log.error.count isnt 0, log.throwControled "#log.error.count errors during compilation"
-       if (log.error.count !== 0) {log.throwControled("#log.error.count errors during compilation")};
+       // if log.errorCount isnt 0, log.throwControled "#log.errorCount errors during compilation"
+       if (log.errorCount !== 0) {log.throwControled("#log.errorCount errors during compilation");};
 
 // text compiled result can be obtained with: moduleNode.lexer.out.getResult() :string array
 

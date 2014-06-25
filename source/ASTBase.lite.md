@@ -18,15 +18,16 @@ This class serves as a base class on top of which Grammar classes are defined.
 It contains basic functions to parse a token stream.
 
 #### properties
-        parent, 
+        
+        parent: ASTBase 
+        name, keyword 
 
-        name, keyword, type, itemType
+        type, keyType, itemType
+        extraInfo // if parse failed, extra information 
 
         lexer:Lexer, lineInx
         sourceLineNum, column
         indent, locked
-        index
-
 
 #### Constructor (parent:ASTBase, name)
 
@@ -300,7 +301,7 @@ else, If `opt` returned nothing, we give the user a useful error.
         var result = .opt.apply(this,arguments)
 
         if no result 
-          .throwParseFailed "#{.constructor.name}: found #{.lexer.token.toString()} but #{.listArgs(arguments)} required"
+          .throwParseFailed "#{.constructor.name}:#{.extraInfo} found #{.lexer.token.toString()} but #{.listArgs(arguments)} required"
 
         return result
 
@@ -411,8 +412,8 @@ First line sets indent level
         debug "optFreeFormList [#{.constructor.name}] parentname:#{.parent.name} parentIndent:#{parentIndent}, blockIndent:#{blockIndent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no-'
 
         if blockIndent <= parentIndent #first line is same or less indented than parent - assume empty list
-          .lexer.sayErr "free-form SeparatedList: next line is same or less indented (#{blockIndent}) than parent indent (#{parentIndent}) - assume empty list"
-          return result
+            .lexer.sayErr "free-form SeparatedList: next line is same or less indented (#{blockIndent}) than parent indent (#{parentIndent}) - assume empty list"
+            return result
 
 now loop until closer or an indent change
 
@@ -519,6 +520,8 @@ Helper functions for code generation
 *out* is a helper function for code generation
 It evaluates and output its arguments. uses .lexer.out
 
+        var out = .lexer.out
+
         for each item in arguments
 
 skip empty items
@@ -527,7 +530,8 @@ skip empty items
 
 if it is the first thing in the line, out indentation
 
-          if not .lexer.out.currLine, .lexer.out.put String.spaces(.indent-1)
+          if not out.currLine and .indent > 1
+              out.put String.spaces(.indent-1)
 
 if it is an AST node, call .produce()
 
@@ -538,19 +542,19 @@ if it is an AST node, call .produce()
 New line char means "start new line"
 
           else if item is '\n' 
-            .lexer.out.startNewLine()
+            out.startNewLine()
 
 a simple string, out the string
 
           else if type of item is 'string'
-            .lexer.out.put item
+            out.put item
             
 else, Object codes
 
           else if type of item is 'object'
 
             declare on item
-              COMMENT:string, NLI, CSL:array, freeForm
+              COMMENT:string, NLI, CSL:array, freeForm, h
             
 if the object is an array, resolve with a recursive call
 
@@ -570,7 +574,7 @@ if the object is an array, resolve with a recursive call
                 declare valid listItem.out
 
                 if inx>0 
-                  .lexer.out.put item.separator or ', '
+                  out.put item.separator or ', '
 
                 if item.freeForm 
                   if listItem instanceof ASTBase
@@ -588,11 +592,16 @@ if the object is an array, resolve with a recursive call
  
             else if item.COMMENT isnt undefined
 
-              if .lexer.options.comments #comments level > 0
+              if no .lexer or .lexer.options.comments #comments level > 0
 
                   # prepend // if necessary
-                  if type of item isnt 'string' or not item.COMMENT.startsWith("//"), .lexer.out.put "// "
+                  if type of item isnt 'string' or not item.COMMENT.startsWith("//"), out.put "// "
                   .out item.COMMENT
+
+{h:1/0} --> enable/disabe output to header file
+ 
+            else if item.h isnt undefined
+                out.toHeader = item.h
 
 else, unrecognized object
 
@@ -605,7 +614,7 @@ else, unrecognized object
 Last option, out item.toString()
 
           else
-            .lexer.out.put item.toString() # try item.toString()
+            out.put item.toString() # try item.toString()
 
           end if
 
@@ -633,7 +642,7 @@ validate index
         var line = .lexer.infoLines[lineInx]
         if no line, return log.error("ASTBase.outLineAsComment #{lineInx}: NO LINE")
 
-        if line.type is .lexer.LineTypes.BLANK
+        if line.type is Lexer.LineTypes.BLANK
             .lexer.out.blankLine
             return
 
@@ -680,7 +689,7 @@ find comment lines in the previous lines of code.
       var preInx = inx
       while preInx and preInx>.lexer.out.lastOutCommentLine 
           preInx--
-          if .lexer.infoLines[preInx].type is .lexer.LineTypes.CODE 
+          if .lexer.infoLines[preInx].type is Lexer.LineTypes.CODE 
               preInx++
               break
 
@@ -768,8 +777,13 @@ return root.compilerVars.members[name].value
 
 ----------------------------------------------------------------------------------------------
 
-### export helper function getUniqueVarName(prefix)
-Generate unique variable names
+### export helper function setUniqueID(prefix, value)
+Generate unique numbers, starting at 1
+
+        uniqueIds[prefix] = value-1
+
+### export helper function getUniqueID(prefix) returns int
+Generate unique numbers, starting at 1
 
         var id = uniqueIds[prefix] or 0
 
@@ -777,7 +791,12 @@ Generate unique variable names
 
         uniqueIds[prefix] = id
 
-        return '_'+ prefix + id
+        return id
+
+### export helper function getUniqueVarName(prefix) returns string
+Generate unique variable names
+
+        return ('_'+ prefix) + getUniqueID(prefix)
 
 Support Module Var:
 

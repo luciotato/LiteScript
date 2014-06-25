@@ -4,19 +4,22 @@
         <activeConfTypeElem>1</activeConfTypeElem>
         <activeConfIndexElem>0</activeConfIndexElem>
     </data>
-    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="4">
+        <file>
+            <url>LiteC-core.c</url>
+            <bookmark id="3">
+                <name/>
+                <line>0</line>
+                <key/>
+            </bookmark>
+            <bookmark id="1">
+                <name/>
+                <line>0</line>
+                <key/>
+            </bookmark>
+        </file>
+    </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest3-allAny/LiteC-core.c</file>
-            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest3-allAny/include/gc/gc.h</file>
-            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest3-allAny/main.c</file>
-            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest3-allAny/LiteC-core.h</file>
-            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest3-allAny/any.c</file>
-            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest3-allAny/util.c</file>
-            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest3-allAny/exceptions.c</file>
-            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest3-allAny/util.h</file>
-            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest3-allAny/exceptions.h</file>
-            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest3-allAny/any.h</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>

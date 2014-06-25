@@ -8,7 +8,6 @@ Dependencies
     global import fs, path
 
     import mkPath, log
-    var debug = log.debug
 
 ### export Class FileInfo
      properties

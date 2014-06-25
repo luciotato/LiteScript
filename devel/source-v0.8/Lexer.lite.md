@@ -19,8 +19,6 @@ then each CODE line is *Tokenized*, getting a `tokens[]` array
 ### dependencies
 
     import log
-    var debug = log.debug
-
 
 The Lexer Class
 ===============
@@ -31,7 +29,6 @@ The Lexer class turns the input lines into an array of "infoLines"
 
 #### properties 
 
-        compiler
         project
         filename:string
         options 
@@ -55,9 +52,9 @@ The Lexer class turns the input lines into an array of "infoLines"
 
         out:OutCode
 
-#### Constructor new Lexer(compiler, project, options)
+#### Constructor new Lexer(compilerService, project, options)
 
-          .compiler = compiler #Compiler.lite.md module.exports
+          //.compiler = compiler #Compiler.lite.md module.exports
           .project = project #Compiler.lite.md class Project
 
 use same options as compiler
@@ -246,7 +243,7 @@ clear source lines from memory
 
 Now, after processing all lines, we tokenize each CODE line
 
-        debug "---- TOKENIZE"
+        log.debug "---- TOKENIZE"
 
         for each item in .infoLines
 
@@ -489,9 +486,15 @@ This method handles #ifdef/#else/#endif as multiline comments
             .project.setCompilerVar words[1],false
             return false
 
-        var startCol = line.indexOf("#ifdef ")
-        if startCol<0, startCol = line.indexOf("#if def ")
-        if startCol<0, return 
+        var invert = false
+
+        var pos = line.indexOf("#ifdef ")
+
+        if pos<0 
+            pos = line.indexOf("#ifndef ")
+            invert = true
+
+        if pos<0, return 
 
         //get rid of quoted strings. Still there?
         if String.replaceQuoted(line,"").indexOf("#if")<0
@@ -499,10 +502,13 @@ This method handles #ifdef/#else/#endif as multiline comments
 
         var startRef = "while processing #ifdef started on line #{startSourceLine}"
 
-        words = line.slice(startCol).split(' ')
+        words = line.slice(pos).split(' ')
         var conditional = words[1]
         if no conditional, .throwErr "#ifdef; missing conditional"
         var defValue = .project.compilerVar(conditional)
+        if invert, defValue = not defValue //if it was "#ifndef"
+
+        .replaceSourceLine .line.replace(/\#if/g,"//if")
 
         var endFound=false
         do
@@ -533,7 +539,7 @@ This method handles #ifdef/#else/#endif as multiline comments
         loop until endFound
 
         #rewind position after #ifdef, reprocess lines
-        .sourceLineNum = startSourceLine
+        .sourceLineNum = startSourceLine -1 
         return true #OK, lines processed
 
 
@@ -686,7 +692,7 @@ Save current pos, and get next token
         .consumeToken()
 
         #debug
-        debug ">>>ADVANCE", "#{.sourceLineNum}:#{.token.column or 0} [#{.index}]", .token.toString()
+        log.debug ">>>ADVANCE", "#{.sourceLineNum}:#{.token.column or 0} [#{.index}]", .token.toString()
         
         return true
 
@@ -697,7 +703,7 @@ Save current pos, and get next token
         #restore last saved pos (rewind)
 
         .setPos .last
-        debug '<< Returned:',.token.toString(),'line',.sourceLineNum 
+        log.debug '<< Returned:',.token.toString(),'line',.sourceLineNum 
 
 -----------------------------------------------------
 This method gets the next line CODE from infoLines
@@ -745,7 +751,7 @@ if it is a CODE line, store in lexer.sourceLineNum, and return true (ok)
 **throwErr** add lexer position and emit error (abort compilation)
 
         var err = new Error("#{.posToString()} #{msg}")
-        err.controled = true 
+        err.extra.set "controled", true 
         throw err
 
 #### method sayErr(msg)
@@ -880,7 +886,7 @@ Each "infoLine" has:
       method dump() # out debug info
 
         if .type is LineTypes.BLANK
-          debug .sourceLineNum,"(BLANK)"
+          log.debug .sourceLineNum,"(BLANK)"
           return
 
         var type = ""
@@ -889,10 +895,10 @@ Each "infoLine" has:
         else if .type is LineTypes.CODE
           type="CODE"
         
-        debug .sourceLineNum, "#{.indent}(#{type})", .text
+        log.debug .sourceLineNum, "#{.indent}(#{type})", .text
         if .tokens
-            debug('   ',.tokens.join(' '))
-            debug()
+            log.debug('   ',.tokens.join(' '))
+            log.debug()
 
 
 The Tokenize method
@@ -948,7 +954,7 @@ If there was no match, this is a bad token and we will abort compilation here.
                 log.error errPosString+'^'
 
                 var err = new Error(msg)
-                err.controled = true
+                err.extra.set "controled", true
                 raise err
 
               #end if
@@ -972,16 +978,29 @@ If its a string constant, and it has `#{`|`${`, process the **Interpolated Expre
 
                     declare parsed:Array
 
-                    #parse the string, splitting at #{...}, return array 
+                    #parse the quoted string, splitting at #{...}, return array 
                     var parsed = String.splitExpressions(match, lexer.stringInterpolationChar)
 
-                    #if the first expression starts with "(", we add `"" + ` so the parentheses
-                    # can't be mis-parsed as a "function call"
-                    if parsed.length and parsed[0].startsWith("(")
-                      parsed.unshift('""')
+For C generation, replace string interpolation
+with a call to core function "concat"
 
-                    #join expressions using +, so we have a valid composed expression, evaluating to a string.
+                #ifdef PROD_C
+                    
+                    // code a call to "concat" to handle string interpolation
+                    var composed = new InfoLine(lexer, LineTypes.CODE, token.column, 
+                        "any_concat(#{parsed.join(',')})", .sourceLineNum  )
+
+                #else //-> JavaScript
+                    //if the first expression isnt a quoted string constant
+                    // we add `"" + ` so: we get string concatenation from javascript.
+                    // Also: if the first expression starts with `(`, LiteScript can 
+                    // mis-parse the expression as a "function call"
+                    if parsed.length and parsed[0][0] isnt match[0] //match[0] is the quote: ' or "
+                        parsed.unshift "''" // prepend ''
+
+                    //join expressions using +, so we have a valid composed expression, evaluating to a string.
                     var composed = new InfoLine(lexer, LineTypes.CODE, token.column, parsed.join(' + '), .sourceLineNum  )
+                #end if
 
                     #Now we 'tokenize' the new composed expression
                     composed.tokenize(lexer)
@@ -1082,7 +1101,7 @@ get rid of quoted strings. Still there?
 
 ok, found startCode, initialize
 
-        debug "**** START MULTILINE ",startCode
+        log.debug "**** START MULTILINE ",startCode
 
         this.section = []
         var startSourceLine = lexer.sourceLineNum
@@ -1197,7 +1216,7 @@ Start New Line into produced code
 send the current line
 
           if .currLine or .currLine is ""
-              debug  .lineNum, .currLine
+              log.debug  .lineNum, .currLine
               if .toHeader
                 .hLines.push .currLine
               else

@@ -359,33 +359,52 @@ Populate the global scope
 
         var objProto = addBuiltInObject('Object') #first: Object. Order is important
         objProto.addMember('__proto__')
-        declare valid objProto.members.constructor.addMember
-        objProto.members.constructor.addMember('name')
+        #ifndef PROD_C
+        objProto.ownMember("constructor").addMember('name')
+        #endif
 
-        addBuiltInObject 'Function' #second: Function. Order is important
-        #Function is declared here so ':function' properties of "array" or "string"
+        var functionProto = addBuiltInObject('Function') #second: Function. Order is important
+        #Function is declared here so ':function' type properties of "array" or "string"
         #are properly typified
 
         var stringProto = addBuiltInObject('String')
         var arrayProto = addBuiltInObject('Array')
         #state that String.split returns string array
-        stringProto.members["split"].setMember '**return type**', arrayProto
+        stringProto.ownMember("split").setMember '**return type**', arrayProto
         #state that Obj.toString returns string:
-        objProto.members["tostring"].setMember '**return type**', stringProto
+        objProto.ownMember("tostring").setMember '**return type**', stringProto
 
-        #ifdef PROD_C
+        // int equals 'number'
         globalScope.addMember 'int'
-        globalScope.addMember 'str'
-        globalScope.addMember 'size_t'
-        #endif
 
         addBuiltInObject 'Boolean'
         addBuiltInObject 'Number' 
         addBuiltInObject 'Date' 
         addBuiltInObject 'RegExp'
         addBuiltInObject 'JSON'
-        addBuiltInObject('Error').addMember('stack')
+        var ErrProto = addBuiltInObject('Error')
+        ErrProto.addMember 'stack'
         addBuiltInObject 'Math'
+
+        var argumentsType = globalScope.addMember('any*') //  any pointer, type for "arguments"
+        argumentsType.addMember('length') // 
+        argumentsType.addMember('toArray',{type:functionProto}) // 
+
+        #ifdef PROD_C
+        var anyType = globalScope.addMember('any') // all vars and props are type:any - see LiteC core, any.h
+        var anyTypeProto = anyType.addMember('prototype')
+        anyTypeProto.addMember 'constructor',{type:"any"} //hack
+        anyTypeProto.addMember 'length',{type:"int"}
+
+        var console = globalScope.addMember('console') //  any pointer, type for "arguments"
+        console.addMember('log',{type:functionProto}) // 
+        console.addMember('error',{type:functionProto}) // 
+
+        globalScope.addMember 'any_concat',{type:"Function"} //used for string interpolation
+
+        ErrProto.addMember 'extra',{type:'Object'}
+
+        #endif
 
         globalScope.addMember 'true',{value:true}
         globalScope.addMember 'false',{value:false}
@@ -399,6 +418,7 @@ Populate the global scope
         globalScope.addMember 'setInterval'
         globalScope.addMember 'clearInterval'
 
+        #ifndef PROD_C
         declare valid project.options.browser
         if project.options.browser
           do nothing
@@ -409,6 +429,7 @@ Populate the global scope
           globalScope.addMember 'global',{type:globalScope}
           globalScope.addMember 'require'
           addBuiltInObject 'process'
+        #endif
 
 
 ----------
@@ -693,7 +714,7 @@ declareName creates a new NameDeclaration, referecing source (AST node)
 
         return new NameDeclaration(name, options, this)
 
-#### method addMemberTo(nameDecl, memberName, options) 
+#### method addMemberTo(nameDecl, memberName, options)  returns NameDeclaration
 a Helper method ASTBase.*addMemberTo*
 Adds a member to a NameDecl, referencing this node as nodeDeclared
         
@@ -927,7 +948,7 @@ We also add 'arguments.length'
 
         var scope = .createScope()
 
-        .addMemberTo(scope, 'arguments').addMember('length')
+        .addMemberTo(scope,'arguments',{type:'any*'})
 
         var varThis = .addMemberTo(scope,'this',{type:scopeThisProto})
 
@@ -986,7 +1007,7 @@ Append to class|namespace
 check if owner is class (namespace) or class.prototype (class)
 
         if toNamespace 
-            do nothing #'namespace properties' and 'append to namespace' are added directly to rerenced class-function
+            do nothing #'append to namespace' are added directly to rerenced class-function
         else
           # move to class prototype
           declare valid ownerDecl.members.prototype
@@ -1163,6 +1184,7 @@ if we do, set type (unless is "null" or "undefined", they destroy type info)
 #### Method declare() ## function, methods and constructors
 
       var owner
+      var isMethod:boolean
 
 1st: Grammar.FunctionDeclaration
 
@@ -1195,11 +1217,13 @@ Note: Constructors have no "name". Constructors are the class itself.
           owner = .tryGetOwnerDecl()
           if owner and .name 
               .addMethodToOwner owner
+              isMethod = true
+
       end if
 
 Define function's return type from parsed text
 
-      .createReturnType
+      var returnType = .createReturnType()
 
 Now create function's scope, using found owner as function's scope var this's **proto**
 
@@ -1250,7 +1274,7 @@ Add to owner, type is 'Function'
       .addMemberTo owner, .nameDecl
 
 
-#### method createReturnType() ## functions & methods
+#### method createReturnType() returns string ## functions & methods
 
       if no .nameDecl, return #nowhere to put definitions
 
@@ -1266,8 +1290,8 @@ and set this new nameDecl as function's **return type**
 
 check if it alerady exists, if not found, create one. Type is 'Array'
         
-          var intermediateNameDecl = globalScope.members[composedName] 
-                or globalScope.addMember(composedName,{type:globalPrototype('Array')})
+          if not globalScope.findMember(composedName) into var intermediateNameDecl
+              intermediateNameDecl = globalScope.addMember(composedName,{type:globalPrototype('Array')})
 
 item type, is each array member's type 
 
@@ -1275,11 +1299,14 @@ item type, is each array member's type
 
           .nameDecl.setMember '**return type**', intermediateNameDecl
 
+          return intermediateNameDecl
+
 else, it's a simple type
 
       else 
 
           if .type then .nameDecl.setMember('**return type**', .type)
+          return .type
 
 
 ### Append to class Grammar.PropertiesDeclaration ###
@@ -1363,7 +1390,7 @@ ForEachInArray: check if the iterable has a .length property.
             if no iterableType 
               #.sayErr "ForEachInArray: no type declared for: '#{.variant.iterable}'"
               do nothing
-            else if no iterableType.findMember('length')
+            else if no .variant.isMap and no iterableType.findMember('length')
               .sayErr "ForEachInArray: no .length property declared in '#{.variant.iterable}' type:'#{iterableType.toString()}'"
               log.error iterableType.originalDeclarationPosition()
 
@@ -1747,18 +1774,20 @@ Assign specific type to varRef - for the entire compilation
 #### helper method setTypes(actualVar:NameDeclaration) # Grammar.DeclareStatement ###
 Assign types if it was declared
 
-      #set type if type was declared
-      var doProcess = false
-      if .type #create type on the fly
-          actualVar.setMember '**proto**', .type
-          doProcess = true
+      #create type on the fly, overwrite existing type
 
-      if .itemType #create type on the fly
-          actualVar.setMember '**item type**', .itemType
-          doProcess = true
+      .setSubType actualVar,.type,'**proto**'
+      .setSubType actualVar,.itemType,'**item type**'
 
-      if doProcess 
-          actualVar.processConvertTypes({informError:true})
+#### helper method setSubType(actualVar:NameDeclaration, toSet, propName ) 
+Assign type if it was declared
+
+      if toSet #create type on the fly
+          //var act=actualVar.findMember(propName)
+          //print "set *type* was #{act} set to #{toSet}"
+          actualVar.setMember propName, toSet
+          var result = actualVar.processConvertTypes()
+          if result.failures, .sayErr "can't find type '#{toSet}' in scope"
 
 #### method validatePropertyAccess() # Grammar.DeclareStatement ###
 

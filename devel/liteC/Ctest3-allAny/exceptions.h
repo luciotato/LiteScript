@@ -22,27 +22,32 @@
 # define E4C_MAX_FRAMES 32
 #endif
 
+#ifndef NDEBUG
+    #define E4C_INFO __FILE__, __LINE__
+#else
+    #define E4C_INFO NULL, 0
+#endif
+
 /* Exception handling keywords: try/catch/finally/throw */
 #ifndef E4C_NOKEYWORDS
-# define try E4C_TRY
-# define catch(e) E4C_CATCH(e)
-# define finally E4C_FINALLY
-# define throw(a) E4C_THROW(a)
+
+    #define try E4C_TRY
+    #define catch(e) E4C_CATCH(e)
+    #define finally E4C_FINALLY
+
+    #define throw(e) e4c_throw(E4C_INFO, e)
+    #define fail_with(a) e4c_throw(E4C_INFO, any_str( a ))
+
 #endif
 
 /* Represents an instance of an exception*/
 struct e4c_exception{
-	any object;
+	any error;
 	const char * file;
 	int line;
 };
 
 /* Implementation details */
-#ifndef NDEBUG
-        # define E4C_INFO __FILE__, __LINE__
-#else
-        # define E4C_INFO NULL, 0
-#endif
 
 #define E4C_TRY \
         if(e4c_try(E4C_INFO) && setjmp(e4c.jump[e4c.frames - 1]) >= 0) \
@@ -57,13 +62,13 @@ struct e4c_exception{
              for(var ERRVAR = e4c.err.object, *__i=0; __i==0; __i=1)
 */
 
+#define E4C_THROW(X) e4c_throw(E4C_INFO, X)
+
 #define E4C_CATCH(ERRVAR) \
         else if(e4c.frame[e4c.frames].stage == e4c_catching) \
-             for(ERRVAR = e4c.err.object; e4c.frame[e4c.frames].uncaught!=0; e4c.frame[e4c.frames].uncaught=0)
+             for(ERRVAR = e4c.exception.error; e4c.frame[e4c.frames].uncaught!=0; e4c.frame[e4c.frames].uncaught=0)
 
 #define E4C_FINALLY else if(e4c.frame[e4c.frames].stage == e4c_finalizing)
-
-#define E4C_THROW(X) e4c_throw(E4C_INFO, X)
 
 enum e4c_stage{
     e4c_beginning,
@@ -74,7 +79,7 @@ enum e4c_stage{
 
 extern struct e4c_context{
         jmp_buf jump[E4C_MAX_FRAMES];
-        struct e4c_exception err;
+        struct e4c_exception exception;
         struct{
             unsigned char stage;
             unsigned char uncaught;

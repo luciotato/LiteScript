@@ -1,7 +1,5 @@
 Log Utility
 ============
-(c) 2014 Lucio M. Tato
-
 
 options
 -------

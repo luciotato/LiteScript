@@ -21,6 +21,11 @@ When compiled with "-D PROD_C", this source will incorporate
 "producer_c.js" and will hace as default target ".C"
 see: build-PRODC.sh
 
+#### added:
+
+var x = arguments.toArray()  =>  var x = Array.prototype.slice.call(arguments)
+
+
 #### Removed:
 - "namespace properties": were confusing. Better is to create
     "append to namespace xx" after the class PropertyDeclaration

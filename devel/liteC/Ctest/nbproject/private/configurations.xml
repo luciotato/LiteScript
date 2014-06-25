@@ -25,8 +25,13 @@
       <runprofile version="9">
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -v 1</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -h</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -D PROD_C -c test</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -v 2 -D PROD_C -c test</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -v 2 -D PROD_C -D FROM_C -c test</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <runcommand>"${OUTPUT_PATH}" -v 2 -D PROD_C -D FROM_C -c test</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>

@@ -21,18 +21,15 @@
 
    // import log
    var log = require('./log');
-   var debug = log.debug;
-
 
 // The Lexer Class
 // ===============
 
    // export default class Lexer
    // constructor
-    function Lexer(compiler, project, options){
+    function Lexer(compilerService, project, options){
      //      properties
 
-        // compiler
         // project
         // filename:string
         // options
@@ -57,7 +54,7 @@
         // out:OutCode
         this.maxSourceLineNum=0;
 
-         this.compiler = compiler;// #Compiler.lite.md module.exports
+          //.compiler = compiler #Compiler.lite.md module.exports
          this.project = project;// #Compiler.lite.md class Project
 
 // use same options as compiler
@@ -110,7 +107,7 @@
 // then to lines array
 
            // if typeof source isnt 'string', source = source.toString()
-           if (typeof source !== 'string') {source = source.toString()};
+           if (typeof source !== 'string') {source = source.toString();};
 
            this.lines = source.split('\n');
            this.lines.push("");// # add extra empty line
@@ -176,7 +173,7 @@
                // if indent >= 4
                if (indent >= 4) {
                    // if lastLineWasBlank,inCodeBlock = true
-                   if (lastLineWasBlank) {inCodeBlock = true};
+                   if (lastLineWasBlank) {inCodeBlock = true;};
                }
 
 // else, (not indented 4) probably a literate comment,
@@ -203,7 +200,7 @@
 
                          indent = line.search(/\S/);
                          // if indent<4, .throwErr "MarkDown Title-keyword, expected at least indent 4 ('\#\#\# ')"
-                         if (indent < 4) {this.throwErr("MarkDown Title-keyword, expected at least indent 4 ('\#\#\# ')")};
+                         if (indent < 4) {this.throwErr("MarkDown Title-keyword, expected at least indent 4 ('\#\#\# ')");};
                          inCodeBlock = true;
                        };
                    };
@@ -284,7 +281,7 @@
 
 // Now, after processing all lines, we tokenize each CODE line
 
-       debug("---- TOKENIZE");
+       log.debug("---- TOKENIZE");
 
        // for each item in .infoLines
        for( var item__inx=0,item ; item__inx<this.infoLines.length ; item__inx++){item=this.infoLines[item__inx];
@@ -328,7 +325,7 @@
 
      // for each index,item in .infoLines where item.type is LineTypes.CODE
      for( var index=0,item ; index<this.infoLines.length ; index++){item=this.infoLines[index];
-     if(item.type === LineTypes.CODE){
+       if(item.type === LineTypes.CODE){
 
        // if item.text like /^compiler\s+generate\b/
        if (/^compiler\s+generate\b/.test(item.text)) {
@@ -346,7 +343,7 @@
            while(bodyInx < this.infoLines.length && ((bodyLine=this.infoLines[bodyInx])).indent > item.indent){
                bodyLines.push(String.spaces(bodyLine.indent) + bodyLine.text);
                // if bodyIndent is 0, bodyIndent = bodyLine.indent #first indent
-               if (bodyIndent === 0) {bodyIndent = bodyLine.indent};
+               if (bodyIndent === 0) {bodyIndent = bodyLine.indent;};
                bodyInx++;
            };// end loop
 
@@ -579,11 +576,18 @@
            return false;
        };
 
-       var startCol = line.indexOf("#ifdef ");
-       // if startCol<0, startCol = line.indexOf("#if def ")
-       if (startCol < 0) {startCol = line.indexOf("#if def ")};
-       // if startCol<0, return
-       if (startCol < 0) {return};
+       var invert = false;
+
+       var pos = line.indexOf("#ifdef ");
+
+       // if pos<0
+       if (pos < 0) {
+           pos = line.indexOf("#ifndef ");
+           invert = true;
+       };
+
+       // if pos<0, return
+       if (pos < 0) {return;};
 
         //get rid of quoted strings. Still there?
        // if String.replaceQuoted(line,"").indexOf("#if")<0
@@ -593,18 +597,22 @@
 
        var startRef = "while processing #ifdef started on line " + startSourceLine;
 
-       words = line.slice(startCol).split(' ');
+       words = line.slice(pos).split(' ');
        var conditional = words[1];
        // if no conditional, .throwErr "#ifdef; missing conditional"
-       if (!conditional) {this.throwErr("#ifdef; missing conditional")};
+       if (!conditional) {this.throwErr("#ifdef; missing conditional");};
        var defValue = this.project.compilerVar(conditional);
+       // if invert, defValue = not defValue //if it was "#ifndef"
+       if (invert) {defValue = !(defValue);};
+
+       this.replaceSourceLine(this.line.replace(/\#if/g, "//if"));
 
        var endFound = false;
        // do
        do{
             // #get next line
            // if no .nextSourceLine(),.throwErr "EOF #{startRef}"
-           if (!this.nextSourceLine()) {this.throwErr("EOF " + startRef)};
+           if (!this.nextSourceLine()) {this.throwErr("EOF " + startRef);};
            line = this.line;
 
            // if line.search(/\S/) into var indent >= 0
@@ -623,7 +631,7 @@
                            
                    case "#end":
                            // if words[1] isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
-                           if (words[1] !== 'if') {this.throwErr("expected '#end if', read '" + line + "' " + startRef)};
+                           if (words[1] !== 'if') {this.throwErr("expected '#end if', read '" + line + "' " + startRef);};
                            endFound = true;
                            break;
                            
@@ -642,7 +650,7 @@
                else {
                     // comment line if .compilerVar not defined (or processing #else)
                    // if not defValue, .replaceSourceLine String.spaces(indent)+"//"+line
-                   if (!(defValue)) {this.replaceSourceLine(String.spaces(indent) + "//" + line)};
+                   if (!(defValue)) {this.replaceSourceLine(String.spaces(indent) + "//" + line);};
                };
                // end if
                
@@ -652,7 +660,7 @@
        } while (!endFound);// end loop
 
         // #rewind position after #ifdef, reprocess lines
-       this.sourceLineNum = startSourceLine;
+       this.sourceLineNum = startSourceLine - 1;
        return true;// #OK, lines processed
     };
 
@@ -697,7 +705,7 @@
 // Create a full string with last position. Useful to inform errors
 
        // if .last, return .last.toString()
-       if (this.last) {return this.last.toString()};
+       if (this.last) {return this.last.toString();};
        return this.getPos().toString();
     };
 
@@ -843,7 +851,7 @@
        this.consumeToken();
 
         // #debug
-       debug(">>>ADVANCE", "" + this.sourceLineNum + ":" + (this.token.column || 0) + " [" + this.index + "]", this.token.toString());
+       log.debug(">>>ADVANCE", "" + this.sourceLineNum + ":" + (this.token.column || 0) + " [" + this.index + "]", this.token.toString());
 
        return true;
     };
@@ -856,7 +864,7 @@
         // #restore last saved pos (rewind)
 
        this.setPos(this.last);
-       debug('<< Returned:', this.token.toString(), 'line', this.sourceLineNum);
+       log.debug('<< Returned:', this.token.toString(), 'line', this.sourceLineNum);
     };
 
 // -----------------------------------------------------
@@ -910,7 +918,7 @@
     Lexer.prototype.say = function(){
 // **say** emit error (but continue compiling)
 
-       log.error.apply(this, arguments);
+       log.error.apply(this, Array.prototype.slice.call(arguments));
     };
 
 
@@ -919,7 +927,7 @@
 // **throwErr** add lexer position and emit error (abort compilation)
 
        var err = new Error("" + (this.posToString()) + " " + msg);
-       err.controled = true;
+       err.extra.set("controled", true);
        // throw err
        throw err;
     };
@@ -1016,7 +1024,7 @@
 
        // if .type is LineTypes.BLANK
        if (this.type === LineTypes.BLANK) {
-         debug(this.sourceLineNum, "(BLANK)");
+         log.debug(this.sourceLineNum, "(BLANK)");
          return;
        };
 
@@ -1030,11 +1038,11 @@
          type = "CODE";
        };
 
-       debug(this.sourceLineNum, "" + this.indent + "(" + type + ")", this.text);
+       log.debug(this.sourceLineNum, "" + this.indent + "(" + type + ")", this.text);
        // if .tokens
        if (this.tokens) {
-           debug('   ', this.tokens.join(' '));
-           debug();
+           log.debug('   ', this.tokens.join(' '));
+           log.debug();
        };
      };
 
@@ -1103,7 +1111,7 @@
                log.error(errPosString + '^');
 
                var err = new Error(msg);
-               err.controled = true;
+               err.extra.set("controled", true);
                // raise err
                throw err;
              };
@@ -1133,18 +1141,28 @@
 
                     // declare parsed:Array
 
-                    // #parse the string, splitting at #{...}, return array
+                    // #parse the quoted string, splitting at #{...}, return array
                    var parsed = String.splitExpressions(match, lexer.stringInterpolationChar);
 
-                    // #if the first expression starts with "(", we add `"" + ` so the parentheses
-                    // # can't be mis-parsed as a "function call"
-                   // if parsed.length and parsed[0].startsWith("(")
-                   if (parsed.length && parsed[0].startsWith("(")) {
-                     parsed.unshift('""');
-                   };
+// For C generation, replace string interpolation
+// with a call to core function "concat"
 
-                    // #join expressions using +, so we have a valid composed expression, evaluating to a string.
-                   var composed = new InfoLine(lexer, LineTypes.CODE, token.column, parsed.join(' + '), this.sourceLineNum);
+                //ifdef PROD_C
+
+                    // code a call to "concat" to handle string interpolation
+                   var composed = new InfoLine(lexer, LineTypes.CODE, token.column, "any_concat(" + (parsed.join(',')) + ")", this.sourceLineNum);
+
+                // #else //-> JavaScript
+                    ////if the first expression isnt a quoted string constant
+                    //// we add `"" + ` so: we get string concatenation from javascript.
+                    //// Also: if the first expression starts with `(`, LiteScript can
+                    //// mis-parse the expression as a "function call"
+                    //if parsed.length and parsed[0][0] isnt match[0] //match[0] is the quote: ' or "
+                        //parsed.unshift "''" // prepend ''
+
+                    ////join expressions using +, so we have a valid composed expression, evaluating to a string.
+                    //var composed = new InfoLine(lexer, LineTypes.CODE, token.column, parsed.join(' + '), .sourceLineNum  )
+                // #end if
 
                     // #Now we 'tokenize' the new composed expression
                    composed.tokenize(lexer);
@@ -1192,11 +1210,11 @@
                this.type = LineTypes.COMMENT;// # is a COMMENT line
                var char = undefined;
                // if words[5] into char is 'is' then char = words[6] #get it (skip optional 'is')
-               if ((char=words[5]) === 'is') {char = words[6]};
+               if ((char=words[5]) === 'is') {char = words[6];};
                // if char[0] in ['"',"'"], char = char.slice(1,-1) #optionally quoted, remove quotes
-               if (['"', "'"].indexOf(char[0])>=0) {char = char.slice(1, -1)};
+               if (['"', "'"].indexOf(char[0])>=0) {char = char.slice(1, -1);};
                // if no char then lexer.throwErr "missing string interpolation char"  #check
-               if (!char) {lexer.throwErr("missing string interpolation char")};
+               if (!char) {lexer.throwErr("missing string interpolation char");};
                lexer.stringInterpolationChar = char;
              };
            };
@@ -1230,7 +1248,7 @@
      // method toString()
      LexerPos.prototype.toString = function(){
        // if no .token, .token = {column:0}
-       if (!this.token) {this.token = {column: 0}};
+       if (!this.token) {this.token = {column: 0};};
        return "" + this.lexer.filename + ":" + this.sourceLineNum + ":" + ((this.token.column || 0) + 1);
      };
    // end class LexerPos
@@ -1264,7 +1282,7 @@
 
 // ok, found startCode, initialize
 
-       debug("**** START MULTILINE ", startCode);
+       log.debug("**** START MULTILINE ", startCode);
 
        this.section = [];
        var startSourceLine = lexer.sourceLineNum;
@@ -1399,7 +1417,7 @@
 
          // if .currLine or .currLine is ""
          if (this.currLine || this.currLine === "") {
-             debug(this.lineNum, this.currLine);
+             log.debug(this.lineNum, this.currLine);
              // if .toHeader
              if (this.toHeader) {
                this.hLines.push(this.currLine);
@@ -1422,7 +1440,7 @@
 // if there's something on the line, start a new one
 
          // if .currLine, .startNewLine
-         if (this.currLine) {this.startNewLine()};
+         if (this.currLine) {this.startNewLine();};
     };
 
 
@@ -1461,7 +1479,7 @@
     OutCode.prototype.markSourceMap = function(indent){
        var col = this.column;
        // if not .currLine, col += indent-1
-       if (!(this.currLine)) {col += indent - 1};
+       if (!(this.currLine)) {col += indent - 1;};
        return {col: col, lin: this.lineNum - 1};
     };
 

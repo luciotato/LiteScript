@@ -721,9 +721,9 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>background</key>
-				<string>#203020</string>
+				<string>#330D04</string>
 				<key>foreground</key>
-				<string>#b0b0b0</string>  //MARKUP TITLE #CDA869 #B6A574 #A0A020
+				<string>#d0d0d0</string>  //MARKUP TITLE #CDA869 #B6A574 #A0A020
 			</dict>
 		</dict>
 		<dict>
@@ -736,7 +736,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>background</key>
-				<string>#531D04</string>
+				<string>#0a190a</string>
 				<key>foreground</key>
 				<string>#b0b0b0</string>  //MARKUP TITLE #CDA869 #B6A574 #A0A020
 			</dict>

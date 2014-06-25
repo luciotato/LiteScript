@@ -3,14 +3,13 @@
 // Dependencies
 // ------------
 
-   // import ASTBase,Grammar,log
+   // import ASTBase,Grammar,log, Map
    var ASTBase = require('./ASTBase');
    var Grammar = require('./Grammar');
    var log = require('./log');
-   var debug = log.debug;
-
-   // import Map
    var Map = require('./Map');
+
+    //import Map
 
    // export default class NameDeclaration
    // constructor
@@ -18,7 +17,7 @@
      //      properties
 
       // name: string
-      // members: Map //Map string to NameDeclaration
+      // members: Map string to NameDeclaration
       // nodeDeclared: ASTBase
       // parent: NameDeclaration
       // type, itemType
@@ -31,7 +30,7 @@
      this.nodeDeclared = node;
 
       // declare on options
-        // pointsTo:NameDeclaration, type, itemType, value, isForward, isDummy
+        // pointsTo:NameDeclaration, type, itemType, returnType, value, isForward, isDummy
 
      // if options
      if (options) {
@@ -46,17 +45,19 @@
        
        else {
          // if options.type, .setMember('**proto**',options.type)
-         if (options.type) {this.setMember('**proto**', options.type)};
+         if (options.type) {this.setMember('**proto**', options.type);};
          // if options.itemType, .setMember('**item type**',options.itemType)
-         if (options.itemType) {this.setMember('**item type**', options.itemType)};
+         if (options.itemType) {this.setMember('**item type**', options.itemType);};
+         // if options.returnType, .setMember('**return type**',options.returnType)
+         if (options.returnType) {this.setMember('**return type**', options.returnType);};
          // if options.hasOwnProperty('value'), .setMember('**value**',options.value)
-         if (options.hasOwnProperty('value')) {this.setMember('**value**', options.value)};
+         if (options.hasOwnProperty('value')) {this.setMember('**value**', options.value);};
        };
 
        // if options.isForward, .isForward = true
-       if (options.isForward) {this.isForward = true};
+       if (options.isForward) {this.isForward = true;};
        // if options.isDummy, .isDummy = true
-       if (options.isDummy) {this.isDummy = true};
+       if (options.isDummy) {this.isDummy = true;};
      };
 
 // keep a list of all NameDeclarations
@@ -80,9 +81,9 @@
            // do
            do{
                // if no actual or no actual.members, break #end of chain
-               if (!actual || !actual.members) {break};
+               if (!actual || !actual.members) {break;};
                // if actual is this, return #circular ref, abort setting
-               if (actual === this) {return};
+               if (actual === this) {return;};
            } while ((actual=actual.members.get(normalized)));// end loop
            
        };
@@ -130,7 +131,8 @@
 
        // for each key,member in map realNameDecl.members
        var member=undefined;
-       for ( var key in realNameDecl.members.members) if (realNameDecl.members.members.hasOwnProperty(key)){member=realNameDecl.members.members[key];
+       if(!realNameDecl.members.map_members) throw(new Error("for each in map: not a Map, no .map_members"));
+       for ( var key in realNameDecl.members.map_members) if (realNameDecl.members.map_members.hasOwnProperty(key)){member=realNameDecl.members.map_members[key];
          {
           // declare member:NameDeclaration
          member.parent = this;
@@ -156,13 +158,14 @@
     NameDeclaration.prototype.makePointTo = function(nameDecl){
 
        // if nameDecl isnt instance of NameDeclaration, fail with "makePointTo: not a NameDeclaration"
-       if (!(nameDecl instanceof NameDeclaration)) {throw new Error("makePointTo: not a NameDeclaration")};
+       if (!(nameDecl instanceof NameDeclaration)) {throw new Error("makePointTo: not a NameDeclaration");};
 
         // # remove existing members from nameDeclarations[]
        this.isForward = false;
        // for each memberDecl in map .members
        var memberDecl=undefined;
-       for ( var memberDecl__propName in this.members.members) if (this.members.members.hasOwnProperty(memberDecl__propName)){memberDecl=this.members.members[memberDecl__propName];
+       if(!this.members.map_members) throw(new Error("for each in map: not a Map, no .map_members"));
+       for ( var memberDecl__propName in this.members.map_members) if (this.members.map_members.hasOwnProperty(memberDecl__propName)){memberDecl=this.members.map_members[memberDecl__propName];
          {
          NameDeclaration.allOfThem.remove(memberDecl);
          }
@@ -230,7 +233,7 @@
     };
 
 
-    // helper method addMember(nameDecl:NameDeclaration, options, nodeDeclared)
+    // helper method addMember(nameDecl:NameDeclaration, options, nodeDeclared) returns NameDeclaration
     NameDeclaration.prototype.addMember = function(nameDecl, options, nodeDeclared){
 // Adds passed NameDeclaration to .members
 // Reports duplicated.
@@ -251,7 +254,7 @@
        if(!options) options={};
        // options.scopeCase: undefined
 
-       debug("addMember: '" + nameDecl.name + "' to '" + this.name + "'");// #[#{.constructor.name}] name:
+       log.debug("addMember: '" + nameDecl.name + "' to '" + this.name + "'");// #[#{.constructor.name}] name:
 
        var dest = this;
        // if no .members
@@ -297,7 +300,7 @@
            log.error("" + (nameDecl.positionText()) + ". DUPLICATED property name: '" + nameDecl.name + "'");
            log.error(found.originalDeclarationPosition());// #add extra information line
            // if no nameDecl.nodeDeclared, console.trace
-           if (!nameDecl.nodeDeclared) {console.trace()};
+           if (!nameDecl.nodeDeclared) {console.trace();};
        };
 
        return nameDecl;
@@ -368,8 +371,8 @@
    // export helper function fixSpecialNames(text:string)
    function fixSpecialNames(text){
 
-     // if text in ['__proto__','NaN','Infinity','undefined','null','false','true','constructor','prototype'] # not good names
-     if (['__proto__', 'NaN', 'Infinity', 'undefined', 'null', 'false', 'true', 'constructor', 'prototype'].indexOf(text)>=0) {// # not good names
+     // if text in ['__proto__','NaN','Infinity','undefined','null','false','true','constructor'] # not good names
+     if (['__proto__', 'NaN', 'Infinity', 'undefined', 'null', 'false', 'true', 'constructor'].indexOf(text)>=0) {// # not good names
        return '|' + text + '|';
      }
      

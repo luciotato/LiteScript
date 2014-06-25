@@ -5,30 +5,30 @@
    // constructor
    function Map(){
         // properties
-            // members:Object = new Object
-           this.members=new Object();
+            // map_members:Object = new Object
+           this.map_members=new Object();
    };
 
        // method set(key:string, value)
        Map.prototype.set = function(key, value){
-           this.members[key] = value;
+           this.map_members[key] = value;
        };
 
        // method get(key:string)
        Map.prototype.get = function(key){
-           return this.members[key];
+           return this.map_members[key];
        };
 
        // method has(key:string)
        Map.prototype.has = function(key){
-           return key in this.members;
+           return key in this.map_members;
        };
 
        // method forEach(callb)
        Map.prototype.forEach = function(callb){
-           // for each own property propName,value in .members
+           // for each own property propName,value in .map_members
            var value=undefined;
-           for ( var propName in this.members)if (this.members.hasOwnProperty(propName)){value=this.members[propName];
+           for ( var propName in this.map_members)if (this.map_members.hasOwnProperty(propName)){value=this.map_members[propName];
                {
                callb(propName, value);
                }
@@ -39,7 +39,7 @@
 
        // method clear()
        Map.prototype.clear = function(){
-           this.members = new Object();
+           this.map_members = new Object();
        };
    // end class Map
 

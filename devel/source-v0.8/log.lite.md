@@ -1,92 +1,93 @@
 Log Utility
 ============
-(c) 2014 Lucio M. Tato
 
+    import color
 
 options
 -------
 
-    export var options  =
+    class LogOptions
+        properties
+            verbose: int = 1
+            warning: int = 1
+            storeMessages:boolean = false
+            debug = new LogOptionsDebug
 
-            verbose: 1
-
-            warning: 1
-
-            storeMessages: false
-
-            debug:
-                enabled: false
-                file   : 'out/debug.log'
-
-if options.storeMessages, messages are pused at messages[]
-instead of console.
-
-    export var messages=[]
+    class LogOptionsDebug
+        properties
+            enabled: boolean =  false
+            file   : string = 'out/debug.log'
 
 
-Colors
-------
-
-    export var color = 
-
-      normal:   "\x1b[39;49m"
-      red:      "\x1b[91m"
-      yellow:   "\x1b[93m"
-      green:    "\x1b[32m" 
- 
-    
 Dependencies:
 -------------
+
+    #ifndef PROD_C
 
     if type of process isnt 'undefined' #only import if we're on node
         global import fs
         import mkPath 
 
-###global declares, valid properties
+    #endif
 
-    declare on Error
-        soft, controled, code
+
+## Main namespace / singleton
+
+### export default namespace log
+
+#### properties 
+
+        options:LogOptions = new LogOptions
+        errorCount = 0
+        warningCount = 0
+
+if options.storeMessages, messages are pused at messages[]
+instead of console.
+
+        messages: string Array = []
 
 Implementation
 ---------------
 
-    declare valid Array.prototype.slice.apply
-    declare valid Array.prototype.join.apply
-    declare valid console.log.apply
-    declare valid console.error.apply
+#### method debug
 
-### export function debug
+        if .options.debug.enabled
 
-        if options.debug.enabled
-            var args:Object array = Array.prototype.slice.apply(arguments)
+            var args = arguments.toArray()
+
+            #ifndef PROD_C
             if options.debug.file
                 fs.appendFileSync options.debug.file, args.join(" ")+"\r\n"
             else
                 console.log.apply console,args
+            #endif
 
-### append to namespace debug
-#### method clear ### clear debug file
+#### method debugClear ### clear debug file
 
+        #ifdef PROD_C
+        do nothing
+        #else
         mkPath.toFile options.debug.file
         fs.writeFileSync options.debug.file,""
+        #endif
 
 
-### export function error
+#### method error
     
 increment error count 
 
-        error.count++
-        var args:Object array = Array.prototype.slice.apply(arguments);
+        .errorCount++
+        var args = arguments.toArray()
 
 add "ERROR:", send to debug log
 
         args.unshift('ERROR:');
-        debug.apply(this,args);
+        .debug.apply(this,args);
 
 if messages should be stored...
 
-        if options.storeMessages
-            messages.push args.join(" ")
+        if .options.storeMessages
+            .messages.push args.join(" ")
 
 else, add red color, send to stderr
 
@@ -96,23 +97,19 @@ else, add red color, send to stderr
             console.error.apply(console,args);
 
 
-### append to namespace error #to the function as namespace
-        properties 
-            count = 0  # now we have: log.error.count
+#### method warning
 
-
-### export function warning
-
-        warning.count++
-        var args:Object array = Array.prototype.slice.apply(arguments);
-        args.unshift('WARNING:');
-        debug.apply(this,args);
-        if options.warning > 0
+        .warningCount++
+        var args = arguments.toArray()
+        args.unshift('WARNING:')
+        .debug.apply(this,args)
+        
+        if .options.warning > 0
 
 if messages should be stored...
 
-            if options.storeMessages
-                messages.push args.join(" ")
+            if .options.storeMessages
+                .messages.push args.join(" ")
 
 else, add yellow color, send to stderr
 
@@ -121,51 +118,51 @@ else, add yellow color, send to stderr
                 args.push(color.normal);
                 console.error.apply(console,args);
         
-### append to namespace warning #to the function as namespace
-        properties 
-            count = 0  # now we have: log.warning.count
+#### method message
 
-### export function message
+        var args = arguments.toArray()
 
-        debug.apply(this,arguments)
-        if options.verbose >= 1
+        .debug.apply(this,args)
+        if .options.verbose >= 1
 
 if messages should be stored...
 
-            if options.storeMessages
-                messages.push Array.prototype.join.call(arguments," ")
+            if .options.storeMessages
+                .messages.push args.join(" ")
 
 else, send to console
 
             else 
-                console.log.apply(console,arguments)
+                console.log.apply(console,args)
 
 
-### export function info
+#### method info
 
-        if options.verbose >= 2
-            message.apply(this,arguments)
+        var args = arguments.toArray()
+        if .options.verbose >= 2
+            .message.apply(this,args)
 
-### export function extra
+#### method extra
 
-        if options.verbose >= 3
-            message.apply(this,arguments)
+        var args = arguments.toArray()
+        if .options.verbose >= 3
+            .message.apply(this,args)
 
 
-### export function getMessages
+#### method getMessages
 get & clear
 
-        var result = messages
-        messages =[]
+        var result = .messages
+        .messages =[]
         return result
 
 
-### export function throwControled
+#### method throwControled(msg)
 Throws Error, but with a "controled" flag set, 
 to differentiate from unexpected compiler errors
 
-        var e = new Error(Array.prototype.slice.apply(arguments).join(" "))
-        e.controled = true
-        debug "Controled ERROR:", e.message
+        var e = new Error(msg)
+        e.extra.set "controled", 1
+        .debug "Controled ERROR:", e.message
         throw e
 

@@ -10,11 +10,10 @@ Core2
     public class TestClass
 
         properties
-            value //if type left unstated, get assigned as "initValue"????
             myArr: string array
 
-        constructor new TestClass(initValue)
-            .value = initValue
+        constructor new TestClass(initValue:array)
+            .myArr = initValue
             
         method indexOf(searched:string, fromIndex:int=0) returns int
 
@@ -22,19 +21,21 @@ Core2
                 if .myArr[n] is searched, return n;
             return -1
             
-        method sliceJoin(start:int, endPos:int=-1) returns string
+        method sliceJoin(start, endPos) returns string
 
-            var len:int = .myArr.length
+            var len = .myArr.length
 
-            start = inRange( 0, start<0?len+start:start , len)
+            default endPos = len+1
 
-            endPos = inRange( 0, endPos<0?len+endPos:endPos , len)
+            start = inRange( 0, start<0?len+start:start , len-1)
+
+            endPos = inRange( 0, endPos<0?len+endPos:endPos , len-1)
 
             if start>=endPos, return ''
 
-            var result:string
+            var result:string = ""
             for n=start to endPos 
-                result.concat .myArr[n],' '
+                result = "#{result}#{.myArr[n]} ";
 
             return result
 

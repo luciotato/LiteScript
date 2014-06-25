@@ -1,116 +1,125 @@
 //Compiled by LiteScript compiler v0.7.0, source: /home/ltato/LiteScript/devel/source-v0.8/log.lite.md
 // Log Utility
 // ============
-// (c) 2014 Lucio M. Tato
 
+   // import color
+   var color = require('./color');
 
 // options
 // -------
 
-   var options = {
-           verbose: 1, 
-           warning: 1, 
-           storeMessages: false, 
-           debug: {
-               enabled: false, 
-               file: 'out/debug.log'
-               }
-           };
-   // export
-   module.exports.options = options;
+   // class LogOptions
+   // constructor
+   function LogOptions(){
+        // properties
+            // verbose: int = 1
+            // warning: int = 1
+            // storeMessages:boolean = false
+            // debug = new LogOptionsDebug
+           this.verbose=1;
+           this.warning=1;
+           this.storeMessages=false;
+           this.debug=new LogOptionsDebug();
+   };
+   
+   // end class LogOptions
 
-// if options.storeMessages, messages are pused at messages[]
-// instead of console.
-
-   var messages = [];
-   // export
-   module.exports.messages = messages;
-
-
-// Colors
-// ------
-
-   var color = {
-     normal: "\x1b[39;49m", 
-     red: "\x1b[91m", 
-     yellow: "\x1b[93m", 
-     green: "\x1b[32m"
-     };
-   // export
-   module.exports.color = color;
+   // class LogOptionsDebug
+   // constructor
+   function LogOptionsDebug(){
+        // properties
+            // enabled: boolean =  false
+            // file   : string = 'out/debug.log'
+           this.enabled=false;
+           this.file='out/debug.log';
+   };
+   
+   // end class LogOptionsDebug
 
 
 // Dependencies:
 // -------------
 
-   // if type of process isnt 'undefined' #only import if we're on node
-   if (typeof process !== 'undefined') {// #only import if we're on node
-       // global import fs
-       var fs = require('fs');
-       // import mkPath
-       var mkPath = require('./mkPath');
-       
-   };
+    //ifndef PROD_C
 
-// ###global declares, valid properties
+    //if type of process isnt 'undefined' #only import if we're on node
+        //global import fs
+        //import mkPath
 
-    // declare on Error
-        // soft, controled, code
+    // #endif
+
+
+// ## Main namespace / singleton
+
+   // export default namespace log
+   var log={};
+
+     //      properties
+
+        // options:LogOptions = new LogOptions
+        // errorCount = 0
+        // warningCount = 0
+
+// if options.storeMessages, messages are pused at messages[]
+// instead of console.
+
+        // messages: string Array = []
+        log.options=new LogOptions();
+        log.errorCount=0;
+        log.warningCount=0;
+        log.messages=[];
 
 // Implementation
 // ---------------
 
-    // declare valid Array.prototype.slice.apply
-    // declare valid Array.prototype.join.apply
-    // declare valid console.log.apply
-    // declare valid console.error.apply
+    // method debug
+    log.debug = function(){
 
-   // export function debug
-   function debug(){
+       // if .options.debug.enabled
+       if (this.options.debug.enabled) {
 
-       // if options.debug.enabled
-       if (options.debug.enabled) {
-           var args = Array.prototype.slice.apply(arguments);
-           // if options.debug.file
-           if (options.debug.file) {
-               fs.appendFileSync(options.debug.file, args.join(" ") + "\r\n");
-           }
-           
-           else {
-               console.log.apply(console, args);
-           };
+           var args = Array.prototype.slice.call(arguments);
        };
-   };
-   // export
-   module.exports.debug=debug;
-
-   // append to namespace debug
-    // method clear ### clear debug file
-    debug.clear = function(){// ### clear debug file
-
-       mkPath.toFile(options.debug.file);
-       fs.writeFileSync(options.debug.file, "");
     };
 
+            //ifndef PROD_C
+            //if options.debug.file
+                //fs.appendFileSync options.debug.file, args.join(" ")+"\r\n"
+            //else
+                //console.log.apply console,args
+            // #endif
 
-   // export function error
-   function error(){
+    // method debugClear ### clear debug file
+    log.debugClear = function(){// ### clear debug file
+
+        //ifdef PROD_C
+       // do nothing
+       null;
+    };
+        // #else
+        //mkPath.toFile options.debug.file
+        //fs.writeFileSync options.debug.file,""
+        // #endif
+
+
+    // method error
+    log.error = function(){
 
 // increment error count
 
-       error.count++;
-       var args = Array.prototype.slice.apply(arguments);
+       this.errorCount++;
+       var args = Array.prototype.slice.call(arguments);
 
 // add "ERROR:", send to debug log
 
        args.unshift('ERROR:');
-       debug.apply(this, args);
+       this.debug.apply(this, args);
 
 // if messages should be stored...
 
-       // if options.storeMessages
-       if (options.storeMessages) {
-           messages.push(args.join(" "));
+       // if .options.storeMessages
+       if (this.options.storeMessages) {
+           this.messages.push(args.join(" "));
        }
 
 // else, add red color, send to stderr
@@ -120,33 +129,25 @@
            args.push(color.normal);
            console.error.apply(console, args);
        };
-   };
-   // export
-   module.exports.error=error;
+    };
 
 
-   // append to namespace error #to the function as namespace
-        // properties
-            // count = 0  # now we have: log.error.count
-           error.count=0;
-       
+    // method warning
+    log.warning = function(){
 
-
-   // export function warning
-   function warning(){
-
-       warning.count++;
-       var args = Array.prototype.slice.apply(arguments);
+       this.warningCount++;
+       var args = Array.prototype.slice.call(arguments);
        args.unshift('WARNING:');
-       debug.apply(this, args);
-       // if options.warning > 0
-       if (options.warning > 0) {
+       this.debug.apply(this, args);
+
+       // if .options.warning > 0
+       if (this.options.warning > 0) {
 
 // if messages should be stored...
 
-           // if options.storeMessages
-           if (options.storeMessages) {
-               messages.push(args.join(" "));
+           // if .options.storeMessages
+           if (this.options.storeMessages) {
+               this.messages.push(args.join(" "));
            }
 
 // else, add yellow color, send to stderr
@@ -157,87 +158,75 @@
                console.error.apply(console, args);
            };
        };
-   };
-   // export
-   module.exports.warning=warning;
+    };
 
-   // append to namespace warning #to the function as namespace
-        // properties
-            // count = 0  # now we have: log.warning.count
-           warning.count=0;
-       
+    // method message
+    log.message = function(){
 
-   // export function message
-   function message(){
+       var args = Array.prototype.slice.call(arguments);
 
-       debug.apply(this, arguments);
-       // if options.verbose >= 1
-       if (options.verbose >= 1) {
+       this.debug.apply(this, args);
+       // if .options.verbose >= 1
+       if (this.options.verbose >= 1) {
 
 // if messages should be stored...
 
-           // if options.storeMessages
-           if (options.storeMessages) {
-               messages.push(Array.prototype.join.call(arguments, " "));
+           // if .options.storeMessages
+           if (this.options.storeMessages) {
+               this.messages.push(args.join(" "));
            }
 
 // else, send to console
            
            else {
-               console.log.apply(console, arguments);
+               console.log.apply(console, args);
            };
        };
-   };
-   // export
-   module.exports.message=message;
+    };
 
 
-   // export function info
-   function info(){
+    // method info
+    log.info = function(){
 
-       // if options.verbose >= 2
-       if (options.verbose >= 2) {
-           message.apply(this, arguments);
+       var args = Array.prototype.slice.call(arguments);
+       // if .options.verbose >= 2
+       if (this.options.verbose >= 2) {
+           this.message.apply(this, args);
        };
-   };
-   // export
-   module.exports.info=info;
+    };
 
-   // export function extra
-   function extra(){
+    // method extra
+    log.extra = function(){
 
-       // if options.verbose >= 3
-       if (options.verbose >= 3) {
-           message.apply(this, arguments);
+       var args = Array.prototype.slice.call(arguments);
+       // if .options.verbose >= 3
+       if (this.options.verbose >= 3) {
+           this.message.apply(this, args);
        };
-   };
-   // export
-   module.exports.extra=extra;
+    };
 
 
-   // export function getMessages
-   function getMessages(){
+    // method getMessages
+    log.getMessages = function(){
 // get & clear
 
-       var result = messages;
-       messages = [];
+       var result = this.messages;
+       this.messages = [];
        return result;
-   };
-   // export
-   module.exports.getMessages=getMessages;
+    };
 
 
-   // export function throwControled
-   function throwControled(){
+    // method throwControled(msg)
+    log.throwControled = function(msg){
 // Throws Error, but with a "controled" flag set,
 // to differentiate from unexpected compiler errors
 
-       var e = new Error(Array.prototype.slice.apply(arguments).join(" "));
-       e.controled = true;
-       debug("Controled ERROR:", e.message);
+       var e = new Error(msg);
+       e.extra.set("controled", 1);
+       this.debug("Controled ERROR:", e.message);
        // throw e
        throw e;
-   };
-   // export
-   module.exports.throwControled=throwControled;
+    };
 
+
+module.exports=log;

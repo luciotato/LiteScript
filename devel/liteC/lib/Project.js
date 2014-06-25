@@ -15,13 +15,15 @@
    var NameDeclaration = require('./NameDeclaration');
    var Validate = require('./Validate');
    var log = require('./log');
+   var color = require('./color');
 
     //ifdef PROD_C
    // import Map
    var Map = require('./Map');
+    // declare on Error
+        // extra: Map string to Object
+        // code
     // #endif
-
-   var debug = log.debug;
 
 // Get the 'Environment' object for the compiler to use.
 // The 'Environment' object, must provide functions to load files, search modules,
@@ -48,7 +50,7 @@
 
         // options
         // name
-        // moduleCache: Map
+        // moduleCache: Map string to Grammar.Module
         // root: Grammar.Module
         // compilerVars: NameDeclaration
         // globalScope: NameDeclaration
@@ -93,12 +95,12 @@
        this.options = options;
        this.moduleCache = new Map(); //{}
 
-       log.error.count = 0;
+       log.errorCount = 0;
        log.options.verbose = options.verbose;
        log.options.warning = options.warning;
        log.options.debug.enabled = options.debug;
-       // if options.debug, log.debug.clear
-       if (options.debug) {log.debug.clear()};
+       // if options.debug, log.debugClear
+       if (options.debug) {log.debugClear();};
 
 // set basePath from main module path
 
@@ -166,9 +168,10 @@
 // -if not cached-, all dependent modules.
 
        this.main = this.importModule(this.root, {name: this.options.mainModuleName});
+       this.main.isMain = true;
 
-       // if log.error.count is 0
-       if (log.error.count === 0) {
+       // if log.errorCount is 0
+       if (log.errorCount === 0) {
            log.info("\nParsed OK");
        };
 
@@ -178,8 +181,8 @@
        if (!this.options.skip) {
            log.info("Validating");
            Validate.validate(this);
-           // if log.error.count, log.throwControled log.error.count,"errors"
-           if (log.error.count) {log.throwControled(log.error.count, "errors")};
+           // if log.errorCount, log.throwControled log.errorCount,"errors"
+           if (log.errorCount) {log.throwControled(log.errorCount, "errors");};
        };
 
 // Produce, for each module
@@ -192,7 +195,8 @@
 
        // for each moduleNode:Grammar.Module in map .moduleCache
        var moduleNode=undefined;
-       for ( var moduleNode__propName in this.moduleCache.members) if (this.moduleCache.members.hasOwnProperty(moduleNode__propName)){moduleNode=this.moduleCache.members[moduleNode__propName];
+       if(!this.moduleCache.map_members) throw(new Error("for each in map: not a Map, no .map_members"));
+       for ( var moduleNode__propName in this.moduleCache.map_members) if (this.moduleCache.map_members.hasOwnProperty(moduleNode__propName)){moduleNode=this.moduleCache.map_members[moduleNode__propName];
          {
 
          // if not moduleNode.fileInfo.isCore and moduleNode.referenceCount
@@ -252,7 +256,7 @@
 
            // end if
 
-           log.message("" + log.color.green + "[OK] " + result + " -> " + moduleNode.fileInfo.outRelFilename + " " + log.color.normal);
+           log.message("" + color.green + "[OK] " + result + " -> " + moduleNode.fileInfo.outRelFilename + " " + color.normal);
            log.extra();// #blank line
          };
          }
@@ -261,11 +265,11 @@
 
        // end for each module cached
 
-       log.message("" + log.error.count + " errors, " + log.warning.count + " warnings.");
+       log.message("" + log.errorCount + " errors, " + log.warningCount + " warnings.");
 
         //ifdef PROD_C
-       // if no log.error.count, Producer_c.postProduction this
-       if (!log.error.count) {Producer_c.postProduction(this)};
+       // if no log.errorCount, Producer_c.postProduction this
+       if (!log.errorCount) {Producer_c.postProduction(this);};
     };
         // #endif
 
@@ -297,7 +301,7 @@
 
 // set Lexer source code, process lines, tokenize
 
-       log.error.count = 0;
+       log.errorCount = 0;
 
        var stage = "lexer";
        moduleNode.lexer.initSource(filename, sourceLines);
@@ -310,10 +314,10 @@
 
 // Check if errors were emitted
 
-       // if log.error.count
-       if (log.error.count) {
-           var errsEmitted = new Error("" + log.error.count + " errors emitted");
-           errsEmitted.controled = true;
+       // if log.errorCount
+       if (log.errorCount) {
+           var errsEmitted = new Error("" + log.errorCount + " errors emitted");
+           errsEmitted.extra.set("controled", true);
            // throw errsEmitted
            throw errsEmitted;
        };
@@ -325,8 +329,8 @@
        }catch(err){
 
            err = moduleNode.lexer.hardError || err; //get important (inner) error
-           // if not err.controled  //if not 'controled' show lexer pos & call stack (includes err text)
-           if (!(err.controled)) { //if not 'controled' show lexer pos & call stack (includes err text)
+           // if not err.extra.get("controled")  //if not 'controled' show lexer pos & call stack (includes err text)
+           if (!(err.extra.get("controled"))) { //if not 'controled' show lexer pos & call stack (includes err text)
                 // declare valid err.stack
                err.message = "" + (moduleNode.lexer.posToString()) + "\n" + (err.stack || err.message);
            };
@@ -335,7 +339,7 @@
 
             // #show last soft error. Can be useful to pinpoint the problem
            // if moduleNode.lexer.softError, log.message "previous soft-error: #{moduleNode.lexer.softError.message}"
-           if (moduleNode.lexer.softError) {log.message("previous soft-error: " + moduleNode.lexer.softError.message)};
+           if (moduleNode.lexer.softError) {log.message("previous soft-error: " + moduleNode.lexer.softError.message);};
 
             //if process #we're in node.js
             //    process.exit(1)
@@ -586,7 +590,7 @@
        // if fileInfo.isCore or fileInfo.importInfo.globalImport or fileInfo.extension is '.js'
        if (fileInfo.isCore || fileInfo.importInfo.globalImport || fileInfo.extension === '.js') {
 
-           log.info(String.spaces(this.recurseLevel * 2), fileInfo.isCore ? "core module" : "javascript file", "require('" + fileInfo.relFilename + "')");
+           log.info(String.spaces(this.recurseLevel * 2), fileInfo.isCore ? "core module" : "javascript file", "require('" + fileInfo.basename + "')");
 
            // if not fileInfo.isCore
            if (!(fileInfo.isCore)) {
@@ -598,7 +602,7 @@
                var save = {paths: module.paths, filename: module.filename};
                module.paths = module.constructor._nodeModulePaths(importingModule.fileInfo.dirname);
                module.filename = importingModule.fileInfo.filename;
-               debug("importingModule", module.filename);
+               log.debug("importingModule", module.filename);
            };
 
            var requiredNodeJSModule = require(fileInfo.importInfo.name);
@@ -633,7 +637,7 @@
 
        var compVar = this.compilerVars.findOwnMember(name);
        // if no compVar, compVar = .compilerVars.addMember(name)
-       if (!compVar) {compVar = this.compilerVars.addMember(name)};
+       if (!compVar) {compVar = this.compilerVars.addMember(name);};
        compVar.setMember("**value**", value);
     };
 
@@ -642,7 +646,8 @@
 
        // for each moduleNode:Grammar.Module in map .moduleCache
        var moduleNode=undefined;
-       for ( var moduleNode__propName in this.moduleCache.members) if (this.moduleCache.members.hasOwnProperty(moduleNode__propName)){moduleNode=this.moduleCache.members[moduleNode__propName];
+       if(!this.moduleCache.map_members) throw(new Error("for each in map: not a Map, no .map_members"));
+       for ( var moduleNode__propName in this.moduleCache.map_members) if (this.moduleCache.map_members.hasOwnProperty(moduleNode__propName)){moduleNode=this.moduleCache.map_members[moduleNode__propName];
              {
              moduleNode.lexer.out = newOut;
              }

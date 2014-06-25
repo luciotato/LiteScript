@@ -6,7 +6,7 @@
    
    
    // classTestClass
-   #define TestClass 16
+   #define TestClass 24
    
    // declare:
    // TestClass_ptr : type = ptr to instance
@@ -14,8 +14,7 @@
    // struct TestClass_s = struct with instance properties
    struct TestClass_s {
        TypeID constructor;
-       any value;
-       any myArr;
+           any myArr;
    };
    
    extern any TestClass__init(any this,any initValue);

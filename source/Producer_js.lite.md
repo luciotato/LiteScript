@@ -237,8 +237,7 @@ example (`arguments` pseudo-array): `'lite' not in arguments` -> `Array.prototyp
             .out .right,".indexOf(",.left,")", .negated? "===-1" : ">=0"
 
 fix when used on JS built-in array-like `arguments`
-
-            .lexer.out.currLine = .lexer.out.currLine.replace(/\barguments.indexOf\(/,'Array.prototype.slice.call(arguments).indexOf(')
+//            .lexer.out.currLine = .lexer.out.currLine.replace(/\barguments.indexOf\(/,'Array.prototype.slice.call(arguments).indexOf(')
 
 2) *'has property'* operator, requires swapping left and right operands and to use js: `in`
 
@@ -310,6 +309,10 @@ produce the expression body
       method produce() 
 
 Prefix ++/--, varName, Accessors and postfix ++/--
+
+        if .name is 'arguments' //the only thing that can be done with "arguments" is "arguments.toArray()"
+            .out 'Array.prototype.slice.call(arguments)' 
+            return
 
         .out .preIncDec, .name.translate(IDENTIFIER_ALIASES), .accessors, .postIncDec
 
@@ -409,8 +412,7 @@ return prefix for item to be appended
           ownerName = parent.varRef
         
         else # in a ClassDeclaration
-          declare valid .toNamespace
-          toPrototype = not .toNamespace #if it's a "namespace properties" or "namespace method"
+          toPrototype = true
           ownerName = parent.name
 
         return [ownerName, toPrototype? ".prototype." else "." ]
@@ -545,13 +547,7 @@ if it has AssginedValue, we out assignment if ES6 is available.
 ### Append to class Grammar.SingleLineStatement ###
 
       method produce()
-    
-        var bare=[]
-        for each statement in .statements
-            bare.push statement.statement
-        #.out NL,"    ",{CSL:bare, separator:";"}
-        .out {CSL:bare, separator:";"}
-
+        .out {CSL:.statements, separator:";"},";"
 
 ### Append to class Grammar.IfStatement ###
 
@@ -597,13 +593,11 @@ Pre-For code. If required, store the iterable in a temp var.
 var in order to avoid calling it twice. Else, we use it as is.
 
         var iterable:Grammar.Expression = .variant.iterable
-
-        declare valid iterable.root.name.hasSideEffects
-
         if iterable 
-          if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
-            iterable = ASTBase.getUniqueVarName('list')  #unique temp iterable var name
-            .out "var ",iterable,"=",.variant.iterable,";",NL
+            declare valid iterable.root.name.hasSideEffects
+            if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
+                iterable = ASTBase.getUniqueVarName('list')  #unique temp iterable var name
+                .out "var ",iterable,"=",.variant.iterable,";",NL
 
         .variant.produce(iterable)
 
@@ -649,6 +643,9 @@ Since al 3 cases are closed with '}; //comment', we skip statement semicolon
 
 Create a default index var name if none was provided
 
+        if .isMap //new syntax "for each in map xx"
+            return .produceInMap(iterable)
+
         var indexVar = .indexVar
         if no indexVar
           indexVar = {name:.mainVar.name+'__inx', assignedValue:0} #default index var name
@@ -661,11 +658,40 @@ Create a default index var name if none was provided
         .body.out .mainVar.name,"=",iterable,"[",indexVar.name,"];",NL
 
         if .where 
-          .out .where,"{",.body,"}"
+          .out '  ',.where,"{",.body,"}"
         else 
           .out .body
 
         .out "};",{COMMENT:["end for each in ",.iterable]},NL
+
+
+method: produceInMap
+When Map is implemented using js "Object"
+
+      method produceInMap(iterable)
+
+          var indexVarName:string
+          if no .indexVar
+            indexVarName = .mainVar.name+'__propName'
+          else
+            indexVarName = .indexVar.name
+
+          .out "var ", .mainVar.name,"=undefined;",NL
+          .out 'if(!',iterable,'.map_members) throw(new Error("for each in map: not a Map, no .map_members"));',NL
+          .out "for ( var ", indexVarName, " in ", iterable, ".map_members)"
+          .out " if (",iterable,".map_members.hasOwnProperty(",indexVarName,"))"
+
+          if .mainVar
+              .body.out "{", .mainVar.name,"=",iterable,".map_members[",indexVarName,"];",NL
+
+          .out .where
+
+          .body.out "{", .body, "}",NL
+
+          if .mainVar
+            .body.out NL, "}"
+
+          .out {COMMENT:"end for each property"},NL
 
 ### Append to class Grammar.ForIndexNumeric
 ### Variant 3) 'for index=...' to create *numeric loops* 
@@ -684,6 +710,7 @@ Handle by using a js/C standard for(;;){} loop
         if .conditionPrefix is 'to'
             #'for n=0 to 10' -> for(n=0;n<=10;...
             .out .indexVar.name,"<=",.endExpression
+            if .increment, .sayErr "Do not use 'for... to' and a increment statement. Use 'while|until'"
 
         else # is while|until
 
@@ -697,7 +724,10 @@ produce the condition, negated if the prefix is 'until'
 
 if no increment specified, the default is indexVar++
 
-        .out .increment or [.indexVar.name,"++"]
+        if .increment
+            .out {CSL:.increment.statements}
+        else
+            .out .indexVar.name,"++"
 
         .out ") ", .where
 
@@ -1019,7 +1049,6 @@ we need to get the class constructor, and separate other class items.
         var theConstructor = null
         var theMethods = []
         var theProperties = []
-        var theNamespaceProperties = []
 
         if .body
           for each index,item in .body.statements
@@ -1032,11 +1061,7 @@ we need to get the class constructor, and separate other class items.
               theConstructor = item.statement
 
             else if item.statement instanceof Grammar.PropertiesDeclaration
-              declare valid item.statement.toNamespace
-              if item.statement.toNamespace
-                 theNamespaceProperties.push item.statement
-              else
-                  theProperties.push item.statement
+              theProperties.push item.statement
 
             else 
               theMethods.push item
@@ -1063,11 +1088,6 @@ Set parent class if we have one indicated
         if .varRefSuper
           .out {COMMENT:[.name,' (extends|proto is) ',.varRefSuper,NL]}
           .out .name,'.prototype.__proto__ = ', .varRefSuper,'.prototype;',NL 
-
-now out namespace properties, which means create properties in the object-function-class
-
-        for each propDecl in theNamespaceProperties
-          propDecl.produce(.name+'.') //namespace property assignments
 
 now out methods, which means create properties in the object-function-class prototype
 
@@ -1168,7 +1188,7 @@ if we have a varRef, is a case over a value
                     ,") return ",caseWhenSection.resultExpression,";",NL
 
             if .elseExpression, .out "    return ",.elseExpression,";",NL
-            .out "        }(",.varRef,"))"
+            .out "        }.call(this,",.varRef,"))"
 
 else, it's a var-less case. we code it as chained ternary operators
 

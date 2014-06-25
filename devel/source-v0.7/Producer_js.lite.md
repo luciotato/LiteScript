@@ -237,8 +237,7 @@ example (`arguments` pseudo-array): `'lite' not in arguments` -> `Array.prototyp
             .out .right,".indexOf(",.left,")", .negated? "===-1" : ">=0"
 
 fix when used on JS built-in array-like `arguments`
-
-            .lexer.out.currLine = .lexer.out.currLine.replace(/\barguments.indexOf\(/,'Array.prototype.slice.call(arguments).indexOf(')
+//            .lexer.out.currLine = .lexer.out.currLine.replace(/\barguments.indexOf\(/,'Array.prototype.slice.call(arguments).indexOf(')
 
 2) *'has property'* operator, requires swapping left and right operands and to use js: `in`
 
@@ -310,6 +309,10 @@ produce the expression body
       method produce() 
 
 Prefix ++/--, varName, Accessors and postfix ++/--
+
+        if .name is 'arguments' //the only thing that can be done with "arguments" is "arguments.toArray()"
+            .out 'Array.prototype.slice.call(arguments)' 
+            return
 
         .out .preIncDec, .name.translate(IDENTIFIER_ALIASES), .accessors, .postIncDec
 
@@ -544,13 +547,7 @@ if it has AssginedValue, we out assignment if ES6 is available.
 ### Append to class Grammar.SingleLineStatement ###
 
       method produce()
-    
-        var bare=[]
-        for each statement in .statements
-            bare.push statement.statement
-        #.out NL,"    ",{CSL:bare, separator:";"}
-        .out {CSL:bare, separator:";"}
-
+        .out {CSL:.statements, separator:";"},";"
 
 ### Append to class Grammar.IfStatement ###
 
@@ -597,10 +594,10 @@ var in order to avoid calling it twice. Else, we use it as is.
 
         var iterable:Grammar.Expression = .variant.iterable
         if iterable 
-          declare valid iterable.root.name.hasSideEffects
-          if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
-            iterable = ASTBase.getUniqueVarName('list')  #unique temp iterable var name
-            .out "var ",iterable,"=",.variant.iterable,";",NL
+            declare valid iterable.root.name.hasSideEffects
+            if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
+                iterable = ASTBase.getUniqueVarName('list')  #unique temp iterable var name
+                .out "var ",iterable,"=",.variant.iterable,";",NL
 
         .variant.produce(iterable)
 
@@ -661,7 +658,7 @@ Create a default index var name if none was provided
         .body.out .mainVar.name,"=",iterable,"[",indexVar.name,"];",NL
 
         if .where 
-          .out .where,"{",.body,"}"
+          .out '  ',.where,"{",.body,"}"
         else 
           .out .body
 
@@ -680,12 +677,12 @@ When Map is implemented using js "Object"
             indexVarName = .indexVar.name
 
           .out "var ", .mainVar.name,"=undefined;",NL
-
-          .out "for ( var ", indexVarName, " in ", iterable, ".members)"
-          .out " if (",iterable,".members.hasOwnProperty(",indexVarName,"))"
+          .out 'if(!',iterable,'.map_members) throw(new Error("for each in map: not a Map, no .map_members"));',NL
+          .out "for ( var ", indexVarName, " in ", iterable, ".map_members)"
+          .out " if (",iterable,".map_members.hasOwnProperty(",indexVarName,"))"
 
           if .mainVar
-              .body.out "{", .mainVar.name,"=",iterable,".members[",indexVarName,"];",NL
+              .body.out "{", .mainVar.name,"=",iterable,".map_members[",indexVarName,"];",NL
 
           .out .where
 
@@ -727,7 +724,10 @@ produce the condition, negated if the prefix is 'until'
 
 if no increment specified, the default is indexVar++
 
-        .out .increment or [.indexVar.name,"++"]
+        if .increment
+            .out {CSL:.increment.statements}
+        else
+            .out .indexVar.name,"++"
 
         .out ") ", .where
 
@@ -1188,7 +1188,7 @@ if we have a varRef, is a case over a value
                     ,") return ",caseWhenSection.resultExpression,";",NL
 
             if .elseExpression, .out "    return ",.elseExpression,";",NL
-            .out "        }(",.varRef,"))"
+            .out "        }.call(this,",.varRef,"))"
 
 else, it's a var-less case. we code it as chained ternary operators
 

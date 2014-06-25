@@ -6,6 +6,7 @@
  */
 
 #include "exceptions.h"
+#include "LiteC-core.h"
 
 struct e4c_context e4c = {0};
 
@@ -22,10 +23,11 @@ static void e4c_propagate(void){
 	if(e4c.frames > 0) longjmp(e4c.jump[e4c.frames - 1], 1);
 
 	if(fprintf(stderr
-                , "\n\nUncaught exception thrown at %s:%d\n\n"
-                , e4c.err.file||""
-                , e4c.err.line) > 0)
-
+                , "\n\n%s:%d:1 Uncaught exception thrown\n%s\n"
+                , e4c.exception.file
+                , e4c.exception.line
+                , ((Error_ptr)e4c.exception.error.value.ptr)->message.value.str
+               ) > 0)
                         (void)fflush(stderr);
 
 	exit(EXIT_FAILURE);
@@ -68,12 +70,15 @@ int e4c_hook(){
 
 void e4c_throw( const char * file
                 , int line
-                , any errObject){
+                , any error){
 
-	e4c.err.file = file;
-	e4c.err.line = line;
+	e4c.exception.file = file;
+	e4c.exception.line = line;
 
-    e4c.err.object = errObject;
+    if (error.type!=Error_TYPEID){
+        error = _newErr(anyToStr(error));
+    }
+    e4c.exception.error = error;
 
 	e4c_propagate();
 }

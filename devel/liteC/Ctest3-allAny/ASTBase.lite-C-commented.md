@@ -12,6 +12,23 @@ COMMENTED MANUAL C  GENERATION
 - so, there's a "apply" dispatcher, which takes the function to call from "this" parameter,
    and the "this" to use from arguments[0]
 
+LiteScript
+-js inspired, so: 
+  - all parameters are optional, unless marked as "required"
+  e.g.
+      function inRange(min:int, val:int, max:int)
+      --all parameters are optional
+      -- can be: 'undefined' or int32
+
+       function inRange(required min:int, required val:int, required max:int)
+      --all parameters are required
+      -- cant be 'undefined', should be int32
+
+  option 2- "required" keyword
+      function inRange(min:int, val:int, max:int) 
+          required min,val,max
+
+
 
 */-------------------
 
@@ -92,7 +109,7 @@ Also remember line index in tokenized lines, and indent
 // when sending as param, if param type is any, TO_ANY() macro should be used 
 
     any ASTBase__init(any this, any arguments /*parent:ASTBase,name*/){
-        // validate param types, define as typecast
+        // validate param types
         assert(this.constructor==ASTBase)
         assert(arguments.constructor==Array)
         //---------

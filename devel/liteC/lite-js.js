@@ -104,7 +104,7 @@
        //if options.verbose
        if (options.verbose) {
            console.log('\n\ncompiler path: ' + compilerPath);
-           console.log('compiler options: ' + (JSON.stringify(options)));
+           console.log('options: ' + (JSON.stringify(options,null,2)));
            console.log('cwd: ' + (process.cwd()));
            console.log('compile' + (compileAndRun ? " and run" : "") + ': ' + mainModuleName);
        };

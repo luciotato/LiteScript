@@ -2,17 +2,16 @@
 Dependencies
 ------------
 
-    import ASTBase,Grammar,log
-    var debug = log.debug
+    import ASTBase,Grammar,log, Map
 
-    import Map
+    //import Map
 
 ### export default Class NameDeclaration
 
 #### properties
 
       name: string
-      members: Map //Map string to NameDeclaration
+      members: Map string to NameDeclaration
       nodeDeclared: ASTBase
       parent: NameDeclaration
       type, itemType
@@ -22,14 +21,14 @@ Dependencies
 
      declare name affinity nameDecl
 
-#### constructor(name, options, node)
+#### constructor new NameDeclaration(name, options, node)
       
       .name = name
       .members = new Map //{} // {}, JSON, is "Map string to any" literal notation
       .nodeDeclared = node
 
       declare on options
-        pointsTo:NameDeclaration, type, itemType, value, isForward, isDummy
+        pointsTo:NameDeclaration, type, itemType, returnType, value, isForward, isDummy
 
       if options 
 
@@ -41,6 +40,7 @@ effectively working as a pointer
         else 
           if options.type, .setMember('**proto**',options.type)
           if options.itemType, .setMember('**item type**',options.itemType)
+          if options.returnType, .setMember('**return type**',options.returnType)
           if options.hasOwnProperty('value'), .setMember('**value**',options.value)
             
         if options.isForward, .isForward = true
@@ -160,7 +160,7 @@ If this item has a different case than the name we're adding, emit error
             return true
 
 
-#### helper method addMember(nameDecl:NameDeclaration, options, nodeDeclared) 
+#### helper method addMember(nameDecl:NameDeclaration, options, nodeDeclared) returns NameDeclaration
 Adds passed NameDeclaration to .members
 Reports duplicated.
 returns: Identifier
@@ -177,7 +177,7 @@ returns: Identifier
         default options =
             scopeCase: undefined            
 
-        debug "addMember: '#{nameDecl.name}' to '#{.name}'" #[#{.constructor.name}] name:
+        log.debug "addMember: '#{nameDecl.name}' to '#{.name}'" #[#{.constructor.name}] name:
 
         var dest = this
         if no .members
@@ -259,7 +259,7 @@ exported as members of export default class NameDeclaration
 
 ### export helper function fixSpecialNames(text:string)
 
-      if text in ['__proto__','NaN','Infinity','undefined','null','false','true','constructor','prototype'] # not good names
+      if text in ['__proto__','NaN','Infinity','undefined','null','false','true','constructor'] # not good names
         return '|'+text+'|'
       else
         return text

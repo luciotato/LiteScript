@@ -13,8 +13,6 @@ All the parts of the lexer work with "arrays" of lines.
 The first lexer pass analyzes entire lines. 
 Each line of the array is classified with a 'Line Type':
 
-    var LineTypes = {CODE:0, COMMENT:1, BLANK:2}
-
 then each CODE line is *Tokenized*, getting a `tokens[]` array
 
 -------------------------
@@ -27,7 +25,7 @@ then each CODE line is *Tokenized*, getting a `tokens[]` array
 The Lexer Class
 ===============
 
-### Class Lexer
+### export default Class Lexer
 
 The Lexer class turns the input lines into an array of "infoLines"
 
@@ -983,16 +981,29 @@ If its a string constant, and it has `#{`|`${`, process the **Interpolated Expre
 
                     declare parsed:Array
 
-                    #parse the string, splitting at #{...}, return array 
+                    #parse the quoted string, splitting at #{...}, return array 
                     var parsed = String.splitExpressions(match, lexer.stringInterpolationChar)
 
-                    #if the first expression starts with "(", we add `"" + ` so the parentheses
-                    # can't be mis-parsed as a "function call"
-                    if parsed.length and parsed[0].startsWith("(")
-                      parsed.unshift('""')
+For C generation, replace string interpolation
+with a call to core function "concat"
 
-                    #join expressions using +, so we have a valid composed expression, evaluating to a string.
+                #ifdef PROD_C
+                    
+                    // code a call to "concat" to handle string interpolation
+                    var composed = new InfoLine(lexer, LineTypes.CODE, token.column, 
+                        "any_concat(#{parsed.join(',')})", .sourceLineNum  )
+
+                #else //-> JavaScript
+                    //if the first expression isnt a quoted string constant
+                    // we add `"" + ` so: we get string concatenation from javascript.
+                    // Also: if the first expression starts with `(`, LiteScript can 
+                    // mis-parse the expression as a "function call"
+                    if parsed.length and parsed[0][0] isnt match[0] //match[0] is the quote: ' or "
+                        parsed.unshift "''" // prepend ''
+
+                    //join expressions using +, so we have a valid composed expression, evaluating to a string.
                     var composed = new InfoLine(lexer, LineTypes.CODE, token.column, parsed.join(' + '), .sourceLineNum  )
+                #end if
 
                     #Now we 'tokenize' the new composed expression
                     composed.tokenize(lexer)
@@ -1135,9 +1146,14 @@ text before endCode, goes into multiline section
 
         this.postIndent = endCol+endCode.length
 
+    end class Lexer
 
 ------------------------
-----------------------------------------------------------------------------------------------
+
+Exported Module vars
+------------------------
+
+    export var LineTypes = {CODE:0, COMMENT:1, BLANK:2}
 
 ### Public Helper Class OutCode
 This class contains helper methods for AST nodes's `produce()` methods
@@ -1263,12 +1279,3 @@ get result and clear memory
             .sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
         #endif
 
-------------------------
-Exports
-=======
-
-    
-    #make LineTypes const available as .lexer.LineTypes
-    Lexer.prototype.LineTypes = LineTypes
-
-    module.exports = Lexer 

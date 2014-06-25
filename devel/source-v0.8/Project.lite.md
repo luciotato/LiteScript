@@ -10,13 +10,14 @@ compile LiteScript code.
     import 
         ASTBase, Grammar, Lexer
         NameDeclaration, Validate
-        log
+        log, color
 
     #ifdef PROD_C
     import Map
+    declare on Error
+        extra: Map string to Object
+        code
     #endif
-
-    var debug = log.debug
 
 Get the 'Environment' object for the compiler to use.
 The 'Environment' object, must provide functions to load files, search modules, 
@@ -52,7 +53,7 @@ The Modules dependency tree is the *Project tree*.
 
         options
         name
-        moduleCache: Map
+        moduleCache: Map string to Grammar.Module
         root: Grammar.Module
         compilerVars: NameDeclaration
         globalScope: NameDeclaration
@@ -98,11 +99,11 @@ when imported|required is only compiled once and then cached.
         .options = options
         .moduleCache = new Map //{}
 
-        log.error.count = 0
+        log.errorCount = 0
         log.options.verbose = options.verbose
         log.options.warning = options.warning
         log.options.debug.enabled = options.debug
-        if options.debug, log.debug.clear
+        if options.debug, log.debugClear
 
 set basePath from main module path
 
@@ -165,8 +166,9 @@ Import & compile the main module. The main module will, in turn, 'import' and 'c
 -if not cached-, all dependent modules. 
 
         .main = .importModule(.root, {name:.options.mainModuleName})
+        .main.isMain = true
 
-        if log.error.count is 0
+        if log.errorCount is 0
             log.info "\nParsed OK"
 
 Validate
@@ -174,7 +176,7 @@ Validate
         if no .options.skip 
             log.info "Validating"
             Validate.validate this
-            if log.error.count, log.throwControled log.error.count,"errors"
+            if log.errorCount, log.throwControled log.errorCount,"errors"
 
 Produce, for each module
 
@@ -237,15 +239,15 @@ save to disk / add to external cache
 
             end if
 
-            log.message "#{log.color.green}[OK] #{result} -> #{moduleNode.fileInfo.outRelFilename} #{log.color.normal}"
+            log.message "#{color.green}[OK] #{result} -> #{moduleNode.fileInfo.outRelFilename} #{color.normal}"
             log.extra #blank line
 
         end for each module cached
 
-        log.message "#{log.error.count} errors, #{log.warning.count} warnings."
+        log.message "#{log.errorCount} errors, #{log.warningCount} warnings."
 
         #ifdef PROD_C
-        if no log.error.count, Producer_c.postProduction this
+        if no log.errorCount, Producer_c.postProduction this
         #endif
 
 #### Method compileFile(filename, moduleNode:Grammar.Module)
@@ -271,7 +273,7 @@ This method will initialize lexer & parse  source lines into ModuleNode scope
 
 set Lexer source code, process lines, tokenize
 
-        log.error.count = 0
+        log.errorCount = 0
 
         var stage = "lexer"
         moduleNode.lexer.initSource( filename, sourceLines )
@@ -284,9 +286,9 @@ Parse source
 
 Check if errors were emitted
 
-        if log.error.count
-            var errsEmitted = new Error("#{log.error.count} errors emitted")
-            errsEmitted.controled = true
+        if log.errorCount
+            var errsEmitted = new Error("#{log.errorCount} errors emitted")
+            errsEmitted.extra.set "controled",true
             throw errsEmitted
 
 Handle errors, add stage info, and stack
@@ -294,7 +296,7 @@ Handle errors, add stage info, and stack
         exception err
     
             err = moduleNode.lexer.hardError or err //get important (inner) error
-            if not err.controled  //if not 'controled' show lexer pos & call stack (includes err text)
+            if not err.extra.get("controled")  //if not 'controled' show lexer pos & call stack (includes err text)
                 declare valid err.stack
                 err.message = "#{moduleNode.lexer.posToString()}\n#{err.stack or err.message}"
 
@@ -498,7 +500,7 @@ and generate & cache interface
 
             log.info String.spaces(this.recurseLevel*2),
                 fileInfo.isCore?"core module":"javascript file",
-                "require('#{fileInfo.relFilename}')"
+                "require('#{fileInfo.basename}')"
 
             if not fileInfo.isCore
                 #hack for require(). Simulate we're at the importingModule dir
@@ -509,7 +511,7 @@ and generate & cache interface
                 var save = {paths:module.paths, filename: module.filename}
                 module.paths = module.constructor._nodeModulePaths(importingModule.fileInfo.dirname)
                 module.filename = importingModule.fileInfo.filename
-                debug "importingModule", module.filename
+                log.debug "importingModule", module.filename
 
             var requiredNodeJSModule = require(fileInfo.importInfo.name)
             moduleNode.exports.getMembersFromObjProperties(requiredNodeJSModule)

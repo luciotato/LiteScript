@@ -173,9 +173,6 @@ split expressions
 
                 loop
 
-                // make sure we start with a string to avoid '+' numeric behavior
-                if items.length and items[0][0] isnt quotes then items.unshift(quotes+quotes)
-                
                 // remainder
                 push s.slice(lastDelimiterPos),quotes
 

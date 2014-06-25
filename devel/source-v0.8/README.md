@@ -1,46 +1,45 @@
-LiteScript Compiler Source v0.7
+LiteScript Compiler Source v0.8
 ===============================
 
-This .lite code is written in v0.6 SYNTAX, and when processed by v0.6 compiler,
-will generate the v0.7 compiler, supporting v0.7 SYNTAX. 
+This .lite code is written in v0.7 SYNTAX, and when processed by v0.7 compiler,
+will generate the v0.8 compiler, supporting v0.8 SYNTAX. 
 
-Actually, v0.7 compiler is able to compile itself.
+Eventually the, v0.8 compiler should be able to compile itself.
 
-##IMPORTANT: development is made at /devel/source-v0.7
+##IMPORTANT: development is made at /devel/source-v0.8
 
-Ig you're reading /source/, it's just a snapshot of the las release.
-Do NOT work on /source/, work on /devel/source-v0.7
+Ig you're reading /source/, it's *just a snapshot of the last release*.
+work on /devel/source-v0.8
 
-v0.7 
+v0.8
 ----
 
 ### MAIN CHANGES
 
-First "Compile-to-C" incorporation.
+"Compile-to-C" incorporation.
 When compiled with "-D PROD_C", this source will incorporate
 "producer_c.js" and will hace as default target ".C"
-see: build-PRODC.sh
 
-#### Removed:
-- "namespace properties": were confusing. Better is to create
-    "append to namespace xx" after the class PropertyDeclaration
+For every *imported* (aka required) module, if there is 
+a namespace with the same name as the module filename,
+is by default a "export default namespace x"
 
-#### requirement to a valid c-conversion
+e.g.:
 
-- not supported yet:
-    - untyped vars
-    - Regexp
-    - JSON
-    - append to namespace
+-- main file:
 
+    import path
 
+-- file path.lite.md:
 
+    namespace path   // same as filename, so it is "export default". 
+                    // Exports from this module are path's methods and properties, public by default
 
-###TO DO:
-PropertyDeclaration:
-    [enumerable][read-only] property IDENTIFIER ["=" value-Expression]
-                [get ":" get-FunctionDeclaration]
-                [set ":" set-FunctionDeclaration]
+        properties
+            sep='/'
 
----
+        method resolve(...)
+    
+    end namespace path
+
 

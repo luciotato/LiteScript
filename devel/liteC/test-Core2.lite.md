@@ -1,20 +1,27 @@
 test Core2
 
-    global declare Core2
+    import Core2
 
-    function testCore2
+    import log from '../source-v0.8/log'
 
-        var c:int=0
+    var c:int=0
 
-        print inRange(1,c,10)
+    print Core2.inRange(1,c,10)
 
-        var a = new TestClass("murcielago")
+    var a = "murcielago"
 
-        print a.indexOf('e')
+    print 
+        a.indexOf('e')
+        a.indexOf('lago')
+        a.slice(3,6)
 
-        print a.indexOf('lago')
-
-        print a.sliceJoin(2,3)
-
-        print a.sliceJoin(-4)    
+    var b = new Core2.TestClass([0,1,2,3,4,5,6])
+    print '[#{b.myArr.join(", ")}]'
+    print "b.sliceJoin(2,3)", b.sliceJoin(2,3)
+    print "b.sliceJoin(-4)", b.sliceJoin(-4)
+  
+    b = new Core2.TestClass([])
+    print '[#{b.myArr.join(", ")}]'
+    print "b.sliceJoin(2,3)", b.sliceJoin(2,3)
+    print "b.sliceJoin(-4)", b.sliceJoin(-4)
 

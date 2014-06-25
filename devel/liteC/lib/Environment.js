@@ -13,7 +13,6 @@
    // import mkPath, log
    var mkPath = require('./mkPath');
    var log = require('./log');
-   var debug = log.debug;
 
    // export class FileInfo
    // constructor
@@ -107,11 +106,11 @@
 
            // for each item in search where not found
            for( var item__inx=0,item ; item__inx<search.length ; item__inx++){item=search[item__inx];
-           if(!(found)){
+             if(!(found)){
                // for each ext in ['.lite.md','.md','.interface.md','.js'] where not found
                var _list3=['.lite.md', '.md', '.interface.md', '.js'];
                for( var ext__inx=0,ext ; ext__inx<_list3.length ; ext__inx++){ext=_list3[ext__inx];
-               if(!(found)){
+                 if(!(found)){
                    // if fs.existsSync(item+ext into full)
                    if (fs.existsSync((full=item + ext))) {
                        found = full;
@@ -158,7 +157,7 @@
         //print JSON.stringify(this,null,2)
 
        // if this.importInfo.createFile, return #we're creating this file
-       if (this.importInfo.createFile) {return};
+       if (this.importInfo.createFile) {return;};
 
 // Check if outFile exists, but is older than Source
 
@@ -211,7 +210,7 @@
             //cache exists if source is older
            this.interfaceFileExists = (statInterface.mtime > sourceStat.mtime);
            // if not this.interfaceFileExists, externalCacheSave this.interfaceFile,null //delete cache file if outdated
-           if (!(this.interfaceFileExists)) {externalCacheSave(this.interfaceFile, null)};
+           if (!(this.interfaceFileExists)) {externalCacheSave(this.interfaceFile, null);};
        };
 
        return;
@@ -311,11 +310,11 @@
       // if isCoreModule
       if (isCoreModule) {
            // if no prop, return true; //just asking: is core module?
-           if (!prop) {return true};
+           if (!prop) {return true;};
 
            var r = require(name); //load module
            // if r has property prop, return true; //is the member there?
-           if (prop in r) {return true};
+           if (prop in r) {return true;};
       };
    };
    // export

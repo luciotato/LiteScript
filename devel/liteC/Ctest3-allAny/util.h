@@ -18,11 +18,13 @@ extern "C" {
     #include <stdarg.h>
     #include <stdbool.h>
     #include <assert.h>
+    #include <limits.h>
 
     #include "gc.h"
 
     extern void* mem_alloc(size_t size);
     extern void* mem_realloc(void* ptr, size_t size);
+
 
 #ifdef	__cplusplus
 }

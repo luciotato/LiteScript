@@ -108,6 +108,7 @@ Case When Expression
                       when a in 'abc' or a in 'ABC' then 'is abc'
                       when a in 'lmt' or a in 'LMT' then 'is lmt'
                       when a>1 and a<10 or a is 42 then 'between 1 and 10, or 42'
+                      else 'unexpected'
                     end 
                 , 'is lmt'
 
@@ -116,6 +117,7 @@ Case When Expression
                       when a in 'abc' or a in 'ABC' then 'is abc'
                       when a in 'lmt' or a in 'LMT' then 'is lmt'
                       when a>1 and a<10 or a is 42 then 'between 1 and 10, or 42'
+                      else undefined
                     end 
                 , undefined
 
@@ -124,6 +126,7 @@ Case When Expression
                       when 'abc' then 'is abc'
                       when 'lmt' then 'is lmt'
                       when 1,10,42 then '1, 10, or 42'
+                      else 'unexpected'
                     end 
                 , '1, 10, or 42'
 
@@ -132,5 +135,6 @@ Case When Expression
                       when 'abc' then 'is abc'
                       when 'lmt' then 'is lmt'
                       when 1,10,42 then '1, 10, or 42'
+                      else 'unexpected'
                     end 
-                , undefined
+                , 'unexpected'

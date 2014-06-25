@@ -78,7 +78,6 @@
    // import ASTBase, log
    var ASTBase = require('./ASTBase');
    var log = require('./log');
-   var debug = log.debug;
 
 
 // Reserved Words
@@ -87,8 +86,7 @@
 // Words that are reserved in LiteScript and cannot be used as variable or function names
 // (There are no restrictions to object property names)
 
-   var RESERVED_WORDS = ['namespace', 'function', 'async', 'class', 'method', 'constructor', 'prototype', 'if', 'then', 'else', 'switch', 'when', 'case', 'end', 'null', 'true', 'false', 'undefined', 'and', 'or', 'but', 'no', 'not', 'has', 'hasnt', 'property', 'properties', 'new', 'is', 'isnt', 'do', 'loop', 'while', 'until', 'for', 'to', 'break', 'continue', 'return', 'try', 'catch', 'throw', 'raise', 'fail', 'exception', 'finally', 'with', 'arguments', 'in', 'instanceof', 'typeof', 'var', 'let', 'default', 'delete', 'interface', 'implements', 'yield', 'like', 'this', 'super', 'export', 'compiler', 'compile', 'debugger'];
-
+   var RESERVED_WORDS = ['namespace', 'function', 'async', 'class', 'method', 'constructor', 'prototype', 'if', 'then', 'else', 'switch', 'when', 'case', 'end', 'null', 'true', 'false', 'undefined', 'and', 'or', 'but', 'no', 'not', 'has', 'hasnt', 'property', 'properties', 'new', 'is', 'isnt', 'do', 'loop', 'while', 'until', 'for', 'to', 'break', 'continue', 'return', 'try', 'catch', 'throw', 'raise', 'fail', 'exception', 'finally', 'with', 'arguments', 'in', 'instanceof', 'typeof', 'var', 'let', 'default', 'delete', 'interface', 'implements', 'yield', 'like', 'this', 'super', 'export', 'compiler', 'compile', 'debugger', 'length', 'short', 'long', 'int', 'unsigned', 'void', 'NULL', 'bool', 'assert'];
 
 // Operators precedence
 // --------------------
@@ -129,26 +127,46 @@
    // end class PrintStatement
 
 
-   // export class VarStatement extends ASTBase
+   // export helper class VarDeclList extends ASTBase
    // constructor
-   function VarStatement(){// default constructor: call super.constructor
+   function VarDeclList(){// default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       // properties
-        // list:VariableDecl array
-        // export:boolean, default:boolean
+        // list: array of VariableDecl
    };
-   // VarStatement (extends|proto is) ASTBase
-   VarStatement.prototype.__proto__ = ASTBase.prototype;
+   // VarDeclList (extends|proto is) ASTBase
+   VarDeclList.prototype.__proto__ = ASTBase.prototype;
+
+     // method parseList
+     VarDeclList.prototype.parseList = function(){
+       this.list = this.reqSeparatedList(VariableDecl, ",");
+     };
+   // export
+   module.exports.VarDeclList = VarDeclList;
+   // end class VarDeclList
+
+   // export class VarStatement extends VarDeclList
+   // constructor
+   function VarStatement(){// default constructor: call super.constructor
+       VarDeclList.prototype.constructor.apply(this,arguments)
+   };
+   // VarStatement (extends|proto is) VarDeclList
+   VarStatement.prototype.__proto__ = VarDeclList.prototype;
+
+// `VarStatement: (var|let) (VariableDecl,)+ `
+
+// `var` followed by a comma separated list of VariableDecl (one or more)
 
      // method parse()
      VarStatement.prototype.parse = function(){
        this.req('var', 'let');
        this.lock();
-       this.list = this.reqSeparatedList(VariableDecl, ",");
+       this.parseList();
      };
    // export
    module.exports.VarStatement = VarStatement;
    // end class VarStatement
+
 
 
    // export class VariableDecl extends ASTBase
@@ -171,6 +189,9 @@
      VariableDecl.prototype.parse = function(){
        this.name = this.req('IDENTIFIER');
        this.lock();
+
+       // if .name in RESERVED_WORDS, .sayErr '"#{.name}" is a reserved word'
+       if (RESERVED_WORDS.indexOf(this.name)>=0) {this.sayErr('"' + this.name + '" is a reserved word');};
 
 // optional type annotation &
 // optional assigned value
@@ -205,7 +226,7 @@
                }
                
                else {
-                   this.assignedValue = this.req(Expression);
+                 this.assignedValue = this.req(Expression);
                };
            };
        };
@@ -323,16 +344,15 @@
 //       ...function body...
 
 
-   // export class PropertiesDeclaration extends ASTBase
+   // export class PropertiesDeclaration extends VarDeclList
    // constructor
    function PropertiesDeclaration(){// default constructor: call super.constructor
-       ASTBase.prototype.constructor.apply(this,arguments)
+       VarDeclList.prototype.constructor.apply(this,arguments)
       // properties
         // list: VariableDecl array
-        // toNamespace: boolean
    };
-   // PropertiesDeclaration (extends|proto is) ASTBase
-   PropertiesDeclaration.prototype.__proto__ = ASTBase.prototype;
+   // PropertiesDeclaration (extends|proto is) VarDeclList
+   PropertiesDeclaration.prototype.__proto__ = VarDeclList.prototype;
 
       // declare name affinity propDecl
 
@@ -340,7 +360,7 @@
      PropertiesDeclaration.prototype.parse = function(){
        this.req('properties');
        this.lock();
-       this.list = this.reqSeparatedList(VariableDecl, ',');
+       this.parseList();
      };
    // export
    module.exports.PropertiesDeclaration = PropertiesDeclaration;
@@ -419,7 +439,7 @@
 // get optional "finally" block
 
        // if .opt('finally'), .finallyBody = .req(Body)
-       if (this.opt('finally')) {this.finallyBody = this.req(Body)};
+       if (this.opt('finally')) {this.finallyBody = this.req(Body);};
      };
    // export
    module.exports.ExceptionBlock = ExceptionBlock;
@@ -443,7 +463,7 @@
 
        this.lock();
        // if .specifier is 'fail', .req 'with'
-       if (this.specifier === 'fail') {this.req('with')};
+       if (this.specifier === 'fail') {this.req('with');};
        this.expr = this.req(Expression);// #trow expression
      };
    // export
@@ -476,7 +496,9 @@
    function IfStatement(){// default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       // properties
-        // conditional,body,elseStatement
+        // conditional: Expression
+        // body
+        // elseStatement
    };
    // IfStatement (extends|proto is) ASTBase
    IfStatement.prototype.__proto__ = ASTBase.prototype;
@@ -708,7 +730,7 @@
    // constructor
    function WhileUntilExpression(){// default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
-      // properties expr
+      // properties expr:Expression
    };
    // WhileUntilExpression (extends|proto is) ASTBase
    WhileUntilExpression.prototype.__proto__ = ASTBase.prototype;
@@ -1010,7 +1032,7 @@
        
        else {
          // if optNewLine, .lexer.returnToken # return NEWLINE
-         if (optNewLine) {this.lexer.returnToken()};
+         if (optNewLine) {this.lexer.returnToken();};
          this.throwParseFailed("expected '[NEWLINE] where'");
        };
      };
@@ -1123,7 +1145,18 @@
                this.name = 'this';// #default replacement for '.x'
            };
 
-           var member = this.req('IDENTIFIER');
+           var member = undefined;
+            // #we must allow 'not' and 'has' as method names, (jQuery uses "not", Map uses "has").
+            // #They're classsified as "Opers", but they're valid identifiers in this context
+           // if .lexer.token.value in ['not','has']
+           if (['not', 'has'].indexOf(this.lexer.token.value)>=0) {
+               member = this.lexer.nextToken(); //get not|has as identifier
+           }
+           
+           else {
+               member = this.req('IDENTIFIER');
+           };
+
            this.addAccessor(new PropertyAccess(this, member));
        }
        
@@ -1153,7 +1186,7 @@
            var classDecl = this.getParent(ClassDeclaration);
            // if no classDecl
            if (!classDecl) {
-             this.throwError("can't use 'super' outside a class method");
+             this.throwError("use of 'super' outside a class method");
            };
 
            // if classDecl.varRefSuper
@@ -1188,11 +1221,6 @@
        };
 
        // end if super
-
-// Allow 'null' as alias to 'do nothing'
-
-       // if .name is 'null', .executes = true
-       if (this.name === 'null') {this.executes = true};
 
 // Hack: after 'into var', allow :type for simple (no accessor) var names
 
@@ -1333,7 +1361,17 @@
      PropertyAccess.prototype.parse = function(){
        this.req('.');
        this.lock();
-       this.name = this.req('IDENTIFIER');
+        // #we must allow 'not' and 'has' as method names, (jQuery uses "not", Map uses "has").
+        // #They're classsified as "Opers", but they're valid identifiers in this context
+       // if .lexer.token.value in ['not','has']
+       if (['not', 'has'].indexOf(this.lexer.token.value)>=0) {
+           this.name = this.lexer.token.value; //get "not"|"has" as identifier
+           this.lexer.nextToken(); //advance
+       }
+       
+       else {
+           this.name = this.req('IDENTIFIER');
+       };
      };
 
      // method toString()
@@ -1413,7 +1451,7 @@
 
           // #(performance) only if the next token in ".[("
          // if .lexer.token.value not in '.[(' then return
-         if ('.[('.indexOf(this.lexer.token.value)===-1) {return};
+         if ('.[('.indexOf(this.lexer.token.value)===-1) {return;};
 
 // We store the accessors in the property: .accessors
 // if the accessors node exists, .list will have **at least one item**.
@@ -1423,7 +1461,7 @@
          while(true){
              var ac = this.parseDirect(this.lexer.token.value, AccessorsDirect);
              // if no ac, break
-             if (!ac) {break};
+             if (!ac) {break;};
              this.addAccessor(ac);
          };// end loop
          return;
@@ -1434,11 +1472,11 @@
 
             // #create accessors list, if there was none
            // if no .accessors, .accessors = []
-           if (!this.accessors) {this.accessors = []};
+           if (!this.accessors) {this.accessors = [];};
 
             // #polymorphic params: string defaults to PropertyAccess
            // if type of item is 'string', item = new PropertyAccess(this, item)
-           if (typeof item === 'string') {item = new PropertyAccess(this, item)};
+           if (typeof item === 'string') {item = new PropertyAccess(this, item);};
 
             // #insert
            this.accessors.splice(position, 0, item);
@@ -1450,7 +1488,7 @@
 
             // #create accessors list, if there was none
            // if no .accessors, .accessors = []
-           if (!this.accessors) {this.accessors = []};
+           if (!this.accessors) {this.accessors = [];};
            this.insertAccessorAt(this.accessors.length, item);
 
 // if the very last accesor is "(", it means the entire expression is a function call,
@@ -1459,7 +1497,7 @@
 
            this.executes = item instanceof FunctionAccess;
            // if .executes, .hasSideEffects = true
-           if (this.executes) {this.hasSideEffects = true};
+           if (this.executes) {this.hasSideEffects = true;};
      };
 
 
@@ -1670,7 +1708,7 @@
            // if .opt('not') # --> is not/has not...
            if (this.opt('not')) {// # --> is not/has not...
                // if .negated, .throwError '"isnt not" is invalid'
-               if (this.negated) {this.throwError('"isnt not" is invalid')};
+               if (this.negated) {this.throwError('"isnt not" is invalid');};
                this.negated = true;// # set the 'negated' flag
            };
 
@@ -1895,7 +1933,7 @@
 
            var oper = this.opt(Oper);
            // if no oper then break # no more operators, end of expression
-           if (!oper) {break};
+           if (!oper) {break;};
 
 // keep count on ternaryOpers
 
@@ -1930,7 +1968,7 @@
 // Control: complete all ternary operators
 
        // if .ternaryCount, .throwError 'missing (":"|else) on ternary operator (a? b else c)'
-       if (this.ternaryCount) {this.throwError('missing (":"|else) on ternary operator (a? b else c)')};
+       if (this.ternaryCount) {this.throwError('missing (":"|else) on ternary operator (a? b else c)');};
 
 // Fix 'new' calls. Check parameters for 'new' unary operator, for consistency, add '()' if not present,
 // so `a = new MyClass` turns into `a = new MyClass()`
@@ -1945,7 +1983,7 @@
            if (operand.name instanceof VariableRef) {
                var varRef = operand.name;
                // if no varRef.executes, varRef.addAccessor new FunctionAccess(this)
-               if (!varRef.executes) {varRef.addAccessor(new FunctionAccess(this))};
+               if (!varRef.executes) {varRef.addAccessor(new FunctionAccess(this));};
            };
          };
        };// end for each in arr
@@ -2064,7 +2102,7 @@
 
           // #control
          // if pos<0, .throwError("can't find highest precedence operator")
-         if (pos < 0) {this.throwError("can't find highest precedence operator")};
+         if (pos < 0) {this.throwError("can't find highest precedence operator");};
 
 // Un-flatten: Push down the operands a level down
 
@@ -2252,7 +2290,7 @@
        Literal.prototype.constructor.apply(this,arguments)
       // properties
         // type = 'Array'
-        // items
+        // items: array of Expression
          this.type='Array';
    };
    // ArrayLiteral (extends|proto is) Literal
@@ -2470,7 +2508,6 @@
        ASTBase.prototype.constructor.apply(this,arguments)
       // properties
         // specifier
-        // export,default,shim,generator,nice //adjectives
         // paramsDeclarations: VariableDecl array
         // definePropItems: DefinePropertyItem array
         // body
@@ -2496,7 +2533,11 @@
        // if .specifier isnt '->'
        if (this.specifier !== '->') {
            this.name = this.opt('IDENTIFIER');
+            //ifdef PROD_C
+           // if .name is 'main', .sayErr '"main" is a reserved function name'
+           if (this.name === 'main') {this.sayErr('"main" is a reserved function name');};
        };
+            // #endif
 
 // get parameter members, and function body
 
@@ -2527,7 +2568,7 @@
            // until .lexer.token.type is 'NEWLINE' or .lexer.token.value in ['=','return']
            while(!(this.lexer.token.type === 'NEWLINE' || ['=', 'return'].indexOf(this.lexer.token.value)>=0)){
                // if .paramsDeclarations.length, .req ','
-               if (this.paramsDeclarations.length) {this.req(',')};
+               if (this.paramsDeclarations.length) {this.req(',');};
                var varDecl = new VariableDecl(this, this.req('IDENTIFIER'));
                // if .opt(":")
                if (this.opt(":")) {
@@ -2637,7 +2678,7 @@
         //.name = .req('IDENTIFIER')
        this.name = this.lexer.token.value;
        // if not .name like /^[a-zA-Z$_]+[0-9a-zA-Z$_]*$/, .throwError 'invalid method name: "#{.name}"'
-       if (!(/^[a-zA-Z$_]+[0-9a-zA-Z$_]*$/.test(this.name))) {this.throwError('invalid method name: "' + this.name + '"')};
+       if (!(/^[a-zA-Z$_]+[0-9a-zA-Z$_]*$/.test(this.name))) {this.throwError('invalid method name: "' + this.name + '"');};
        this.lexer.nextToken();
 
 // now parse parameters and body (as with any function)
@@ -2660,7 +2701,6 @@
    function ClassDeclaration(){// default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       // properties
-        // export:boolean,default:boolean
         // varRefSuper:VariableRef
         // body
    };
@@ -2777,6 +2817,9 @@
 
        this.varRef = this.req(VariableRef);
 
+       // if .toNamespace, .name=.varRef.toString()
+       if (this.toNamespace) {this.name = this.varRef.toString();};
+
 // Now get body.
 
        this.body = this.req(Body);
@@ -2808,6 +2851,8 @@
        this.lock();
        this.toNamespace = true;
        this.varRef = this.req(VariableRef);
+
+       this.name = this.varRef.toString();
 
 // Now get body.
 
@@ -2860,7 +2905,6 @@
       // properties
         // kind, conditional:string
         // list, body
-        // importStatement
         // endLineInx
    };
    // CompilerStatement (extends|proto is) ASTBase
@@ -2870,17 +2914,6 @@
      CompilerStatement.prototype.parse = function(){
        this.req('compiler', 'compile');
        this.lock();
-       this.kind = this.lexer.token.value;
-
-// ### compiler ImportStatement
-
-       // if .kind is 'import'
-       if (this.kind === 'import') {
-         this.importStatement = this.req(ImportStatement);
-         return;
-       };
-
-// ### others
 
        this.kind = this.req('set', 'if', 'debugger', 'options');
 
@@ -2955,7 +2988,7 @@
        this.lock();
 
        // if .lexer.options.browser, .throwError "'import' statement invalid in browser-mode. Do you mean 'global declare'?"
-       if (this.lexer.options.browser) {this.throwError("'import' statement invalid in browser-mode. Do you mean 'global declare'?")};
+       if (this.lexer.options.browser) {this.throwError("'import' statement invalid in browser-mode. Do you mean 'global declare'?");};
 
        this.list = this.reqSeparatedList(ImportStatementItem, ",");
 
@@ -3077,7 +3110,6 @@
    function DeclareStatement(){// default constructor: call super.constructor
        ASTBase.prototype.constructor.apply(this,arguments)
       // properties
-        // global //adjective
         // varRef: VariableRef
         // type: VariableRef
         // names: VariableDecl array
@@ -3096,8 +3128,8 @@
 
 // if it was 'global declare', treat as import statement
 
-       // if .global
-       if (this.global) {
+       // if .hasAdjective('global')
+       if (this.hasAdjective('global')) {
              this.list = this.reqSeparatedList(ImportStatementItem, ",");
               //keep track of `import/require` calls
              var parentModule = this.getParent(Module);
@@ -3151,7 +3183,7 @@
        case 'valid':
            this.varRef = this.req(VariableRef);
            // if no .varRef.accessors, .sayErr "declare valid: expected accesor chain. Example: 'declare valid name.member.member'"
-           if (!this.varRef.accessors) {this.sayErr("declare valid: expected accesor chain. Example: 'declare valid name.member.member'")};
+           if (!this.varRef.accessors) {this.sayErr("declare valid: expected accesor chain. Example: 'declare valid name.member.member'");};
            // if .opt(':')
            if (this.opt(':')) {
                this.parseType(); //optional type
@@ -3173,8 +3205,8 @@
            this.names = this.reqSeparatedList(VariableDecl, ',');
            // for each varDecl in .names
            for( var varDecl__inx=0,varDecl ; varDecl__inx<this.names.length ; varDecl__inx++){varDecl=this.names[varDecl__inx];
-              // if varDecl.type or varDecl.assignedValue
-              if (varDecl.type || varDecl.assignedValue) {
+              // if (varDecl.type and varDecl.type isnt 'any') or varDecl.assignedValue
+              if ((varDecl.type && varDecl.type !== 'any') || varDecl.assignedValue) {
                  this.sayErr("declare name affinity: expected 'name,name,...'");
               };
            };// end for each in this.names
@@ -3187,7 +3219,7 @@
            for( var varDecl__inx=0,varDecl ; varDecl__inx<this.names.length ; varDecl__inx++){varDecl=this.names[varDecl__inx];
               // if varDecl.assignedValue
               if (varDecl.assignedValue) {
-                 this.sayErr("declare var. Cannot assign value in .interface file.");
+                 this.sayErr("declare var. Cannot assign value in .interface.md file.");
               };
            };// end for each in this.names
            
@@ -3411,36 +3443,6 @@
    // end class YieldExpression
 
 
-// --------------
-
-// Adjective
-// ---------
-// `Adjective: (public|export|default|nice|generator|shim|helper|global)`
-
-// Adjectives can precede several statement.
-
-   // public class Adjective extends ASTBase
-   // constructor
-   function Adjective(){// default constructor: call super.constructor
-       ASTBase.prototype.constructor.apply(this,arguments)
-   };
-   // Adjective (extends|proto is) ASTBase
-   Adjective.prototype.__proto__ = ASTBase.prototype;
-
-    // method parse()
-    Adjective.prototype.parse = function(){
-
-       this.name = this.req('public', 'export', 'default', 'nice', 'generator', 'shim', 'helper', 'global');
-        // #'public' is just alias for 'export'
-       // if .name is 'public', .name='export'
-       if (this.name === 'public') {this.name = 'export'};
-    };
-   // export
-   module.exports.Adjective = Adjective;
-   // end class Adjective
-
-
-
 // FunctionCall
 // ------------
 
@@ -3460,7 +3462,6 @@
      // method parse(options)
      FunctionCall.prototype.parse = function(options){
         // declare valid .parent.preParsedVarRef
-        // declare valid .name.executes
 
 // Check for VariableRef. - can include (...) FunctionAccess
 
@@ -3474,6 +3475,8 @@
        };
 
 // if the last accessor is function call, this is already a FunctionCall
+
+        //debug "#{.varRef.toString()} #{.varRef.executes?'executes':'DO NOT executes'}"
 
        // if .varRef.executes
        if (this.varRef.executes) {
@@ -3502,6 +3505,30 @@
    // export
    module.exports.FunctionCall = FunctionCall;
    // end class FunctionCall
+
+// COMMENTED: Different tries to alllow a indented block to be parsed as fn call arguments
+//         if .lexer.token.type is 'EOF'
+//             or .lexer.token.type is 'NEWLINE' and .parent instance of SingleLineStatement
+//                 return // no more tokens expected
+//         if .opt('NEWLINE') // if end of line, check next line
+//             if .lexer.token.column<=.indent // next line is not indented, assume just fn call w/o parameters
+//                 .lexer.returnToken()
+//                 return
+// else, get parameters, add to varRef as FunctionAccess accessor
+//         var functionAccess = new FunctionAccess(.varRef)
+//         functionAccess.args = functionAccess.optSeparatedList(Expression,",")
+//         if .lexer.token.value is '->' #add last parameter: callback function
+//             functionAccess.args.push .req(FunctionDeclaration)
+//         .varRef.addAccessor functionAccess
+
+//         // get arguments
+//         var args = .optSeparatedList(Expression,",")
+//         if args //has arguments
+//             var functionAccess = new FunctionAccess(.varRef)
+//             functionAccess.args = args
+//             if .lexer.token.value is '->' #add last parameter: closure'd callback function
+//                 functionAccess.args.push .req(FunctionDeclaration)
+//             .varRef.addAccessor functionAccess
 
 
 // ## SwitchStatement
@@ -3572,19 +3599,35 @@
            
            else if (keyword === 'default') {
                this.opt(":");
-               this.defaultBody = this.req(Body);
+               this.defaultBody = this.reqBody();
                // break;
                break;
            };
        };// end loop
 
        // if no .cases.length, .throwError "no 'case' found after 'switch'"
-       if (!this.cases.length) {this.throwError("no 'case' found after 'switch'")};
+       if (!this.cases.length) {this.throwError("no 'case' found after 'switch'");};
      };
    // export
    module.exports.SwitchStatement = SwitchStatement;
    // end class SwitchStatement
 
+   // append to class ASTBase
+
+     // method reqBody returns ASTBase
+     ASTBase.prototype.reqBody = function(){
+       // if .lexer.token.type is ('NEWLINE')
+       if (this.lexer.token.type === ('NEWLINE')) {
+            //indented body
+           return this.req(Body);
+       }
+            //indented body
+       
+       else {
+            //single line case/default
+           return this.req(SingleLineStatement);
+       };
+     };
 
    // public helper class SwitchCase extends ASTBase
    // constructor
@@ -3602,7 +3645,7 @@
        // method parse()
        SwitchCase.prototype.parse = function(){
            this.expressions = this.reqSeparatedList(Expression, ",", ":");
-           this.body = this.req(Body);
+           this.body = this.reqBody();
        };
    // export
    module.exports.SwitchCase = SwitchCase;
@@ -3674,8 +3717,10 @@
 
 // check if there are cases. Require 'end'
 
-       // if no .cases.length, .throwError "no 'when' found after 'case'"
-       if (!this.cases.length) {this.throwError("no 'when' found after 'case'")};
+       // if no .cases.length, .sayErr "no 'when' found after 'case'"
+       if (!this.cases.length) {this.sayErr("no 'when' found after 'case'");};
+       // if no .elseExpression, .sayErr "no 'else' expression in 'case/when'"
+       if (!this.elseExpression) {this.sayErr("no 'else' expression in 'case/when'");};
 
        this.opt('NEWLINE');
        this.req('end');
@@ -3750,10 +3795,11 @@
        ASTBase.prototype.constructor.apply(this,arguments)
       // properties
         // keyword
-        // adjectives: Adjective array
+        // adjectives: string array = []
         // statement
         // preParsedVarRef
         // intoVars
+         this.adjectives=[];
    };
    // Statement (extends|proto is) ASTBase
    Statement.prototype.__proto__ = ASTBase.prototype;
@@ -3764,7 +3810,7 @@
        var key = undefined;
 
         // #debug show line and tokens
-       debug("");
+       log.debug("");
        this.lexer.infoLine.dump();
 
 // First, fast-parse the statement by using a table.
@@ -3772,19 +3818,28 @@
 
        key = this.lexer.token.value;
        this.statement = this.parseDirect(key, StatementsDirect);
+
        // if no .statement
        if (!this.statement) {
 
-// If it was not found, try optional adjectives (zero or more). Adjectives are: `(export|public|generator|shim|helper)`.
+// If it was not found, try optional adjectives (zero or more).
+// Adjectives are: `(export|public|generator|shim|helper)`.
 
-         this.adjectives = this.optList(Adjective);
+           // while .opt('public','export','default','nice','generator','shim','helper','global') into var adj
+           var adj=undefined;
+           while((adj=this.opt('public', 'export', 'default', 'nice', 'generator', 'shim', 'helper', 'global'))){
+               // if adj is 'public', adj='export' #'public' is just alias for 'export'
+               if (adj === 'public') {adj = 'export';};
+               this.adjectives.push(adj);
+           };// end loop
 
 // Now re-try fast-parse
 
-         key = this.lexer.token.value;
-         this.statement = this.parseDirect(key, StatementsDirect);
-         // if no .statement
-         if (!this.statement) {
+           key = this.lexer.token.value;
+           this.statement = this.parseDirect(key, StatementsDirect);
+
+           // if no .statement
+           if (!this.statement) {
 
 // Last possibilities are: `FunctionCall` or `AssignmentStatement`
 // both start with a `VariableRef`:
@@ -3792,11 +3847,11 @@
 // (performance) **require** & pre-parse the VariableRef.
 // Then we require a AssignmentStatement or FunctionCall
 
-           key = 'varref';
-           this.preParsedVarRef = this.req(VariableRef);
-           this.statement = this.req(AssignmentStatement, FunctionCall);
-           this.preParsedVarRef = undefined;// #clear
-         };
+               key = 'varref';
+               this.preParsedVarRef = this.req(VariableRef);
+               this.statement = this.req(AssignmentStatement, FunctionCall);
+               this.preParsedVarRef = undefined;// #clear
+           };
        };
 
        // end if - statement parse tries
@@ -3807,14 +3862,11 @@
        key = key.toLowerCase();
        this.keyword = key;
 
-       // if .adjectives
-       if (this.adjectives) {
-         // for each adj in .adjectives
-         for( var adj__inx=0,adj ; adj__inx<this.adjectives.length ; adj__inx++){adj=this.adjectives[adj__inx];
-
 // Check validity of adjective-statement combination
 
-             var CFVN = ['class', 'function', 'var', 'namespace'];
+       var CFVN = ['class', 'function', 'var', 'namespace'];
+       // for each adjective in .adjectives
+       for( var adjective__inx=0,adjective ; adjective__inx<this.adjectives.length ; adjective__inx++){adjective=this.adjectives[adjective__inx];
 
              var validCombinations = {
                    export: CFVN, 
@@ -3826,48 +3878,43 @@
                    global: ['import', 'declare']
                    };
 
-             var valid = validCombinations[adj.name] || ['-*none*-'];
-             // if key not in valid, .throwError "'#{adj.name}' can only apply to #{valid.join('|')} not to '#{key}'"
-             if (valid.indexOf(key)===-1) {this.throwError("'" + adj.name + "' can only apply to " + (valid.join('|')) + " not to '" + key + "'")};
-         };// end for each in this.adjectives
+             var valid = validCombinations[adjective] || ['-*none*-'];
+             // if key not in valid, .throwError "'#{adjective}' can only apply to #{valid.join('|')} not to '#{key}'"
+             if (valid.indexOf(key)===-1) {this.throwError("'" + adjective + "' can only apply to " + (valid.join('|')) + " not to '" + key + "'");};
+       };// end for each in this.adjectives
 
-         // end for
+       // end for
 
-// set module.exportDefault if 'export default' or 'public default' was parsed
+// set module.exportDefault if 'export default' or 'public default' was parsed.
+// Also, if the class/namespace has the same name as the file, it's automagically "export default"
 
-          // declare valid .statement.default
-          // declare valid .statement.export
-         // if .statement.export and .statement.default
-         if (this.statement.export && this.statement.default) {
-             var moduleNode = this.getParent(Module);
-             // if moduleNode.exportDefault, .throwError "only one 'export default' can be defined"
-             if (moduleNode.exportDefault) {this.throwError("only one 'export default' can be defined")};
-             moduleNode.exportDefault = this.statement;
-         };
+       var moduleNode = this.getParent(Module);
+       // if .statement.constructor in [ClassDeclaration,NamespaceDeclaration] and moduleNode.fileInfo.basename is .statement.name
+       if ([ClassDeclaration, NamespaceDeclaration].indexOf(this.statement.constructor)>=0 && moduleNode.fileInfo.basename === this.statement.name) {
+           this.adjectives.push('export', 'default');
        };
-     };
 
-
-
-     // helper method hasAdjective(name) returns boolean
-     Statement.prototype.hasAdjective = function(name){
-// To check if a statement has an adjective WHILE parsing the statment
-// (after the statement, adjectives are assignes as statement properties)
-
-       // if .adjectives
-       if (this.adjectives) {
-         // for each adjective in .adjectives where adjective.name is name
-         for( var adjective__inx=0,adjective ; adjective__inx<this.adjectives.length ; adjective__inx++){adjective=this.adjectives[adjective__inx];
-         if(adjective.name === name){
-           return true;
-         }};// end for each in this.adjectives
-         
+       // if .statement.hasAdjective('export') and .statement.hasAdjective('default')
+       if (this.statement.hasAdjective('export') && this.statement.hasAdjective('default')) {
+           // if moduleNode.exportDefault, .throwError "only one 'export default' can be defined"
+           if (moduleNode.exportDefault) {this.throwError("only one 'export default' can be defined");};
+           moduleNode.exportDefault = this.statement;
        };
      };
    // export
    module.exports.Statement = Statement;
    // end class Statement
 
+
+   // append to class ASTBase
+
+     // helper method hasAdjective(name) returns boolean
+     ASTBase.prototype.hasAdjective = function(name){
+// To check if a statement has an adjective. We assume .parent is Grammar.Statement
+
+        // declare .parent:Statement
+       return this.parent.adjectives.indexOf(name)>=0;
+     };
 
 // ## Body
 
@@ -3943,6 +3990,13 @@
 
        this.statements = this.reqSeparatedList(Statement, ";", 'NEWLINE');
        this.lexer.returnToken();// #return closing NEWLINE
+
+        // remove the Statement abstraction, leave only the bare specific statements
+       // for each inx,statement in .statements
+       for( var inx=0,statement ; inx<this.statements.length ; inx++){statement=this.statements[inx];
+           this.statements[inx] = statement.statement;
+       };// end for each in this.statements
+       
      };
    // export
    module.exports.SingleLineStatement = SingleLineStatement;
@@ -3957,10 +4011,12 @@
    function Module(){// default constructor: call super.constructor
        Body.prototype.constructor.apply(this,arguments)
       // properties
+        // isMain: boolean
         // exportDefault: ASTBase
    };
    // Module (extends|proto is) Body
    Module.prototype.__proto__ = Body.prototype;
+
 
      // method parse()
      Module.prototype.parse = function(){
@@ -4086,8 +4142,8 @@
 
 // check for 'array', e.g.: `var list : array of NameDeclaration`
 
-       // if .opt('array')
-       if (this.opt('array')) {
+       // if .opt('array','Array')
+       if (this.opt('array', 'Array')) {
            this.type = 'Array';
            // if .opt('of')
            if (this.opt('of')) {
@@ -4102,32 +4158,31 @@
 
 // Check for 'map', e.g.: `var list : map string to NameDeclaration`
 
-       this.isMap = this.opt('map');
-
-       this.type = this.req(VariableRef);// #KEYS: reference to an existing class
+       this.type = this.req(VariableRef);// #reference to an existing class
         //auto-capitalize core classes
         // declare .type:VariableRef
        this.type.name = autoCapitalizeCoreClasses(this.type.name);
 
-        //ifdef PROD_C
-        //if .type.name is 'String', .type.name = 'str'
-        // #endif
-
-       // if .isMap
-       if (this.isMap) {
-           this.req('to');
-           this.itemType = this.req(VariableRef);// #VALUES: reference to an existing class
-            // #auto-capitalize core classes
-            // declare .itemType:VariableRef
-           this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
+       // if .type.name is 'Map'
+       if (this.type.name === 'Map') {
+             this.extraInfo = 'map [type] to [type]'; //extra info to show on parse fail
+             this.keyType = this.req(VariableRef);// #type for KEYS: reference to an existing class
+              //auto-capitalize core classes
+              // declare .keyType:VariableRef
+             this.keyType.name = autoCapitalizeCoreClasses(this.keyType.name);
+             this.req('to');
+             this.itemType = this.req(VariableRef);// #type for values: reference to an existing class
+              // #auto-capitalize core classes
+              // declare .itemType:VariableRef
+             this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
        }
        
        else {
             // #check for 'type array', e.g.: `var list : string array`
            // if .opt('Array','array')
            if (this.opt('Array', 'array')) {
-               this.itemType = this.type;// #assign as sub-type
-               this.type = 'Array';
+               this.itemType = this.type;// #assign read type as sub-type
+               this.type = 'Array';// #real type
            };
        };
      };

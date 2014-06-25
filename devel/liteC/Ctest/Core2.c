@@ -40,7 +40,7 @@
          case 1:initValue=arguments.value.item[0];
        }
        //---------
-           AS(TestClass,this)->value = initValue;
+           ((TestClass_ptr)this.value.ptr)->myArr = initValue;
        };
 
        // method indexOf(searched:string, fromIndex:int=0) returns int
@@ -59,15 +59,15 @@
        //---------
 
            // for n=fromIndex while n<.myArr.length
-           for(int64_t n=fromIndex.value.number; n < AS(TestClass,this)->myArr.length; n++) {
+           for(int64_t n=fromIndex.value.number; n < length(((TestClass_ptr)this.value.ptr)->myArr); n++) {
                // if .myArr[n] is searched, return n;
-               if (AS(TestClass,this)->myArr.value.item[n].value.number == searched.value.number) {return any_number(n);};
+               if (((TestClass_ptr)this.value.ptr)->myArr.value.item[n].value.number == searched.value.number) {return any_number(n);};
            };// end for n
            return any_number(-1);
        }
        ;
 
-       // method sliceJoin(start:int, endPos:int=-1) returns string
+       // method sliceJoin(start, endPos) returns string
        any TestClass_sliceJoin(any this, any arguments){
        // validate param types
        assert(this.constructor==TestClass);
@@ -82,19 +82,22 @@
        }
        //---------
 
-           any len = any_number(AS(TestClass,this)->myArr.length);
+           any len = any_number(length(((TestClass_ptr)this.value.ptr)->myArr));
 
-           start = inRange(undefined,(any){Array,3,.value.item=(any_arr){any_number(0), start.value.number < 0 ? any_number(len.value.number + start.value.number) : start, len}});
+           // default endPos = len+1
+           if(endPos.constructor==UNDEFINED) endPos=any_number(len.value.number + 1);
 
-           endPos = inRange(undefined,(any){Array,3,.value.item=(any_arr){any_number(0), endPos.value.number < 0 ? any_number(len.value.number + endPos.value.number) : endPos, len}});
+           start = inRange((any){MISSING},(any){Array,3,.value.item=(any_arr){any_number(0), start.value.number < 0 ? any_number(len.value.number + start.value.number) : start, any_number(len.value.number - 1)}});
+
+           endPos = inRange((any){MISSING},(any){Array,3,.value.item=(any_arr){any_number(0), endPos.value.number < 0 ? any_number(len.value.number + endPos.value.number) : endPos, any_number(len.value.number - 1)}});
 
            // if start>=endPos, return ''
            if (start.value.number >= endPos.value.number) {return any_EMPTY_STR;};
 
-           any result = undefined;
+           any result = any_EMPTY_STR;
            // for n=start to endPos
            for(int64_t n=start.value.number; n<=endPos.value.number; n++) {
-               concat(result,(any){Array,2,.value.item=(any_arr){AS(TestClass,this)->myArr.value.item[n], any_str(" ")}});
+               result = any_concat((any){MISSING},(any){Array,3,.value.item=(any_arr){result, (((TestClass_ptr)this.value.ptr)->myArr.value.item[n]), any_str(" ")}});
            };// end for n
 
            return result;

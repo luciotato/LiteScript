@@ -4,8 +4,6 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>LiteC-core.h</itemPath>
-      <itemPath>any.h</itemPath>
       <itemPath>exceptions.h</itemPath>
       <itemPath>include/gc/gc.h</itemPath>
       <itemPath>util.h</itemPath>
@@ -17,10 +15,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>LiteC-core.c</itemPath>
-      <itemPath>any.c</itemPath>
       <itemPath>exceptions.c</itemPath>
-      <itemPath>main.c</itemPath>
       <itemPath>util.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -34,6 +29,11 @@
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
+    <itemPath>LiteC-core.c</itemPath>
+    <itemPath>LiteC-core.h</itemPath>
+    <itemPath>any.c</itemPath>
+    <itemPath>any.h</itemPath>
+    <itemPath>main.c</itemPath>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>

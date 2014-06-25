@@ -3,7 +3,10 @@
 set -e
 
 VERSION=$1
-[ "$VERSION" = "" ] && VERSION=0.6
+if [ "$VERSION" = "" ]; then 
+    echo "missing parameter, VERSION. e.g.: copy-to-main 0.7"
+    exit 1
+fi
 
 CWD=$(pwd)
 

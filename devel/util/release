@@ -51,4 +51,4 @@ node test -compiler-path ./${out}/lib
 
 echo files created at: ${out}/
 
-bash ./copy-to-main
+bash ./copy-to-main ${VERSION} 

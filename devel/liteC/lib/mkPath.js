@@ -22,7 +22,7 @@
 // Make sure a path exists - Recursive
 
        // if dirExists(dirPath), return; //ok! dir exists
-       if (dirExists(dirPath)) {return};
+       if (dirExists(dirPath)) {return;};
 
 // else... recursive:
 // try a folder up, until a dir is found (or an error thrown)
@@ -60,7 +60,7 @@
 
             //if dir does not exists, return false
            // if err.code is 'ENOENT', return false
-           if (err.code === 'ENOENT') {return false};
+           if (err.code === 'ENOENT') {return false;};
            // throw err //another error
            throw err; //another error
        };

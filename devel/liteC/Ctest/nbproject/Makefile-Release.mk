@@ -35,14 +35,17 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/Core2.o \
-	${OBJECTDIR}/FIXES.o \
 	${OBJECTDIR}/LiteC-core.o \
+	${OBJECTDIR}/OptionsParser.o \
 	${OBJECTDIR}/_dispatcher.o \
 	${OBJECTDIR}/any.o \
+	${OBJECTDIR}/color.o \
 	${OBJECTDIR}/exceptions.o \
-	${OBJECTDIR}/main.o \
-	${OBJECTDIR}/test-Core2.o \
+	${OBJECTDIR}/fs.o \
+	${OBJECTDIR}/fs_native.o \
+	${OBJECTDIR}/litec.o \
+	${OBJECTDIR}/log.o \
+	${OBJECTDIR}/path.o \
 	${OBJECTDIR}/util.o
 
 
@@ -70,20 +73,15 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/ctest: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/ctest ${OBJECTFILES} ${LDLIBSOPTIONS}
 
-${OBJECTDIR}/Core2.o: Core2.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Core2.o Core2.c
-
-${OBJECTDIR}/FIXES.o: FIXES.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FIXES.o FIXES.c
-
 ${OBJECTDIR}/LiteC-core.o: LiteC-core.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/LiteC-core.o LiteC-core.c
+
+${OBJECTDIR}/OptionsParser.o: OptionsParser.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/OptionsParser.o OptionsParser.c
 
 ${OBJECTDIR}/_dispatcher.o: _dispatcher.c 
 	${MKDIR} -p ${OBJECTDIR}
@@ -95,20 +93,40 @@ ${OBJECTDIR}/any.o: any.c
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/any.o any.c
 
+${OBJECTDIR}/color.o: color.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/color.o color.c
+
 ${OBJECTDIR}/exceptions.o: exceptions.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/exceptions.o exceptions.c
 
-${OBJECTDIR}/main.o: main.c 
+${OBJECTDIR}/fs.o: fs.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.c
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/fs.o fs.c
 
-${OBJECTDIR}/test-Core2.o: test-Core2.c 
+${OBJECTDIR}/fs_native.o: fs_native.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/test-Core2.o test-Core2.c
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/fs_native.o fs_native.c
+
+${OBJECTDIR}/litec.o: litec.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/litec.o litec.c
+
+${OBJECTDIR}/log.o: log.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/log.o log.c
+
+${OBJECTDIR}/path.o: path.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/path.o path.c
 
 ${OBJECTDIR}/util.o: util.c 
 	${MKDIR} -p ${OBJECTDIR}

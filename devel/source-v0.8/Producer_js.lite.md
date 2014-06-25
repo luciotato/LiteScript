@@ -660,7 +660,7 @@ Create a default index var name if none was provided
         .body.out .mainVar.name,"=",iterable,"[",indexVar.name,"];",NL
 
         if .where 
-          .out .where,"{",.body,"}"
+          .out '  ',.where,"{",.body,"}"
         else 
           .out .body
 

@@ -3,7 +3,7 @@
     global import path,fs
     import Args
 
-    var VERSION = '0.6.7'
+    var VERSION = '0.7.0'
 
 ## usage, module vars
 

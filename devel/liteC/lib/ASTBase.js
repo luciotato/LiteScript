@@ -12,19 +12,20 @@
    // import Lexer, log
    var Lexer = require('./Lexer');
    var log = require('./log');
-   var debug = log.debug;
-
 
    // public default class ASTBase
    // constructor
     function ASTBase(parent, name){
      //      properties
-        // parent:ASTBase
-        // name, keyword, type, itemType
+        // parent: ASTBase
+        // name, keyword
+
+        // type, keyType, itemType
+        // extraInfo // if parse failed, extra information
+
         // lexer:Lexer, lineInx
         // sourceLineNum, column
         // indent, locked
-        // index
 
        this.parent = parent;
        this.name = name;
@@ -75,7 +76,7 @@
     ASTBase.prototype.positionText = function(){
 
        // if not .lexer or no .sourceLineNum, return "(compiler-defined)"
-       if (!(this.lexer) || !this.sourceLineNum) {return "(compiler-defined)"};
+       if (!(this.lexer) || !this.sourceLineNum) {return "(compiler-defined)";};
        return "" + this.lexer.filename + ":" + this.sourceLineNum + ":" + (this.column || 0);
     };
 
@@ -96,7 +97,7 @@
 // and it shows error message *and stack trace*.
 
        var err = new Error("" + (this.positionText()) + ". " + msg);
-       err.controled = true;
+       err.extra.set("controled", true);
        // throw err
        throw err;
     };
@@ -121,8 +122,8 @@
 
         //var err = new Error("#{.positionText()}. #{msg}")
        var err = new Error("" + (this.lexer.posToString()) + ". " + msg);
-       err.soft = !(this.locked);// #if not locked, is a soft-error, another Grammar class migth parse.
-       err.controled = true;
+       err.extra.set("soft", !(this.locked));// #if not locked, is a soft-error, another Grammar class migth parse.
+       err.extra.set("controled", true);
        // throw err
        throw err;
     };
@@ -200,12 +201,12 @@
 // with the class, or match the token type to the string.
 
        // for each searched in arguments
-       for( var searched__inx=0,searched ; searched__inx<arguments.length ; searched__inx++){searched=arguments[searched__inx];
+       for( var searched__inx=0,searched ; searched__inx<Array.prototype.slice.call(arguments).length ; searched__inx++){searched=Array.prototype.slice.call(arguments)[searched__inx];
 
 // skip empty, null & undefined
 
          // if no searched, continue
-         if (!searched) {continue};
+         if (!searched) {continue;};
 
 // determine value or type
 // For strings we check the token **value** or **TYPE** (if searched is all-uppercase)
@@ -239,7 +240,7 @@
 // If we return the 'token' object, the calling function will recive a "pointer"
 // and it can inadvertedly alter the token object in the token stream. (it should not, leads to subtle bugs)
 
-             debug(spaces, this.constructor.name, 'matched OK:', searched, this.lexer.token.value);
+             log.debug(spaces, this.constructor.name, 'matched OK:', searched, this.lexer.token.value);
              var result = this.lexer.token.value;
 
 // Advance a token, .lexer.token always has next token
@@ -256,7 +257,7 @@
             // declare on searched
               // name #for AST nodes
 
-           debug(spaces, this.constructor.name, 'TRY', searched.name, 'on', this.lexer.token.toString());
+           log.debug(spaces, this.constructor.name, 'TRY', searched.name, 'on', this.lexer.token.toString());
 
 // if the argument is an AST node class, we instantiate the class and try the `parse()` method.
 // `parse()` can fail with `ParseFailed` if the syntax do not match
@@ -266,22 +267,9 @@
 
                var astNode = new searched(this);// # create required ASTNode, to try parse
 
-                // #if there was adjectives on the parent, apply as properties
-                // # so they're available during parse
-                // declare valid .adjectives:ASTBase array
-               // if .adjectives
-               if (this.adjectives) {
-                   // for each adj in .adjectives
-                   for( var adj__inx=0,adj ; adj__inx<this.adjectives.length ; adj__inx++){adj=this.adjectives[adj__inx];
-                        // declare valid adj.name
-                       astNode[adj.name] = true;
-                   };// end for each in this.adjectives
-                   
-               };
-
                astNode.parse();// # if it can't parse, will raise an exception
 
-               debug(spaces, 'Parsed OK!->', searched.name);
+               log.debug(spaces, 'Parsed OK!->', searched.name);
 
                 //ifdef TARGET_C
                 //if no .children, .children = []
@@ -295,14 +283,14 @@
 // If parsing fail, but the AST node were not 'locked' on target, (a soft-error),
 // we will try other AST nodes.
 
-             // if err.soft
-             if (err.soft) {
+             // if err.extra.get("soft")
+             if (err.extra.get("soft")) {
                  this.lexer.softError = err;
-                 debug(spaces, searched.name, 'parse failed.', err.message);
+                 log.debug(spaces, searched.name, 'parse failed.', err.message);
 
 // rewind the token stream, to try other AST nodes
 
-                 debug("<<REW to", "" + startPos.sourceLineNum + ":" + (startPos.token.column || 0) + " [" + startPos.index + "]", startPos.token.toString());
+                 log.debug("<<REW to", "" + startPos.sourceLineNum + ":" + (startPos.token.column || 0) + " [" + startPos.index + "]", startPos.token.toString());
                  this.lexer.setPos(startPos);
              }
              
@@ -327,7 +315,7 @@
              };
            };
          };
-       };// end for each in arguments
+       };// end for each in Array.prototype.slice.call(arguments)
 
               // #end if - type of error
 
@@ -357,11 +345,11 @@
 
 // else, If `opt` returned nothing, we give the user a useful error.
 
-       var result = this.opt.apply(this, arguments);
+       var result = this.opt.apply(this, Array.prototype.slice.call(arguments));
 
        // if no result
        if (!result) {
-         this.throwParseFailed("" + this.constructor.name + ": found " + (this.lexer.token.toString()) + " but " + (this.listArgs(arguments)) + " required");
+         this.throwParseFailed("" + this.constructor.name + ":" + this.extraInfo + " found " + (this.lexer.token.toString()) + " but " + (this.listArgs(Array.prototype.slice.call(arguments))) + " required");
        };
 
        return result;
@@ -392,9 +380,9 @@
 
        // do
        while(true){
-         item = this.opt.apply(this, arguments);
+         item = this.opt.apply(this, Array.prototype.slice.call(arguments));
          // if no item then break
-         if (!item) {break};
+         if (!item) {break;};
          list.push(item);
        };// end loop
 
@@ -427,7 +415,7 @@
 // normal separated list,
 // loop until closer found
 
-       debug("optSeparatedList [" + this.constructor.name + "] indent:" + this.indent + ", get SeparatedList of [" + astClass.name + "] by '" + separator + "' closer:", closer || '-no closer-');
+       log.debug("optSeparatedList [" + this.constructor.name + "] indent:" + this.indent + ", get SeparatedList of [" + astClass.name + "] by '" + separator + "' closer:", closer || '-no closer-');
 
        var startLine = this.lexer.sourceLineNum;
        // do until .opt(closer)
@@ -449,7 +437,7 @@
 // if, after newline, we got the closer, then exit.
 
            // if .opt(closer) then break #closer found
-           if (this.opt(closer)) {break};
+           if (this.opt(closer)) {break;};
 
 // here, a 'separator' (comma/semicolon) means: 'there is another item'.
 // Any token other than 'separator' means 'end of list'
@@ -459,9 +447,9 @@
               // # any token other than comma/semicolon means 'end of comma separated list'
               // # but if a closer was required, then "other" token is an error
              // if closer, .throwError "Expected '#{closer}' to end list started at line #{startLine}, got '#{.lexer.token.value}'"
-             if (closer) {this.throwError("Expected '" + closer + "' to end list started at line " + startLine + ", got '" + this.lexer.token.value + "'")};
+             if (closer) {this.throwError("Expected '" + closer + "' to end list started at line " + startLine + ", got '" + this.lexer.token.value + "'");};
              // if consumedNewLine, .lexer.returnToken()
-             if (consumedNewLine) {this.lexer.returnToken()};
+             if (consumedNewLine) {this.lexer.returnToken();};
              // break # else ok, end of list
              break;// # else ok, end of list
            };
@@ -493,7 +481,7 @@
        var startLine = this.lexer.sourceLineNum;
        var blockIndent = this.lexer.indent;
 
-       debug("optFreeFormList [" + this.constructor.name + "] parentname:" + this.parent.name + " parentIndent:" + parentIndent + ", blockIndent:" + blockIndent + ", get SeparatedList of [" + astClass.name + "] by '" + separator + "' closer:", closer || '-no-');
+       log.debug("optFreeFormList [" + this.constructor.name + "] parentname:" + this.parent.name + " parentIndent:" + parentIndent + ", blockIndent:" + blockIndent + ", get SeparatedList of [" + astClass.name + "] by '" + separator + "' closer:", closer || '-no-');
 
        // if blockIndent <= parentIndent #first line is same or less indented than parent - assume empty list
        if (blockIndent <= parentIndent) {// #first line is same or less indented than parent - assume empty list
@@ -508,7 +496,7 @@
 
 // check for indent changes
 
-           debug("freeForm Mode .lexer.indent:" + this.lexer.indent + " block indent:" + blockIndent + " parentIndent:" + parentIndent);
+           log.debug("freeForm Mode .lexer.indent:" + this.lexer.indent + " block indent:" + blockIndent + " parentIndent:" + parentIndent);
            // if .lexer.indent isnt blockIndent
            if (this.lexer.indent !== blockIndent) {
 
@@ -556,7 +544,7 @@
 // newline after item (before comma or closer) is optional
 
            // if item.sourceLineNum>.lexer.maxSourceLineNum, .lexer.maxSourceLineNum=item.sourceLineNum
-           if (item.sourceLineNum > this.lexer.maxSourceLineNum) {this.lexer.maxSourceLineNum = item.sourceLineNum};
+           if (item.sourceLineNum > this.lexer.maxSourceLineNum) {this.lexer.maxSourceLineNum = item.sourceLineNum;};
            this.opt('NEWLINE');
 
 // separator (comma|semicolon) is optional,
@@ -566,7 +554,7 @@
            this.opt('NEWLINE');
        };// end loop
 
-       debug("END freeFormMode [" + this.constructor.name + "] blockIndent:" + blockIndent + ", get SeparatedList of [" + astClass.name + "] by '" + separator + "' closer:", closer || '-no closer-');
+       log.debug("END freeFormMode [" + this.constructor.name + "] blockIndent:" + blockIndent + ", get SeparatedList of [" + astClass.name + "] by '" + separator + "' closer:", closer || '-no closer-');
 
         //if closer then .opt('NEWLINE') # consume optional newline after closer in free-form mode
 
@@ -583,7 +571,7 @@
 
        var result = this.optSeparatedList(astClass, separator, closer);
        // if result.length is 0, .throwParseFailed "#{.constructor.name}: Get list: At least one [#{astClass.name}] was expected"
-       if (result.length === 0) {this.throwParseFailed("" + this.constructor.name + ": Get list: At least one [" + astClass.name + "] was expected")};
+       if (result.length === 0) {this.throwParseFailed("" + this.constructor.name + ": Get list: At least one [" + astClass.name + "] was expected");};
 
        return result;
     };
@@ -638,12 +626,12 @@
        var out = this.lexer.out;
 
        // for each item in arguments
-       for( var item__inx=0,item ; item__inx<arguments.length ; item__inx++){item=arguments[item__inx];
+       for( var item__inx=0,item ; item__inx<Array.prototype.slice.call(arguments).length ; item__inx++){item=Array.prototype.slice.call(arguments)[item__inx];
 
 // skip empty items
 
          // if no item, continue
-         if (!item) {continue};
+         if (!item) {continue;};
 
 // if it is the first thing in the line, out indentation
 
@@ -691,7 +679,7 @@
            else if (item.hasOwnProperty('CSL')) {
 
              // if no item.CSL, continue #empty list
-             if (!item.CSL) {continue};
+             if (!item.CSL) {continue;};
 
               // declare on item pre,post,separator
 
@@ -723,7 +711,7 @@
              // end for
 
              // if item.freeForm, .out '\n' # (prettier generated code)
-             if (item.freeForm) {this.out('\n')};
+             if (item.freeForm) {this.out('\n');};
            }
 
 // {COMMENT:text} --> output text as a comment
@@ -735,7 +723,7 @@
 
                   // # prepend // if necessary
                  // if type of item isnt 'string' or not item.COMMENT.startsWith("//"), out.put "// "
-                 if (typeof item !== 'string' || !(item.COMMENT.startsWith("//"))) {out.put("// ")};
+                 if (typeof item !== 'string' || !(item.COMMENT.startsWith("//"))) {out.put("// ");};
                  this.out(item.COMMENT);
              };
            }
@@ -751,8 +739,8 @@
            
            else {
              var msg = "method:ASTBase.out() Caller:" + this.constructor.name + ": object not recognized. type: " + typeof item;
-             debug(msg);
-             debug(item);
+             log.debug(msg);
+             log.debug(item);
              this.throwError(msg);
            };
          }
@@ -765,7 +753,7 @@
 
          // end if
          
-       };// end for each in arguments
+       };// end for each in Array.prototype.slice.call(arguments)
        
     };
 
@@ -778,7 +766,7 @@
 // out a full source line as comment into produced code
 
        // if no .lexer.options.comments, return
-       if (!this.lexer.options.comments) {return};
+       if (!this.lexer.options.comments) {return;};
 
 // manage optional parameters
 
@@ -795,11 +783,11 @@
 // validate index
 
        // if no .lexer, return log.error("ASTBase.outLineAsComment #{lineInx}: NO LEXER")
-       if (!this.lexer) {return log.error("ASTBase.outLineAsComment " + lineInx + ": NO LEXER")};
+       if (!this.lexer) {return log.error("ASTBase.outLineAsComment " + lineInx + ": NO LEXER");};
 
        var line = this.lexer.infoLines[lineInx];
        // if no line, return log.error("ASTBase.outLineAsComment #{lineInx}: NO LINE")
-       if (!line) {return log.error("ASTBase.outLineAsComment " + lineInx + ": NO LINE")};
+       if (!line) {return log.error("ASTBase.outLineAsComment " + lineInx + ": NO LINE");};
 
        // if line.type is Lexer.LineTypes.BLANK
        if (line.type === Lexer.LineTypes.BLANK) {
@@ -811,11 +799,11 @@
 
        var prepend = "";
        // if preComment or not line.text.startsWith("//"), prepend="// "
-       if (preComment || !(line.text.startsWith("//"))) {prepend = "// "};
+       if (preComment || !(line.text.startsWith("//"))) {prepend = "// ";};
        // if no .lexer.out.currLine, prepend=String.spaces(line.indent)+prepend
-       if (!this.lexer.out.currLine) {prepend = String.spaces(line.indent) + prepend};
+       if (!this.lexer.out.currLine) {prepend = String.spaces(line.indent) + prepend;};
        // if preComment or line.text, .lexer.out.put prepend+preComment+line.text
-       if (preComment || line.text) {this.lexer.out.put(prepend + preComment + line.text)};
+       if (preComment || line.text) {this.lexer.out.put(prepend + preComment + line.text);};
 
        this.lexer.out.startNewLine();
 
@@ -827,7 +815,7 @@
     ASTBase.prototype.outLinesAsComment = function(fromLine, toLine){
 
        // if no .lexer.options.comments, return
-       if (!this.lexer.options.comments) {return};
+       if (!this.lexer.options.comments) {return;};
 
         // # if line has something and is not spaces
        // if .lexer.out.currLine and .lexer.out.currLine.trim()
@@ -852,11 +840,11 @@
 // before the statement
 
      // if no .lexer.options.comments, return
-     if (!this.lexer.options.comments) {return};
+     if (!this.lexer.options.comments) {return;};
 
      var inx = startFrom || this.lineInx || 0;
      // if inx<1, return
-     if (inx < 1) {return};
+     if (inx < 1) {return;};
 
      // default .lexer.out.lastOutCommentLine = -1
      if(this.lexer.out.lastOutCommentLine===undefined) this.lexer.out.lastOutCommentLine=-1;
@@ -891,7 +879,7 @@
 // such as `a = 1 #comment`. We want to try to add these at the end of the current JavaScript line.
 
        // if no .lexer.options.comments, return
-       if (!this.lexer.options.comments) {return};
+       if (!this.lexer.options.comments) {return;};
 
        var inx = this.lineInx;
        var infoLine = this.lexer.infoLines[inx];
@@ -930,7 +918,7 @@
     //ifdef TARGET_C
 
 //#### helper method callOnSubTree(dispatcher:function)
-        //dispatcher this //call method dispatcher on this instance
+        //dispatcher.call this //call method dispatcher on this instance
         //if .children
             //for each child in .children
                 //child.callOnSubTree dispatcher // call on all children and children's children
@@ -943,10 +931,10 @@
 // This is instance has the method, call it
 
      // if this has property methodName, this[methodName]()
-     if (methodName in this) {this[methodName]()};
+     if (methodName in this) {this[methodName]();};
 
      // if classFilter and this is instance of classFilter, return #do not recurse on filtered's childs
-     if (classFilter && this instanceof classFilter) {return};
+     if (classFilter && this instanceof classFilter) {return;};
 
 // recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
 
@@ -961,7 +949,7 @@
              else if (this[name] instanceof Array) {
                  // for each item in this[name] where item instance of ASTBase
                  for( var item__inx=0,item ; item__inx<this[name].length ; item__inx++){item=this[name][item__inx];
-                 if(item instanceof ASTBase){
+                   if(item instanceof ASTBase){
                     // declare item:ASTBase
                    item.callOnSubTree(methodName, classFilter);
                  }};// end for each in this[name]

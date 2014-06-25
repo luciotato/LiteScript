@@ -18,15 +18,16 @@ This class serves as a base class on top of which Grammar classes are defined.
 It contains basic functions to parse a token stream.
 
 #### properties
-        parent, 
+        
+        parent: ASTBase 
+        name, keyword 
 
-        name, keyword, type, itemType
+        type, keyType, itemType
+        extraInfo // if parse failed, extra information 
 
         lexer:Lexer, lineInx
         sourceLineNum, column
         indent, locked
-        index
-
 
 #### Constructor (parent:ASTBase, name)
 
@@ -300,7 +301,7 @@ else, If `opt` returned nothing, we give the user a useful error.
         var result = .opt.apply(this,arguments)
 
         if no result 
-          .throwParseFailed "#{.constructor.name}: found #{.lexer.token.toString()} but #{.listArgs(arguments)} required"
+          .throwParseFailed "#{.constructor.name}:#{.extraInfo} found #{.lexer.token.toString()} but #{.listArgs(arguments)} required"
 
         return result
 
@@ -641,7 +642,7 @@ validate index
         var line = .lexer.infoLines[lineInx]
         if no line, return log.error("ASTBase.outLineAsComment #{lineInx}: NO LINE")
 
-        if line.type is .lexer.LineTypes.BLANK
+        if line.type is Lexer.LineTypes.BLANK
             .lexer.out.blankLine
             return
 
@@ -688,7 +689,7 @@ find comment lines in the previous lines of code.
       var preInx = inx
       while preInx and preInx>.lexer.out.lastOutCommentLine 
           preInx--
-          if .lexer.infoLines[preInx].type is .lexer.LineTypes.CODE 
+          if .lexer.infoLines[preInx].type is Lexer.LineTypes.CODE 
               preInx++
               break
 

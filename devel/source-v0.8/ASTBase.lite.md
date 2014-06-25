@@ -9,8 +9,6 @@ and comma or semicolon **Separated Lists** of symbols.
 Dependencies
 
     import Lexer, log 
-    var debug = log.debug
-
 
 ### public default Class ASTBase 
 
@@ -18,12 +16,15 @@ This class serves as a base class on top of which Grammar classes are defined.
 It contains basic functions to parse a token stream.
 
 #### properties
-        parent:ASTBase 
-        name, keyword, type, itemType
+        parent: ASTBase 
+        name, keyword 
+
+        type, keyType, itemType
+        extraInfo // if parse failed, extra information 
+
         lexer:Lexer, lineInx
         sourceLineNum, column
         indent, locked
-        index
 
 To compile to C, we must surrender js dynamic "reflection". We can not treat
 any instance as a "map string to any". 
@@ -91,7 +92,7 @@ A 'un-controled' error is an unhandled exception in the compiler code itself,
 and it shows error message *and stack trace*.
 
         var err = new Error("#{.positionText()}. #{msg}")
-        err.controled = true
+        err.extra.set "controled",true
         throw err
 
 #### helper method sayErr(msg)
@@ -111,8 +112,8 @@ as the parent node will try other AST classes against the token stream before fa
 
         //var err = new Error("#{.positionText()}. #{msg}")
         var err = new Error("#{.lexer.posToString()}. #{msg}")
-        err.soft = not .locked  #if not locked, is a soft-error, another Grammar class migth parse.
-        err.controled = true
+        err.extra.set "soft", not .locked  #if not locked, is a soft-error, another Grammar class migth parse.
+        err.extra.set "controled", true
         throw err
 
 #### method parse()
@@ -211,7 +212,7 @@ is a "pass by reference". You return a "pointer" to the object.
 If we return the 'token' object, the calling function will recive a "pointer"
 and it can inadvertedly alter the token object in the token stream. (it should not, leads to subtle bugs)
 
-              debug spaces, .constructor.name,'matched OK:',searched, .lexer.token.value
+              log.debug spaces, .constructor.name,'matched OK:',searched, .lexer.token.value
               var result = .lexer.token.value 
 
 Advance a token, .lexer.token always has next token
@@ -226,7 +227,7 @@ Advance a token, .lexer.token always has next token
             declare on searched
               name #for AST nodes
 
-            debug spaces, .constructor.name,'TRY',searched.name, 'on', .lexer.token.toString()
+            log.debug spaces, .constructor.name,'TRY',searched.name, 'on', .lexer.token.toString()
 
 if the argument is an AST node class, we instantiate the class and try the `parse()` method.
 `parse()` can fail with `ParseFailed` if the syntax do not match
@@ -235,17 +236,9 @@ if the argument is an AST node class, we instantiate the class and try the `pars
 
                 var astNode:ASTBase = new searched(this) # create required ASTNode, to try parse
 
-                #if there was adjectives on the parent, apply as properties
-                # so they're available during parse
-                declare valid .adjectives:ASTBase array
-                if .adjectives 
-                    for each adj in .adjectives
-                        declare valid adj.name
-                        astNode[adj.name]=true
-
                 astNode.parse() # if it can't parse, will raise an exception
 
-                debug spaces, 'Parsed OK!->',searched.name
+                log.debug spaces, 'Parsed OK!->',searched.name
 
                 #ifdef TARGET_C
                 if no .children, .children = []
@@ -259,13 +252,13 @@ if the argument is an AST node class, we instantiate the class and try the `pars
 If parsing fail, but the AST node were not 'locked' on target, (a soft-error),
 we will try other AST nodes.
 
-              if err.soft
+              if err.extra.get("soft")
                   .lexer.softError = err
-                  debug spaces, searched.name,'parse failed.',err.message
+                  log.debug spaces, searched.name,'parse failed.',err.message
 
 rewind the token stream, to try other AST nodes
 
-                  debug "<<REW to", "#{startPos.sourceLineNum}:#{startPos.token.column or 0} [#{startPos.index}]", startPos.token.toString()
+                  log.debug "<<REW to", "#{startPos.sourceLineNum}:#{startPos.token.column or 0} [#{startPos.index}]", startPos.token.toString()
                   .lexer.setPos startPos
 
               else
@@ -313,7 +306,7 @@ else, If `opt` returned nothing, we give the user a useful error.
         var result = .opt.apply(this,arguments)
 
         if no result 
-          .throwParseFailed "#{.constructor.name}: found #{.lexer.token.toString()} but #{.listArgs(arguments)} required"
+          .throwParseFailed "#{.constructor.name}:#{.extraInfo} found #{.lexer.token.toString()} but #{.listArgs(arguments)} required"
 
         return result
 
@@ -363,7 +356,7 @@ process as free-form mode separated list, where NEWLINE is a valid separator.
 normal separated list, 
 loop until closer found
 
-        debug "optSeparatedList [#{.constructor.name}] indent:#{.indent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer-'
+        log.debug "optSeparatedList [#{.constructor.name}] indent:#{.indent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer-'
 
         var startLine = .lexer.sourceLineNum
         do until .opt(closer)
@@ -421,7 +414,7 @@ First line sets indent level
         var startLine = .lexer.sourceLineNum
         var blockIndent = .lexer.indent
 
-        debug "optFreeFormList [#{.constructor.name}] parentname:#{.parent.name} parentIndent:#{parentIndent}, blockIndent:#{blockIndent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no-'
+        log.debug "optFreeFormList [#{.constructor.name}] parentname:#{.parent.name} parentIndent:#{parentIndent}, blockIndent:#{blockIndent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no-'
 
         if blockIndent <= parentIndent #first line is same or less indented than parent - assume empty list
           .lexer.sayErr "free-form SeparatedList: next line is same or less indented (#{blockIndent}) than parent indent (#{parentIndent}) - assume empty list"
@@ -433,7 +426,7 @@ now loop until closer or an indent change
 
 check for indent changes
 
-            debug "freeForm Mode .lexer.indent:#{.lexer.indent} block indent:#{blockIndent} parentIndent:#{parentIndent}"
+            log.debug "freeForm Mode .lexer.indent:#{.lexer.indent} block indent:#{blockIndent} parentIndent:#{parentIndent}"
             if .lexer.indent isnt blockIndent
 
 indent changed:
@@ -482,7 +475,7 @@ NEWLINE also is optional and valid
 
         loop #try get next item
 
-        debug "END freeFormMode [#{.constructor.name}] blockIndent:#{blockIndent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer-'
+        log.debug "END freeFormMode [#{.constructor.name}] blockIndent:#{blockIndent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer-'
 
         //if closer then .opt('NEWLINE') # consume optional newline after closer in free-form mode
 
@@ -620,8 +613,8 @@ else, unrecognized object
 
             else
               var msg = "method:ASTBase.out() Caller:#{.constructor.name}: object not recognized. type: "+ typeof item
-              debug msg
-              debug item
+              log.debug msg
+              log.debug item
               .throwError msg
 
 Last option, out item.toString()
@@ -747,7 +740,7 @@ show indented messaged for debugging
     #ifdef TARGET_C
 
 #### helper method callOnSubTree(dispatcher:function)
-        dispatcher this //call method dispatcher on this instance
+        dispatcher.call this //call method dispatcher on this instance
         if .children 
             for each child in .children
                 child.callOnSubTree dispatcher // call on all children and children's children

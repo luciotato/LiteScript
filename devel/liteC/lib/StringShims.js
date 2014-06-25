@@ -25,7 +25,7 @@
        // method capitalized
        String.prototype.capitalized = function(){
           // if this, return this[0].toUpperCase()+this.slice(1)
-          if (this) {return this[0].toUpperCase() + this.slice(1)};
+          if (this) {return this[0].toUpperCase() + this.slice(1);};
        };
 
 // .quoted(quotechar)
@@ -40,7 +40,7 @@
        // method repeat(howMany)
        String.prototype.repeat = function(howMany){
            // if howMany<=0, return
-           if (howMany <= 0) {return};
+           if (howMany <= 0) {return;};
            var a = [];
            a[howMany] = "";
            return a.join(this);
@@ -98,7 +98,7 @@
        // method spaces(howMany)
        String.spaces = function(howMany){
            // if howMany<=0, return ""
-           if (howMany <= 0) {return ""};
+           if (howMany <= 0) {return "";};
            return " ".repeat(howMany);
        };
 
@@ -110,12 +110,12 @@
            // if text and text[0] is text[0].toUpperCase()
            if (text && text[0] === text[0].toUpperCase()) {
                // if text.length  is 1, return true;
-               if (text.length === 1) {return true};
+               if (text.length === 1) {return true;};
 
                // for n=1 while n<text.length
                for( var n=1; n < text.length; n++) {
                    // if text[n] is text[n].toLowerCase(), return true
-                   if (text[n] === text[n].toLowerCase()) {return true};
+                   if (text[n] === text[n].toLowerCase()) {return true;};
                };// end for n
                
            };
@@ -133,9 +133,9 @@
            // for n=start+1 while n<text.length
            for( var n=start + 1; n < text.length; n++) {
                // if text[n] is closer and --opencount is 0, return n
-               if (text[n] === closer && --opencount === 0) {return n};
+               if (text[n] === closer && --opencount === 0) {return n;};
                // if text[n] is opener, opencount++
-               if (text[n] === opener) {opencount++};
+               if (text[n] === opener) {opencount++;};
            };// end for n
 
            return -1;
@@ -154,7 +154,7 @@
                var p = text.search(/"|'/);
 
                // if p<0, break //no more quotes
-               if (p < 0) {break};
+               if (p < 0) {break;};
 
                var quote = text[p];
 
@@ -163,7 +163,7 @@
                 // Note: ...ONE or more times..., to do not convert """ into "
 
                // if no regExp.test(text), break //unmatched quote
-               if (!regExp.test(text)) {break};
+               if (!regExp.test(text)) {break;};
 
                text = text.replace(regExp, rep);
            };// end loop
@@ -181,7 +181,7 @@
 // split expressions
 
                // if no text then return []
-               if (!text) {return []};
+               if (!text) {return [];};
 
                 //get quotes
                var quotes = text[0];
@@ -205,7 +205,7 @@
                    // if content
                    if (content) {
                        // if useQuotes, content = content.quoted(useQuotes)
-                       if (useQuotes) {content = content.quoted(useQuotes)};
+                       if (useQuotes) {content = content.quoted(useQuotes);};
                        items.push(content);
                    };
                };
@@ -221,7 +221,7 @@
 
                    delimiterPos = s.indexOf(delimiter + "{", lastDelimiterPos);
                    // if delimiterPos<0 then break
-                   if (delimiterPos < 0) {break};
+                   if (delimiterPos < 0) {break;};
 
                     // first part - text upto first delimiter
                    push(s.slice(lastDelimiterPos, delimiterPos), quotes);
@@ -240,16 +240,12 @@
                    item = s.slice(start + 1, closerPos);
                     // add parens if expression
                    // if item not like /^[A-Za-z0-9_$.]+$/ then item = '('+item+')';
-                   if (!(/^[A-Za-z0-9_$.]+$/.test(item))) {item = '(' + item + ')'};
+                   if (!(/^[A-Za-z0-9_$.]+$/.test(item))) {item = '(' + item + ')';};
 
                    lastDelimiterPos = closerPos + 1;
 
                    push(item); //push expression
                };// end loop
-
-                // make sure we start with a string to avoid '+' numeric behavior
-               // if items.length and items[0][0] isnt quotes then items.unshift(quotes+quotes)
-               if (items.length && items[0][0] !== quotes) {items.unshift(quotes + quotes)};
 
                 // remainder
                push(s.slice(lastDelimiterPos), quotes);
