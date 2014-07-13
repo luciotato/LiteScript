@@ -1,3 +1,4 @@
 //run LiteScript Command Line Interface
-var cli = require('../out/lib/lite-cli');
+console.log(process.cwd());
+var cli = require('../../liteCompiler-v0.7/lite-cli');
 cli.main();

@@ -19,8 +19,10 @@
 // -------------------------
 // ### dependencies
 
-   // import log
-   var log = require('./log');
+   // import logger, ControlledError, GeneralOptions
+   var logger = require('./lib/logger.js');
+   var ControlledError = require('./lib/ControlledError.js');
+   var GeneralOptions = require('./lib/GeneralOptions.js');
 
 // The Lexer Class
 // ===============
@@ -32,7 +34,7 @@
 
         // project
         // filename:string
-        // options
+        // options: GeneralOptions
 
         // lines:string array
         // infoLines: InfoLine array
@@ -164,7 +166,7 @@
 
            // if no line
            if (!line) {
-               type = LineTypes.BLANK;
+               type = lineTypes.BLANK;
            }
 
 // else, if indented 4 spaces or more, can be the start of a code block
@@ -217,16 +219,16 @@
 
                    // if line.startsWith("#") or line.startsWith("//") # CODE by indent, but all commented
                    if (line.startsWith("#") || line.startsWith("//")) {// # CODE by indent, but all commented
-                     type = LineTypes.COMMENT;
+                     type = lineTypes.COMMENT;
                    }
                    
                    else {
-                     type = LineTypes.CODE;
+                     type = lineTypes.CODE;
                    };
                }
                
                else {
-                   type = LineTypes.COMMENT;
+                   type = lineTypes.COMMENT;
                };
            };
                 // #end if
@@ -236,13 +238,13 @@
 // parse multi-line string (triple quotes) and convert to one logical line:
 // Example result: var a = 'first line\nsecond line\nThird line\n'
 
-           // if type is LineTypes.CODE
-           if (type === LineTypes.CODE) {
+           // if type is lineTypes.CODE
+           if (type === lineTypes.CODE) {
              line = this.parseTripleQuotes(line);
            };
 
 // check for multi-line comment, C and js style //.... 
-// then check for #ifdef/#else/#endif
+// then check for "#ifdef/#else/#endif"
 
            // if .checkMultilineComment(infoLines, type, indent, line )
            if (this.checkMultilineComment(infoLines, type, indent, line)) {
@@ -262,7 +264,7 @@
 
            infoLines.push(infoLine);
 
-           lastLineWasBlank = type === LineTypes.BLANK;
+           lastLineWasBlank = type === lineTypes.BLANK;
        };// end loop
 
 // now we have a infoLine array, tokenized, ready to be parsed
@@ -281,15 +283,15 @@
 
 // Now, after processing all lines, we tokenize each CODE line
 
-       log.debug("---- TOKENIZE");
+       logger.debug("---- TOKENIZE");
 
        // for each item in .infoLines
        for( var item__inx=0,item ; item__inx<this.infoLines.length ; item__inx++){item=this.infoLines[item__inx];
 
            item.dump();// # debug
 
-           // if item.type is LineTypes.CODE
-           if (item.type === LineTypes.CODE) {
+           // if item.type is lineTypes.CODE
+           if (item.type === lineTypes.CODE) {
                item.tokenize(this);
            };
            // end if
@@ -320,78 +322,56 @@
     // method preprocessor()
     Lexer.prototype.preprocessor = function(){
 
+     // do nothing
+     null;
+    };
+
 // Here we search for 'compiler generate', then we take the indented 'body', compile the body,
 // run it, and replace 'compiler generate + Body' with the generated lines.
-
-     // for each index,item in .infoLines where item.type is LineTypes.CODE
-     for( var index=0,item ; index<this.infoLines.length ; index++){item=this.infoLines[index];
-       if(item.type === LineTypes.CODE){
-
-       // if item.text like /^compiler\s+generate\b/
-       if (/^compiler\s+generate\b/.test(item.text)) {
-
+//       for each index,item in .infoLines where item.type is lineTypes.CODE
+//         if item.text like /^compiler\s+generate\b/
 // get all the indented lines under 'compiler generate'
-
-           var 
-           bodyLines = [], 
-           bodyInx = index + 1, 
-           bodyIndent = 0
-           ;
-
-           // while bodyInx<.infoLines.length and (.infoLines[bodyInx] into var bodyLine).indent>item.indent
-           var bodyLine=undefined;
-           while(bodyInx < this.infoLines.length && ((bodyLine=this.infoLines[bodyInx])).indent > item.indent){
-               bodyLines.push(String.spaces(bodyLine.indent) + bodyLine.text);
-               // if bodyIndent is 0, bodyIndent = bodyLine.indent #first indent
-               if (bodyIndent === 0) {bodyIndent = bodyLine.indent;};
-               bodyInx++;
-           };// end loop
-
+//             var bodyLines = [], bodyInx=index+1, bodyIndent = 0
+//             while bodyInx<.infoLines.length and (.infoLines[bodyInx] into var bodyLine).indent>item.indent
+//                 bodyLines.push String.spaces(bodyLine.indent)+bodyLine.text
+//                 if bodyIndent is 0, bodyIndent = bodyLine.indent #first indent
+//                 bodyInx++
 // add implicit parameter lines:string array to macro code
-
-           bodyLines.unshift(String.spaces(bodyIndent) + 'global declare lines:string array');
-
+//             bodyLines.unshift String.spaces(bodyIndent)
+//                     +'global declare lines:string array'
 // compile the body
-
-           var referenceName = '*compiler generate* at line ' + item.sourceLineNum + ' file ' + this.filename;
-            // declare valid .compiler.compileModule
-           var moduleNode = this.compiler.compileModule(referenceName, bodyLines, {browser: this.options.browser, target: 'js', verbose: 0, skip: true});
-
+//             var referenceName = '*compiler generate* at line #{item.sourceLineNum} file #{.filename}'
+//             var moduleNode = .compiler.compileModule(
+//                                 referenceName
+//                                 bodyLines,{
+//                                     browser: .options.browser
+//                                     target:'js'
+//                                     verbose:0
+//                                     skip:true #skip validation. Note: until fix ERROR: (compiler-defined) DUPLICATED name in scope: 'lines'
+//                                               #test with LiteScript_online_playground - Preprocessor.lite.md
+//                                 }
+//                                 )
 // run the body
-
-           var lines = [];
-            // declare valid moduleNode.getCompiledText
-           var generateFn = new Function("lines", moduleNode.getCompiledText()); //create a Fn with compiled lines
-           generateFn(lines); // call the Fn, Execute the 'compiler generate' body
-
+//             var lines = []
+//             declare valid moduleNode.getCompiledText
+//             var generateFn = new Function("lines", moduleNode.getCompiledText()); //create a Fn with compiled lines
+//             generateFn lines // call the Fn, Execute the 'compiler generate' body
 // indent 4 spaces the generated lines
-
-           // for each i,line in lines
-           for( var i=0,line ; i<lines.length ; i++){line=lines[i];
-               lines[i] = '    ' + line;
-           };// end for each in lines
-
+//             for each i,line in lines
+//                 lines[i]='    '+line
 // reuse this lexer, call .preParseSource to analyze generated lines.
 // preParseSource() set line type, calculates indent, handle multiline comments, string interpolation, etc.
-
-           this.initSource(referenceName, lines);
-           var newInfoLines = this.preParseSource();// #generate 'infolines' from source
-
+//             .initSource referenceName, lines
+//             var newInfoLines = .preParseSource() #generate 'infolines' from source
 // replace 'compiler generate+Body' with generated lines in .infoLines
-
-            // #pass parameters to Array.splice
-           newInfoLines.unshift(bodyInx - index);// #how many to delete
-           newInfoLines.unshift(index);// #where to start
-           Array.prototype.splice.apply(this.infoLines, newInfoLines);// #remove old and insert new
-       };
-     }};// end for each in this.infoLines
-
+//             #pass parameters to Array.splice
+//             newInfoLines.unshift bodyInx-index #how many to delete
+//             newInfoLines.unshift index #where to start
+//             Array.prototype.splice.apply .infoLines,newInfoLines #remove old and insert new
 // now continue processing were we left, so the the newly generated lines
 // will be processed, allowing recursion
-
-     // end for code lines
-     
-    };
+//       end for code lines
+//       
 
 
     // method process()
@@ -410,7 +390,6 @@
 
      this.tokenize();
     };
-
 
 // Next Source Line
 // ----------------
@@ -534,13 +513,13 @@
 
          // for each inx,sectionLine in result.section
          for( var inx=0,sectionLine ; inx<result.section.length ; inx++){sectionLine=result.section[inx];
-             infoLines.push(new InfoLine(this, LineTypes.COMMENT, 0, sectionLine, startSourceLine + inx));
+             infoLines.push(new InfoLine(this, lineTypes.COMMENT, 0, sectionLine, startSourceLine + inx));
          };// end for each in result.section
 
          // if result.post.trim()
          if (result.post.trim()) {
-             log.warning("" + this.filename + ":" + this.sourceLineNum + ":1. Do not add text on the same line after `*/`. Indent is not clear");
-             infoLines.push(new InfoLine(this, LineTypes.CODE, result.postIndent, result.post, this.sourceLineNum));
+             logger.warning("" + this.filename + ":" + this.sourceLineNum + ":1. Do not add text on the same line after `*/`. Indent is not clear");
+             infoLines.push(new InfoLine(this, lineTypes.CODE, result.postIndent, result.post, this.sourceLineNum));
          };
        };
 
@@ -551,7 +530,7 @@
     // method checkConditionalCompilation(line:string)
     Lexer.prototype.checkConditionalCompilation = function(line){
 
-// This method handles #ifdef/#else/#endif as multiline comments
+// This method handles "#ifdef/#else/#endif" as multiline comments
 
        var startSourceLine = this.sourceLineNum;
 
@@ -576,10 +555,19 @@
            return false;
        };
 
+       var pos = undefined;
+       pos = line.indexOf("#endif");
+       // if pos
+       if (pos) {
+          //get rid of quoted strings. Still there?
+         // if String.replaceQuoted(line,"").indexOf("#endif")>=0
+         if (String.replaceQuoted(line, "").indexOf("#endif") >= 0) {
+             this.throwErr('found "#endif" without "#ifdef"');
+         };
+       };
+
        var invert = false;
-
-       var pos = line.indexOf("#ifdef ");
-
+       pos = line.indexOf("#ifdef ");
        // if pos<0
        if (pos < 0) {
            pos = line.indexOf("#ifndef ");
@@ -619,8 +607,8 @@
            var indent=undefined;
            if ((indent=line.search(/\S/)) >= 0) {
                line = line.trim();
-               // if line[0] is '#' and line[1] isnt '#' //expected: #else, #endif #end if
-               if (line[0] === '#' && line[1] !== '#') { //expected: #else, #endif #end if
+               // if line[0] is '#' and line[1] isnt '#' //expected: "#else, #endif #end if"
+               if (line[0] === '#' && line[1] !== '#') { //expected: "#else, #endif #end if"
                    words = line.split(' ');
                    // switch words[0]
                    switch(words[0]){
@@ -726,8 +714,8 @@
        var inx = this.lineInx - 1;
        // while inx >=0
        while(inx >= 0){
-           // if .infoLines[inx].type is LineTypes.CODE
-           if (this.infoLines[inx].type === LineTypes.CODE) {
+           // if .infoLines[inx].type is lineTypes.CODE
+           if (this.infoLines[inx].type === lineTypes.CODE) {
                return this.infoLines[inx].indent;
            };
            inx -= 1;
@@ -771,7 +759,7 @@
 
 // if no more CODE lines -> EOF
 
-                       this.infoLine = new InfoLine(this, LineTypes.CODE, -1, '', this.lineInx);
+                       this.infoLine = new InfoLine(this, lineTypes.CODE, -1, '', this.lineInx);
                        this.token = new Token('EOF');
                        this.infoLine.tokens = [this.token];
                        this.indent = -1;
@@ -851,7 +839,7 @@
        this.consumeToken();
 
         // #debug
-       log.debug(">>>ADVANCE", "" + this.sourceLineNum + ":" + (this.token.column || 0) + " [" + this.index + "]", this.token.toString());
+       logger.debug(">>>ADVANCE", "" + this.sourceLineNum + ":" + (this.token.column || 0) + " [" + this.index + "]", this.token.toString());
 
        return true;
     };
@@ -864,7 +852,7 @@
         // #restore last saved pos (rewind)
 
        this.setPos(this.last);
-       log.debug('<< Returned:', this.token.toString(), 'line', this.sourceLineNum);
+       logger.debug('<< Returned:', this.token.toString(), 'line', this.sourceLineNum);
     };
 
 // -----------------------------------------------------
@@ -896,8 +884,8 @@
 
 // if it is a CODE line, store in lexer.sourceLineNum, and return true (ok)
 
-           // if .infoLine.type is LineTypes.CODE
-           if (this.infoLine.type === LineTypes.CODE) {
+           // if .infoLine.type is lineTypes.CODE
+           if (this.infoLine.type === lineTypes.CODE) {
 
                this.sourceLineNum = this.infoLine.sourceLineNum;
                this.indent = this.infoLine.indent;
@@ -918,7 +906,7 @@
     Lexer.prototype.say = function(){
 // **say** emit error (but continue compiling)
 
-       log.error.apply(this, Array.prototype.slice.call(arguments));
+       logger.error.apply(this, Array.prototype.slice.call(arguments));
     };
 
 
@@ -926,17 +914,14 @@
     Lexer.prototype.throwErr = function(msg){
 // **throwErr** add lexer position and emit error (abort compilation)
 
-       var err = new Error("" + (this.posToString()) + " " + msg);
-       err.extra.set("controled", true);
-       // throw err
-       throw err;
+       logger.throwControlled("" + (this.posToString()) + " " + msg);
     };
 
     // method sayErr(msg)
     Lexer.prototype.sayErr = function(msg){
 // **sayErr** add lexer position and emit error (but continue compiling)
 
-       log.error(this.posToString(), msg);
+       logger.error(this.posToString(), msg);
     };
 
 
@@ -944,7 +929,7 @@
     Lexer.prototype.warn = function(msg){
 // **warn** add lexer position and emit warning (continue compiling)
 
-       log.warning(this.posToString(), msg);
+       logger.warning(this.posToString(), msg);
     };
    // end class Lexer
 
@@ -994,7 +979,7 @@
 // it has a source line number reference, and a tokens[] array if it's a CODE line
 
 // Each "infoLine" has:
-// * a line "type" of: `BLANK`, `COMMENT` or `CODE` (LineTypes),
+// * a line "type" of: `BLANK`, `COMMENT` or `CODE` (lineTypes),
 // * a tokens[] array if it's `CODE`
 // * sourceLineNum: the original source line number (for SourceMap)
 // * indent: the line indent
@@ -1022,27 +1007,27 @@
      // method dump() # out debug info
      InfoLine.prototype.dump = function(){// # out debug info
 
-       // if .type is LineTypes.BLANK
-       if (this.type === LineTypes.BLANK) {
-         log.debug(this.sourceLineNum, "(BLANK)");
+       // if .type is lineTypes.BLANK
+       if (this.type === lineTypes.BLANK) {
+         logger.debug(this.sourceLineNum, "(BLANK)");
          return;
        };
 
        var type = "";
-       // if .type is LineTypes.COMMENT
-       if (this.type === LineTypes.COMMENT) {
+       // if .type is lineTypes.COMMENT
+       if (this.type === lineTypes.COMMENT) {
          type = "COMMENT";
        }
        
-       else if (this.type === LineTypes.CODE) {
+       else if (this.type === lineTypes.CODE) {
          type = "CODE";
        };
 
-       log.debug(this.sourceLineNum, "" + this.indent + "(" + type + ")", this.text);
+       logger.debug(this.sourceLineNum, "" + this.indent + "(" + type + ")", this.text);
        // if .tokens
        if (this.tokens) {
-           log.debug('   ', this.tokens.join(' '));
-           log.debug();
+           logger.debug('   ', this.tokens.join(' '));
+           logger.debug();
        };
      };
 
@@ -1098,9 +1083,9 @@
              // if no match
              if (!match) {
 
+                // calc position from line info (we're at post-lexexr)
                msg = "(" + lexer.filename + ":" + this.sourceLineNum + ":" + (colInx + 1) + ") Tokenize patterns: invalid token: " + chunk;
-               log.error(msg);
-               log.error(code);
+               logger.error(msg);
 
                var errPosString = '';
                // while errPosString.length<colInx
@@ -1108,12 +1093,10 @@
                    errPosString += ' ';
                };// end loop
 
-               log.error(errPosString + '^');
+               logger.error(code);
+               logger.error(errPosString + '^');
 
-               var err = new Error(msg);
-               err.extra.set("controled", true);
-               // raise err
-               throw err;
+               logger.throwControlled("parsing tokens");
              };
 
               // #end if
@@ -1150,7 +1133,7 @@
                 //ifdef PROD_C
 
                     // code a call to "concat" to handle string interpolation
-                   var composed = new InfoLine(lexer, LineTypes.CODE, token.column, "any_concat(" + (parsed.join(',')) + ")", this.sourceLineNum);
+                   var composed = new InfoLine(lexer, lineTypes.CODE, token.column, "_concatAny(" + (parsed.join(',')) + ")", this.sourceLineNum);
 
                 // #else //-> JavaScript
                     ////if the first expression isnt a quoted string constant
@@ -1161,7 +1144,7 @@
                         //parsed.unshift "''" // prepend ''
 
                     ////join expressions using +, so we have a valid composed expression, evaluating to a string.
-                    //var composed = new InfoLine(lexer, LineTypes.CODE, token.column, parsed.join(' + '), .sourceLineNum  )
+                    //var composed = new InfoLine(lexer, lineTypes.CODE, token.column, parsed.join(' + '), .sourceLineNum  )
                 // #end if
 
                     // #Now we 'tokenize' the new composed expression
@@ -1207,7 +1190,7 @@
            if (words[0] === 'lexer') {
              // if words.slice(1,5).join(" ") is "options string interpolation char"
              if (words.slice(1, 5).join(" ") === "options string interpolation char") {
-               this.type = LineTypes.COMMENT;// # is a COMMENT line
+               this.type = lineTypes.COMMENT;// # is a COMMENT line
                var char = undefined;
                // if words[5] into char is 'is' then char = words[6] #get it (skip optional 'is')
                if ((char=words[5]) === 'is') {char = words[6];};
@@ -1220,8 +1203,8 @@
            };
        
        }catch(e){
-           log.error("" + lexer.filename + ":" + this.sourceLineNum + ":" + (colInx + 1), e.message);
-           log.error(msg);
+           // if not e instanceof ControlledError, lexer.sayErr e.message //adds position info
+           if (!(e instanceof ControlledError)) {lexer.sayErr(e.message);};
            // throw e
            throw e;
        };
@@ -1282,7 +1265,7 @@
 
 // ok, found startCode, initialize
 
-       log.debug("**** START MULTILINE ", startCode);
+       logger.debug("**** START MULTILINE ", startCode);
 
        this.section = [];
        var startSourceLine = lexer.sourceLineNum;
@@ -1338,9 +1321,19 @@
 // Exported Module vars
 // ------------------------
 
-   var LineTypes = {CODE: 0, COMMENT: 1, BLANK: 2};
+   // public namespace lineTypes
+   var lineTypes={};
+        // properties
+            // CODE = 0
+            // COMMENT = 1
+            // BLANK = 2
+           lineTypes.CODE=0;
+           lineTypes.COMMENT=1;
+           lineTypes.BLANK=2;
+       
+   ;
    // export
-   Lexer.LineTypes = LineTypes;
+   Lexer.lineTypes=lineTypes;
 
    // public helper class OutCode
    // constructor
@@ -1417,7 +1410,7 @@
 
          // if .currLine or .currLine is ""
          if (this.currLine || this.currLine === "") {
-             log.debug(this.lineNum, this.currLine);
+             logger.debug(this.lineNum, this.currLine);
              // if .toHeader
              if (this.toHeader) {
                this.hLines.push(this.currLine);

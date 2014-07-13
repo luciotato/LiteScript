@@ -1,7 +1,14 @@
-OUT=../liteC/lib
-if node  ../util/lite-js -use v0.7 -D PROD_C -compile Compiler -o $OUT -nomap; then 
-    echo compiled OK $(pwd) 
-    echo compiled at $OUT
-fi
+basename=$1
+dirname=$2
 
-#node  ../util/lite-js -use v0.6 -D PROD_C -compile producer_c.lite.md -single -o $OUT -nomap
+if [ $basename = "litec.lite.md" ]; then 
+    echo compile LiteC
+    cd ../liteC
+    pwd
+    node lite-js -v 2 -D PROD_C -compile ../source-v0.8/litec -o ../liteC/Ctest/generated
+else
+    echo compile v0.8
+    if node  ../util/lite-js -v 2 -use v0.7 -D PROD_C -compile Compiler -o ../liteC/lib -nomap; then 
+        echo compiled OK $(pwd) 
+    fi
+fi

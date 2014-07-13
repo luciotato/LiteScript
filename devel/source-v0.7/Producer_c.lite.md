@@ -255,7 +255,7 @@ To ease reading of compiled code, add original Lite line as comment
 
 Each statement in its own line
 
-        if .statement isnt instance of Grammar.SingleLineStatement
+        if .statement isnt instance of Grammar.SingleLineBody
           .lexer.out.ensureNewLine
 
 if there are one or more 'into var x' in a expression in this statement, 
@@ -795,7 +795,7 @@ if it has AssginedValue, we out assignment if ES6 is available.
     #end VariableDecl
 
 
-### Append to class Grammar.SingleLineStatement ###
+### Append to class Grammar.SingleLineBody ###
 
       method produce()
     
@@ -812,7 +812,7 @@ if it has AssginedValue, we out assignment if ES6 is available.
 
         declare valid .elseStatement.produce
 
-        if .body instanceof Grammar.SingleLineStatement
+        if .body instanceof Grammar.SingleLineBody
             .out "if (", .conditional,") {",.body,"}"
         else
             .out "if (", .conditional, ") {", .getEOLComment()
@@ -935,8 +935,12 @@ Handle by using a js/C standard for(;;){} loop
         .out "for(int ",.indexVar.name, "=", .indexVar.assignedValue or "0", "; "
 
         if .conditionPrefix is 'to'
-            #'for n=0 to 10' -> for(n=0;n<=10;...
+            #'for n=0 to 10' -> for(n=0;n<=10;n++)
             .out .indexVar.name,"<=",.endExpression
+
+        else if .conditionPrefix is 'down'
+            #'for n=10 down to 0' -> for(n=10;n>=0;n--)
+            .out .indexVar.name,">=",.endExpression
 
         else # is while|until
 
@@ -948,9 +952,9 @@ produce the condition, negated if the prefix is 'until'
 
         .out "; "
 
-if no increment specified, the default is indexVar++
+if no increment specified, the default is indexVar++/--
 
-        .out .increment or [.indexVar.name,"++"]
+        .out .increment or [.indexVar.name, .conditionPrefix is 'down'? '--' else '++']
 
         .out ") ", .where
 

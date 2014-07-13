@@ -1,3 +1,224 @@
+# module is namespace
+check Grammar.Module, add a .body property (as namespaces have)
+at C production, use namespace.produce to produce a module body
+
+# Append to core-class - methods - DONE
+
+se puede hacer, hay que separarlos, y luego de inicializar el core,
+se puede llamar a algo como:
+
+    LiteCore_registerMethod(String, startsWith_, String_StartsWith);
+    LiteCore_registerShim(String, startsWith_, String_StartsWith);
+
+tambien puede ser un metodo "registerMethod"/"registerShim" asociado a Class:
+
+    // String.addMethod(LiteCore.getSymbol('startsWith'), String_startsWith )
+    CALL2(registerMethod_,String, LiteCore_getSymbol("startsWith"),any_func(String_StartsWith));
+
+    // String.addShim(String_StartsWith)
+    CALL2(registerShim_,String, LiteCore_getSymbol("startsWith"),any_func(String_StartsWith));
+
+que: extiende la jmp table si es necesario y agrega el metodo en la jmp table
+
+
+# to-do
+named-params, re-order upon name, Use instead of: 
+  - Names.NameDeclOptions 
+  - ImportParameterInfo
+remove those classes
+
+
+##match foo instance of
+
+instead of 
+            
+    if foo instance of Grammar.VarStatement
+        declare foo:Grammar.VarStatement
+        ...
+
+Problem with "declare": "declare .name:Grammar.VarStatement"
+makes ASTBase.name a Grammar.VarStatement for the rest of the code
+even in other modules, also for derived classes. should be changed ASAP.
+
+Note: allow only "declare x:type" for local scope vars
+
+    match foo instance of
+
+        when Grammar.ClassDeclaration:
+            ...
+
+        when Grammar.AppendToDeclaration:
+            ...
+
+        when Grammar.VarStatement:
+            ...
+
+        [else fail with "Unexpected class. foo is instance of #{foo.class.name}"]
+
+
+instead of "declare foo:Grammar.VarStatement"     
+
+    if foo instance of Bar
+
+_Note_: we use "match foo instance of" instead of "switch foo class"
+because the beahvior is very different from "switch case". 
+'when' clauses are all evaluated first for foo direct class,
+then for foo.super, then for foo.super.super...
+This means a derived, more specific class 'Bar' will be selected, even if the "when" clauses
+is after its super class 'SuperBar'.
+
+_Note_: The compiler should warn if a 'when' clause of a derived class is located *after* the
+when clause of its super class.
+
+The above construct translates to:
+
+JS:
+
+    var __proto1 = foo.__proto__;
+    while(__proto1) {
+      var __it1=foo; //scope of __it1 is while loop
+      switch(__proto1){
+        case Grammar.ClassDeclaration.prototype:
+          declare __it1:Grammar.ClassDeclaration
+          ...
+          break;
+        case Grammar.AppendToDeclaration.prototype:
+          declare __it1:Grammar.AppendToDeclaration
+          ...
+          break;
+        case Grammar.VarStatement.prototype:
+          declare __it1:Grammar.VarStatement
+          ...
+          break;
+      }
+      __proto1 = __proto1.__proto__;
+    }
+    if (!__obj1){ //default:
+        fail with "Unexpected class. foo is #{foo.constructor?foo.constructor.name:typeof foo}"
+    }
+
+C:
+
+    var __class1 = foo.class;
+    while(__class1) {
+        var __it1=foo;
+        if (__class1==Grammar.ClassDeclaration.value.class){
+            declare __it1:Grammar.ClassDeclaration;
+            ...
+        }
+        else if (__class1==Grammar.AppendToDeclaration){
+            ...
+        }
+        else if (__class1==Grammar.VarStatement){
+            ...
+        }
+        __class1=__class1.class;
+    }
+    if (!__class1){ //default:
+        fail with "Unexpected class. foo is #{foo.class.name}"
+    }
+
+
+## add foo.class
+
+for js compiles to: (foo.constructor or {name:typeof foo})
+
+
+##match foo - SUGAR
+
+    match foo
+
+        when it is -2 or it is in 0..100
+            ...
+
+        when in 100..200 
+            ...
+
+        when instance of Grammar.VarStatement
+            ...
+
+        [else fail with "Unexpected condition. match foo. No 'when clause' is true"]
+
+
+The above construct translates to:
+
+JS:
+
+    var __it1=foo; //scope of __it1 is while loop
+    switch(true){
+      case __it1===-2 && __it1>=0 && __it1<100:
+        ...
+        break;
+      case __it1>=100 && __it1<200:
+        ...
+        break;
+      case __it1 is instance of Grammar.VarStatement
+        ...
+        break;
+
+      default:
+        fail with "Unexpected condition. match foo. No 'when clause' is true"
+    }
+
+C:
+
+    var __it1=foo;
+    if (__it1==3 || __it1>100 && __it1<200){
+        ...
+    }
+    if (__it1>=200 && __it1<300){
+        ...
+    }
+    else if (__it1.class==Grammar.AppendToDeclaration.value.class){
+        ...
+    }
+    else { //default:
+        fail_with("Unexpected condition. match foo. No 'when clause' is true");
+    }
+
+
+##default namespace -DONE
+
+- no crear "module.exports" (si dejar module.filename)
+- at the begining of a Module.parse, a default namespace is
+created with the same name as the module.
+Este default namespace es lo que antes era module.exports
+- en function "addToExports", lo que se hace es agregar miembros al default namespace
+- toda "public var", es lo mismo que "properties del original default namespace" y ademas van al scope
+- toda "public function", es lo mismo que "method del original default namespace" y ademas van al scope
+- non-public var o function, son agregadas solo al scope (como se hace normalmente)
+- si aparece un namespace o clase con el mismo nombre q el default, este reemplaza al default
+  - si el default tenia algo en ese momento 
+        -> warn: cannot have "public function/var" and also a class/namespace named as the module (default export)
+  - si aparece public var/function Y YA HAY default namespace replaced
+      -> warn: cannot have "public function/var" and also a class/namespace named as the module (default export)
+
+//// NO - el default namespace, puede ser un "prototype" si aparece una class con el mismo nombre del modulo
+
+-remove "default export" as an option.
+
+
+## to analize
+
+todas las fn se llaman con this,argc,arguments
+
+a) como la 1er funcion es llamada desde main, podemos hacer que siempre pasen "this"
+incluso cuando llamas a una fn global o de namespace. main llama con this = undefined
+y luego ese valor se envia en cascada. Cuando llamas a una fn global o de namespace
+*desde un metodo* esta funcion recibe "this" con un .class y .value corresp 
+a la instancia del metodo desde el cual es llamado.
+*JS NO ANDA ASI*. para que una fn reciba this=foo, debe ser llamada
+como foo.fn() o fn.call(foo). Cuando es llamada como fn(), this es window/global.
+
+b) declarar las funciones como (this, argc, ...) --
+*NO VALE LA PENA*. VA_LIST no siempre devuelve un puntero al stack ya que los params pueden ser pasados en registros.---
+ declarar las funciones como (this, argc, ...) en lugar de DEFAULT_ARGUMENTS
+y ver de usar VA_ARGS, ver que hacen
+Esto permitiria eliminar (any_arr) y hacer las llamadas directo
+CALL(_method,this,2,arg1,arg2)
+CALL(_push,arr,4,arg1,arg2,arg3,arg4)
+
+
 ## NO ANDA PUBLIC NAMESPACE, en .interface
 ## era var titleKeyRegexp = /^(#)... 
 ## ==> HACERLO MAS INCLUSIVO para evitar
@@ -515,7 +736,7 @@ la var tiene diferentes tipos en diferentes partes del codigo.
 como esta ahora, la var tiene el tipo de la ultima asignacion
 
 ---
-- agregar ,SingleLineStatement para "while/until" loop
+- agregar ,SingleLineBody para "while/until" loop
 - agregar "unless" como "if not"
 
 ----
@@ -535,17 +756,6 @@ js:
 
         return SourceMap.BASE64_CHARS[value] or function(){throw new Error("Cannot Base64 encode value: #{value}")})();
 
-other:
-
-      method encodeBase64(value) 
-        return SourceMap.BASE64_CHARS[value] 
-          or fail with {message:"Cannot Base64 encode value: #{value}", controled:true}
-
-      method encodeBase64(value) 
-        return SourceMap.BASE64_CHARS[value] 
-          or fail with
-                message: "Cannot Base64 encode value: #{value}"
-                controled: true
 
 ----
 PROBLEMA CON export VAR
@@ -557,16 +767,16 @@ module.exports.pepe = pepe;
 
 luego:
 
-var log = require('log')
-log.pepe = []
+var logger = require('logger')
+logger.pepe = []
 
 LO QUE DESCONECTA 'var pepe' en el modulo 
-de log.pepe (module.exports.pepe)
+de logger.pepe (module.exports.pepe)
 ahora module.exports.pepe se refiere a otro [] 
 que 'var pepe', por lo que si en el modulo
 se hace pepe.push('z')
 
-log.pepe (externo) NO LO VE (es otro array)
+logger.pepe (externo) NO LO VE (es otro array)
 
 -----------
 
@@ -600,14 +810,14 @@ agregar "unless"
 hacer string intepolation en """
 
 -----------
-ver node_modules/log.lite.md 
+ver node_modules/logger.lite.md 
 
 la exportacion de var color={red: green...}
 no exporta .red .green
 ver compiler.lite.md . hubo que poner:
 
-    declare valid log.color.red
-    declare valid log.color.green
+    declare valid logger.color.red
+    declare valid logger.color.green
 
 
 ----------
@@ -1314,7 +1524,7 @@ TERNARY STATEMENT : NO - "if" is better
 NOPE: TRUTHY CHECK ([no] VariableRef ?) 
 
             if no actual.findOwnMember(name)
-                log 'cant find'
+                logger 'cant find'
                 actual.addMember(name)
                 actual = 'unk'
             else
@@ -1324,7 +1534,7 @@ NOPE: TRUTHY CHECK ([no] VariableRef ?)
             actual = no actual.findOwnMember(name)? "unk" : name
 
             no actual.findOwnMember(name)?
-                log 'cant find'
+                logger 'cant find'
                 actual.addMember(name)
                 actual = 'unk'
             else

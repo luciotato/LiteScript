@@ -60,6 +60,12 @@
            };
        };
 
+       // shim method rpad(howMany)
+       if (!String.prototype.rpad)
+       String.prototype.rpad = function(howMany){
+           return this.concat(String.spaces(howMany - this.length));
+       };
+
 
    // append to class Array
 

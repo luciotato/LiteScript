@@ -222,7 +222,7 @@
 // to differentiate from unexpected compiler errors
 
        var e = new Error(msg);
-       e.extra.set("controled", 1);
+       e.controled = true;
        this.debug("Controled ERROR:", e.message);
        // throw e
        throw e;

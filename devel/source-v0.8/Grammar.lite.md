@@ -74,8 +74,9 @@ utility methods to **req**uire tokens and allow **opt**ional ones.
 
 ### Dependencies 
 
-    import ASTBase, log
+    import ASTBase, logger, UniqueID, Strings
 
+    shim import Map, PMREX
 
 Reserved Words
 ---------------
@@ -86,11 +87,11 @@ Words that are reserved in LiteScript and cannot be used as variable or function
     var RESERVED_WORDS = [
         'namespace'
         'function','async'
-        'class','method','constructor','prototype'
+        'class','method'
         'if','then','else','switch','when','case','end'
         'null','true','false','undefined'
         'and','or','but','no','not','has','hasnt','property','properties'
-        'new','is','isnt'
+        'new','is','isnt','prototype'
         'do','loop','while','until','for','to','break','continue'
         'return','try','catch','throw','raise','fail','exception','finally'
         'with','arguments','in','instanceof','typeof'
@@ -99,7 +100,7 @@ Words that are reserved in LiteScript and cannot be used as variable or function
         'export','compiler','compile','debugger'
         //-----------------
         // "C" production reserved words
-        'length','short','long','int','unsigned','void','NULL','bool','assert' 
+        'char','short','long','int','unsigned','void','NULL','bool','assert' 
         ]
 
 Operators precedence
@@ -181,7 +182,6 @@ Example:
   `function x ( a : string = 'some text', b, c=0)`
 
       properties
-        name 
         type: VariableRef
         itemType: VariableRef
         aliasVarRef: VariableRef
@@ -198,33 +198,41 @@ Example:
 optional type annotation & 
 optional assigned value 
 
-        var dangling
+        var parseFreeFormMap
 
         if .opt(':')
-            if .lexer.token.type is 'NEWLINE' #dangling assignment ":"[NEWLINE]
-                dangling=true
-                #ifdef PROD_C
-                .type = "Map"
-                #endif
+            if .lexer.token.type is 'NEWLINE' #dangling  assignment ":"[NEWLINE]
+                parseFreeFormMap=true
             else
                 .parseType
 
-        if not dangling and .opt('=')
-            if .lexer.token.type is 'NEWLINE' #dangling assignment "="[NEWLINE]
-                dangling=true
-            else
-                if .lexer.interfaceMode //assignment => declare alias
-                    .aliasVarRef = .req(VariableRef)
-                else
-                  .assignedValue = .req(Expression)
+        if not parseFreeFormMap 
 
-        if dangling #dangling assignment :/= assume free-form object literal
+            if .opt('=') 
+
+                if .lexer.token.type is 'NEWLINE' #dangling assignment "="[NEWLINE]
+                    parseFreeFormMap=true
+                    if .lexer.options.literalMap, .type='Map'
+
+                else if .lexer.token.value is 'map' #literal map creation "x = map"[NEWLINE]
+                    .req 'map'
+                    .type='Map'
+                    parseFreeFormMap=true
+
+                else // just assignment aon the same line
+
+                    if .lexer.interfaceMode //assignment in interfaces => declare var alias. as in: `var $=jQuery`
+                        .aliasVarRef = .req(VariableRef)
+                    else
+                        .assignedValue = .req(Expression)
+                    return
+
+        
+        if parseFreeFormMap #dangling assignment, parse a free-form object literal as assigned value
+            
             .assignedValue   = .req(FreeObjectLiteral)
 
-        #ifdef PROD_C
-        if no .type and no .assignedValue
-            .type = "any"
-        #end if
+            .assignedValue.isMap = .type is 'Map'
 
 ##FreeObjectLiteral and Free-Form Separated List
 
@@ -294,7 +302,7 @@ Examples: /*
 
   js:
 
-    Console.log(title,subtitle,line1,line2,value,recommendation)
+    Console.logger(title,subtitle,line1,line2,value,recommendation)
 
   LiteScript available variations:
 
@@ -378,7 +386,7 @@ with frontDoor
       method parse()
         .req 'with'
         .lock()
-        .name = ASTBase.getUniqueVarName('with')  #unique 'with' storage var name
+        .name = UniqueID.getVarName('with')  #unique 'with' storage var name
         .varRef = .req(VariableRef)
         .body = .req(Body)
 
@@ -420,6 +428,8 @@ get catch variable - Note: catch variables in js are block-scoped
 
 get body 
 
+        if no .getParent(FunctionDeclaration), .sayErr "Exception/catch outside a function/method"
+
         .body = .req(Body)
 
 get optional "finally" block
@@ -459,7 +469,7 @@ At this point we lock because it is definitely a `throw` statement
 
 ### export class IfStatement extends ASTBase
       
-`IfStatement: (if|when) Expression (then|',') SingleLineStatement [ElseIfStatement|ElseStatement]*`
+`IfStatement: (if|when) Expression (then|',') SingleLineBody [ElseIfStatement|ElseStatement]*`
 `IfStatement: (if|when) Expression Body [ElseIfStatement|ElseStatement]*`
  
 Parses `if` statments and any attached `else` or chained `else if` 
@@ -479,10 +489,10 @@ after `,` or `then`, a statement on the same line is required
 if we're processing all single-line if's, ',|then' is *required*
 
 choose same body class as parent:
-either SingleLineStatement or Body (multiline indented)
+either SingleLineBody or Body (multiline indented)
 
         if .opt(',','then')
-            .body = .req(SingleLineStatement)
+            .body = .req(SingleLineBody)
             .req 'NEWLINE'
 
         else # and indented block
@@ -721,31 +731,27 @@ if the optional `own` keyword is used, only instance properties will be looped
 ### export class ForEachProperty extends ASTBase
 
       properties 
-        ownOnly
         indexVar:VariableDecl, mainVar:VariableDecl
-        iterable, where:ForWhereFilter
+        iterable:Expression 
+        where:ForWhereFilter
         body
 
       method parse()
         .req('each')
-
-then check for optional `own`
-
-        .ownOnly = .opt('own')? true: false
 
 next we require: 'property', and lock.
 
         .req('property')  
         .lock()
 
-Get index variable name (to store property names)
+Get main variable name (to store property value)
 
-        .indexVar = .req(VariableDecl)
-        .indexVar.type="string"
+        .mainVar = .req(VariableDecl)
 
-if comma present, get main variable name (to store property value)
+if comma present, it was propName-index (to store property names)
 
         if .opt(",")
+          .indexVar = .mainVar
           .mainVar = .req(VariableDecl)
 
 Then we require `in`, and the iterable-Expression (a object)
@@ -820,7 +826,7 @@ and then, loop body
 This `for` variant is just a verbose expressions of the standard C (and js) `for(;;)` loop
 
 Grammar:
-`ForIndexNumeric: for index-VariableDecl [[","] (while|until|to) end-Expression ["," increment-Statement] ["," where Expression]`
+`ForIndexNumeric: for index-VariableDecl [","] (while|until|to|down to) end-Expression ["," increment-Statement]`
 
 where `index-VariableDecl` is a numeric variable declared on the spot to store loop index,
 `start-Expression` is the start value for the index (ussually 0)
@@ -836,7 +842,6 @@ If omitted the default is `index++`
       properties 
         indexVar:VariableDecl
         conditionPrefix, endExpression
-        where
         increment: Statement
         body
 
@@ -850,18 +855,14 @@ next comma is  optional, then
 get 'while|until|to' and condition
 
         .opt ','
-        .conditionPrefix = .req('while','until','to')
+        .conditionPrefix = .req('while','until','to','down')
+        if .conditionPrefix is 'down', .req 'to'
         .endExpression = .req(Expression)
 
-another optional comma, and ForWhereFilter
+another optional comma, and increment-Statement(s)
 
         .opt ','
-        .where = .opt(ForWhereFilter)
-
-another optional comma, and increment-Statement
-
-        .opt ','
-        .increment = .opt(SingleLineStatement)
+        .increment = .opt(Statement)
 
 Now, get the loop body
 
@@ -876,14 +877,14 @@ This is a helper symbol denoting optional filter for the ForLoop variants.
 is: optional NEWLINE, then 'where' then filter-Expression
 
       properties
-        filter
+        filterExpression
 
       method parse
         var optNewLine = .opt('NEWLINE')
 
         if .opt('where')
           .lock()
-          .filter = .req(Expression)
+          .filterExpression = .req(Expression)
 
         else
           if optNewLine, .lexer.returnToken # return NEWLINE
@@ -1004,28 +1005,33 @@ Replace lexical `super` by `#{SuperClass name}.prototype`
 
             if classDecl.varRefSuper
                 #replace name='super' by name = #{SuperClass name}
-                .name = classDecl.varRefSuper.name
+                .name = classDecl.varRefSuper.toString()
             else
                 .name ='Object' # no superclass means 'Object' is super class
 
-            #insert '.prototype.' as first accessor (after super class name)
+            #ifndef PROD_C
+/*
+insert '.prototype.' as first accessor (after super class name)
+
             .insertAccessorAt 0, 'prototype'
 
-            #if super class is a composed name (x.y.z), we must insert those accessors also
-            # so 'super.myFunc' turns into 'NameSpace.subName.SuperClass.prototype.myFunc'
+if super class is a composed name (x.y.z), we must insert those accessors also
+so 'super.myFunc' turns into 'NameSpace.subName.SuperClass.prototype.myFunc'
+
             if classDecl.varRefSuper and classDecl.varRefSuper.accessors
-                #insert super class accessors
+                //insert super class accessors
                 var position = 0
                 for each ac in classDecl.varRefSuper.accessors
                   if ac instanceof PropertyAccess
                     .insertAccessorAt position++, ac.name
-
+            #endif
+*/
         end if super
 
-Hack: after 'into var', allow :type for simple (no accessor) var names
+Hack: after 'into var', allow :type 
 
         if .getParent(Statement).intoVars and .opt(":")
-            .type = .req(VariableRef)
+            .parseType
 
 check for post-fix increment/decrement
 
@@ -1065,11 +1071,11 @@ Note: commented 2014-6-11
 This method is only valid to be used in error reporting.
 function accessors will be output as "(...)", and index accessors as [...]
 
-        var result = (.preIncDec or "") + .name
+        var result = "#{.preIncDec or ''}#{.name}"
         if .accessors
           for each ac in .accessors
-            result += ac.toString()
-        return result + (.postIncDec or "")
+            result = "#{result}#{ac.toString()}"
+        return "#{result}#{.postIncDec or ''}"
 
 -----------------------
 
@@ -1106,8 +1112,6 @@ Examples:
 We provide a class Accessor to be super class for the three accessors types.
 
 ### export class Accessor extends ASTBase
-      properties
-        args:ASTBase array
 
       method parse
         fail with 'abstract'
@@ -1133,7 +1137,7 @@ We provide a class Accessor to be super class for the three accessors types.
             .name = .req('IDENTIFIER')
 
       method toString()
-        return '.'+.name
+        return '.#{.name}'
 
 
 ### export class IndexAccess extends Accessor
@@ -1153,25 +1157,44 @@ We provide a class Accessor to be super class for the three accessors types.
       method toString()
         return '[...]'
 
+### export class FunctionArgument extends ASTBase
+
+`FunctionArgument: [param-IDENTIFIER=]Expression`
+
+      properties 
+        expression
+
+      method parse()
+
+        .lock()
+
+        if .opt('IDENTIFIER') into .name
+            if .lexer.token.value is '=' 
+                .req '='
+            else
+                .lexer.returnToken
+                .name = undefined
+
+        .expression =.req(Expression)
 
 ### export class FunctionAccess extends Accessor
 `(...)` -> FunctionAccess: The object is assumed to be a function, and the code executed. 
                            It resolves to the function return value.
 
-`FunctionAccess: '(' [Expression,]* ')'`
+`FunctionAccess: '(' [FunctionArgument,]* ')'`
 
       properties 
-        args:Expression array
+        args:array of FunctionArgument
 
       method parse()
         .req "("
         .lock()
-        .args = .optSeparatedList( Expression, ",", ")" ) #comma-separated list of expressions, closed by ")"
+        .args = .optSeparatedList( FunctionArgument, ",", ")" ) #comma-separated list of FunctionArgument, closed by ")"
 
       method toString()
         return '(...)'
 
-## Helper Functions to parse accessors on any node
+## Functions appended to ASTBase, to help parse accessors on any node
 
 ### Append to class ASTBase
       properties 
@@ -1243,6 +1266,7 @@ To make parsing faster, associate a token type/value,
 with exact AST class to call parse() on.
 
     var OPERAND_DIRECT_TYPE = 
+
           'STRING': StringLiteral
           'NUMBER': NumberLiteral
           'REGEX': RegExpLiteral
@@ -1250,6 +1274,7 @@ with exact AST class to call parse() on.
     
 
     var OPERAND_DIRECT_TOKEN = 
+
           '(':ParenExpression
           '[':ArrayLiteral
           '{':ObjectLiteral
@@ -1340,17 +1365,20 @@ A) validate double-word opers
 A.1) validate `instance of`
 
         if .name is 'instance'
-            .name += ' '+.req('of')
+            .req('of')
+            .name = "instance of"
 
 A.2) validate `has|hasnt property`
 
         else if .name is 'has'
             .negated = .opt('not')? true:false # set the 'negated' flag
-            .name += ' '+.req('property')
+            .req('property')
+            .name = "has property"
 
         else if .name is 'hasnt'
+            .req('property')
             .negated = true # set the 'negated' flag
-            .name += 'has '+.req('property')
+            .name = "has property"
 
 A.3) also, check if we got a `not` token.
 In this case we require the next token to be `in|like` 
@@ -1397,7 +1425,9 @@ C) Variants on 'is/isnt...'
   C.2) accept 'is/isnt instance of' and 'is/isnt instanceof'
 
             if .opt('instance')
-                .name = 'instance '+.req('of')
+                .req('of')
+                .name = 'instance of'
+
             else if .opt('instanceof')
                 .name = 'instance of'
 
@@ -1531,7 +1561,7 @@ Get optional unary operator
 Get operand
 
             arr.push .req(Operand) 
-            .operandCount += 1 
+            .operandCount++
             .lock()
 
 (performance) Fast exit for common tokens: `= , ] )` -> end of expression.
@@ -1590,12 +1620,12 @@ Fix 'new' calls. Check parameters for 'new' unary operator, for consistency, add
 so `a = new MyClass` turns into `a = new MyClass()`
 
         for each index,item in arr
-          declare item:UnaryOper         
-          if item instanceof UnaryOper and item.name is 'new'
-            var operand = arr[index+1]
-            if operand.name instanceof VariableRef
-                var varRef = operand.name
-                if no varRef.executes, varRef.addAccessor new FunctionAccess(this)
+            declare item:UnaryOper  
+            if item instanceof UnaryOper and item.name is 'new'
+                var operand = arr[index+1]
+                if operand.name instanceof VariableRef
+                    var varRef = operand.name
+                    if no varRef.executes, varRef.addAccessor new FunctionAccess(this)
 
 Now we create a tree from .arr[], based on operator precedence
 
@@ -1623,7 +1653,7 @@ For example, `not 1 + 2 * 3 is 5`, turns into:
 In this method we create the tree, by pushing down operands, 
 according to operator precedence.
 
-Te process runs until there is only one operator left in the root node 
+The process is repeated until there is only one operator left in the root node 
 (the one with lower precedence)
 
 For example, `not 1 + 2 * 3 is 5`, turns into:
@@ -1712,10 +1742,8 @@ Un-flatten: Push down the operands a level down
           if oper instanceof UnaryOper
 
             #control
-            compile if debug
-              if pos is arr.length
-                .throwError("can't get RIGHT operand for unary operator '#{oper}'") 
-            end compile
+            if pos is arr.length
+              .throwError("can't get RIGHT operand for unary operator '#{oper}'") 
 
             # if it's a unary operator, take the only (right) operand, and push-it down the tree
             oper.right = arr.splice(pos+1,1)[0]
@@ -1723,14 +1751,12 @@ Un-flatten: Push down the operands a level down
           else
 
             #control
-            compile if debug
-              if pos is arr.length
-                .throwError("can't get RIGHT operand for binary operator '#{oper}'")
-              if pos is 0
-                .throwError("can't get LEFT operand for binary operator '#{oper}'")
-            end compile
+            if pos is arr.length
+              .throwError("can't get RIGHT operand for binary operator '#{oper}'")
+            if pos is 0
+              .throwError("can't get LEFT operand for binary operator '#{oper}'")
 
-            # if it's a binary operator, take the left and right operand, and push-them down the tree
+            # if it's a binary operator, take the left and right operand, and push them down the tree
             oper.right = arr.splice(pos+1,1)[0]
             oper.left = arr.splice(pos-1,1)[0]
 
@@ -1840,6 +1866,7 @@ a = [
 `ObjectLiteral: '{' NameValuePair* '}'`
 
 Defines an object with a list of key value pairs. This is a JavaScript-style definition.
+For LiteC (the Litescript-to-C compiler), a ObjectLiteral crates a `Map string to any` on the fly.
 
 `x = {a:1,b:2,c:{d:1}}`
 
@@ -1847,7 +1874,6 @@ Defines an object with a list of key value pairs. This is a JavaScript-style def
 
       properties 
         items: NameValuePair array
-        type = 'Object'
 
       method parse()
         .req '{'
@@ -1894,9 +1920,9 @@ if it's a "dangling assignment", we assume FreeObjectLiteral
 
 recursive duet 2 (see ObjectLiteral)
 
-      helper method forEach(callback)
+      helper method forEach(callback:Function)
 
-          callback(this) 
+          callback.call(this) 
 
           #if ObjectLiteral, recurse
           declare valid .value.root.name
@@ -1911,7 +1937,7 @@ recursive duet 2 (see ObjectLiteral)
 
 Defines an object with a list of key value pairs. 
 Each pair can be in it's own line. A indent denotes a new level deep.
-FreeObjectLiterals are triggered by a "danglin assignment"
+FreeObjectLiterals are triggered by a "dangling assignment"
 
 Examples: 
 /*
@@ -1920,7 +1946,7 @@ Examples:
           a: 1 
           b:           // <- dangling assignment
             b1:"some"
-            b2:"cofee"
+            b2:"latte"
 
     var x =
      a:1
@@ -1997,11 +2023,11 @@ Functions: parametrized pieces of callable code.
 
 '->' are anonymous lambda functions
 
-        if .specifier isnt '->'
+        if .specifier is '->'
+            .name = UniqueID.getVarName('fn')
+        else
             .name = .opt('IDENTIFIER') 
-            #ifdef PROD_C
-            if .name is 'main', .sayErr '"main" is a reserved function name'
-            #endif
+            if .name in ['main','__init','new'], .sayErr '"#{.name}" is a reserved function name'
 
 get parameter members, and function body
 
@@ -2014,48 +2040,36 @@ get parameter members, and function body
 This method is shared by functions, methods and constructors. 
 `()` after `function` are optional. It parses: `['(' [VariableDecl,] ')'] [returns VariableRef] '['DefinePropertyItem']'`
 
-        .EndFnLineNum = .sourceLineNum+1 //default value
-
-
+        .EndFnLineNum = .sourceLineNum+1 //default value - store to generate accurate SourceMaps (js)
 
         if .opt("(")
             .paramsDeclarations = .optSeparatedList(VariableDecl,',',')')
 
-        else if .specifier is '->' #we arrive here by: FnCall-param-Expression-Operand-'->'
+        else if .specifier is '->' #we arrived here by: FnCall-param-Expression-Operand-'->'
             # after '->' we accept function params w/o parentheses.
-            # get parameter names (name:type only), up to [NEWLINE],'=' or 'return'
+            # get parameter names (name:type only), up to [NEWLINE] or '=' 
             .paramsDeclarations=[]
-            until .lexer.token.type is 'NEWLINE' or .lexer.token.value in ['=','return'] 
+            until .lexer.token.type is 'NEWLINE' or .lexer.token.value is '='
                 if .paramsDeclarations.length, .req ','
                 var varDecl = new VariableDecl(this, .req('IDENTIFIER'))
-                if .opt(":")
-                    varDecl.parseType
-                else
-                    #ifdef PROD_C
-                    varDecl.type = 'any'
-                    #else
-                    do nothing
-                    #endif
-                end if
-
+                if .opt(":"), varDecl.parseType
                 .paramsDeclarations.push varDecl
 
-        if .opt('=','return') #one line function. Body is a Expression
+        if .opt('=') #one line function. Body is a Expression
 
             .body = .req(Expression)
 
         else # full body function
 
-            if .opt('returns')
-                .parseType  #function return type
+            if .opt('returns'), .parseType  #function return type
 
-            if .opt('[','SPACE_BRACKET') # property attributes
+            if .opt('[','SPACE_BRACKET') # property attributes (non-enumerable, writable, etc - Object.defineProperty)
                 .definePropItems = .optSeparatedList(DefinePropertyItem,',',']')
 
             #indented function body
             .body = .req(Body)
 
-            # get function exit point source line number
+            # get function exit point source line number (for SourceMap)
             .EndFnLineNum = .lexer.maxSourceLineNum
 
         end if
@@ -2101,7 +2115,11 @@ take any token, and check if it's valid identifier
 
         //.name = .req('IDENTIFIER') 
         .name = .lexer.token.value 
-        if not .name like /^[a-zA-Z$_]+[0-9a-zA-Z$_]*$/, .throwError 'invalid method name: "#{.name}"'
+
+        var p = PMREX.whileRanges(.name,0,"a-zA-Z$_") //start with one or more letters
+        if p>=0, p = PMREX.whileRanges(.name,p,"0-9a-zA-Z$_") //can have numbers
+        if p < .name.length, .throwError 'invalid method name: "#{.name}"'
+
         .lexer.nextToken
 
 now parse parameters and body (as with any function)
@@ -2130,7 +2148,7 @@ Defines a new class with an optional parent class. properties and methods go ins
 
 Control: class names should be Capitalized, except: jQuery
 
-        if not .lexer.interfaceMode and not String.isCapitalized(.name)
+        if not .lexer.interfaceMode and not Strings.isCapitalized(.name)
             .lexer.sayErr "class names should be Capitalized: class #{.name}"
 
 Now parse optional `,(extend|proto is|inherits from)` setting the super class
@@ -2140,10 +2158,13 @@ Now parse optional `,(extend|proto is|inherits from)` setting the super class
           .opt('from','is') 
           .varRefSuper = .req(VariableRef)
 
-Now get class body.
+Now get body.
 
         .body = .opt(Body)
 
+        .body.validate 
+            PropertiesDeclaration, ConstructorDeclaration 
+            MethodDeclaration, DeclareStatement
 
 
 ## ConstructorDeclaration 
@@ -2163,8 +2184,10 @@ ConstructorDeclaration derives from MethodDeclaration, so it is also a instance 
         .specifier = .req('constructor')
         .lock()
 
+        .name = '__init'
+
         if .opt('new') # optional: constructor new Person(name:string)
-          # to ease reading, and to find the constructor when you search for "new Person"
+          # to ease reading, and to find also the constructor when searching for "new Person"
           var className = .req('IDENTIFIER')
           var classDeclaration = .getParent(ClassDeclaration)
           if classDeclaration and classDeclaration.name isnt className
@@ -2197,7 +2220,8 @@ Adds methods and properties to an existent object, e.g., Class.prototype
         .req 'to'
         .lock()
 
-        .toNamespace = .req('class','object','namespace') isnt 'class'
+        var appendToWhat:string = .req('class','Class','namespace','Namespace')
+        .toNamespace = appendToWhat.endsWith('space')
 
         .varRef = .req(VariableRef)
 
@@ -2207,29 +2231,38 @@ Now get body.
 
         .body = .req(Body)
 
+        .body.validate 
+            PropertiesDeclaration
+            MethodDeclaration
+            ClassDeclaration
+
 
 ## NamespaceDeclaration
 
 `NamespaceDeclaration: namespace IDENTIFIER Body`
 
-creates a object with methods, properties and classes
+Declares a namespace. 
+for js: creates a object with methods and properties
+for LiteC, just declare a namespace. All classes created inside will have the namespace prepended with "_"
 
-    public class NamespaceDeclaration extends AppendToDeclaration
+    public class NamespaceDeclaration extends ClassDeclaration // NamespaceDeclaration is instance of ClassDeclaration
       
       method parse()
 
         .req 'namespace','Namespace'
 
         .lock()
-        .toNamespace = true
-        .varRef = .req(VariableRef)
-
-        .name=.varRef.toString()
+        .name=.req('IDENTIFIER')
 
 Now get body.
 
         .body = .req(Body)
 
+        .body.validate 
+            PropertiesDeclaration
+            MethodDeclaration
+            ClassDeclaration
+            NamespaceDeclaration
 
 
 ## DebuggerStatement
@@ -2241,7 +2274,6 @@ When a debugger is attached, break at this point.
     public class DebuggerStatement extends ASTBase
       method parse()
         .name = .req("debugger")
-
 
 
 CompilerStatement
@@ -2351,7 +2383,7 @@ Declare allows you to define a variable and/or its type
 
 Declare a variable type on the fly, from declaration point onward
 
-Example: `declare name:string, parent:NameDeclaration` #on the fly, from declaration point onward
+Example: `declare name:string, parent:Grammar.Statement` #on the fly, from declaration point onward
 
 
 #####Global Declare
@@ -2382,19 +2414,19 @@ that will default to Class as type
 
 Example
 ```
-  Class NameDeclaration
+  Class VariableDecl
     properties
       name: string, sourceLine, column
-      declare name affinity nameDecl
+      declare name affinity varDecl
 ```
 
-Given the above declaration, any `var` named (or ending in) **"nameDecl"** or **"nameDeclaration"** 
-will assume `:NameDeclaration` as type. (Classname is automatically included in 'name affinity')
+Given the above declaration, any `var` named (or ending in) **"varDecl"** or **"VariableDecl"** 
+will assume `:VariableDecl` as type. (Class name is automatically included in 'name affinity')
 
 Example:
-`var nameDecl, parentNameDeclaration, childNameDecl, nameDeclaration`
+`var varDecl, parentVariableDecl, childVarDecl, variableDecl`
 
-all three vars will assume `:NameDeclaration` as type.
+all three vars will assume `:VariableDecl` as type.
 
 #####Declare valid
 `DeclareStatement: declare valid IDENTIFIER("."(IDENTIFIER|"()"|"[]"))* [:type-VariableRef]` 
@@ -2476,13 +2508,6 @@ get specifier 'on|valid|name|all'
             if no .varRef.accessors, .sayErr "declare valid: expected accesor chain. Example: 'declare valid name.member.member'"
             if .opt(':') 
                 .parseType //optional type
-            else
-                #ifdef PROD_C
-                .type = 'any'
-                #else
-                do nothing
-                #endif
-            end if
 
           case 'name':
             .specifier = .req('affinity')
@@ -2526,7 +2551,7 @@ Example: /*
     function theApi(object,options,callback)
 
       default options =
-        log: console.log
+        logger: console.log
         encoding: 'utf-8'
         throwErrors: true
         debug:
@@ -2545,7 +2570,7 @@ is equivalent to js's:
 
         //defaults
         if (!options) options = {};
-        if (options.log===undefined) options.log = console.log;
+        if (options.logger===undefined) options.logger = console.log;
         if (options.encoding===undefined) options.encoding = 'utf-8';
         if (options.throwErrors===undefined) options.throwErrors=true;
         if (!options.debug) options.debug = {};
@@ -2679,7 +2704,7 @@ Example: `contents = yield until fs.readFile 'myFile.txt','utf8'`
 FunctionCall
 ------------
 
-`FunctionCall: VariableRef ["("] (Expression,) [")"]`
+`FunctionCall: VariableRef ["("] (FunctionArgument,) [")"]`
 
     public class FunctionCall extends ASTBase
       
@@ -2705,56 +2730,27 @@ if the last accessor is function call, this is already a FunctionCall
         if .varRef.executes
             return #already a function call
 
-Here we assume is a function call without parentheses, a 'command'
-
-        if .lexer.token.type in ['NEWLINE','EOF'] 
-          # no more tokens, let's asume FnCall w/o parentheses and w/o parameters
-          return
-
-else, get parameters, add to varRef as FunctionAccess accessor
-
-        var functionAccess = new FunctionAccess(.varRef)
-        functionAccess.args = functionAccess.optSeparatedList(Expression,",")
-        if .lexer.token.value is '->' #add last parameter: callback function
-            functionAccess.args.push .req(FunctionDeclaration)
-
-        .varRef.addAccessor functionAccess
-
-    /* COMMENTED: Different tries to alllow a indented block to be parsed as fn call arguments
-
         if .lexer.token.type is 'EOF'
-            or .lexer.token.type is 'NEWLINE' and .parent instance of SingleLineStatement
-                return // no more tokens expected
+            return // no more tokens 
         
-        if .opt('NEWLINE') // if end of line, check next line
-            if .lexer.token.column<=.indent // next line is not indented, assume just fn call w/o parameters
-                .lexer.returnToken()
-                return
+alllow a indented block to be parsed as fn call arguments
 
-else, get parameters, add to varRef as FunctionAccess accessor
+        if .opt('NEWLINE') // if end of line, check next line
+            var nextLineIndent = .lexer.indent //save indent
+            .lexer.returnToken() //return NEWLINE
+            // check if next line is indented (with respect to Statement (parent))
+            if nextLineIndent <= .parent.indent // next line is not indented 
+                  // assume this is just a fn call w/o parameters
+                  return
+
+else, get parameters, add to varRef as FunctionAccess accessor,
 
         var functionAccess = new FunctionAccess(.varRef)
-        functionAccess.args = functionAccess.optSeparatedList(Expression,",")
+        functionAccess.args = functionAccess.reqSeparatedList(FunctionArgument,",")
         if .lexer.token.value is '->' #add last parameter: callback function
             functionAccess.args.push .req(FunctionDeclaration)
 
         .varRef.addAccessor functionAccess
-
-*/
-
-/*
-        // get arguments
-        var args = .optSeparatedList(Expression,",")
-
-        if args //has arguments
-            var functionAccess = new FunctionAccess(.varRef)
-            functionAccess.args = args
-            if .lexer.token.value is '->' #add last parameter: closure'd callback function
-                functionAccess.args.push .req(FunctionDeclaration)
-
-            .varRef.addAccessor functionAccess
-*/
-
 
 ## SwitchStatement
 
@@ -2824,13 +2820,16 @@ else, on 'default', get default body, and break loop
 
 ### append to class ASTBase
 
+if there are more statements in the line, we assume SingleLineBody
+else we expect an indented body
+
       method reqBody returns ASTBase
         if .lexer.token.type is ('NEWLINE')
             //indented body
             return .req(Body)
         else
             //single line case/default
-            return .req(SingleLineStatement)
+            return .req(SingleLineBody)
 
 ### public helper class SwitchCase extends ASTBase
 Helper class to parse each case
@@ -2957,9 +2956,8 @@ Statement: ( AssignmentStatement | fnCall-VariableRef [ ["("] (Expression,) [")"
     public class Statement extends ASTBase
   
       properties
-        keyword 
         adjectives: string array = []
-        statement
+        specific: ASTBase //specific statement, e.g.: :VarDeclaration, :PropertiesDeclaration, :FunctionDeclaration
         preParsedVarRef
         intoVars
 
@@ -2968,16 +2966,16 @@ Statement: ( AssignmentStatement | fnCall-VariableRef [ ["("] (Expression,) [")"
         var key
 
         #debug show line and tokens
-        log.debug ""
+        logger.debug ""
         .lexer.infoLine.dump()
 
 First, fast-parse the statement by using a table.
 We look up the token (keyword) in **StatementsDirect** table, and parse the specific AST node
 
         key = .lexer.token.value
-        .statement = .parseDirect(key, StatementsDirect)
+        .specific = .parseDirect(key, StatementsDirect)
 
-        if no .statement
+        if no .specific
 
 If it was not found, try optional adjectives (zero or more). 
 Adjectives are: `(export|public|generator|shim|helper)`. 
@@ -2989,9 +2987,9 @@ Adjectives are: `(export|public|generator|shim|helper)`.
 Now re-try fast-parse
 
             key = .lexer.token.value
-            .statement = .parseDirect(key, StatementsDirect)
+            .specific = .parseDirect(key, StatementsDirect)
 
-            if no .statement
+            if no .specific
 
 Last possibilities are: `FunctionCall` or `AssignmentStatement`
 both start with a `VariableRef`:
@@ -3001,7 +2999,7 @@ Then we require a AssignmentStatement or FunctionCall
 
                 key = 'varref'
                 .preParsedVarRef = .req(VariableRef)
-                .statement = .req(AssignmentStatement,FunctionCall)
+                .specific = .req(AssignmentStatement,FunctionCall)
                 .preParsedVarRef = undefined #clear
 
         end if - statement parse tries
@@ -3021,11 +3019,11 @@ Check validity of adjective-statement combination
                     export: CFVN, default: CFVN
                     generator: ['function','method'] 
                     nice: ['function','method'] 
-                    shim: ['function','method','class'] 
-                    helper:  ['function','method','class']
+                    shim: ['function','method','class','namespace','import'] 
+                    helper:  ['function','method','class','namespace']
                     global: ['import','declare']
 
-              var valid:string array = validCombinations[adjective] or ['-*none*-']
+              var valid:string array = validCombinations.get(adjective) or ['-*none*-']
               if key not in valid, .throwError "'#{adjective}' can only apply to #{valid.join('|')} not to '#{key}'"
 
         end for
@@ -3034,12 +3032,12 @@ set module.exportDefault if 'export default' or 'public default' was parsed.
 Also, if the class/namespace has the same name as the file, it's automagically "export default"
 
         var moduleNode:Module = .getParent(Module)
-        if .statement.constructor in [ClassDeclaration,NamespaceDeclaration] and moduleNode.fileInfo.basename is .statement.name  
+        if .specific.constructor in [ClassDeclaration,NamespaceDeclaration] and moduleNode.fileInfo.base is .specific.name  
             .adjectives.push 'export','default'
 
-        if .statement.hasAdjective('export') and .statement.hasAdjective('default')
+        if .hasAdjective('export') and .hasAdjective('default')
             if moduleNode.exportDefault, .throwError "only one 'export default' can be defined"
-            moduleNode.exportDefault = .statement
+            moduleNode.exportDefault = .specific
 
 
 ### Append to class ASTBase
@@ -3047,8 +3045,9 @@ Also, if the class/namespace has the same name as the file, it's automagically "
 ##### helper method hasAdjective(name) returns boolean
 To check if a statement has an adjective. We assume .parent is Grammar.Statement
 
-        declare .parent:Statement
-        return name in .parent.adjectives
+        var stat:Statement = this.constructor is Statement? this else .getParent(Statement)
+        if no stat, .throwError "[#{.constructor.name}].hasAdjective('#{name}'): can't find a parent Statement"
+        return name in stat.adjectives
 
 ## Body
 
@@ -3059,6 +3058,8 @@ Body is a semicolon-separated list of statements (At least one)
 `Body` is used for "Module" body, "class" body, "function" body, etc.
 Anywhere a list of semicolon separated statements apply.
 
+Body parser expects a [NEWLINE] and then a indented list of statements
+
     public class Body extends ASTBase
 
       properties
@@ -3067,7 +3068,7 @@ Anywhere a list of semicolon separated statements apply.
       method parse()
 
         if .lexer.interfaceMode
-            if .parent.constructor not in [ClassDeclaration,AppendToDeclaration,NamespaceDeclaration]
+            if .parent isnt instance of ClassDeclaration
                 return //"no 'Bodys' expected on interface.md file except for: class, append to and namespace
 
         if .lexer.token.type isnt 'NEWLINE'
@@ -3079,33 +3080,34 @@ We use the generic ***ASTBase.reqSeparatedList*** to get a list of **Statement**
         .statements = .reqSeparatedList(Statement,";")
 
 
-## Single Line Statement
 
-This construction is used when a statement is expected on the same line.
-It is used by `IfStatement: if conditon-Expression (','|then) *SingleLineStatement*`
-It is also used for the increment statemenf in for-while loops:`for x=0; while x<10 [,SingleLineStatement]`
+      method validate
 
-    public class SingleLineStatement extends Statement
+this method check all the body statements againts a valid-list (arguments)      
       
-      properties
-        statements: Statement array
+        var validArray = arguments.toArray()
 
+        for each stm in .statements 
+            where stm.specific.constructor not in [EndStatement,CompilerStatement] //always Valid
+
+                if stm.specific.constructor not in validArray
+                    stm.sayErr "a [#{stm.specific.constructor.name}] is not valid in the body of a [#{.parent.constructor.name}]"
+
+## Single Line Body
+
+This construction is used when only one statement is expected, and on the same line.
+It is used by `IfStatement: if conditon-Expression (','|then) *SingleLineBody*`
+It is also used for the increment statemenf in for-while loops:`for x=0, while x<10 [,SingleLineBody]`
+
+normally: ReturnStatement, ThrowStatement, PrintStatement, AssignmentStatement
+
+    public class SingleLineBody extends Body
+      
       method parse()
 
-        /*if .lexer.token.type is 'NEWLINE'
-          .lexer.returnToken()
-          .lock()
-          .lexer.sayErr "Expected statement on the same line after '#{.lexer.token.value}'"
-        */
-        # normally: ReturnStatement, ThrowStatement, PrintStatement, AssignmentStatement
-        # but we parse any Statement up to NEWLINE
-  
         .statements = .reqSeparatedList(Statement,";",'NEWLINE')
         .lexer.returnToken() #return closing NEWLINE
 
-        // remove the Statement abstraction, leave only the bare specific statements
-        for each inx,statement in .statements
-            .statements[inx]=statement.statement
 
 ## Module
 
@@ -3189,17 +3191,18 @@ Anything standing alone in it's own line, its an imperative statement (it does s
     
 
     var AccessorsDirect = 
+
         '.': PropertyAccess
         '[': IndexAccess
         '(': FunctionAccess 
 
 
-##### Helper Functions
+##### Helpers
 
     export helper function autoCapitalizeCoreClasses(name:string) returns String
       #auto-capitalize core classes when used as type annotations
-      if name in ['string','array','number','object','function','boolean']
-        return name.slice(0,1).toUpperCase()+name.slice(1)
+      if name in ['string','array','number','object','function','boolean','map']
+        return "#{name.slice(0,1).toUpperCase()}#{name.slice(1)}"
       return name
 
 
@@ -3222,7 +3225,7 @@ parse type declaration:
             .type= new VariableRef(this, 'Function')
             return
 
-check for 'array', e.g.: `var list : array of NameDeclaration`
+check for 'array', e.g.: `var list : array of String`
 
         if .opt('array','Array')
             .type = 'Array'
@@ -3234,7 +3237,7 @@ check for 'array', e.g.: `var list : array of NameDeclaration`
             end if
             return
 
-Check for 'map', e.g.: `var list : map string to NameDeclaration`
+Check for 'map', e.g.: `var list : map string to Statement`
 
         .type = .req(VariableRef) #reference to an existing class
         //auto-capitalize core classes

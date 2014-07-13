@@ -34,7 +34,7 @@ as the new 'export default' (instead of 'module.exports')
 
         end if
 
-        for each statement in .statements
+        for each statement in .specifics
           statement.produce()
         .out NL
 
@@ -57,7 +57,7 @@ A "Body" is an ordered list of statements.
 
       method produce()
 
-        for each statement in .statements
+        for each statement in .specifics
           statement.produce()
 
         .out NL
@@ -71,7 +71,7 @@ after adding any comment lines preceding the statement
 
       method produce()
 
-        declare valid .statement.body
+        declare valid .specific.body
 
 add comment lines, in the same position as the source
 
@@ -81,7 +81,7 @@ To ease reading of compiled code, add original Lite line as comment
 
         if .lexer.options.comments
           if .lexer.out.lastOriginalCodeComment<.lineInx
-            if not (.statement.constructor in [
+            if not (.specific.constructor in [
                 Grammar.PrintStatement, Grammar.VarStatement, Grammar.CompilerStatement
                 Grammar.DeclareStatement,Grammar.AssignmentStatement, Grammar.ReturnStatement
                 Grammar.PropertiesDeclaration, Grammar.FunctionCall
@@ -91,27 +91,28 @@ To ease reading of compiled code, add original Lite line as comment
 
 Each statement in its own line
 
-        if .statement isnt instance of Grammar.SingleLineStatement
+        if .specific isnt instance of Grammar.SingleLineBody
           .lexer.out.ensureNewLine
 
 if there are one or more 'into var x' in a expression in this statement, 
 declare vars before statement (exclude body of FunctionDeclaration)
 
-        this.callOnSubTree "declareIntoVar", Grammar.Body
+        var methodToCall = LiteCore.getSymbol('declareIntoVar')
+        this.callOnSubTree methodToCall, excludeClass=Grammar.Body
 
 call the specific statement (if,for,print,if,function,class,etc) .produce()
 
         var mark = .lexer.out.markSourceMap(.indent)
-        .out .statement
+        .out .specific
 
 add ";" after the statement
 then EOL comment (if it isnt a multiline statement)
 then NEWLINE
 
-        if not .statement.skipSemiColon
+        if not .specific.skipSemiColon
           .addSourceMap mark
           .out ";"
-          if not .statement.body
+          if not .specific.body
             .out .getEOLComment()
 
 called above, pre-declare vars from 'into var x' assignment-expression
@@ -264,24 +265,18 @@ We out: left,operator,right
 
 ### append to class Grammar.Expression ###
 
-      method produce(options) 
+      method produce(negated) 
 
-        declare on options
-          negated
-
-Produce the expression body, negated if options={negated:true}
-
-        default options=
-          negated: undefined
+Produce the expression body, optionally negated
 
         var prepend=""
         var append=""
-        if options.negated
+        if negated
 
 (prettier generated code) Try to avoid unnecessary parens after '!' 
 for example: if the expression is a single variable, as in the 'falsey' check: 
-Example: `if no options.log then... ` --> `if (!options.log) {...` 
-we don't want: `if (!(options.log)) {...` 
+Example: `if no options.logger then... ` --> `if (!options.logger) {...` 
+we don't want: `if (!(options.logger)) {...` 
 
           if .operandCount is 1 
               #no parens needed
@@ -367,7 +362,12 @@ We just defer to JavaScript's built in `.` `[ ]` and `( )` accessors
 
 ### append to class Grammar.PropertyAccess ##
       method produce() 
-        .out ".",.name
+        if .name is 'initInstance' 
+            do nothing  // initInstance is the liteScript unified (C and JS) way to call Class instance Initializator function.
+                        // in JS, since Classes are Functions, JS uses the Class-Function as initializator function 
+                        // so we need to add nothing in case of 'initInstance' 
+        else
+            .out ".",.name
 
 ### append to class Grammar.IndexAccess
       method produce() 
@@ -541,14 +541,13 @@ if it has AssginedValue, we out assignment if ES6 is available.
     #end VariableDecl
 
 
-### Append to class Grammar.SingleLineStatement ###
+### Append to class Grammar.SingleLineBody ###
 
       method produce()
     
         var bare=[]
         for each statement in .statements
-            bare.push statement.statement
-        #.out NL,"    ",{CSL:bare, separator:";"}
+            bare.push statement.specific
         .out {CSL:bare, separator:";"}
 
 
@@ -558,7 +557,7 @@ if it has AssginedValue, we out assignment if ES6 is available.
 
         declare valid .elseStatement.produce
 
-        if .body instanceof Grammar.SingleLineStatement
+        if .body instanceof Grammar.SingleLineBody
             .out "if (", .conditional,") {",.body,"}"
         else
             .out "if (", .conditional, ") {", .getEOLComment()
@@ -681,8 +680,12 @@ Handle by using a js/C standard for(;;){} loop
         .out "for( var ",.indexVar.name, "=", .indexVar.assignedValue or "0", "; "
 
         if .conditionPrefix is 'to'
-            #'for n=0 to 10' -> for(n=0;n<=10;...
+            #'for n=0 to 10' -> for(n=0;n<=10;n++)
             .out .indexVar.name,"<=",.endExpression
+
+        elseif .conditionPrefix is 'down'
+            #'for n=10 down to 0' -> for(n=10;n>=0;n--)
+            .out .indexVar.name,">=",.endExpression
 
         else # is while|until
 
@@ -690,13 +693,13 @@ produce the condition, negated if the prefix is 'until'
 
           #for n=0, while n<arr.length  -> for(n=0;n<arr.length;...
           #for n=0, until n >= arr.length  -> for(n=0;!(n>=arr.length);...
-          .endExpression.produce( {negated: .conditionPrefix is 'until' })
+          .endExpression.produce( negated = .conditionPrefix is 'until' )
 
         .out "; "
 
 if no increment specified, the default is indexVar++
 
-        .out .increment or [.indexVar.name,"++"]
+        .out .increment or [.indexVar.name, .conditionPrefix is 'down'? '--' else '++']
 
         .out ") ", .where
 
@@ -719,19 +722,15 @@ if no increment specified, the default is indexVar++
 
 ### Append to class Grammar.WhileUntilExpression ###
 
-      method produce(options) 
+      method produce(askFor:string, negated:boolean) 
 
 If the parent ask for a 'while' condition, but this is a 'until' condition,
 or the parent ask for a 'until' condition and this is 'while', we must *negate* the condition.
 
         declare valid .expr.produce
 
-        default options = 
-          askFor: undefined
-          negated: undefined
-
-        if options.askFor and .name isnt options.askFor
-            options.negated = true
+        if askFor and .name isnt askFor
+            negated = true
 
 *options.askFor* is used when the source code was, for example,
 `do until Expression` and we need to code: `while(!(Expression))` 
@@ -740,7 +739,7 @@ or the code was `loop while Expression` and we need to code: `if (!(Expression))
 when you have a `until` condition, you need to negate the expression 
 to produce a `while` condition. (`while NOT x` is equivalent to `until x`)
 
-        .expr.produce(options)
+        .expr.produce(negated=negated)
 
 
 ### Append to class Grammar.DoLoop ###
@@ -900,7 +899,7 @@ if simple-function, insert implicit return. Example: function square(x) = x*x
 if it has a "catch" or "exception", insert 'try{'
 
           for each statement in .body.statements
-            if statement.statement instance of Grammar.ExceptionBlock
+            if statement.specific instance of Grammar.ExceptionBlock
                 .out " try{",NL
                 break
 
@@ -1022,15 +1021,15 @@ we need to get the class constructor, and separate other class items.
         if .body
           for each index,item in .body.statements
 
-            if item.statement instanceof Grammar.ConstructorDeclaration 
+            if itemspecific instanceof Grammar.ConstructorDeclaration 
 
               if theConstructor # what? more than one?
                 .throwError('Two constructors declared for class #{.name}')
 
-              theConstructor = item.statement
+              theConstructor = itemspecific
 
-            else if item.statement instanceof Grammar.PropertiesDeclaration
-              theProperties.push item.statement
+            else if itemspecific instanceof Grammar.PropertiesDeclaration
+              theProperties.push itemspecific
 
             else 
               theMethods.push item
@@ -1045,7 +1044,7 @@ we need to get the class constructor, and separate other class items.
           #out a default "constructor"
           .out "function ",.name,"(){"
           if .varRefSuper
-              .out {COMMENT:["default constructor: call super.constructor"]}
+              .out {COMMENT:["default constructor: call super class init"]}
               .out NL,"    ",.varRefSuper,".prototype.constructor.apply(this,arguments)",NL
           for each propDecl in theProperties
               propDecl.produce('this.') //property assignments
@@ -1089,7 +1088,8 @@ Any class|object can have properties or methods appended at any time.
 Append-to body contains properties and methods definitions.
 
       method produce() 
-        .out no .varRef.accessors? 'var ':'' ,.varRef,'={};'
+        //.out no .varRef.accessors? 'var ':'' ,.varRef,'={};'
+        .out 'var ',.name,'={};'
         .out .body
         .skipSemiColon = true
 

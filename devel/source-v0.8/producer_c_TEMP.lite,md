@@ -17,7 +17,7 @@ now follow each accessor
         result.push [actualVar.name]
         partial = .name
 
-        var avType:NameDeclaration
+        var avType:Names.Declaration
 
         for each inx,ac in .accessors
             declare valid ac.name

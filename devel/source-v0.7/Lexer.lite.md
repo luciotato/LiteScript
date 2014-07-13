@@ -429,9 +429,23 @@ Get section between """ and """
           for each inx,sectionLine in result.section
             result.section[inx] = sectionLine.slice(indent).replace(/\s+$/,"")
 
-          line = result.section.join("\\n") #join with (encoded) newline char
-          line = line.replace(/'/g,"\\'") #escape quotes
-          line = result.pre + " " + line.quoted("'") + result.post #add pre & post
+          #join with (encoded) newline char and enclose in quotes (for splitExpressions)
+          line = result.section.join("\\n").quoted('"') 
+
+Now we should escape internal d-quotes, but only *outside* string interpolation expressions
+
+          var parsed = String.splitExpressions(line, .stringInterpolationChar)
+          for each inx,item:string in parsed
+              if item.charAt(0) is '"' //a string part
+                  item = item.slice(1,-1) //remove quotes
+                  parsed[inx] = item.replaceAll('"','\\"') #store with *escaped* internal d-quotes
+              else
+                  #restore string interp. codes
+                  parsed[inx] = "#{.stringInterpolationChar}{#{item}}"
+
+          #re-join & re.enclose in quotes
+          line = parsed.join("").quoted('"') 
+          line = "#{result.pre} #{line}#{result.post}" #add pre & post
 
         return line
 
@@ -489,11 +503,14 @@ This method handles #ifdef/#else/#endif as multiline comments
             .project.setCompilerVar words[1],false
             return false
 
+ifdef, #ifndef, #else and #endif should be the first thing on the line
+
+        if line.indexOf("#endif") is 0, .throwErr 'found "#endif" without "#ifdef"'
+        if line.indexOf("#else") is 0, .throwErr 'found "#else" without "#ifdef"'
+
         var invert = false
-
         var pos = line.indexOf("#ifdef ")
-
-        if pos<0 
+        if pos isnt 0 
             pos = line.indexOf("#ifndef ")
             invert = true
 
@@ -525,6 +542,7 @@ This method handles #ifdef/#else/#endif as multiline comments
                     words = line.split(' ')
                     switch words[0] 
                         case '#else':
+                            .replaceSourceLine .line.replaceAll("#else","//else")
                             defValue = not defValue
                         case "#end":
                             if words[1] isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
@@ -541,6 +559,7 @@ This method handles #ifdef/#else/#endif as multiline comments
             end if              
         loop until endFound
 
+        .replaceSourceLine .line.replaceAll("#end","//end")
         #rewind position after #ifdef, reprocess lines
         .sourceLineNum = startSourceLine -1 
         return true #OK, lines processed
@@ -1040,14 +1059,29 @@ Store tokenize result in tokens
 Special lexer options: string interpolation char
 `lexer options string interpolation char [is] (IDENTIFIER|LITERAL|STRING)`
 
-            if words[0] is 'lexer'
-              if words.slice(1,5).join(" ") is "options string interpolation char" 
-                .type = LineTypes.COMMENT # is a COMMENT line
-                var char:string
-                if words[5] into char is 'is' then char = words[6] #get it (skip optional 'is')
-                if char[0] in ['"',"'"], char = char.slice(1,-1) #optionally quoted, remove quotes
-                if no char then lexer.throwErr "missing string interpolation char"  #check
-                lexer.stringInterpolationChar = char
+            if words[0] is 'lexer' and words[1] is 'options'
+              .type = LineTypes.COMMENT # is a COMMENT line
+
+              if words.slice(2,5).join(" ") is "string interpolation char" 
+                  var char:string
+                  if words[5] into char is 'is' then char = words[6] #get it (skip optional 'is')
+                  if char[0] in ['"',"'"], char = char.slice(1,-1) #optionally quoted, remove quotes
+                  if no char then lexer.throwErr "missing string interpolation char"  #check
+                  lexer.stringInterpolationChar = char
+              
+              else if words[2] is "literal"
+                  declare valid lexer.options.literalMap
+                  switch words[3]
+                      case "map":
+                          lexer.options.literalMap = true                          
+                      case "object":
+                          lexer.options.literalMap = false
+                      default:
+                          fail with "Lexer options, expected: 'literal map'|'literal object'"
+
+              else 
+                fail with "Lexer options, expected: (string interpolation|literal)"
+
 
 enhance error reporting
 

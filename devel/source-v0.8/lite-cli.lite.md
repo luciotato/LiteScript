@@ -20,7 +20,7 @@
     options are:
     -r, -run         compile & run .lite.md file
     -c, -compile     compile project, mainModule & all dependent files
-    -o dir           output dir. Default is '.'
+    -o dir           output dir. Default is './out'
     -b, -browser     compile for a browser environment (window instead of global, no process, etc)
     -v, -verbose     verbose level, default is 0 (0-3)
     -w, -warning     warning level, default is 1 (0-1)
@@ -36,7 +36,7 @@
     -noval           skip property name validation
     -D NAME -D NAME  Defines names for preprocessing with #ifdef
     -u, -use vX.Y.Z  select LiteScript Compiler Version to use (devel)
-    -d, -debug       enable full compiler debug log file at 'out/debug.log'
+    -d, -debug       enable full compiler debug logger file at 'out/debug.logger'
     -run -debug      when -run used with -debug, launch compiled file with: node --debug-brk 
     
     """
@@ -84,12 +84,12 @@ get compiler version to --use
 Check for other options
 
         var options = 
-            outDir  : path.resolve(args.value('o') or '.') //output dir
-            verbose : Number(args.value('v',"verbose") or 0) 
-            warning : Number(args.value('w',"warning") or 1)
+            outDir  : path.resolve(args.value('o') or './out') //output dir
+            verboseLevel : Number(args.value('v',"verbose") or 0) 
+            warningLevel : Number(args.value('w',"warning") or 1)
             comments: Number(args.value('comment',"comments") or 1) 
             target  : args.value('target') or 'js' //target
-            debug   : args.option('d',"debug") 
+            debugEnabled   : args.option('d',"debug") 
             skip    : args.option('noval',"novalidation") // skip name validation
             nomap   : args.option('nm',"nomap") // do not generate sourcemap
             single  : args.option('s',"single") // single file- do not follow require() calls
@@ -116,7 +116,7 @@ load required version of LiteScript compiler
 
         declare valid Compiler.version
         declare valid Compiler.buildDate
-        if options.verbose, print 'LiteScript compiler version #{Compiler.version}  #{Compiler.buildDate}'
+        if options.verboseLevel, print 'LiteScript compiler version #{Compiler.version}  #{Compiler.buildDate}'
 
 Check for -watch dir
 
@@ -141,12 +141,12 @@ get mainModuleName
 show args
 
         //console.log(process.cwd());
-        if options.verbose>1
+        if options.verboseLevel>1
             print '\n\ncompiler path: #{compilerPath}'
             print 'compiler options: #{JSON.stringify(options)}'
             print 'cwd: #{process.cwd()}'
             print 'compile#{compileAndRunOption?" and run":""}: #{mainModuleName}'
-            if options.debug, print color.yellow,"GENERATING COMPILER DEBUG AT out/debug.log",color.normal
+            if options.debug, print color.yellow,"GENERATING COMPILER DEBUG AT out/debug.logger",color.normal
 
 
 launch project compilation
@@ -167,21 +167,18 @@ Compile Exception handler
 
         exception e
 
-            declare valid e.controled
-            declare valid e.code
-            if e.controled
-                console.error(color.red, e.message, color.normal);
-                process.exit(1);
+            if e instance of ConstrolledError 
+                console.error color.red, e.message, color.normal
+                process.exit 1
             
             else if e.code is 'EISDIR'
-                console.error(color.red + 'ERROR: "'+mainModuleName+'" is a directory',color.normal);
-                console.error('Please specify a *file* as the main module to compile');
-                process.exit(2);
+                console.error color.red, 'ERROR: "#{mainModuleName}" is a directory',color.normal
+                console.error 'Please specify a *file* as the main module to compile'
+                process.exit 2
             
             else 
-                console.log('UNCONTROLED ERROR:');
-                console.log(e);
-                throw e;
+                console.log 'UNCONTROLLED ERROR:',e
+                throw e
         
         end exception
 
@@ -234,12 +231,12 @@ Compile Exception handler
                         if error 
                             print "ERROR",error.code
                             print error.message
-                            process.exit error.code or 1
+                            process.exit error.errno or 1
 
         else //run here
 
             compileAndRunParams.unshift 'lite',mainModuleName  #add 'lite filename...' to arguments
-            if options.verbose, print "RUN: #{compileAndRunParams.join(' ')}"
+            if options.verboseLevel, print "RUN: #{compileAndRunParams.join(' ')}"
             
 register require() extensions, so if .lite and .md LiteScript 
 files can be required() from node

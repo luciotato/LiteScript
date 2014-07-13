@@ -46,12 +46,8 @@ function body assignment
 
     function square(x) = x*x
 
-alternative: "return" expression  
-
-    function sqr(x) return x*x
-
-
 # Objects:
+
     var math =
       root: Math.sqrt
       cube: function(x) = x * square(x)
@@ -66,7 +62,7 @@ verbose callback:
         else print 'file contents are: #{data}'
 
 function arrow callback:
-"-> x,y" should read "function(x,y)"
+"-> x,y" means "function(x,y)"
 
     fs.readFile 'test' -> error,data
         if no error, print 'file contents:',data
@@ -75,11 +71,8 @@ function arrow callback:
 # Array map, from verbose to terse:
 
 intention: map function math.cube() on list:array, assign result to var cubes:array
-verbose version: 
 
-    var cubes:array = list.map(function(num) return math.cube(num))
-
-with simple-function...
+using simple-function...
 
     var cubes = list.map(function(num) = math.cube(num))
 
@@ -93,9 +86,6 @@ with function arrow...
     print arr.filter(->x = x>2)
     # => [3,4,5]
 
-    #alternative syntax
-    print arr.filter(->x return x>2)
-    # => [3,4,5]
 
 #Event Emitters
 
@@ -515,7 +505,7 @@ la var tiene diferentes tipos en diferentes partes del codigo.
 como esta ahora, la var tiene el tipo de la ultima asignacion
 
 ---
-- agregar ,SingleLineStatement para "while/until" loop
+- agregar ,SingleLineBody para "while/until" loop
 - agregar "unless" como "if not"
 
 ----

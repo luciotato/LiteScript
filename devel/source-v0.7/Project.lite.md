@@ -81,6 +81,8 @@ normalize options
             extraComments:1
             defines:[]
 
+            literalMap: false
+
             mainModuleName: filename
             basePath: undefined
             outBasePath: options.outDir
@@ -139,12 +141,30 @@ compiler vars, to use at conditional compilation
 
 add 'inNode' and 'inBrowser' as compiler vars
 
+        #ifdef TARGET_JS
+        .compilerVars.addMember 'ENV_JS',{value:true}
+        #endif
+        #ifdef TARGET_C
+        .compilerVars.addMember 'ENV_C',{value:true}
+        #endif
+
         declare var window
         var inNode = type of window is 'undefined'
-        .compilerVars.addMember 'inNode',{value:inNode}
-        .compilerVars.addMember 'inBrowser',{value: not inNode}
+        if inNode
+            .compilerVars.addMember 'ENV_NODE',{value: true}
+        else
+            .compilerVars.addMember 'ENV_BROWSER',{value: true}
+        end if
 
-        //log.info .root.compilerVars
+        .compilerVars.addMember 'TARGET_#{options.target.toUpperCase()}',{value: true}
+
+        var defined = []
+        for each own property key,nameDecl in .compilerVars.members
+            defined.push nameDecl.name
+
+        log.message 'preprocessor #defined', defined
+
+        //log.message .compilerVars
         //log.info ""
 
 in 'options' we receive also the target code to generate. (default is 'js')
@@ -154,7 +174,7 @@ Now we load the **Producer** module for the selected target code.
 The **Producer** module will append to each Grammar class a `produce()` method
 which generates target code for the AST class
     
-        .Producer = require('./Producer_'+options.target)
+        .Producer = require('./Producer_#{options.target}')
 
 #### Method compile()
 
@@ -402,7 +422,13 @@ else, If the origin is a require() call
 if found a valid filename to import
 
             if importInfo.name
-                node.importedModule = .importModule(moduleNode, importInfo)
+                try
+                    node.importedModule = .importModule(moduleNode, importInfo)
+                catch err
+                    #show import statement source location
+                    node.sayErr '#{err.message} importing module "#{importInfo.name}"'
+                    raise err //re-throw
+
 
         #loop
 

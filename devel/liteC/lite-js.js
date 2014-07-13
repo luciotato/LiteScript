@@ -60,9 +60,9 @@
 
        var options = {
            outDir: path.resolve(args.value('o') || '.'), 
-           verbose: Number(args.value('v', "verbose")||defaultVerbose), 
-           warning: Number(args.value('w', "warning")||1), 
-           debug: args.option('d', "debug"), 
+           verboseLevel: Number(args.value('v', "verbose")||defaultVerbose), 
+           warningLevel: Number(args.value('w', "warning")||1), 
+           debugEnabled: args.option('d', "debug"), 
            skip: args.option('noval', "novalidation"), 
            nomap: args.option('nm', "nomap"), 
            single: args.option('s', "single"), 
@@ -101,8 +101,8 @@
 //show args
 
         //console.log(process.cwd());
-       //if options.verbose
-       if (options.verbose) {
+       //if options.verboseLevel
+       if (options.verboseLevel) {
            console.log('\n\ncompiler path: ' + compilerPath);
            console.log('options: ' + (JSON.stringify(options,null,2)));
            console.log('cwd: ' + (process.cwd()));
@@ -120,8 +120,8 @@
 
         //declare valid Compiler.version
         //declare valid Compiler.compile
-       //if options.verbose, print 'LiteScript compiler version #{Compiler.version}'
-       if (options.verbose) {
+       //if options.verboseLevel, print 'LiteScript compiler version #{Compiler.version}'
+       if (options.verboseLevel) {
            console.log('LiteScript compiler version ' + Compiler.version)};
 
        //try
@@ -188,7 +188,11 @@
             //declare valid e.controled
             //declare valid e.code
            //if e.controled
-           if (e.controled) {
+           //console.log(e.constructor);
+           console.log('Error:',e.constructor.name);
+           //console.log('stack',e.stack);
+
+           if (e.constructor.name==='ControlledError') {
                console.error(color.red, e.message, color.normal);
                process.exit(1);
            }
@@ -200,9 +204,9 @@
            }
            
            else {
-               console.log('UNCONTROLED ERROR:');
-               console.log(e);
-               //throw e;
+               console.log('UNCONTROLLED ERROR:');
+               //console.log(e);
+               //console.log(e.stack);
                throw e;
            };
        };
@@ -216,8 +220,8 @@
 //add 'lite filename...' to arguments
 
            compileAndRunParams.unshift('lite', mainModuleName);
-           //if options.verbose, print "RUN: #{compileAndRunParams.join(' ')}"
-           if (options.verbose) {
+           //if options.verboseLevel, print "RUN: #{compileAndRunParams.join(' ')}"
+           if (options.verboseLevel) {
                console.log("RUN: " + (compileAndRunParams.join(' ')))};
 
 //register require() extensions, so .lite and .md LiteScript files are recognized,

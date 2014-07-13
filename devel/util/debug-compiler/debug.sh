@@ -1,5 +1,5 @@
 #copy latest compiled compiler
-cp ../../liteCompiler-v0.7/* ../out/lib/
+#cp ../../liteCompiler-v0.7/* ../out/lib/
 
 LOCAL=$(pwd)
 echo $LOCAL
@@ -34,7 +34,7 @@ PARAMS="-compile simple.lite.md $*"
 cd ~/LiteScript/devel/source-v0.8
 PARAMS="-D PROD_C  -compile Compiler $*"
 
-CALL="node --debug-brk $LOCAL/lite-debug -v 1 $PARAMS"
+CALL="node --debug-brk $LOCAL/lite-debug -v 2 $PARAMS"
 echo $CALL 
 $CALL
 

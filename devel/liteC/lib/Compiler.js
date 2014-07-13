@@ -7,11 +7,11 @@
    // export
    module.exports.version = version;
 
-    //compiler generate(lines:string array)
-    //    lines.push "export var buildDate = '#{new Date.toISOString()}'"
    var buildDate = '20140618';
    // export
    module.exports.buildDate = buildDate;
+
+    // lexer options literal map //make new Map() from literal objects {name:value}
 
 // This v0.6 compiler is written in v0.5 syntax.
 // That is, you use the v0.5 compiler to compile this code
@@ -22,12 +22,11 @@
 // The Compiler module is the main interface to LiteScript Project module.
 
    // import
-   var Project = require('./Project');
-   var Validate = require('./Validate');
-   var Grammar = require('./Grammar');
-   var log = require('./log');
-
-   Project.version = version;
+   var Project = require('./Project.js');
+   var Validate = require('./Validate.js');
+   var Grammar = require('./Grammar.js');
+   var logger = require('./lib/logger.js');
+   var GeneralOptions = require('./lib/GeneralOptions.js');
 
 // Get the 'Environment' object for the compiler to use.
 // The 'Environment' object, must provide functions to load files, search modules,
@@ -35,12 +34,12 @@
 // The `Environment` abstraction allows us to support compile on server(node) or the browser.
 
    // import Environment
-   var Environment = require('./Environment');
+   var Environment = require('./lib/Environment.js');
 
 
 // ## Main API functions: LiteScript.compile & LiteScript.compileProject
 
-   // export function compile (filename, sourceLines, options) returns string
+   // export function compile (filename, sourceLines, options: GeneralOptions) returns string
    function compile(filename, sourceLines, options){
 
 // Used to compile source code loaded in memory (instead of loading a file)
@@ -51,11 +50,12 @@
 // output:
 // * string, compiled code
 
-        // declare valid options.storeMessages
+       options.version = module.exports.version;
+
        // if options.storeMessages
        if (options.storeMessages) {
-           log.options.storeMessages = true;
-           log.getMessages(); //clear
+           logger.options.storeMessages = true;
+           logger.getMessages(); //clear
        };
 
        var moduleNode = compileModule(filename, sourceLines, options);
@@ -66,7 +66,7 @@
    module.exports.compile=compile;
 
 
-   // export function compileProject (mainModule, options) returns Project
+   // export function compileProject (mainModule, options:GeneralOptions) returns Project
    function compileProject(mainModule, options){
 
 // The 'compileProject' function will load and compile the main Module of a project.
@@ -76,20 +76,19 @@
 // The main module is the root of the module dependency tree, and can reference
 // another modules via import|require.
 
-        //ifdef PROD_C
-       // default options =
-       if(!options) options={};
-       if(options.outDir===undefined) options.outDir='out';
-       if(options.target===undefined) options.target='c';
-        // #else
-        //default options =
-            //outDir: '.'
-            //target: 'js'
-        // #endif
-
-       log.extra("Out Dir: " + options.outDir);
-
 // Create a 'Project' to hold the main module and dependant modules
+
+        //ifdef PROD_C
+       // default options.outDir = 'out'
+       if(options.outDir===undefined) options.outDir='out';
+       // default options.target = 'c'
+       if(options.target===undefined) options.target='c';
+        //else
+        //default options.outDir = '.'
+        //default options.target = 'js'
+        //endif
+
+       options.version = module.exports.version;
 
        var project = new Project(mainModule, options);
 
@@ -105,7 +104,7 @@
 
 // ## Secondary Function: compileModule, returns Grammar.Module
 
-   // export function compileModule (filename, sourceLines, options) returns Grammar.Module
+   // export function compileModule (filename, sourceLines, options:GeneralOptions) returns Grammar.Module
    function compileModule(filename, sourceLines, options){
 // Compile a module from source in memory
 // input:
@@ -118,12 +117,11 @@
        // default filename = 'unnamed'
        if(filename===undefined) filename='unnamed';
 
-        // declare on options version
-       options.version = version;// #add version to options
+       options.version = module.exports.version;
 
        var project = new Project(filename, options);
 
-       var fileInfo = new Environment.FileInfo({name: filename});
+       var fileInfo = new Environment.FileInfo(filename);
 
        var moduleNode = project.createNewModule(fileInfo);
 
@@ -145,19 +143,19 @@
        if (!project.options.skip) {
 
            Validate.validate(project);
-           // if log.errorCount is 0, log.info "Validation OK"
-           if (log.errorCount === 0) {log.info("Validation OK");};
+           // if logger.errorCount is 0, logger.info "Validation OK"
+           if (logger.errorCount === 0) {logger.info("Validation OK")};
        };
 
 // initialize out buffer & produce target code
 
-       log.info("Generating " + project.options.target);
+       logger.info("Generating " + project.options.target);
 
        project.produceModule(moduleNode);
         // # the produced code will be at: moduleNode.lexer.out.getResult() :string array
 
-       // if log.errorCount isnt 0, log.throwControled "#log.errorCount errors during compilation"
-       if (log.errorCount !== 0) {log.throwControled("#log.errorCount errors during compilation");};
+       // if logger.errorCount isnt 0, logger.throwControlled "#logger.errorCount errors during compilation"
+       if (logger.errorCount !== 0) {logger.throwControlled("#logger.errorCount errors during compilation")};
 
 // text compiled result can be obtained with: moduleNode.lexer.out.getResult() :string array
 
@@ -167,44 +165,42 @@
    module.exports.compileModule=compileModule;
 
 
-// Require Extensions
-// ------------------
+    //ifndef PROD_C
 
-// This segment adds extensions to node's `require` function
-// for LiteScript files so that you can just `require` a .lite.md file
-// without having to compile it ahead of time
+//Require Extensions
+//------------------
 
-   // helper function extension_LoadLS(requiringModule, filename)
-   function extension_LoadLS(requiringModule, filename){
+//This segment adds extensions to node's `require` function
+//for LiteScript files so that you can just `require` a .lite.md file
+//without having to compile it ahead of time
 
-// Read the file, then compile using the `compile` function above.
-// Then use node's built-in compile function to compile the generated JavaScript.
+    //helper function extension_LoadLS(requiringModule, filename)
 
-       var content = compile(filename, Environment.loadFile(filename), {verbose: 0, warnings: 0});
-        // declare valid requiringModule._compile
-       requiringModule._compile(content, filename);
-   };
+//Read the file, then compile using the `compile` function above.
+//Then use node's built-in compile function to compile the generated JavaScript.
+
+        //var options = new GeneralOptions
+        //options.verboseLevel = 0
+        //options.warningsLevel = 0
+        //var content = compile(filename, Environment.loadFile(filename),options)
+        //declare valid requiringModule._compile
+        //requiringModule._compile(content, filename)
 
 
-   // export helper function registerRequireExtensions
-   function registerRequireExtensions(){
+    //export helper function registerRequireExtensions
 
-// Add the extension for all appropriate file types. Don't overwrite `.md` in case CoffeeScript or something else is already using it.
+//Add the extension for all appropriate file types. Don't overwrite `.md` in case CoffeeScript or something else is already using it.
 
-        // declare on require
-            // extensions
+        //declare on require
+            //extensions
 
-       // if require.extensions
-       if (require.extensions) {
+        //if require.extensions
 
-         require.extensions['.lite.md'] = extension_LoadLS;
-         require.extensions['.lite'] = extension_LoadLS;
-         require.extensions['.md'] = extension_LoadLS;
-       };
-   };
-   // export
-   module.exports.registerRequireExtensions=registerRequireExtensions;
+          //require.extensions['.lite.md'] = extension_LoadLS
+          //require.extensions['.lite'] = extension_LoadLS
+          //require.extensions['.md'] = extension_LoadLS
 
+    //endif
 
 // ##Helper module functions
 
@@ -212,7 +208,7 @@
    function getMessages(){
 // if compile() throws, call getMessages() to retrieve compiler messages
 
-       return log.getMessages();
+       return logger.getMessages();
    };
    // export
    module.exports.getMessages=getMessages;

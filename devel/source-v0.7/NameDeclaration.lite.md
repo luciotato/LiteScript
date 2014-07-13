@@ -18,6 +18,8 @@ Dependencies
       isForward
       isDummy
 
+      isPublic: boolean
+
      declare name affinity nameDecl
 
 #### constructor(name, options, node)
@@ -228,7 +230,7 @@ else, if it wasnt a forward declaration, then is a duplicated error
   
 #### helper method composedName() 
         var name = .name
-        if .parent and .parent.name not in ['prototype','Project Root Scope']
+        if .parent and .parent.name isnt 'prototype' and not .parent.name.endsWith(' Scope')
           name = .parent.name+'.'+name
         return name
 

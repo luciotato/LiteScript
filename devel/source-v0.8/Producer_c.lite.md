@@ -11,36 +11,47 @@ We extend the Grammar classes, so this module require the `Grammar` module.
 
     import 
       Project
-      ASTBase, Grammar, NameDeclaration,  Lexer
-      Environment, log, color, Map
+      Parser, ASTBase, Grammar
+      Names
+      Environment, logger, color, UniqueID
 
+    shim import LiteCore, Map
+      
 "C" Producer Functions
 ==========================
 
 module vars  
 
-    # list of classes, to call __registerclass
-    var classes: Grammar.ClassDeclaration array = []
+    # list of classes, to call _newClass & _declareMethodsAndProps
+    var allClasses: array of Grammar.ClassDeclaration = []
 
-    # USER_CLASSES_START_ID 
-    # must be kept in sync with hand-coded LiteC-core.c
-    var USER_CLASSES_START_ID = 32
+store each distinct method name (globally).
+We start with core-supported methods. 
+Method get a trailing "_" if they're a C reserved word
 
-    #store info to create a dispatcher for each method name (globally)
-    var allDispatchersNameDecl = new NameDeclaration
+    var allMethodNames: Map string to Names.Declaration = {}  // all distinct methodnames, to declare method symbols
+    var allPropertyNames: Map string to Names.Declaration = {} // all distinct propname, to declare props symbols
+
+    var coreSupportedMethods = [
+        "toString"
+        "tryGetMethod","tryGetProperty","getProperty", "getPropertyName"
+        "has", "get", "set", "clear", "delete", "keys"
+        "slice", "split", "indexOf", "lastIndexOf", "concat"
+        "toUpperCase", "toLowerCase","charAt", "replaceAll","trim"
+        "toDateString","toTimeString","toUTCString","toISOString"
+        "shift","push","unshift", "pop", "join","splice"
+    ]
+
+    var coreSupportedProps = [
+        'name','value','message','stack','code'
+    ]
+
     public var dispatcherModule: Grammar.Module
+
+    var appendToCoreClassMethods: array of Grammar.MethodDeclaration = []
 
     var DEFAULT_ARGUMENTS = "(any this, len_t argc, any* arguments)"
 
-### Append to class NameDeclaration ###
-      properties
-        funcDecl: Grammar.FunctionDeclaration #pointer on dispatcherModule's each case
-
-
-### Public function preProduction(project)
-
-        // user class ID's start 
-        ASTBase.setUniqueID 'TYPEID',USER_CLASSES_START_ID
 
 ### Public function postProduction(project)
 
@@ -48,28 +59,34 @@ create _dispatcher.c & .h
 
         dispatcherModule = new Grammar.Module(project)
         declare valid project.options
-        dispatcherModule.lexer = new Lexer(null, project, project.options)
+        dispatcherModule.lexer = new Parser.Lexer(project, project.options)
 
-        project.redirectOutput dispatcherModule.lexer.out // all Lexers now out here        
+        project.redirectOutput dispatcherModule.lexer.outCode // all Lexers now out here        
 
-        dispatcherModule.fileInfo = Environment.fileInfoNewFile("_dispatcher",project.options)
+        dispatcherModule.fileInfo = Environment.fileInfoNewFile("_dispatcher", project.options.target)
         dispatcherModule.produceDispatcher project
 
-        resultLines =  dispatcherModule.lexer.out.getResult() //get .c file contents
+        var resultLines:string array =  dispatcherModule.lexer.outCode.getResult() //get .c file contents
         if resultLines.length
             Environment.externalCacheSave dispatcherModule.fileInfo.outFilename,resultLines
 
-        var resultLines:string array =  dispatcherModule.lexer.out.getResult(1) //get .h file contents
+        resultLines =  dispatcherModule.lexer.outCode.getResult(1) //get .h file contents
         if resultLines.length
-            Environment.externalCacheSave dispatcherModule.fileInfo.outFilename.slice(0,-1)+'h',resultLines
+            Environment.externalCacheSave '#{dispatcherModule.fileInfo.outFilename.slice(0,-1)}h',resultLines
 
-        log.message "#{color.green}[OK] -> #{dispatcherModule.fileInfo.outRelFilename} #{color.normal}"
-        log.extra #blank line
+        logger.msg "#{color.green}[OK] -> #{dispatcherModule.fileInfo.outRelFilename} #{color.normal}"
+        logger.extra #blank line
 
     end function
 
     helper function normalizeDefine(name:string)
-        return name.replace(/[\s\W]/g,"_").toUpperCase()
+        var chr, result=""
+        for n=0 to name.length
+            chr=name.charAt(n).toUpperCase()
+            if chr<'A' or chr>'Z', chr="_"
+            result="#{result}#{chr}"
+
+        return result
 
 
 ### Append to class Grammar.Module ###
@@ -78,212 +95,478 @@ create _dispatcher.c & .h
 
         var requiredHeaders: Grammar.Module array = []
 
-Add core-supported dispatchers & methods
-
-"toString" have a default handler in core. It's added for any class
-
-        .addMethodDispatcher 'toString'
-
-        var supportedCoreMethods = new Map
-        supportedCoreMethods.map_members = 
-            String: ['slice', 'split', 'indexOf', 'lastIndexOf', 'concat'] //, 'substring', 'substr']
-            Array: ['slice', 'splice', 'indexOf', 'lastIndexOf', 'push', 'unshift', 'pop', 'join', 'concat' ]
-            Map: ['get', 'has', 'set', 'clear', 'delete']
-            console: ['log', 'error']
-            process: ['exit', 'cwd']
-
-        for each className, methodNames:array in map supportedCoreMethods
-            for each methodName in methodNames
-                  .addMethodDispatcher methodName, className
-
-_dispatcher.c
-
-        .out '#include "_dispatcher.h"',NL,NL,NL,NL
-
-core support and defined classes init function
-
-        .out 'void __init_core_support(int argc, char** argv){',NL,NL,NL
-
-        .out '    LiteC_registerCoreClasses(argc,argv);',NL
-
-register user classes, init singletons
-
-        for each classDeclaration in classes
-            .out '    __registerClass('
-                ,classDeclaration.name,'_TYPEID,'
-                ,'"',classDeclaration.name,'", ' 
-
-            if classDeclaration.varRefSuper 
-                .out classDeclaration.varRefSuper,"_TYPEID"
-            else 
-                .out 'UNDEFINED',', ' 
-
-            .out classDeclaration.name,'__init',', '
-                ,'sizeof(struct ',classDeclaration.name,'_s));',NL
-
-        .out NL
-        for each classDeclaration in classes
-            where classDeclaration instanceof Grammar.NamespaceDeclaration
-                .out '    #{classDeclaration.name}__init_singleton();',NL
-              
-        .out NL,'};',NL,NL
-
-now all method dispatchers
-
-        .out {COMMENT: 'method dispatchers'},NL,NL
-        for each dispatcherNameDecl in map allDispatchersNameDecl.members
-
-            var methodName = dispatcherNameDecl.name
-            .out 'any _', methodName, DEFAULT_ARGUMENTS
-            //.produceParameters 'void*' //type for implicit parameter "this"
-            .out "{",NL
-            .out "    switch(this.type){",NL
-            
-            for each caseNameDecl in map dispatcherNameDecl.members
-                .out "      case ",caseNameDecl.name,"_TYPEID:",NL
-                // call specific class_method
-                .out "         return ",caseNameDecl.name,"_",methodName,"(this,argc,arguments);",NL
-                // passs same parameters, same order as dispatcher
-                // C-compiler should optimize this tail-call to a JMP instead of CALL
-
-                // keep a list of required Headers
-                if caseNameDecl.funcDecl
-                    var classModule = caseNameDecl.funcDecl.getParent(Grammar.Module)
-                    if classModule not in requiredHeaders
-                        requiredHeaders.push classModule
-
-            end for each case
-
-            .out NL,'      default:',NL
-            if methodName is 'toString' //'toString' has "default" handler in core
-                .out '         return _default_toString(this,argc,arguments);',NL
-            else
-                .out '         throw(_noMethod(this.type,"',methodName,'"));',NL
-
-            .out "    };",NL
-            .out "};",NL,NL
-
-        end for each dispatcher (method name)
-
 _dispatcher.h
 
-        .out {h:1},NL
-        
-        .out '#ifndef #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL
-        .out '#define #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL,NL
-
-include LiteC-core
-
-        .out '#include "LiteC-core.h"',NL
-
-include headers for all the imported modules
-  
-        for each moduleNode:Grammar.Module in map project.moduleCache
-            .out '#include "#{moduleNode.fileInfo.outRelFilename.slice(0,-1)}h"',NL
-
-        //var project = .parent
-        //.out '#include "#{project.main.fileInfo.outRelFilename.slice(0,-1)}h"',NL
-        //for each moduleDecl in requiredHeaders
-        //    .out '#include "#{moduleDecl.fileInfo.outRelFilename.slice(0,-1)}h"',NL
+        .out 
+            {h:1},NL
+            '#ifndef #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL
+            '#define #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL,NL
+            '#include "../core/LiteC-core.h"',NL,NL,NL
 
 LiteC__init extern declaration
 
-        .out NL,{COMMENT: 'core support and defined classes init'},NL
-        .out 'extern void __init_core_support();',NL,NL
+        .out 
+            NL,{COMMENT: 'core support and defined classes init'},NL
+            'extern void __declareClasses();',NL,NL
 
-methods dispatchers extern declaration
+verbs & things
 
-        .out {COMMENT: 'method dispatchers'},NL,NL
+now all distinct method names
 
-        for each dispatcherNameDecl in map allDispatchersNameDecl.members
-            .out 'extern any _',dispatcherNameDecl.name,"( DEFAULT_ARGUMENTS );",NL
-            //.produceParameters 'void*' //type for implicit parameter "this"
-            //.out ";",NL
+        .out 
+            {COMMENT: 'methods'},NL,NL
+            "enum _VERBS { //a symbol for each distinct method name",NL
+
+        var initialValue = " = -_CORE_METHODS_MAX-#{allMethodNames.size}"
+        for each methodDeclaration in map allMethodNames
+            .out '    ',makeSymbolName(methodDeclaration.name),initialValue,",",NL
+            initialValue=undefined
+        .out NL,"_LAST_VERB};",NL
+
+all  distinct property names
+
+        .out 
+            {COMMENT: 'propery names'},NL,NL
+            "enum _THINGS { //a symbol for each distinct property name",NL
+
+        initialValue = "= _CORE_PROPS_LENGTH"
+        for each name,value in map allPropertyNames
+            .out '    ',makeSymbolName(name), initialValue, ",",NL
+            initialValue=undefined
+        .out NL,"_LAST_THING};",NL,NL,NL
+
+Now include headers for all the imported modules.
+To put this last is important, because if there's a error in the included.h 
+and it's *before* declaring _VERBS and _THINGS, _VERBS and _THINGS don't get
+declared and the C compiler shows errors everywhere
+
+        for each moduleNode:Grammar.Module in map project.moduleCache
+            var hFile = moduleNode.fileInfo.outWithExtension(".h")
+            hFile = Environment.relativeFrom(.fileInfo.outDir, hFile)
+            .out '#include "#{hFile}"',NL
 
         .out NL,NL,"#endif",NL,NL
 
-#### method produce()
+_dispatcher.c
 
-if a 'export default' was declared, set the referenced namespace 
-as the new 'export default' (instead of 'module.exports')
+        .out 
+            {h:0},NL
+            '#include "_dispatcher.h"',NL,NL,NL,NL
 
-        var exportsName = '_Module_#{.name}_exports'
-        .lexer.out.exportNamespace = exportsName
-        if .exportDefault instance of Grammar.VarStatement
-            declare valid .exportDefault.list.length
-            declare valid .exportDefault.throwError
-            if .exportDefault.list.length > 1, .exportDefault.throwError "only one var:Object alllowed for 'export default'"
-            .lexer.out.exportNamespace = .exportDefault.list[0].name
+static definition added verbs (methods) and things (properties)
 
-        else if .exportDefault instance of ASTBase
-            declare valid .exportDefault.name
-            .lexer.out.exportNamespace = .exportDefault.name
+        .out 
+            {COMMENT: 'methods'},NL,NL
+            "static str _ADD_VERBS[] = { //string name for each distinct method name",NL
+            {pre:'    "', CSL:allMethodNames.keys(), post:'"\n'}
+            '};',NL,NL
 
-        end if
+all  distinct property names
+
+        .out 
+            {COMMENT: 'propery names'},NL,NL
+            "static str _ADD_THINGS[] = { //string name for each distinct property name",NL
+            {pre:'    "', CSL:allPropertyNames.keys(), post:'"\n'}
+            '};',NL,NL
+
+_dispatcher.c contains main function
+
+        .out 
+            "\n\n\n//-------------------------------",NL
+            "int main(int argc, char** argv) {",NL
+            '    LiteC_init(argc,argv);',NL
+            '    LiteC_addMethodSymbols( #{allMethodNames.size}, _ADD_VERBS);',NL
+            '    LiteC_addPropSymbols( #{allPropertyNames.size}, _ADD_THINGS);',NL
+            
+
+process methods appended to core classes, by calling LiteC_registerShim
+
+        .out '\n'
+        for each methodDeclaration in appendToCoreClassMethods
+                var appendToDeclaration = methodDeclaration.getParent(Grammar.ClassDeclaration)
+                .out '    LiteC_registerShim(',appendToDeclaration.varRef,'.value.class',
+                     ',#{methodDeclaration.name}_,',
+                     appendToDeclaration.varRef,'_',methodDeclaration.name,');',NL
+
+call __ModuleInit for all the imported modules. call the base modules init first
+    
+        var moduleList: array of Grammar.Module=[]
+
+        for each moduleNode:Grammar.Module in map project.moduleCache
+            where moduleNode isnt project.main
+                moduleList.push moduleNode //order in moduleCache is lower level to higher level
+        
+        .out '\n'
+        for each nodeModule in moduleList
+            .out '    ',nodeModule.fileInfo.base,'__moduleInit();',NL 
+
+call main module __init
+
+        .out '\n\n    ',project.main.fileInfo.base,'__moduleInit();',NL 
+
+        .out '}',NL, {COMMENT: 'end main'},NL
+
+
+#### method produce() # Module
 
 default #includes:
-"LiteC-core.h" at the header, the header at the .c
+"LiteC-core.h" in the header, the .h in the .c
 
-        .out {h:1},NL
-        .out '#ifndef #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL
-        .out '#define #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL,NL
+        .out 
+            {h:1},NL
+            '#ifndef #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL
+            '#define #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL,NL
 
-        .out '#include "_dispatcher.h"',NL
+        var thisBase = Environment.dirName(.fileInfo.outFilename)
 
-        .out {h:0},NL
-        .out '#include "#{.fileInfo.basename}.h"',NL,NL
+        declare valid .parent.fileInfo.outFilename
+        var dispatcherFull = "#{Environment.dirName(.parent.fileInfo.outFilename)}/_dispatcher.h"
+        .out '#include "#{Environment.relativeFrom(thisBase,dispatcherFull)}"',NL
 
-if is main module,
-First: all classes declarations, imports and declares
-after that, we start "int main(){..."
+        var prefix=.fileInfo.base
 
-        if .isMain 
+header
 
-            for each statement in .statements
+        .out 
+            "//-------------------------",NL
+            "//Module ",prefix, NL
+            "//-------------------------",NL
 
-                if statement.statement instanceof Grammar.VarStatement
-                    declare statement.statement: Grammar.VarStatement
-                    statement.statement.produceDeclare
+Modules have a __moduleInit function holding module items initialization and any loose statements
 
-                else if statement.isDeclaration()
-                    statement.produce
+        .out "extern void ",prefix,"__moduleInit(void);",NL
 
-            .out NL,NL,NL,"//-------------------------------",NL
-            .out "int main(int argc, char** argv) {",NL
-            .out "   __init_core_support(argc,argv); //see _dispatcher.c",NL
+Interfaces have a __nativeInit function to provide a initialization opportunity 
+to module native support
 
-            for each statement in .statements 
+        if .fileInfo.isInterface // add call to native hand-coded C support for this module 
+            .out "extern void ",prefix,"__nativeInit(void);",NL
 
-                if statement.statement instanceof Grammar.VarStatement
-                    declare statement.statement: Grammar.VarStatement
-                    statement.statement.produceAssignments
+Since we cannot initialize a module var at declaration in C (err:initializer element is not constant),
+we separate declaration from initialization.
 
-                else if not statement.isDeclaration()
-                    statement.produce
+Var names declared inside a module/namespace, get prefixed with namespace name
 
-            //if not mainFunctionStarted, .throwError '"#{.fileInfo.outRelFilename}": no code found to create main function'
-            .out NL,"}//end main function",NL
+module vars declared public 
 
-        else
+        // add each public/export item as a extern declaration
+        .produceDeclaredExternProps prefix
 
-            .out .statements
+Now produce the .c file,
 
-        //add end of file comments
-        .outPrevLinesComments .lexer.infoLines.length-1
+        .out 
+            {h:0} //on .c
+            '#include "#{prefix}.h"',NL,NL
+            "//-------------------------",NL
+            "//Module ",prefix, .fileInfo.isInterface? ' - INTERFACE':'',NL
+            "//-------------------------",NL
 
-export 'export default' namespace, if it was set.
+        // add sustance for the module
+        .produceSustance prefix
 
-        //if not .lexer.out.browser
-        //    if .lexer.out.exportNamespace isnt exportsName
-        //        .out exportsName,'=',.lexer.out.exportNamespace,";",NL
+__moduleInit: module main function 
+
+        .out 
+            "\n\n//-------------------------",NL
+            "void ",prefix,"__moduleInit(void){",NL
+
+        .produceMainFunctionBody prefix
+
+        if .fileInfo.isInterface // add call to native hand-coded C support for this module 
+            .out NL,'    ',prefix,"__nativeInit();"
+
+        .out NL,"};",NL
+
+        .skipSemiColon = true
+
 
 close .h #ifdef
 
-        .out NL
-        .out {h:1},NL
-        .out '#endif',NL
+        .out 
+            {h:1}
+            NL,'#endif',NL
+            {h:0}
 
-### Append to class Grammar.Body ### and Module (derives from Body)
+
+----------------------------
+
+## Grammar.ClassDeclaration & derivated
+
+### Append to class Grammar.AppendToDeclaration ###
+
+Any class|object can have properties or methods appended at any time. 
+Append-to body contains properties and methods definitions.
+
+      method produceHeader() 
+
+        var nameDeclClass = .varRef.tryGetReference() // get class being append to
+        if no nameDeclClass, return .sayErr("append to: no reference found")
+
+        if .toNamespace
+                .body.produceDeclaredExternProps nameDeclClass.getComposedName(), true
+                return //nothing more to do if it's "append to namespace"
+
+handle methods added to core classes
+        
+        if nameDeclClass.nodeDeclared and nameDeclClass.nodeDeclared.name is "*Global Scope*"
+            // is append to a core class
+            for each item in .body.statements
+                where item.specific.constructor is Grammar.MethodDeclaration 
+                    declare item.specific: Grammar.MethodDeclaration 
+                    if no item.specific.nameDecl, continue //shim
+                    // keep a list of all methods appended to core-defined classes (like String)
+                    // they require a special registration, because the class pre-exists in core
+                    appendToCoreClassMethods.push item.specific
+                    //also add to allMethods, since the class is core, is not declared in this project
+                    item.specific.nameDecl.addToAllMethodNames
+                    // out header
+                    .out 'extern any ',item.specific.nameDecl.getComposedName(),"(DEFAULT_ARGUMENTS);",NL                            
+
+
+
+      method produce() 
+
+        //if .toNamespace, return //nothing to do if it's "append to namespace"
+        .out .body
+        .skipSemiColon = true
+
+
+### Append to class Grammar.NamespaceDeclaration ###
+
+namespaces are like modules inside modules
+
+#### method makeName()
+
+        var prefix = .nameDecl.getComposedName()
+
+if this is a namespace declared at module scope, we check if it has 
+the same name as the module. If it does, is the "default export",
+if it not, we prepend module name to namespace name. 
+(Modules act as namespaces, var=property, function=method)
+
+        if .nameDecl.parent.isScope //is a namespace declared at module scope
+            var moduleNode:Grammar.Module = .getParent(Grammar.Module)
+            if moduleNode.fileInfo.base is .nameDecl.name
+                //this namespace have the same name as the module
+                do nothing //prefix is OK
+            else
+                //append modulename to prefix
+                prefix = "#{moduleNode.fileInfo.base}_#{prefix}"
+            end if
+        end if
+
+        return prefix
+
+#### method produceHeader
+                       
+        var prefix= .makeName()
+
+        .out 
+            "//-------------------------",NL
+            "// namespace ",prefix,NL
+            "//-------------------------",NL
+
+all namespace methods & props are public 
+
+        // add each method
+        var count=0
+        var namespaceMethods=[]
+        for each member in map .nameDecl.members
+            where member.name not in ['constructor','length','prototype']
+                if member.isProperty()
+                    .out '    extern var ',prefix,'_',member.name,';',NL
+                else if member.isMethod()
+                    .out '    extern any ',prefix,'_',member.name,'(DEFAULT_ARGUMENTS);',NL
+            
+         // recurse, add internal classes and namespaces
+        .body.produceDeclaredExternProps prefix, forcePublic=true
+
+
+#### method produce
+
+        var prefix= .makeName()
+        var isPublic = .hasAdjective('export')
+
+        //logger.debug "produce Namespace",c
+
+Now on the .c file,
+
+        .out 
+            "//-------------------------",NL
+            "//NAMESPACE ",prefix,NL
+            "//-------------------------",NL
+
+        .body.produceSustance prefix
+
+__namespaceInit function
+
+        .out 
+            NL,NL,"//------------------",NL
+            "void ",prefix,"__namespaceInit(void){",NL
+
+        .body.produceMainFunctionBody prefix
+        .out "};",NL
+
+        .skipSemiColon = true
+
+
+### Append to class Grammar.ClassDeclaration ###
+
+#### method produceHeader()
+
+        if no .nameDecl, return //shim class
+
+        // keep a list of classes in each moudle, to out __registerClass
+        allClasses.push this
+
+        var c = .nameDecl.getComposedName()
+
+        //logger.debug "produce header class",c
+
+header
+
+        .out 
+            "\n\n//--------------",NL
+            {COMMENT:c} 
+            .varRefSuper? [' extends ',.varRefSuper,NL] else '', NL
+            NL
+            "extern any ",c,"; //Class Object",NL,NL
+
+In C we create a struct for "instance properties" of each class 
+
+        // declare struct
+        .out 
+            "typedef struct ",c,"_s * ",c,"_ptr;",NL
+            "typedef struct ",c,"_s {",NL
+
+        // add each prop
+        var count=0
+        var classMethods=[]
+
+        var prt = .nameDecl.findOwnMember('prototype')
+        for each prtNameDecl in map prt.members
+            where prtNameDecl.name not in ['constructor','length','prototype']
+                if prtNameDecl.isProperty()
+                    prtNameDecl.addToAllProperties
+                    if count
+                        .out ',',NL
+                    else
+                        .out '    any',NL
+
+                    .out '        ',prtNameDecl.name
+                    count++
+
+                else
+                    // list of this class methods
+                    classMethods.push prtNameDecl.name
+
+                    // keep a list of all classes methods
+                    prtNameDecl.addToAllMethodNames 
+
+
+        if count, .out NL,';'
+        .out NL,"} ",c,"_s;",NL,NL
+
+        .out "extern void ",c,"__init(DEFAULT_ARGUMENTS);",NL
+
+        //declare extern for this class methods
+        for each methodName in classMethods
+            .out "extern any ",c,"_",methodName,"(DEFAULT_ARGUMENTS);",NL
+
+
+#### method produce()
+
+        if no .nameDecl, return //shim class
+
+        var c = .nameDecl.getComposedName()
+
+        //logger.debug "produce body class",c
+
+this is the class body, goes on the .c file,
+
+        .out 
+            {COMMENT:c},NL,NL
+            'any #{c}; //Class Object',NL
+
+        var hasConstructor: boolean
+        for each index,item in .body.statements
+            if item.specific instanceof Grammar.ConstructorDeclaration 
+                if hasConstructor # what? more than one?
+                    .throwError('Two constructors declared for class #{c}')
+                hasConstructor = true
+
+default constructor
+
+        if not hasConstructor and not .getParent(Grammar.Module).fileInfo.isInterface
+            // produce a default constructor
+            .out 
+                "//auto ",c,"__init",NL
+                "void ",c,"__init",DEFAULT_ARGUMENTS,"{",NL
+
+            if .varRefSuper
+                .out 
+                    "    ",{COMMENT:"//auto call super class __init"},NL
+                    "    ",.varRefSuper,"__init(this,argc,arguments);",NL
+
+            .body.producePropertiesInitialValueAssignments '((#{c}_ptr)this.value.ptr)->'
+
+            // end default constructor
+            .out "};",NL
+
+        .body.produce
+
+        .skipSemiColon = true
+
+
+-------------------------------------
+#### method produceStaticListMethodsAndProps
+
+static definition info for each class: list of _METHODS and _PROPS
+
+        var c = .nameDecl.getComposedName()
+
+        .out 
+            '//-----------------------',NL
+            '// Class ',c,': static list of METHODS(verbs) and PROPS(things)',NL
+            '//-----------------------',NL
+            NL 
+            "static _methodInfoArr ",c,"_METHODS = {",NL
+
+        var propList=[]
+        var prt = .nameDecl.findOwnMember('prototype')
+        for each nameDecl in map prt.members
+            where nameDecl.name not in ['constructor','length','prototype']
+                if nameDecl.isMethod()
+                    .out '  { #{makeSymbolName(nameDecl.name)}, #{c}_#{nameDecl.name} },',NL
+                else
+                    propList.push makeSymbolName(nameDecl.name)
+
+        .out 
+            NL,"{0,0}}; //method jmp table initializer end mark",NL
+            NL
+            "static _posTableItem_t ",c,"_PROPS[] = {",NL
+            {CSL:propList, post:'\n    '}
+            "};",NL,NL
+
+#### method produceClassRegistration
+
+        var c = .nameDecl.getComposedName()
+        var superClass
+        if .varRefSuper
+            superClass = .varRefSuper.tryGetReference()
+            if no superClass, .throwError "cannot get a reference to #{.varRefSuper}"
+            superClass = superClass.getComposedName()
+        else
+            superClass = "Object"
+
+        .out 
+            '    #{c} =_newClass("#{c}", #{c}__init, sizeof(struct #{c}_s), #{superClass}.value.class);',NL,NL
+            '    _declareMethods(#{c}.value.class, #{c}_METHODS);',NL
+            '    _declareProps(#{c}.value.class, #{c}_PROPS, sizeof #{c}_PROPS);',NL
+
+-------------------------------------
+
+### Append to class Grammar.Body 
 
 A "Body" is an ordered list of statements.
 
@@ -291,12 +574,139 @@ A "Body" is an ordered list of statements.
 
 "Body"s are used for example, to parse an `if` statement body and `else` body, `for` loops, etc.
 
-      method produce()
+#### method produce()
 
         for each statement in .statements
           statement.produce()
 
         .out NL
+
+#### method produceDeclaredExternProps(parentName,forcePublic)
+
+        var prefix = parentName? "#{parentName}_" else ""
+
+        // add each declared prop as a extern prefixed var
+        for each item in .statements
+
+            var isPublic = forcePublic or item.hasAdjective('export')
+
+            switch item.specific.constructor
+
+                case Grammar.VarStatement:
+                    declare item.specific:Grammar.VarStatement
+                    if isPublic, .out 'extern var ',{pre:prefix, CSL:item.specific.getNames()},";",NL
+
+                case Grammar.FunctionDeclaration:
+                    declare item.specific:Grammar.FunctionDeclaration
+                    //export module function
+                    if isPublic, .out 'extern any ',prefix,item.specific.name,"(DEFAULT_ARGUMENTS);",NL
+
+                case Grammar.ClassDeclaration, Grammar.AppendToDeclaration:
+                    declare item.specific:Grammar.ClassDeclaration
+                    //produce class header declarations
+                    item.specific.produceHeader
+                    // class headers are always produced. Props are declared in header production
+
+                case Grammar.NamespaceDeclaration:
+                    declare item.specific:Grammar.NamespaceDeclaration
+                    item.specific.produceHeader #recurses
+                    // as in JS, always public. Must produce, can have classes inside
+
+
+#### method produceSustance(prefix)
+
+before main function,
+produce body sustance: vars & other functions declarations
+
+        var produceSecond: array of Grammar.Statement = []
+        var produceThird: array of Grammar.Statement = []
+
+        for each item in .statements
+
+            if item.specific instanceof Grammar.VarDeclList // PropertiesDeclaration & VarStatement
+                declare item.specific:Grammar.VarDeclList
+                //just declare existence, do not assign. (C compiler: error: initializer element is not constant)
+                .out 'var ',{pre:"#{prefix}_", CSL:item.specific.getNames()},";",NL
+
+            //since C require to define a fn before usage. we make forward declarations
+            // of all module functions, to avoid any ordering problem.
+            else if item.specific.constructor is Grammar.FunctionDeclaration
+                declare item.specific:Grammar.FunctionDeclaration
+                //just declare existence, do not assign. (C compiler: error: initializer element is not constant)
+                .out 'any ',prefix,'_',item.specific.name,"(DEFAULT_ARGUMENTS); //forward declare",NL
+                produceThird.push item
+
+            else if item.specific.constructor is Grammar.ClassDeclaration
+                declare item.specific:Grammar.ClassDeclaration
+                item.specific.produceStaticListMethodsAndProps
+                produceSecond.push item.specific
+
+            else if item.specific.constructor is Grammar.NamespaceDeclaration
+                declare item.specific:Grammar.NamespaceDeclaration
+                produceSecond.push item.specific #recurses
+
+            else if item.isDeclaration()
+                produceThird.push item
+        
+        end for //produce vars functions & classes sustance
+
+        for each item in produceSecond //class & namespace sustance
+            item.produce
+
+        for each item in produceThird //other declare statements
+            item.produce
+
+
+#### method produceMainFunctionBody(prefix)
+
+assign values for module vars.
+if there is var or properties with assigned values, produce those assignment
+
+        for each item in .statements 
+            where item.specific instanceof Grammar.VarDeclList //for modules:VarStatement, for Namespaces: PropertiesDeclaration
+                declare item.specific:Grammar.VarDeclList
+                for each variableDecl in item.specific.list
+                    where variableDecl.assignedValue
+                        .out prefix,'_',variableDecl.name,' = ', variableDecl.assignedValue,";",NL
+
+        for each item in .statements
+
+register user classes
+
+            if item.specific.constructor is Grammar.ClassDeclaration
+                declare item.specific:Grammar.ClassDeclaration
+                item.specific.produceClassRegistration
+
+recurse for namespaces 
+
+            else if item.specific.constructor is Grammar.NamespaceDeclaration
+                declare item.specific:Grammar.NamespaceDeclaration
+                #call namespaceInit
+                .out '    ',item.specific.makeName(),'__namespaceInit();',NL
+
+        end for
+
+        // all other loose statements in module body
+        .produceLooseExecutableStatements()
+
+
+#### method producePropertiesInitialValueAssignments(fullPrefix)
+
+if there is var or properties with assigned values, produce those assignment
+
+        for each item in .statements 
+            where item.specific.constructor is Grammar.PropertiesDeclaration 
+                declare item.specific:Grammar.PropertiesDeclaration
+                for each variableDecl in item.specific.list
+                    where variableDecl.assignedValue
+                        .out 'PROP(',variableDecl.name,'_,this)=',variableDecl.assignedValue,";",NL
+
+
+#### method produceLooseExecutableStatements()
+        // all loose executable statements in a namespace or module body
+        for each item in .statements
+            where item.isExecutableStatement()
+                item.produce //produce here
 
 
 -------------------------------------
@@ -307,7 +717,7 @@ after adding any comment lines preceding the statement
 
       method produce()
 
-        declare valid .statement.body
+        declare valid .specific.body
 
 add comment lines, in the same position as the source
 
@@ -316,45 +726,38 @@ add comment lines, in the same position as the source
 To ease reading of compiled code, add original Lite line as comment 
 
         if .lexer.options.comments
-          if .lexer.out.lastOriginalCodeComment<.lineInx
-            if not (.statement.constructor in [
-                Grammar.PrintStatement, Grammar.VarStatement, Grammar.CompilerStatement
-                Grammar.DeclareStatement,Grammar.AssignmentStatement, Grammar.ReturnStatement
-                Grammar.PropertiesDeclaration, Grammar.FunctionCall, Grammar.DoNothingStatement
+          if .lexer.outCode.lastOriginalCodeComment<.lineInx
+            if not (.specific.constructor in [
+                Grammar.CompilerStatement, Grammar.DeclareStatement 
+                Grammar.DoNothingStatement
               ])
               .out {COMMENT: .lexer.infoLines[.lineInx].text.trim()},NL
-          .lexer.out.lastOriginalCodeComment = .lineInx
+          .lexer.outCode.lastOriginalCodeComment = .lineInx
 
 Each statement in its own line
 
-        if .statement isnt instance of Grammar.SingleLineStatement
-          .lexer.out.ensureNewLine
+        if .specific isnt instance of Grammar.SingleLineBody
+          .lexer.outCode.ensureNewLine
 
 if there are one or more 'into var x' in a expression in this statement, 
-declare vars before statement (exclude body of FunctionDeclaration)
-Note: producer_js uses: callOnSubTree
+declare vars before the statement (exclude body of FunctionDeclaration)
 
-        #ifdef TARGET_C
-        for each child in .children where child.constructor isnt Grammar.Body
-            declare valid child.declareIntoVar
-            child.declareIntoVar
-        #else
-        this.callOnSubTree "declareIntoVar",Grammar.Body
-        #endif
+        var methodToCall = LiteCore.getSymbol('declareIntoVar')
+        this.callOnSubTree methodToCall, excludeClass=Grammar.Body
 
 call the specific statement (if,for,print,if,function,class,etc) .produce()
 
-        var mark = .lexer.out.markSourceMap(.indent)
-        .out .statement
+        var mark = .lexer.outCode.markSourceMap(.indent)
+        .out .specific
 
 add ";" after the statement
 then EOL comment (if it isnt a multiline statement)
 then NEWLINE
 
-        if not .statement.skipSemiColon
+        if not .specific.skipSemiColon
           .addSourceMap mark
           .out ";"
-          if not .statement.body
+          if not .specific.body
             .out .getEOLComment()
 
 helper function to determine if a statement is a declaration (can be outside a funcion in "C")
@@ -362,14 +765,18 @@ or a "statement" (must be inside a funcion in "C")
 
       helper method isDeclaration returns boolean
 
-        return .statement is instance of Grammar.ClassDeclaration
-            or .statement is instance of Grammar.FunctionDeclaration
-            or .statement.constructor in [
+        return .specific is instance of Grammar.ClassDeclaration
+            or .specific is instance of Grammar.FunctionDeclaration
+            or .specific is instance of Grammar.VarStatement
+            or .specific.constructor in [
                     Grammar.ImportStatement
                     Grammar.DeclareStatement
                     Grammar.CompilerStatement
                     ]
 
+      helper method isExecutableStatement returns boolean
+
+        return not .isDeclaration()
 
 called above, pre-declare vars from 'into var x' assignment-expression
 
@@ -384,7 +791,7 @@ called above, pre-declare vars from 'into var x' assignment-expression
 
       method produce()
           if .specifier is 'fail'
-            .out "throw(new(Error_TYPEID,1,(any_arr){",.expr,"}));"
+            .out "throw(new(Error,1,(any_arr){",.expr,"}));"
           else
             .out "throw(",.expr,")"
 
@@ -392,28 +799,25 @@ called above, pre-declare vars from 'into var x' assignment-expression
 ### Append to class Grammar.ReturnStatement ###
 
       method produce()
-        .out "return"
-        if .expr, .out ' ',.expr
+        var defaultReturn = .getParent(Grammar.ConstructorDeclaration)? '' else 'undefined'
+        .out 'return ',.expr or defaultReturn
 
 
 ### Append to class Grammar.FunctionCall ###
 
       method produce() 
 
-        var options=
-            validations:[]
+Check if varRef "executes" 
+(a varRef executes if last accessor is "FunctionCall" or it has --/++)
 
-        var result = .varRef.calcReference(options)
+if varRef do not "executes" add "FunctionCall", 
+so varRef production adds (), 
+and C/JS executes the function call
 
-        // assert not null or undefined before calling
-        //for each validation in options.validations
-        //    .out validation,NL
+        if no .varRef.executes, .varRef.addAccessor new Grammar.FunctionAccess(.varRef)
 
-        // out function call
+        var result = .varRef.calcReference()
         .out result
-
-        //if .varRef.executes, return #if varRef already executes, nothing more to do
-        //.out "()" #add (), so JS executes the function call
 
 
 ### append to class Grammar.Operand ###
@@ -438,19 +842,17 @@ or the only Operand of a unary oper.
             // in C we only have "" to define strings, '' are for char constants
             // if the StringLiteral is defined with '', change to "" and escape all internal \"
             var strValue:string = .name.name
-            if strValue[0] is "'"
+            if strValue.charAt(0) is "'"
                 strValue = .name.getValue() // w/o quotes
-                strValue = strValue.replace(/"/g,'\\"') // escape internal \"
-                strValue = '"'+strValue+'"' // enclose in ""
-
-            if .produceType is 'any'
-                pre="any_str("
-                post=")"
+                strValue = strValue.replaceAll("\"",'\\"') // escape internal " => \"
+                strValue = '"#{strValue}"' // enclose in ""
 
             if strValue is '""' 
                 .out "any_EMPTY_STR"
+            else if .produceType is 'Number' and (strValue.length is 3 or strValue.charAt(1) is '/' and strValue.length is 4) //a single char (maybe escaped)
+                .out "'", strValue.slice(1,-1), "'" // out as C 'char' (C char = byte, a numeric value)
             else
-                .out pre,strValue,post
+                .out "any_str(",strValue,")"
 
             .out .accessors
 
@@ -460,7 +862,7 @@ or the only Operand of a unary oper.
                 pre="any_number("
                 post=")"
 
-            .out pre,.name,post,.accessors
+            .out pre,.name,.accessors,post
 
         else if .name instance of Grammar.VariableRef
             declare .name:Grammar.VariableRef
@@ -500,32 +902,42 @@ Examples:
         var translated = operTranslate(.name)
         var prepend,append
 
+Consider "not": 
 if it is "boolean not", add parentheses, because js has a different precedence for "boolean not"
--(prettier generated code) do not add () for simple "falsey" variable check
+-(prettier generated code) do not add () for simple "falsey" variable check: "if no x"
 
         if translated is "!" 
             if not (.name is "no" and .right.name instanceof Grammar.VariableRef)
                 prepend ="("
                 append=")"
 
+Special cases
+
+        var pre,post
 
         if translated is "new" and .right.name instance of Grammar.VariableRef
             declare .right.name:Grammar.VariableRef
-            .out .right.name.calcReference({nameReplace:"new", typeID:.right.name.name})
+            .out "new(", .right.name.calcReference(callNew=true)
+            return
+
+        if translated is "typeof" 
+            pre="_typeof("
+            translated=""
+            post=")"
 
         else
-            var pre,post
             if .produceType is 'any'
                 pre="any_number("
                 post=")"
 
             .right.produceType = translated is "!"? 'Bool' else 'Number' //Except "!", unary opers require numbers
 
-add a space if the unary operator is a word. Example `typeof`
+        end if
 
-            if /\w/.test(translated), translated+=" "
+//add a space if the unary operator is a word. Example `typeof`
+//            if /\w/.test(translated), translated+=" "
 
-            .out pre, translated, prepend, .right, append, post
+        .out pre, translated, prepend, .right, append, post
 
 
 ### append to class Grammar.Oper ###
@@ -536,6 +948,21 @@ add a space if the unary operator is a word. Example `typeof`
       method produce()
 
         var oper = .name
+
+Discourage string concat using '+':
+
++, the infamous js string concat. You should not use + to concat strings. use string interpolation instead.
+e.g.: DO NOT: `stra+": "+strb`   DO: `"#{stra}: #{strb}"`
+
+        if oper is '+'
+            var lresultNameDecl = .left.getResultType() 
+            var rresultNameDecl = .right.getResultType() 
+            if (lresultNameDecl and lresultNameDecl.isInstanceof('String'))
+                or (rresultNameDecl and rresultNameDecl.isInstanceof('String'))
+                    .sayErr """
+                            You should not use + to concat strings. use string interpolation instead.
+                            e.g.: DO: "#\{stra}: #\{strb}"  vs.  DO NOT: stra + ": " + strb
+                            """
 
 default mechanism to handle 'negated' operand
 
@@ -561,7 +988,7 @@ example: `char not in myString` -> `indexOf(char,myString)==-1`
 
         switch .name 
           case 'in':
-            .out toAnyPre,"indexOf(",.left,",1,(any_arr){",.right,"}).value.number", .negated? "==-1" : ">=0",toAnyPost
+            .out toAnyPre,"CALL1(indexOf_,",.right,",",.left,").value.number", .negated? "==-1" : ">=0",toAnyPost
 
 2) *'has property'* operator, requires swapping left and right operands and to use js: `in`
 
@@ -571,35 +998,56 @@ example: `char not in myString` -> `indexOf(char,myString)==-1`
 3) *'into'* operator (assignment-expression), requires swapping left and right operands and to use: `=`
 
           case 'into':
-            if .produceType and .produceType isnt 'any', .out 'anyTo',.produceType,'('
+            if .produceType and .produceType isnt 'any', .out '_anyTo',.produceType,'('
+            .left.produceType='any'
             .out "(",.right,"=",.left,")"
             if .produceType and .produceType isnt 'any', .out ')'
 
-4) *'like'* operator (RegExp.test), requires swapping left and right operands and to use js: `.test()`
+4) *instanceof* use core _instanceof(x,y)
+
+          case 'instance of':
+            .left.produceType = 'any'
+            .right.produceType = 'any'
+            .out toAnyPre,prepend,'_instanceof(',.left,',',.right,')',append,toAnyPost
+
+4b) *'like'* operator (RegExp.test), requires swapping left and right operands and to use js: `.test()`
 
           case 'like':
-            .out toAnyPre,prepend,'RegExp_test(',.left,',"',.right,'")',append,toAnyPost
+            .throwError "like not supported yet for C-production"
+            //.out toAnyPre,prepend,'RegExp_test(',.left,',"',.right,'")',append,toAnyPost
 
 5) equal comparisions require both any
 
           case 'is':
             .left.produceType = 'any'
             .right.produceType = 'any'
-            .out .negated?'!':'', '__is(',.left,',',.right,')'
+            .out toAnyPre,.negated?'!':'', '__is(',.left,',',.right,')',toAnyPost
 
 6) js's '||' operator returns first expression if it's true, second expression is first is false, 0 if both are false
    so it can be used to set a default value if first value is undefined,0,null or ""
-   C's '||' operator, returns 1 (not the first expression itself, the expressions are lost)
+   C's '||' operator, returns 1 (not the first expression. Expressions are discarded in C's ||)
 
           case 'or':
             .left.produceType = 'any'
             .right.produceType = 'any'
+            if .produceType and .produceType isnt 'any', .out '_anyTo',.produceType,'('
             .out '__or(',.left,',',.right,')'
+            if .produceType and .produceType isnt 'any', .out ')'
+
+modulus is only for integers. for doubles, you need fmod (and link the math.lib)
+we convert to int, as js seems to do.
+
+          case '%':
+            if .produceType and .produceType isnt 'Number', .out 'any_number('
+            .left.produceType = 'Number'
+            .right.produceType = 'Number'
+            .out '(int64_t)',.left,' % (int64_t)',.right
+            if .produceType and .produceType isnt 'Number', .out ')'
 
 else we have a direct translatable operator. 
 We out: left,operator,right
 
-          default
+          default:
 
             var operC = operTranslate(oper) 
             
@@ -613,7 +1061,7 @@ We out: left,operator,right
                     .left.produceType = .produceType
                     .right.produceType = .produceType
 
-                case '&&','||': // boolean opers
+                case '&&': // boolean and
                     .left.produceType = 'Bool'
                     .right.produceType = 'Bool'
 
@@ -621,8 +1069,9 @@ We out: left,operator,right
                     .left.produceType = 'Number'
                     .right.produceType = 'Number'
 
+            var extra, preExtra
+
             if operC isnt '?' // cant put xx( a ? b )
-                var extra, preExtra
                 if .produceType is 'any' 
                     if .left.produceType is 'any' and .right.produceType is 'any'
                         do nothing
@@ -635,7 +1084,7 @@ We out: left,operator,right
                         or ( .produceType is 'Bool' and .left.produceType is 'Number' and .right.produceType is 'Number' ) // numbers are valid bools
                         do nothing
                     else
-                      preExtra = 'anyTo#{.produceType}('
+                      preExtra = '_anyTo#{.produceType}('
                       extra = ")"
 
             .out preExtra, prepend, .left,' ', operC, ' ',.right, append, extra
@@ -648,23 +1097,20 @@ We out: left,operator,right
       properties
           produceType: string
 
-      method produce(options) 
+      method produce(negated) 
 
-Produce the expression body, negated if options={negated:true}
-
-        default options=
-          negated: undefined
+Produce the expression body, optionally negated
 
         default .produceType='any'
 
         var prepend=""
         var append=""
-        if options.negated
+        if negated
 
 (prettier generated code) Try to avoid unnecessary parens after '!' 
 for example: if the expression is a single variable, as in the 'falsey' check: 
-Example: `if no options.log then... ` --> `if (!options.log) {...` 
-we don't want: `if (!(options.log)) {...` 
+Example: `if no options.logger then... ` --> `if (!options.logger) {...` 
+we don't want: `if (!(options.logger)) {...` 
 
           if .operandCount is 1 
               #no parens needed
@@ -683,15 +1129,16 @@ produce the expression body
         //.out preExtra, prepend, .root, append, extra
 
 
-### helper function fixCReservedWord(methodName)
+### append to class Grammar.FunctionArgument ###
 
-        // hack: fix some C's reserverd word usage
-        switch methodName
-            case 'exit': return 'exit_'
-            case 'log': return 'log_'
-            case 'error': return 'error_'
+        method produce
+            .out .expression
 
-        return methodName
+
+### helper function makeSymbolName(symbol)
+        // hack: make "symbols" avoid interference with C's reserved words
+        // and also common variable names
+        return "#{symbol}_"
 
 ### append to class Grammar.VariableRef ###
 
@@ -705,236 +1152,372 @@ produce the expression body
 
       properties
           produceType: string 
-          isAny: boolean
+          calcType: string // 'any','Number','Bool','**native number**'
 
       method produce() 
 
 Prefix ++/--, varName, Accessors and postfix ++/--
 
         if .name is 'arguments'
-            .out '_newArrayWith(argc,arguments)'
+            .out '_newArray(argc,arguments)'
             return
 
         var result = .calcReference()
 
-        var pre, post
-        
-        if .produceType is 'any' and not .isAny 
+        var pre,post
+
+        if .produceType is 'any' and not .calcType is 'any'
             pre = 'any_number('
             post = ')'
         
-        else if .produceType and .produceType isnt 'any' and .isAny 
-            pre = 'anyTo#{.produceType}('
+        else if .produceType and .produceType isnt 'any' and .calcType is 'any'
+            pre = '_anyTo#{.produceType}('
             post = ')'
 
-        .out pre, .preIncDec, result, .postIncDec, post
+        .out pre, result, post
 
-##### helper method calcReference(options) returns array of array
+##### helper method calcReference(callNew) returns array of array
 
-        var result: array = [] //array of arrays
-        var partial: string
+        var result = .calcReferenceArr(callNew)
 
-        default options=
-            nameReplace: undefined
-            typeID: undefined
-            validations:[]
+PreIncDec and postIncDec: ++/--
+
+        var hasIncDec = .preIncDec or .postIncDec
+        
+        if hasIncDec 
+
+            if no .calcType
+                .throwError "pre or post inc/dec (++/--) can only be used on simple variables"
+
+            if .calcType is 'any'
+                result.push ['.value.number']
+                .calcType = 'Number'
+
+            else //assume number
+                do nothing
+
+        if .postIncDec
+            result.push [.postIncDec]
+
+        if .preIncDec
+            result.unshift [.preIncDec]
+
+        return result
+
+##### helper method calcReferenceArr(callNew) returns array of array
 
 Start with main variable name, to check property names
 
-        partial = options.nameReplace or 
-                case .name 
-                    when 'true' then 'any_TRUE'
-                    when 'false' then 'any_FALSE'
-                    else .name
-                end
+        var actualVar = .tryGetFromScope(.name)
+        if no actualVar, .throwError("var '#{.name}' not found in scope")
 
-        result.push [fixCReservedWord(partial)]
-        .isAny = true
-        var actualVar = .tryGetFromScope(.name, {informError:true, isForward:true, isDummy:true})
+        var result: array = [] //array of arrays
+        
+        var partial = actualVar.getComposedName()
 
-        if no actualVar, .throwError("var '#{partial}' not found in scope")
-        if actualVar.findOwnMember("**proto**") is '**nativeNumber**', .isAny=false
+        result.push [partial]
+
+        .calcType = 'any' //default
+        if actualVar.findOwnMember("**proto**") is '**native number**', .calcType = '**native number**'
 
         if no .accessors, return result
 
 now follow each accessor
 
-        var avType:NameDeclaration
+        var avType:Names.Declaration
+        
+        var hasInstanceReference:boolean
+
+        var isOk, functionAccess, args:array
 
         for each inx,ac in .accessors
             declare valid ac.name
 
-            if no actualVar
-                .throwError("processing '#{partial}', cant follow property chain types")
+            //if no actualVar
+            //    .throwError("processing '#{partial}', cant follow property chain types")
 
-for FunctionAccess
+for PropertyAccess
 
-            if ac.constructor is Grammar.FunctionAccess
+            if ac instanceof Grammar.PropertyAccess
 
-                partial +="(...)"
-                .isAny = true
+                var classNameArr:array
 
-                if inx>1 and .accessors[inx-1].constructor isnt Grammar.PropertyAccess
-                    .throwError("'#{partial}.call' or '.apply' must be used to call a function pointer stored on a variable")
+                if ac.name is 'constructor' //hack, all vars have a "constructor". 
+                    //convert "bar.constructor" to: "any_class(bar.class)"
+                    //var classNameArr:array = result.pop()
+                    result.unshift ['any_class(']
+                    // here goes any class
+                    result.push [".class)"]
+                    //result.push classNameArr
+                    .calcType = 'any'
+                    hasInstanceReference=true
+                    if actualVar, actualVar = actualVar.findOwnMember('**proto**')
 
-                var prevNameArr:array = result.pop() //take fn name 
+                else if ac.name is 'prototype' //hack, all classes have a "prototype" to access methods
+                    //convert "Foo.prototype.toString" to: "__classMethodAny(toString,Foo)"
+                    if inx+1 >= .accessors.length or .accessors[inx+1].constructor isnt Grammar.PropertyAccess
+                        .sayErr "expected: Class.prototype.method, e.g.: 'Foo.prototype.toString'"
+                    else
+                        classNameArr = result.pop()
+                        classNameArr.unshift '__classMethodFunc(',.accessors[inx+1].name,"_ ," //__classMethodFunc(methodName,
+                        // here goes any class
+                        classNameArr.push ")"
+                        result.push classNameArr //now converted to any Function
+                        inx+=1 //skip method name
+                        .calcType = 'any' // __classMethodFunc returns any_func
+                        hasInstanceReference = true
+                        
+                        actualVar = .tryGetFromScope('Function')
+                        if actualVar, actualVar=actualVar.findOwnMember('prototype') //actual var is now function prototype
 
-                var callParams:array
-                if inx is 0 //first accessor is function access, this is a call to a global function
-                    prevNameArr.push "(" //add "(" 
-                    result.unshift prevNameArr // put "functioname" first - call to glboal function
-                    callParams = [options.typeID? "#{options.typeID}_TYPEID": "NONE"] //"this=NONE when calling a global fn w/o instance
-                else
-                    //method call
-                    prevNameArr.unshift "_" //add "_" to call dispatcher for this method
-                    prevNameArr.push "(" //add "(" 
-                    result.unshift prevNameArr // put "methodname(" first - call to dispatcher
-                    callParams = result.pop() //take instance reference as 1st param (this)
-                    options.validations.push ["assert("].concat(callParams,".type>TYPE_NULL);")
-
-                //add arguments[] 
-                if ac.args and ac.args.length
-                    callParams.push ",#{ac.args.length},(any_arr){",{CSL:ac.args,freeForm:1},"}"
-                else
-                    callParams.push ",0,NULL"
-                callParams.push ")"                    
-
-                result.push callParams
-
-                actualVar = actualVar.findMember('**return type**')
-                #the actualVar is now function's return type'
-                #and next property access should be on defined members of the return type
-
-for PropertyAccess, we must apply AS(type...) to prev item
-
-            else if ac instanceof Grammar.PropertyAccess
-
-                if ac.name is '_typeID' //native int, part of any_s
-                    result.push [".","type"]
-                    .isAny=false
-
-                else if ac.name is 'length' //hack, convert x.length in a funcion call, length(x)
-                    result.unshift ['length','('] // put "length(" first - call to dispatcher
+                else if ac.name is 'length' //hack, convert x.length in a funcion call, _length(x)
+                    result.unshift ['_length','('] // put "length(" first - call to dispatcher
                     result.push [")"]
-                    .isAny=false
+                    .calcType = '**native number**'
+                    actualVar = undefined
+
+                else if ac.name is 'call' 
+                    //hack: .call
+                    // this is .call use __apply(Function,instance,argc,arguments)
+
+                    //should be here after Class.prototype.xxx.call
+                    if no actualVar or no actualVar.findMember('call')
+                        .throwError 'cannot use .call on a non-Function. Use: Class.prototype.method.call(this,arg1,...)'
+
+                    //let's make sure next accessor is FunctionAccess with at least one arg
+                    isOk=false
+
+                    if inx+1<.accessors.length 
+                        if .accessors[inx+1].constructor is Grammar.FunctionAccess
+                            functionAccess=.accessors[inx+1]
+                            if functionAccess.args and functionAccess.args.length >= 1
+                                isOk=true
+
+                    if no isOk, .throwError 'expected instance and optional arguments after ".call": foo.call(this,arg1,arg2)'
+                    
+                    args = functionAccess.args
+
+                    result.unshift ['__apply(']
+                    //here goes Function ref
+                    var FnArr = [",",args[0],","] // instance
+                    .addArguments args.slice(1), FnArr //other arguments
+                    FnArr.push ')'
+
+                    result.push FnArr
+                    inx+=1 //skip fn.call and args
+                    actualVar = undefined
+
+
+                else if ac.name is 'apply' 
+                    //hack: .apply
+                    // this is .apply(this,args:anyArr) use __applyArr(Function,instance,anyArgsArray)
+
+                    //should be here after Class.prototype.xxx.apply
+                    if no actualVar or no actualVar.findMember('apply')
+                        .throwError 'cannot use .apply on a non-Function. Use: Class.prototype.method.apply(this,args:Array)'
+
+                    //let's make sure next accessor is FunctionAccess with at least one arg
+                    isOk=false
+                    if inx+1<.accessors.length 
+                        if .accessors[inx+1].constructor is Grammar.FunctionAccess
+                            functionAccess=.accessors[inx+1]
+                            if functionAccess.args and functionAccess.args.length >= 2
+                                isOk=true
+
+                    if no isOk, .throwError 'expected two arguments after ".apply". e.g.: foo.apply(this,argArray)'
+                    
+                    args = functionAccess.args
+
+                    result.unshift ['__applyArr(', hasInstanceReference? '': 'any_func(']
+                    //here goes Function ref
+                    result.push [hasInstanceReference? '': ')',',',args[0],',',args[1],')']
+
+                    inx+=1 //skip fn.call and args
+                    actualVar = undefined
+
+                else if actualVar and actualVar.isNamespace //just namespace access
+                    var prevArr:array = result.pop() 
+                    prevArr.push "_",ac.name
+                    result.push prevArr
+
+                    actualVar = actualVar.findOwnMember(ac.name)
 
                 else if inx+1 < .accessors.length and .accessors[inx+1].constructor is Grammar.FunctionAccess
-                    // next is function access,
-                    // we do not need to derefence this as a pointer. Keep it as it is
-                    result.push [fixCReservedWord(ac.name)]
-                    .isAny = true
-
-                else if ac.name is 'apply' or inx+2 < .accessors.length and .accessors[inx+1].constructor is Grammar.PropertyAccess
-                    and .accessors[inx+1].name is 'apply'
-                    // this is apply or next is .apply, call: _apply_function(function,this,args)
-                    //hack: _apply
-                    result.pop() //take method owner (remove)
-                    var methodName
-                    if ac.name is 'apply'
-                        methodName = fixCReservedWord(.name) //main varref name, global fn
-                    else
-                        methodName = "_#{fixCReservedWord(ac.name)}" //a method call
-
-                    var acApplyCall:Grammar.FunctionAccess = .accessors[inx+2]
-                    if no acApplyCall.constructor is Grammar.FunctionAccess or no acApplyCall.args or acApplyCall.args.length isnt 2 
-                        .sayErr "Expected 2 arguments after .apply, 'this' and 'arguments:array'"
-                    else
-                        result.push ["_apply_function(",methodName,",", acApplyCall.args[0],",",acApplyCall.args[1],")"]
-
-                    inx+=2 //skip apply and "(this,args)"
+                    // if next is function access, this is a method name. just make name a symbol
+                    result.push [makeSymbolName(ac.name)]
+                    .calcType = 'any'
+                    hasInstanceReference=true
+                    if actualVar, actualVar = actualVar.findOwnMember(ac.name)
 
                 else
+                    // normal property access
+                    //out PROP(propName,instance)
+                    .calcType = 'any'
+                    hasInstanceReference=true
+                    result.unshift ["PROP","(", makeSymbolName(ac.name), ","] // PROP macro enclose all 
+                    // here goes thisValue (instance)
+                    result.push [")"]
 
-                    .isAny = true
-
-                    var typeStr
-                    avType = actualVar.findOwnMember('**proto**')
-                    if no avType, avType = actualVar.findOwnMember('*namespace*')
-                    if no avType
-                        if inx is 0
-                            typeStr = .name //let's assume singleton
-                        else
-                            .sayErr "Can not determine type of '#{partial}'. Can not code Property Access(.)"
-                            return
-                    else
-                        #get type name
-                        typeStr = avType.name
-                        if typeStr is 'prototype'
-                            typeStr = avType.parent.name
-                        end if
-                    end if
-
-                    result.unshift ["((",typeStr,"_ptr)"]
-                    prevNameArr = result.pop()
-                    // Note: generate a complete typecast instead of using macro "AS(..)"
-                    // to ease C code Netbeans GUI debugging (macro AS(..) can't be added as watch)
-                    prevNameArr.push ".value.ptr)->"
-
-                    result.push prevNameArr, [ac.name]
+                    if actualVar, actualVar = actualVar.findOwnMember(ac.name)
 
                 end if // subtypes of propertyAccess
 
-                partial +=".#{ac.name}"
+                partial ="#{partial}.#{ac.name}"
 
-                //get prop definition
-                actualVar = .tryGetMember(actualVar, ac.name,{informError:true})
+else, for FunctionAccess
+
+            else if ac.constructor is Grammar.FunctionAccess
+
+                partial ="#{partial}(...)"
+                .calcType = 'any'
+
+                functionAccess = ac
+
+                //we're calling on an IndexAccess or the result of a function. Mandatory use of apply/call
+                if inx>1 and .accessors[inx-1].constructor isnt Grammar.PropertyAccess
+                    .throwError("'#{partial}.call' or '.apply' must be used to call a function pointer stored in a variable")
+
+                var callParams:array
+
+                if callNew
+                    callParams = [","] // new(Class,argc,arguments*)
+                    //add arguments: count,(any_arr){...}
+                    .addArguments functionAccess.args, callParams
+
+                else
+                    var fnNameArray:array = result.pop() //take fn name 
+                    if no hasInstanceReference //first accessor is function access, this is a call to a global function
+
+                        fnNameArray.push "(" //add "(" 
+                        //if fnNameArray[0] is 'Number', fnNameArray[0]='_toNumber'; //convert "Number" (class name) to fn "_toNumber"
+                        result.unshift fnNameArray // put "functioname" first - call to global function
+
+                        if fnNameArray[0] is '_concatAny'
+                            callParams =[] // no "thisValue" for internal _concatAny, just params to concat
+                        else
+                            callParams = ["undefined", ","] //this==undefined as in js "use strict" mode
+
+                        //add arguments: count,(any_arr){...}
+                        .addArguments functionAccess.args, callParams
+
+                    else
+                        //method call
+
+                        //to ease C-code reading, use macros CALL1 to CALL4 if possible
+                        if functionAccess.args and functionAccess.args.length<=4
+
+                            // __call enclose all
+                            fnNameArray.unshift "CALL#{functionAccess.args.length}(" 
+                            // here goes methodName
+                            fnNameArray.push "," // CALLn(symbol_ *,*
+                            // here: instance reference as 2nd param (this value)
+                            result.unshift fnNameArray //prepend CALLn(method_,instanceof,...
+                            callParams = functionAccess.args.length? [","] else []
+                            callParams.push {CSL:functionAccess.args}
+
+                        else // do not use macros CALL1 to CALL4
+
+                            // __call enclose all
+                            fnNameArray.unshift "__call(" 
+                            // here goes methodName
+                            fnNameArray.push "," // __call(symbol_ *,*
+                            // here: instance reference as 2nd param (this value)
+                            result.unshift fnNameArray //prepend __call(methodName, ...instanceof
+                            //options.validations.push ["assert("].concat(callParams,".type>TYPE_NULL);")
+                            callParams = [","]
+                            //add arguments: count,(any_arr){...}
+                            .addArguments functionAccess.args, callParams
+
+                        end if
+                
+                    end if //global fn or method
+
+                end if //callNew
+
+                callParams.push ")" //close __call(symbol,this,argc, any* arguments )  | function(undefined,arg,any* arguments)
+                result.push callParams
+
+                if actualVar, actualVar = actualVar.findMember('**return type**')
+                #the actualVar is now function's return type'
+                #and next property access should be on defined members of the return type
+
 
 else, for IndexAccess, the varRef type is now 'name.value.item[...]'
 and next property access should be on defined members of the type
 
             else if ac.constructor is Grammar.IndexAccess
                 
-                partial +="[...]"
-                .isAny = true
+                partial ="#{partial}[...]"
+
+                .calcType = 'any'
 
                 declare ac:Grammar.IndexAccess
 
-                //add .value.item[...]
-                var prevName:array = result.pop()
-
-                //ac.name is Expression
+                //ac.name is a Expression
                 ac.name.produceType = 'Number'
 
-                // w/o array bounds check:
-                prevName.push ".value.arr->item[(len_t)",ac.name,"]" //ac.name is Expression
-                
-                // with array bounds check:
-                //result.unshift ["__getItem","("]
-                //prevName.push ",",ac.name,")" //ac.name is Expression
+                //add macro ITEM(index, array )
+                //macro ITEM() encloses all 
+                result.unshift ["ITEM(",ac.name,"," ]
+                // here goes instance
+                result.push [")"]
 
-                result.push prevName
-
-                actualVar = actualVar.findMember('**item type**')
+                if actualVar, actualVar = actualVar.findOwnMember('**item type**')
 
             end if //type of accessor
-
-            if actualVar instanceof Grammar.VariableRef
-                declare actualVar:Grammar.VariableRef
-                actualVar = actualVar.tryGetReference({informError:true, isForward:true, isDummy:true})
 
         end for #each accessor
 
         return result
 
 
+
       method getTypeName() returns string
 
-          var avType = .tryGetReference({informError:true, isForward:true, isDummy:true})
-          #get type name
-          var typeStr = avType.name
-          if typeStr is 'prototype'
-              typeStr = avType.parent.name
-          end if
+        var opt = new Names.NameDeclOptions
+        opt.informError = true
+        opt.isForward = true
+        opt.isDummy = true
+        var avType = .tryGetReference(opt)
+        #get type name
+        var typeStr = avType.name
+        if typeStr is 'prototype'
+            typeStr = avType.parent.name
+        end if
 
-          return typeStr
+        return typeStr
+
+    
+      helper method addArguments(args:array , callParams:array)
+
+        //add arguments[] 
+        if args and args.length
+            callParams.push "#{args.length},(any_arr){",{CSL:args},"}"
+            //,freeForm:true,indent:String.spaces(8)
+        else
+            callParams.push "0,NULL"
+
+
 
 ### append to class Grammar.AssignmentStatement ###
 
       method produce() 
 
-        .out .lvalue, ' ', operTranslate(.name), ' ' 
-        .out .rvalue
+        var extraLvalue='.value.number'
+        if .lvalue.tryGetReference() into var nameDecl
+            and nameDecl.findOwnMember('**proto**') is '**native number**'
+                extraLvalue=undefined
 
+        var oper = operTranslate(.name)
+        switch oper
+            case "+=","-=","*=","/=":
+
+                .rvalue.produceType = 'Number'
+                .out .lvalue,extraLvalue,' ', oper,' ',.rvalue
+
+            default:
+                .rvalue.produceType = 'any'
+                .out .lvalue, ' ', operTranslate(.name), ' ' , .rvalue
 
 -------
 ### append to class Grammar.DefaultAssignment ###
@@ -966,13 +1549,15 @@ else, simple value (Expression)
       #recursive duet 2
       helper method processItems(main, objectLiteral) 
 
+          .throwError "default for objects not supported on C-generation"
+          /*
           .out "_defaultObject(&",main,");",NL
 
           for each nameValue in objectLiteral.items
             var itemFullName = [main,'.',nameValue.name]
             .process(itemFullName, nameValue.value)
-
-
+          */
+    
     #end helper recursive functions
 
 -----------
@@ -988,31 +1573,6 @@ More Helper methods, get max line of list
               lastLine = item.lineInx
 
         return lastLine
-
-
-#### method getOwnerPrefix() returns string
-
-check if we're inside a ClassDeclaration or AppendToDeclaration.
-return prefix for item to be appended
-
-        var parent = .getParent(Grammar.ClassDeclaration)
-
-        if no parent, return 
-    
-        var ownerName, toPrototype
-        if parent instance of Grammar.AppendToDeclaration
-          #append to class prototype or object
-          declare parent:Grammar.AppendToDeclaration
-          toPrototype = not parent.toNamespace
-          ownerName = parent.varRef.toString()
-        
-        else # in a ClassDeclaration
-          declare valid .toNamespace
-          toPrototype = true
-          ownerName = parent.name
-
-        //return [ownerName, toPrototype? "->prototype->" else "->" ]
-        return ownerName
 
 
 ---
@@ -1042,10 +1602,69 @@ var with__1=frontDoor;
 
       method produce() 
 
-        .out "var ",.name,'=',.varRef,";"
+        .out "var ",.nameDecl.getComposedName(),'=',.varRef,";"
         .out .body
 
 
+
+---
+
+### Append to class Names.Declaration ###
+
+      method addToAllProperties
+
+        var name = .name
+        if name not in coreSupportedProps and not allPropertyNames.has(name) 
+            if allMethodNames.has(name)
+                .sayErr "A method named '#{name}' is already defined. Cannot reuse the symbol for a property"
+                allMethodNames.get(name).sayErr "declaration of method '#{name}'"
+            else if name in coreSupportedMethods
+                .sayErr "'#{name}' is declared in as a core method. Cannot use the symbol for a property"
+            else
+                allPropertyNames.set name, this
+
+### Append to class Grammar.VarDeclList ###
+
+      method addToAllProperties
+        for each varDecl in .list
+            varDecl.nameDecl.addToAllProperties
+
+      method getNames returns array of string
+        var result=[]
+        for each varDecl in .list
+            result.push varDecl.name
+        return result
+
+
+### Append to class Grammar.VarStatement ###
+
+'var' followed by a list of comma separated: var names and optional assignment
+
+      method produce() 
+        .out 'var ',{CSL:.list}
+
+### Append to class Grammar.VariableDecl ###
+
+variable name and optionally assign a value
+
+      method produce
+        .out .name,' = ', .assignedValue or 'undefined'
+
+
+/*
+      method produceAssignments(prefix) 
+
+        var count=0
+
+        for each variableDecl in .list
+            if count++ and no prefix, .out ", "
+            variableDecl.produceAssignment prefix
+            if prefix, .out ";",NL
+
+        if count and no prefix, .out ";",NL
+
+
+/*
 ---
 ### Append to class Grammar.PropertiesDeclaration ###
 
@@ -1056,42 +1675,30 @@ See: Grammar.VariableDecl
 
         //.outLinesAsComment .lineInx, .lastLineInxOf(.list)
 
-        .out 'any ',{CSL:.list},";"
-        //for each varDecl in 
-        //    .out varDecl,";",NL
+        .out 'any ',{CSL:.list, freeForm:1},";"
+        
+        //for each inx,varDecl in .list
+        //    .out inx>0?',':'',varDecl.name,NL
 
-/*
-        var prefix
+        .addToAllProperties
 
-        // AppendToDeclaration extends NamespaceDeclaration extends ClassDeclaration 
-        if .getParent(Grammar.NamespaceDeclaration) into var parent:Grammar.NamespaceDeclaration 
-            // for NamespaceDeclaration and Append-to namespace, declare vars with prefix 
-            if parent.toNamespace, prefix = .getOwnerPrefix()
-
-        for each varDecl in .list
-            varDecl.produce(prefix)
-            .out ";",NL
-*/
-
-/*          if varDecl.assignedValue #is not valid to assign to .prototype. - creates subtle errors later
-            if prefix instance of Array and prefix[1] and prefix[1] isnt '.', .throwError 'cannot assign values to instance properties in "Append to"'
-            .out '    ',prefix, varDecl.name,"=",varDecl.assignedValue,";",NL
-*/
         .skipSemiColon = true
 
 
-### Append to class Grammar.VarDeclList ###
+### Append to class Grammar.VariableDecl ###
 
-      method produceAssignments(className) 
+variable name and optionally assign a value
 
-        var count=0
+      method produceAssignment(prefix) // prefix+name = [assignedValue|undefined]
 
-        for each variableDecl in .list
-            if count++ and no className, .out ", "
-            variableDecl.produceAssignment className
-            if className, .out ";",NL
+            .out prefix, .name,' = '
+            if .assignedValue
+                .out .assignedValue 
+            else
+                .out 'undefined'
 
-        if count and no className, .out ";",NL
+    end VariableDecl
+
 
 ### Append to class Grammar.VarStatement ###
 
@@ -1102,22 +1709,11 @@ See: Grammar.VariableDecl
 
       method produce() 
 
-        declare valid .compilerVar
-        declare valid .export
-
-        /*
-        if .keyword is 'let' and .compilerVar('ES6')
-          .out 'let '
-
-        else
-          .out 'var '
-        */
+'var' (alias for 'any') and one or more comma separated VariableDecl with assignments 
 
         .out 'var '
-
-Now, after 'var' (alias for 'any') out one or more comma separated VariableDecl 
-    
         .produceAssignments 
+        .skipSemiColon = true
 
 If 'var' was adjectivated 'export', add to exportNamespace
 
@@ -1130,7 +1726,7 @@ If 'var' was adjectivated 'export', add to exportNamespace
                     .out .lexer.out.exportNamespace,'.',varDecl.name,' = ', varDecl.name, ";", NL
                 .skipSemiColon = true
         */
-
+*/
 
 ### Append to class Grammar.ImportStatement ###
 
@@ -1138,57 +1734,21 @@ If 'var' was adjectivated 'export', add to exportNamespace
 
       method produce() 
 
-        for each item in .list
-            .out '#include "', item.getBaseFilename(), '.h"', NL
+        //for each item in .list
+        //    .out '#include "', item.getRefFilename('.h'),'"', NL
 
         .skipSemiColon = true
 
 
-### Append to class Grammar.VariableDecl ###
-
-variable name and optionally assign a value
-
-      method produceAssignment(className) 
-
-            if className, .out '((',className,'_ptr)this.value.ptr)->'
-            .out .name,' = '
-
-            if .assignedValue
-                .out .assignedValue 
-            else
-                .out 'undefined'
-
-
-      //method produce(options) 
-      //      .out .name
-
-          /*
-          if no .nameDecl, .sayErr "INTERNAL ERROR: var '#{.name}' has no .nameDecl"
-          var typeNameDecl = .nameDecl.findMember("**proto**")
-          var typeStr
-          if no typeNameDecl
-              //.sayErr "can't determine type for var '#{.name}'"
-              // if no explicit type assume "any"
-              typeStr = 'any'
-          else
-              typeStr = typeNameDecl.name
-              if typeNameDecl.name is 'prototype'
-                  var parentName = typeNameDecl.parent.name
-                  typeStr = parentName is 'String'?'str' else "#{parentName}_ptr";
-              end if
-              
-          .out typeStr ,' ', .name
-          */
-
-
-    #end VariableDecl
-
-
-### Append to class Grammar.SingleLineStatement ###
+### Append to class Grammar.SingleLineBody ###
 
       method produce()
-    
-        .out "{",{CSL:.statements, separator:";"},";","}"
+        
+        var bare=[]
+        for each item in .statements
+            bare.push item.specific
+
+        .out {CSL:bare, separator:";"},";"
 
 
 ### Append to class Grammar.IfStatement ###
@@ -1199,8 +1759,8 @@ variable name and optionally assign a value
         .conditional.produceType = 'Bool'
         .out "if (", .conditional,") "
 
-        if .body instanceof Grammar.SingleLineStatement
-            .out .body
+        if .body instanceof Grammar.SingleLineBody
+            .out '{',.body,'}'
         else
             .out " {", .getEOLComment()
             .out .body, "}"
@@ -1239,126 +1799,182 @@ Since al 3 cases are closed with '}; //comment', we skip statement semicolon
 ### Append to class Grammar.ForEachProperty
 ### Variant 1) 'for each property' to loop over *object property names* 
 
-`ForEachProperty: for each [own] property name-VariableDecl in object-VariableRef`
+`ForEachProperty: for each property [name-IDENTIFIER,]value-IDENTIFIER in this-VariableRef`
 
       method produce() 
 
-        .sayErr "'for each property' not supported for C production"
-        /*
-        //declare valid iterable.root.name.hasSideEffects
-        //if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
-          var listName:string = ASTBase.getUniqueVarName('list')  #unique temp listName var name
-          .out "any * ",listName,"=",.iterable,"->base;",NL
-
-          if .mainVar
-            .out "var ", .mainVar.name,"=undefined;",NL
-
-          .out "for ( var ", .indexVar.name, " in ", listName, ")"
-
-          if .ownOnly
-              .out "if (",listName,".hasOwnProperty(",.indexVar,"))"
-
-          if .mainVar
-              .body.out "{", .mainVar.name,"=",listName,"[",.indexVar,"];",NL
-
-          .out .where
-
-          .body.out "{", .body, "}",NL
-
-          if .mainVar
-            .body.out NL, "}"
-
-          .out {COMMENT:"end for each property"},NL
-        */
-
-### Append to class Grammar.ForEachInArray
-### Variant 2) 'for each index' to loop over *Array indexes and items*
-
-`ForEachInArray: for each [index-VariableDecl,]item-VariableDecl in array-VariableRef`
-
-      method produce()
+=> C:  for(inx=0;inx<obj.getPropertyCount();inx++){ 
+            value=obj.value.prop[inx]; name=obj.getPropName(inx); 
+        ...
 
 Create a default index var name if none was provided
 
-        var listName
+        var listName, uniqueName = UniqueID.getVarName('list')  #unique temp listName var name
         declare valid .iterable.root.name.hasSideEffects
         if .iterable.operandCount>1 or .iterable.root.name.hasSideEffects or .iterable.root.name instanceof Grammar.Literal
-            listName = ASTBase.getUniqueVarName('list')  #unique temp listName var name
+            listName = uniqueName
             .out "any ",listName,"=",.iterable,";",NL
         else
             listName = .iterable
 
+create a var holding object property count
+
+        .out "len_t ",uniqueName,"_len=",listName,'.class->instanceSize / sizeof(any);' ,NL
+
         var startValue = "0"
-        var intIndexVarName
+        var intIndexVarName = '#{.mainVar.name}__inx';
         if .indexVar 
-            .out "any ",.indexVar,"=undefined;",NL
-            intIndexVarName = .indexVar.name
-            startValue = .indexVar.assignedValue or "0"
-        else
-            intIndexVarName = .mainVar.name+'__inx';
+            .out "any ",.indexVar.name,"=undefined;",NL
 
         .out "any ",.mainVar.name,"=undefined;",NL
 
-        .out "for(int ", intIndexVarName,"=", startValue,
-                  " ; ",intIndexVarName,"<",listName,".value.arr->length",
-                  " ; ",intIndexVarName,"++){"
+        .out 
+            "for(int ", intIndexVarName,"=", startValue
+            " ; ",intIndexVarName,"<",uniqueName,"_len"
+            " ; ",intIndexVarName,"++){"
 
-        if .isMap
-            if .indexVar, .body.out .indexVar,"=",listName,".value.map->keys[",intIndexVarName,"];",NL
-            .body.out .mainVar.name,"=",listName,".value.map->values[",intIndexVarName,"];",NL
-        else
-            #Array
-            .body.out .mainVar.name,"=",listName,".value.arr->item[",intIndexVarName,"];",NL
+        .body.out .mainVar.name,"=",listName,".value.prop[",intIndexVarName,"];",NL
+        
+        if .indexVar 
+            .body.out .indexVar.name,"= _getPropertyName(",listName,",",intIndexVarName,");",NL
 
         if .where 
           .out '  ',.where,"{",.body,"}"
         else 
           .out .body
 
-        .out "};",{COMMENT:["end for each in ",.iterable]},NL
+        .out "};",{COMMENT:["end for each property in ",.iterable]},NL
 
+### Append to class Grammar.ForEachInArray
+### Variant 2) 'for each index' to loop over *Array indexes and items*
+
+`ForEachInArray: for each [index-VariableDecl,]item-VariableDecl in array-VariableRef`
+
+####  method produce()
+
+Create a default index var name if none was provided
+
+        var listName
+        listName = UniqueID.getVarName('list')  #unique temp listName var name
+        .out "any ",listName,"=",.iterable,";",NL
+
+        if .isMap
+            return .produceForMap(listName)
+
+        var intIndexVarName
+        var startValue = "0"
+        if .indexVar 
+            .indexVar.nameDecl.members.set '**proto**','**native number**'
+            intIndexVarName = .indexVar.name
+            startValue = .indexVar.assignedValue or "0"
+        else
+            intIndexVarName = '#{.mainVar.name}__inx';
+
+include mainVar.name in a bracket block to contain scope
+
+        .out "{ var ",.mainVar.name,"=undefined;",NL
+
+        .out 
+            "for(int ", intIndexVarName,"=", startValue
+            " ; ",intIndexVarName,"<",listName,".value.arr->length"
+            " ; ",intIndexVarName,"++){"
+
+        .body.out .mainVar.name,"=ITEM(",intIndexVarName,",",listName,");",NL
+
+        if .where 
+            .out '  ',.where,"{",.body,"}" //filter condition
+        else 
+            .out .body
+
+        .out "}};",{COMMENT:["end for each in ",.iterable]},NL
+
+
+####  method produceForMap(listName)
+
+        var intIndexVarName = "#{.mainVar.name}__inx" # unique map numeric index
+        var nvp = UniqueID.getVarName('nvp') # pointer to name-value pair[inx]
+
+        .out "{ NameValuePair_ptr ",nvp,"=NULL; //name:value pair",NL
+        if .indexVar, .body.out " var ",.indexVar.name,"=undefined; //key",NL 
+        .out " var ",.mainVar.name,"=undefined; //value",NL
+
+        .out 
+            "for(int64_t ",intIndexVarName,"=0"
+            " ; ",intIndexVarName,"<",listName,".value.arr->length"
+            " ; ",intIndexVarName,"++){",NL
+
+        .body.out "assert(ITEM(",intIndexVarName,",",listName,").value.class==&NameValuePair_CLASSINFO);",NL
+        
+        .out nvp," = ITEM(",intIndexVarName,",",listName,").value.ptr;",NL //get nv pair
+        if .indexVar, .body.out .indexVar.name,"=",nvp,"->name;",NL //get key
+        .body.out .mainVar.name,"=",nvp,"->value;",NL //get value
+
+        if .where 
+          .out '  ',.where,"{",.body,"}" //filter condition
+        else 
+          .out .body
+
+        .out "}};",{COMMENT:["end for each in map ",.iterable]},NL
 
 ### Append to class Grammar.ForIndexNumeric
 ### Variant 3) 'for index=...' to create *numeric loops* 
 
-`ForIndexNumeric: for index-VariableDecl "=" start-Expression [,|;] (while|until) condition-Expression [(,|;) increment-Statement]`
+`ForIndexNumeric: for index-VariableDecl [","] (while|until|to|down to) end-Expression ["," increment-Statement] ["," where Expression]`
 
 Examples: `for n=0 while n<10`, `for n=0 to 9`
 Handle by using a js/C standard for(;;){} loop
 
       method produce(iterable)
 
-        declare valid .endExpression.produce
+        var isToDownTo: boolean
+        var endTempVarName
+
+        .endExpression.produceType='Number'
 
         // indicate .indexVar is a native number, so no ".value.number" required to produce a number
-        .indexVar.nameDecl.members.set '**proto**','**nativeNumber**'
+        .indexVar.nameDecl.members.set '**proto**','**native number**'
 
-        .indexVar.assignedValue.produceType='Number';
+        if .indexVar.assignedValue, .indexVar.assignedValue.produceType='Number'
+
+        if .conditionPrefix in['to','down']
+
+            isToDownTo= true
+
+store endExpression in a temp var. 
+For loops "to/down to" evaluate end expresion only once
+
+            endTempVarName = UniqueID.getVarName('end')
+            .out "int64_t ",endTempVarName,"=",.endExpression,";",NL
+
+        end if
 
         .out "for(int64_t ", .indexVar.name,"=", .indexVar.assignedValue or "0","; "
 
-        if .conditionPrefix is 'to'
-            #'for n=0 to 10' -> for(n=0;n<=10;...
-            .endExpression.produceType='Number';
-            .out .indexVar.name,"<=",.endExpression
+        if isToDownTo
+
+            #'for n=0 to 10' -> for(n=0;n<=10;n++)
+            #'for n=10 down to 0' -> for(n=10;n>=0;n--)
+            .out .indexVar.name, .conditionPrefix is 'to'? "<=" else ">=", endTempVarName
 
         else # is while|until
 
 produce the condition, negated if the prefix is 'until'
 
-          #for n=0, while n<arr.length  -> for(n=0;n<arr.length;...
-          #for n=0, until n >= arr.length  -> for(n=0;!(n>=arr.length);...
-          .endExpression.produce( {negated: .conditionPrefix is 'until' })
+            #for n=0, while n<arr.length  -> for(n=0;n<arr.length;...
+            #for n=0, until n >= arr.length  -> for(n=0;!(n>=arr.length);...
+            .endExpression.produceType='Bool'
+            .endExpression.produce( negated = .conditionPrefix is 'until' )
+
+        end if
 
         .out "; "
 
-if no increment specified, the default is indexVar++
+if no increment specified, the default is indexVar++/--
 
-        .out .increment or [.indexVar.name,"++"]
-
-        .out ") ", .where
-
-        .out "{", .body, "};",{COMMENT:"end for #{.indexVar.name}"}, NL
+        .out 
+            .increment? .increment.specific else [.indexVar.name, .conditionPrefix is 'down'? '--' else '++'], ") " 
+            "{" , .body, "};" 
+            {COMMENT:"end for #{.indexVar.name}"}, NL
 
 
 
@@ -1367,7 +1983,9 @@ if no increment specified, the default is indexVar++
 `ForWhereFilter: [where Expression]`
 
       method produce()
-        .out 'if(',.filter,')'
+        .outLineAsComment .lineInx
+        .filterExpression.produceType='Bool'
+        .out 'if(',.filterExpression,')'
 
 ### Append to class Grammar.DeleteStatement
 `DeleteStatement: delete VariableRef`
@@ -1377,17 +1995,13 @@ if no increment specified, the default is indexVar++
 
 ### Append to class Grammar.WhileUntilExpression ###
 
-      method produce(options) 
+      method produce(askFor:string, negated:boolean) 
 
 If the parent ask for a 'while' condition, but this is a 'until' condition,
 or the parent ask for a 'until' condition and this is 'while', we must *negate* the condition.
 
-        default options = 
-          askFor: undefined
-          negated: undefined
-
-        if options.askFor and .name isnt options.askFor
-            options.negated = true
+        if askFor and .name isnt askFor
+            negated = true
 
 *options.askFor* is used when the source code was, for example,
 `do until Expression` and we need to code: `while(!(Expression))` 
@@ -1397,7 +2011,7 @@ when you have a `until` condition, you need to negate the expression
 to produce a `while` condition. (`while NOT x` is equivalent to `until x`)
 
         .expr.produceType = 'Bool'
-        .expr.produce(options)
+        .expr.produce(negated=negated)
 
 
 ### Append to class Grammar.DoLoop ###
@@ -1411,10 +2025,13 @@ is used by both symbols.
 
 if we have a post-condition, for example: `do ... loop while x>0`, 
 
-            .out "do{", .getEOLComment()
-            .out .body
-            .out "} while ("
-            .postWhileUntilExpression.produce({askFor:'while'})
+            .out 
+                "do{", .getEOLComment()
+                .body
+                "} while ("
+            
+            .postWhileUntilExpression.produce(askFor='while')
+            
             .out ")"
 
 else, optional pre-condition:
@@ -1423,9 +2040,10 @@ else, optional pre-condition:
 
             .out 'while('
             if .preWhileUntilExpression
-              .preWhileUntilExpression.produce({askFor:'while'})
+              .preWhileUntilExpression.produce(askFor='while')
             else 
-              .out 'true'
+              .out 'TRUE'
+
             .out '){', .body , "}"
 
         end if
@@ -1460,7 +2078,7 @@ A `ArrayLiteral` is a definition of a list like `[1, a, 2+3]`. We just pass this
 
       method produce() 
 
-        .out "_newArrayWith("
+        .out "_newArray("
         
         if no .items or .items.length is 0
             .out "0,NULL"
@@ -1482,123 +2100,126 @@ A `ArrayLiteral` is a definition of a list like `[1, a, 2+3]`. We just pass this
 
 ### Append to class Grammar.NameValuePair ###
 
-A `NameValuePair` is a single item in an object definition. Since we copy js for this, we pass this straight through 
+A `NameValuePair` is a single item in an object definition. 
+Since we copy js for this, we pass this straight through 
 
       method produce() 
-        .out .name,": ",.value
+        var strName = .name
 
-### Append to class Grammar.ObjectLiteral ###
+        if strName instanceof Grammar.Literal
+            declare strName: Grammar.Literal
+            strName = strName.getValue() 
+
+        .out NL,'{&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("',strName, '"),', .value,'})}'
+
+### Append to class Grammar.ObjectLiteral ### also FreeObjectLiteral
 
 A `ObjectLiteral` is an object definition using key/value pairs like `{a:1,b:2}`. 
 JavaScript supports this syntax, so we just pass it through. 
 
       method produce()
         if no .items or .items.length is 0
-            .out "_newMap(0,NULL)"
+            .out "new(Map,0,NULL)"
         else
-            .out "{",{CSL:.items},"}"
+            //.out "{",{CSL:.items},"}"
+            .out 
+                'new(Map,',.items.length,',(any_arr){'
+                {CSL:.items, freeForm:.constructor is Grammar.FreeObjectLiteral }
+                NL,"})"
 
 
-### Append to class Grammar.FreeObjectLiteral ###
+### Append to class Grammar.ConstructorDeclaration ###
 
-A `FreeObjectLiteral` is an object definition using key/value pairs, but in free-form
-(one NameValuePair per line, indented, comma is optional)
+Produce a Constructor
 
-      method produce()
-        .out "{",{CSL:.items, freeForm:true},"}"
+      method produce() 
+
+        if no .body.statements 
+            .skipSemiColon=true
+            return // just method declaration (interface)
+
+        // get owner: should be ClassDeclaration
+        var ownerClassDeclaration  = .getParent(Grammar.ClassDeclaration) 
+        if no ownerClassDeclaration.nameDecl, return 
+
+        var c = ownerClassDeclaration.nameDecl.getComposedName()
+
+        .out "void ",c,"__init(DEFAULT_ARGUMENTS){",NL
+
+On the constructor, assign initial values for properties.
+Initialize (non-undefined) properties with assigned values.
+
+        .getParent(Grammar.ClassDeclaration).body.producePropertiesInitialValueAssignments "#{c}_"
+
+// now the rest of the constructor body 
+
+        .produceFunctionBody c
+
+
+### Append to class Grammar.MethodDeclaration ###
+
+Produce a Method
+
+      method produce() 
+
+        if no .body.statements
+            .skipSemiColon=true
+            return //just interface
+
+        if no .nameDecl, return //shim
+        var name = .nameDecl.getComposedName()
+
+        var ownerNameDecl  = .nameDecl.parent
+        if no ownerNameDecl, return 
+
+        var isClass = ownerNameDecl.name is 'prototype'
+
+        var c = ownerNameDecl.getComposedName()
+
+        .out "any ",name,"(DEFAULT_ARGUMENTS){",NL
+
+        //assert 'this' parameter class
+        if isClass 
+            .body.out 
+                "assert(_instanceof(this,",c,"));",NL
+                "//---------",NL 
+
+        .produceFunctionBody c
 
 
 ### Append to class Grammar.FunctionDeclaration ###
 
-`FunctionDeclaration: '[export][generator] (function|method|constructor) [name] '(' FunctionParameterDecl* ')' Block`
+only module function production
+(methods & constructors handled above)
 
-`FunctionDeclaration`s are function definitions. 
+`FunctionDeclaration: '[export] function [name] '(' FunctionParameterDecl* ')' Block`
 
-`export` prefix causes the function to be included in `module.exports`
-`generator` prefix marks a 'generator' function that can be paused by `yield` (js/ES6 function*)
+      method produce() 
 
-##### method produce()
+exit if it is a *shim* method which never got declared (method exists, shim not required)
 
-        var generatorMark = .hasAdjective('generator') and .compilerVar('ES6')? "*" else ""
-        var isConstructor = this instance of Grammar.ConstructorDeclaration
-        var addThis = false
-        var ownerClass: Grammar.ClassDeclaration
-        var className: string
+        if no .nameDecl, return
 
-check if this is a 'constructor', 'method' or 'function'
+being a function, the only possible parent is a Module
 
-        if isConstructor
-            .out "//class _init fn",NL
-            ownerClass = .getParent(Grammar.ClassDeclaration)
-            className = ownerClass.name
-            .out "void ",className,"__init"
-            addThis = true
+        var parentModule = .getParent(Grammar.Module)
+        var prefix = parentModule.fileInfo.base
+        var name = "#{prefix}_#{.name}"
 
-else, method?
+        var isInterface = no .body.statements
+        if isInterface, return // just method declaration (interface)
+        
+        .out "any ",name,"(DEFAULT_ARGUMENTS){"
 
-        else if this instance of Grammar.MethodDeclaration
-
-            //if no options.typeSignature, .out "//function ",.name,NL
-
-            #get owner where this method belongs to
-            if no .getOwnerPrefix() into className 
-                fail with 'method "#{.name}" Cannot determine owner object'
-
-            #if shim, check before define
-            //if .shim, .out "if (!",className,.name,")",NL
-
-            //if .definePropItems #we should code Object.defineProperty
-            //    className[1] = className[1].replace(/\.$/,"") #remove extra dot
-            //    .out "Object.defineProperty(",NL,
-            //          className, ",'",.name,"',{value:function",generatorMark
-            //else
-            //.out .type or 'void',' '
-            .out 'any ',className,'_',fixCReservedWord(.name)
-
-            addThis = true
-
-For C production, we're using a dispatcher for each method name
-
-            .addMethodDispatcher .name, className
-
-else is a simple function
-
-        else 
-            //.out any [name]( any this, int argc, any * arguments )
-            .out 'any ',' ',fixCReservedWord(.name)
-
-Now, function parameters
-
-        .out DEFAULT_ARGUMENTS
-        //.produceParameters className
-
-if 'nice', produce default nice body, and then the generator header for real body
-
-        /*
-        var isNice = .nice and not (isConstructor or .shim or .definePropItems or .generator)
-        if isNice
-            var argsArray = (.paramsDeclarations or []).concat["__callback"]
-            .out "(", {CSL:argsArray},"){", .getEOLComment(),NL
-            .out '  nicegen(this, ',prefix,.name,"_generator, arguments);",NL
-            .out "};",NL
-            .out "function* ",prefix,.name,"_generator"
-        end if
-        */
+        .produceFunctionBody prefix
 
 
+##### helper method produceFunctionBody(prefix:string)
+
+common code
 start body
 
-        if no .body, .throwError 'function #{.name} has no body'
-
-        .body.out "{", .getEOLComment(), NL
-
-        if className
-            .body.out (
-                NL,NL,"// validate this type",NL
-                "assert(this.type==",className,"_TYPEID);",NL
-                "//---------",NL
-                )
-
+        // function named params
         if .paramsDeclarations and .paramsDeclarations.length
 
                 .body.out "// define named params",NL
@@ -1612,11 +2233,11 @@ start body
                     for each paramDecl in .paramsDeclarations
                         namedParams.push paramDecl.name
 
-                    .body.out ( 
+                    .body.out  
                         "var ",{CSL:namedParams},";",NL
                         namedParams.join("="),"=undefined;",NL
                         "switch(argc){",NL 
-                        )
+                        
 
                     for inx=namedParams.length-1, while inx>=0, inx--
                         .body.out "  case #{inx+1}:#{namedParams[inx]}=arguments[#{inx}];",NL
@@ -1627,96 +2248,39 @@ start body
                 .body.out "//---------",NL
         
         end if //named params
-                      
 
-if is __init, assign initial values for properties
-
-        if isConstructor 
-            ownerClass.producePropertyAssignments className
-
-if simple-function, insert implicit return. Example: function square(x) = x*x
+if single line body, insert return. Example: `function square(x) = x*x`
 
         if .body instance of Grammar.Expression
             .out "return ", .body
 
         else
 
-if it has a "catch" or "exception", insert 'try{'
+if it has "catch" or "exception", insert 'try{'
 
             for each statement in .body.statements
-                if statement.statement instance of Grammar.ExceptionBlock
+                if statement.specific instance of Grammar.ExceptionBlock
                     .body.out " try{",NL
                     break
-
-if params defaults where included, we assign default values to arguments 
-(if ES6 enabled, they were included abobve in ParamsDeclarations production )
-
-        /* no on C
-        if .paramsDeclarations and not .compilerVar('ES6')
-            for each paramDecl in .paramsDeclarations
-                if paramDecl.assignedValue 
-                    .body.assignIfUndefined paramDecl.name, paramDecl.assignedValue
-            #end for
-        #end if
-        */
 
 now produce function body
 
         .body.produce()
 
-close the function, add source map for function default "return undefined".
+close the function, to all functions except *constructors* (__init), 
+add default "return undefined", to emulate js behavior on C. 
+if you dot not insert a "return", the C function will return garbage.
+
+        if not .constructor is Grammar.ConstructorDeclaration // declared as void Class__init(...)
+            .out "return undefined;",NL
 
         .out "}"
-        #ifdef PROD_C
-        do nothing
-        #else
-        if .lexer.out.sourceMap
-            .lexer.out.sourceMap.add ( .EndFnLineNum, 0, .lexer.out.lineNum-1, 0)
-        #endif
 
-if we were coding .definePropItems , close Object.defineProperty
+        .skipSemiColon = true
 
-/*
-        if .definePropItems 
-            for each definePropItem in .definePropItems 
-                .out NL,",",definePropItem.name,":", definePropItem.negated? 'false':'true'
-            end for
-            .out NL,"})"
-*/
-
-If the function was adjectivated 'export/public', add to .h
-
-        //if .export and not .default and this isnt instance of Grammar.ConstructorDeclaration
-        if true and this isnt instance of Grammar.ConstructorDeclaration
-            .out {h:1},NL
-            .out "extern "
-            if this is instance of Grammar.MethodDeclaration
-                //.out .type or 'void',' '
-                .out 'any ',className,'_',fixCReservedWord(.name )
-            else
-                .out 'any ',' ',fixCReservedWord(.name)
-
-            //.produceParameters className
-            .out "( DEFAULT_ARGUMENTS );",NL,{h:0}
-
-    /*
-#### method produceParameters(className)
-
-if this is a class method, add "this" as first parameter
-
-        var isConstructor = this is instance of Grammar.ConstructorDeclaration 
-        if isConstructor
-          or this is instance of Grammar.MethodDeclaration
-
-            .out "(", (isConstructor?"any":"#{className}_ptr") ," this"
-            if .paramsDeclarations.length
-                .out ',',{CSL:.paramsDeclarations}
-            .out ")"
-        
-        else
-            //just function parameters declaration
-            .out "(", {CSL:.paramsDeclarations}, ")" 
-    */
+        //if .lexer.out.sourceMap
+        //    .lexer.out.sourceMap.add ( .EndFnLineNum, 0, .lexer.out.lineNum-1, 0)
+        //endif
 
 
 --------------------
@@ -1726,9 +2290,9 @@ if this is a class method, add "this" as first parameter
       method produce()
 
         if .args.length 
-            .out 'console_log_(NONE,#{.args.length},(any_arr){',{CSL:.args},'})'
+            .out 'print(#{.args.length},(any_arr){',{CSL:.args},'})'
         else
-            .out 'console_log_(NONE,0,NULL)'
+            .out 'print(0,NULL)'
 
 --------------------
 ### Append to class Grammar.EndStatement ###
@@ -1737,10 +2301,10 @@ Marks the end of a block. It's just a comment for javascript
 
       method produce()
 
-        declare valid .lexer.out.lastOriginalCodeComment
+        declare valid .lexer.outCode.lastOriginalCodeComment
         declare valid .lexer.infoLines
 
-        if .lexer.out.lastOriginalCodeComment<.lineInx
+        if .lexer.outCode.lastOriginalCodeComment<.lineInx
           .out {COMMENT: .lexer.infoLines[.lineInx].text}
         
         .skipSemiColon = true
@@ -1767,7 +2331,12 @@ if it's a conditional compile, output body is option is Set
 --------------------
 ### Append to class Grammar.ImportStatementItem ###
 
-        method getBaseFilename return .importParameter?.importParameter.getValue():.name 
+        method getRefFilename(ext)
+
+            var thisModule = .getParent(Grammar.Module)
+
+            return Environment.relativeFrom(thisModule.fileInfo.outDir,
+                     .importedModule.fileInfo.outWithExtension(".h"))
 
 --------------------
 ### Append to class Grammar.DeclareStatement ###
@@ -1775,202 +2344,72 @@ if it's a conditional compile, output body is option is Set
 Out as comments
 
       method produce()
-
-        if .hasAdjective('global')
-
-          .out {h:1},NL
-
-          for each item in .list
-            .out '#include "',item.getBaseFilename(),'.h"',NL
-
-          .out {h:0},NL
-         
-
         .outLinesAsComment .lineInx, .names? .lastLineInxOf(.names) : .lineInx
         .skipSemiColon = true
 
 
 ----------------------------
-### Append to class Grammar.ClassDeclaration ###
+### Append to class Names.Declaration ###
+        //properties  
+            //productionInfo: ClassProductionInfo
 
-Classes contain a code block with properties and methods definitions.
+        method getComposedName
 
-#### method produce()
+if this nameDecl is member of a namespace, goes up the parent chain
+composing the name. e.g.: Foo_Bar_var
 
-1st, split body into: a) properties b) constructor c) methods
+            var result = []
+            var node = this
+            while node and not node.isScope
+                if node.name isnt 'prototype', result.unshift node.name
+                if node.nodeDeclared instanceof Grammar.ImportStatementItem
+                    //stop here, imported modules create a local var, but act as global var
+                    //since all others import of the same name, return the same content 
+                    return result.join('_')
 
-        log.debug "produce: #{.constructor.name} #{.name}"
+                node = node.parent
 
-        declare theConstructor:Grammar.FunctionDeclaration
-        declare valid .produce_AssignObjectProperties
-        declare valid .export
-
-        var theConstructor = null
-        var theMethods: Grammar.Statement array = []
-        var PropertiesDeclarationStatements = []
-
-        if .body
-          for each index,item in .body.statements
-
-            if item.statement instanceof Grammar.ConstructorDeclaration 
-
-              if theConstructor # what? more than one?
-                .throwError('Two constructors declared for class #{.name}')
-
-              theConstructor = item.statement
-
-            else if item.statement instanceof Grammar.PropertiesDeclaration
-               PropertiesDeclarationStatements.push item.statement
-
-            else 
-              theMethods.push item
-
-        end if has .body
-
-In C we create a struct for "instance properties" of each class
-
-        if .constructor is Grammar.NamespaceDeclaration
-
-            //.out no .varRef.accessors? 'var ':'' ,.varRef,'={};'
-            declare .name:string
-            .name = .name.replace(/\./g,'_')
-
-            .out 'any #{fixCReservedWord(.name)}={.type=0}; //declare singleton',NL,
-                 'void #{.name}__init_singleton(){',NL,
-                 '   if (!#{fixCReservedWord(.name)}.type) #{fixCReservedWord(.name)}=new(#{.name}_TYPEID,0,NULL);',NL,
-                 '};',NL
-
-            .out {h:1},NL, //start header output
-                "//-------------------",NL,
-                "//.namespace ", .name ,NL,
-                'extern any #{fixCReservedWord(.name)}; //#{.name} is a singleton',NL,
-                'void #{.name}__init_singleton();',NL,
-                "//-------------------",NL
-
-        else
-            .out {h:1},NL //start header output
-            .out {COMMENT:"class"},.name
-            if .varRefSuper
-                .out ' extends ',.varRefSuper,NL
-            else 
-                .out NL
-
-        end if
-
-        // generate unique class id
-        .out "#define #{.name}_TYPEID ",ASTBase.getUniqueID('TYPEID'),NL
-
-        //.out NL,"// declare:",NL
-        //.out "// #{.name}_ptr : type = ptr to instance",NL
-        .out "typedef struct ",.name,"_s * ",.name,"_ptr;",NL
-
-        //.out "// struct #{.name}_s = struct with instance properties",NL
-        .out "typedef struct ",.name,"_s {",NL
-        for each propertiesDeclaration in PropertiesDeclarationStatements
-            propertiesDeclaration.produce
-        .out "} ",.name,"_s;",NL,NL
-
-export class__init(), constructor
-
-        .out "extern void ",.name,"__init", DEFAULT_ARGUMENTS,";"
-        /*
-        if theConstructor
-            theConstructor.produceParameters .name
-        else 
-            //default constructor
-            .out DEFAULT_ARGUMENTS
-        end if
-        .out ";",NL,NL
-        */
-
-        .out {h:0},NL //end header output
-
-        // keep a list of classes|namespaces in each moudle, to out __registerClass
-        classes.push this
-
-      
-Now on the .c file:
-
-a) the __init constructor ( void function [name]__init)
-
-        //.out {COMMENT:"constructor"},NL
-
-        if theConstructor
-            theConstructor.produce 
-            .out ";",NL
-        
-        else // a default constructor
-            .out "//auto ",.name,"__init",NL
-            .out "void ",.name,"__init",DEFAULT_ARGUMENTS,"{",NL
-            if .varRefSuper and .varRefSuper.toString() isnt 'Object'
-                .out "    ",{COMMENT:["//auto call super__init, to initialize first part of space at *this.value.ptr"]},NL
-                .out "    ",.varRefSuper,"__init(this,argc,arguments);",NL
-
-            //initialize properties with assigned values
-            .producePropertyAssignments .name
-
-            // en default constructor
-            .out "};",NL
-
-        end if
+if we reach module scope, (and not Global Scope) 
+then it's a var|fn|class declared at module scope.
+Since modules act as namespaces, we add module.fileinfo.base to the name.
+Except is the same name as the top namespace|class (auto export default).
 
 
-b) the methods
+            if node and node.isScope and node.nodeDeclared.constructor is Grammar.Module 
+                var scopeModule = node.nodeDeclared
+                if scopeModule.name isnt '*Global Scope*' //except for global scope
+                    if result[0] isnt scopeModule.fileInfo.base
+                        result.unshift scopeModule.fileInfo.base
 
-now out methods, which means create functions
-named: class__fnName
+            return result.join('_')
 
-        .out theMethods
+        method isClass
+            return not .isNamespace and .findOwnMember('prototype')
 
-If the class was adjectivated 'export', add to module.exports
-      /*
-        if not .lexer.out.browser
-          if .export and not .default
-            .out NL,{COMMENT:'export'},NL
-            .out .lexer.out.exportNamespace,'.',.name,' = ', .name,';'
-      */
+        method isMethod
+            if .isNamespace or .isClass(), return false
+            var prt = .findOwnMember('**proto**')
+            return prt and prt.parent and prt.parent.name is 'Function'
 
-        // .out NL,{COMMENT:'end class '},.name,NL
-        .skipSemiColon = true
+        method isProperty
+            return not .isNamespace and not .isClass() and not .isMethod()
 
-#### method producePropertyAssignments(className)
+For C production, we're declaring each distinct method name (verbs)
 
-        if .body
-            for each item in .body.statements where item.statement is instance of Grammar.PropertiesDeclaration
-                declare item.statement:Grammar.PropertiesDeclaration
-                //initialize properties with assigned values
-                item.statement.produceAssignments className
+        method addToAllMethodNames() 
+            var methodName=.name
 
+            if methodName not in coreSupportedMethods and not allMethodNames.has(methodName) 
+                if allPropertyNames.has(methodName)
+                    .sayErr "A property '#{methodName}' is already defined. Cannot reuse the symbol for a method."
+                    allPropertyNames.get(methodName).sayErr "Definition of property '#{methodName}'."
+                else if methodName in coreSupportedProps
+                    .sayErr "A property '#{methodName}' is defined in core. Cannot reuse the symbol for a method."
 
-### Append to class Grammar.AppendToDeclaration ###
-
-Any class|object can have properties or methods appended at any time. 
-Append-to body contains properties and methods definitions.
-
-      method produce() 
-        .out .body
-        .skipSemiColon = true
+                else
+                    allMethodNames.set methodName, this
 
 
-### Append to class Grammar.NamespaceDeclaration ###
-
-Any class|object can have properties or methods appended at any time. 
-Append-to body contains properties and methods definitions.
-
-      method produce() 
-
-        Grammar.ClassDeclaration.prototype.produce.call(this)
-
-/*
-        //.out no .varRef.accessors? 'var ':'' ,.varRef,'={};'
-        var namespaceName = .varRef.toString().replace(/\./g,'_')
-        .out "//-------------------",NL
-        .out "//namespace ", namespaceName ,NL
-        .out .body
-
-        //.out .body
-        .skipSemiColon = true
-*/
 
 ### Append to class Grammar.TryCatch ###
 
@@ -1993,26 +2432,44 @@ Append-to body contains properties and methods definitions.
       method produce()
 
 if we have a varRef, is a switch over a value
+we produce as chained if-else, using == to switchValue
 
         if .varRef
-            .out 'switch(anyToInt64(', .varRef, ')){',NL
-            .out .cases
-            if .defaultBody, .out 'default:',.defaultBody
-            .out NL,'}'
+
+            var switchVar = UniqueID.getVarName('switch')
+            .out "any ",switchVar,"=",.varRef,";",NL
+
+            for each index,switchCase in .cases
+
+                .outLineAsComment switchCase.lineInx
+
+                .out 
+                    index>0? 'else ' : '' 
+                    'if (', {pre:'__is(#{switchVar},',CSL:switchCase.expressions, post:')', separator:'||'}
+                    '){'
+                    switchCase.body
+                    NL
+                    '}'
 
 else, it's a swtich over true-expression, we produce as chained if-else
+with the casee expresions
 
         else
 
           for each index,switchCase in .cases
               .outLineAsComment switchCase.lineInx
-              .out index>0? 'else ':'', 'if ('
-              .out {pre:'(', CSL:switchCase.expressions, post:')', separator:'||'}
-              .out '){'
-              .out switchCase.body
-              .out NL,'}'
+              .out 
+                    index>0? 'else ' : '' 
+                    'if (', {pre:'(', CSL:switchCase.expressions, post:')', separator:'||'}
+                    '){'
+                    switchCase.body, NL
+                    '}'
 
-          if .defaultBody, .out NL,'else {',.defaultBody,'}'
+        end if
+
+defaul case
+
+        if .defaultBody, .out NL,'else {',.defaultBody,'}'
 
 
 ### Append to class Grammar.SwitchCase ###
@@ -2035,7 +2492,7 @@ if we have a varRef, is a case over a value
 
         if .varRef
 
-            var caseVar = ASTBase.getUniqueVarName('caseVar')
+            var caseVar = UniqueID.getVarName('caseVar')
             .out '(function(',caseVar,'){',NL
             for each caseWhenSection in .cases
                 caseWhenSection.out 'if('
@@ -2056,6 +2513,10 @@ else, it's a var-less case. we code it as chained ternary operators
 
           .out '/* else */ ',.elseExpression or 'undefined'
 
+
+### Append to class Grammar.DebuggerStatement ###
+      method produce
+        .out "assert(0)"
 
 ### Append to class Grammar.YieldExpression ###
 
@@ -2079,7 +2540,8 @@ Check location
 
             var inx=varRef.accessors.length-1
             if varRef.accessors[inx] instance of Grammar.FunctionAccess
-                yieldArr = varRef.accessors[inx].args
+                var functionAccess = varRef.accessors[inx]
+                yieldArr = functionAccess.args
                 inx--
 
             if inx>=0 
@@ -2087,7 +2549,8 @@ Check location
                     .throwError 'yield needs a clear method name. Example: "yield until obj.method(10)". redefine yield parameter.'
 
                 fnName = "'#{varRef.accessors[inx].name}'"
-                thisValue = [varRef.name].concat(varRef.accessors.slice(0,inx))
+                thisValue = [varRef.name]
+                thisValue = thisValue.concat(varRef.accessors.slice(0,inx))
 
 
         if .specifier is 'until'
@@ -2126,7 +2589,7 @@ Operator Mapping
 
 Many LiteScript operators can be easily mapped one-to-one with their JavaScript equivalents.
 
-    var OPER_TRANSLATION =
+    var OPER_TRANSLATION_map = 
 
       'no':           '!'
       'not':          '!'
@@ -2143,40 +2606,22 @@ Many LiteScript operators can be easily mapped one-to-one with their JavaScript 
       'but':          '&&'
       'or':           '||'
       'has property': 'in'
+    
 
     function operTranslate(name:string)
-      return name.translate(OPER_TRANSLATION)
+      return OPER_TRANSLATION_map.get(name) or name
 
 ---------------------------------
 
 ### Append to class ASTBase
-
 Helper methods and properties, valid for all nodes
 
-#### properties skipSemiColon 
+     properties skipSemiColon 
 
 #### helper method assignIfUndefined(name,expression) 
           
-          .out "if(",name,'.type==UNDEFINED) ',name,"=",expression,";",NL
+          //.out "if(",name,'.class==&Undefined_CLASSINFO) ',name,"=",expression,";",NL
+          .out "_default(&",name,",",expression,");",NL
 
-#### helper method addMethodDispatcher(methodName,className) 
-
-For C production, we're using a dispatcher for each method name
-
-          methodName = fixCReservedWord(methodName)
-
-          // look in existing dispatchers
-          if not allDispatchersNameDecl.findOwnMember(methodName) into var dispatcherNameDecl 
-              dispatcherNameDecl = allDispatchersNameDecl.addMember(methodName)
-
-          if className
-              //create a case for the class in the dispatcher
-              if dispatcherNameDecl.findOwnMember(className) 
-                  .throwError "DUPLICATED METHOD: a method named '#{methodName}' already exists for class '#{className}'"
-              var caseNameDecl = dispatcherNameDecl.addMember(className)
-
-              #store a pointer to this FunctonDeclaration, to later code case call w parameters
-              if this is instance of Grammar.FunctionDeclaration
-                  caseNameDecl.funcDecl = this 
 
 --------------------------------

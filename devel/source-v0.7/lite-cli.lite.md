@@ -20,7 +20,7 @@
     options are:
     -r, -run         compile & run .lite.md file
     -c, -compile     compile project, mainModule & all dependent files
-    -o dir           output dir. Default is '.'
+    -o dir           output dir. Default is './out'
     -b, -browser     compile for a browser environment (window instead of global, no process, etc)
     -v, -verbose     verbose level, default is 0 (0-3)
     -w, -warning     warning level, default is 1 (0-1)
@@ -84,7 +84,7 @@ get compiler version to --use
 Check for other options
 
         var options = 
-            outDir  : path.resolve(args.value('o') or '.') //output dir
+            outDir  : path.resolve(args.value('o') or './out') //output dir
             verbose : Number(args.value('v',"verbose") or 0) 
             warning : Number(args.value('w',"warning") or 1)
             comments: Number(args.value('comment',"comments") or 1) 

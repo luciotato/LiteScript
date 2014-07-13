@@ -8,16 +8,12 @@ The Project Class require all other modules to
 compile LiteScript code.
 
     import 
-        ASTBase, Grammar, Lexer
-        NameDeclaration, Validate
-        log, color
+        ASTBase, Grammar, Parser
+        Names, Validate
+        ControlledError, GeneralOptions
+        logger, color, Strings
 
-    #ifdef PROD_C
-    import Map
-    declare on Error
-        extra: Map string to Object
-        code
-    #endif
+    shim import Map
 
 Get the 'Environment' object for the compiler to use.
 The 'Environment' object, must provide functions to load files, search modules, 
@@ -37,7 +33,7 @@ Require the Producer (to include it in the dependency tree)
 ----------------
 ### export default Class Project
 
-A **Project** object acts as the root for a complex AST spanning several related **Modules**
+A **Project** object acts as the rootModule for a complex AST spanning several related **Modules**
 
 Normally, you launch the project compilation by calling `compile()` on the main module 
 of your project. At `compile()` the main module is imported and compiled.
@@ -51,150 +47,132 @@ The Modules dependency tree is the *Project tree*.
 
 #### Properties
 
-        options
+        options: GeneralOptions
         name
         moduleCache: Map string to Grammar.Module
-        root: Grammar.Module
-        compilerVars: NameDeclaration
-        globalScope: NameDeclaration
+        rootModule: Grammar.Module
+        compilerVars: Map string to Names.Declaration
         main: Grammar.Module
         Producer
         recurseLevel = 0
 
-#### constructor new Project(filename, options)
+        //lexer=undefined //dummy, to allow Project to be main module's parent
 
-normalize options
-
-        #ifdef PROD_C
-        var DEFAULT_TARGET="c"
-        #else
-        var DEFAULT_TARGET="js"
-        #end if
-
-        default options =
-            verbose: 1
-            warning: 1
-            comments: 1
-            target: DEFAULT_TARGET
-            outDir: '.'
-            debug: undefined
-            skip: undefined
-            nomap: undefined
-            single: undefined
-            compileIfNewer: undefined
-            browser:undefined
-            extraComments:1
-            defines:[]
-
-            mainModuleName: filename
-            basePath: undefined
-            outBasePath: options.outDir
-
+#### constructor new Project(filename, options:GeneralOptions)
 
 Initialize this project. Project has a cache for required modules. 
 As with node's `require` mechanism, a module, 
 when imported|required is only compiled once and then cached.
     
         .name = 'Project'
-        .options = options
-        .moduleCache = new Map //{}
 
-        log.errorCount = 0
-        log.options.verbose = options.verbose
-        log.options.warning = options.warning
-        log.options.debug.enabled = options.debug
-        if options.debug, log.debugClear
+        .options = options
+        default options.now = new Date()
+
+        .moduleCache = new Map 
+
+        logger.errorCount = 0
+        logger.options.verboseLevel = options.verboseLevel
+        logger.options.warningLevel = options.warningLevel
+        logger.options.debugOptions.enabled = options.debugEnabled
+        if options.debugEnabled, logger.debugClear
 
 set basePath from main module path
 
-        Environment.setBasePath filename,options
+        var tempFileInfo = new Environment.FileInfo(filename)
+        options.projectDir = tempFileInfo.dir
+        options.mainModuleName = './#{tempFileInfo.base}'
+        options.outDir = Environment.resolvePath(options.outDir)
 
-        log.info 'Base Path:',.options.basePath
-        log.info 'Main Module:',.options.mainModuleName
-        log.info 'Out Base Path:',.options.outBasePath
+        Environment.setBaseInfo options.projectDir, options.outDir, options.target
 
-create a 'root' dummy-module to hold global scope
-
-        .root = new Grammar.Module(this)
-        .root.name = 'Project Root'
-        .root.fileInfo = new Environment.FileInfo({name:'Project'}) 
-        .root.fileInfo.relFilename='Project'
-        .root.fileInfo.dirname = options.basePath
-
-The "scope" of rootNode is the global scope. 
-Initialize the global scope
-
-        Validate.createGlobalScope this 
-
-Note: we defer requiring utility string functions to *after* **createGlobalScope**
-to avoid tainting core classes in the compiled module global scope.
-In 'string-shims' we add methods to core's String & Array
-
-        import StringShims
-
+        logger.info 'Project Dir:',.options.projectDir
+        logger.info 'Main Module:',.options.mainModuleName
+        logger.info 'Out Dir:',.options.outDir
 
 compiler vars, to use at conditional compilation
         
-        .compilerVars = new NameDeclaration("Compiler Vars")
-        .compilerVars.addMember 'debug',{value:true}
+        .compilerVars = new Map
 
         for each def in options.defines
-            .compilerVars.addMember def,{value:true}
+            .compilerVars.set def,new Names.Declaration(def)
 
 add 'inNode' and 'inBrowser' as compiler vars
 
+        #ifdef TARGET_JS
+        .compilerVars.set 'ENV_JS', new Names.Declaration("ENV_JS")
         declare var window
         var inNode = type of window is 'undefined'
-        .compilerVars.addMember 'inNode',{value:inNode}
-        .compilerVars.addMember 'inBrowser',{value: not inNode}
+        if inNode
+            .compilerVars.set 'ENV_NODE',new Names.Declaration("ENV_NODE")
+        else
+            .compilerVars.set 'ENV_BROWSER',new Names.Declaration("ENV_BROWSER")
+        end if
+        #endif
 
-        //log.info .root.compilerVars
-        //log.info ""
+        #ifdef TARGET_C
+        .compilerVars.set 'ENV_C', new Names.Declaration("ENV_C")
+        #endif
 
-in 'options' we receive also the target code to generate. (default is 'js')
+        var targetDef = 'TARGET_#{options.target.toUpperCase()}'
+        .compilerVars.set targetDef,new Names.Declaration(targetDef)
 
-Now we load the **Producer** module for the selected target code.
+        logger.msg 'preprocessor #defined', .compilerVars.keys()
 
-The **Producer** module will append to each Grammar class a `produce()` method
-which generates target code for the AST class
-    
-        .Producer = require('./Producer_'+options.target)
+        //logger.message .compilerVars
+        //logger.info ""
+
+create a 'rootModule' module to hold global scope
+
+        .rootModule = new Grammar.Module() //parent is Project
+        .rootModule.name = '*Global Scope*' 
+
+        .rootModule.fileInfo = new Environment.FileInfo('Project') 
+        .rootModule.fileInfo.relFilename='Project'
+        .rootModule.fileInfo.dir = options.projectDir
+        .rootModule.fileInfo.outFilename = "#{options.outDir}/_project_"
+        
+
+Validate.initialize will prepare the global scope 
+by parsing the file: "lib/GlobalScopeJS.interface.md"
+
+        Validate.initialize this 
+
+In 'options' we receive also the target code to generate. (default is 'js')
 
 #### Method compile()
 
 Import & compile the main module. The main module will, in turn, 'import' and 'compile' 
 -if not cached-, all dependent modules. 
 
-        .main = .importModule(.root, {name:.options.mainModuleName})
+        var importInfo = new Environment.ImportParameterInfo
+        importInfo.name = .options.mainModuleName
+        .main = .importModule(.rootModule, importInfo)
         .main.isMain = true
 
-        if log.errorCount is 0
-            log.info "\nParsed OK"
+        if logger.errorCount is 0
+            logger.info "\nParsed OK"
 
 Validate
 
         if no .options.skip 
-            log.info "Validating"
+            logger.info "Validating"
             Validate.validate this
-            if log.errorCount, log.throwControled log.errorCount,"errors"
+            if logger.errorCount, logger.throwControlled '#{logger.errorCount} errors'
 
 Produce, for each module
 
-        log.info "\nProducing #{.options.target} at #{.options.outDir}\n"
-
-        #ifdef PROD_C
-        Producer_c.preProduction this
-        #endif
+        logger.info "\nProducing #{.options.target} at #{.options.outDir}\n"
 
         for each moduleNode:Grammar.Module in map .moduleCache
 
           if not moduleNode.fileInfo.isCore and moduleNode.referenceCount 
 
-            log.extra "source:", moduleNode.fileInfo.importInfo.name
+            logger.extra "source:", moduleNode.fileInfo.importInfo.name
             var result:string
 
             if not moduleNode.fileInfo.isLite 
-                log.extra 'non-Lite module, copy to out dir.'
+                logger.extra 'non-Lite module, copy to out dir.'
                 #copy the file to output dir
                 var contents = Environment.loadFile(moduleNode.fileInfo.filename)
                 Environment.externalCacheSave(moduleNode.fileInfo.outFilename, contents)
@@ -207,7 +185,7 @@ Produce, for each module
 produce & get result target code
         
                 .produceModule moduleNode
-                var resultLines:string array =  moduleNode.lexer.out.getResult()
+                var resultLines:string array =  moduleNode.lexer.outCode.getResult()
 
 save to disk / add to external cache
 
@@ -215,9 +193,9 @@ save to disk / add to external cache
                 result = "#{resultLines.length} lines"
 
                 #ifdef PROD_C
-                resultLines =  moduleNode.lexer.out.getResult(1) //get .h file contents
+                resultLines =  moduleNode.lexer.outCode.getResult(1) //get .h file contents
                 if resultLines.length
-                    Environment.externalCacheSave moduleNode.fileInfo.outFilename.slice(0,-1)+'h',resultLines
+                    Environment.externalCacheSave '#{moduleNode.fileInfo.outFilename.slice(0,-1)}h',resultLines
                 end if
 
                 #else
@@ -239,23 +217,38 @@ save to disk / add to external cache
 
             end if
 
-            log.message "#{color.green}[OK] #{result} -> #{moduleNode.fileInfo.outRelFilename} #{color.normal}"
-            log.extra #blank line
+            logger.msg "#{color.green}[OK] #{result} -> #{moduleNode.fileInfo.outRelFilename} #{color.normal}"
+            logger.extra #blank line
 
         end for each module cached
 
-        log.message "#{log.errorCount} errors, #{log.warningCount} warnings."
+        logger.msg "#{logger.errorCount} errors, #{logger.warningCount} warnings."
 
         #ifdef PROD_C
-        if no log.errorCount, Producer_c.postProduction this
+        if no logger.errorCount, Producer_c.postProduction this
         #endif
 
-#### Method compileFile(filename, moduleNode:Grammar.Module)
+#### Method compileFile(filename) returns Grammar.Module
+
+        var filenameInfo = new Environment.FileInfo(filename)
+
+        //search the file
+        filenameInfo.searchModule .rootModule.fileInfo
+
+        // create a module
+        var newModule = .createNewModule(filenameInfo, .rootModule)
+
+        // compile the file
+        .compileFileOnModule filenameInfo.filename, newModule
+
+        return newModule
+
+#### Method compileFileOnModule(filename, moduleNode:Grammar.Module)
 
 Compilation:
 Load source -> Lexer/Tokenize -> Parse/create AST 
 
-        log.info String.spaces(this.recurseLevel*2),"compile: '#{Environment.relName(filename,.options.basePath)}'"
+        logger.info Strings.spaces(this.recurseLevel*2),"compile: '#{Environment.relativeFrom(.options.projectDir,filename)}'"
 
 Load source code, parse
 
@@ -263,7 +256,7 @@ Load source code, parse
 
 Check if this module 'imported other modules'. Process Imports (recursive)
 
-        if no .options.single
+        if no .options.single 
             .importDependencies moduleNode
 
 
@@ -273,7 +266,7 @@ This method will initialize lexer & parse  source lines into ModuleNode scope
 
 set Lexer source code, process lines, tokenize
 
-        log.errorCount = 0
+        logger.errorCount = 0
 
         var stage = "lexer"
         moduleNode.lexer.initSource( filename, sourceLines )
@@ -286,36 +279,37 @@ Parse source
 
 Check if errors were emitted
 
-        if log.errorCount
-            var errsEmitted = new Error("#{log.errorCount} errors emitted")
-            errsEmitted.extra.set "controled",true
-            throw errsEmitted
+        if logger.errorCount, logger.throwControlled "#{logger.errorCount} errors emitted"
 
 Handle errors, add stage info, and stack
 
         exception err
     
-            err = moduleNode.lexer.hardError or err //get important (inner) error
-            if not err.extra.get("controled")  //if not 'controled' show lexer pos & call stack (includes err text)
-                declare valid err.stack
-                err.message = "#{moduleNode.lexer.posToString()}\n#{err.stack or err.message}"
+            if err instanceof ControlledError  //if not 'controlled' show lexer pos & call stack (includes err text)
+                err = moduleNode.lexer.hardError or err //get important (inner) error
+            else
+                // uncontrolled
+                // add position & stack
+                err.message = "#{moduleNode.lexer.posToString()}\n#{err.stack or err.message}" 
 
-            log.error err.message
+            logger.error err.message
 
             #show last soft error. Can be useful to pinpoint the problem
-            if moduleNode.lexer.softError, log.message "previous soft-error: #{moduleNode.lexer.softError.message}"
+            if moduleNode.lexer.softError, logger.msg "previous soft-error: #{moduleNode.lexer.softError.message}"
 
             //if process #we're in node.js
             //    process.exit(1) 
             //else
             throw err
 
-#### method createNewModule(fileInfo) returns Grammar.Module
+#### method createNewModule(fileInfo, parent) returns Grammar.Module
 
 create a **new Module** and then create a **new lexer** for the Module 
 (each module has its own lexer. There is one lexer per file)
 
-        var moduleNode = new Grammar.Module(.root)
+        default parent = .rootModule
+
+        var moduleNode = new Grammar.Module(parent)
         moduleNode.name = fileInfo.filename
         moduleNode.fileInfo = fileInfo
         moduleNode.referenceCount = 0
@@ -324,19 +318,28 @@ create a Lexer for the module. The Lexer receives this module exports as a "comp
 because the lexer preprocessor can compile marcros and generate code on the fly
 via 'compiler generate'
 
-        moduleNode.lexer = new Lexer(module.exports, this, .options)
+        moduleNode.lexer = new Parser.Lexer(this, .options)
 
 Now create the module scope, with two local scope vars: 
 'module' and 'exports = module.exports'. 'exports' will hold all exported members.
 
         moduleNode.createScope()
+        //var opt = new Names.NameDeclOptions
+        //opt.normalizeModeKeepFirstCase = true
+        moduleNode.exports = new Names.Declaration(fileInfo.base,undefined,moduleNode)
+        moduleNode.exportsReplaced = false
+        
         var moduleVar = moduleNode.addToScope('module')
-        moduleNode.exports = moduleVar.addMember('exports') #add as member of 'module'
-        moduleNode.addToScope('exports',{pointsTo:moduleNode.exports}) #add also as 'exports' in scope
+        //moduleNode.exports = moduleVar.addMember('exports') #add as member of 'module'
+        //var opt = new Names.NameDeclOptions
+        //opt.pointsTo = moduleNode.exports
+        //moduleNode.addToScope('exports',opt) #add also as 'exports' in scope
 
 add other common built-in members of var 'module'. http://nodejs.org/api/modules.html#modules_module_id
 
-        moduleVar.addMember moduleNode.declareName('filename',{value: fileInfo.filename})
+        var fnameOpt = new Names.NameDeclOptions
+        fnameOpt.value = fileInfo.filename
+        moduleVar.addMember moduleNode.declareName('filename',fnameOpt)
 
 Also, register every `import|require` in this module body, to track modules dependencies.
 We create a empty a empty `.requireCallNodes[]`, to hold:
@@ -350,18 +353,18 @@ We create a empty a empty `.requireCallNodes[]`, to hold:
 
 #### Method produceModule(moduleNode:Grammar.Module)
 
-        moduleNode.lexer.out.browser = .options.browser
+        moduleNode.lexer.outCode.browser = .options.browser
 
         if .options.extraComments
-            moduleNode.lexer.out.put "//Compiled by LiteScript compiler v#{Project.version}, source: #{moduleNode.fileInfo.filename}"
-            moduleNode.lexer.out.startNewLine
+            moduleNode.lexer.outCode.put "//Compiled by LiteScript compiler v#{.options.version}, source: #{moduleNode.fileInfo.filename}"
+            moduleNode.lexer.outCode.startNewLine
 
         moduleNode.produce 
 
         #referenceSourceMap
-        if no .options.nomap and moduleNode.fileInfo.outExtension
-            moduleNode.lexer.out.startNewLine
-            moduleNode.lexer.out.put "//# sourceMappingURL=#{moduleNode.fileInfo.basename+moduleNode.fileInfo.outExtension+'.map'}"
+        if no .options.nomap and moduleNode.fileInfo.outExtension is 'js'
+            moduleNode.lexer.outCode.startNewLine
+            moduleNode.lexer.outCode.put "//# sourceMappingURL=#{moduleNode.fileInfo.base}#{moduleNode.fileInfo.outExtension}.map"
         
 
 #### Method importDependencies(moduleNode:Grammar.Module)
@@ -385,11 +388,14 @@ If the origin is: ImportStatement/global Declare
                 else
                     importInfo.name = node.name
 
+                if node.hasAdjective('shim') and node.findInScope(importInfo.name) 
+                    continue // do not import if shim and already declared
+
 if it was 'global import, inform, els search will be local '.','./lib' and '../lib'
 
                 declare valid node.parent.global 
                 if node.parent instanceof Grammar.DeclareStatement
-                    importInfo.interface = true
+                    importInfo.isGlobalDeclare = true
                 else if node.parent instanceof Grammar.ImportStatement 
                     importInfo.globalImport = node.parent.global 
 
@@ -399,8 +405,8 @@ else, If the origin is a require() call
                 declare node:Grammar.VariableRef
                 if node.accessors and node.accessors[0] instanceof Grammar.FunctionAccess
                     var requireCall:Grammar.FunctionAccess = node.accessors[0]
-                    if requireCall.args[0].root.name instanceof Grammar.StringLiteral
-                        var stringLiteral = requireCall.args[0].root.name
+                    if requireCall.args[0].expression.root.name instanceof Grammar.StringLiteral
+                        var stringLiteral = requireCall.args[0].expression.root.name
                         importInfo.name = stringLiteral.getValue()
 
 if found a valid filename to import
@@ -420,23 +426,23 @@ importParameter is the raw string passed to `import/require` statements,
         declare valid .recurseLevel
 
         .recurseLevel++
-        var indent = String.spaces(.recurseLevel*2)
+        var indent = Strings.spaces(.recurseLevel*2)
 
-        log.info ""
-        log.info indent,"'#{importingModule.fileInfo.relFilename}' imports '#{importInfo.name}'"
+        logger.info ""
+        logger.info indent,"'#{importingModule.fileInfo.relFilename}' imports '#{importInfo.name}'"
 
 Determine the full module filename. Search for the module in the environment.
 
         var fileInfo = new Environment.FileInfo(importInfo)
 
-        fileInfo.searchModule importingModule.fileInfo, .options
+        fileInfo.searchModule importingModule.fileInfo
 
 Before compiling the module, check internal, and external cache
 
 Check Internal Cache: if it is already compiled, return cached Module node
 
         if .moduleCache.has(fileInfo.filename) #registered
-            log.info indent,'cached: ',fileInfo.filename
+            logger.info indent,'cached: ',fileInfo.filename
             .recurseLevel--
             return .moduleCache.get(fileInfo.filename)
 
@@ -452,16 +458,19 @@ Check if we can get exports from a "interface.md" file
 
         if .getInterface(importingModule, fileInfo, moduleNode)
             #getInterface also loads and analyze .js interfaces
-            do nothing
+
+            #if it is an interface, but loaded from 'import' statement
+            #we increment .referenceCount in order to produce the file
+            if not importInfo.isGlobalDeclare, moduleNode.referenceCount++
 
 else, we need to compile the file 
     
         else 
 
-            if importingModule is .root and .options.compileIfNewer and fileInfo.outFileIsNewer 
+            if importingModule is .rootModule and .options.compileIfNewer and fileInfo.outFileIsNewer 
                 do nothing //do not compile if source didnt change
             else
-                this.compileFile fileInfo.filename, moduleNode
+                this.compileFileOnModule fileInfo.filename, moduleNode
                 moduleNode.referenceCount++
 
 
@@ -480,14 +489,17 @@ return true if interface (exports) obtained
 
         if fileInfo.interfaceFileExists 
             # compile interface
-            this.compileFile fileInfo.interfaceFile, moduleNode
+            this.compileFileOnModule fileInfo.interfaceFile, moduleNode
             return true //got Interface
+
+        
+        #ifndef PROD_C //except we're generating the compile-to-C compiler
 
 Check if we're compiling for the browser
 
         if .options.browser
             if fileInfo.extension is '.js'
-                log.throwControled 'Missing #{fileInfo.relPath}/#{fileInfo.basename}.interface.md for '
+                logger.throwControlled 'Missing #{fileInfo.relPath}/#{fileInfo.basename}.interface.md for '
             else # assume a .lite.md file
                 return false //getInterface returning false means call "CompileFile"
 
@@ -498,71 +510,73 @@ and generate & cache interface
 
         if fileInfo.isCore or fileInfo.importInfo.globalImport or fileInfo.extension is '.js' 
 
-            log.info String.spaces(this.recurseLevel*2),
+            logger.info String.spaces(this.recurseLevel*2),
                 fileInfo.isCore?"core module":"javascript file",
                 "require('#{fileInfo.basename}')"
 
             if not fileInfo.isCore
-                #hack for require(). Simulate we're at the importingModule dir
-                #for require() fn to look at the same dirs as at runtime
+
+hack for require(). Simulate we're at the importingModule dir
+for node's require() function to look at the same dirs as at runtime
+
                 declare on module paths:string array
                 declare valid module.constructor._nodeModulePaths
-                #declare valid module.filename
-                var save = {paths:module.paths, filename: module.filename}
+
+                var savePaths = module.paths, saveFilename = module.filename
                 module.paths = module.constructor._nodeModulePaths(importingModule.fileInfo.dirname)
                 module.filename = importingModule.fileInfo.filename
-                log.debug "importingModule", module.filename
+                logger.debug "importingModule", module.filename
 
             var requiredNodeJSModule = require(fileInfo.importInfo.name)
             moduleNode.exports.getMembersFromObjProperties(requiredNodeJSModule)
 
             if not fileInfo.isCore #restore
-                module.paths= save.paths
-                module.filename= save.filename
+                module.paths= savePaths
+                module.filename= saveFilename
             
             return true
 
-#### helper method compilerVar(name) 
-helper compilerVar(name)
-return root.compilerVars.members[name].value
+        #endif // skip node-js code if we're generatice the compile-to-C compiler
 
-        if .compilerVars.findOwnMember(name) into var compVar:NameDeclaration
-            return compVar.findOwnMember("**value**")
+
+#### helper method compilerVar(name) returns Names.Declaration // or undefined
+helper compilerVar(name)
+return rootModule.compilerVars.members[name].value
+
+        return .compilerVars.get(name) 
 
 #### helper method setCompilerVar(name,value) 
 helper compilerVar(name)
-root.compilerVars.members.set(name,value)
+rootModule.compilerVars.members.set(name,value)
 
-        var compVar = .compilerVars.findOwnMember(name) 
-        if no compVar, compVar = .compilerVars.addMember(name)
-        compVar.setMember "**value**",value
+        if no .compilerVars.get(name) into var nameDecl
+            nameDecl = new Names.Declaration(name)
+            .compilerVars.set name, nameDecl
+
+        nameDecl.setMember "**value**",value
 
 #### helper method redirectOutput(newOut)
 
         for each moduleNode:Grammar.Module in map .moduleCache
-              moduleNode.lexer.out = newOut
+              moduleNode.lexer.outCode = newOut
 
     end class Project
-
-### Append to namespace Project
-#### properties // as namespace properties
-        version:string #version. set from compiler
-
 
 ##Add helper properties and methods to AST node class Module
 
 ### Append to class Grammar.Module
 #### Properties
         fileInfo #module file info
-        exports: NameDeclaration # holds module.exports as members
+        exports: Names.Declaration # holds module.exports as members
+        exportsReplaced: boolean # if exports was replaced by a ClassDeclaration with the module name
         requireCallNodes: Grammar.ImportStatementItem array #list of `import` item nodes or `require()` function calls (varRef)
         referenceCount
         
 #### method getCompiledLines returns string array 
-        return .lexer.out.getResult()
+        return .lexer.outCode.getResult()
 
 #### method getCompiledText returns string 
-        return .lexer.out.getResult().join('\n')
+        return .lexer.outCode.getResult().join('\n')
 
 
 ### Append to class Grammar.VariableRef
@@ -572,65 +586,3 @@ root.compilerVars.members.set(name,value)
 ### Append to class Grammar.ImportStatementItem
 #### Properties
         importedModule: Grammar.Module
-
-
-----------------
-### Append to class NameDeclaration
-#### helper method toExportArray() 
-
-converts .members={} to 
-simpler arrays for JSON.stringify & cache
-
-      #declare valid .members
-      #declare valid item.type.fullName
-      #declare valid item.itemType.fullName
-
-      #FIX WITH for each own property
-      if .members
-        var result = []
-        # FIX with for each property
-        for each prop in Object.keys(.members)
-          var item:NameDeclaration = .members[prop]
-          var membersArr:Object array = item.toExportArray() #recursive
-          # FIX with Ternary
-          var arrItem= {name:item.name}
-
-          declare valid arrItem.members
-          declare valid arrItem.type
-          declare valid arrItem.itemType
-          declare valid arrItem.value
-
-          if membersArr.length
-            arrItem.members = membersArr
-
-          if item.hasOwnProperty('type') and item.type
-            arrItem.type = item.type.toString()
-
-          if item.hasOwnProperty('itemType') and item.itemType
-            arrItem.itemType = item.itemType.toString()
-
-          if item.hasOwnProperty('value')
-            arrItem.value = item.value
-
-          result.push arrItem
-
-      return result
-
-----------------
-### Append to class NameDeclaration
-#### helper method importMembersFromArray(exportedArr: NameDeclaration array) ### Recursive
-
-Inverse of helper method toExportObject() 
-converts exported object, back to NameDeclarations and .members[]
-
-        #declare item:Grammar.Identifier
-
-        for each item in exportedArr
-          var nameDecl = new NameDeclaration(item.name or '(unnamed)')
-          if item.hasOwnProperty('type')
-            nameDecl.type = item.type
-          if item.hasOwnProperty('value')
-            nameDecl.value = item.value
-          .addMember nameDecl 
-          if item.members
-            nameDecl.importMembersFromArray(item.members) #recursive

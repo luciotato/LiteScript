@@ -93,6 +93,9 @@ and it shows error message *and stack trace*.
 
         log.error .positionText(), msg
           
+#### helper method warn(msg)
+
+        log.warning .positionText(), msg
 
 #### method throwParseFailed(msg)
 throws a parseFailed-error
@@ -191,7 +194,7 @@ For strings we check the token **value** or **TYPE** (if searched is all-upperca
 
             #debug spaces, .constructor.name,'TRY',searched, 'on', .lexer.token.toString()
 
-            var isTYPE = /^[A-Z_]+$/.test(searched)
+            var isTYPE = searched[0]>="A" and searched[0]<="Z" and searched is searched.toUpperCase()
             var found
 
             if isTYPE 
@@ -301,7 +304,7 @@ else, If `opt` returned nothing, we give the user a useful error.
         var result = .opt.apply(this,arguments)
 
         if no result 
-          .throwParseFailed "#{.constructor.name}:#{.extraInfo} found #{.lexer.token.toString()} but #{.listArgs(arguments)} required"
+          .throwParseFailed "#{.constructor.name}:#{.extraInfo or ''} found #{.lexer.token.toString()} but #{.listArgs(arguments)} required"
 
         return result
 

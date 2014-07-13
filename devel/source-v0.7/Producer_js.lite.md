@@ -9,7 +9,7 @@ in order to return the compiled code for the entire tree.
 
 We extend the Grammar classes, so this module require the `Grammar` module.
 
-    import ASTBase, Grammar
+    import ASTBase, Grammar, Environment 
 
 JavaScript Producer Functions
 ==============================
@@ -91,7 +91,7 @@ To ease reading of compiled code, add original Lite line as comment
 
 Each statement in its own line
 
-        if .statement isnt instance of Grammar.SingleLineStatement
+        if .statement isnt instance of Grammar.SingleLineBody
           .lexer.out.ensureNewLine
 
 if there are one or more 'into var x' in a expression in this statement, 
@@ -145,7 +145,8 @@ called above, pre-declare vars from 'into var x' assignment-expression
       method produce() 
 
         .varRef.produce()
-        if .varRef.executes, return #if varRef already executes, nothing more to do
+        if .varRef.executes, return #if varRef already executes, () are not needed
+        
         .out "()" #add (), so JS executes the function call
 
 
@@ -308,13 +309,42 @@ produce the expression body
 
       method produce() 
 
+        var preIfExported 
+
 Prefix ++/--, varName, Accessors and postfix ++/--
 
         if .name is 'arguments' //the only thing that can be done with "arguments" is "arguments.toArray()"
             .out 'Array.prototype.slice.call(arguments)' 
             return
 
-        .out .preIncDec, .name.translate(IDENTIFIER_ALIASES), .accessors, .postIncDec
+        else 
+            var refNameDecl = .tryGetFromScope(.name)
+            if no refNameDecl
+                .sayErr "cannot find '#{.name}' in scope"
+            else
+                if refNameDecl.isPublic
+                    preIfExported='module.exports.'
+
+node.js module.exports is a leaky abstractions for exported
+objects other than functions (e.g: Arrays or objects).
+You MUST use always "module.export.varX" and not a local var.
+
+If you do: 
+
+  var arr=[];
+  module.export.arr = arr;
+
+  then use arr.push... arr.pop in the module code...
+
+It'll work fine until a module requirer does: 
+
+  var reqd=require('theModule');
+  reqd.arr = []
+
+At that point, module.export.arr will point to a different array than
+the internal module var "arr[]", so the module will stop working.
+
+        .out .preIncDec, preIfExported, .name.translate(IDENTIFIER_ALIASES), .accessors, .postIncDec
 
 
 ### append to class Grammar.AssignmentStatement ###
@@ -370,11 +400,20 @@ We just defer to JavaScript's built in `.` `[ ]` and `( )` accessors
 
 ### append to class Grammar.PropertyAccess ##
       method produce() 
-        .out ".",.name
+        if .name is 'initInstance' 
+            do nothing  // initInstance is the liteScript unified (C and JS) way to call Class instance Initializator function.
+                        // in JS, since Classes are Functions, JS uses the Class-Function as initializator function 
+                        // so we need to add nothing in case of 'initInstance' 
+        else
+            .out ".",.name
 
 ### append to class Grammar.IndexAccess
       method produce() 
         .out "[",.name,"]"
+
+### append to class Grammar.FunctionArgument
+      method produce() 
+        .out .expression
 
 ### append to class Grammar.FunctionAccess
       method produce() 
@@ -400,22 +439,39 @@ More Helper methods, get max line of list
 check if we're inside a ClassDeclaration or AppendToDeclaration.
 return prefix for item to be appended
 
-        var parent = .getParent(Grammar.ClassDeclaration)
+        var result=[]
+        var start = this
 
-        if no parent, return 
-    
-        var ownerName, toPrototype
-        if parent instance of Grammar.AppendToDeclaration
-          #append to class prototype or object
-          declare parent:Grammar.AppendToDeclaration
-          toPrototype = not parent.toNamespace
-          ownerName = parent.varRef
-        
-        else # in a ClassDeclaration
-          toPrototype = true
-          ownerName = parent.name
+        while start and start.getParent(Grammar.ClassDeclaration) into var parent
 
-        return [ownerName, toPrototype? ".prototype." else "." ]
+            var ownerName, toPrototype
+
+            if parent instance of Grammar.AppendToDeclaration
+                #append to class prototype or object
+                declare parent:Grammar.AppendToDeclaration
+                toPrototype = not parent.toNamespace
+                ownerName = parent.varRef
+                var refNameDecl  = parent.varRef.tryGetReference()
+                if refNameDecl and refNameDecl.nodeDeclared instanceof Grammar.ClassDeclaration
+                    start = refNameDecl.nodeDeclared
+                else
+                    start = undefined
+              
+            else if parent instance of Grammar.NamespaceDeclaration
+                toPrototype = false
+                ownerName = parent.name
+                start = parent
+
+            else # in a ClassDeclaration
+                toPrototype = true
+                ownerName = parent.name
+                start = parent
+
+            result.unshift ownerName, (toPrototype? ".prototype." else ".")
+
+        #loop
+
+        return result
 
 
 ---
@@ -498,20 +554,49 @@ If 'var' was adjectivated 'export', add to exportNamespace
 
 
 
+### Append to class Grammar.ImportStatementItem ###
+
+      method produce() 
+        .out "var ",.name," = require('", .getNodeJSRequireFileRef(),"');", NL
+
+
+      method getNodeJSRequireFileRef() 
+        
+node.js require() require "./" to denote a local module to load.
+it does like bash does for executable files. A name  without ./ means "look in $PATH".
+this is not the most intuitive choice.
+
+        if .importedModule.fileInfo.importInfo.globalImport 
+            return .name // for node, no './' means "look in node_modules, and up, then global paths"
+
+        var thisModule = .getParent(Grammar.Module)
+
+get the required file path, relative to the location of this module (as nodejs's require() requires)
+
+        if no .importedModule.fileInfo.outRelFilename
+            print JSON.stringify(.importedModule.fileInfo)
+            print thisModule.fileInfo.dirname
+
+        var fn = Environment.relName(.importedModule.fileInfo.outRelFilename
+                                     ,Environment.dirName(thisModule.fileInfo.outRelFilename));
+        
+check for 'import x from 'path/file';
+
+        if .importParameter and fn[0] is '/' //has `from 'path/file'` AND  is an absolute path 
+            return fn
+
+else, a simple 'import x'
+
+        return "./#{fn}"; // node.js require() require "./" to denote a local module to load                
+
+
 ### Append to class Grammar.ImportStatement ###
 
 'import' followed by a list of comma separated: var names and optional assignment
 
       method produce() 
-
-        for each item:Grammar.ImportStatementItem in .list
-          
-          var requireParam = item.importParameter? item.importParameter.getValue() else item.name 
-
-          .out "var ",item.name," = require('",
-                  .global or requireParam[0] is '/'? "" else "./", requireParam, "');", NL
-
-        .skipSemiColon = true
+        .out .list //see:Grammar.ImportStatementItem
+        .skipSemiColon = true //each item is `var x=require('x');`
 
 
 ### Append to class Grammar.VariableDecl ###
@@ -544,10 +629,13 @@ if it has AssginedValue, we out assignment if ES6 is available.
     #end VariableDecl
 
 
-### Append to class Grammar.SingleLineStatement ###
+### Append to class Grammar.SingleLineBody ###
 
       method produce()
-        .out {CSL:.statements, separator:";"},";"
+        var bare=[]
+        for each statement in .statements
+            bare.push statement.statement
+        .out {CSL:bare, separator:";"}
 
 ### Append to class Grammar.IfStatement ###
 
@@ -555,7 +643,7 @@ if it has AssginedValue, we out assignment if ES6 is available.
 
         declare valid .elseStatement.produce
 
-        if .body instanceof Grammar.SingleLineStatement
+        if .body instanceof Grammar.SingleLineBody
             .out "if (", .conditional,") {",.body,"}"
         else
             .out "if (", .conditional, ") {", .getEOLComment()
@@ -616,20 +704,18 @@ Since al 3 cases are closed with '}; //comment', we skip statement semicolon
           if .mainVar
             .out "var ", .mainVar.name,"=undefined;",NL
 
-          .out "for ( var ", .indexVar.name, " in ", iterable, ")"
+          var index=.indexVar or ASTBase.getUniqueVarName('inx');
 
-          if .ownOnly
-              .out "if (",iterable,".hasOwnProperty(",.indexVar,"))"
+          .out "for ( var ", index, " in ", iterable, ")"
+          .out "if (",iterable,".hasOwnProperty(",index,"))"
 
-          if .mainVar
-              .body.out "{", .mainVar.name,"=",iterable,"[",.indexVar,"];",NL
+          .body.out "{", .mainVar.name,"=",iterable,"[",index,"];",NL
 
           .out .where
 
           .body.out "{", .body, "}",NL
 
-          if .mainVar
-            .body.out NL, "}"
+          .body.out NL, "}"
 
           .out {COMMENT:"end for each property"},NL
 
@@ -643,7 +729,7 @@ Since al 3 cases are closed with '}; //comment', we skip statement semicolon
 
 Create a default index var name if none was provided
 
-        if .isMap //new syntax "for each in map xx"
+        if .inMap //new syntax "for each in map xx"
             return .produceInMap(iterable)
 
         var indexVar = .indexVar
@@ -677,12 +763,12 @@ When Map is implemented using js "Object"
             indexVarName = .indexVar.name
 
           .out "var ", .mainVar.name,"=undefined;",NL
-          .out 'if(!',iterable,'.map_members) throw(new Error("for each in map: not a Map, no .map_members"));',NL
-          .out "for ( var ", indexVarName, " in ", iterable, ".map_members)"
-          .out " if (",iterable,".map_members.hasOwnProperty(",indexVarName,"))"
+          .out 'if(!',iterable,'.dict) throw(new Error("for each in map: not a Map, no .dict property"));',NL
+          .out "for ( var ", indexVarName, " in ", iterable, ".dict)"
+          .out " if (",iterable,".dict.hasOwnProperty(",indexVarName,"))"
 
           if .mainVar
-              .body.out "{", .mainVar.name,"=",iterable,".map_members[",indexVarName,"];",NL
+              .body.out "{", .mainVar.name,"=",iterable,".dict[",indexVarName,"];",NL
 
           .out .where
 
@@ -703,31 +789,42 @@ Handle by using a js/C standard for(;;){} loop
 
       method produce(iterable)
 
-        declare valid .endExpression.produce
+        var isToDownTo: boolean
+
+        if .conditionPrefix in['to','down']
+            
+            isToDownTo= true
+
+store endExpression in a temp var. 
+For loops "to/down to" evaluate end expresion only once
+
+            var endTempVarName = ASTBase.getUniqueVarName('end')
+            .out "var ",endTempVarName,"=",.endExpression,";",NL
+
+        end if
 
         .out "for( var ",.indexVar.name, "=", .indexVar.assignedValue or "0", "; "
 
-        if .conditionPrefix is 'to'
-            #'for n=0 to 10' -> for(n=0;n<=10;...
-            .out .indexVar.name,"<=",.endExpression
-            if .increment, .sayErr "Do not use 'for... to' and a increment statement. Use 'while|until'"
+        if isToDownTo
+
+            #'for n=0 to 10' -> for(n=0;n<=10;n++)
+            #'for n=10 down to 0' -> for(n=10;n>=0;n--)
+            .out .indexVar.name, .conditionPrefix is 'to'? "<=" else ">=", endTempVarName
 
         else # is while|until
 
-produce the condition, negated if the prefix is 'until'
+while|until conditions are evaluated on each loop.
+Produce the condition, negated if the prefix is 'until'.
 
-          #for n=0, while n<arr.length  -> for(n=0;n<arr.length;...
-          #for n=0, until n >= arr.length  -> for(n=0;!(n>=arr.length);...
-          .endExpression.produce( {negated: .conditionPrefix is 'until' })
+            #for n=0, while n<arr.length  -> for(n=0;n<arr.length;...
+            #for n=0, until n >= arr.length  -> for(n=0;!(n>=arr.length);...
+            .endExpression.produce( {negated: .conditionPrefix is 'until' })
 
         .out "; "
 
 if no increment specified, the default is indexVar++
 
-        if .increment
-            .out {CSL:.increment.statements}
-        else
-            .out .indexVar.name,"++"
+        .out .increment or [.indexVar.name, .conditionPrefix is 'down'? '--' else '++']
 
         .out ") ", .where
 
@@ -839,21 +936,19 @@ A `NameValuePair` is a single item in an object definition. Since we copy js for
       method produce() 
         .out .name,": ",.value
 
-### Append to class Grammar.ObjectLiteral ###
+### Append to class Grammar.ObjectLiteral ### also FreeObjectLiteral
 
 A `ObjectLiteral` is an object definition using key/value pairs like `{a:1,b:2}`. 
 JavaScript supports this syntax, so we just pass it through. 
-
-      method produce()
-        .out "{",{CSL:.items},"}"
-
-### Append to class Grammar.FreeObjectLiteral ###
 
 A `FreeObjectLiteral` is an object definition using key/value pairs, but in free-form
 (one NameValuePair per line, indented, comma is optional)
 
       method produce()
-        .out "{",{CSL:.items, freeForm:true},"}"
+
+          if .isMap, .out 'new Map().fromObject('
+          .out '{',{CSL:.items, freeForm:.constructor is Grammar.FreeObjectLiteral },'}'
+          if .isMap, .out ')'
 
 
 ### Append to class Grammar.FunctionDeclaration ###
@@ -865,7 +960,7 @@ A `FreeObjectLiteral` is an object definition using key/value pairs, but in free
 `export` prefix causes the function to be included in `module.exports`
 `generator` prefix marks a 'generator' function that can be paused by `yield` (js/ES6 function*)
 
-     method produce(theProperties:array)
+     method produce(theProperties:array, prefix:array)
 
 Generators are implemented in ES6 with the "function*" keyword (note the asterisk)
 
@@ -884,8 +979,9 @@ else, method?
       else if this instance of Grammar.MethodDeclaration
 
           #get owner where this method belongs to
-          if no .getOwnerPrefix() into var prefix 
-              fail with 'method "#{.name}" Cannot determine owner object'
+          if no prefix
+              if no .getOwnerPrefix() into prefix 
+                  fail with 'method "#{.name}" Cannot determine owner object'
 
           #if shim, check before define
           if .shim, .out "if (!",prefix,.name,")",NL
@@ -976,6 +1072,7 @@ If the function was adjectivated 'export', add to module.exports
           .out ";",NL,{COMMENT:'export'},NL
           .out .lexer.out.exportNamespace,'.',.name,'=',.name,";"
           .skipSemiColon = true
+
 
 --------------------
 ### Append to class Grammar.PrintStatement ###
@@ -1068,8 +1165,10 @@ we need to get the class constructor, and separate other class items.
 
         #end if body
 
+        var prefix = .getOwnerPrefix()
+
         if theConstructor
-          theConstructor.produce theProperties
+          theConstructor.produce theProperties, prefix
           .out ";",NL
         
         else
@@ -1081,6 +1180,10 @@ we need to get the class constructor, and separate other class items.
           for each propDecl in theProperties
               propDecl.produce('this.') //property assignments
           .out "};",NL
+
+          if prefix and prefix.length > 0
+              .out prefix,.name,"=",.name,";",NL //set fn as method of owner
+
         #end if
 
 Set parent class if we have one indicated
@@ -1091,7 +1194,8 @@ Set parent class if we have one indicated
 
 now out methods, which means create properties in the object-function-class prototype
 
-        .out theMethods
+        for each itemMethodDeclaration in theMethods
+            itemMethodDeclaration.produce undefined, prefix
 
 If the class was adjectivated 'export', add to module.exports
 
@@ -1123,6 +1227,13 @@ Append-to body contains properties and methods definitions.
         .out no .varRef.accessors? 'var ':'' ,.varRef,'={};'
         .out .body
         .skipSemiColon = true
+
+        if not .lexer.out.browser
+            if .export and not .default
+                .out ";",NL,{COMMENT:'export'},NL
+                .out .lexer.out.exportNamespace,'.',.name,'=',.name,";"
+
+
 
 ### Append to class Grammar.TryCatch ###
 

@@ -8,7 +8,10 @@ and comma or semicolon **Separated Lists** of symbols.
 
 Dependencies
 
-    import Lexer, log 
+    import Parser, ControlledError
+    import logger, Strings 
+    
+    shim import LiteCore, Map
 
 ### public default Class ASTBase 
 
@@ -17,23 +20,14 @@ It contains basic functions to parse a token stream.
 
 #### properties
         parent: ASTBase 
-        name, keyword 
+        name:string, keyword:string
 
         type, keyType, itemType
         extraInfo // if parse failed, extra information 
 
-        lexer:Lexer, lineInx
+        lexer: Parser.Lexer, lineInx
         sourceLineNum, column
         indent, locked
-
-To compile to C, we must surrender js dynamic "reflection". We can not treat
-any instance as a "map string to any". 
-In order to walk the AST, we create a "children" array, where we put all AST nodes
-created as childs of this node
-
-        #ifdef TARGET_C
-        children: ASTBase array // of ASTBase 
-        #endif
 
 #### Constructor (parent:ASTBase, name)
 
@@ -42,16 +36,17 @@ created as childs of this node
 
 Get lexer from parent
 
-        .lexer = parent.lexer
+        if parent
+            .lexer = parent.lexer
 
 Remember this node source position.
 Also remember line index in tokenized lines, and indent
 
-        if .lexer 
-          .sourceLineNum = .lexer.sourceLineNum
-          .column = .lexer.token.column
-          .indent = .lexer.indent
-          .lineInx = .lexer.lineInx
+            if .lexer 
+                .sourceLineNum = .lexer.sourceLineNum
+                .column = .lexer.token.column
+                .indent = .lexer.indent
+                .lineInx = .lexer.lineInx
 
         #debug "created [#.constructor.name] indent #.indent col:#.column #{.lexer? .lexer.token:''}"
 
@@ -62,7 +57,7 @@ for the given syntax. For example, if the `FunctionDeclaration` class see the to
 we are certain this is the right class to use, so we 'lock()'. 
 Once locked, any **req**uired token not present causes compilation to fail.
 
-        .locked = on
+        .locked = true
 
 #### helper method getParent(searchedClass)
 **getParent** method searchs up the AST tree until a specfied node class is found
@@ -83,22 +78,23 @@ Once locked, any **req**uired token not present causes compilation to fail.
         return "[#{.constructor.name}]"
 
 
-#### method throwError(msg)
-**throwError** add node position info and throws a 'controled' error.
-
-A 'controled' error, shows only err.message
-
-A 'un-controled' error is an unhandled exception in the compiler code itself, 
-and it shows error message *and stack trace*.
-
-        var err = new Error("#{.positionText()}. #{msg}")
-        err.extra.set "controled",true
-        throw err
-
 #### helper method sayErr(msg)
 
-        log.error .positionText(), msg
-          
+        logger.error .positionText(), msg
+
+#### helper method warn(msg)
+
+        logger.warning .positionText(), msg
+
+#### method throwError(msg)
+**throwError** add node position info and throws a 'controlled' error.
+
+A 'controlled' error, shows only err.message
+
+A 'un-controlled' error is an unhandled exception in the compiler code itself, 
+and it shows error message *and stack trace*.
+
+        logger.throwControlled "#{.positionText()}. #{msg}"
 
 #### method throwParseFailed(msg)
 throws a parseFailed-error
@@ -111,16 +107,15 @@ If the AST node was NOT locked, it's a soft-error, and will not abort compilatio
 as the parent node will try other AST classes against the token stream before failing.
 
         //var err = new Error("#{.positionText()}. #{msg}")
-        var err = new Error("#{.lexer.posToString()}. #{msg}")
-        err.extra.set "soft", not .locked  #if not locked, is a soft-error, another Grammar class migth parse.
-        err.extra.set "controled", true
-        throw err
+        var cErr = new ControlledError("#{.lexer.posToString()}. #{msg}")
+        cErr.soft = not .locked
+        throw cErr
 
 #### method parse()
 abstract method representing the TRY-Parse of the node.
 Child classes _must_ override this method
       
-        .throwError 'Parser Not Implemented: ' + .constructor.name
+        .throwError 'Parser Not Implemented'
 
 #### method produce()
 **produce()** is the method to produce target code
@@ -128,7 +123,7 @@ Target code produces should override this, if the default production isnt: `.out
 
         .out .name
 
-#### method parseDirect(key,directObj)
+#### method parseDirect(key, directMap)
 
 We use a DIRECT associative array to pick the exact AST node to parse 
 based on the actual token value or type.
@@ -136,18 +131,13 @@ This speeds up parsing, avoiding parsing by trial & error
 
 Check keyword
 
-        if directObj.hasOwnProperty(key)
+        if directMap.get(key) into var param
 
-get Symbol-Class or array of
-
-            var param = directObj[key]
-
-try parse (call .opt) Accept Array as param.
+try parse by calling .opt, accept Array as param
             
-            var statement = case  
-              when param instance of Array then .opt.apply(this, param)
-              else .opt(param)
-            end
+            var statement = param instance of Array ? 
+                    ASTBase.prototype.opt.apply(this, param) 
+                    : .opt(param)
 
 return parsed statement or nothing
 
@@ -180,7 +170,7 @@ Remember the actual position, to rewind if all the arguments to `opt` fail
 For each argument, -a class or a string-, we will attempt to parse the token stream 
 with the class, or match the token type to the string.
 
-        for each searched in arguments
+        for each searched in arguments.toArray()
 
 skip empty, null & undefined
 
@@ -191,12 +181,11 @@ For strings we check the token **value** or **TYPE** (if searched is all-upperca
 
           if typeof searched is 'string'
 
-            declare on searched
-              toUpperCase #for strings
+            declare searched:string
 
             #debug spaces, .constructor.name,'TRY',searched, 'on', .lexer.token.toString()
 
-            var isTYPE = /^[A-Z_]+$/.test(searched)
+            var isTYPE = searched.charAt(0)>="A" and searched.charAt(0)<="Z" and searched is searched.toUpperCase()
             var found
 
             if isTYPE 
@@ -212,7 +201,7 @@ is a "pass by reference". You return a "pointer" to the object.
 If we return the 'token' object, the calling function will recive a "pointer"
 and it can inadvertedly alter the token object in the token stream. (it should not, leads to subtle bugs)
 
-              log.debug spaces, .constructor.name,'matched OK:',searched, .lexer.token.value
+              logger.debug spaces, .constructor.name,'matched OK:',searched, .lexer.token.value
               var result = .lexer.token.value 
 
 Advance a token, .lexer.token always has next token
@@ -224,10 +213,9 @@ Advance a token, .lexer.token always has next token
 
 "searched" is an AST class
 
-            declare on searched
-              name #for AST nodes
+            declare searched:Function //class
 
-            log.debug spaces, .constructor.name,'TRY',searched.name, 'on', .lexer.token.toString()
+            logger.debug spaces, .constructor.name,'TRY',searched.name, 'on', .lexer.token.toString()
 
 if the argument is an AST node class, we instantiate the class and try the `parse()` method.
 `parse()` can fail with `ParseFailed` if the syntax do not match
@@ -238,59 +226,52 @@ if the argument is an AST node class, we instantiate the class and try the `pars
 
                 astNode.parse() # if it can't parse, will raise an exception
 
-                log.debug spaces, 'Parsed OK!->',searched.name
-
-                #ifdef TARGET_C
-                if no .children, .children = []
-                .children.push astNode
-                #endif
+                logger.debug spaces, 'Parsed OK!->',searched.name
 
                 return astNode # parsed ok!, return instance
 
             catch err
-
+                if err isnt instance of ControlledError, throw err //re-raise if not ControlledError
+                declare err:ControlledError
+                
 If parsing fail, but the AST node were not 'locked' on target, (a soft-error),
 we will try other AST nodes.
 
-              if err.extra.get("soft")
-                  .lexer.softError = err
-                  log.debug spaces, searched.name,'parse failed.',err.message
+                if err.soft
+                    .lexer.softError = err
+                    logger.debug spaces, searched.name,'parse failed.',err.message
 
 rewind the token stream, to try other AST nodes
 
-                  log.debug "<<REW to", "#{startPos.sourceLineNum}:#{startPos.token.column or 0} [#{startPos.index}]", startPos.token.toString()
-                  .lexer.setPos startPos
+                    logger.debug "<<REW to", "#{startPos.sourceLineNum}:#{startPos.token.column or 0} [#{startPos.index}]", startPos.token.toString()
+                    .lexer.setPos startPos
 
-              else
+                else
 
 else: it's a hard-error. The AST node were locked-on-target.
 We abort parsing and throw.
 
-                  # debug
-
-                  # the first hard-error is the most informative, the others are cascading ones
-                  if .lexer.hardError is null 
-                      .lexer.hardError = err
-                  #end if
+                    # the first hard-error is the most informative, the others are cascading ones
+                    if .lexer.hardError is null, .lexer.hardError = err
 
 raise up, abort parsing
+              
+                    raise err
 
-                  raise err
+                end if - type of error
 
-              #end if - type of error
-
-            #end catch
+            end catch
             
-          #end if - string or class
+          end if - string or class
 
-        #loop - try the next argument
+        end loop - try the next argument
 
 No more arguments.
-`opt` returns `undefined` if none of the arguments could be use to parse the stream.
+`opt` returns `undefined` if none of the arguments can be use to parse the token stream.
 
         return undefined
 
-      #end method opt
+     end method opt
 
 
 #### method req() returns ASTBase
@@ -303,10 +284,10 @@ so we just return the node that `opt` found.
 
 else, If `opt` returned nothing, we give the user a useful error.
 
-        var result = .opt.apply(this,arguments)
+        var result = ASTBase.prototype.opt.apply(this,arguments)
 
         if no result 
-          .throwParseFailed "#{.constructor.name}:#{.extraInfo} found #{.lexer.token.toString()} but #{.listArgs(arguments)} required"
+          .throwParseFailed "#{.constructor.name}:#{.extraInfo or ''} found #{.lexer.token.toString()} but #{.listArgs(arguments)} required"
 
         return result
 
@@ -315,7 +296,7 @@ else, If `opt` returned nothing, we give the user a useful error.
 (performance) call req only if next token (value) in list
         
         if .lexer.token.value in arr
-            return .req.apply(this,arr)
+            return ASTBase.prototype.req.apply(this,arr)
         else
             .throwParseFailed "not in list"
 
@@ -327,7 +308,7 @@ this generic method will look for zero or more of the requested classes,
         var list=[]
         
         do
-          item = .opt.apply(this,arguments)
+          item = ASTBase.prototype.opt.apply(this,arguments)
           if no item then break
           list.push item
         loop
@@ -340,26 +321,32 @@ this generic method will look for zero or more of the requested classes,
 Start optSeparatedList
 
         var result = []
-        var optSepar = 'NEWLINE' #newline is optional before and after separator
+        var optSepar
 
-if the requested closer is NEWLINE, NEWLINE can't be optional
+except the requested closer is NEWLINE, 
+NEWLINE is included as an optional extra separator 
+and also we allow a free-form mode list
 
-        if closer is 'NEWLINE' #Except required closer *IS* NEWLINE
-            optSepar = undefined #no optional separ
+        if closer isnt 'NEWLINE' #Except required closer *IS* NEWLINE
 
-else, if the list starts with a NEWLINE, 
-process as free-form mode separated list, where NEWLINE is a valid separator.
+if the list starts with a NEWLINE, 
+assume an indented free-form mode separated list, 
+where NEWLINE is a valid separator.
 
-        else if .lexer.token.type is 'NEWLINE'
-          return .optFreeFormList( astClass, separator, closer )
+            if .lexer.token.type is 'NEWLINE'
+                return .optFreeFormList( astClass, separator, closer )
+
+else normal list, but NEWLINE is accepted as optional before and after separator
+
+            optSepar = 'NEWLINE' #newline is optional before and after separator
 
 normal separated list, 
 loop until closer found
 
-        log.debug "optSeparatedList [#{.constructor.name}] indent:#{.indent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer-'
+        logger.debug "optSeparatedList [#{.constructor.name}] indent:#{.indent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer-'
 
         var startLine = .lexer.sourceLineNum
-        do until .opt(closer)
+        do until .opt(closer) or .lexer.token.type is 'EOF'
 
 get a item
 
@@ -382,11 +369,11 @@ here, a 'separator' (comma/semicolon) means: 'there is another item'.
 Any token other than 'separator' means 'end of list'
 
             if no .opt(separator)
-              # any token other than comma/semicolon means 'end of comma separated list'
-              # but if a closer was required, then "other" token is an error
-              if closer, .throwError "Expected '#{closer}' to end list started at line #{startLine}, got '#{.lexer.token.value}'"
-              if consumedNewLine, .lexer.returnToken()
-              break # else ok, end of list
+                # any token other than comma/semicolon means 'end of comma separated list'
+                # but if a closer was required, then "other" token is an error
+                if closer, .throwError "Expected '#{closer}' to end list started at line #{startLine}, got '#{.lexer.token.value}'"
+                if consumedNewLine, .lexer.returnToken()
+                break # if no error, end of list
             end if
 
 optional newline after comma 
@@ -414,7 +401,7 @@ First line sets indent level
         var startLine = .lexer.sourceLineNum
         var blockIndent = .lexer.indent
 
-        log.debug "optFreeFormList [#{.constructor.name}] parentname:#{.parent.name} parentIndent:#{parentIndent}, blockIndent:#{blockIndent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no-'
+        logger.debug "optFreeFormList [#{.constructor.name}] parentname:#{.parent.name} parentIndent:#{parentIndent}, blockIndent:#{blockIndent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no-'
 
         if blockIndent <= parentIndent #first line is same or less indented than parent - assume empty list
           .lexer.sayErr "free-form SeparatedList: next line is same or less indented (#{blockIndent}) than parent indent (#{parentIndent}) - assume empty list"
@@ -422,11 +409,12 @@ First line sets indent level
 
 now loop until closer or an indent change
 
-        do until .opt(closer) #if closer found (`]`, `)`, `}`), end of list
+        #if closer found (`]`, `)`, `}`), end of list
+        do until .opt(closer) or .lexer.token.type is 'EOF'
 
 check for indent changes
 
-            log.debug "freeForm Mode .lexer.indent:#{.lexer.indent} block indent:#{blockIndent} parentIndent:#{parentIndent}"
+            logger.debug "freeForm Mode .lexer.indent:#{.lexer.indent} block indent:#{blockIndent} parentIndent:#{parentIndent}"
             if .lexer.indent isnt blockIndent
 
 indent changed:
@@ -475,7 +463,7 @@ NEWLINE also is optional and valid
 
         loop #try get next item
 
-        log.debug "END freeFormMode [#{.constructor.name}] blockIndent:#{blockIndent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer-'
+        logger.debug "END freeFormMode [#{.constructor.name}] blockIndent:#{blockIndent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer-'
 
         //if closer then .opt('NEWLINE') # consume optional newline after closer in free-form mode
 
@@ -525,9 +513,9 @@ Helper functions for code generation
 *out* is a helper function for code generation
 It evaluates and output its arguments. uses .lexer.out
 
-        var out = .lexer.out
+        var rawOut = .lexer.outCode
 
-        for each item in arguments
+        for each item in arguments.toArray()
 
 skip empty items
 
@@ -535,8 +523,8 @@ skip empty items
 
 if it is the first thing in the line, out indentation
 
-          if not out.currLine and .indent > 1
-              out.put String.spaces(.indent-1)
+          if not rawOut.currLine and .indent > 1
+              rawOut.put Strings.spaces(.indent-1)
 
 if it is an AST node, call .produce()
 
@@ -547,85 +535,79 @@ if it is an AST node, call .produce()
 New line char means "start new line"
 
           else if item is '\n' 
-            out.startNewLine()
+            rawOut.startNewLine()
 
 a simple string, out the string
 
           else if type of item is 'string'
-            out.put item
-            
-else, Object codes
-
-          else if type of item is 'object'
-
-            declare on item
-              COMMENT:string, NLI, CSL:Object array, freeForm, h
+            rawOut.put item
             
 if the object is an array, resolve with a recursive call
 
-            if item instance of Array
-              .out.apply this,item #recursive
+          else if item instance of Array
+              # Recursive #
+              ASTBase.prototype.out.apply this,item 
 
+else, Object codes
+
+          else if item instanceof Map
+
+              declare item: Map string to any
+
+            // expected keys:
+            //  COMMENT:string, NLI, CSL:Object array, freeForm, h
+            
 {CSL:arr} -> output the array as Comma Separated List
  
-            else if item.hasOwnProperty('CSL')
+              if item.get('CSL') into var CSL:array
 
-              if no item.CSL, continue #empty list
+                  // additional keys: pre,post,separator
+                  var separator = item.get('separator') or ', '
+                  
+                  for each inx,listItem in CSL
 
-              declare on item pre,post,separator
+                    declare valid listItem.out
 
-              for each inx,listItem in item.CSL
+                    if inx>0 
+                      rawOut.put separator
 
-                declare valid listItem.out
+                    if item.get('freeForm')
+                        rawOut.put '\n        '
 
-                if inx>0 
-                  out.put item.separator or ', '
+                    #recurse
+                    .out item.get('pre'), listItem, item.get('post')
 
-                if item.freeForm 
-                  if listItem instanceof ASTBase
-                    listItem.out '\n' #(prettier generated code) use "listItem" indent
-                  else
-                    item.out '\n'
+                  end for
 
-                .out item.pre, listItem, item.post
-
-              end for
-
-              if item.freeForm, .out '\n' # (prettier generated code)
+                  if item.get('freeForm'), rawOut.put '\n' # (prettier generated code)
 
 {COMMENT:text} --> output text as a comment 
  
-            else if item.COMMENT isnt undefined
+              else if item.get('COMMENT') into var comment:string
 
-              if no .lexer or .lexer.options.comments #comments level > 0
+                  if no .lexer or .lexer.options.comments #comments level > 0
 
-                  # prepend // if necessary
-                  if type of item isnt 'string' or not item.COMMENT.startsWith("//"), out.put "// "
-                  .out item.COMMENT
+                      # prepend // if necessary
+                      if type of item isnt 'string' or not comment.startsWith("//"), rawOut.put "// "
+                      .out comment
 
 {h:1/0} --> enable/disabe output to header file
  
-            else if item.h isnt undefined
-                out.startNewLine
-                out.toHeader = item.h
+              else if item.get('h') into var header:number isnt undefined
+                  rawOut.startNewLine
+                  rawOut.toHeader = header
 
-else, unrecognized object
-
-            else
-              var msg = "method:ASTBase.out() Caller:#{.constructor.name}: object not recognized. type: "+ typeof item
-              log.debug msg
-              log.debug item
-              .throwError msg
+              else 
+                  .sayErr "ASTBase method out, item:map: unrecognized map keys: #{item}"
 
 Last option, out item.toString()
 
           else
-            out.put item.toString() # try item.toString()
+              rawOut.put item.toString() # try item.toString()
 
           end if
 
-
-        #loop, next item
+        end loop, next item
 
 
 #### helper method outLineAsComment(preComment,lineInx)
@@ -639,29 +621,29 @@ manage optional parameters
           lineInx = preComment
           preComment = ""
         else
-          preComment+=": "
+          preComment="#{preComment}: "
 
 validate index
 
-        if no .lexer, return log.error("ASTBase.outLineAsComment #{lineInx}: NO LEXER")
+        if no .lexer, return logger.error("ASTBase.outLineAsComment #{lineInx}: NO LEXER")
 
         var line = .lexer.infoLines[lineInx]
-        if no line, return log.error("ASTBase.outLineAsComment #{lineInx}: NO LINE")
+        if no line, return logger.error("ASTBase.outLineAsComment #{lineInx}: NO LINE")
 
-        if line.type is Lexer.LineTypes.BLANK
-            .lexer.out.blankLine
+        if line.type is Parser.LineTypes.BLANK
+            .lexer.outCode.blankLine
             return
 
 out as comment
 
         var prepend=""
         if preComment or not line.text.startsWith("//"), prepend="// "
-        if no .lexer.out.currLine, prepend=String.spaces(line.indent)+prepend
-        if preComment or line.text, .lexer.out.put prepend+preComment+line.text
+        if no .lexer.outCode.currLine, prepend="#{Strings.spaces(line.indent)}#{prepend}"
+        if preComment or line.text, .lexer.outCode.put "#{prepend}#{preComment}#{line.text}"
 
-        .lexer.out.startNewLine
+        .lexer.outCode.startNewLine
 
-        .lexer.out.lastOutCommentLine = lineInx
+        .lexer.outCode.lastOutCommentLine = lineInx
 
       
 #### helper method outLinesAsComment(fromLine,toLine)
@@ -669,13 +651,13 @@ out as comment
         if no .lexer.options.comments, return 
 
         # if line has something and is not spaces
-        if .lexer.out.currLine and .lexer.out.currLine.trim()
-          .lexer.out.startNewLine()
+        if .lexer.outCode.currLine and .lexer.outCode.currLine.trim()
+            .lexer.outCode.startNewLine()
 
-        .lexer.out.currLine = undefined #clear indents
+        .lexer.outCode.currLine = undefined #clear indents
 
         for i=fromLine to toLine
-          .outLineAsComment i
+            .outLineAsComment i
 
 
 #### helper method outPrevLinesComments(startFrom) 
@@ -688,14 +670,14 @@ before the statement
       var inx = startFrom or .lineInx or 0
       if inx<1, return
 
-      default .lexer.out.lastOutCommentLine = -1
+      default .lexer.outCode.lastOutCommentLine = -1
 
 find comment lines in the previous lines of code. 
 
       var preInx = inx
-      while preInx and preInx>.lexer.out.lastOutCommentLine 
+      while preInx and preInx>.lexer.outCode.lastOutCommentLine 
           preInx--
-          if .lexer.infoLines[preInx].type is Lexer.LineTypes.CODE 
+          if .lexer.infoLines[preInx].type is Parser.LineTypes.CODE 
               preInx++
               break
 
@@ -724,7 +706,7 @@ such as `a = 1 #comment`. We want to try to add these at the end of the current 
 
 #### helper method addSourceMap(mark)
 
-        .lexer.out.addSourceMap mark, .sourceLineNum, .column, .indent
+        .lexer.outCode.addSourceMap mark, .sourceLineNum, .column, .indent
 
 
 #### helper method levelIndent()
@@ -734,44 +716,34 @@ show indented messaged for debugging
         var node = .parent
         while node
           node = node.parent
-          indent += '  '
+          indent = '#{indent}  ' //add 2 spaces
         return indent
 
-    #ifdef TARGET_C
+#### helper method callOnSubTree(methodSymbol,excludeClass) # recursive
 
-#### helper method callOnSubTree(dispatcher:function)
-        dispatcher.call this //call method dispatcher on this instance
-        if .children 
-            for each child in .children
-                child.callOnSubTree dispatcher // call on all children and children's children
+This is instance has the method, call the method on the instance
 
-    #else
+      if this.tryGetMethod(methodSymbol) into var theFunction, theFunction.call(this)
 
-#### helper method callOnSubTree(methodName,classFilter) # recursive
-
-This is instance has the method, call it
-
-      if this has property methodName, this[methodName]()
-
-      if classFilter and this is instance of classFilter, return #do not recurse on filtered's childs
+      if excludeClass and this is instance of excludeClass, return #do not recurse on filtered's childs
 
 recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
 
-      for each own property name in this
+      for each property name,value in this
         where name not in ['parent','importedModule','requireCallNodes','exportDefault']
 
-              if this[name] instance of ASTBase 
-                  this[name].callOnSubTree methodName,classFilter #recurse
+            if value instance of ASTBase 
+                declare value:ASTBase
+                value.callOnSubTree methodSymbol,excludeClass #recurse
 
-              else if this[name] instance of Array
-                  for each item in this[name] where item instance of ASTBase
+            else if value instance of Array
+                declare value:array 
+                for each item in value where item instance of ASTBase
                     declare item:ASTBase
-                    item.callOnSubTree methodName,classFilter
+                    item.callOnSubTree methodSymbol,excludeClass
       end for
 
-    #endif
-
-
+    
 #### helper method getRootNode()
 
 **getRootNode** method moves up in the AST up to the node holding the global scope ("root").
@@ -786,36 +758,10 @@ recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
 #### helper method compilerVar(name) 
 
 helper function compilerVar(name)
-return root.compilerVars.members.get(name).value
+return root.compilerVars.members.get(name)
 
-        if .getRootNode().parent.compilerVars.findOwnMember(name) into var asked
-          declare valid asked.findOwnMember
-          return asked.findOwnMember("**value**")
+        return .getRootNode().parent.compilerVars.members.get(name) 
 
-----------------------------------------------------------------------------------------------
+    end class ASTBase
 
-### export helper function setUniqueID(prefix, value)
-Generate unique numbers, starting at 1
-
-        uniqueIds[prefix] = value-1
-
-### export helper function getUniqueID(prefix) returns int
-Generate unique numbers, starting at 1
-
-        var id = uniqueIds[prefix] or 0
-
-        id += 1
-
-        uniqueIds[prefix] = id
-
-        return id
-
-### export helper function getUniqueVarName(prefix) returns string
-Generate unique variable names
-
-        return ('_'+ prefix) + getUniqueID(prefix)
-
-Support Module Var:
-
-    var uniqueIds={}
 

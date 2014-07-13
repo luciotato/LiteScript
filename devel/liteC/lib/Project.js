@@ -9,21 +9,19 @@
 // compile LiteScript code.
 
    // import
-   var ASTBase = require('./ASTBase');
-   var Grammar = require('./Grammar');
-   var Lexer = require('./Lexer');
-   var NameDeclaration = require('./NameDeclaration');
-   var Validate = require('./Validate');
-   var log = require('./log');
-   var color = require('./color');
+   var ASTBase = require('./ASTBase.js');
+   var Grammar = require('./Grammar.js');
+   var Parser = require('./Parser.js');
+   var Names = require('./Names.js');
+   var Validate = require('./Validate.js');
+   var ControlledError = require('./lib/ControlledError.js');
+   var GeneralOptions = require('./lib/GeneralOptions.js');
+   var logger = require('./lib/logger.js');
+   var color = require('./lib/color.js');
+   var Strings = require('./lib/Strings.js');
 
-    //ifdef PROD_C
-   // import Map
-   var Map = require('./Map');
-    // declare on Error
-        // extra: Map string to Object
-        // code
-    // #endif
+   // shim import Map
+   var Map = require('./lib/Map.js');
 
 // Get the 'Environment' object for the compiler to use.
 // The 'Environment' object, must provide functions to load files, search modules,
@@ -31,16 +29,16 @@
 // The `Environment` abstraction allows us to support compile on server(node) or the browser.
 
    // import Environment
-   var Environment = require('./Environment');
+   var Environment = require('./lib/Environment.js');
 
 // Require the Producer (to include it in the dependency tree)
 
     //ifdef PROD_C
    // import Producer_c
-   var Producer_c = require('./Producer_c');
-    // #else
+   var Producer_c = require('./Producer_c.js');
+    //else
     //import Producer_js
-    // #endif
+    //endif
 
 // ----------------
    // export default class Project
@@ -48,118 +46,104 @@
     function Project(filename, options){
      //      properties
 
-        // options
+        // options: GeneralOptions
         // name
         // moduleCache: Map string to Grammar.Module
-        // root: Grammar.Module
-        // compilerVars: NameDeclaration
-        // globalScope: NameDeclaration
+        // rootModule: Grammar.Module
+        // compilerVars: Map string to Names.Declaration
         // main: Grammar.Module
         // Producer
         // recurseLevel = 0
         this.recurseLevel=0;
-
-// normalize options
-
-        //ifdef PROD_C
-       var DEFAULT_TARGET = "c";
-        // #else
-        //var DEFAULT_TARGET="js"
-        // #end if
-
-       // default options =
-       if(!options) options={};
-       if(options.verbose===undefined) options.verbose=1;
-       if(options.warning===undefined) options.warning=1;
-       if(options.comments===undefined) options.comments=1;
-       if(options.target===undefined) options.target=DEFAULT_TARGET;
-       if(options.outDir===undefined) options.outDir='.';
-       // options.debug: undefined
-       // options.skip: undefined
-       // options.nomap: undefined
-       // options.single: undefined
-       // options.compileIfNewer: undefined
-       // options.browser: undefined
-       if(options.extraComments===undefined) options.extraComments=1;
-       if(options.defines===undefined) options.defines=[];
-       if(options.mainModuleName===undefined) options.mainModuleName=filename;
-       // options.basePath: undefined
-       if(options.outBasePath===undefined) options.outBasePath=options.outDir;
-
 
 // Initialize this project. Project has a cache for required modules.
 // As with node's `require` mechanism, a module,
 // when imported|required is only compiled once and then cached.
 
        this.name = 'Project';
-       this.options = options;
-       this.moduleCache = new Map(); //{}
 
-       log.errorCount = 0;
-       log.options.verbose = options.verbose;
-       log.options.warning = options.warning;
-       log.options.debug.enabled = options.debug;
-       // if options.debug, log.debugClear
-       if (options.debug) {log.debugClear();};
+       this.options = options;
+       // default options.now = new Date()
+       if(options.now===undefined) options.now=new Date();
+
+       this.moduleCache = new Map();
+
+       logger.errorCount = 0;
+       logger.options.verboseLevel = options.verboseLevel;
+       logger.options.warningLevel = options.warningLevel;
+       logger.options.debugOptions.enabled = options.debugEnabled;
+       // if options.debugEnabled, logger.debugClear
+       if (options.debugEnabled) {logger.debugClear()};
 
 // set basePath from main module path
 
-       Environment.setBasePath(filename, options);
+       var tempFileInfo = new Environment.FileInfo(filename);
+       options.projectDir = tempFileInfo.dir;
+       options.mainModuleName = './' + tempFileInfo.base;
+       options.outDir = Environment.resolvePath(options.outDir);
 
-       log.info('Base Path:', this.options.basePath);
-       log.info('Main Module:', this.options.mainModuleName);
-       log.info('Out Base Path:', this.options.outBasePath);
+       Environment.setBaseInfo(options.projectDir, options.outDir, options.target);
 
-// create a 'root' dummy-module to hold global scope
-
-       this.root = new Grammar.Module(this);
-       this.root.name = 'Project Root';
-       this.root.fileInfo = new Environment.FileInfo({name: 'Project'});
-       this.root.fileInfo.relFilename = 'Project';
-       this.root.fileInfo.dirname = options.basePath;
-
-// The "scope" of rootNode is the global scope.
-// Initialize the global scope
-
-       Validate.createGlobalScope(this);
-
-// Note: we defer requiring utility string functions to *after* **createGlobalScope**
-// to avoid tainting core classes in the compiled module global scope.
-// In 'string-shims' we add methods to core's String & Array
-
-       // import StringShims
-       var StringShims = require('./StringShims');
-
+       logger.info('Project Dir:', this.options.projectDir);
+       logger.info('Main Module:', this.options.mainModuleName);
+       logger.info('Out Dir:', this.options.outDir);
 
 // compiler vars, to use at conditional compilation
 
-       this.compilerVars = new NameDeclaration("Compiler Vars");
-       this.compilerVars.addMember('debug', {value: true});
+       this.compilerVars = new Map();
 
        // for each def in options.defines
        for( var def__inx=0,def ; def__inx<options.defines.length ; def__inx++){def=options.defines[def__inx];
-           this.compilerVars.addMember(def, {value: true});
+           this.compilerVars.set(def, new Names.Declaration(def));
        };// end for each in options.defines
 
 // add 'inNode' and 'inBrowser' as compiler vars
 
+        //ifdef TARGET_JS
+       this.compilerVars.set('ENV_JS', new Names.Declaration("ENV_JS"));
         // declare var window
        var inNode = typeof window === 'undefined';
-       this.compilerVars.addMember('inNode', {value: inNode});
-       this.compilerVars.addMember('inBrowser', {value: !(inNode)});
+       // if inNode
+       if (inNode) {
+           this.compilerVars.set('ENV_NODE', new Names.Declaration("ENV_NODE"));
+       }
+       
+       else {
+           this.compilerVars.set('ENV_BROWSER', new Names.Declaration("ENV_BROWSER"));
+       };
+       // end if
+        //endif
 
-        //log.info .root.compilerVars
-        //log.info ""
+        //ifdef TARGET_C
+        //.compilerVars.set 'ENV_C', new Names.Declaration("ENV_C")
+        //endif
 
-// in 'options' we receive also the target code to generate. (default is 'js')
+       var targetDef = 'TARGET_' + (options.target.toUpperCase());
+       this.compilerVars.set(targetDef, new Names.Declaration(targetDef));
 
-// Now we load the **Producer** module for the selected target code.
+       logger.msg('preprocessor #defined', this.compilerVars.keys());
 
-// The **Producer** module will append to each Grammar class a `produce()` method
-// which generates target code for the AST class
+        //logger.message .compilerVars
+        //logger.info ""
 
-       this.Producer = require('./Producer_' + options.target);
+// create a 'rootModule' module to hold global scope
+
+       this.rootModule = new Grammar.Module(); //parent is Project
+       this.rootModule.name = '*Global Scope*';
+
+       this.rootModule.fileInfo = new Environment.FileInfo('Project');
+       this.rootModule.fileInfo.relFilename = 'Project';
+       this.rootModule.fileInfo.dir = options.projectDir;
+       this.rootModule.fileInfo.outFilename = "" + options.outDir + "/_project_";
+
+
+// Validate.initialize will prepare the global scope
+// by parsing the file: "lib/GlobalScopeJS.interface.md"
+
+       Validate.initialize(this);
     };
+
+// In 'options' we receive also the target code to generate. (default is 'js')
 
     // method compile()
     Project.prototype.compile = function(){
@@ -167,47 +151,45 @@
 // Import & compile the main module. The main module will, in turn, 'import' and 'compile'
 // -if not cached-, all dependent modules.
 
-       this.main = this.importModule(this.root, {name: this.options.mainModuleName});
+       var importInfo = new Environment.ImportParameterInfo();
+       importInfo.name = this.options.mainModuleName;
+       this.main = this.importModule(this.rootModule, importInfo);
        this.main.isMain = true;
 
-       // if log.errorCount is 0
-       if (log.errorCount === 0) {
-           log.info("\nParsed OK");
+       // if logger.errorCount is 0
+       if (logger.errorCount === 0) {
+           logger.info("\nParsed OK");
        };
 
 // Validate
 
        // if no .options.skip
        if (!this.options.skip) {
-           log.info("Validating");
+           logger.info("Validating");
            Validate.validate(this);
-           // if log.errorCount, log.throwControled log.errorCount,"errors"
-           if (log.errorCount) {log.throwControled(log.errorCount, "errors");};
+           // if logger.errorCount, logger.throwControlled '#{logger.errorCount} errors'
+           if (logger.errorCount) {logger.throwControlled('' + logger.errorCount + ' errors')};
        };
 
 // Produce, for each module
 
-       log.info("\nProducing " + this.options.target + " at " + this.options.outDir + "\n");
-
-        //ifdef PROD_C
-       Producer_c.preProduction(this);
-        // #endif
+       logger.info("\nProducing " + this.options.target + " at " + this.options.outDir + "\n");
 
        // for each moduleNode:Grammar.Module in map .moduleCache
        var moduleNode=undefined;
-       if(!this.moduleCache.map_members) throw(new Error("for each in map: not a Map, no .map_members"));
-       for ( var moduleNode__propName in this.moduleCache.map_members) if (this.moduleCache.map_members.hasOwnProperty(moduleNode__propName)){moduleNode=this.moduleCache.map_members[moduleNode__propName];
+       if(!this.moduleCache.dict) throw(new Error("for each in map: not a Map, no .dict property"));
+       for ( var moduleNode__propName in this.moduleCache.dict) if (this.moduleCache.dict.hasOwnProperty(moduleNode__propName)){moduleNode=this.moduleCache.dict[moduleNode__propName];
          {
 
          // if not moduleNode.fileInfo.isCore and moduleNode.referenceCount
          if (!(moduleNode.fileInfo.isCore) && moduleNode.referenceCount) {
 
-           log.extra("source:", moduleNode.fileInfo.importInfo.name);
+           logger.extra("source:", moduleNode.fileInfo.importInfo.name);
            var result = undefined;
 
            // if not moduleNode.fileInfo.isLite
            if (!(moduleNode.fileInfo.isLite)) {
-               log.extra('non-Lite module, copy to out dir.');
+               logger.extra('non-Lite module, copy to out dir.');
                 // #copy the file to output dir
                var contents = Environment.loadFile(moduleNode.fileInfo.filename);
                Environment.externalCacheSave(moduleNode.fileInfo.outFilename, contents);
@@ -221,7 +203,7 @@
 // produce & get result target code
 
                this.produceModule(moduleNode);
-               var resultLines = moduleNode.lexer.out.getResult();
+               var resultLines = moduleNode.lexer.outCode.getResult();
 
 // save to disk / add to external cache
 
@@ -229,16 +211,16 @@
                result = "" + resultLines.length + " lines";
 
                 //ifdef PROD_C
-               resultLines = moduleNode.lexer.out.getResult(1); //get .h file contents
+               resultLines = moduleNode.lexer.outCode.getResult(1); //get .h file contents
                // if resultLines.length
                if (resultLines.length) {
-                   Environment.externalCacheSave(moduleNode.fileInfo.outFilename.slice(0, -1) + 'h', resultLines);
+                   Environment.externalCacheSave('' + (moduleNode.fileInfo.outFilename.slice(0, -1)) + 'h', resultLines);
                };
                // end if
                
            };
 
-                // #else
+                //else
                 //if moduleNode.lexer.out.sourceMap
 
                     //Environment.externalCacheSave moduleNode.fileInfo.outFilename+'.map',
@@ -247,7 +229,7 @@
                                           //sourceFiles  : [moduleNode.fileInfo.sourcename]
                                           //})
                 //end if
-                // #endif
+                //endif
 
 //                 var exportedArray = moduleNode.exports.toExportArray()
 //                 var cacheContents = JSON.stringify({required:[], exported:exportedArray},null,2)
@@ -256,8 +238,8 @@
 
            // end if
 
-           log.message("" + color.green + "[OK] " + result + " -> " + moduleNode.fileInfo.outRelFilename + " " + color.normal);
-           log.extra();// #blank line
+           logger.msg("" + color.green + "[OK] " + result + " -> " + moduleNode.fileInfo.outRelFilename + " " + color.normal);
+           logger.extra();// #blank line
          };
          }
          
@@ -265,21 +247,38 @@
 
        // end for each module cached
 
-       log.message("" + log.errorCount + " errors, " + log.warningCount + " warnings.");
+       logger.msg("" + logger.errorCount + " errors, " + logger.warningCount + " warnings.");
 
         //ifdef PROD_C
-       // if no log.errorCount, Producer_c.postProduction this
-       if (!log.errorCount) {Producer_c.postProduction(this);};
+       // if no logger.errorCount, Producer_c.postProduction this
+       if (!logger.errorCount) {Producer_c.postProduction(this)};
     };
-        // #endif
+        //endif
 
-    // method compileFile(filename, moduleNode:Grammar.Module)
-    Project.prototype.compileFile = function(filename, moduleNode){
+    // method compileFile(filename) returns Grammar.Module
+    Project.prototype.compileFile = function(filename){
+
+       var filenameInfo = new Environment.FileInfo(filename);
+
+        //search the file
+       filenameInfo.searchModule(this.rootModule.fileInfo);
+
+        // create a module
+       var newModule = this.createNewModule(filenameInfo, this.rootModule);
+
+        // compile the file
+       this.compileFileOnModule(filenameInfo.filename, newModule);
+
+       return newModule;
+    };
+
+    // method compileFileOnModule(filename, moduleNode:Grammar.Module)
+    Project.prototype.compileFileOnModule = function(filename, moduleNode){
 
 // Compilation:
 // Load source -> Lexer/Tokenize -> Parse/create AST
 
-       log.info(String.spaces(this.recurseLevel * 2), "compile: '" + (Environment.relName(filename, this.options.basePath)) + "'");
+       logger.info(Strings.spaces(this.recurseLevel * 2), "compile: '" + (Environment.relativeFrom(this.options.projectDir, filename)) + "'");
 
 // Load source code, parse
 
@@ -301,7 +300,7 @@
 
 // set Lexer source code, process lines, tokenize
 
-       log.errorCount = 0;
+       logger.errorCount = 0;
 
        var stage = "lexer";
        moduleNode.lexer.initSource(filename, sourceLines);
@@ -314,13 +313,8 @@
 
 // Check if errors were emitted
 
-       // if log.errorCount
-       if (log.errorCount) {
-           var errsEmitted = new Error("" + log.errorCount + " errors emitted");
-           errsEmitted.extra.set("controled", true);
-           // throw errsEmitted
-           throw errsEmitted;
-       };
+       // if logger.errorCount, logger.throwControlled "#{logger.errorCount} errors emitted"
+       if (logger.errorCount) {logger.throwControlled("" + logger.errorCount + " errors emitted")};
 
 // Handle errors, add stage info, and stack
 
@@ -328,18 +322,22 @@
        
        }catch(err){
 
-           err = moduleNode.lexer.hardError || err; //get important (inner) error
-           // if not err.extra.get("controled")  //if not 'controled' show lexer pos & call stack (includes err text)
-           if (!(err.extra.get("controled"))) { //if not 'controled' show lexer pos & call stack (includes err text)
-                // declare valid err.stack
+           // if err instanceof ControlledError  //if not 'controlled' show lexer pos & call stack (includes err text)
+           if (err instanceof ControlledError) { //if not 'controlled' show lexer pos & call stack (includes err text)
+               err = moduleNode.lexer.hardError || err; //get important (inner) error
+           }
+           
+           else {
+                // uncontrolled
+                // add position & stack
                err.message = "" + (moduleNode.lexer.posToString()) + "\n" + (err.stack || err.message);
            };
 
-           log.error(err.message);
+           logger.error(err.message);
 
             // #show last soft error. Can be useful to pinpoint the problem
-           // if moduleNode.lexer.softError, log.message "previous soft-error: #{moduleNode.lexer.softError.message}"
-           if (moduleNode.lexer.softError) {log.message("previous soft-error: " + moduleNode.lexer.softError.message);};
+           // if moduleNode.lexer.softError, logger.msg "previous soft-error: #{moduleNode.lexer.softError.message}"
+           if (moduleNode.lexer.softError) {logger.msg("previous soft-error: " + moduleNode.lexer.softError.message)};
 
             //if process #we're in node.js
             //    process.exit(1)
@@ -349,13 +347,16 @@
        };
     };
 
-    // method createNewModule(fileInfo) returns Grammar.Module
-    Project.prototype.createNewModule = function(fileInfo){
+    // method createNewModule(fileInfo, parent) returns Grammar.Module
+    Project.prototype.createNewModule = function(fileInfo, parent){
 
 // create a **new Module** and then create a **new lexer** for the Module
 // (each module has its own lexer. There is one lexer per file)
 
-       var moduleNode = new Grammar.Module(this.root);
+       // default parent = .rootModule
+       if(parent===undefined) parent=this.rootModule;
+
+       var moduleNode = new Grammar.Module(parent);
        moduleNode.name = fileInfo.filename;
        moduleNode.fileInfo = fileInfo;
        moduleNode.referenceCount = 0;
@@ -364,19 +365,28 @@
 // because the lexer preprocessor can compile marcros and generate code on the fly
 // via 'compiler generate'
 
-       moduleNode.lexer = new Lexer(module.exports, this, this.options);
+       moduleNode.lexer = new Parser.Lexer(this, this.options);
 
 // Now create the module scope, with two local scope vars:
 // 'module' and 'exports = module.exports'. 'exports' will hold all exported members.
 
        moduleNode.createScope();
+        //var opt = new Names.NameDeclOptions
+        //opt.normalizeModeKeepFirstCase = true
+       moduleNode.exports = new Names.Declaration(fileInfo.base, undefined, moduleNode);
+       moduleNode.exportsReplaced = false;
+
        var moduleVar = moduleNode.addToScope('module');
-       moduleNode.exports = moduleVar.addMember('exports');// #add as member of 'module'
-       moduleNode.addToScope('exports', {pointsTo: moduleNode.exports});// #add also as 'exports' in scope
+        //moduleNode.exports = moduleVar.addMember('exports') #add as member of 'module'
+        //var opt = new Names.NameDeclOptions
+        //opt.pointsTo = moduleNode.exports
+        //moduleNode.addToScope('exports',opt) #add also as 'exports' in scope
 
 // add other common built-in members of var 'module'. http://nodejs.org/api/modules.html#modules_module_id
 
-       moduleVar.addMember(moduleNode.declareName('filename', {value: fileInfo.filename}));
+       var fnameOpt = new Names.NameDeclOptions();
+       fnameOpt.value = fileInfo.filename;
+       moduleVar.addMember(moduleNode.declareName('filename', fnameOpt));
 
 // Also, register every `import|require` in this module body, to track modules dependencies.
 // We create a empty a empty `.requireCallNodes[]`, to hold:
@@ -392,21 +402,21 @@
     // method produceModule(moduleNode:Grammar.Module)
     Project.prototype.produceModule = function(moduleNode){
 
-       moduleNode.lexer.out.browser = this.options.browser;
+       moduleNode.lexer.outCode.browser = this.options.browser;
 
        // if .options.extraComments
        if (this.options.extraComments) {
-           moduleNode.lexer.out.put("//Compiled by LiteScript compiler v" + Project.version + ", source: " + moduleNode.fileInfo.filename);
-           moduleNode.lexer.out.startNewLine();
+           moduleNode.lexer.outCode.put("//Compiled by LiteScript compiler v" + this.options.version + ", source: " + moduleNode.fileInfo.filename);
+           moduleNode.lexer.outCode.startNewLine();
        };
 
        moduleNode.produce();
 
         // #referenceSourceMap
-       // if no .options.nomap and moduleNode.fileInfo.outExtension
-       if (!this.options.nomap && moduleNode.fileInfo.outExtension) {
-           moduleNode.lexer.out.startNewLine();
-           moduleNode.lexer.out.put("//# sourceMappingURL=" + (moduleNode.fileInfo.basename + moduleNode.fileInfo.outExtension + '.map'));
+       // if no .options.nomap and moduleNode.fileInfo.outExtension is 'js'
+       if (!this.options.nomap && moduleNode.fileInfo.outExtension === 'js') {
+           moduleNode.lexer.outCode.startNewLine();
+           moduleNode.lexer.outCode.put("//# sourceMappingURL=" + moduleNode.fileInfo.base + moduleNode.fileInfo.outExtension + ".map");
        };
     };
 
@@ -439,12 +449,18 @@
                    importInfo.name = node.name;
                };
 
+               // if node.hasAdjective('shim') and node.findInScope(importInfo.name)
+               if (node.hasAdjective('shim') && node.findInScope(importInfo.name)) {
+                   // continue // do not import if shim and already declared
+                   continue; // do not import if shim and already declared
+               };
+
 // if it was 'global import, inform, els search will be local '.','./lib' and '../lib'
 
                 // declare valid node.parent.global
                // if node.parent instanceof Grammar.DeclareStatement
                if (node.parent instanceof Grammar.DeclareStatement) {
-                   importInfo.interface = true;
+                   importInfo.isGlobalDeclare = true;
                }
                
                else if (node.parent instanceof Grammar.ImportStatement) {
@@ -459,9 +475,9 @@
                // if node.accessors and node.accessors[0] instanceof Grammar.FunctionAccess
                if (node.accessors && node.accessors[0] instanceof Grammar.FunctionAccess) {
                    var requireCall = node.accessors[0];
-                   // if requireCall.args[0].root.name instanceof Grammar.StringLiteral
-                   if (requireCall.args[0].root.name instanceof Grammar.StringLiteral) {
-                       var stringLiteral = requireCall.args[0].root.name;
+                   // if requireCall.args[0].expression.root.name instanceof Grammar.StringLiteral
+                   if (requireCall.args[0].expression.root.name instanceof Grammar.StringLiteral) {
+                       var stringLiteral = requireCall.args[0].expression.root.name;
                        importInfo.name = stringLiteral.getValue();
                    };
                };
@@ -490,16 +506,16 @@
         // declare valid .recurseLevel
 
        this.recurseLevel++;
-       var indent = String.spaces(this.recurseLevel * 2);
+       var indent = Strings.spaces(this.recurseLevel * 2);
 
-       log.info("");
-       log.info(indent, "'" + importingModule.fileInfo.relFilename + "' imports '" + importInfo.name + "'");
+       logger.info("");
+       logger.info(indent, "'" + importingModule.fileInfo.relFilename + "' imports '" + importInfo.name + "'");
 
 // Determine the full module filename. Search for the module in the environment.
 
        var fileInfo = new Environment.FileInfo(importInfo);
 
-       fileInfo.searchModule(importingModule.fileInfo, this.options);
+       fileInfo.searchModule(importingModule.fileInfo);
 
 // Before compiling the module, check internal, and external cache
 
@@ -507,7 +523,7 @@
 
        // if .moduleCache.has(fileInfo.filename) #registered
        if (this.moduleCache.has(fileInfo.filename)) {// #registered
-           log.info(indent, 'cached: ', fileInfo.filename);
+           logger.info(indent, 'cached: ', fileInfo.filename);
            this.recurseLevel--;
            return this.moduleCache.get(fileInfo.filename);
        };
@@ -525,22 +541,25 @@
        // if .getInterface(importingModule, fileInfo, moduleNode)
        if (this.getInterface(importingModule, fileInfo, moduleNode)) {
             // #getInterface also loads and analyze .js interfaces
-           // do nothing
-           null;
+
+            // #if it is an interface, but loaded from 'import' statement
+            // #we increment .referenceCount in order to produce the file
+           // if not importInfo.isGlobalDeclare, moduleNode.referenceCount++
+           if (!(importInfo.isGlobalDeclare)) {moduleNode.referenceCount++};
        }
 
 // else, we need to compile the file
        
        else {
 
-           // if importingModule is .root and .options.compileIfNewer and fileInfo.outFileIsNewer
-           if (importingModule === this.root && this.options.compileIfNewer && fileInfo.outFileIsNewer) {
+           // if importingModule is .rootModule and .options.compileIfNewer and fileInfo.outFileIsNewer
+           if (importingModule === this.rootModule && this.options.compileIfNewer && fileInfo.outFileIsNewer) {
                // do nothing //do not compile if source didnt change
                null; //do not compile if source didnt change
            }
            
            else {
-               this.compileFile(fileInfo.filename, moduleNode);
+               this.compileFileOnModule(fileInfo.filename, moduleNode);
                moduleNode.referenceCount++;
            };
        };
@@ -564,81 +583,79 @@
        // if fileInfo.interfaceFileExists
        if (fileInfo.interfaceFileExists) {
             // # compile interface
-           this.compileFile(fileInfo.interfaceFile, moduleNode);
+           this.compileFileOnModule(fileInfo.interfaceFile, moduleNode);
            return true; //got Interface
-       };
-
-// Check if we're compiling for the browser
-
-       // if .options.browser
-       if (this.options.browser) {
-           // if fileInfo.extension is '.js'
-           if (fileInfo.extension === '.js') {
-               log.throwControled('Missing ' + fileInfo.relPath + '/' + fileInfo.basename + '.interface.md for ');
-           }
-           
-           else {
-               return false; //getInterface returning false means call "CompileFile"
-           };
-       };
-
-// here, we're compiling for node.js environment
-// for .js file/core/global module,
-// call node.js **require()** for parameter
-// and generate & cache interface
-
-       // if fileInfo.isCore or fileInfo.importInfo.globalImport or fileInfo.extension is '.js'
-       if (fileInfo.isCore || fileInfo.importInfo.globalImport || fileInfo.extension === '.js') {
-
-           log.info(String.spaces(this.recurseLevel * 2), fileInfo.isCore ? "core module" : "javascript file", "require('" + fileInfo.basename + "')");
-
-           // if not fileInfo.isCore
-           if (!(fileInfo.isCore)) {
-                // #hack for require(). Simulate we're at the importingModule dir
-                // #for require() fn to look at the same dirs as at runtime
-                // declare on module paths:string array
-                // declare valid module.constructor._nodeModulePaths
-                // #declare valid module.filename
-               var save = {paths: module.paths, filename: module.filename};
-               module.paths = module.constructor._nodeModulePaths(importingModule.fileInfo.dirname);
-               module.filename = importingModule.fileInfo.filename;
-               log.debug("importingModule", module.filename);
-           };
-
-           var requiredNodeJSModule = require(fileInfo.importInfo.name);
-           moduleNode.exports.getMembersFromObjProperties(requiredNodeJSModule);
-
-           // if not fileInfo.isCore #restore
-           if (!(fileInfo.isCore)) {// #restore
-               module.paths = save.paths;
-               module.filename = save.filename;
-           };
-
-           return true;
        };
     };
 
-    // helper method compilerVar(name)
-    Project.prototype.compilerVar = function(name){
-// helper compilerVar(name)
-// return root.compilerVars.members[name].value
 
-       // if .compilerVars.findOwnMember(name) into var compVar:NameDeclaration
-       var compVar=undefined;
-       if ((compVar=this.compilerVars.findOwnMember(name))) {
-           return compVar.findOwnMember("**value**");
-       };
+        //ifndef PROD_C //except we're generating the compile-to-C compiler
+
+//Check if we're compiling for the browser
+
+        //if .options.browser
+            //if fileInfo.extension is '.js'
+                //logger.throwControlled 'Missing #{fileInfo.relPath}/#{fileInfo.basename}.interface.md for '
+            //else # assume a .lite.md file
+                //return false //getInterface returning false means call "CompileFile"
+
+//here, we're compiling for node.js environment
+//for .js file/core/global module,
+//call node.js **require()** for parameter
+//and generate & cache interface
+
+        //if fileInfo.isCore or fileInfo.importInfo.globalImport or fileInfo.extension is '.js'
+
+            //logger.info String.spaces(this.recurseLevel*2),
+                //fileInfo.isCore?"core module":"javascript file",
+                //"require('#{fileInfo.basename}')"
+
+            //if not fileInfo.isCore
+
+//hack for require(). Simulate we're at the importingModule dir
+//for node's require() function to look at the same dirs as at runtime
+
+                //declare on module paths:string array
+                //declare valid module.constructor._nodeModulePaths
+
+                //var savePaths = module.paths, saveFilename = module.filename
+                //module.paths = module.constructor._nodeModulePaths(importingModule.fileInfo.dirname)
+                //module.filename = importingModule.fileInfo.filename
+                //logger.debug "importingModule", module.filename
+
+            //var requiredNodeJSModule = require(fileInfo.importInfo.name)
+            //moduleNode.exports.getMembersFromObjProperties(requiredNodeJSModule)
+
+            //if not fileInfo.isCore #restore
+                //module.paths= savePaths
+                //module.filename= saveFilename
+
+            //return true
+
+        //endif // skip node-js code if we're generatice the compile-to-C compiler
+
+
+    // helper method compilerVar(name) returns Names.Declaration // or undefined
+    Project.prototype.compilerVar = function(name){ // or undefined
+// helper compilerVar(name)
+// return rootModule.compilerVars.members[name].value
+
+       return this.compilerVars.get(name);
     };
 
     // helper method setCompilerVar(name,value)
     Project.prototype.setCompilerVar = function(name, value){
 // helper compilerVar(name)
-// root.compilerVars.members.set(name,value)
+// rootModule.compilerVars.members.set(name,value)
 
-       var compVar = this.compilerVars.findOwnMember(name);
-       // if no compVar, compVar = .compilerVars.addMember(name)
-       if (!compVar) {compVar = this.compilerVars.addMember(name);};
-       compVar.setMember("**value**", value);
+       // if no .compilerVars.get(name) into var nameDecl
+       var nameDecl=undefined;
+       if (!((nameDecl=this.compilerVars.get(name)))) {
+           nameDecl = new Names.Declaration(name);
+           this.compilerVars.set(name, nameDecl);
+       };
+
+       nameDecl.setMember("**value**", value);
     };
 
     // helper method redirectOutput(newOut)
@@ -646,10 +663,10 @@
 
        // for each moduleNode:Grammar.Module in map .moduleCache
        var moduleNode=undefined;
-       if(!this.moduleCache.map_members) throw(new Error("for each in map: not a Map, no .map_members"));
-       for ( var moduleNode__propName in this.moduleCache.map_members) if (this.moduleCache.map_members.hasOwnProperty(moduleNode__propName)){moduleNode=this.moduleCache.map_members[moduleNode__propName];
+       if(!this.moduleCache.dict) throw(new Error("for each in map: not a Map, no .dict property"));
+       for ( var moduleNode__propName in this.moduleCache.dict) if (this.moduleCache.dict.hasOwnProperty(moduleNode__propName)){moduleNode=this.moduleCache.dict[moduleNode__propName];
              {
-             moduleNode.lexer.out = newOut;
+             moduleNode.lexer.outCode = newOut;
              }
              
              }// end for each property
@@ -659,29 +676,24 @@
 
    // end class Project
 
-   // append to namespace Project
-     //      properties // as namespace properties
-        // version:string #version. set from compiler
-    
-
-
 // ##Add helper properties and methods to AST node class Module
 
    // append to class Grammar.Module
      //      properties
         // fileInfo #module file info
-        // exports: NameDeclaration # holds module.exports as members
+        // exports: Names.Declaration # holds module.exports as members
+        // exportsReplaced: boolean # if exports was replaced by a ClassDeclaration with the module name
         // requireCallNodes: Grammar.ImportStatementItem array #list of `import` item nodes or `require()` function calls (varRef)
         // referenceCount
 
     // method getCompiledLines returns string array
     Grammar.Module.prototype.getCompiledLines = function(){
-       return this.lexer.out.getResult();
+       return this.lexer.outCode.getResult();
     };
 
     // method getCompiledText returns string
     Grammar.Module.prototype.getCompiledText = function(){
-       return this.lexer.out.getResult().join('\n');
+       return this.lexer.outCode.getResult().join('\n');
     };
 
 
@@ -694,94 +706,5 @@
      //      properties
         // importedModule: Grammar.Module
     
-
-
-// ----------------
-   // append to class NameDeclaration
-    // helper method toExportArray()
-    NameDeclaration.prototype.toExportArray = function(){
-
-// converts .members={} to
-// simpler arrays for JSON.stringify & cache
-
-      // #declare valid .members
-      // #declare valid item.type.fullName
-      // #declare valid item.itemType.fullName
-
-      // #FIX WITH for each own property
-     // if .members
-     if (this.members) {
-       var result = [];
-        // # FIX with for each property
-       // for each prop in Object.keys(.members)
-       var _list1=Object.keys(this.members);
-       for( var prop__inx=0,prop ; prop__inx<_list1.length ; prop__inx++){prop=_list1[prop__inx];
-         var item = this.members[prop];
-         var membersArr = item.toExportArray();// #recursive
-          // # FIX with Ternary
-         var arrItem = {name: item.name};
-
-          // declare valid arrItem.members
-          // declare valid arrItem.type
-          // declare valid arrItem.itemType
-          // declare valid arrItem.value
-
-         // if membersArr.length
-         if (membersArr.length) {
-           arrItem.members = membersArr;
-         };
-
-         // if item.hasOwnProperty('type') and item.type
-         if (item.hasOwnProperty('type') && item.type) {
-           arrItem.type = item.type.toString();
-         };
-
-         // if item.hasOwnProperty('itemType') and item.itemType
-         if (item.hasOwnProperty('itemType') && item.itemType) {
-           arrItem.itemType = item.itemType.toString();
-         };
-
-         // if item.hasOwnProperty('value')
-         if (item.hasOwnProperty('value')) {
-           arrItem.value = item.value;
-         };
-
-         result.push(arrItem);
-       };// end for each in Object.keys(this.members)
-       
-     };
-
-     return result;
-    };
-
-// ----------------
-   // append to class NameDeclaration
-    // helper method importMembersFromArray(exportedArr: NameDeclaration array) ### Recursive
-    NameDeclaration.prototype.importMembersFromArray = function(exportedArr){// ### Recursive
-
-// Inverse of helper method toExportObject()
-// converts exported object, back to NameDeclarations and .members[]
-
-        // #declare item:Grammar.Identifier
-
-       // for each item in exportedArr
-       for( var item__inx=0,item ; item__inx<exportedArr.length ; item__inx++){item=exportedArr[item__inx];
-         var nameDecl = new NameDeclaration(item.name || '(unnamed)');
-         // if item.hasOwnProperty('type')
-         if (item.hasOwnProperty('type')) {
-           nameDecl.type = item.type;
-         };
-         // if item.hasOwnProperty('value')
-         if (item.hasOwnProperty('value')) {
-           nameDecl.value = item.value;
-         };
-         this.addMember(nameDecl);
-         // if item.members
-         if (item.members) {
-           nameDecl.importMembersFromArray(item.members);// #recursive
-         };
-       };// end for each in exportedArr
-       
-    };
 
 module.exports=Project;

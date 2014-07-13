@@ -16,7 +16,17 @@ also add 'remove' to Array
 .capitalized
 
         method capitalized
-           if this, return this[0].toUpperCase()+this.slice(1)
+           return this.charAt(0).toUpperCase()+this.slice(1)
+
+.replaceAll, equiv. to .replace(/./g, newStr)
+
+        shim method replaceAll(searched,newStr)
+           return this.replace(new RegExp(searched,"g"), newStr)
+
+a.compare(b), equiv. a==b?0 : a>b? 1 : -1
+
+        shim method compare(compareTo) returns number
+           return this is compareTo? 0 : this>compareTo? 1 : -1
 
 .quoted(quotechar)
 

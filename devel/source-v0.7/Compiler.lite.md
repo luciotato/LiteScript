@@ -35,7 +35,7 @@ The `Environment` abstraction allows us to support compile on server(node) or th
    
 ## Main API functions: LiteScript.compile & LiteScript.compileProject
 
-### export Function compile (filename, sourceLines, options) returns string
+### export Function compile (filename:string, sourceLines, options:Object) returns string
 
 Used to compile source code loaded in memory (instead of loading a file)
 input: 
@@ -64,17 +64,15 @@ The compilation of the main module will trigger import and compilation of all it
 The main module is the root of the module dependency tree, and can reference
 another modules via import|require.
 
+        default options =
+            outDir : './out' 
         #ifdef PROD_C
-        default options = 
-            outDir: 'out'
             target: 'c'
         #else
-        default options = 
-            outDir: '.'
             target: 'js'
         #endif
 
-        log.extra "Out Dir: #{options.outDir}"
+        log.message "Out Dir: #{options.outDir}"
 
 Create a 'Project' to hold the main module and dependant modules
 

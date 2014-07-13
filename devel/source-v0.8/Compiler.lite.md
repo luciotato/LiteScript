@@ -4,9 +4,9 @@ LiteScript is a highly readable language that compiles to JavaScript.
 
     export var version = '0.8.1'
 
-    //compiler generate(lines:string array)
-    //    lines.push "export var buildDate = '#{new Date.toISOString()}'"
     export var buildDate = '20140618'
+
+    lexer options literal map //make new Map() from literal objects {name:value}
 
 This v0.6 compiler is written in v0.5 syntax. 
 That is, you use the v0.5 compiler to compile this code 
@@ -19,10 +19,8 @@ The Compiler module is the main interface to LiteScript Project module.
     import 
         Project, Validate
         Grammar 
-        log
+        logger, GeneralOptions
     
-    Project.version = version
-
 Get the 'Environment' object for the compiler to use.
 The 'Environment' object, must provide functions to load files, search modules, 
 and a optional external cache (disk). 
@@ -33,7 +31,7 @@ The `Environment` abstraction allows us to support compile on server(node) or th
    
 ## Main API functions: LiteScript.compile & LiteScript.compileProject
 
-### export Function compile (filename, sourceLines, options) returns string
+### export Function compile (filename, sourceLines, options: GeneralOptions) returns string
 
 Used to compile source code loaded in memory (instead of loading a file)
 input: 
@@ -43,17 +41,18 @@ input:
 output: 
 * string, compiled code
 
-        declare valid options.storeMessages
+        options.version = version
+
         if options.storeMessages
-            log.options.storeMessages = true
-            log.getMessages //clear
+            logger.options.storeMessages = true
+            logger.getMessages //clear
 
         var moduleNode = compileModule(filename, sourceLines, options)
 
         return moduleNode.getCompiledText()
 
 
-### export Function compileProject (mainModule, options) returns Project
+### export Function compileProject (mainModule, options:GeneralOptions) returns Project
 
 The 'compileProject' function will load and compile the main Module of a project. 
 The compilation of the main module will trigger import and compilation of all its "child" modules 
@@ -62,19 +61,17 @@ The compilation of the main module will trigger import and compilation of all it
 The main module is the root of the module dependency tree, and can reference
 another modules via import|require.
 
+Create a 'Project' to hold the main module and dependant modules
+
         #ifdef PROD_C
-        default options = 
-            outDir: 'out'
-            target: 'c'
+        default options.outDir = 'out'
+        default options.target = 'c'
         #else
-        default options = 
-            outDir: '.'
-            target: 'js'
+        default options.outDir = '.'
+        default options.target = 'js'
         #endif
 
-        log.extra "Out Dir: #{options.outDir}"
-
-Create a 'Project' to hold the main module and dependant modules
+        options.version = version
 
         var project = new Project(mainModule, options)
 
@@ -87,7 +84,7 @@ mainModuleName and all its dependencies will be compiled in the output dir
 
 ## Secondary Function: compileModule, returns Grammar.Module
 
-### export Function compileModule (filename, sourceLines, options) returns Grammar.Module
+### export Function compileModule (filename, sourceLines, options:GeneralOptions) returns Grammar.Module
 Compile a module from source in memory
 input: 
 * filename (for error reporting), 
@@ -98,12 +95,11 @@ output:
 
 		default filename = 'unnamed'
 
-        declare on options version
-        options.version = version #add version to options
+        options.version = version
 
-        var project = new Project(filename, options )
+        var project = new Project(filename, options)
 
-        var fileInfo = new Environment.FileInfo({name:filename})
+        var fileInfo = new Environment.FileInfo(filename)
 
         var moduleNode = project.createNewModule(fileInfo)
 
@@ -122,21 +118,23 @@ validate var & property names
         if no project.options.skip
 
             Validate.validate project
-            if log.errorCount is 0, log.info "Validation OK"
+            if logger.errorCount is 0, logger.info "Validation OK"
 
 initialize out buffer & produce target code 
     
-        log.info "Generating #{project.options.target}"
+        logger.info "Generating #{project.options.target}"
 
         project.produceModule moduleNode
         # the produced code will be at: moduleNode.lexer.out.getResult() :string array
 
-        if log.errorCount isnt 0, log.throwControled "#log.errorCount errors during compilation"
+        if logger.errorCount isnt 0, logger.throwControlled "#logger.errorCount errors during compilation"
 
 text compiled result can be obtained with: moduleNode.lexer.out.getResult() :string array
 
         return moduleNode
 
+
+    #ifndef PROD_C
 
 Require Extensions
 ------------------
@@ -150,7 +148,10 @@ without having to compile it ahead of time
 Read the file, then compile using the `compile` function above. 
 Then use node's built-in compile function to compile the generated JavaScript.
 
-        var content = compile(filename, Environment.loadFile(filename),{verbose:0,warnings:0})
+        var options = new GeneralOptions
+        options.verboseLevel = 0
+        options.warningsLevel = 0 
+        var content = compile(filename, Environment.loadFile(filename),options)
         declare valid requiringModule._compile
         requiringModule._compile(content, filename)
 
@@ -168,11 +169,12 @@ Add the extension for all appropriate file types. Don't overwrite `.md` in case 
           require.extensions['.lite'] = extension_LoadLS
           require.extensions['.md'] = extension_LoadLS
 
+    #endif 
 
 ##Helper module functions
 
 ### public function getMessages() returns string array
 if compile() throws, call getMessages() to retrieve compiler messages
 
-        return log.getMessages();
+        return logger.getMessages();
 
