@@ -28,6 +28,7 @@
         ,"unshift"
         ,"join"
         ,"splice"
+        ,"tryGet"
 
         ,"toISOString"
         ,"toUTCString"
@@ -84,11 +85,11 @@
         return CALL0(toLowerCase_,this.class->name);
     }
 
-    bool _instanceof(any this, any class){
-        assert(class.class==&Class_CLASSINFO); //class should be a Class
-        //follow the inheritance chain, until NULL or class found
-        for(Class_ptr classPtr=this.class; classPtr; classPtr = classPtr->super) {
-            if(class.value.class == classPtr) return TRUE;
+    bool _instanceof(any this, any searchedClass){
+        assert(searchedClass.class==&Class_CLASSINFO); //searchedClass should be a Class
+        //follow the inheritance chain, until NULL or searched class found
+        for(Class_ptr classIptr=this.class; classIptr!=NULL; classIptr=classIptr->super) {
+            if(classIptr == searchedClass.value.classINFOptr) return TRUE;
         }
         return FALSE;
     }
@@ -110,12 +111,13 @@
     // #ifdef NDEBUG, macro CALLL resolves to __call().
     // Note: for no-checks code, CALL resolves to direct jmp: this.class->call[method](this,argc,arguments)
     function_ptr __classMethod(int symbol, any anyClass){
-        assert(anyClass.class==&Class_CLASSINFO);
-        return __classMethodNat(symbol,anyClass.value.class);
+        assert(_instanceof(anyClass,Class));
+        return __classMethodNat(symbol, anyClass.value.classINFOptr );
     }
 
     any __call(int symbol, DEFAULT_ARGUMENTS){
-        return __classMethodNat(symbol, this.class)(this,argc,arguments);
+        function_ptr fn = __classMethodNat(symbol, this.class);
+        return fn(this,argc,arguments);
     }
 
     any __classMethodFunc(int symbol, any anyClass){
@@ -154,15 +156,34 @@
 
         // check index against arr->length
         if (index >= arrProp.value.arr->length){
-            fprintf(stderr,"access index[%d]: OUT OF BOUNDS on Array[0..%d]\n"
-                    ,arrProp.value.arr->length-1);
-            //fprintf(stderr,"access index[%d]: OUT OF BOUNDS. property '%s' on class '%s' is Array[0..%d]\n"
-                    //,index,_symbol[arrPropName],this.class->name.value.str
-                    //,arrProp.value.arr->length-1);
-            abort();
+            //Note: to be js-compat, a _tryGet() array method is provided
+            // Array.tryGet() will just return "undefined"
+            //instead of raising an exception
+            fail_with(_concatToNULL("OUT OF BOUNDS index[",_int64ToStr(index)
+                     ,"]. Array.length is ",_int64ToStr(arrProp.value.arr->length),NULL));
         }
         return &(arrProp.value.arr->item[index]);
 
+    }
+
+    any Array_tryGet(DEFAULT_ARGUMENTS){
+        if (!_instanceof(this,Array)) {
+            fail_with("Array_tryGet(), object isnt instance of Array");
+        }
+        if (argc==0) {
+            fail_with("Array_tryGet(), missing index param");
+        }
+        if (arguments[0].class!=&Number_CLASSINFO) {
+            fail_with("Array_tryGet(), param should be Number");
+        }
+        //get index from argument 0
+        int64_t index=(int64_t)arguments[0].value.number;
+        // check index against arr->length
+        if (index<0 || index >= this.value.arr->length){
+            //Note: to be js-compat, will just return "undefined"
+            return undefined;
+        }
+        return this.value.arr->item[index];
     }
 
     // get a reference to a value at a index in an array
@@ -185,8 +206,8 @@
     }
 
     any __applyArr(any anyFunc, any this, any argsArray){
-        assert(anyFunc.class==Function.value.class);
-        assert(argsArray.class==Array.value.class);
+        assert(anyFunc.class==&Function_CLASSINFO);
+        assert(argsArray.class==&Array_CLASSINFO);
         return __apply(anyFunc, this, argsArray.value.arr->length, argsArray.value.arr->item);
     }
 
@@ -270,13 +291,13 @@
 
     void Class__init(DEFAULT_ARGUMENTS){
         assert(argc>=4);
-        assert(arguments[0].class==String.value.class);
-        assert(arguments[1].class==Function.value.class);
-        assert(arguments[2].class==Number.value.class);
-        assert(arguments[3].class==Class.value.class);
+        assert(arguments[0].class==&String_CLASSINFO);
+        assert(arguments[1].class==&Function_CLASSINFO);
+        assert(arguments[2].class==&Number_CLASSINFO);
+        assert(arguments[3].class==&Class_CLASSINFO);
         //---------
         size_t instanceSize = (size_t)arguments[2].value.number;
-        Class_ptr super = arguments[3].value.class;
+        Class_ptr super = arguments[3].value.classINFOptr;
         //---------
         Class_ptr prop = (Class_ptr)this.value.prop; // with this.properties
         // any-visible
@@ -312,7 +333,7 @@
     }
 
     any _newArray(len_t initialLen, any* optionalValues){
-        return (any){Array.value.class,_initArrayAt(NULL,initialLen,optionalValues)};
+        return (any){&Array_CLASSINFO, _initArrayAt(NULL,initialLen,optionalValues)};
     }
     any Array_clone(any this, len_t argc, any* arguments){
         return _newArray(this.value.arr->length, this.value.arr->item);
@@ -322,7 +343,7 @@
         // convert main function args into Array
         any a = _newArray(argc,NULL);
         any* item = a.value.arr->item;
-        for(;argc--;){ *item++=(any){String.value.class,*argv++}; }
+        for(;argc--;){ *item++=(any){&String_CLASSINFO,*argv++}; }
         return a;
     };
 
@@ -332,7 +353,7 @@
         // we must initialize it
         //----
         // to be js compat. If only arg is a Number, is the initial size of an empty arr
-        if(argc==1 && arguments[0].class==Number.value.class) {
+        if(argc==1 && arguments[0].class==&Number_CLASSINFO) {
             int64_t i64 = arguments[0].value.number;
             if (i64>=UINT32_MAX) fatal("new Array, limit is UINT32_MAX ");
             _initArrayAt(this.value.arr, (len_t)i64, NULL);
@@ -354,6 +375,9 @@
         ((NameValuePair_ptr)this.value.ptr)->value=arguments[1];
     };
 
+    any _newPair(str name, any value){
+        return new(NameValuePair,2,(any_arr){any_str(name),value});
+    }
 //-------------------
 // helper functions
 //--------------------
@@ -362,12 +386,12 @@
 //--------------------
     any new(any this, len_t argc, any* arguments){
 
-        Class_ptr class;
         // valid class?
-        if (this.class!=Class.value.class) {
+        Class_ptr class;
+        if (!(class=this.value.classINFOptr)) fatal("new: 'this' (Class ptr) is NULL");
+        if (!_instanceof(this,Class)) {
                 fatal("new: 'this' argument is not a Class");
         }
-        if (!(class=this.value.class)) fatal("new: 'this' (Class ptr) is NULL");
 
         any a = {class,NULL}; //constructor & value
 
@@ -410,7 +434,7 @@
 //--- Helper throw error functions
 
     any _newErr(str message){ //,.item=
-        return new(Error, 1,(any_arr){String.value.class,(char*)message});
+        return new(Error, 1,(any_arr){&String_CLASSINFO,(char*)message});
     }
 
     str _anyToStr(any this){
@@ -462,13 +486,15 @@
     //callabel from Ls
     any LiteCore_getSymbol(DEFAULT_ARGUMENTS){
         assert(argc==1);
-        assert(arguments[0].class==String.value.class);
+        assert(arguments[0].class==&String_CLASSINFO);
         return any_str(_symbol[_getSymbol(arguments[0].value.str)]);
     }
 
 
-    function_ptr LiteC_registerShim(Class_ptr class, int symbol, function_ptr fn) {
-        assert(class);
+    function_ptr LiteC_registerShim(any anyClass, int symbol, function_ptr fn) {
+        assert(_instanceof(anyClass,Class));
+        Class_ptr class = anyClass.value.classINFOptr;
+
         if (symbol < 0 && -symbol < _allMethodsLength){
             int withinLength = -symbol<TABLE_LENGTH(class->method);
             function_ptr actualMethod;
@@ -486,7 +512,7 @@
     // tryGetMethod(symbol:Number) returns Function or undefined
     any Object_tryGetMethod(DEFAULT_ARGUMENTS) {
         assert(argc==1);
-        assert(arguments[0].class==Number.value.class);
+        assert(arguments[0].class==&Number_CLASSINFO);
         double arg0 = arguments[0].value.number;
         if (arg0>=0 || arg0< -_allMethodsMax) throw(any_str("invalid method symbol"));
         function_ptr fn;
@@ -511,7 +537,7 @@
 
     any Object_getProperty(DEFAULT_ARGUMENTS) {
         assert(argc==1);
-        assert(arguments[0].class==Number.value.class);
+        assert(arguments[0].class==&Number_CLASSINFO);
         if (arguments[0].value.number<0 || arguments[0].value.number>=_allPropsLength) throw(any_str("invalid prop symbol"));
 
         return _getProperty(this,arguments[0].value.number);
@@ -519,7 +545,7 @@
 
     any Object_tryGetProperty(DEFAULT_ARGUMENTS) {
         assert(argc==1);
-        assert(arguments[0].class==Number.value.class);
+        assert(arguments[0].class==&Number_CLASSINFO);
         if (arguments[0].value.number<0 || arguments[0].value.number>=_allPropsLength) throw(any_str("invalid prop symbol"));
 
         int symbol=arguments[0].value.number;
@@ -549,7 +575,7 @@
 
     any Object_getPropertyName(DEFAULT_ARGUMENTS) { // from prop index
         assert(argc==1);
-        assert(arguments[0].class==Number.value.class);
+        assert(arguments[0].class==&Number_CLASSINFO);
         return _getPropertyName(this,arguments[0].value.number);
     }
 
@@ -583,7 +609,7 @@
 
 
     any Class_toString(DEFAULT_ARGUMENTS) {
-       return this.value.class->name;
+       return this.value.classINFOptr->name;
     }
 
     any Array_toString(DEFAULT_ARGUMENTS) {
@@ -616,8 +642,8 @@
    //----------------------
    any String_indexOf(any this, len_t argc, any* arguments) {
         assert(argc>=1 && arguments!=NULL);
-        assert(argc<1 || (arguments[0].class == String.value.class));
-        assert(argc<2 || (arguments[1].class == Number.value.class));
+        assert(argc<1 || (arguments[0].class == &String_CLASSINFO));
+        assert(argc<2 || (arguments[1].class == &Number_CLASSINFO));
         // define named params
         str searched = arguments[0].value.str;
         size_t fromIndex = argc>=2? (size_t)arguments[1].value.number:0;
@@ -627,8 +653,8 @@
 
    any String_lastIndexOf(any this, len_t argc, any* arguments) {
         assert(argc >= 1 && arguments != NULL);
-        assert(argc < 1 || (arguments[0].class == String.value.class));
-        assert(argc < 2 || (arguments[1].class == Number.value.class));
+        assert(argc < 1 || (arguments[0].class == &String_CLASSINFO));
+        assert(argc < 2 || (arguments[1].class == &Number_CLASSINFO));
         //---------
         // define named params
         str searched = arguments[0].value.str;
@@ -638,9 +664,9 @@
    }
 
    any String_slice(any this, len_t argc, any* arguments) {
-        if (argc==0) return (any){String.value.class,this.value.str};
-        assert(argc<1 || (arguments[0].class == Number.value.class));
-        assert(argc<2 || (arguments[1].class == Number.value.class));
+        if (argc==0) return (any){&String_CLASSINFO,this.value.str};
+        assert(argc<1 || (arguments[0].class == &Number_CLASSINFO));
+        assert(argc<2 || (arguments[1].class == &Number_CLASSINFO));
         //---------
         // define named params
         int64_t startPos = (int64_t)arguments[0].value.number;
@@ -651,8 +677,8 @@
 
    any String_substr(any this, len_t argc, any* arguments) {
         assert(argc>=1);
-        assert(argc<1 || (arguments[0].class == Number.value.class));
-        assert(argc<2 || (arguments[1].class == Number.value.class));
+        assert(argc<1 || (arguments[0].class == &Number_CLASSINFO));
+        assert(argc<2 || (arguments[1].class == &Number_CLASSINFO));
         //end index is start index + qty
         arguments[1].value.number+=arguments[0].value.number;
         // if start index is <0, end index should be also<0, else undefined
@@ -662,7 +688,7 @@
 
    any String_charAt(any this, len_t argc, any* arguments) {
         assert(argc==1);
-        assert(arguments[0].class == Number.value.class);
+        assert(arguments[0].class == &Number_CLASSINFO);
         int64_t startPos = (int64_t)arguments[0].value.number;
         int64_t endPos = startPos==-1? LLONG_MAX: startPos+1;
         return any_str(utf8slice(this.value.str,startPos,endPos));
@@ -670,8 +696,8 @@
 
    any String_replaceAll(any this, len_t argc, any* arguments) {
         assert(argc==2);
-        assert(arguments[0].class == String.value.class); //searched
-        assert(arguments[1].class == String.value.class); //newStr
+        assert(arguments[0].class == &String_CLASSINFO); //searched
+        assert(arguments[1].class == &String_CLASSINFO); //newStr
         str searched=arguments[0].value.str;
         str newStr=arguments[1].value.str;
 
@@ -742,7 +768,7 @@
     }
 
     any String_concat(any this, len_t argc, any* arguments){
-        if (argc==0) return (any){String.value.class,this.value.str};
+        if (argc==0) return (any){&String_CLASSINFO,this.value.str};
         return _stringJoin(this.value.str,argc,arguments,NULL);
     }
 
@@ -765,13 +791,13 @@
    // args: separator, limit
    any String_split(any this, len_t argc, any* arguments) {
         assert(argc<=2);
-        assert(argc<1||arguments[0].class == String.value.class||arguments[0].class==Undefined.value.class); //separator
-        assert(argc<2||arguments[1].class == Number.value.class); //limit
+        assert(argc<1||arguments[0].class == &String_CLASSINFO||arguments[0].class==&Undefined_CLASSINFO); //separator
+        assert(argc<2||arguments[1].class == &Number_CLASSINFO); //limit
 
         var result = _newArray(0,NULL);
         len_t pushed=0;
 
-        if (arguments[0].class==Undefined.value.class) {
+        if (arguments[0].class==&Undefined_CLASSINFO) {
             //MDN:  If separator is omitted, the array returned contains one element consisting of the entire string
             CALL1(push_,result,this);
             return result;
@@ -847,9 +873,9 @@
 
     any _concatToArrayFlat(any this, len_t itemCount, any* item){
         // flatten arrays, pushes elements
-        assert(this.class==Array.value.class);
+        assert(this.class==&Array_CLASSINFO);
         for(int32_t n=0;n<itemCount; n++,item++){
-            if(item->class==Array.value.class){
+            if(item->class==&Array_CLASSINFO){
                 //recurse
                 _concatToArrayFlat(this, item->value.arr->length, item->value.arr->item );
             }
@@ -871,7 +897,7 @@
         // indexOf(0:item, 1:fromIndex)
         assert(argc>=1 && arguments!=NULL);
         assert(argc<=2);
-        assert(argc<2 || (arguments[1].class == Number.value.class));
+        assert(argc<2 || (arguments[1].class == &Number_CLASSINFO));
         //---------
         //---------
         len_t len = this.value.arr->length;
@@ -890,7 +916,7 @@
         // lastIndexOf(0:item, 1:fromIndex)
         assert(argc>=1 && arguments!=NULL);
         assert(argc<=2);
-        assert(argc<2 || (arguments[1].class == Number.value.class));
+        assert(argc<2 || (arguments[1].class == &Number_CLASSINFO));
         //---------
         //---------
         // define named params
@@ -910,7 +936,7 @@
         // slice(0:start, 1:end)
         assert(argc>=1 && arguments!=NULL);
         assert(argc<=2);
-        assert(argc<2 || (arguments[1].class == Number.value.class));
+        assert(argc<2 || (arguments[1].class == &Number_CLASSINFO));
         //---------
         // define named params
         len_t len = this.value.arr->length;
@@ -955,8 +981,8 @@
 
    any Array_splice(any this, len_t argc, any* arguments) {
         assert(argc>=2 && arguments!=NULL);
-        assert((arguments[0].class == Number.value.class));
-        assert((arguments[1].class == Number.value.class));
+        assert((arguments[0].class == &Number_CLASSINFO));
+        assert((arguments[1].class == &Number_CLASSINFO));
         //---------
         // define named params
         int64_t startPos = arguments[0].value.number;
@@ -986,7 +1012,7 @@
     }
 
     any Array_join(any this, len_t argc, any* arguments) {
-        assert(argc<1 || (arguments[0].class == String.value.class));
+        assert(argc<1 || (arguments[0].class == &String_CLASSINFO));
         //---------
         // define named params
         str separ= argc? arguments[0].value.str: ",";
@@ -1010,7 +1036,7 @@
     }*/
 
     any NameValuePair_toString(DEFAULT_ARGUMENTS) {
-        assert(this.class=NameValuePair.value.class);
+        assert(this.class==&NameValuePair_CLASSINFO);
         Buffer_s b= _newBuffer();
         NameValuePair_s nv = *((NameValuePair_ptr)this.value.ptr);
         _Buffer_concatToNULL(&b, "\"", CALL0(toString_,nv.name).value.str,"\":",CALL0(toString_,nv.value).value.str, NULL);
@@ -1021,7 +1047,7 @@
         NameValuePair_ptr nv;
         len_t len=map->length;
         for(any* item=map->item; len--; item++){
-            assert(item->class == NameValuePair.value.class);
+            assert(item->class == &NameValuePair_CLASSINFO);
             nv=((NameValuePair_ptr)item->value.ptr);
             if (__is(nv->name, key)) return nv;
         }
@@ -1032,7 +1058,7 @@
         len_t inx=0;
         len_t len=map->length;
         for(any* item=map->item; len--; item++,inx++){
-            assert(item->class == NameValuePair.value.class);
+            assert(item->class == &NameValuePair_CLASSINFO);
             NameValuePair_ptr nv=((NameValuePair_ptr)item->value.ptr);
             if (__is(nv->name, key)) return inx;
         }
@@ -1041,7 +1067,7 @@
 
     any Map_get(any this, len_t argc, any* arguments) {
         assert(argc==1);
-        assert(this.class==Map.value.class);
+        assert(_instanceof(this,Map));
         NameValuePair_ptr nv=_map_item((Map_ptr)this.value.ptr, arguments[0]);
         if(!nv) return undefined;
         return nv->value;
@@ -1049,7 +1075,7 @@
 
     any Map_has(any this, len_t argc, any* arguments) {
         assert(argc==1);
-        assert(this.class==Map.value.class);
+        assert(_instanceof(this,Map));
         NameValuePair_ptr nv=_map_item((Map_ptr)this.value.ptr, arguments[0]);
         if(!nv) return false;
         return true;
@@ -1057,7 +1083,7 @@
 
     any Map_set(any this, len_t argc, any* arguments) {
         assert(argc==2);
-        assert(this.class==Map.value.class);
+        assert(_instanceof(this,Map));
         NameValuePair_ptr nv=_map_item((Map_ptr)this.value.ptr, arguments[0]);
         if(!nv) {
             Array_push(this,1,(any_arr){new(NameValuePair,2,arguments)});
@@ -1069,7 +1095,7 @@
 
     any Map_delete(any this, len_t argc, any* arguments) {
         assert(argc==1);
-        assert(this.class==Map.value.class);
+        assert(_instanceof(this,Map));
         int64_t index=_map_inx((Map_ptr)this.value.ptr, arguments[0]);
         if(index<0) return undefined;
         any value=((NameValuePair_ptr)this.value.arr->item[index].value.ptr)->value;
@@ -1087,7 +1113,7 @@
         var result = _newArray(len,NULL);
         any* resItem = result.value.arr->item;
         for(any* item=this.value.arr->item; len--; item++){
-            assert(item->class == NameValuePair.value.class);
+            assert(item->class == &NameValuePair_CLASSINFO);
             *resItem++ = ((NameValuePair_ptr)item->value.ptr)->name;
         }
         return result;
@@ -1107,7 +1133,7 @@
     any _DateTo(time_t t, str format, int local){
         struct tm * tm_s_ptr = local?localtime(&t):gmtime(&t); // Convert to Local/GMT
         char buf[128];
-        strftime(buf,sizeof(buf),format,tm_s_ptr );
+        strftime(buf,sizeof buf,format,tm_s_ptr );
         return any_str(buf);
     }
     any Date_toString(DEFAULT_ARGUMENTS){
@@ -1132,7 +1158,7 @@
     any JSON_stringify(any this, len_t argc, any* arguments) {
         assert(argc>=1);
         var what=arguments[0];
-        if (what.class==Array.value.class){
+        if (what.class==&Array_CLASSINFO){
             // Array
             Buffer_s b = _newBuffer();
             _Buffer_addStr(&b,"[");
@@ -1146,7 +1172,7 @@
             _Buffer_addStr(&b,"]");
             return _Buffer_toString(&b);
         }
-        else if (what.class==Map.value.class){
+        else if (_instanceof(what,Map)){
             // Map, (js Object)
             Buffer_s b = _newBuffer();
             _Buffer_addStr(&b,"{");
@@ -1251,26 +1277,34 @@
 
     len_t _length(any this){
         return this.class==&String_CLASSINFO ? utf8len(this.value.ptr)
-                :(this.class==Array.value.class||this.class==Map.value.class)? this.value.arr->length
+                :(this.class==&Array_CLASSINFO||_instanceof(this,Map))? this.value.arr->length
                 :0;
     }
 
     double _anyToNumber(any this){
-        char* endConverted;
-        if (this.class==&String_CLASSINFO) return strtod(this.value.str,&endConverted);
-        else if (this.class==&Number_CLASSINFO) return this.value.number;
-        else {
-            fail_with(_concatToNULL("cannot convert [",this.class->name.value.str,"] to number\n",NULL));
-        }
+        //NOTE: _anyToNumber(String) RETURNS ASCII CODE OF FIRST CHAR
+        // on producer_C a single char StringLiteral is produced as C unsigned char/byte
+        //so :  `x > "A"` is converted to C's `_anyToNumber(x) > 'A'`
+        // and 'A' in C is unsigned char/byte/65 >= a number
+        // ---
+        // use parseFloat to convert strings with number representations.
+        //
+        if (this.class==&String_CLASSINFO) return (double)this.value.str[0];
+        else return this.value.number;
     }
 
     any parseFloat(DEFAULT_ARGUMENTS){
-        assert(argc>=1);
-        return any_number(_anyToNumber(arguments[0]));
+        assert(argc==1);
+        char* endConverted;
+        if (arguments[0].class==&String_CLASSINFO) return any_number(strtod(arguments[0].value.str,&endConverted));
+        else if (arguments[0].class==&Number_CLASSINFO) return arguments[0];
+        else return (any){&NaN_CLASSINFO,0};
     }
+
     any parseInt(DEFAULT_ARGUMENTS){
         assert(argc==1);
-        return any_number((int64_t)_anyToNumber(arguments[0]));
+        if (arguments[0].class==&String_CLASSINFO) return any_number(atol(arguments[0].value.str));
+        else return (any){&NaN_CLASSINFO,0};
     }
 
     int _anyToBool(any this){
@@ -1350,7 +1384,9 @@
 
     //-- _register Methods & props
 
-    void _declareMethods(Class_ptr class, _methodInfoArr infoArr){
+    void _declareMethods(any anyClass, _methodInfoArr infoArr){
+        assert(_instanceof(anyClass,Class));
+        Class_ptr class = anyClass.value.classINFOptr;
         // set jmpTable with implemented methods
         if (infoArr) {
             _jmpTable jmpTable=class->method;
@@ -1359,7 +1395,11 @@
             }
         }
     }
-    void _declareProps(Class_ptr class, _posTableItem_t propsSymbolList[], size_t posTable_byteSize){
+
+    void _declareProps(any anyClass, _posTableItem_t propsSymbolList[], size_t posTable_byteSize){
+        assert(_instanceof(anyClass,Class));
+        Class_ptr class = anyClass.value.classINFOptr;
+        // set posTable with implemented methods
         _posTable posTable = class->pos;
         if (posTable_byteSize){
             int propsLength = posTable_byteSize / sizeof(_posTableItem_t);
@@ -1456,6 +1496,7 @@
         M( lastIndexOf )
         M( join )
         M( concat )
+        M( tryGet )
     M_END
     #undef M
 
@@ -1545,18 +1586,21 @@
         assert(_symbol[constructor_]== "constructor");
 
         //-------
+        // hierarchy root
+        //-------
         // chicken & egg problem:
         // Object_CLASSINFO & Class_CLASSINFO must be initialized manually
         // (can't use _newClass() without Class_CLASSINFO having valid values)
+        // Object has a pointer to Class(CLASSINFO) & Class has a ptr to Object (class & super)
         //-------
 
+        // hierarchy root - jmpTable & posTable
         //-------
-        // Object
-        //-------
-
         _jmpTable Object_JMPTABLE = _newJmpTableFrom(NULL);
         _posTable Object_POSTABLE = _newPosTableFrom(NULL);
 
+        // hierarchy root - CLASSINFOs
+        //-------
         Object_CLASSINFO = (struct Class_s){
                 any_str("Object"), // str type name
                 any_func(NULL), // function __init
@@ -1565,15 +1609,6 @@
                 Object_JMPTABLE, //jmp table
                 Object_POSTABLE //prop rel pos table
                 };
-
-        Object = (any){&Class_CLASSINFO, &Object_CLASSINFO};
-
-        // Object's methods
-        _declareMethods( &Object_CLASSINFO, Object_CORE_METHODS); //no props
-
-        //-------
-        // Class
-        //-------
 
         Class_CLASSINFO = (struct Class_s){
                 any_str("Class"), // str type name
@@ -1584,8 +1619,12 @@
                 _newPosTableFrom(Object_POSTABLE) //basic prop rel pos table
                 };
 
+        Object = (any){&Class_CLASSINFO, &Object_CLASSINFO};
         Class = (any){&Class_CLASSINFO, &Class_CLASSINFO};
-        _declareProps( &Class_CLASSINFO, Class_CORE_PROPS, sizeof Class_CORE_PROPS); // no methods
+
+        // hierarchy root - Object's methods & class props
+        _declareMethods(Object, Object_CORE_METHODS); //no props
+        _declareProps(Class, Class_CORE_PROPS, sizeof Class_CORE_PROPS); // no methods
 
         //-------
         // pseudo-classes (native types & classes w/o instance memory space)
@@ -1603,32 +1642,32 @@
         FROMOBJECT(Function,"Function");
 
         FROMOBJECT(Boolean,"Boolean");
-        Boolean.value.class->method[-toString_]=&Boolean_toString;
+        Boolean_CLASSINFO.method[-toString_]=&Boolean_toString;
         true = (any){&Boolean_CLASSINFO,.value.number=1};
         false = (any){&Boolean_CLASSINFO,.value.number=0};
 
         FROMOBJECT(Undefined,"Undefined");
-        Undefined.value.class->method[-toString_]=&Undefined_toString;
+        Undefined_CLASSINFO.method[-toString_]=&Undefined_toString;
         undefined = (any){&Undefined_CLASSINFO,0};
 
         FROMOBJECT(Null,"Null");
-        Null.value.class->method[-toString_]=&Null_toString;
+        Null_CLASSINFO.method[-toString_]=&Null_toString;
         null = (any){&Undefined_CLASSINFO,0};
 
         FROMOBJECT(NaN,"NaN");
-        NaN.value.class->method[-toString_]=&NaN_toString;
+        NaN_CLASSINFO.method[-toString_]=&NaN_toString;
 
         FROMOBJECT(Infinity,"Infinity");
-        Infinity.value.class->method[-toString_]=&Infinity_toString;
+        Infinity_CLASSINFO.method[-toString_]=&Infinity_toString;
 
         //String methods
-        _declareMethods( &String_CLASSINFO, String_CORE_METHODS); //no props
+        _declareMethods(String, String_CORE_METHODS); //no props
 
         //Number methods
-        _declareMethods( Number.value.class, Number_CORE_METHODS); //no props
+        _declareMethods(Number, Number_CORE_METHODS); //no props
 
         //Date methods
-        _declareMethods( Date.value.class, Date_CORE_METHODS); //no props
+        _declareMethods(Date, Date_CORE_METHODS); //no props
 
         #define WITHCLASSINFO(X) \
             X##_CLASSINFO = (struct Class_s){ \
@@ -1637,17 +1676,18 @@
             X = (any){&Class_CLASSINFO, & X##_CLASSINFO}
 
         WITHCLASSINFO(Error);
-        _declareMethods( Error.value.class, Error_CORE_METHODS);
-        _declareProps( Error.value.class, Error_PROPS, sizeof Error_PROPS);
+        _declareMethods(Error, Error_CORE_METHODS);
+        _declareProps(Error, Error_PROPS, sizeof Error_PROPS);
 
         WITHCLASSINFO(Array);
-        _declareMethods( Array.value.class, Array_CORE_METHODS); //no props
+        _declareMethods(Array, Array_CORE_METHODS); //no props
 
-        Map = _newClass("Map", Map__init, sizeof(struct Map_s), Array.value.class);
-        _declareMethods( Map.value.class, Map_CORE_METHODS); //no props
+        // Map extends array
+        Map = _newClass("Map", Map__init, sizeof(struct Map_s), &Array_CLASSINFO);
+        _declareMethods(Map, Map_CORE_METHODS); //no props
 
         WITHCLASSINFO(NameValuePair);
-        _declareProps( NameValuePair.value.class, NameValuePair_PROPS, sizeof NameValuePair_PROPS);
+        _declareProps(NameValuePair, NameValuePair_PROPS, sizeof NameValuePair_PROPS);
 
         //init process_argv with program arguments
         process_argv = _newArrayFromCharPtrPtr(argc,CharPtrPtrargv);

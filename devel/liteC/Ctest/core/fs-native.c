@@ -19,7 +19,7 @@
     #define THIS ((fs_Stat_s*)this.value.ptr)
 
     void fs_Stat__init(DEFAULT_ARGUMENTS){
-        assert(this.class==fs_Stat.value.class);
+        assert(_instanceof(this,fs_Stat));
         assert(this.class->instanceSize==sizeof(fs_Stat_s));
         assert_args( this,argc,arguments, 1,1,&String_CLASSINFO);
 
@@ -34,11 +34,11 @@
     };
 
     any fs_Stat_isDirectory(DEFAULT_ARGUMENTS){
-        assert(this.class==fs_Stat.value.class);
+        assert(_instanceof(this,fs_Stat));
         return S_ISDIR((int)THIS->mode.value.number)?true:false;
     }
     any fs_Stat_isFile(DEFAULT_ARGUMENTS){
-        assert(this.class==fs_Stat.value.class);
+        assert(_instanceof(this,fs_Stat));
         return S_ISDIR((int)THIS->mode.value.number)?false:true;
     }
 
@@ -71,8 +71,10 @@
     any fs_existsSync( DEFAULT_ARGUMENTS ) {
         try {
             var stat=fs_statSync(this,argc,arguments);
+            e4c_exitTry(1);
             return true;
         } catch(err){
+            e4c_exitTry(1);
             return false;
         }
     };

@@ -184,7 +184,7 @@ process methods appended to core classes, by calling LiteC_registerShim
         .out '\n'
         for each methodDeclaration in appendToCoreClassMethods
                 var appendToDeclaration = methodDeclaration.getParent(Grammar.ClassDeclaration)
-                .out '    LiteC_registerShim(',appendToDeclaration.varRef,'.value.class',
+                .out '    LiteC_registerShim(',appendToDeclaration.varRef,
                      ',#{methodDeclaration.name}_,',
                      appendToDeclaration.varRef,'_',methodDeclaration.name,');',NL
 
@@ -560,9 +560,9 @@ static definition info for each class: list of _METHODS and _PROPS
             superClass = "Object"
 
         .out 
-            '    #{c} =_newClass("#{c}", #{c}__init, sizeof(struct #{c}_s), #{superClass}.value.class);',NL,NL
-            '    _declareMethods(#{c}.value.class, #{c}_METHODS);',NL
-            '    _declareProps(#{c}.value.class, #{c}_PROPS, sizeof #{c}_PROPS);',NL
+            '    #{c} =_newClass("#{c}", #{c}__init, sizeof(struct #{c}_s), #{superClass}.value.classINFOptr);',NL,NL
+            '    _declareMethods(#{c}, #{c}_METHODS);',NL
+            '    _declareProps(#{c}, #{c}_PROPS, sizeof #{c}_PROPS);',NL
 
 -------------------------------------
 
@@ -800,7 +800,23 @@ called above, pre-declare vars from 'into var x' assignment-expression
 
       method produce()
         var defaultReturn = .getParent(Grammar.ConstructorDeclaration)? '' else 'undefined'
+        
+
+we need to unwind try-catch blocks, to calculate to which active exception frame
+we're "returning" to
+
+        var countTryBlocks=0
+        var node=this
+        while node.getParent(Grammar.TryCatch) into node //includes catch & finally (parts of try)
+            countTryBlocks++
+        
+        if countTryBlocks
+            .out "{e4c_exitTry(",countTryBlocks,");"
+
         .out 'return ',.expr or defaultReturn
+
+        if countTryBlocks
+            .out ";}"
 
 
 ### Append to class Grammar.FunctionCall ###
@@ -1903,7 +1919,7 @@ include mainVar.name in a bracket block to contain scope
             " ; ",intIndexVarName,"<",listName,".value.arr->length"
             " ; ",intIndexVarName,"++){",NL
 
-        .body.out "assert(ITEM(",intIndexVarName,",",listName,").value.class==&NameValuePair_CLASSINFO);",NL
+        .body.out "assert(ITEM(",intIndexVarName,",",listName,").class==&NameValuePair_CLASSINFO);",NL
         
         .out nvp," = ITEM(",intIndexVarName,",",listName,").value.ptr;",NL //get nv pair
         if .indexVar, .body.out .indexVar.name,"=",nvp,"->name;",NL //get key
@@ -2110,7 +2126,7 @@ Since we copy js for this, we pass this straight through
             declare strName: Grammar.Literal
             strName = strName.getValue() 
 
-        .out NL,'{&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("',strName, '"),', .value,'})}'
+        .out NL,'_newPair("',strName, '",', .value,')'
 
 ### Append to class Grammar.ObjectLiteral ### also FreeObjectLiteral
 
@@ -2124,7 +2140,7 @@ JavaScript supports this syntax, so we just pass it through.
             //.out "{",{CSL:.items},"}"
             .out 
                 'new(Map,',.items.length,',(any_arr){'
-                {CSL:.items, freeForm:.constructor is Grammar.FreeObjectLiteral }
+                {CSL:.items}
                 NL,"})"
 
 

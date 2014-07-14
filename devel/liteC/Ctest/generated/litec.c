@@ -65,7 +65,7 @@ any litec_startCompilation(DEFAULT_ARGUMENTS); //forward declare
 //-------------------------
 void litec__moduleInit(void){
 litec_VERSION = any_str("0.8.1");
-litec_BUILD_DATE = any_str("2014-07-13T06:32:18.344Z");
+litec_BUILD_DATE = any_str("2014-07-14T02:35:49.534Z");
 litec_usage = _concatAny(5,(any_arr){any_str("\n    LiteScript-C v"), litec_VERSION, any_str(" "), litec_BUILD_DATE, any_str("\n\n    Usage: litec main.lite.md [options]\n\n    options are:\n    -o dir           output dir. Default is './out'\n    -v, -verbose     verbose level, default is 0 (0-3)\n    -w, -warning     warning level, default is 1 (0-1)\n    -comments        comment level on generated files, default is 1 (0-2)\n    -version         print LiteScript version & exit\n\n    Advanced options:\n    -D FOO -D BAR    Defines preprocessor names (#ifdef FOO/#ifndef BAR)\n    -d, -debug       enable full compiler debug logger file at 'out/debug.logger'\n")});
 litec_args = new(OptionsParser,1,(any_arr){process_argv});
 litec_options = new(GeneralOptions,0,NULL);
@@ -132,8 +132,8 @@ litec_options = new(GeneralOptions,0,NULL);
    litec_mainModuleName = ITEM(0,PROP(items_,litec_args));
    // if options.verboseLevel > 1
    if (_anyToNumber(PROP(verboseLevel_,litec_options)) > 1)  {
-       // print "\n            compiler version: #{Compiler.version} #{Compiler.buildDate}\n            compiler options: \n#{options}\n            cwd: #{(process.cwd())}\n            compile: #{mainModuleName}"
-       print(1,(any_arr){_concatAny(10,(any_arr){any_str("\n            compiler version: "), Compiler_version, any_str(" "), Compiler_buildDate, any_str("\n            compiler options: \n"), litec_options, any_str("\n            cwd: "), ((process_cwd(undefined,0,NULL))), any_str("\n            compile: "), litec_mainModuleName})});
+       // print "compiler version: #{Compiler.version} #{Compiler.buildDate}\ncompiler options: \n#{options}\ncwd: #{(process.cwd())}\ncompile: #{mainModuleName}"
+       print(1,(any_arr){_concatAny(10,(any_arr){any_str("compiler version: "), Compiler_version, any_str(" "), Compiler_buildDate, any_str("\ncompiler options: \n"), litec_options, any_str("\ncwd: "), ((process_cwd(undefined,0,NULL))), any_str("\ncompile: "), litec_mainModuleName})});
        // if options.debugEnabled
        if (_anyToBool(PROP(debugEnabled_,litec_options)))  {
            // print color.yellow,"GENERATING COMPILER DEBUG AT out/debug.logger",color.normal

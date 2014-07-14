@@ -213,13 +213,13 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 ,     "main"
 ,     "Producer"
 ,     "recurseLevel"
-,     "lexer"
 ,     "parent"
 ,     "keyword"
 ,     "type"
 ,     "keyType"
 ,     "itemType"
 ,     "extraInfo"
+,     "lexer"
 ,     "lineInx"
 ,     "sourceLineNum"
 ,     "column"
@@ -383,15 +383,15 @@ int main(int argc, char** argv) {
     LiteC_init(argc,argv);
     LiteC_addMethodSymbols( 177, _ADD_VERBS);
     LiteC_addPropSymbols( 193, _ADD_THINGS);
-    LiteC_registerShim(String.value.class,startsWith_,String_startsWith);
-    LiteC_registerShim(String.value.class,endsWith_,String_endsWith);
-    LiteC_registerShim(String.value.class,trimRight_,String_trimRight);
-    LiteC_registerShim(String.value.class,trimLeft_,String_trimLeft);
-    LiteC_registerShim(String.value.class,capitalized_,String_capitalized);
-    LiteC_registerShim(String.value.class,countSpaces_,String_countSpaces);
-    LiteC_registerShim(String.value.class,quoted_,String_quoted);
-    LiteC_registerShim(String.value.class,rpad_,String_rpad);
-    LiteC_registerShim(Array.value.class,remove_,Array_remove);
+    LiteC_registerShim(String,startsWith_,String_startsWith);
+    LiteC_registerShim(String,endsWith_,String_endsWith);
+    LiteC_registerShim(String,trimRight_,String_trimRight);
+    LiteC_registerShim(String,trimLeft_,String_trimLeft);
+    LiteC_registerShim(String,capitalized_,String_capitalized);
+    LiteC_registerShim(String,countSpaces_,String_countSpaces);
+    LiteC_registerShim(String,quoted_,String_quoted);
+    LiteC_registerShim(String,rpad_,String_rpad);
+    LiteC_registerShim(Array,remove_,Array_remove);
     fs__moduleInit();
     path__moduleInit();
     color__moduleInit();

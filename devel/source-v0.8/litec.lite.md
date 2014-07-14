@@ -104,7 +104,6 @@ show args
     //console.log(process.cwd());
     if options.verboseLevel > 1
         print """
-
             compiler version: #{Compiler.version} #{Compiler.buildDate}
             compiler options: \n#{options}
             cwd: #{process.cwd()}

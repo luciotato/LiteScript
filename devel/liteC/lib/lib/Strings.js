@@ -24,9 +24,9 @@
        // shim method trimRight()
        if (!String.prototype.trimRight)
        String.prototype.trimRight = function(){
-           // if no this.length into var inx, return
+           // if no this.length into var inx, return this //empty str
            var inx=undefined;
-           if (!((inx=this.length))) {return};
+           if (!((inx=this.length))) {return this};
            // do
            do{
                inx--;
@@ -37,9 +37,9 @@
        // shim method trimLeft()
        if (!String.prototype.trimLeft)
        String.prototype.trimLeft = function(){
-           // if no this.length into var len, return
+           // if no this.length into var len, return this
            var len=undefined;
-           if (!((len=this.length))) {return};
+           if (!((len=this.length))) {return this};
            var inx = 0;
            // while inx<len and this.charAt(inx) is ' '
            while(inx < len && this.charAt(inx) === ' '){

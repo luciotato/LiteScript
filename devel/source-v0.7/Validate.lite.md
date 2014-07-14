@@ -389,10 +389,15 @@ Populate the global scope
 
         var stringProto = addBuiltInObject('String')
         var arrayProto = addBuiltInObject('Array')
+        
         #state that String.split returns string array
         stringProto.ownMember("split").setMember '**return type**', arrayProto
+        
         #state that Obj.toString returns string:
         objProto.ownMember("tostring").setMember '**return type**', stringProto
+        
+        #add Array.tryGet(index): returns undefined if index is out of bounds
+        //arrayProto.addMember("tryGet",{type:functionProto})
 
         // int equals 'number'
         //globalScope.addMember 'int'

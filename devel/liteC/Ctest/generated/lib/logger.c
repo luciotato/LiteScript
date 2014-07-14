@@ -267,13 +267,13 @@
 
 //-------------------------
 void logger__moduleInit(void){
-       logger_LogOptions =_newClass("logger_LogOptions", logger_LogOptions__init, sizeof(struct logger_LogOptions_s), Object.value.class);
+       logger_LogOptions =_newClass("logger_LogOptions", logger_LogOptions__init, sizeof(struct logger_LogOptions_s), Object.value.classINFOptr);
    
-       _declareMethods(logger_LogOptions.value.class, logger_LogOptions_METHODS);
-       _declareProps(logger_LogOptions.value.class, logger_LogOptions_PROPS, sizeof logger_LogOptions_PROPS);
-       logger_LogOptionsDebug =_newClass("logger_LogOptionsDebug", logger_LogOptionsDebug__init, sizeof(struct logger_LogOptionsDebug_s), Object.value.class);
+       _declareMethods(logger_LogOptions, logger_LogOptions_METHODS);
+       _declareProps(logger_LogOptions, logger_LogOptions_PROPS, sizeof logger_LogOptions_PROPS);
+       logger_LogOptionsDebug =_newClass("logger_LogOptionsDebug", logger_LogOptionsDebug__init, sizeof(struct logger_LogOptionsDebug_s), Object.value.classINFOptr);
    
-       _declareMethods(logger_LogOptionsDebug.value.class, logger_LogOptionsDebug_METHODS);
-       _declareProps(logger_LogOptionsDebug.value.class, logger_LogOptionsDebug_PROPS, sizeof logger_LogOptionsDebug_PROPS);
+       _declareMethods(logger_LogOptionsDebug, logger_LogOptionsDebug_METHODS);
+       _declareProps(logger_LogOptionsDebug, logger_LogOptionsDebug_PROPS, sizeof logger_LogOptionsDebug_PROPS);
     logger__namespaceInit();
 };

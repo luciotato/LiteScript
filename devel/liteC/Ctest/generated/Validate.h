@@ -12,6 +12,7 @@ extern any Validate_initialize(DEFAULT_ARGUMENTS);
 
 //--------------
      // Names_ConvertResult
+     
      extern any Names_ConvertResult; //Class Object
      
      typedef struct Names_ConvertResult_s * Names_ConvertResult_ptr;

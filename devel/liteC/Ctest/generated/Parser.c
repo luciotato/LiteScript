@@ -193,13 +193,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 
          // preprocessor_replaces =
          Parser_preprocessor_replaces = new(Map,3,(any_arr){
-        
-             {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("DATE"),CALL0(toDateString_,PROP(now_,PROP(options_,this)))})}, 
-        
-             {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("TIME"),CALL0(toTimeString_,PROP(now_,PROP(options_,this)))})}, 
-        
-             {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("TIMESTAMP"),CALL0(toISOString_,PROP(now_,PROP(options_,this)))})}
-
+             _newPair("DATE",CALL0(toDateString_,PROP(now_,PROP(options_,this)))), 
+             _newPair("TIME",CALL0(toTimeString_,PROP(now_,PROP(options_,this)))), 
+             _newPair("TIMESTAMP",CALL0(toISOString_,PROP(now_,PROP(options_,this))))
              });
 
 // stringInterpolationChar starts for every file the same: "#"
@@ -667,7 +663,7 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
             var macro=undefined; //key
         var value=undefined; //value
        for(int64_t value__inx=0 ; value__inx<_list16.value.arr->length ; value__inx++){
-           assert(ITEM(value__inx,_list16).value.class==&NameValuePair_CLASSINFO);
+           assert(ITEM(value__inx,_list16).class==&NameValuePair_CLASSINFO);
        _nvp3 = ITEM(value__inx,_list16).value.ptr;
            macro=_nvp3->name;
            value=_nvp3->value;
@@ -1817,8 +1813,8 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 // `lexer options string interpolation char [is] (IDENTIFIER|PUCT|STRING)`
 // `lexer options literal (map|object)`
 
-       // if words[0] is 'lexer' and words[1] is 'options'
-       if (__is(ITEM(0,words),any_str("lexer")) && __is(ITEM(1,words),any_str("options")))  {
+       // if words.tryGet(0) is 'lexer' and words.tryGet(1) is 'options'
+       if (__is(CALL1(tryGet_,words,any_number(0)),any_str("lexer")) && __is(CALL1(tryGet_,words,any_number(1)),any_str("options")))  {
            // .type = LineTypes.COMMENT # is a COMMENT line
            PROP(type_,this) = Parser_LineTypes_COMMENT;// # is a COMMENT line
 
@@ -1826,8 +1822,8 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
            if (__is(CALL1(join_,CALL2(slice_,words,any_number(2), any_number(5)),any_str(" ")),any_str("string interpolation char")))  {
                // var ch:string
                var ch = undefined;
-               // if words[5] into ch is 'is' then ch = words[6] #get it (skip optional 'is')
-               if (__is((ch=ITEM(5,words)),any_str("is"))) {ch = ITEM(6,words);};
+               // if words.tryGet(5) into ch is 'is' then ch = words.tryGet(6) #get it (skip optional 'is')
+               if (__is((ch=CALL1(tryGet_,words,any_number(5))),any_str("is"))) {ch = CALL1(tryGet_,words,any_number(6));};
                // if ch.charAt(0) in ['"',"'"], ch = ch.slice(1,-1) #optionally quoted, remove quotes
                if (CALL1(indexOf_,_newArray(2,(any_arr){any_str("\""), any_str("'")}),CALL1(charAt_,ch,any_number(0))).value.number>=0) {ch = CALL2(slice_,ch,any_number(1), any_number(-1));};
                // if no ch then fail with "missing string interpolation char"  #check
@@ -1836,9 +1832,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                PROP(stringInterpolationChar_,lexer) = ch;
            }
            
-           else if (__is(ITEM(2,words),any_str("literal")))  {
-                 // switch words[3]
-                 any _switch2=ITEM(3,words);
+           else if (__is(CALL1(tryGet_,words,any_number(2)),any_str("literal")))  {
+                 // switch words.tryGet(3)
+                 any _switch2=CALL1(tryGet_,words,any_number(3));
                       // case "map":
                  if (__is(_switch2,any_str("map"))){
                          // lexer.options.literalMap = true
@@ -2397,8 +2393,8 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
        if (!(_anyToBool(PROP(currLine_,this)))) {col.value.number += _anyToNumber(indent) - 1;};
        // return {
        return new(Map,2,(any_arr){
-             {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("col"),col})}, 
-             {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("lin"),any_number(_anyToNumber(PROP(lineNum_,this)) - 1)})}
+             _newPair("col",col), 
+             _newPair("lin",any_number(_anyToNumber(PROP(lineNum_,this)) - 1))
        });
     return undefined;
     }
@@ -2446,29 +2442,29 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 
 //-------------------------
 void Parser__moduleInit(void){
-       Parser_Lexer =_newClass("Parser_Lexer", Parser_Lexer__init, sizeof(struct Parser_Lexer_s), Object.value.class);
+       Parser_Lexer =_newClass("Parser_Lexer", Parser_Lexer__init, sizeof(struct Parser_Lexer_s), Object.value.classINFOptr);
    
-       _declareMethods(Parser_Lexer.value.class, Parser_Lexer_METHODS);
-       _declareProps(Parser_Lexer.value.class, Parser_Lexer_PROPS, sizeof Parser_Lexer_PROPS);
-       Parser_Token =_newClass("Parser_Token", Parser_Token__init, sizeof(struct Parser_Token_s), Object.value.class);
+       _declareMethods(Parser_Lexer, Parser_Lexer_METHODS);
+       _declareProps(Parser_Lexer, Parser_Lexer_PROPS, sizeof Parser_Lexer_PROPS);
+       Parser_Token =_newClass("Parser_Token", Parser_Token__init, sizeof(struct Parser_Token_s), Object.value.classINFOptr);
    
-       _declareMethods(Parser_Token.value.class, Parser_Token_METHODS);
-       _declareProps(Parser_Token.value.class, Parser_Token_PROPS, sizeof Parser_Token_PROPS);
-       Parser_InfoLine =_newClass("Parser_InfoLine", Parser_InfoLine__init, sizeof(struct Parser_InfoLine_s), Object.value.class);
+       _declareMethods(Parser_Token, Parser_Token_METHODS);
+       _declareProps(Parser_Token, Parser_Token_PROPS, sizeof Parser_Token_PROPS);
+       Parser_InfoLine =_newClass("Parser_InfoLine", Parser_InfoLine__init, sizeof(struct Parser_InfoLine_s), Object.value.classINFOptr);
    
-       _declareMethods(Parser_InfoLine.value.class, Parser_InfoLine_METHODS);
-       _declareProps(Parser_InfoLine.value.class, Parser_InfoLine_PROPS, sizeof Parser_InfoLine_PROPS);
-       Parser_LexerPos =_newClass("Parser_LexerPos", Parser_LexerPos__init, sizeof(struct Parser_LexerPos_s), Object.value.class);
+       _declareMethods(Parser_InfoLine, Parser_InfoLine_METHODS);
+       _declareProps(Parser_InfoLine, Parser_InfoLine_PROPS, sizeof Parser_InfoLine_PROPS);
+       Parser_LexerPos =_newClass("Parser_LexerPos", Parser_LexerPos__init, sizeof(struct Parser_LexerPos_s), Object.value.classINFOptr);
    
-       _declareMethods(Parser_LexerPos.value.class, Parser_LexerPos_METHODS);
-       _declareProps(Parser_LexerPos.value.class, Parser_LexerPos_PROPS, sizeof Parser_LexerPos_PROPS);
-       Parser_MultilineSection =_newClass("Parser_MultilineSection", Parser_MultilineSection__init, sizeof(struct Parser_MultilineSection_s), Object.value.class);
+       _declareMethods(Parser_LexerPos, Parser_LexerPos_METHODS);
+       _declareProps(Parser_LexerPos, Parser_LexerPos_PROPS, sizeof Parser_LexerPos_PROPS);
+       Parser_MultilineSection =_newClass("Parser_MultilineSection", Parser_MultilineSection__init, sizeof(struct Parser_MultilineSection_s), Object.value.classINFOptr);
    
-       _declareMethods(Parser_MultilineSection.value.class, Parser_MultilineSection_METHODS);
-       _declareProps(Parser_MultilineSection.value.class, Parser_MultilineSection_PROPS, sizeof Parser_MultilineSection_PROPS);
+       _declareMethods(Parser_MultilineSection, Parser_MultilineSection_METHODS);
+       _declareProps(Parser_MultilineSection, Parser_MultilineSection_PROPS, sizeof Parser_MultilineSection_PROPS);
     Parser_LineTypes__namespaceInit();
-       Parser_OutCode =_newClass("Parser_OutCode", Parser_OutCode__init, sizeof(struct Parser_OutCode_s), Object.value.class);
+       Parser_OutCode =_newClass("Parser_OutCode", Parser_OutCode__init, sizeof(struct Parser_OutCode_s), Object.value.classINFOptr);
    
-       _declareMethods(Parser_OutCode.value.class, Parser_OutCode_METHODS);
-       _declareProps(Parser_OutCode.value.class, Parser_OutCode_PROPS, sizeof Parser_OutCode_PROPS);
+       _declareMethods(Parser_OutCode, Parser_OutCode_METHODS);
+       _declareProps(Parser_OutCode, Parser_OutCode_PROPS, sizeof Parser_OutCode_PROPS);
 };

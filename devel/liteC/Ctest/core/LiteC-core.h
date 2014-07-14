@@ -17,7 +17,7 @@
     extern void LiteC_addMethodSymbols(int addedMethods, str* _verb_table);
     extern void LiteC_addPropSymbols(int addedProps, str* _things_table);
 
-    extern function_ptr LiteC_registerShim(Class_ptr class, int symbol, function_ptr fn);
+    extern function_ptr LiteC_registerShim(any anyClass, int symbol, function_ptr fn);
 
     // _symbol names
     extern int _allMethodsLength, _allPropsLength, _symbolTableLength;
@@ -51,7 +51,7 @@
     typedef struct _propertyInfoItem _propertyInfoArr[];
 
     // core methods, negative ints
-    #define _CORE_METHODS_MAX 32 // means -1..-_CORE_METHODS_MAX are valid method symbols
+    #define _CORE_METHODS_MAX 33 // means -1..-_CORE_METHODS_MAX are valid method symbols
     // means 1.._CORE_METHODS_MAX are used jmpTable indexes, so initial TABLE_LENGTH(jmpTable)=_CORE_METHODS_MAX+1
     // 0 is a reserved jmpTable index (TABLE_LENGTH is stored there), but symbol:0 is PROPERTY constructor:Class
     enum _CORE_METHODS_ENUM {
@@ -61,6 +61,7 @@
         ,unshift_
         ,join_
         ,splice_
+        ,tryGet_
 
         ,toISOString_
         ,toUTCString_
@@ -117,6 +118,8 @@
     extern function_ptr __classMethodNat(int symbol, Class_ptr class);
     extern function_ptr __classMethod(int symbol, any anyClass);
     extern any __classMethodFunc(int symbol, any anyClass);
+
+    extern any Array_tryGet(DEFAULT_ARGUMENTS);
 
     #ifndef NDEBUG
         // access a method on the instance
@@ -206,7 +209,7 @@
     //extern any any_number(double S);
     #define any_number(S) (any){&Number_CLASSINFO,.value.number=S}
     #define any_func(S) (any){&Function_CLASSINFO,.value.ptr=(function_ptr)S}
-    #define any_class(S) (any){&Class_CLASSINFO,.value.class=S}
+    #define any_class(S) (any){&Class_CLASSINFO,.value.classINFOptr=S}
 
 
 //-------
@@ -277,8 +280,8 @@
 //------------------------
 // Register Methods & Props for a class
 
-    extern void _declareMethods(Class_ptr class, _methodInfoArr infoArr);
-    extern void _declareProps(Class_ptr class, _posTable posTable, size_t posTable_byteSize);
+    extern void _declareMethods(any anyClass, _methodInfoArr infoArr);
+    extern void _declareProps(any anyClass, _posTable posTable, size_t posTable_byteSize);
 
 //------------------------
 // export helper functions
@@ -390,6 +393,7 @@
     extern any Map_clear(DEFAULT_ARGUMENTS); //Map = js Object, array of props
 
     extern void NameValuePair__init(DEFAULT_ARGUMENTS);
+    extern any _newPair(str name, any value);
 
     //namespace JSON
     any JSON_stringify(any this, len_t argc, any* arguments);

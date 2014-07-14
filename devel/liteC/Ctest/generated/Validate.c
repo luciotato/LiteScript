@@ -171,18 +171,18 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        // logger.info "- Connect Imported"
        logger_info(undefined,1,(any_arr){any_str("- Connect Imported")});
        // for each moduleNode:Grammar.Module in map project.moduleCache
-       any _list31=PROP(moduleCache_,Validate_project);
+       any _list34=PROP(moduleCache_,Validate_project);
        { NameValuePair_ptr _nvp6=NULL; //name:value pair
         var moduleNode=undefined; //value
-       for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list31.value.arr->length ; moduleNode__inx++){
-         assert(ITEM(moduleNode__inx,_list31).value.class==&NameValuePair_CLASSINFO);
-       _nvp6 = ITEM(moduleNode__inx,_list31).value.ptr;
+       for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list34.value.arr->length ; moduleNode__inx++){
+         assert(ITEM(moduleNode__inx,_list34).class==&NameValuePair_CLASSINFO);
+       _nvp6 = ITEM(moduleNode__inx,_list34).value.ptr;
          moduleNode=_nvp6->value;
 
          // for each node in moduleNode.requireCallNodes
-         any _list32=PROP(requireCallNodes_,moduleNode);
+         any _list35=PROP(requireCallNodes_,moduleNode);
          { var node=undefined;
-         for(int node__inx=0 ; node__inx<_list32.value.arr->length ; node__inx++){node=ITEM(node__inx,_list32);
+         for(int node__inx=0 ; node__inx<_list35.value.arr->length ; node__inx++){node=ITEM(node__inx,_list35);
 
             // declare valid node.importedModule.exports.members
 
@@ -231,12 +231,12 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                             // a "declare global x", but "x.lite.md" do not export a class
                             // move all exported (namespace members) to global scope
                            // for each nameDecl in map moveWhat.members
-                           any _list33=PROP(members_,moveWhat);
+                           any _list36=PROP(members_,moveWhat);
                            { NameValuePair_ptr _nvp7=NULL; //name:value pair
                             var nameDecl=undefined; //value
-                           for(int64_t nameDecl__inx=0 ; nameDecl__inx<_list33.value.arr->length ; nameDecl__inx++){
-                               assert(ITEM(nameDecl__inx,_list33).value.class==&NameValuePair_CLASSINFO);
-                           _nvp7 = ITEM(nameDecl__inx,_list33).value.ptr;
+                           for(int64_t nameDecl__inx=0 ; nameDecl__inx<_list36.value.arr->length ; nameDecl__inx++){
+                               assert(ITEM(nameDecl__inx,_list36).class==&NameValuePair_CLASSINFO);
+                           _nvp7 = ITEM(nameDecl__inx,_list36).value.ptr;
                                nameDecl=_nvp7->value;
                                // project.rootModule.addToScope nameDecl
                                CALL1(addToScope_,PROP(rootModule_,Validate_project),nameDecl);
@@ -303,9 +303,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         // #first, try to assign type by "name affinity"
         // #(only applies when type is not specified)
        // for each nameDecl in Names.allNameDeclarations
-       any _list34=Names_allNameDeclarations;
+       any _list37=Names_allNameDeclarations;
        { var nameDecl=undefined;
-       for(int nameDecl__inx=0 ; nameDecl__inx<_list34.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list34);
+       for(int nameDecl__inx=0 ; nameDecl__inx<_list37.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list37);
            // nameDecl.assignTypebyNameAffinity()
            CALL0(assignTypebyNameAffinity_,nameDecl);
        }};// end for each in Names_allNameDeclarations
@@ -333,9 +333,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
             // #process all, sum conversion failures
            // for each nameDecl in Names.allNameDeclarations
-           any _list35=Names_allNameDeclarations;
+           any _list38=Names_allNameDeclarations;
            { var nameDecl=undefined;
-           for(int nameDecl__inx=0 ; nameDecl__inx<_list35.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list35);
+           for(int nameDecl__inx=0 ; nameDecl__inx<_list38.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list38);
                // var result = nameDecl.processConvertTypes()
                var result = CALL0(processConvertTypes_,nameDecl);
                // sumFailures += result.failures
@@ -349,12 +349,6 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            pass.value.number++;
        } while (!(__is(sumFailures,lastSumFailures)));// end loop
 
-       // if sumConverted<=0 or sumFailures>0
-       if (_anyToBool(__or(any_number(_anyToNumber(sumConverted) <= 0),any_number(_anyToNumber(sumFailures) > 0))))  {
-           // logger.info "- Converted OK:#{sumConverted}, fails:#{sumFailures}"
-           logger_info(undefined,1,(any_arr){_concatAny(4,(any_arr){any_str("- Converted OK:"), sumConverted, any_str(", fails:"), sumFailures})});
-       };
-
 // Inform unconverted types as errors
 
        // if sumFailures #there was failures, inform al errors
@@ -364,9 +358,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            // opt.informError = true
            PROP(informError_,opt) = true;
            // for each nameDecl in Names.allNameDeclarations
-           any _list36=Names_allNameDeclarations;
+           any _list39=Names_allNameDeclarations;
            { var nameDecl=undefined;
-           for(int nameDecl__inx=0 ; nameDecl__inx<_list36.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list36);
+           for(int nameDecl__inx=0 ; nameDecl__inx<_list39.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list39);
                // nameDecl.processConvertTypes(opt)
                CALL1(processConvertTypes_,nameDecl,opt);
            }};// end for each in Names_allNameDeclarations
@@ -395,9 +389,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 // Inform forward declarations not fulfilled, as errors
 
        // for each nameDecl in Names.allNameDeclarations
-       any _list37=Names_allNameDeclarations;
+       any _list40=Names_allNameDeclarations;
        { var nameDecl=undefined;
-       for(int nameDecl__inx=0 ; nameDecl__inx<_list37.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list37);
+       for(int nameDecl__inx=0 ; nameDecl__inx<_list40.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list40);
 
            // if nameDecl.isForward and not nameDecl.isDummy
            if (_anyToBool(PROP(isForward_,nameDecl)) && !(_anyToBool(PROP(isDummy_,nameDecl))))  {
@@ -416,6 +410,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            };
        }};// end for each in Names_allNameDeclarations
        
+   return undefined;
    }
 
    // export function walkAllNodesCalling(methodName:string)
@@ -431,17 +426,18 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 // For all modules, for each node, if the specific AST node has methodName, call it
 
        // for each moduleNode:Grammar.Module in map project.moduleCache
-       any _list38=PROP(moduleCache_,Validate_project);
+       any _list41=PROP(moduleCache_,Validate_project);
        { NameValuePair_ptr _nvp8=NULL; //name:value pair
         var moduleNode=undefined; //value
-       for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list38.value.arr->length ; moduleNode__inx++){
-           assert(ITEM(moduleNode__inx,_list38).value.class==&NameValuePair_CLASSINFO);
-       _nvp8 = ITEM(moduleNode__inx,_list38).value.ptr;
+       for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list41.value.arr->length ; moduleNode__inx++){
+           assert(ITEM(moduleNode__inx,_list41).class==&NameValuePair_CLASSINFO);
+       _nvp8 = ITEM(moduleNode__inx,_list41).value.ptr;
            moduleNode=_nvp8->value;
            // moduleNode.callOnSubTree methodSymbol
            CALL1(callOnSubTree_,moduleNode,methodSymbol);
        }};// end for each in map PROP(moduleCache_,Validate_project)
        
+   return undefined;
    }
 
 
@@ -580,12 +576,12 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 // move all exported from the interface file, to project.rootModule global scope
 
        // for each nameDecl in map globalInterfaceModule.exports.members
-       any _list39=PROP(members_,PROP(exports_,globalInterfaceModule));
+       any _list42=PROP(members_,PROP(exports_,globalInterfaceModule));
        { NameValuePair_ptr _nvp9=NULL; //name:value pair
         var nameDecl=undefined; //value
-       for(int64_t nameDecl__inx=0 ; nameDecl__inx<_list39.value.arr->length ; nameDecl__inx++){
-           assert(ITEM(nameDecl__inx,_list39).value.class==&NameValuePair_CLASSINFO);
-       _nvp9 = ITEM(nameDecl__inx,_list39).value.ptr;
+       for(int64_t nameDecl__inx=0 ; nameDecl__inx<_list42.value.arr->length ; nameDecl__inx++){
+           assert(ITEM(nameDecl__inx,_list42).class==&NameValuePair_CLASSINFO);
+       _nvp9 = ITEM(nameDecl__inx,_list42).value.ptr;
            nameDecl=_nvp9->value;
            // project.rootModule.addToSpecificScope globalScope, nameDecl
            CALL2(addToSpecificScope_,PROP(rootModule_,Validate_project),Validate_globalScope, nameDecl);
@@ -599,6 +595,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            // nameAffinity.members.set 'Err',errProto.parent // err|xxxErr => type:Error
            CALL2(set_,PROP(members_,Validate_nameAffinity),any_str("Err"), PROP(parent_,errProto)); // err|xxxErr => type:Error
        };
+   return undefined;
    }
 
 
@@ -695,6 +692,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
          // return nameDecl.members.get("prototype")
          return CALL1(get_,PROP(members_,nameDecl),any_str("prototype"));
      };
+   return undefined;
    }
 
    // helper function globalPrototype(name)
@@ -722,6 +720,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
      // return protoNameDecl
      return protoNameDecl;
+   return undefined;
    }
 
 
@@ -738,7 +737,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
      // var nameDecl = new Names.Declaration( name,{isBuiltIn:true},node )
      var nameDecl = new(Names_Declaration,3,(any_arr){name, new(Map,1,(any_arr){
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("isBuiltIn"),true})}
+     _newPair("isBuiltIn",true)
      }), node});
      // globalScope.addMember nameDecl
      CALL1(addMember_,Validate_globalScope,nameDecl);
@@ -760,6 +759,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
      // return classProto
      return classProto;
+   return undefined;
    }
 
 
@@ -776,7 +776,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
      // var nameDecl = new Names.Declaration(name, {isBuiltIn:true},node)
      var nameDecl = new(Names_Declaration,3,(any_arr){name, new(Map,1,(any_arr){
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("isBuiltIn"),true})}
+     _newPair("isBuiltIn",true)
      }), node});
      // globalScope.addMember nameDecl
      CALL1(addMember_,Validate_globalScope,nameDecl);
@@ -791,6 +791,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
      // return nameDecl
      return nameDecl;
+   return undefined;
    }
 
 // ---------------------------------------
@@ -867,6 +868,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            };
        };// end loop
        
+    return undefined;
     }
 
 
@@ -920,6 +922,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            };
        };// end loop
        
+    return undefined;
     }
 
     // helper method getMembersFromObjProperties(obj) #Recursive
@@ -937,6 +940,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //ifdef PROD_C
        // return
        return undefined;
+    return undefined;
     }
         //else
         //var newMember:Names.Declaration
@@ -995,6 +999,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
          nameDecl = PROP(parent_,nameDecl);
        };// end loop
        
+    return undefined;
     }
 
 
@@ -1020,6 +1025,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // return result
        return result;
+    return undefined;
     }
 
 
@@ -1118,6 +1124,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // return
        return undefined;
+    return undefined;
     }
 
 
@@ -1160,6 +1167,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            // .setMember '**proto**', theType
            CALL2(setMember_,this,any_str("**proto**"), theType);
      };
+    return undefined;
     }
 
 
@@ -1200,13 +1208,13 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                // if not possibleClassRef and .name.length>=6
                if (!(_anyToBool(possibleClassRef)) && _length(PROP(name_,this)) >= 6)  {
                    // for each affinityName,classRef in map nameAffinity.members
-                   any _list40=PROP(members_,Validate_nameAffinity);
+                   any _list43=PROP(members_,Validate_nameAffinity);
                    { NameValuePair_ptr _nvp10=NULL; //name:value pair
                         var affinityName=undefined; //key
                     var classRef=undefined; //value
-                   for(int64_t classRef__inx=0 ; classRef__inx<_list40.value.arr->length ; classRef__inx++){
-                       assert(ITEM(classRef__inx,_list40).value.class==&NameValuePair_CLASSINFO);
-                   _nvp10 = ITEM(classRef__inx,_list40).value.ptr;
+                   for(int64_t classRef__inx=0 ; classRef__inx<_list43.value.arr->length ; classRef__inx++){
+                       assert(ITEM(classRef__inx,_list43).class==&NameValuePair_CLASSINFO);
+                   _nvp10 = ITEM(classRef__inx,_list43).value.ptr;
                        affinityName=_nvp10->name;
                        classRef=_nvp10->value;
                        // if asClassName.endsWith(affinityName)
@@ -1231,6 +1239,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                };
            };
        };
+    return undefined;
     }
 
 
@@ -1258,6 +1267,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // return new Names.Declaration(name, options, this)
        return new(Names_Declaration,3,(any_arr){name, options, this});
+    return undefined;
     }
 
     // method addMemberTo(nameDecl, memberName, options)  returns Names.Declaration
@@ -1278,6 +1288,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // return nameDecl.addMember(memberName, options, this)
        return CALL3(addMember_,nameDecl,memberName, options, this);
+    return undefined;
     }
 
     // helper method tryGetMember(nameDecl, name:string, options:Names.NameDeclOptions)
@@ -1322,6 +1333,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // return found
        return found;
+    return undefined;
     }
 
 
@@ -1337,15 +1349,14 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // var node = this
        var node = this;
-        // declare valid node.scope
 
        // while node
        while(_anyToBool(node)){
 
          // if node.scope
          if (_anyToBool(PROP(scope_,node)))  {
-           // return node # found a node with scope
-           return node;// # found a node with scope
+             // return node # found a node with scope
+             return node;// # found a node with scope
          };
 
          // node = node.parent # move up
@@ -1356,6 +1367,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // return null
        return null;
+    return undefined;
     }
 
 
@@ -1394,6 +1406,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
          node = PROP(parent_,node);
        };// end loop
        
+    return undefined;
     }
 
         // #loop
@@ -1465,6 +1478,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // return found
        return found;
+    return undefined;
     }
 
 
@@ -1493,6 +1507,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // return .addToSpecificScope(scope, item, options)
        return CALL3(addToSpecificScope_,this,scope, item, options);
+    return undefined;
     }
 
 // First search it to report duplicates, if found in the scope.
@@ -1575,6 +1590,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // return nameDecl
        return nameDecl;
+    return undefined;
     }
 
 
@@ -1635,6 +1651,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
          // exportedNameDecl.warn 'default export: cannot have some "public function/var" and also a class/namespace named as the module (default export)'
          CALL1(warn_,exportedNameDecl,any_str("default export: cannot have some \"public function/var\" and also a class/namespace named as the module (default export)"));
      };
+    return undefined;
     }
 
 
@@ -1659,6 +1676,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // return .scope
        return PROP(scope_,this);
+    return undefined;
     }
 
     // helper method tryGetOwnerNameDecl( informError ) returns Names.Declaration
@@ -1757,6 +1775,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // end if
        
+    return undefined;
     }
 
 
@@ -1833,6 +1852,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // return .declareName(.name,options)
        return CALL2(declareName_,this,PROP(name_,this), options);
+     return undefined;
      }
 
      // helper method declareInScope()
@@ -1841,6 +1861,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
          //---------
          // .nameDecl = .addToScope(.createNameDeclaration())
          PROP(nameDecl_,this) = CALL1(addToScope_,this,CALL0(createNameDeclaration_,this));
+     return undefined;
      }
 
      // helper method getTypeFromAssignedValue()
@@ -1860,6 +1881,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                  };
              };
          };
+     return undefined;
      }
 
 
@@ -1870,11 +1892,11 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        assert(_instanceof(this,Grammar_VarStatement));
        //---------
        // for each varDecl in .list
-       any _list41=PROP(list_,this);
+       any _list44=PROP(list_,this);
        { var varDecl=undefined;
-       for(int varDecl__inx=0 ; varDecl__inx<_list41.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list41);
+       for(int varDecl__inx=0 ; varDecl__inx<_list44.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list44);
            // varDecl.declareInScope
-           PROP(declareInScope_,varDecl);
+           __call(declareInScope_,varDecl,0,NULL);
             // declare .parent: Grammar.Statement
            // if .hasAdjective('export'), .addToExport varDecl.nameDecl, isVarFn=true
            if (_anyToBool(CALL1(hasAdjective_,this,any_str("export")))) {CALL2(addToExport_,this,PROP(nameDecl_,varDecl), true);};
@@ -1895,6 +1917,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            };
        }};// end for each in PROP(list_,this)
        
+    return undefined;
     }
 
 
@@ -1903,13 +1926,14 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        assert(_instanceof(this,Grammar_VarStatement));
        //---------
        // for each varDecl in .list
-       any _list42=PROP(list_,this);
+       any _list45=PROP(list_,this);
        { var varDecl=undefined;
-       for(int varDecl__inx=0 ; varDecl__inx<_list42.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list42);
+       for(int varDecl__inx=0 ; varDecl__inx<_list45.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list45);
            // varDecl.getTypeFromAssignedValue
-           PROP(getTypeFromAssignedValue_,varDecl);
+           __call(getTypeFromAssignedValue_,varDecl,0,NULL);
        }};// end for each in PROP(list_,this)
        
+    return undefined;
     }
 
 
@@ -1924,6 +1948,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //---------
         // .nameDecl = .addToScope(.declareName(.name))
         PROP(nameDecl_,this) = CALL1(addToScope_,this,CALL1(declareName_,this,PROP(name_,this)));
+     return undefined;
      }
 
      // method evaluateAssignments() # pass 4, determine type from assigned value
@@ -1932,6 +1957,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // .nameDecl.assignTypeFromValue .varRef
        CALL1(assignTypeFromValue_,PROP(nameDecl_,this),PROP(varRef_,this));
+     return undefined;
      }
 
 
@@ -1952,6 +1978,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            // .nameDecl = .addToScope(.name)
            PROP(nameDecl_,this) = CALL1(addToScope_,this,PROP(name_,this));
        };
+     return undefined;
      }
 
 
@@ -2084,6 +2111,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                CALL2(set_,PROP(members_,Validate_nameAffinity),PROP(name_,this), PROP(nameDecl_,this));
            };
        };
+    return undefined;
     }
 
 
@@ -2106,6 +2134,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         // declare valid .parent.nameDecl
        // .nameDecl = .parent.nameDecl or .declareName(UniqueID.getVarName('*ObjectLiteral*'))
        PROP(nameDecl_,this) = __or(PROP(nameDecl_,PROP(parent_,this)),CALL1(declareName_,this,UniqueID_getVarName(undefined,1,(any_arr){any_str("*ObjectLiteral*")})));
+    return undefined;
     }
 
 // When producing the LiteScript-to-C compiler, a ObjectLiteral's return type is 'Map string to any'
@@ -2125,6 +2154,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            // return .nameDecl
            return PROP(nameDecl_,this);
        };
+    return undefined;
     }
 
 
@@ -2160,6 +2190,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            // .nameDecl.assignTypeFromValue .value
            CALL1(assignTypeFromValue_,PROP(nameDecl_,this),PROP(value_,this));
        };
+    return undefined;
     }
 
    // append to class Grammar.FunctionDeclaration ###
@@ -2287,14 +2318,15 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
      // if .paramsDeclarations
      if (_anyToBool(PROP(paramsDeclarations_,this)))  {
        // for each varDecl in .paramsDeclarations
-       any _list43=PROP(paramsDeclarations_,this);
+       any _list46=PROP(paramsDeclarations_,this);
        { var varDecl=undefined;
-       for(int varDecl__inx=0 ; varDecl__inx<_list43.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list43);
+       for(int varDecl__inx=0 ; varDecl__inx<_list46.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list46);
          // varDecl.declareInScope
-         PROP(declareInScope_,varDecl);
+         __call(declareInScope_,varDecl,0,NULL);
        }};// end for each in PROP(paramsDeclarations_,this)
        
      };
+    return undefined;
     }
 
 
@@ -2333,6 +2365,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
      // .addMemberTo owner, .nameDecl
      CALL2(addMemberTo_,this,owner, PROP(nameDecl_,this));
+    return undefined;
     }
 
 
@@ -2390,6 +2423,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
          // return .type
          return PROP(type_,this);
      };
+    return undefined;
     }
 
 
@@ -2429,9 +2463,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
      if (_anyToBool(prt)) {ownerDecl = prt;};
 
      // for each item in .body.statements
-     any _list44=PROP(statements_,PROP(body_,this));
+     any _list47=PROP(statements_,PROP(body_,this));
      { var item=undefined;
-     for(int item__inx=0 ; item__inx<_list44.value.arr->length ; item__inx++){item=ITEM(item__inx,_list44);
+     for(int item__inx=0 ; item__inx<_list47.value.arr->length ; item__inx++){item=ITEM(item__inx,_list47);
 
          // switch item.specific.constructor
          any _switch4=any_class(PROP(specific_,item).class);
@@ -2461,7 +2495,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                      CALL2(setMember_,scopeThis,any_str("**proto**"), ownerDecl);
                       // #set also **return type**
                      // m.createReturnType
-                     PROP(createReturnType_,m);
+                     __call(createReturnType_,m,0,NULL);
                  };
          
          }// case Grammar.ClassDeclaration:
@@ -2482,6 +2516,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
          };
      }};// end for each in PROP(statements_,PROP(body_,this))
      
+    return undefined;
     }
 
 
@@ -2506,9 +2541,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        if (_anyToBool((owner=CALL1(tryGetOwnerNameDecl_,this,informError))))  {
 
            // for each varDecl in .list
-           any _list45=PROP(list_,this);
+           any _list48=PROP(list_,this);
            { var varDecl=undefined;
-           for(int varDecl__inx=0 ; varDecl__inx<_list45.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list45);
+           for(int varDecl__inx=0 ; varDecl__inx<_list48.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list48);
                // opt.type = varDecl.type
                PROP(type_,opt) = PROP(type_,varDecl);
                // opt.itemType = varDecl.itemType
@@ -2520,6 +2555,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            // .declared = true
            PROP(declared_,this) = true;
        };
+    return undefined;
     }
 
     // method evaluateAssignments() # determine type from assigned value on properties declaration
@@ -2528,13 +2564,14 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        //---------
 
        // for each varDecl in .list
-       any _list46=PROP(list_,this);
+       any _list49=PROP(list_,this);
        { var varDecl=undefined;
-       for(int varDecl__inx=0 ; varDecl__inx<_list46.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list46);
+       for(int varDecl__inx=0 ; varDecl__inx<_list49.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list49);
            // varDecl.getTypeFromAssignedValue
-           PROP(getTypeFromAssignedValue_,varDecl);
+           __call(getTypeFromAssignedValue_,varDecl,0,NULL);
        }};// end for each in PROP(list_,this)
        
+    return undefined;
     }
 
 
@@ -2553,9 +2590,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         // declare valid .variant.iterable:Grammar.VariableRef
 
        // .createScope
-       PROP(createScope_,this);
+       __call(createScope_,this,0,NULL);
        // if .variant.indexVar, .variant.indexVar.declareInScope
-       if (_anyToBool(PROP(indexVar_,PROP(variant_,this)))) {PROP(declareInScope_,PROP(indexVar_,PROP(variant_,this)));};
+       if (_anyToBool(PROP(indexVar_,PROP(variant_,this)))) {__call(declareInScope_,PROP(indexVar_,PROP(variant_,this)),0,NULL);};
 
        // if .variant.mainVar
        if (_anyToBool(PROP(mainVar_,PROP(variant_,this))))  {
@@ -2563,8 +2600,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            if (_anyToBool(PROP(iterable_,PROP(variant_,this)))) {_default(&PROP(type_,PROP(mainVar_,PROP(variant_,this))),PROP(itemType_,PROP(iterable_,PROP(variant_,this))));
            ;};
            // .variant.mainVar.declareInScope
-           PROP(declareInScope_,PROP(mainVar_,PROP(variant_,this)));
+           __call(declareInScope_,PROP(mainVar_,PROP(variant_,this)),0,NULL);
        };
+    return undefined;
     }
 
         //debug:
@@ -2604,6 +2642,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            // .variant.indexVar.nameDecl.setMember('**proto**',globalPrototype('String'))
            CALL2(setMember_,PROP(nameDecl_,PROP(indexVar_,PROP(variant_,this))),any_str("**proto**"), Validate_globalPrototype(undefined,1,(any_arr){any_str("String")}));
        };
+    return undefined;
     }
 
 
@@ -2636,6 +2675,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
              logger_error(undefined,1,(any_arr){CALL0(originalDeclarationPosition_,iterableType)});
            };
        };
+    return undefined;
     }
 
 
@@ -2650,11 +2690,12 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 // Exception blocks have a scope
 
        // .createScope
-       PROP(createScope_,this);
+       __call(createScope_,this,0,NULL);
        // .addToScope .catchVar,{type:globalPrototype('Error')}
        CALL2(addToScope_,this,PROP(catchVar_,this), new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("type"),Validate_globalPrototype(undefined,1,(any_arr){any_str("Error")})})}
+       _newPair("type",Validate_globalPrototype(undefined,1,(any_arr){any_str("Error")}))
        }));
+     return undefined;
      }
 
 
@@ -2698,9 +2739,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        if (_anyToBool(__or(any_number(!_anyToBool(actualVar)),any_number(!_anyToBool(PROP(accessors_,this)))))) {return undefined;};
 
        // for each ac in .accessors
-       any _list47=PROP(accessors_,this);
+       any _list50=PROP(accessors_,this);
        { var ac=undefined;
-       for(int ac__inx=0 ; ac__inx<_list47.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list47);
+       for(int ac__inx=0 ; ac__inx<_list50.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list50);
             // declare valid ac.name
 
 // for PropertyAccess, check if the property name is valid
@@ -2759,6 +2800,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // return actualVar
        return actualVar;
+    return undefined;
     }
 
     // helper method tryGetReference(options:Names.NameDeclOptions) returns Names.Declaration
@@ -2793,9 +2835,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        var partial = PROP(name_,this);
 
        // for each ac in .accessors
-       any _list48=PROP(accessors_,this);
+       any _list51=PROP(accessors_,this);
        { var ac=undefined;
-       for(int ac__inx=0 ; ac__inx<_list48.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list48);
+       for(int ac__inx=0 ; ac__inx<_list51.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list51);
             // declare valid ac.name
 
 // for PropertyAccess
@@ -2848,6 +2890,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // return actualVar
        return actualVar;
+    return undefined;
     }
 
     // helper method getResultType() returns Names.Declaration
@@ -2857,6 +2900,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
      // return .tryGetReference()
      return CALL0(tryGetReference_,this);
+    return undefined;
     }
 
 // -------
@@ -2883,6 +2927,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
      // reference.assignTypeFromValue .rvalue
      CALL1(assignTypeFromValue_,reference,PROP(rvalue_,this));
+    return undefined;
     }
 
 
@@ -2941,6 +2986,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         // declare valid .root.getResultType
        // return .root.getResultType() # .root is Grammar.Oper or Grammar.Operand
        return CALL0(getResultType_,PROP(root_,this));// # .root is Grammar.Oper or Grammar.Operand
+    return undefined;
     }
 
 
@@ -2977,6 +3023,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            // .addToScope .declareName(varRef.name,opt)
            CALL1(addToScope_,this,CALL2(declareName_,this,PROP(name_,varRef), opt));
        };
+    return undefined;
     }
 
     // method evaluateAssignments()
@@ -3010,6 +3057,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
              CALL1(assignTypeFromValue_,nameDecl,PROP(left_,this));
          };
      };
+    return undefined;
     }
 
 
@@ -3026,6 +3074,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            // return .right.getResultType() #.right is Grammar.Operand
            return CALL0(getResultType_,PROP(right_,this));// #.right is Grammar.Operand
        };
+    return undefined;
     }
 
 
@@ -3056,6 +3105,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            // return .name.tryGetReference()
            return CALL0(tryGetReference_,PROP(name_,this));
        };
+    return undefined;
     }
 
 
@@ -3090,9 +3140,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
          };
 
          // for each varDecl in .names
-         any _list49=PROP(names_,this);
+         any _list52=PROP(names_,this);
          { var varDecl=undefined;
-         for(int varDecl__inx=0 ; varDecl__inx<_list49.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list49);
+         for(int varDecl__inx=0 ; varDecl__inx<_list52.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list52);
              // .addMemberTo reference, varDecl.createNameDeclaration()
              CALL2(addMemberTo_,this,reference, CALL0(createNameDeclaration_,varDecl));
          }};// end for each in PROP(names_,this)
@@ -3104,9 +3154,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
      else if (CALL1(indexOf_,_newArray(2,(any_arr){any_str("affinity"), any_str("var")}),PROP(specifier_,this)).value.number>=0)  {
 
          // for each varDecl in .names
-         any _list50=PROP(names_,this);
+         any _list53=PROP(names_,this);
          { var varDecl=undefined;
-         for(int varDecl__inx=0 ; varDecl__inx<_list50.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list50);
+         for(int varDecl__inx=0 ; varDecl__inx<_list53.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list53);
 
            // varDecl.nameDecl = varDecl.createNameDeclaration()
            PROP(nameDecl_,varDecl) = CALL0(createNameDeclaration_,varDecl);
@@ -3145,6 +3195,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
          }};// end for each in PROP(names_,this)
          
      };
+    return undefined;
     }
 
 // if .specifier is 'on-the-fly', the type will be converted on next passes over the created Names.Declaration.
@@ -3170,6 +3221,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
              CALL1(setTypes_,this,actualVar);
          };
      };
+    return undefined;
     }
 
     // helper method setTypes(actualVar:Names.Declaration) # Grammar.DeclareStatement ###
@@ -3187,6 +3239,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
      CALL3(setSubType_,this,actualVar, PROP(type_,this), any_str("**proto**"));
      // .setSubType actualVar,.itemType,'**item type**'
      CALL3(setSubType_,this,actualVar, PROP(itemType_,this), any_str("**item type**"));
+    return undefined;
     }
 
     // helper method setSubType(actualVar:Names.Declaration, toSet, propName )
@@ -3215,6 +3268,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
          // if result.failures, .sayErr "can't find type '#{toSet}' in scope"
          if (_anyToBool(PROP(failures_,result))) {CALL1(sayErr_,this,_concatAny(3,(any_arr){any_str("can't find type '"), toSet, any_str("' in scope")}));};
      };
+    return undefined;
     }
 
     // method validatePropertyAccess() # Grammar.DeclareStatement ###
@@ -3234,15 +3288,15 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
            // actualVar = .tryGetFromScope(.varRef.name,{informError:true})
            actualVar = CALL2(tryGetFromScope_,this,PROP(name_,PROP(varRef_,this)), new(Map,1,(any_arr){
-           {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("informError"),true})}
+           _newPair("informError",true)
            }));
            // if no actualVar, return
            if (!_anyToBool(actualVar)) {return undefined;};
 
            // for each ac in .varRef.accessors
-           any _list51=PROP(accessors_,PROP(varRef_,this));
+           any _list54=PROP(accessors_,PROP(varRef_,this));
            { var ac=undefined;
-           for(int ac__inx=0 ; ac__inx<_list51.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list51);
+           for(int ac__inx=0 ; ac__inx<_list54.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list54);
                 // declare valid ac.name
 
                // if ac isnt instance of Grammar.PropertyAccess
@@ -3285,6 +3339,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            };
      
      };
+    return undefined;
     }
 
 
@@ -3295,9 +3350,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        var nameDecl = undefined;
 
        // for each name in arguments.toArray()
-       any _list52=_newArray(argc,arguments);
+       any _list55=_newArray(argc,arguments);
        { var name=undefined;
-       for(int name__inx=0 ; name__inx<_list52.value.arr->length ; name__inx++){name=ITEM(name__inx,_list52);
+       for(int name__inx=0 ; name__inx<_list55.value.arr->length ; name__inx++){name=ITEM(name__inx,_list55);
            // nameDecl = globalScope.addMember(name)
            nameDecl = CALL1(addMember_,Validate_globalScope,name);
            // nameDecl.addMember 'prototype'
@@ -3311,6 +3366,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            };
        }};// end for each in _newArray(argc,arguments)
        
+   return undefined;
    }
 
 //-------------------------

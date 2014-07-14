@@ -117,6 +117,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // return path.join(.outDir,"#{.base}#{ext}")
        return path_join(undefined,2,(any_arr){PROP(outDir_,this), _concatAny(2,(any_arr){PROP(base_,this), ext})});
+    return undefined;
     }
 
     // method searchModule(importingModuleFileInfo )
@@ -170,7 +171,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
            }
            
            else {
-                // #normal: search local ./lib & ../lib
+                // #normal: search local ./ & .[projectDir]/lib
                // search = [
                search = _newArray(2,(any_arr){path_join(undefined,2,(any_arr){PROP(dir_,importingModuleFileInfo), PROP(name_,PROP(importInfo_,this))}), path_join(undefined,3,(any_arr){Environment_projectDir, any_str("/lib"), PROP(name_,PROP(importInfo_,this))})});
 
@@ -183,26 +184,27 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
            };
 
 
-           // for each item in search where not found
-           any _list53=search;
+           // for each item in search
+           any _list56=search;
            { var item=undefined;
-           for(int item__inx=0 ; item__inx<_list53.value.arr->length ; item__inx++){item=ITEM(item__inx,_list53);
-             // for each item in search where not found
-           if(!(_anyToBool(found))){
-               // for each ext in ['.lite.md','.md','.interface.md','.js'] where not found
-               any _list54=_newArray(4,(any_arr){any_str(".lite.md"), any_str(".md"), any_str(".interface.md"), any_str(".js")});
+           for(int item__inx=0 ; item__inx<_list56.value.arr->length ; item__inx++){item=ITEM(item__inx,_list56);
+               // for each ext in ['.lite.md','.md','.interface.md','.js']
+               any _list57=_newArray(4,(any_arr){any_str(".lite.md"), any_str(".md"), any_str(".interface.md"), any_str(".js")});
                { var ext=undefined;
-               for(int ext__inx=0 ; ext__inx<_list54.value.arr->length ; ext__inx++){ext=ITEM(ext__inx,_list54);
-                 // for each ext in ['.lite.md','.md','.interface.md','.js'] where not found
-               if(!(_anyToBool(found))){
+               for(int ext__inx=0 ; ext__inx<_list57.value.arr->length ; ext__inx++){ext=ITEM(ext__inx,_list57);
                    // if fs.existsSync("#{item}#{ext}" into full)
                    if (_anyToBool(fs_existsSync(undefined,1,(any_arr){(full=_concatAny(2,(any_arr){item, ext}))})))  {
-                       // found=full;
+                       // found=full
                        found = full;
+                       // break
+                       break;
                    };
-               }}};// end for each in _newArray(4,(any_arr){any_str(".lite.md"), any_str(".md"), any_str(".interface.md"), any_str(".js")})
-               
-           }}};// end for each in search
+               }};// end for each in _newArray(4,(any_arr){any_str(".lite.md"), any_str(".md"), any_str(".interface.md"), any_str(".js")})
+               // end for
+               // if found, break
+               if (_anyToBool(found)) {break;};
+           }};// end for each in search
+           // end for
 
             //console.log(basePath);
             //logger.debug full
@@ -211,8 +213,8 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
 
            // if not found
            if (!(_anyToBool(found)))  {
-               // logger.throwControlled "#{importingModuleFileInfo.relFilename}: Module not found: #{this.importInfo.name}\nSearched as: #{this.importInfo.name} (.lite.md|.md|.interface.md|.js)\nat Dirs:\n#{(search.join('\t\n'))}"
-               logger_throwControlled(undefined,1,(any_arr){_concatAny(7,(any_arr){PROP(relFilename_,importingModuleFileInfo), any_str(": Module not found: "), PROP(name_,PROP(importInfo_,this)), any_str("\nSearched as: "), PROP(name_,PROP(importInfo_,this)), any_str(" (.lite.md|.md|.interface.md|.js)\nat Dirs:\n"), ((CALL1(join_,search,any_str("\t\n"))))})});
+               // logger.throwControlled "#{importingModuleFileInfo.relFilename}: Module not found: #{this.importInfo.name}\nSearched as:\n#{(search.join('\n'))}\n   with extensions (.lite.md|.md|.interface.md|.js)"
+               logger_throwControlled(undefined,1,(any_arr){_concatAny(6,(any_arr){PROP(relFilename_,importingModuleFileInfo), any_str(": Module not found: "), PROP(name_,PROP(importInfo_,this)), any_str("\nSearched as:\n"), ((CALL1(join_,search,any_str("\n")))), any_str("\n   with extensions (.lite.md|.md|.interface.md|.js)")})});
            };
        };
 
@@ -329,6 +331,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
 
        // return
        return undefined;
+    return undefined;
     }
    // Environment_ImportParameterInfo
    
@@ -358,6 +361,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
        Environment_outDir = aOutDir;
        // targetExt = aTargetExt
        Environment_targetExt = aTargetExt;
+   return undefined;
    }
 
 
@@ -378,6 +382,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
         //print path.relative(fromFileinfo.outDir, filename)
        // return path.relative(actualPath, destFilename ) //from path, to filename/fullpath
        return path_relative(undefined,2,(any_arr){actualPath, destFilename}); //from path, to filename/fullpath
+   return undefined;
    }
 
 
@@ -387,6 +392,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // return path.resolve(text)
        return path_resolve(undefined,1,(any_arr){text});
+   return undefined;
    }
 
    // export helper function dirName(filename)
@@ -396,6 +402,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
         //dir name
        // return path.dirname(filename)
        return path_dirname(undefined,1,(any_arr){filename});
+   return undefined;
    }
 
 // ----------
@@ -410,6 +417,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
     //------------------
        // return fs.readFileSync(filename);
        return fs_readFileSync(undefined,1,(any_arr){filename});
+   return undefined;
    }
 
 
@@ -454,6 +462,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
            // fs.writeFileSync filename,fileLines
            fs_writeFileSync(undefined,2,(any_arr){filename, fileLines});
        };
+   return undefined;
    }
 
 
@@ -473,6 +482,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
         //ifdef PROD_C
        //do nothing
        ; // if generating the compile-to-C compiler
+   return undefined;
    }
 
         //else
@@ -501,6 +511,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
 
        // return name in ['isNaN','parseFloat','parseInt','isFinite'
        return any_number(CALL1(indexOf_,_newArray(12,(any_arr){any_str("isNaN"), any_str("parseFloat"), any_str("parseInt"), any_str("isFinite"), any_str("decodeURI"), any_str("decodeURIComponent"), any_str("encodeURI"), any_str("encodeURIComponent"), any_str("eval"), any_str("console"), any_str("process"), any_str("require")}),name).value.number>=0);
+   return undefined;
    }
 
 
@@ -535,6 +546,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
 
        // end if
        
+   return undefined;
    }
 
    // export helper function fileInfoNewFile(name) returns FileInfo
@@ -556,17 +568,18 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
        CALL1(searchModule_,fileInfo,null);
        // return fileInfo
        return fileInfo;
+   return undefined;
    }
 
 //-------------------------
 void Environment__moduleInit(void){
-       Environment_FileInfo =_newClass("Environment_FileInfo", Environment_FileInfo__init, sizeof(struct Environment_FileInfo_s), Object.value.class);
+       Environment_FileInfo =_newClass("Environment_FileInfo", Environment_FileInfo__init, sizeof(struct Environment_FileInfo_s), Object.value.classINFOptr);
    
-       _declareMethods(Environment_FileInfo.value.class, Environment_FileInfo_METHODS);
-       _declareProps(Environment_FileInfo.value.class, Environment_FileInfo_PROPS, sizeof Environment_FileInfo_PROPS);
-       Environment_ImportParameterInfo =_newClass("Environment_ImportParameterInfo", Environment_ImportParameterInfo__init, sizeof(struct Environment_ImportParameterInfo_s), Object.value.class);
+       _declareMethods(Environment_FileInfo, Environment_FileInfo_METHODS);
+       _declareProps(Environment_FileInfo, Environment_FileInfo_PROPS, sizeof Environment_FileInfo_PROPS);
+       Environment_ImportParameterInfo =_newClass("Environment_ImportParameterInfo", Environment_ImportParameterInfo__init, sizeof(struct Environment_ImportParameterInfo_s), Object.value.classINFOptr);
    
-       _declareMethods(Environment_ImportParameterInfo.value.class, Environment_ImportParameterInfo_METHODS);
-       _declareProps(Environment_ImportParameterInfo.value.class, Environment_ImportParameterInfo_PROPS, sizeof Environment_ImportParameterInfo_PROPS);
+       _declareMethods(Environment_ImportParameterInfo, Environment_ImportParameterInfo_METHODS);
+       _declareProps(Environment_ImportParameterInfo, Environment_ImportParameterInfo_PROPS, sizeof Environment_ImportParameterInfo_PROPS);
    
 };

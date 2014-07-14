@@ -43,7 +43,7 @@ extern "C" {
         time_t time;
 
         // shortcuts for core methods/to help debugging
-        Class_ptr class; //class ptr
+        Class_ptr classINFOptr; //classINFO ptr
         Array_ptr arr; //if class Array ptr
         Error_ptr err; //if class Err
         __instance_ptr instance; //generic instance pointer, to ease debug

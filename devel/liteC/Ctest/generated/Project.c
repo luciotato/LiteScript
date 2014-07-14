@@ -226,7 +226,7 @@
        { NameValuePair_ptr _nvp1=NULL; //name:value pair
         var moduleNode=undefined; //value
        for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list6.value.arr->length ; moduleNode__inx++){
-         assert(ITEM(moduleNode__inx,_list6).value.class==&NameValuePair_CLASSINFO);
+         assert(ITEM(moduleNode__inx,_list6).class==&NameValuePair_CLASSINFO);
        _nvp1 = ITEM(moduleNode__inx,_list6).value.ptr;
          moduleNode=_nvp1->value;
 
@@ -897,7 +897,7 @@
        { NameValuePair_ptr _nvp2=NULL; //name:value pair
         var moduleNode=undefined; //value
        for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list8.value.arr->length ; moduleNode__inx++){
-             assert(ITEM(moduleNode__inx,_list8).value.class==&NameValuePair_CLASSINFO);
+             assert(ITEM(moduleNode__inx,_list8).class==&NameValuePair_CLASSINFO);
        _nvp2 = ITEM(moduleNode__inx,_list8).value.ptr;
              moduleNode=_nvp2->value;
              // moduleNode.lexer.outCode = newOut
@@ -946,9 +946,9 @@
 
 //-------------------------
 void Project__moduleInit(void){
-       Project =_newClass("Project", Project__init, sizeof(struct Project_s), Object.value.class);
+       Project =_newClass("Project", Project__init, sizeof(struct Project_s), Object.value.classINFOptr);
    
-       _declareMethods(Project.value.class, Project_METHODS);
-       _declareProps(Project.value.class, Project_PROPS, sizeof Project_PROPS);
+       _declareMethods(Project, Project_METHODS);
+       _declareProps(Project, Project_PROPS, sizeof Project_PROPS);
    
 };

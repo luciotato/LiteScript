@@ -12,107 +12,94 @@ global Classes pre-created are:
 
         method getSymbol(name:string) returns number
 
-
 ## classes declared in the compiler 
 
 ### Append to class Function
 
-        properties name,prototype
-        method bind
+        properties name
+
+        //method bind
         method call
         method apply
 
 ### Append to Class Object
+
         properties
             constructor: Function
 
         method toString() returns string
 
-        method getMethod() returns function // or undefined
+        method tryGetMethod(methodSymbol) returns function // or undefined
 
-        method getProperty() 
-        method hasProperty() returns boolean
+        method tryGetProperty(propSymbol) returns any // or undefined
+        method getProperty(propSymbol) returns any // or throws
+        method getPropertyName(propIndex) returns string // or throws
         
-### append to namespace Object
-        
-        method keys() returns array of string
-        method create() 
-        method defineProperty() 
-        method defineProperties() 
-        method freeze() 
-        method getPrototypeOf() 
-        method setPrototypeOf() 
-        method getOwnPropertyDescriptor() 
-        method getOwnPropertyNames() 
-        //method is() 
-        method isExtensible() 
-        method isFrozen() 
-        method isSealed() 
-        method preventExtensions() 
-        method seal() 
-        //method getOwnPropertySymbols() 
-
 ### Append to class Array 
         properties
             length:number
         
-        method toLocaleString() 
+        method tryGet(index:number)
+
+        //method toLocaleString() 
         method join() returns string
         method pop() 
         method push() 
         method concat() 
-        method reverse() 
+        //method reverse() 
         method shift() 
         method unshift() 
         method slice() 
         method splice() 
-        method sort() 
-        method filter() 
-        method forEach() 
-        method some() 
-        method every() 
-        method map() 
+        //method sort() 
+        //method filter() 
+        //method forEach() 
+        //method some() 
+        //method every() 
+        //method map() 
         method indexOf() 
         method lastIndexOf() 
-        method reduce() 
-        method reduceRight() 
-        method entries() 
+        //method reduce() 
+        //method reduceRight() 
+        //method entries() 
         method values() 
         method keys() 
-        method find() 
-        method findIndex() 
+        //method find() 
+        //method findIndex() 
     
-    append to namespace Array
-        method isArray() 
-
 ### Append to class String 
         
         properties
             length:number
         
-        method valueOf() 
-        method charAt() 
-        method charCodeAt() 
-        method concat() 
+        //method valueOf() 
+        method charAt() returns string
+        //method charCodeAt() 
+        method concat() returns string
         method indexOf() 
         method lastIndexOf() 
-        method localeCompare() 
-        method match() 
+        //method localeCompare() 
+        //method match() 
         //method normalize() 
-        method replace() 
-        method search() 
-        method slice() 
-        method split() returns array of string
-        method substring() 
+        method replace() returns string
+        //method search() 
+
+        method replaceAll(search,replaceby) //like .replace //g
+        
+        method slice() returns string
+        method split(separator:string,limit) returns array of string
+
+        //method substring() 
         method substr() 
-        method toLowerCase() 
-        method toLocaleLowerCase() 
-        method toUpperCase() 
-        method toLocaleUpperCase() 
-        method trim() 
+        method toLowerCase() returns string
+        //method toLocaleLowerCase() 
+        method toUpperCase() returns string
+        //method toLocaleUpperCase() 
+        method trim() returns string
         //method trimLeft() 
         //method trimRight() 
-        method link() 
+
+        /*method link() 
         method anchor() 
         method fontcolor() 
         method fontsize() 
@@ -126,13 +113,14 @@ global Classes pre-created are:
         method sub() 
         method sup() 
         method repeat() 
+        */
+
         //method startsWith() 
         //method endsWith() 
+
         //method contains() 
 
-    append to namespace String
-        method fromCharCode()
-
+/*
 ### Append to class Number
         
         method toLocaleString() 
@@ -158,50 +146,16 @@ global Classes pre-created are:
         method isSafeInteger() 
         method parseInt() 
         method parseFloat() 
+*/
 
 
-## Classes declared here (not in compiler code)
-
-### public class Error extends Object
-        properties
-            name, message
-            stack
-            code
-
-    append to namespace Error
-        properties
-            stackTraceLimit:number
-
-        method captureStackTrace() 
-
-
-### public class Map
-
-        properties
-            size
-
-        method clear()
-
-To keep compatibility with ES6, we have a special "Map.fromObject()"
-used to create a Map from a Literal Object. 
-We can't use default Map constructor, since ES6 Map constructor is: new Map([iterator])
-
-        method fromObject(object)
-
-        method set(key:string, value)
-        method delete(key:string)
-        method get(key:string)
-        method has(key:string)
-        method keys() returns array
-        method forEach(callb)
-        method toString()
-
-
-### public class Date extends Object
+### append to Class Date
         
         method toDateString() 
         method toTimeString() 
-        method toLocaleString() 
+        method toUTCString() 
+        method toISOString() 
+        /*method toLocaleString() 
         method toLocaleDateString() 
         method toLocaleTimeString() 
         method valueOf() 
@@ -239,16 +193,55 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
         method setFullYear() 
         method setUTCFullYear() 
         method toGMTString() 
-        method toUTCString() 
         method getYear() 
         method setYear() 
-        method toISOString() 
         method toJSON() 
+        */
     
-    append to namespace Date
+    /*append to namespace Date
         method UTC() 
         method parse() 
         method now() 
+    */
+*/
+
+## Classes declared here (not in compiler code)
+
+### public class Error extends Object
+        properties
+            name, message
+            stack
+            code
+
+    //append to namespace Error
+    //    properties
+    //        stackTraceLimit:number
+    //
+    //    method captureStackTrace() 
+
+
+### public class Map
+
+        properties
+            size
+
+        method clear()
+
+To keep compatibility with ES6, we have a special "Map.fromObject()"
+used to create a Map from a Literal Object. 
+We can't use default Map constructor, since ES6 Map constructor is: new Map([iterator])
+
+        method fromObject(object)
+
+        method set(key:string, value)
+        method delete(key:string)
+        method get(key:string)
+        method has(key:string)
+        method keys() returns array
+        method forEach(callb)
+        method toString()
+
+
 
 ### public class RegExp
 
@@ -263,7 +256,8 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
         method test() 
         method toString() 
         method compile() 
-    
+
+/*    
     append to namespace RegExp
         properties
             input:string
@@ -275,11 +269,12 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
             leftContext:string
             rightContext:string
 
-    
+*/    
 ### public namespace JSON
-        method parse() 
+        //method parse() 
         method stringify()     
 
+/*
 ### public namespace Math
         properties
             E:number
@@ -320,7 +315,7 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
         method cbrt() 
         method log1p() 
         method expm1() 
-
+*/
 
 ## global Functions
 
@@ -329,19 +324,17 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
     function clearTimeout
     function setInterval
     function clearInterval
-
-    function liteC_getSymbol
-    function liteC_tryGetMethod
-    function liteC_getMethod
     */
 
 ## Global Namespaces
 
 ### public namespace console
+
         method log
         method error
 
 ### public namespace process
+
         properties
             argv: array of string
 

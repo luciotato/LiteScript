@@ -143,8 +143,8 @@
 
 //-------------------------
 void OptionsParser__moduleInit(void){
-       OptionsParser =_newClass("OptionsParser", OptionsParser__init, sizeof(struct OptionsParser_s), Object.value.class);
+       OptionsParser =_newClass("OptionsParser", OptionsParser__init, sizeof(struct OptionsParser_s), Object.value.classINFOptr);
    
-       _declareMethods(OptionsParser.value.class, OptionsParser_METHODS);
-       _declareProps(OptionsParser.value.class, OptionsParser_PROPS, sizeof OptionsParser_PROPS);
+       _declareMethods(OptionsParser, OptionsParser_METHODS);
+       _declareProps(OptionsParser, OptionsParser_PROPS, sizeof OptionsParser_PROPS);
 };

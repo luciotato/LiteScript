@@ -301,12 +301,16 @@
 
         //var titleKeyRegexp = /^(#)+ *(?:(?:public|export|default|helper)\s*)*(class|namespace|append to|function|method|constructor|properties)\b/i
 
-       var sustantives = ["class", "namespace", "function", "method", "constructor", "properties"];
-
        var words = line.split(" ");
 
-       // if words[0].replaceAll("#"," ").trim(), return // if other than pure ### and spaces
+       // if words[0].length<3, return // should be at least indent 4: '### '
+       if (words[0].length < 3) {return};
+
+        // return if first word is not all #'s
+       // if words[0].replaceAll("#"," ").trim(), return
        if (words[0].replaceAll("#", " ").trim()) {return};
+
+       var sustantives = ["class", "namespace", "function", "method", "constructor", "properties"];
 
        var 
        inx = 1, 
@@ -1356,15 +1360,15 @@
 // `lexer options string interpolation char [is] (IDENTIFIER|PUCT|STRING)`
 // `lexer options literal (map|object)`
 
-       // if words[0] is 'lexer' and words[1] is 'options'
-       if (words[0] === 'lexer' && words[1] === 'options') {
+       // if words.tryGet(0) is 'lexer' and words.tryGet(1) is 'options'
+       if (words.tryGet(0) === 'lexer' && words.tryGet(1) === 'options') {
            this.type = LineTypes.COMMENT;// # is a COMMENT line
 
            // if words.slice(2,5).join(" ") is "string interpolation char"
            if (words.slice(2, 5).join(" ") === "string interpolation char") {
                var ch = undefined;
-               // if words[5] into ch is 'is' then ch = words[6] #get it (skip optional 'is')
-               if ((ch=words[5]) === 'is') {ch = words[6]};
+               // if words.tryGet(5) into ch is 'is' then ch = words.tryGet(6) #get it (skip optional 'is')
+               if ((ch=words.tryGet(5)) === 'is') {ch = words.tryGet(6)};
                // if ch.charAt(0) in ['"',"'"], ch = ch.slice(1,-1) #optionally quoted, remove quotes
                if (['"', "'"].indexOf(ch.charAt(0))>=0) {ch = ch.slice(1, -1)};
                // if no ch then fail with "missing string interpolation char"  #check
@@ -1372,9 +1376,9 @@
                lexer.stringInterpolationChar = ch;
            }
            
-           else if (words[2] === "literal") {
-                 // switch words[3]
-                 switch(words[3]){
+           else if (words.tryGet(2) === "literal") {
+                 // switch words.tryGet(3)
+                 switch(words.tryGet(3)){
                  
                  case "map":
                          lexer.options.literalMap = true;

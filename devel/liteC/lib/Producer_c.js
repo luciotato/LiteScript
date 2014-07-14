@@ -196,7 +196,7 @@
        // for each methodDeclaration in appendToCoreClassMethods
        for( var methodDeclaration__inx=0,methodDeclaration ; methodDeclaration__inx<appendToCoreClassMethods.length ; methodDeclaration__inx++){methodDeclaration=appendToCoreClassMethods[methodDeclaration__inx];
                var appendToDeclaration = methodDeclaration.getParent(Grammar.ClassDeclaration);
-               this.out('    LiteC_registerShim(', appendToDeclaration.varRef, '.value.class', ',' + methodDeclaration.name + '_,', appendToDeclaration.varRef, '_', methodDeclaration.name, ');', NL);
+               this.out('    LiteC_registerShim(', appendToDeclaration.varRef, ',' + methodDeclaration.name + '_,', appendToDeclaration.varRef, '_', methodDeclaration.name, ');', NL);
        };// end for each in appendToCoreClassMethods
 
 // call __ModuleInit for all the imported modules. call the base modules init first
@@ -627,7 +627,7 @@
            superClass = "Object";
        };
 
-       this.out('    ' + c + ' =_newClass("' + c + '", ' + c + '__init, sizeof(struct ' + c + '_s), ' + superClass + '.value.class);', NL, NL, '    _declareMethods(' + c + '.value.class, ' + c + '_METHODS);', NL, '    _declareProps(' + c + '.value.class, ' + c + '_PROPS, sizeof ' + c + '_PROPS);', NL);
+       this.out('    ' + c + ' =_newClass("' + c + '", ' + c + '__init, sizeof(struct ' + c + '_s), ' + superClass + '.value.classINFOptr);', NL, NL, '    _declareMethods(' + c + ', ' + c + '_METHODS);', NL, '    _declareProps(' + c + ', ' + c + '_PROPS, sizeof ' + c + '_PROPS);', NL);
     };
 
 // -------------------------------------
@@ -943,7 +943,29 @@
      // method produce()
      Grammar.ReturnStatement.prototype.produce = function(){
        var defaultReturn = this.getParent(Grammar.ConstructorDeclaration) ? '' : 'undefined';
+
+
+// we need to unwind try-catch blocks, to calculate to which active exception frame
+// we're "returning" to
+
+       var countTryBlocks = 0;
+       var node = this;
+       // while node.getParent(Grammar.TryCatch) into node //includes catch & finally (parts of try)
+       while((node=node.getParent(Grammar.TryCatch))){
+           countTryBlocks++;
+       };// end loop
+
+       // if countTryBlocks
+       if (countTryBlocks) {
+           this.out("{e4c_exitTry(", countTryBlocks, ");");
+       };
+
        this.out('return ', this.expr || defaultReturn);
+
+       // if countTryBlocks
+       if (countTryBlocks) {
+           this.out(";}");
+       };
      };
 
 
@@ -2276,7 +2298,7 @@
 
        this.out("for(int64_t ", intIndexVarName, "=0", " ; ", intIndexVarName, "<", listName, ".value.arr->length", " ; ", intIndexVarName, "++){", NL);
 
-       this.body.out("assert(ITEM(", intIndexVarName, ",", listName, ").value.class==&NameValuePair_CLASSINFO);", NL);
+       this.body.out("assert(ITEM(", intIndexVarName, ",", listName, ").class==&NameValuePair_CLASSINFO);", NL);
 
        this.out(nvp, " = ITEM(", intIndexVarName, ",", listName, ").value.ptr;", NL); //get nv pair
        // if .indexVar, .body.out .indexVar.name,"=",nvp,"->name;",NL //get key
@@ -2521,7 +2543,7 @@
            strName = strName.getValue();
        };
 
-       this.out(NL, '{&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("', strName, '"),', this.value, '})}');
+       this.out(NL, '_newPair("', strName, '",', this.value, ')');
      };
 
    // append to class Grammar.ObjectLiteral ### also FreeObjectLiteral
@@ -2538,7 +2560,7 @@
        
        else {
             //.out "{",{CSL:.items},"}"
-           this.out('new(Map,', this.items.length, ',(any_arr){', new Map().fromObject({CSL: this.items, freeForm: this.constructor === Grammar.FreeObjectLiteral}), NL, "})");
+           this.out('new(Map,', this.items.length, ',(any_arr){', new Map().fromObject({CSL: this.items}), NL, "})");
        };
      };
 

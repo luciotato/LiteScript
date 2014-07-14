@@ -39,6 +39,8 @@ global Classes pre-created are:
         properties
             length:number
         
+        method tryGet(index:number)
+
         //method toLocaleString() 
         method join() returns string
         method pop() 

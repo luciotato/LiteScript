@@ -29,8 +29,8 @@
 
 //-------------------------
 void ControlledError__moduleInit(void){
-       ControlledError =_newClass("ControlledError", ControlledError__init, sizeof(struct ControlledError_s), Error.value.class);
+       ControlledError =_newClass("ControlledError", ControlledError__init, sizeof(struct ControlledError_s), Error.value.classINFOptr);
    
-       _declareMethods(ControlledError.value.class, ControlledError_METHODS);
-       _declareProps(ControlledError.value.class, ControlledError_PROPS, sizeof ControlledError_PROPS);
+       _declareMethods(ControlledError, ControlledError_METHODS);
+       _declareProps(ControlledError, ControlledError_PROPS, sizeof ControlledError_PROPS);
 };

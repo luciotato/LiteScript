@@ -10,6 +10,7 @@ extern var Names_allNameDeclarations;
 
 //--------------
    // Names_Declaration
+   
    extern any Names_Declaration; //Class Object
    
    typedef struct Names_Declaration_s * Names_Declaration_ptr;
@@ -65,6 +66,7 @@ extern var Names_allNameDeclarations;
 
 //--------------
    // Names_NameDeclOptions
+   
    extern any Names_NameDeclOptions; //Class Object
    
    typedef struct Names_NameDeclOptions_s * Names_NameDeclOptions_ptr;

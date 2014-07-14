@@ -1070,18 +1070,18 @@ Special lexer options: string interpolation char
 `lexer options string interpolation char [is] (IDENTIFIER|PUCT|STRING)`
 `lexer options literal (map|object)`
 
-        if words[0] is 'lexer' and words[1] is 'options'
+        if words.tryGet(0) is 'lexer' and words.tryGet(1) is 'options'
             .type = LineTypes.COMMENT # is a COMMENT line
 
             if words.slice(2,5).join(" ") is "string interpolation char" 
                 var ch:string
-                if words[5] into ch is 'is' then ch = words[6] #get it (skip optional 'is')
+                if words.tryGet(5) into ch is 'is' then ch = words.tryGet(6) #get it (skip optional 'is')
                 if ch.charAt(0) in ['"',"'"], ch = ch.slice(1,-1) #optionally quoted, remove quotes
                 if no ch then fail with "missing string interpolation char"  #check
                 lexer.stringInterpolationChar = ch
             
-            else if words[2] is "literal"
-                  switch words[3]
+            else if words.tryGet(2) is "literal"
+                  switch words.tryGet(3)
                       case "map":
                           lexer.options.literalMap = true                          
                       case "object":

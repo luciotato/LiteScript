@@ -59,7 +59,7 @@ LiteScript:
 
 As you can see, the required changes are:
 a) add the keyword "map" after "var foo ="
-b) use `map.get(key)` and `map.set(key,value)` instead of `dict[key]` and `dict[key]=value`
+b) use `map.get(key)` and `map.set(key,value)` instead of `object[key]` and `object[key]=value`
 
 
     class Map
@@ -106,3 +106,43 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
 
         method toString()
             return JSON.stringify(.dict)
+
+# JS array access 
+
+## set array item value
+
+js also allows you to do: 
+ `var a = []`
+ `a[100]='foo'`
+
+and after that the js "array" will have only one element, index:100 value:'foo',
+but length will be 101
+
+LiteC arrays do not behave like that, if you do:
+    `var a = []`
+    `a[100]='foo'` => EXCEPTION: OUT OF BOUNDS
+
+you'll get an "OUT OF BOUNDS" exception. You cannot set value for an
+array item out of current bounds.
+
+## get array item value
+
+LiteC arrays will also give an "OUT OF BOUNDS" exception, when accessing a unexisting array item.
+
+Sometimes is useful to get "undefined" when accessing a "out of bounds" index.
+In order to provide such functionality, you'll have to use `Array.tryGet(index)`
+
+js: 
+ `var a = []`
+ `console.log(a[100]);` => OK, undefined
+
+LiteC:
+ `var a = []`
+ `console.log(a[100]);` => EXCEPTION: OUT OF BOUNDS
+ `console.log(a.tryGet(100));` => OK, undefined
+
+
+    append to class Array
+
+        method tryGet(index:Number)
+            return this[index]

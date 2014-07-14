@@ -8,12 +8,99 @@
 #include "exceptions.h"
 #include "LiteC-core.h"
 
-struct e4c_context e4c = {0};
+struct e4c_global e4c = {0};
 
-    void fatal(char * msg) {
+void fatal(char * msg) {
         fprintf(stderr, msg);
         abort();
     }
+
+void e4c_newFrame(void){
+
+	if(e4c.activeFrame >= E4C_MAX_FRAMES) fatal("Too many nested `try` blocks.");
+	e4c.activeFrame++;
+	e4c.frame[e4c.activeFrame].stage = e4c_beginning;
+}
+
+int e4c_incStage(void){
+
+	assert(e4c.frame[e4c.activeFrame].stage < e4c_done);
+
+    e4c.frame[e4c.activeFrame].stage++;
+    if(e4c.frame[e4c.activeFrame].stage == e4c_catching && !e4c.exception.pending) {
+        //if it reachs "catch" by normal "try" exit (not by throw) there will
+        // be no exception pending, so we skip executing cath block
+        e4c.frame[e4c.activeFrame].stage++;
+    }
+	if(e4c.frame[e4c.activeFrame].stage < e4c_done) {
+        return 1; //continue looping - next stage; trying, catching, finally
+    }
+
+    //else: stage is done - this frame is completed
+	e4c.activeFrame--; //new active frame is prev frame
+	return 0; //exit try/catch/finally loop
+}
+
+int e4c_isCatching(void){
+
+    if (e4c.frame[e4c.activeFrame].stage==e4c_catching){
+        assert(e4c.exception.pending);
+        e4c.exception.pending = FALSE; //exception is pending no more
+        e4c.frame[e4c.activeFrame].catchExecuteCount=1; //execute catch block once
+        return TRUE; //enter catch block
+    }
+    return FALSE; //this frame is not catching
+}
+
+void e4c_exitTry(int howManyBlocks){  // called before return from inside a try-catch
+	assert(howManyBlocks<=e4c.activeFrame);
+    e4c.activeFrame-=howManyBlocks;
+}
+
+void e4c_throw( str file, int line, any error){
+
+    e4c.exception.file = file;
+	e4c.exception.line = line;
+    e4c.exception.error = error;
+    e4c.exception.pending = TRUE; //exception is pending
+
+    if (!_instanceof(error,Error)) {
+        fatal(_concatToNULL(file,":",_int64ToStr(line)," thrown object should be Error",NULL));
+    }
+
+    while(TRUE){ //search for a frame available to catch the exception
+
+        if(e4c.activeFrame  <= 0) { //no more frames, uncaught exception
+            e4c_printLastErr();
+            exit(EXIT_FAILURE);
+        }
+
+        switch(e4c.frame[e4c.activeFrame].stage){
+
+            case e4c_beginning:
+                fatal("e4c INTERNAL error: throw while stage is beginning");
+
+            case e4c_trying:
+                // active frame is in stage "trying"
+                // jmp to active frame loop
+                longjmp(e4c.frame[e4c.activeFrame].jump, 1);
+                // longjmp do not returns
+
+            case e4c_catching: case e4c_finalizing:
+                //exception while catch(err){} or finalize{}
+                // and throw was not insinde a new try{}
+                e4c.activeFrame--; //check prev frame
+                break;
+
+            default:
+                fatal("e4c INTERNAL error: throw on invalid stage");
+
+        }
+
+    } // loop until a trying frame is found
+
+};
+
 
 void e4c_printLastErr(void){
 	if(fprintf(stderr
@@ -25,67 +112,3 @@ void e4c_printLastErr(void){
                         (void)fflush(stderr);
 }
 
-static void e4c_propagate(void){
-
-	e4c.frame[e4c.frames].uncaught = 1;
-
-	if(e4c.frames > 0) longjmp(e4c.jump[e4c.frames - 1], 1);
-
-    //uncaught exception
-	e4c_printLastErr();
-	exit(EXIT_FAILURE);
-}
-
-int e4c_try(const char * file, int line){
-
-	if(e4c.frames >= E4C_MAX_FRAMES) fatal("Too many nested `try` blocks.");
-
-	e4c.frames++;
-
-	e4c.frame[e4c.frames].stage = e4c_beginning;
-	e4c.frame[e4c.frames].uncaught = 0;
-
-	return 1;
-}
-
-int e4c_hook(){
-
-	int uncaught = e4c.frame[e4c.frames].uncaught;
-
-	e4c.frame[e4c.frames].stage++;
-	if(e4c.frame[e4c.frames].stage == e4c_catching && !uncaught) {
-            e4c.frame[e4c.frames].stage++;
-    }
-
-    //fprintf(stdout,"e4c.frames %d, e4c.frame[e4c.frames].stage %d e4c.frame[e4c.frames].uncaught %d\n"
-    //        ,e4c.frames,e4c.frame[e4c.frames].stage, e4c.frame[e4c.frames].uncaught);
-
-	if(e4c.frame[e4c.frames].stage < e4c_done) {
-        return 1; //continue looping - enter try loop
-    }
-
-	e4c.frames--;
-
-	if(uncaught) e4c_propagate();
-
-	return 0;
-}
-
-void e4c_throw( const char * file
-                , int line
-                , any error){
-
-	e4c.exception.file = file;
-	e4c.exception.line = line;
-
-    if (!_instanceof(error,Error)){
-        if (error.class==String.value.class){
-            error = _newErr(error.value.str);
-        }
-        else fatal("throwed object should be Error or String");
-    };
-
-    e4c.exception.error = error;
-
-	e4c_propagate();
-}

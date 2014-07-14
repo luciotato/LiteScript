@@ -73,7 +73,8 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // logger.msg "#{color.green}[OK] -> #{dispatcherModule.fileInfo.outRelFilename} #{color.normal}"
        logger_msg(undefined,1,(any_arr){_concatAny(5,(any_arr){color_green, any_str("[OK] -> "), PROP(outRelFilename_,PROP(fileInfo_,Producer_c_dispatcherModule)), any_str(" "), color_normal})});
        // logger.extra #blank line
-       logger_extra;// #blank line
+       logger_extra(undefined,0,NULL);// #blank line
+   return undefined;
    }
 
    // helper function normalizeDefine(name:string)
@@ -83,8 +84,8 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // var chr, result=""
        var chr = undefined, result = any_EMPTY_STR;
        // for n=0 to name.length
-       int64_t _end4=_length(name);
-       for(int64_t n=0; n<=_end4; n++) {
+       int64_t _end6=_length(name);
+       for(int64_t n=0; n<=_end6; n++) {
            // chr=name.charAt(n).toUpperCase()
            chr = CALL0(toUpperCase_,CALL1(charAt_,name,any_number(n)));
            // if chr<'A' or chr>'Z', chr="_"
@@ -95,6 +96,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // return result
        return result;
+   return undefined;
    }
 
 
@@ -113,48 +115,36 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
 // _dispatcher.h
 
-       // .out {h:1},NL
-       CALL2(out_,this,new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("h"),any_number(1)})}
-       }), Producer_c_NL);
-
-       // .out '#ifndef #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL
-       CALL2(out_,this,_concatAny(3,(any_arr){any_str("#ifndef "), (Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))})), any_str("_H")}), Producer_c_NL);
-       // .out '#define #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL,NL
-       CALL3(out_,this,_concatAny(3,(any_arr){any_str("#define "), (Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))})), any_str("_H")}), Producer_c_NL, Producer_c_NL);
-
-       // .out '#include "../core/LiteC-core.h"',NL,NL,NL
-       CALL4(out_,this,any_str("#include \"../core/LiteC-core.h\""), Producer_c_NL, Producer_c_NL, Producer_c_NL);
+       // .out
+       __call(out_,this,11,(any_arr){new(Map,1,(any_arr){
+           _newPair("h",any_number(1))
+           }), Producer_c_NL, _concatAny(3,(any_arr){any_str("#ifndef "), (Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))})), any_str("_H")}), Producer_c_NL, _concatAny(3,(any_arr){any_str("#define "), (Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))})), any_str("_H")}), Producer_c_NL, Producer_c_NL, any_str("#include \"../core/LiteC-core.h\""), Producer_c_NL, Producer_c_NL, Producer_c_NL});
 
 // LiteC__init extern declaration
 
-       // .out NL,{COMMENT: 'core support and defined classes init'},NL
-       CALL3(out_,this,Producer_c_NL, new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),any_str("core support and defined classes init")})}
-       }), Producer_c_NL);
-       // .out 'extern void __declareClasses();',NL,NL
-       CALL3(out_,this,any_str("extern void __declareClasses();"), Producer_c_NL, Producer_c_NL);
+       // .out
+       __call(out_,this,6,(any_arr){Producer_c_NL, new(Map,1,(any_arr){
+           _newPair("COMMENT",any_str("core support and defined classes init"))
+           }), Producer_c_NL, any_str("extern void __declareClasses();"), Producer_c_NL, Producer_c_NL});
 
 // verbs & things
 
 // now all distinct method names
 
-       // .out {COMMENT: 'methods'},NL,NL
-       CALL3(out_,this,new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),any_str("methods")})}
-       }), Producer_c_NL, Producer_c_NL);
-       // .out "enum _VERBS { //a symbol for each distinct method name",NL
-       CALL2(out_,this,any_str("enum _VERBS { //a symbol for each distinct method name"), Producer_c_NL);
+       // .out
+       __call(out_,this,5,(any_arr){new(Map,1,(any_arr){
+           _newPair("COMMENT",any_str("methods"))
+           }), Producer_c_NL, Producer_c_NL, any_str("enum _VERBS { //a symbol for each distinct method name"), Producer_c_NL});
 
        // var initialValue = " = -_CORE_METHODS_MAX-#{allMethodNames.size}"
        var initialValue = _concatAny(2,(any_arr){any_str(" = -_CORE_METHODS_MAX-"), PROP(size_,Producer_c_allMethodNames)});
        // for each methodDeclaration in map allMethodNames
-       any _list55=Producer_c_allMethodNames;
+       any _list58=Producer_c_allMethodNames;
        { NameValuePair_ptr _nvp11=NULL; //name:value pair
         var methodDeclaration=undefined; //value
-       for(int64_t methodDeclaration__inx=0 ; methodDeclaration__inx<_list55.value.arr->length ; methodDeclaration__inx++){
-           assert(ITEM(methodDeclaration__inx,_list55).value.class==&NameValuePair_CLASSINFO);
-       _nvp11 = ITEM(methodDeclaration__inx,_list55).value.ptr;
+       for(int64_t methodDeclaration__inx=0 ; methodDeclaration__inx<_list58.value.arr->length ; methodDeclaration__inx++){
+           assert(ITEM(methodDeclaration__inx,_list58).class==&NameValuePair_CLASSINFO);
+       _nvp11 = ITEM(methodDeclaration__inx,_list58).value.ptr;
            methodDeclaration=_nvp11->value;
            // .out '    ',makeSymbolName(methodDeclaration.name),initialValue,",",NL
            __call(out_,this,5,(any_arr){any_str("    "), Producer_c_makeSymbolName(undefined,1,(any_arr){PROP(name_,methodDeclaration)}), initialValue, any_str(","), Producer_c_NL});
@@ -166,23 +156,21 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
 // all  distinct property names
 
-       // .out {COMMENT: 'propery names'},NL,NL
-       CALL3(out_,this,new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),any_str("propery names")})}
-       }), Producer_c_NL, Producer_c_NL);
-       // .out "enum _THINGS { //a symbol for each distinct property name",NL
-       CALL2(out_,this,any_str("enum _THINGS { //a symbol for each distinct property name"), Producer_c_NL);
+       // .out
+       __call(out_,this,5,(any_arr){new(Map,1,(any_arr){
+           _newPair("COMMENT",any_str("propery names"))
+           }), Producer_c_NL, Producer_c_NL, any_str("enum _THINGS { //a symbol for each distinct property name"), Producer_c_NL});
 
        // initialValue = "= _CORE_PROPS_LENGTH"
        initialValue = any_str("= _CORE_PROPS_LENGTH");
        // for each name,value in map allPropertyNames
-       any _list56=Producer_c_allPropertyNames;
+       any _list59=Producer_c_allPropertyNames;
        { NameValuePair_ptr _nvp12=NULL; //name:value pair
             var name=undefined; //key
         var value=undefined; //value
-       for(int64_t value__inx=0 ; value__inx<_list56.value.arr->length ; value__inx++){
-           assert(ITEM(value__inx,_list56).value.class==&NameValuePair_CLASSINFO);
-       _nvp12 = ITEM(value__inx,_list56).value.ptr;
+       for(int64_t value__inx=0 ; value__inx<_list59.value.arr->length ; value__inx++){
+           assert(ITEM(value__inx,_list59).class==&NameValuePair_CLASSINFO);
+       _nvp12 = ITEM(value__inx,_list59).value.ptr;
            name=_nvp12->name;
            value=_nvp12->value;
            // .out '    ',makeSymbolName(name), initialValue, ",",NL
@@ -199,12 +187,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 // declared and the C compiler shows errors everywhere
 
        // for each moduleNode:Grammar.Module in map project.moduleCache
-       any _list57=PROP(moduleCache_,project);
+       any _list60=PROP(moduleCache_,project);
        { NameValuePair_ptr _nvp13=NULL; //name:value pair
         var moduleNode=undefined; //value
-       for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list57.value.arr->length ; moduleNode__inx++){
-           assert(ITEM(moduleNode__inx,_list57).value.class==&NameValuePair_CLASSINFO);
-       _nvp13 = ITEM(moduleNode__inx,_list57).value.ptr;
+       for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list60.value.arr->length ; moduleNode__inx++){
+           assert(ITEM(moduleNode__inx,_list60).class==&NameValuePair_CLASSINFO);
+       _nvp13 = ITEM(moduleNode__inx,_list60).value.ptr;
            moduleNode=_nvp13->value;
            // var hFile = moduleNode.fileInfo.outWithExtension(".h")
            var hFile = CALL1(outWithExtension_,PROP(fileInfo_,moduleNode),any_str(".h"));
@@ -219,64 +207,51 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
 // _dispatcher.c
 
-       // .out {h:0},NL
-       CALL2(out_,this,new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("h"),any_number(0)})}
-       }), Producer_c_NL);
-       // .out '#include "_dispatcher.h"',NL,NL,NL,NL
-       __call(out_,this,5,(any_arr){any_str("#include \"_dispatcher.h\""), Producer_c_NL, Producer_c_NL, Producer_c_NL, Producer_c_NL});
+       // .out
+       __call(out_,this,7,(any_arr){new(Map,1,(any_arr){
+           _newPair("h",any_number(0))
+           }), Producer_c_NL, any_str("#include \"_dispatcher.h\""), Producer_c_NL, Producer_c_NL, Producer_c_NL, Producer_c_NL});
 
 // static definition added verbs (methods) and things (properties)
 
-       // .out {COMMENT: 'methods'},NL,NL
-       CALL3(out_,this,new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),any_str("methods")})}
-       }), Producer_c_NL, Producer_c_NL);
-       // .out "static str _ADD_VERBS[] = { //string name for each distinct method name",NL
-       CALL2(out_,this,any_str("static str _ADD_VERBS[] = { //string name for each distinct method name"), Producer_c_NL);
-       // .out {pre:'    "', CSL:allMethodNames.keys(), post:'"\n'}
-       CALL1(out_,this,new(Map,3,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("pre"),any_str("    \"")})}, 
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),CALL0(keys_,Producer_c_allMethodNames)})}, 
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("post"),any_str("\"\n")})}
-       }));
-       // .out '};',NL,NL
-       CALL3(out_,this,any_str("};"), Producer_c_NL, Producer_c_NL);
+       // .out
+       __call(out_,this,9,(any_arr){new(Map,1,(any_arr){
+           _newPair("COMMENT",any_str("methods"))
+           }), Producer_c_NL, Producer_c_NL, any_str("static str _ADD_VERBS[] = { //string name for each distinct method name"), Producer_c_NL, new(Map,3,(any_arr){
+           _newPair("pre",any_str("    \"")), 
+           _newPair("CSL",CALL0(keys_,Producer_c_allMethodNames)), 
+           _newPair("post",any_str("\"\n"))
+           }), any_str("};"), Producer_c_NL, Producer_c_NL});
 
 // all  distinct property names
 
-       // .out {COMMENT: 'propery names'},NL,NL
-       CALL3(out_,this,new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),any_str("propery names")})}
-       }), Producer_c_NL, Producer_c_NL);
-       // .out "static str _ADD_THINGS[] = { //string name for each distinct property name",NL
-       CALL2(out_,this,any_str("static str _ADD_THINGS[] = { //string name for each distinct property name"), Producer_c_NL);
-       // .out {pre:'    "', CSL:allPropertyNames.keys(), post:'"\n'}
-       CALL1(out_,this,new(Map,3,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("pre"),any_str("    \"")})}, 
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),CALL0(keys_,Producer_c_allPropertyNames)})}, 
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("post"),any_str("\"\n")})}
-       }));
-       // .out '};',NL,NL
-       CALL3(out_,this,any_str("};"), Producer_c_NL, Producer_c_NL);
+       // .out
+       __call(out_,this,9,(any_arr){new(Map,1,(any_arr){
+           _newPair("COMMENT",any_str("propery names"))
+           }), Producer_c_NL, Producer_c_NL, any_str("static str _ADD_THINGS[] = { //string name for each distinct property name"), Producer_c_NL, new(Map,3,(any_arr){
+           _newPair("pre",any_str("    \"")), 
+           _newPair("CSL",CALL0(keys_,Producer_c_allPropertyNames)), 
+           _newPair("post",any_str("\"\n"))
+           }), any_str("};"), Producer_c_NL, Producer_c_NL});
 
 // _dispatcher.c contains main function
 
-       // .out (
+       // .out
        __call(out_,this,10,(any_arr){any_str("\n\n\n//-------------------------------"), Producer_c_NL, any_str("int main(int argc, char** argv) {"), Producer_c_NL, any_str("    LiteC_init(argc,argv);"), Producer_c_NL, _concatAny(3,(any_arr){any_str("    LiteC_addMethodSymbols( "), PROP(size_,Producer_c_allMethodNames), any_str(", _ADD_VERBS);")}), Producer_c_NL, _concatAny(3,(any_arr){any_str("    LiteC_addPropSymbols( "), PROP(size_,Producer_c_allPropertyNames), any_str(", _ADD_THINGS);")}), Producer_c_NL});
+
 
 // process methods appended to core classes, by calling LiteC_registerShim
 
        // .out '\n'
        CALL1(out_,this,any_str("\n"));
        // for each methodDeclaration in appendToCoreClassMethods
-       any _list58=Producer_c_appendToCoreClassMethods;
+       any _list61=Producer_c_appendToCoreClassMethods;
        { var methodDeclaration=undefined;
-       for(int methodDeclaration__inx=0 ; methodDeclaration__inx<_list58.value.arr->length ; methodDeclaration__inx++){methodDeclaration=ITEM(methodDeclaration__inx,_list58);
+       for(int methodDeclaration__inx=0 ; methodDeclaration__inx<_list61.value.arr->length ; methodDeclaration__inx++){methodDeclaration=ITEM(methodDeclaration__inx,_list61);
                // var appendToDeclaration = methodDeclaration.getParent(Grammar.ClassDeclaration)
                var appendToDeclaration = CALL1(getParent_,methodDeclaration,Grammar_ClassDeclaration);
-               // .out '    LiteC_registerShim(',appendToDeclaration.varRef,'.value.class',
-               __call(out_,this,9,(any_arr){any_str("    LiteC_registerShim("), PROP(varRef_,appendToDeclaration), any_str(".value.class"), _concatAny(3,(any_arr){any_str(","), PROP(name_,methodDeclaration), any_str("_,")}), PROP(varRef_,appendToDeclaration), any_str("_"), PROP(name_,methodDeclaration), any_str(");"), Producer_c_NL});
+               // .out '    LiteC_registerShim(',appendToDeclaration.varRef,
+               __call(out_,this,8,(any_arr){any_str("    LiteC_registerShim("), PROP(varRef_,appendToDeclaration), _concatAny(3,(any_arr){any_str(","), PROP(name_,methodDeclaration), any_str("_,")}), PROP(varRef_,appendToDeclaration), any_str("_"), PROP(name_,methodDeclaration), any_str(");"), Producer_c_NL});
        }};// end for each in Producer_c_appendToCoreClassMethods
 
 // call __ModuleInit for all the imported modules. call the base modules init first
@@ -285,12 +260,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        var moduleList = _newArray(0,NULL);
 
        // for each moduleNode:Grammar.Module in map project.moduleCache
-       any _list59=PROP(moduleCache_,project);
+       any _list62=PROP(moduleCache_,project);
        { NameValuePair_ptr _nvp14=NULL; //name:value pair
         var moduleNode=undefined; //value
-       for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list59.value.arr->length ; moduleNode__inx++){
-               assert(ITEM(moduleNode__inx,_list59).value.class==&NameValuePair_CLASSINFO);
-       _nvp14 = ITEM(moduleNode__inx,_list59).value.ptr;
+       for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list62.value.arr->length ; moduleNode__inx++){
+               assert(ITEM(moduleNode__inx,_list62).class==&NameValuePair_CLASSINFO);
+       _nvp14 = ITEM(moduleNode__inx,_list62).value.ptr;
                moduleNode=_nvp14->value;
          // where moduleNode isnt project.main
            if(!__is(moduleNode,PROP(main_,project))){
@@ -301,9 +276,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // .out '\n'
        CALL1(out_,this,any_str("\n"));
        // for each nodeModule in moduleList
-       any _list60=moduleList;
+       any _list63=moduleList;
        { var nodeModule=undefined;
-       for(int nodeModule__inx=0 ; nodeModule__inx<_list60.value.arr->length ; nodeModule__inx++){nodeModule=ITEM(nodeModule__inx,_list60);
+       for(int nodeModule__inx=0 ; nodeModule__inx<_list63.value.arr->length ; nodeModule__inx++){nodeModule=ITEM(nodeModule__inx,_list63);
            // .out '    ',nodeModule.fileInfo.base,'__moduleInit();',NL
            CALL4(out_,this,any_str("    "), PROP(base_,PROP(fileInfo_,nodeModule)), any_str("__moduleInit();"), Producer_c_NL);
        }};// end for each in moduleList
@@ -315,8 +290,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .out '}',NL, {COMMENT: 'end main'},NL
        CALL4(out_,this,any_str("}"), Producer_c_NL, new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),any_str("end main")})}
+       _newPair("COMMENT",any_str("end main"))
        }), Producer_c_NL);
+    return undefined;
     }
 
 
@@ -328,14 +304,10 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 // default #includes:
 // "LiteC-core.h" in the header, the .h in the .c
 
-       // .out {h:1},NL
-       CALL2(out_,this,new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("h"),any_number(1)})}
-       }), Producer_c_NL);
-       // .out '#ifndef #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL
-       CALL2(out_,this,_concatAny(3,(any_arr){any_str("#ifndef "), (Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))})), any_str("_H")}), Producer_c_NL);
-       // .out '#define #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL,NL
-       CALL3(out_,this,_concatAny(3,(any_arr){any_str("#define "), (Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))})), any_str("_H")}), Producer_c_NL, Producer_c_NL);
+       // .out
+       __call(out_,this,7,(any_arr){new(Map,1,(any_arr){
+           _newPair("h",any_number(1))
+           }), Producer_c_NL, _concatAny(3,(any_arr){any_str("#ifndef "), (Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))})), any_str("_H")}), Producer_c_NL, _concatAny(3,(any_arr){any_str("#define "), (Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))})), any_str("_H")}), Producer_c_NL, Producer_c_NL});
 
        // var thisBase = Environment.dirName(.fileInfo.outFilename)
        var thisBase = Environment_dirName(undefined,1,(any_arr){PROP(outFilename_,PROP(fileInfo_,this))});
@@ -351,17 +323,22 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
 // header
 
-       // .out "//-------------------------",NL
-       CALL2(out_,this,any_str("//-------------------------"), Producer_c_NL);
-       // .out "//Module ",prefix,NL
-       CALL3(out_,this,any_str("//Module "), prefix, Producer_c_NL);
-       // .out "//-------------------------",NL
-       CALL2(out_,this,any_str("//-------------------------"), Producer_c_NL);
+       // .out
+       __call(out_,this,7,(any_arr){any_str("//-------------------------"), Producer_c_NL, any_str("//Module "), prefix, Producer_c_NL, any_str("//-------------------------"), Producer_c_NL});
 
 // Modules have a __moduleInit function holding module items initialization and any loose statements
 
        // .out "extern void ",prefix,"__moduleInit(void);",NL
        CALL4(out_,this,any_str("extern void "), prefix, any_str("__moduleInit(void);"), Producer_c_NL);
+
+// Interfaces have a __nativeInit function to provide a initialization opportunity
+// to module native support
+
+       // if .fileInfo.isInterface // add call to native hand-coded C support for this module
+       if (_anyToBool(PROP(isInterface_,PROP(fileInfo_,this))))  { // add call to native hand-coded C support for this module
+           // .out "extern void ",prefix,"__nativeInit(void);",NL
+           CALL4(out_,this,any_str("extern void "), prefix, any_str("__nativeInit(void);"), Producer_c_NL);
+       };
 
 // Since we cannot initialize a module var at declaration in C (err:initializer element is not constant),
 // we separate declaration from initialization.
@@ -374,63 +351,47 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // .produceDeclaredExternProps prefix
        CALL1(produceDeclaredExternProps_,this,prefix);
 
-       // if .fileInfo.isInterface // no .c for interfaces
-       if (_anyToBool(PROP(isInterface_,PROP(fileInfo_,this))))  { // no .c for interfaces
-           //do nothing
-           ;
-       }
-       
-       else {
-
 // Now produce the .c file,
 
-               // .out {h:0} //on .c
-               CALL1(out_,this,new(Map,1,(any_arr){
-               {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("h"),any_number(0)})}
-               })); //on .c
-               // .out '#include "#{prefix}.h"',NL,NL
-               CALL3(out_,this,_concatAny(3,(any_arr){any_str("#include \""), prefix, any_str(".h\"")}), Producer_c_NL, Producer_c_NL);
+       // .out
+       __call(out_,this,12,(any_arr){new(Map,1,(any_arr){
+           _newPair("h",any_number(0))
+           }), _concatAny(3,(any_arr){any_str("#include \""), prefix, any_str(".h\"")}), Producer_c_NL, Producer_c_NL, any_str("//-------------------------"), Producer_c_NL, any_str("//Module "), prefix, _anyToBool(PROP(isInterface_,PROP(fileInfo_,this))) ? any_str(" - INTERFACE") : any_EMPTY_STR, Producer_c_NL, any_str("//-------------------------"), Producer_c_NL});
 
-               // .out "//-------------------------",NL
-               CALL2(out_,this,any_str("//-------------------------"), Producer_c_NL);
-               // .out "//Module ",prefix,NL
-               CALL3(out_,this,any_str("//Module "), prefix, Producer_c_NL);
-               // .out "//-------------------------",NL
-               CALL2(out_,this,any_str("//-------------------------"), Producer_c_NL);
-
-                // add sustance for the module
-               // .produceSustance prefix
-               CALL1(produceSustance_,this,prefix);
+        // add sustance for the module
+       // .produceSustance prefix
+       CALL1(produceSustance_,this,prefix);
 
 // __moduleInit: module main function
 
-               // .out "\n\n//-------------------------",NL
-               CALL2(out_,this,any_str("\n\n//-------------------------"), Producer_c_NL);
-               // .out "void ",prefix,"__moduleInit(void){",NL
-               CALL4(out_,this,any_str("void "), prefix, any_str("__moduleInit(void){"), Producer_c_NL);
-               // .produceMainFunctionBody prefix
-               CALL1(produceMainFunctionBody_,this,prefix);
-               // .out NL,"};",NL
-               CALL3(out_,this,Producer_c_NL, any_str("};"), Producer_c_NL);
+       // .out
+       __call(out_,this,6,(any_arr){any_str("\n\n//-------------------------"), Producer_c_NL, any_str("void "), prefix, any_str("__moduleInit(void){"), Producer_c_NL});
 
-               // .skipSemiColon = true
-               PROP(skipSemiColon_,this) = true;
+       // .produceMainFunctionBody prefix
+       CALL1(produceMainFunctionBody_,this,prefix);
+
+       // if .fileInfo.isInterface // add call to native hand-coded C support for this module
+       if (_anyToBool(PROP(isInterface_,PROP(fileInfo_,this))))  { // add call to native hand-coded C support for this module
+           // .out NL,'    ',prefix,"__nativeInit();"
+           CALL4(out_,this,Producer_c_NL, any_str("    "), prefix, any_str("__nativeInit();"));
        };
 
-       // end if // if not interface
+       // .out NL,"};",NL
+       CALL3(out_,this,Producer_c_NL, any_str("};"), Producer_c_NL);
+
+       // .skipSemiColon = true
+       PROP(skipSemiColon_,this) = true;
+
 
 // close .h #ifdef
 
-       // .out {h:1}
-       CALL1(out_,this,new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("h"),any_number(1)})}
-       }));
-       // .out NL,'#endif',NL
-       CALL3(out_,this,Producer_c_NL, any_str("#endif"), Producer_c_NL);
-       // .out {h:0}
-       CALL1(out_,this,new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("h"),any_number(0)})}
-       }));
+       // .out
+       __call(out_,this,5,(any_arr){new(Map,1,(any_arr){
+           _newPair("h",any_number(1))
+           }), Producer_c_NL, any_str("#endif"), Producer_c_NL, new(Map,1,(any_arr){
+           _newPair("h",any_number(0))
+           })});
+    return undefined;
     }
 
 
@@ -467,9 +428,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        if (_anyToBool(PROP(nodeDeclared_,nameDeclClass)) && __is(PROP(name_,PROP(nodeDeclared_,nameDeclClass)),any_str("*Global Scope*")))  {
             // is append to a core class
            // for each item in .body.statements
-           any _list61=PROP(statements_,PROP(body_,this));
+           any _list64=PROP(statements_,PROP(body_,this));
            { var item=undefined;
-           for(int item__inx=0 ; item__inx<_list61.value.arr->length ; item__inx++){item=ITEM(item__inx,_list61);
+           for(int item__inx=0 ; item__inx<_list64.value.arr->length ; item__inx++){item=ITEM(item__inx,_list64);
              // where item.specific.constructor is Grammar.MethodDeclaration
                if(__is(any_class(PROP(specific_,item).class),Grammar_MethodDeclaration)){
                     // declare item.specific: Grammar.MethodDeclaration
@@ -481,13 +442,14 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                    CALL1(push_,Producer_c_appendToCoreClassMethods,PROP(specific_,item));
                     //also add to allMethods, since the class is core, is not declared in this project
                    // item.specific.nameDecl.addToAllMethodNames
-                   PROP(addToAllMethodNames_,PROP(nameDecl_,PROP(specific_,item)));
+                   __call(addToAllMethodNames_,PROP(nameDecl_,PROP(specific_,item)),0,NULL);
                     // out header
                    // .out 'extern any ',item.specific.nameDecl.getComposedName(),"(DEFAULT_ARGUMENTS);",NL
                    CALL4(out_,this,any_str("extern any "), CALL0(getComposedName_,PROP(nameDecl_,PROP(specific_,item))), any_str("(DEFAULT_ARGUMENTS);"), Producer_c_NL);
            }}};// end for each in PROP(statements_,PROP(body_,this))
            
        };
+     return undefined;
      }
 
 
@@ -502,6 +464,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        CALL1(out_,this,PROP(body_,this));
        // .skipSemiColon = true
        PROP(skipSemiColon_,this) = true;
+     return undefined;
      }
 
 
@@ -546,6 +509,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // return prefix
        return prefix;
+    return undefined;
     }
 
     // method produceHeader
@@ -556,12 +520,8 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // var prefix= .makeName()
        var prefix = CALL0(makeName_,this);
 
-       // .out "//-------------------------",NL
-       CALL2(out_,this,any_str("//-------------------------"), Producer_c_NL);
-       // .out "// namespace ",prefix,NL
-       CALL3(out_,this,any_str("// namespace "), prefix, Producer_c_NL);
-       // .out "//-------------------------",NL
-       CALL2(out_,this,any_str("//-------------------------"), Producer_c_NL);
+       // .out
+       __call(out_,this,7,(any_arr){any_str("//-------------------------"), Producer_c_NL, any_str("// namespace "), prefix, Producer_c_NL, any_str("//-------------------------"), Producer_c_NL});
 
 // all namespace methods & props are public
 
@@ -571,12 +531,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // var namespaceMethods=[]
        var namespaceMethods = _newArray(0,NULL);
        // for each member in map .nameDecl.members
-       any _list62=PROP(members_,PROP(nameDecl_,this));
+       any _list65=PROP(members_,PROP(nameDecl_,this));
        { NameValuePair_ptr _nvp15=NULL; //name:value pair
         var member=undefined; //value
-       for(int64_t member__inx=0 ; member__inx<_list62.value.arr->length ; member__inx++){
-               assert(ITEM(member__inx,_list62).value.class==&NameValuePair_CLASSINFO);
-       _nvp15 = ITEM(member__inx,_list62).value.ptr;
+       for(int64_t member__inx=0 ; member__inx<_list65.value.arr->length ; member__inx++){
+               assert(ITEM(member__inx,_list65).class==&NameValuePair_CLASSINFO);
+       _nvp15 = ITEM(member__inx,_list65).value.ptr;
                member=_nvp15->value;
          // where member.name not in ['constructor','length','prototype']
            if(CALL1(indexOf_,_newArray(3,(any_arr){any_str("constructor"), any_str("length"), any_str("prototype")}),PROP(name_,member)).value.number==-1){
@@ -595,6 +555,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
          // recurse, add internal classes and namespaces
        // .body.produceDeclaredExternProps prefix, forcePublic=true
        CALL2(produceDeclaredExternProps_,PROP(body_,this),prefix, true);
+    return undefined;
     }
 
 
@@ -612,22 +573,17 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
 // Now on the .c file,
 
-       // .out "//-------------------------",NL
-       CALL2(out_,this,any_str("//-------------------------"), Producer_c_NL);
-       // .out "//NAMESPACE ",prefix,NL
-       CALL3(out_,this,any_str("//NAMESPACE "), prefix, Producer_c_NL);
-       // .out "//-------------------------",NL
-       CALL2(out_,this,any_str("//-------------------------"), Producer_c_NL);
+       // .out
+       __call(out_,this,7,(any_arr){any_str("//-------------------------"), Producer_c_NL, any_str("//NAMESPACE "), prefix, Producer_c_NL, any_str("//-------------------------"), Producer_c_NL});
 
        // .body.produceSustance prefix
        CALL1(produceSustance_,PROP(body_,this),prefix);
 
 // __namespaceInit function
 
-       // .out NL,NL,"//------------------",NL
-       CALL4(out_,this,Producer_c_NL, Producer_c_NL, any_str("//------------------"), Producer_c_NL);
-       // .out "void ",prefix,"__namespaceInit(void){",NL
-       CALL4(out_,this,any_str("void "), prefix, any_str("__namespaceInit(void){"), Producer_c_NL);
+       // .out
+       __call(out_,this,8,(any_arr){Producer_c_NL, Producer_c_NL, any_str("//------------------"), Producer_c_NL, any_str("void "), prefix, any_str("__namespaceInit(void){"), Producer_c_NL});
+
        // .body.produceMainFunctionBody prefix
        CALL1(produceMainFunctionBody_,PROP(body_,this),prefix);
        // .out "};",NL
@@ -635,6 +591,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .skipSemiColon = true
        PROP(skipSemiColon_,this) = true;
+    return undefined;
     }
 
 
@@ -659,27 +616,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
 // header
 
-       // .out "\n\n//--------------",NL
-       CALL2(out_,this,any_str("\n\n//--------------"), Producer_c_NL);
-       // .out {COMMENT:c}
-       CALL1(out_,this,new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),c})}
-       }));
-       // if .varRefSuper, .out ' extends ',.varRefSuper,NL
-       if (_anyToBool(PROP(varRefSuper_,this))) {CALL3(out_,this,any_str(" extends "), PROP(varRefSuper_,this), Producer_c_NL);};
-       // .out NL
-       CALL1(out_,this,Producer_c_NL);
-
-       // .out "extern any ",c,"; //Class Object",NL,NL
-       __call(out_,this,5,(any_arr){any_str("extern any "), c, any_str("; //Class Object"), Producer_c_NL, Producer_c_NL});
+       // .out
+       __call(out_,this,11,(any_arr){any_str("\n\n//--------------"), Producer_c_NL, new(Map,1,(any_arr){
+           _newPair("COMMENT",c)
+           }), _anyToBool(PROP(varRefSuper_,this)) ? _newArray(3,(any_arr){any_str(" extends "), PROP(varRefSuper_,this), Producer_c_NL}) : any_EMPTY_STR, Producer_c_NL, Producer_c_NL, any_str("extern any "), c, any_str("; //Class Object"), Producer_c_NL, Producer_c_NL});
 
 // In C we create a struct for "instance properties" of each class
 
         // declare struct
-       // .out "typedef struct ",c,"_s * ",c,"_ptr;",NL
-       __call(out_,this,6,(any_arr){any_str("typedef struct "), c, any_str("_s * "), c, any_str("_ptr;"), Producer_c_NL});
-       // .out "typedef struct ",c,"_s {",NL
-       CALL4(out_,this,any_str("typedef struct "), c, any_str("_s {"), Producer_c_NL);
+       // .out
+       __call(out_,this,10,(any_arr){any_str("typedef struct "), c, any_str("_s * "), c, any_str("_ptr;"), Producer_c_NL, any_str("typedef struct "), c, any_str("_s {"), Producer_c_NL});
 
         // add each prop
        // var count=0
@@ -690,19 +636,19 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // var prt = .nameDecl.findOwnMember('prototype')
        var prt = CALL1(findOwnMember_,PROP(nameDecl_,this),any_str("prototype"));
        // for each prtNameDecl in map prt.members
-       any _list63=PROP(members_,prt);
+       any _list66=PROP(members_,prt);
        { NameValuePair_ptr _nvp16=NULL; //name:value pair
         var prtNameDecl=undefined; //value
-       for(int64_t prtNameDecl__inx=0 ; prtNameDecl__inx<_list63.value.arr->length ; prtNameDecl__inx++){
-               assert(ITEM(prtNameDecl__inx,_list63).value.class==&NameValuePair_CLASSINFO);
-       _nvp16 = ITEM(prtNameDecl__inx,_list63).value.ptr;
+       for(int64_t prtNameDecl__inx=0 ; prtNameDecl__inx<_list66.value.arr->length ; prtNameDecl__inx++){
+               assert(ITEM(prtNameDecl__inx,_list66).class==&NameValuePair_CLASSINFO);
+       _nvp16 = ITEM(prtNameDecl__inx,_list66).value.ptr;
                prtNameDecl=_nvp16->value;
          // where prtNameDecl.name not in ['constructor','length','prototype']
            if(CALL1(indexOf_,_newArray(3,(any_arr){any_str("constructor"), any_str("length"), any_str("prototype")}),PROP(name_,prtNameDecl)).value.number==-1){
                // if prtNameDecl.isProperty()
                if (_anyToBool(CALL0(isProperty_,prtNameDecl)))  {
                    // prtNameDecl.addToAllProperties
-                   PROP(addToAllProperties_,prtNameDecl);
+                   __call(addToAllProperties_,prtNameDecl,0,NULL);
                    // if count
                    if (_anyToBool(count))  {
                        // .out ',',NL
@@ -727,7 +673,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
                     // keep a list of all classes methods
                    // prtNameDecl.addToAllMethodNames
-                   PROP(addToAllMethodNames_,prtNameDecl);
+                   __call(addToAllMethodNames_,prtNameDecl,0,NULL);
                };
        }}};// end for each in map PROP(members_,prt)
 
@@ -742,13 +688,14 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
         //declare extern for this class methods
        // for each methodName in classMethods
-       any _list64=classMethods;
+       any _list67=classMethods;
        { var methodName=undefined;
-       for(int methodName__inx=0 ; methodName__inx<_list64.value.arr->length ; methodName__inx++){methodName=ITEM(methodName__inx,_list64);
+       for(int methodName__inx=0 ; methodName__inx<_list67.value.arr->length ; methodName__inx++){methodName=ITEM(methodName__inx,_list67);
            // .out "extern any ",c,"_",methodName,"(DEFAULT_ARGUMENTS);",NL
            __call(out_,this,6,(any_arr){any_str("extern any "), c, any_str("_"), methodName, any_str("(DEFAULT_ARGUMENTS);"), Producer_c_NL});
        }};// end for each in classMethods
        
+    return undefined;
     }
 
 
@@ -767,19 +714,17 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
 // this is the class body, goes on the .c file,
 
-       // .out {COMMENT:c},NL,NL
-       CALL3(out_,this,new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),c})}
-       }), Producer_c_NL, Producer_c_NL);
-       // .out 'any #{c}; //Class Object',NL
-       CALL2(out_,this,_concatAny(3,(any_arr){any_str("any "), c, any_str("; //Class Object")}), Producer_c_NL);
+       // .out
+       __call(out_,this,5,(any_arr){new(Map,1,(any_arr){
+           _newPair("COMMENT",c)
+           }), Producer_c_NL, Producer_c_NL, _concatAny(3,(any_arr){any_str("any "), c, any_str("; //Class Object")}), Producer_c_NL});
 
        // var hasConstructor: boolean
        var hasConstructor = undefined;
        // for each index,item in .body.statements
-       any _list65=PROP(statements_,PROP(body_,this));
+       any _list68=PROP(statements_,PROP(body_,this));
        { var item=undefined;
-       for(int index=0 ; index<_list65.value.arr->length ; index++){item=ITEM(index,_list65);
+       for(int index=0 ; index<_list68.value.arr->length ; index++){item=ITEM(index,_list68);
            // if item.specific instanceof Grammar.ConstructorDeclaration
            if (_instanceof(PROP(specific_,item),Grammar_ConstructorDeclaration))  {
                // if hasConstructor # what? more than one?
@@ -794,21 +739,18 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
 // default constructor
 
-       // if not hasConstructor
-       if (!(_anyToBool(hasConstructor)))  {
-            // a default constructor
-           // .out "//auto ",c,"__init",NL
-           CALL4(out_,this,any_str("//auto "), c, any_str("__init"), Producer_c_NL);
-           // .out "void ",c,"__init",DEFAULT_ARGUMENTS,"{",NL
-           __call(out_,this,6,(any_arr){any_str("void "), c, any_str("__init"), Producer_c_DEFAULT_ARGUMENTS, any_str("{"), Producer_c_NL});
+       // if not hasConstructor and not .getParent(Grammar.Module).fileInfo.isInterface
+       if (!(_anyToBool(hasConstructor)) && !(_anyToBool(PROP(isInterface_,PROP(fileInfo_,CALL1(getParent_,this,Grammar_Module))))))  {
+            // produce a default constructor
+           // .out
+           __call(out_,this,10,(any_arr){any_str("//auto "), c, any_str("__init"), Producer_c_NL, any_str("void "), c, any_str("__init"), Producer_c_DEFAULT_ARGUMENTS, any_str("{"), Producer_c_NL});
+
            // if .varRefSuper
            if (_anyToBool(PROP(varRefSuper_,this)))  {
-               // .out "    ",{COMMENT:"//auto call super class __init"},NL
-               CALL3(out_,this,any_str("    "), new(Map,1,(any_arr){
-               {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),any_str("//auto call super class __init")})}
-               }), Producer_c_NL);
-               // .out "    ",.varRefSuper,"__init(this,argc,arguments);",NL
-               CALL4(out_,this,any_str("    "), PROP(varRefSuper_,this), any_str("__init(this,argc,arguments);"), Producer_c_NL);
+               // .out
+               __call(out_,this,7,(any_arr){any_str("    "), new(Map,1,(any_arr){
+                   _newPair("COMMENT",any_str("//auto call super class __init"))
+                   }), Producer_c_NL, any_str("    "), PROP(varRefSuper_,this), any_str("__init(this,argc,arguments);"), Producer_c_NL});
            };
 
            // .body.producePropertiesInitialValueAssignments '((#{c}_ptr)this.value.ptr)->'
@@ -820,10 +762,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        };
 
        // .body.produce
-       PROP(produce_,PROP(body_,this));
+       __call(produce_,PROP(body_,this),0,NULL);
 
        // .skipSemiColon = true
        PROP(skipSemiColon_,this) = true;
+    return undefined;
     }
 
 
@@ -839,22 +782,19 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        var c = CALL0(getComposedName_,PROP(nameDecl_,this));
 
        // .out
-       __call(out_,this,9,(any_arr){any_str("//-----------------------"), Producer_c_NL, any_str("// Class "), c, any_str(": static list of METHODS(verbs) and PROPS(things)"), Producer_c_NL, any_str("//-----------------------"), Producer_c_NL, Producer_c_NL});
-
-       // .out "static _methodInfoArr ",c,"_METHODS = {",NL
-       CALL4(out_,this,any_str("static _methodInfoArr "), c, any_str("_METHODS = {"), Producer_c_NL);
+       __call(out_,this,13,(any_arr){any_str("//-----------------------"), Producer_c_NL, any_str("// Class "), c, any_str(": static list of METHODS(verbs) and PROPS(things)"), Producer_c_NL, any_str("//-----------------------"), Producer_c_NL, Producer_c_NL, any_str("static _methodInfoArr "), c, any_str("_METHODS = {"), Producer_c_NL});
 
        // var propList=[]
        var propList = _newArray(0,NULL);
        // var prt = .nameDecl.findOwnMember('prototype')
        var prt = CALL1(findOwnMember_,PROP(nameDecl_,this),any_str("prototype"));
        // for each nameDecl in map prt.members
-       any _list66=PROP(members_,prt);
+       any _list69=PROP(members_,prt);
        { NameValuePair_ptr _nvp17=NULL; //name:value pair
         var nameDecl=undefined; //value
-       for(int64_t nameDecl__inx=0 ; nameDecl__inx<_list66.value.arr->length ; nameDecl__inx++){
-               assert(ITEM(nameDecl__inx,_list66).value.class==&NameValuePair_CLASSINFO);
-       _nvp17 = ITEM(nameDecl__inx,_list66).value.ptr;
+       for(int64_t nameDecl__inx=0 ; nameDecl__inx<_list69.value.arr->length ; nameDecl__inx++){
+               assert(ITEM(nameDecl__inx,_list69).class==&NameValuePair_CLASSINFO);
+       _nvp17 = ITEM(nameDecl__inx,_list69).value.ptr;
                nameDecl=_nvp17->value;
          // where nameDecl.name not in ['constructor','length','prototype']
            if(CALL1(indexOf_,_newArray(3,(any_arr){any_str("constructor"), any_str("length"), any_str("prototype")}),PROP(name_,nameDecl)).value.number==-1){
@@ -870,18 +810,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                };
        }}};// end for each in map PROP(members_,prt)
 
-       // .out NL,"{0,0}}; //method jmp table initializer end mark",NL,NL
-       CALL4(out_,this,Producer_c_NL, any_str("{0,0}}; //method jmp table initializer end mark"), Producer_c_NL, Producer_c_NL);
-
-       // .out "static _posTableItem_t ",c,"_PROPS[] = {",NL
-       CALL4(out_,this,any_str("static _posTableItem_t "), c, any_str("_PROPS[] = {"), Producer_c_NL);
-       // .out {CSL:propList, post:'\n    '}
-       CALL1(out_,this,new(Map,2,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),propList})}, 
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("post"),any_str("\n    ")})}
-       }));
-       // .out "};",NL,NL
-       CALL3(out_,this,any_str("};"), Producer_c_NL, Producer_c_NL);
+       // .out
+       __call(out_,this,12,(any_arr){Producer_c_NL, any_str("{0,0}}; //method jmp table initializer end mark"), Producer_c_NL, Producer_c_NL, any_str("static _posTableItem_t "), c, any_str("_PROPS[] = {"), Producer_c_NL, new(Map,2,(any_arr){
+           _newPair("CSL",propList), 
+           _newPair("post",any_str("\n    "))
+           }), any_str("};"), Producer_c_NL, Producer_c_NL});
+    return undefined;
     }
 
     // method produceClassRegistration
@@ -909,7 +843,8 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        };
 
        // .out
-       __call(out_,this,7,(any_arr){_concatAny(11,(any_arr){any_str("    "), c, any_str(" =_newClass(\""), c, any_str("\", "), c, any_str("__init, sizeof(struct "), c, any_str("_s), "), superClass, any_str(".value.class);")}), Producer_c_NL, Producer_c_NL, _concatAny(5,(any_arr){any_str("    _declareMethods("), c, any_str(".value.class, "), c, any_str("_METHODS);")}), Producer_c_NL, _concatAny(7,(any_arr){any_str("    _declareProps("), c, any_str(".value.class, "), c, any_str("_PROPS, sizeof "), c, any_str("_PROPS);")}), Producer_c_NL});
+       __call(out_,this,7,(any_arr){_concatAny(11,(any_arr){any_str("    "), c, any_str(" =_newClass(\""), c, any_str("\", "), c, any_str("__init, sizeof(struct "), c, any_str("_s), "), superClass, any_str(".value.classINFOptr);")}), Producer_c_NL, Producer_c_NL, _concatAny(5,(any_arr){any_str("    _declareMethods("), c, any_str(", "), c, any_str("_METHODS);")}), Producer_c_NL, _concatAny(7,(any_arr){any_str("    _declareProps("), c, any_str(", "), c, any_str("_PROPS, sizeof "), c, any_str("_PROPS);")}), Producer_c_NL});
+    return undefined;
     }
 
 // -------------------------------------
@@ -928,15 +863,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        //---------
 
        // for each statement in .statements
-       any _list67=PROP(statements_,this);
+       any _list70=PROP(statements_,this);
        { var statement=undefined;
-       for(int statement__inx=0 ; statement__inx<_list67.value.arr->length ; statement__inx++){statement=ITEM(statement__inx,_list67);
+       for(int statement__inx=0 ; statement__inx<_list70.value.arr->length ; statement__inx++){statement=ITEM(statement__inx,_list70);
          // statement.produce()
          CALL0(produce_,statement);
        }};// end for each in PROP(statements_,this)
 
        // .out NL
        CALL1(out_,this,Producer_c_NL);
+    return undefined;
     }
 
     // method produceDeclaredExternProps(parentName,forcePublic)
@@ -957,9 +893,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
         // add each declared prop as a extern prefixed var
        // for each item in .statements
-       any _list68=PROP(statements_,this);
+       any _list71=PROP(statements_,this);
        { var item=undefined;
-       for(int item__inx=0 ; item__inx<_list68.value.arr->length ; item__inx++){item=ITEM(item__inx,_list68);
+       for(int item__inx=0 ; item__inx<_list71.value.arr->length ; item__inx++){item=ITEM(item__inx,_list71);
 
            // var isPublic = forcePublic or item.hasAdjective('export')
            var isPublic = __or(forcePublic,CALL1(hasAdjective_,item,any_str("export")));
@@ -971,8 +907,8 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     // declare item.specific:Grammar.VarStatement
                    // if isPublic, .out 'extern var ',{pre:prefix, CSL:item.specific.getNames()},";",NL
                    if (_anyToBool(isPublic)) {CALL4(out_,this,any_str("extern var "), new(Map,2,(any_arr){
-                   {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("pre"),prefix})}, 
-                   {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),CALL0(getNames_,PROP(specific_,item))})}
+                   _newPair("pre",prefix), 
+                   _newPair("CSL",CALL0(getNames_,PROP(specific_,item)))
                    }), any_str(";"), Producer_c_NL);};
            
            }// case Grammar.FunctionDeclaration:
@@ -987,17 +923,18 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     // declare item.specific:Grammar.ClassDeclaration
                     //produce class header declarations
                    // item.specific.produceHeader
-                   PROP(produceHeader_,PROP(specific_,item));
+                   __call(produceHeader_,PROP(specific_,item),0,NULL);
            
            }// case Grammar.NamespaceDeclaration:
            else if (__is(_switch6,Grammar_NamespaceDeclaration)){
                     // declare item.specific:Grammar.NamespaceDeclaration
                    // item.specific.produceHeader #recurses
-                   PROP(produceHeader_,PROP(specific_,item));// #recurses
+                   __call(produceHeader_,PROP(specific_,item),0,NULL);// #recurses
            
            };
        }};// end for each in PROP(statements_,this)
        
+    return undefined;
     }
                     // as in JS, always public. Must produce, can have classes inside
 
@@ -1019,9 +956,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        var produceThird = _newArray(0,NULL);
 
        // for each item in .statements
-       any _list69=PROP(statements_,this);
+       any _list72=PROP(statements_,this);
        { var item=undefined;
-       for(int item__inx=0 ; item__inx<_list69.value.arr->length ; item__inx++){item=ITEM(item__inx,_list69);
+       for(int item__inx=0 ; item__inx<_list72.value.arr->length ; item__inx++){item=ITEM(item__inx,_list72);
 
            // if item.specific instanceof Grammar.VarDeclList // PropertiesDeclaration & VarStatement
            if (_instanceof(PROP(specific_,item),Grammar_VarDeclList))  { // PropertiesDeclaration & VarStatement
@@ -1029,8 +966,8 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 //just declare existence, do not assign. (C compiler: error: initializer element is not constant)
                // .out 'var ',{pre:"#{prefix}_", CSL:item.specific.getNames()},";",NL
                CALL4(out_,this,any_str("var "), new(Map,2,(any_arr){
-               {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("pre"),_concatAny(2,(any_arr){prefix, any_str("_")})})}, 
-               {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),CALL0(getNames_,PROP(specific_,item))})}
+               _newPair("pre",_concatAny(2,(any_arr){prefix, any_str("_")})), 
+               _newPair("CSL",CALL0(getNames_,PROP(specific_,item)))
                }), any_str(";"), Producer_c_NL);
            }
 
@@ -1048,7 +985,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            else if (__is(any_class(PROP(specific_,item).class),Grammar_ClassDeclaration))  {
                 // declare item.specific:Grammar.ClassDeclaration
                // item.specific.produceStaticListMethodsAndProps
-               PROP(produceStaticListMethodsAndProps_,PROP(specific_,item));
+               __call(produceStaticListMethodsAndProps_,PROP(specific_,item),0,NULL);
                // produceSecond.push item.specific
                CALL1(push_,produceSecond,PROP(specific_,item));
            }
@@ -1068,21 +1005,22 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // end for //produce vars functions & classes sustance
 
        // for each item in produceSecond //class & namespace sustance
-       any _list70=produceSecond;
+       any _list73=produceSecond;
        { var item=undefined;
-       for(int item__inx=0 ; item__inx<_list70.value.arr->length ; item__inx++){item=ITEM(item__inx,_list70);
+       for(int item__inx=0 ; item__inx<_list73.value.arr->length ; item__inx++){item=ITEM(item__inx,_list73);
            // item.produce
-           PROP(produce_,item);
+           __call(produce_,item,0,NULL);
        }};// end for each in produceSecond
 
        // for each item in produceThird //other declare statements
-       any _list71=produceThird;
+       any _list74=produceThird;
        { var item=undefined;
-       for(int item__inx=0 ; item__inx<_list71.value.arr->length ; item__inx++){item=ITEM(item__inx,_list71);
+       for(int item__inx=0 ; item__inx<_list74.value.arr->length ; item__inx++){item=ITEM(item__inx,_list74);
            // item.produce
-           PROP(produce_,item);
+           __call(produce_,item,0,NULL);
        }};// end for each in produceThird
        
+    return undefined;
     }
 
 
@@ -1098,16 +1036,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 // if there is var or properties with assigned values, produce those assignment
 
        // for each item in .statements
-       any _list72=PROP(statements_,this);
+       any _list75=PROP(statements_,this);
        { var item=undefined;
-       for(int item__inx=0 ; item__inx<_list72.value.arr->length ; item__inx++){item=ITEM(item__inx,_list72);
+       for(int item__inx=0 ; item__inx<_list75.value.arr->length ; item__inx++){item=ITEM(item__inx,_list75);
          // where item.specific instanceof Grammar.VarDeclList //for modules:VarStatement, for Namespaces: PropertiesDeclaration
            if(_instanceof(PROP(specific_,item),Grammar_VarDeclList)){
                 // declare item.specific:Grammar.VarDeclList
                // for each variableDecl in item.specific.list
-               any _list73=PROP(list_,PROP(specific_,item));
+               any _list76=PROP(list_,PROP(specific_,item));
                { var variableDecl=undefined;
-               for(int variableDecl__inx=0 ; variableDecl__inx<_list73.value.arr->length ; variableDecl__inx++){variableDecl=ITEM(variableDecl__inx,_list73);
+               for(int variableDecl__inx=0 ; variableDecl__inx<_list76.value.arr->length ; variableDecl__inx++){variableDecl=ITEM(variableDecl__inx,_list76);
                  // where variableDecl.assignedValue
                    if(_anyToBool(PROP(assignedValue_,variableDecl))){
                        // .out prefix,'_',variableDecl.name,' = ', variableDecl.assignedValue,";",NL
@@ -1117,9 +1055,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        }}};// end for each in PROP(statements_,this)
 
        // for each item in .statements
-       any _list74=PROP(statements_,this);
+       any _list77=PROP(statements_,this);
        { var item=undefined;
-       for(int item__inx=0 ; item__inx<_list74.value.arr->length ; item__inx++){item=ITEM(item__inx,_list74);
+       for(int item__inx=0 ; item__inx<_list77.value.arr->length ; item__inx++){item=ITEM(item__inx,_list77);
 
 // register user classes
 
@@ -1127,7 +1065,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            if (__is(any_class(PROP(specific_,item).class),Grammar_ClassDeclaration))  {
                 // declare item.specific:Grammar.ClassDeclaration
                // item.specific.produceClassRegistration
-               PROP(produceClassRegistration_,PROP(specific_,item));
+               __call(produceClassRegistration_,PROP(specific_,item),0,NULL);
            }
 
 // recurse for namespaces
@@ -1135,8 +1073,8 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            else if (__is(any_class(PROP(specific_,item).class),Grammar_NamespaceDeclaration))  {
                 // declare item.specific:Grammar.NamespaceDeclaration
                 // #call namespaceInit
-               // .out item.specific.makeName(),'__namespaceInit();',NL
-               CALL3(out_,this,CALL0(makeName_,PROP(specific_,item)), any_str("__namespaceInit();"), Producer_c_NL);
+               // .out '    ',item.specific.makeName(),'__namespaceInit();',NL
+               CALL4(out_,this,any_str("    "), CALL0(makeName_,PROP(specific_,item)), any_str("__namespaceInit();"), Producer_c_NL);
            };
        }};// end for each in PROP(statements_,this)
 
@@ -1145,6 +1083,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         // all other loose statements in module body
        // .produceLooseExecutableStatements()
        CALL0(produceLooseExecutableStatements_,this);
+    return undefined;
     }
 
 
@@ -1159,16 +1098,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 // if there is var or properties with assigned values, produce those assignment
 
        // for each item in .statements
-       any _list75=PROP(statements_,this);
+       any _list78=PROP(statements_,this);
        { var item=undefined;
-       for(int item__inx=0 ; item__inx<_list75.value.arr->length ; item__inx++){item=ITEM(item__inx,_list75);
+       for(int item__inx=0 ; item__inx<_list78.value.arr->length ; item__inx++){item=ITEM(item__inx,_list78);
          // where item.specific.constructor is Grammar.PropertiesDeclaration
            if(__is(any_class(PROP(specific_,item).class),Grammar_PropertiesDeclaration)){
                 // declare item.specific:Grammar.PropertiesDeclaration
                // for each variableDecl in item.specific.list
-               any _list76=PROP(list_,PROP(specific_,item));
+               any _list79=PROP(list_,PROP(specific_,item));
                { var variableDecl=undefined;
-               for(int variableDecl__inx=0 ; variableDecl__inx<_list76.value.arr->length ; variableDecl__inx++){variableDecl=ITEM(variableDecl__inx,_list76);
+               for(int variableDecl__inx=0 ; variableDecl__inx<_list79.value.arr->length ; variableDecl__inx++){variableDecl=ITEM(variableDecl__inx,_list79);
                  // where variableDecl.assignedValue
                    if(_anyToBool(PROP(assignedValue_,variableDecl))){
                        // .out 'PROP(',variableDecl.name,'_,this)=',variableDecl.assignedValue,";",NL
@@ -1177,6 +1116,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                
        }}};// end for each in PROP(statements_,this)
        
+    return undefined;
     }
 
 
@@ -1186,15 +1126,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        //---------
         // all loose executable statements in a namespace or module body
        // for each item in .statements
-       any _list77=PROP(statements_,this);
+       any _list80=PROP(statements_,this);
        { var item=undefined;
-       for(int item__inx=0 ; item__inx<_list77.value.arr->length ; item__inx++){item=ITEM(item__inx,_list77);
+       for(int item__inx=0 ; item__inx<_list80.value.arr->length ; item__inx++){item=ITEM(item__inx,_list80);
          // where item.isExecutableStatement()
            if(_anyToBool(CALL0(isExecutableStatement_,item))){
                // item.produce //produce here
-               PROP(produce_,item); //produce here
+               __call(produce_,item,0,NULL); //produce here
        }}};// end for each in PROP(statements_,this)
        
+    return undefined;
     }
 
 
@@ -1226,7 +1167,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            if (!((CALL1(indexOf_,_newArray(3,(any_arr){Grammar_CompilerStatement, Grammar_DeclareStatement, Grammar_DoNothingStatement}),any_class(PROP(specific_,this).class)).value.number>=0)))  {
              // .out {COMMENT: .lexer.infoLines[.lineInx].text.trim()},NL
              CALL2(out_,this,new(Map,1,(any_arr){
-             {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),CALL0(trim_,PROP(text_,ITEM(_anyToNumber(PROP(lineInx_,this)),PROP(infoLines_,PROP(lexer_,this)))))})}
+             _newPair("COMMENT",CALL0(trim_,PROP(text_,ITEM(_anyToNumber(PROP(lineInx_,this)),PROP(infoLines_,PROP(lexer_,this))))))
              }), Producer_c_NL);
            };
          };
@@ -1239,7 +1180,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // if .specific isnt instance of Grammar.SingleLineBody
        if (!(_instanceof(PROP(specific_,this),Grammar_SingleLineBody)))  {
          // .lexer.outCode.ensureNewLine
-         PROP(ensureNewLine_,PROP(outCode_,PROP(lexer_,this)));
+         __call(ensureNewLine_,PROP(outCode_,PROP(lexer_,this)),0,NULL);
        };
 
 // if there are one or more 'into var x' in a expression in this statement,
@@ -1273,6 +1214,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            CALL1(out_,this,CALL0(getEOLComment_,this));
          };
        };
+     return undefined;
      }
 
 // helper function to determine if a statement is a declaration (can be outside a funcion in "C")
@@ -1285,6 +1227,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // return .specific is instance of Grammar.ClassDeclaration
        return __or(__or(__or(any_number(_instanceof(PROP(specific_,this),Grammar_ClassDeclaration)),any_number(_instanceof(PROP(specific_,this),Grammar_FunctionDeclaration))),any_number(_instanceof(PROP(specific_,this),Grammar_VarStatement))),any_number(CALL1(indexOf_,_newArray(3,(any_arr){Grammar_ImportStatement, Grammar_DeclareStatement, Grammar_CompilerStatement}),any_class(PROP(specific_,this).class)).value.number>=0));
+     return undefined;
      }
 
      // helper method isExecutableStatement returns boolean
@@ -1294,6 +1237,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // return not .isDeclaration()
        return any_number(!(_anyToBool(CALL0(isDeclaration_,this))));
+     return undefined;
      }
 
 // called above, pre-declare vars from 'into var x' assignment-expression
@@ -1308,6 +1252,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
              // .out "var ",.right,"=undefined;",NL
              CALL4(out_,this,any_str("var "), PROP(right_,this), any_str("=undefined;"), Producer_c_NL);
          };
+     return undefined;
      }
 
 
@@ -1328,6 +1273,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            // .out "throw(",.expr,")"
            CALL3(out_,this,any_str("throw("), PROP(expr_,this), any_str(")"));
          };
+     return undefined;
      }
 
 
@@ -1339,8 +1285,36 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // var defaultReturn = .getParent(Grammar.ConstructorDeclaration)? '' else 'undefined'
        var defaultReturn = _anyToBool(CALL1(getParent_,this,Grammar_ConstructorDeclaration)) ? any_EMPTY_STR : any_str("undefined");
+
+
+// we need to unwind try-catch blocks, to calculate to which active exception frame
+// we're "returning" to
+
+       // var countTryBlocks=0
+       var countTryBlocks = any_number(0);
+       // var node=this
+       var node = this;
+       // while node.getParent(Grammar.TryCatch) into node //includes catch & finally (parts of try)
+       while(_anyToBool((node=CALL1(getParent_,node,Grammar_TryCatch)))){
+           // countTryBlocks++
+           countTryBlocks.value.number++;
+       };// end loop
+
+       // if countTryBlocks
+       if (_anyToBool(countTryBlocks))  {
+           // .out "{e4c_exitTry(",countTryBlocks,");"
+           CALL3(out_,this,any_str("{e4c_exitTry("), countTryBlocks, any_str(");"));
+       };
+
        // .out 'return ',.expr or defaultReturn
        CALL2(out_,this,any_str("return "), __or(PROP(expr_,this),defaultReturn));
+
+       // if countTryBlocks
+       if (_anyToBool(countTryBlocks))  {
+           // .out ";}"
+           CALL1(out_,this,any_str(";}"));
+       };
+     return undefined;
      }
 
 
@@ -1351,20 +1325,22 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        assert(_instanceof(this,Grammar_FunctionCall));
        //---------
 
+// Check if varRef "executes"
+// (a varRef executes if last accessor is "FunctionCall" or it has --/++)
+
+// if varRef do not "executes" add "FunctionCall",
+// so varRef production adds (),
+// and C/JS executes the function call
+
+       // if no .varRef.executes, .varRef.addAccessor new Grammar.FunctionAccess(.varRef)
+       if (!_anyToBool(PROP(executes_,PROP(varRef_,this)))) {CALL1(addAccessor_,PROP(varRef_,this),new(Grammar_FunctionAccess,1,(any_arr){PROP(varRef_,this)}));};
+
        // var result = .varRef.calcReference()
        var result = CALL0(calcReference_,PROP(varRef_,this));
-
-        // assert not null or undefined before calling
-        //for each validation in options.validations
-        //    .out validation,NL
-
-        // out function call
        // .out result
        CALL1(out_,this,result);
+     return undefined;
      }
-
-        //if .varRef.executes, return #if varRef already executes, nothing more to do
-        //.out "()" #add (), so JS executes the function call
 
 
    // append to class Grammar.Operand ###
@@ -1457,6 +1433,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // end if
        
+     return undefined;
      }
 
       // #end Operand
@@ -1549,6 +1526,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .out pre, translated, prepend, .right, append, post
        __call(out_,this,6,(any_arr){pre, translated, prepend, PROP(right_,this), append, post});
+     return undefined;
      }
 
 
@@ -1767,6 +1745,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // end case oper
        
+     return undefined;
      }
 
 
@@ -1825,6 +1804,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        PROP(produceType_,PROP(root_,this)) = PROP(produceType_,this);
        // .out prepend, .root, append
        CALL3(out_,this,prepend, PROP(root_,this), append);
+     return undefined;
      }
         //.out preExtra, prepend, .root, append, extra
 
@@ -1837,6 +1817,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            //---------
            // .out .expression
            CALL1(out_,this,PROP(expression_,this));
+       return undefined;
        }
 
 
@@ -1848,6 +1829,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         // and also common variable names
        // return "#{symbol}_"
        return _concatAny(2,(any_arr){symbol, any_str("_")});
+   return undefined;
    }
 
    // append to class Grammar.VariableRef ###
@@ -1901,6 +1883,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .out pre, result, post
        CALL3(out_,this,pre, result, post);
+     return undefined;
      }
 
      // helper method calcReference(callNew) returns array of array
@@ -1956,6 +1939,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // return result
        return result;
+     return undefined;
      }
 
      // helper method calcReferenceArr(callNew) returns array of array
@@ -2002,9 +1986,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        var isOk = undefined, functionAccess = undefined, args = undefined;
 
        // for each inx,ac in .accessors
-       any _list78=PROP(accessors_,this);
+       any _list81=PROP(accessors_,this);
        { var ac=undefined;
-       for(int inx=0 ; inx<_list78.value.arr->length ; inx++){ac=ITEM(inx,_list78);
+       for(int inx=0 ; inx<_list81.value.arr->length ; inx++){ac=ITEM(inx,_list81);
             // declare valid ac.name
 
             //if no actualVar
@@ -2305,7 +2289,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                            callParams = _length(PROP(args_,functionAccess)) ? _newArray(1,(any_arr){any_str(",")}) : _newArray(0,NULL);
                            // callParams.push {CSL:functionAccess.args}
                            CALL1(push_,callParams,new(Map,1,(any_arr){
-                           {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),PROP(args_,functionAccess)})}
+                           _newPair("CSL",PROP(args_,functionAccess))
                            }));
                        }
                        
@@ -2387,6 +2371,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // return result
        return result;
+     return undefined;
      }
 
 
@@ -2418,6 +2403,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // return typeStr
        return typeStr;
+     return undefined;
      }
 
 
@@ -2439,7 +2425,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        if (_anyToBool(args) && _length(args))  {
            // callParams.push "#{args.length},(any_arr){",{CSL:args},"}"
            CALL3(push_,callParams,_concatAny(2,(any_arr){any_number(_length(args)), any_str(",(any_arr){")}), new(Map,1,(any_arr){
-           {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),args})}
+           _newPair("CSL",args)
            }), any_str("}"));
        }
        
@@ -2447,6 +2433,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            // callParams.push "0,NULL"
            CALL1(push_,callParams,any_str("0,NULL"));
        };
+     return undefined;
      }
 
 
@@ -2486,6 +2473,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                // .out .lvalue, ' ', operTranslate(.name), ' ' , .rvalue
                __call(out_,this,5,(any_arr){PROP(lvalue_,this), any_str(" "), Producer_c_operTranslate(undefined,1,(any_arr){PROP(name_,this)}), any_str(" "), PROP(rvalue_,this)});
        };
+     return undefined;
      }
 
 // -------
@@ -2501,6 +2489,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .skipSemiColon = true
        PROP(skipSemiColon_,this) = true;
+     return undefined;
      }
 
 // #### helper Functions
@@ -2535,6 +2524,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            // .assignIfUndefined name, value # Expression
            CALL2(assignIfUndefined_,this,name, value);// # Expression
          };
+     return undefined;
      }
 
 
@@ -2554,6 +2544,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
          // .throwError "default for objects not supported on C-generation"
          CALL1(throwError_,this,any_str("default for objects not supported on C-generation"));
+     return undefined;
      }
 //           .out "_defaultObject(&",main,");",NL
 //           for each nameValue in objectLiteral.items
@@ -2579,9 +2570,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // var lastLine = .lineInx
        var lastLine = PROP(lineInx_,this);
        // for each item in list
-       any _list79=list;
+       any _list82=list;
        { var item=undefined;
-       for(int item__inx=0 ; item__inx<_list79.value.arr->length ; item__inx++){item=ITEM(item__inx,_list79);
+       for(int item__inx=0 ; item__inx<_list82.value.arr->length ; item__inx++){item=ITEM(item__inx,_list82);
            // if item.lineInx>lastLine
            if (_anyToNumber(PROP(lineInx_,item)) > _anyToNumber(lastLine))  {
              // lastLine = item.lineInx
@@ -2591,6 +2582,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // return lastLine
        return lastLine;
+    return undefined;
     }
 
 
@@ -2624,10 +2616,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        assert(_instanceof(this,Grammar_WithStatement));
        //---------
 
-       // .out "var ",.name,'=',.varRef,";"
-       __call(out_,this,5,(any_arr){any_str("var "), PROP(name_,this), any_str("="), PROP(varRef_,this), any_str(";")});
+       // .out "var ",.nameDecl.getComposedName(),'=',.varRef,";"
+       __call(out_,this,5,(any_arr){any_str("var "), CALL0(getComposedName_,PROP(nameDecl_,this)), any_str("="), PROP(varRef_,this), any_str(";")});
        // .out .body
        CALL1(out_,this,PROP(body_,this));
+     return undefined;
      }
 
 
@@ -2663,6 +2656,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                CALL2(set_,Producer_c_allPropertyNames,name, this);
            };
        };
+     return undefined;
      }
 
    // append to class Grammar.VarDeclList ###
@@ -2672,13 +2666,14 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        assert(_instanceof(this,Grammar_VarDeclList));
        //---------
        // for each varDecl in .list
-       any _list80=PROP(list_,this);
+       any _list83=PROP(list_,this);
        { var varDecl=undefined;
-       for(int varDecl__inx=0 ; varDecl__inx<_list80.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list80);
+       for(int varDecl__inx=0 ; varDecl__inx<_list83.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list83);
            // varDecl.nameDecl.addToAllProperties
-           PROP(addToAllProperties_,PROP(nameDecl_,varDecl));
+           __call(addToAllProperties_,PROP(nameDecl_,varDecl),0,NULL);
        }};// end for each in PROP(list_,this)
        
+     return undefined;
      }
 
      // method getNames returns array of string
@@ -2688,14 +2683,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // var result=[]
        var result = _newArray(0,NULL);
        // for each varDecl in .list
-       any _list81=PROP(list_,this);
+       any _list84=PROP(list_,this);
        { var varDecl=undefined;
-       for(int varDecl__inx=0 ; varDecl__inx<_list81.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list81);
+       for(int varDecl__inx=0 ; varDecl__inx<_list84.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list84);
            // result.push varDecl.name
            CALL1(push_,result,PROP(name_,varDecl));
        }};// end for each in PROP(list_,this)
        // return result
        return result;
+     return undefined;
      }
 
 
@@ -2709,8 +2705,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // .out 'var ',{CSL:.list}
        CALL2(out_,this,any_str("var "), new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),PROP(list_,this)})}
+       _newPair("CSL",PROP(list_,this))
        }));
+     return undefined;
      }
 
    // append to class Grammar.VariableDecl ###
@@ -2723,6 +2720,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // .out .name,' = ', .assignedValue or 'undefined'
        CALL3(out_,this,PROP(name_,this), any_str(" = "), __or(PROP(assignedValue_,this),any_str("undefined")));
+     return undefined;
      }
 
 
@@ -2788,6 +2786,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .skipSemiColon = true
        PROP(skipSemiColon_,this) = true;
+     return undefined;
      }
 
 
@@ -2801,18 +2800,19 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // var bare=[]
        var bare = _newArray(0,NULL);
        // for each item in .statements
-       any _list82=PROP(statements_,this);
+       any _list85=PROP(statements_,this);
        { var item=undefined;
-       for(int item__inx=0 ; item__inx<_list82.value.arr->length ; item__inx++){item=ITEM(item__inx,_list82);
+       for(int item__inx=0 ; item__inx<_list85.value.arr->length ; item__inx++){item=ITEM(item__inx,_list85);
            // bare.push item.specific
            CALL1(push_,bare,PROP(specific_,item));
        }};// end for each in PROP(statements_,this)
 
        // .out {CSL:bare, separator:";"},";"
        CALL2(out_,this,new(Map,2,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),bare})}, 
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("separator"),any_str(";")})}
+       _newPair("CSL",bare), 
+       _newPair("separator",any_str(";"))
        }), any_str(";"));
+     return undefined;
      }
 
 
@@ -2849,6 +2849,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            // .elseStatement.produce()
            CALL0(produce_,PROP(elseStatement_,this));
        };
+     return undefined;
      }
 
 
@@ -2861,6 +2862,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .out NL,"else ", .nextIf
        CALL3(out_,this,Producer_c_NL, any_str("else "), PROP(nextIf_,this));
+     return undefined;
      }
 
    // append to class Grammar.ElseStatement ###
@@ -2872,6 +2874,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .out NL,"else {", .body, "}"
        CALL4(out_,this,Producer_c_NL, any_str("else {"), PROP(body_,this), any_str("}"));
+     return undefined;
      }
 
    // append to class Grammar.ForStatement ###
@@ -2891,6 +2894,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .skipSemiColon = true
        PROP(skipSemiColon_,this) = true;
+     return undefined;
      }
 
 
@@ -2944,7 +2948,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // .out "any ",.mainVar.name,"=undefined;",NL
        CALL4(out_,this,any_str("any "), PROP(name_,PROP(mainVar_,this)), any_str("=undefined;"), Producer_c_NL);
 
-       // .out "for(int ", intIndexVarName,"=", startValue,
+       // .out
        __call(out_,this,12,(any_arr){any_str("for(int "), intIndexVarName, any_str("="), startValue, any_str(" ; "), intIndexVarName, any_str("<"), uniqueName, any_str("_len"), any_str(" ; "), intIndexVarName, any_str("++){")});
 
        // .body.out .mainVar.name,"=",listName,".value.prop[",intIndexVarName,"];",NL
@@ -2969,8 +2973,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .out "};",{COMMENT:["end for each property in ",.iterable]},NL
        CALL3(out_,this,any_str("};"), new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),_newArray(2,(any_arr){any_str("end for each property in "), PROP(iterable_,this)})})}
+       _newPair("COMMENT",_newArray(2,(any_arr){any_str("end for each property in "), PROP(iterable_,this)}))
        }), Producer_c_NL);
+     return undefined;
      }
 
    // append to class Grammar.ForEachInArray
@@ -3022,7 +3027,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // .out "{ var ",.mainVar.name,"=undefined;",NL
        CALL4(out_,this,any_str("{ var "), PROP(name_,PROP(mainVar_,this)), any_str("=undefined;"), Producer_c_NL);
 
-       // .out "for(int ", intIndexVarName,"=", startValue,
+       // .out
        __call(out_,this,12,(any_arr){any_str("for(int "), intIndexVarName, any_str("="), startValue, any_str(" ; "), intIndexVarName, any_str("<"), listName, any_str(".value.arr->length"), any_str(" ; "), intIndexVarName, any_str("++){")});
 
        // .body.out .mainVar.name,"=ITEM(",intIndexVarName,",",listName,");",NL
@@ -3041,8 +3046,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .out "}};",{COMMENT:["end for each in ",.iterable]},NL
        CALL3(out_,this,any_str("}};"), new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),_newArray(2,(any_arr){any_str("end for each in "), PROP(iterable_,this)})})}
+       _newPair("COMMENT",_newArray(2,(any_arr){any_str("end for each in "), PROP(iterable_,this)}))
        }), Producer_c_NL);
+     return undefined;
      }
 
 
@@ -3069,8 +3075,8 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // .out
        __call(out_,this,12,(any_arr){any_str("for(int64_t "), intIndexVarName, any_str("=0"), any_str(" ; "), intIndexVarName, any_str("<"), listName, any_str(".value.arr->length"), any_str(" ; "), intIndexVarName, any_str("++){"), Producer_c_NL});
 
-       // .body.out "assert(ITEM(",intIndexVarName,",",listName,").value.class==&NameValuePair_CLASSINFO);",NL
-       __call(out_,PROP(body_,this),6,(any_arr){any_str("assert(ITEM("), intIndexVarName, any_str(","), listName, any_str(").value.class==&NameValuePair_CLASSINFO);"), Producer_c_NL});
+       // .body.out "assert(ITEM(",intIndexVarName,",",listName,").class==&NameValuePair_CLASSINFO);",NL
+       __call(out_,PROP(body_,this),6,(any_arr){any_str("assert(ITEM("), intIndexVarName, any_str(","), listName, any_str(").class==&NameValuePair_CLASSINFO);"), Producer_c_NL});
 
        // .out nvp," = ITEM(",intIndexVarName,",",listName,").value.ptr;",NL //get nv pair
        __call(out_,this,7,(any_arr){nvp, any_str(" = ITEM("), intIndexVarName, any_str(","), listName, any_str(").value.ptr;"), Producer_c_NL}); //get nv pair
@@ -3092,8 +3098,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .out "}};",{COMMENT:["end for each in map ",.iterable]},NL
        CALL3(out_,this,any_str("}};"), new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),_newArray(2,(any_arr){any_str("end for each in map "), PROP(iterable_,this)})})}
+       _newPair("COMMENT",_newArray(2,(any_arr){any_str("end for each in map "), PROP(iterable_,this)}))
        }), Producer_c_NL);
+     return undefined;
      }
 
    // append to class Grammar.ForIndexNumeric
@@ -3162,6 +3169,8 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
             // #for n=0, while n<arr.length  -> for(n=0;n<arr.length;...
             // #for n=0, until n >= arr.length  -> for(n=0;!(n>=arr.length);...
+           // .endExpression.produceType='Bool'
+           PROP(produceType_,PROP(endExpression_,this)) = any_str("Bool");
            // .endExpression.produce( negated = .conditionPrefix is 'until' )
            CALL1(produce_,PROP(endExpression_,this),any_number(__is(PROP(conditionPrefix_,this),any_str("until"))));
        };
@@ -3171,18 +3180,13 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // .out "; "
        CALL1(out_,this,any_str("; "));
 
-// if no increment specified, the default is indexVar++
+// if no increment specified, the default is indexVar++/--
 
-       // .out .increment? .increment.specific else [.indexVar.name, .conditionPrefix is 'down'? '--' else '++']
-       CALL1(out_,this,_anyToBool(PROP(increment_,this)) ? PROP(specific_,PROP(increment_,this)) : _newArray(2,(any_arr){PROP(name_,PROP(indexVar_,this)), __is(PROP(conditionPrefix_,this),any_str("down")) ? any_str("--") : any_str("++")}));
-
-       // .out ") ", .where
-       CALL2(out_,this,any_str(") "), PROP(where_,this));
-
-       // .out "{", .body, "};",{COMMENT:"end for #{.indexVar.name}"}, NL
-       __call(out_,this,5,(any_arr){any_str("{"), PROP(body_,this), any_str("};"), new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),_concatAny(2,(any_arr){any_str("end for "), PROP(name_,PROP(indexVar_,this))})})}
-       }), Producer_c_NL});
+       // .out
+       __call(out_,this,7,(any_arr){_anyToBool(PROP(increment_,this)) ? PROP(specific_,PROP(increment_,this)) : _newArray(2,(any_arr){PROP(name_,PROP(indexVar_,this)), __is(PROP(conditionPrefix_,this),any_str("down")) ? any_str("--") : any_str("++")}), any_str(") "), any_str("{"), PROP(body_,this), any_str("};"), new(Map,1,(any_arr){
+           _newPair("COMMENT",_concatAny(2,(any_arr){any_str("end for "), PROP(name_,PROP(indexVar_,this))}))
+           }), Producer_c_NL});
+     return undefined;
      }
 
 
@@ -3201,6 +3205,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        PROP(produceType_,PROP(filterExpression_,this)) = any_str("Bool");
        // .out 'if(',.filterExpression,')'
        CALL3(out_,this,any_str("if("), PROP(filterExpression_,this), any_str(")"));
+     return undefined;
      }
 
    // append to class Grammar.DeleteStatement
@@ -3212,6 +3217,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // .out 'delete ',.varRef
        CALL2(out_,this,any_str("delete "), PROP(varRef_,this));
+     return undefined;
      }
 
    // append to class Grammar.WhileUntilExpression ###
@@ -3249,6 +3255,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        PROP(produceType_,PROP(expr_,this)) = any_str("Bool");
        // .expr.produce(negated=negated)
        CALL1(produce_,PROP(expr_,this),negated);
+     return undefined;
      }
 
 
@@ -3267,14 +3274,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
 // if we have a post-condition, for example: `do ... loop while x>0`,
 
-           // .out "do{", .getEOLComment()
-           CALL2(out_,this,any_str("do{"), CALL0(getEOLComment_,this));
-           // .out .body
-           CALL1(out_,this,PROP(body_,this));
-           // .out "} while ("
-           CALL1(out_,this,any_str("} while ("));
+           // .out
+           CALL4(out_,this,any_str("do{"), CALL0(getEOLComment_,this), PROP(body_,this), any_str("} while ("));
+
            // .postWhileUntilExpression.produce(askFor='while')
            CALL1(produce_,PROP(postWhileUntilExpression_,this),any_str("while"));
+
            // .out ")"
            CALL1(out_,this,any_str(")"));
        }
@@ -3295,6 +3300,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
              // .out 'TRUE'
              CALL1(out_,this,any_str("TRUE"));
            };
+
            // .out '){', .body , "}"
            CALL3(out_,this,any_str("){"), PROP(body_,this), any_str("}"));
        };
@@ -3303,10 +3309,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .out ";",{COMMENT:"end loop"},NL
        CALL3(out_,this,any_str(";"), new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),any_str("end loop")})}
+       _newPair("COMMENT",any_str("end loop"))
        }), Producer_c_NL);
        // .skipSemiColon = true
        PROP(skipSemiColon_,this) = true;
+     return undefined;
      }
 
    // append to class Grammar.LoopControlStatement ###
@@ -3318,6 +3325,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // .out .control
        CALL1(out_,this,PROP(control_,this));
+     return undefined;
      }
 
    // append to class Grammar.DoNothingStatement ###
@@ -3328,6 +3336,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // .out "//do nothing",NL
        CALL2(out_,this,any_str("//do nothing"), Producer_c_NL);
+     return undefined;
      }
 
    // append to class Grammar.ParenExpression ###
@@ -3344,6 +3353,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        PROP(produceType_,PROP(expr_,this)) = PROP(produceType_,this);
        // .out "(",.expr,")"
        CALL3(out_,this,any_str("("), PROP(expr_,this), any_str(")"));
+     return undefined;
      }
 
    // append to class Grammar.ArrayLiteral ###
@@ -3369,12 +3379,13 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             // e.g.: "C": any list = (any){Array_TYPEID,.value.arr=&(Array_s){3,.item=(any_arr){a,b,c}}};
            // .out .items.length,",(any_arr){",{CSL:.items},"}"
            CALL4(out_,this,any_number(_length(PROP(items_,this))), any_str(",(any_arr){"), new(Map,1,(any_arr){
-           {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),PROP(items_,this)})}
+           _newPair("CSL",PROP(items_,this))
            }), any_str("}"));
        };
 
        // .out ")"
        CALL1(out_,this,any_str(")"));
+     return undefined;
      }
 
 // else
@@ -3403,8 +3414,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            strName = CALL0(getValue_,strName);
        };
 
-       // .out NL,'{&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("',strName, '"),', .value,'})}'
-       __call(out_,this,6,(any_arr){Producer_c_NL, any_str("{&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str(\""), strName, any_str("\"),"), PROP(value_,this), any_str("})}")});
+       // .out NL,'_newPair("',strName, '",', .value,')'
+       __call(out_,this,6,(any_arr){Producer_c_NL, any_str("_newPair(\""), strName, any_str("\","), PROP(value_,this), any_str(")")});
+     return undefined;
      }
 
    // append to class Grammar.ObjectLiteral ### also FreeObjectLiteral
@@ -3424,16 +3436,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        
        else {
             //.out "{",{CSL:.items},"}"
-           // .out 'new(Map,',.items.length,',(any_arr){'
-           CALL3(out_,this,any_str("new(Map,"), any_number(_length(PROP(items_,this))), any_str(",(any_arr){"));
-           // .out {CSL:.items, freeForm:.constructor is Grammar.FreeObjectLiteral }
-           CALL1(out_,this,new(Map,2,(any_arr){
-           {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),PROP(items_,this)})}, 
-           {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("freeForm"),any_number(__is(any_class(this.class),Grammar_FreeObjectLiteral))})}
-           }));
-           // .out NL,"})"
-           CALL2(out_,this,Producer_c_NL, any_str("})"));
+           // .out
+           __call(out_,this,6,(any_arr){any_str("new(Map,"), any_number(_length(PROP(items_,this))), any_str(",(any_arr){"), new(Map,1,(any_arr){
+               _newPair("CSL",PROP(items_,this))
+               }), Producer_c_NL, any_str("})")});
        };
+     return undefined;
      }
 
 
@@ -3446,8 +3454,13 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        assert(_instanceof(this,Grammar_ConstructorDeclaration));
        //---------
 
-       // if no .body.statements, return // just method declaration (interface)
-       if (!_anyToBool(PROP(statements_,PROP(body_,this)))) {return undefined;};
+       // if no .body.statements
+       if (!_anyToBool(PROP(statements_,PROP(body_,this))))  {
+           // .skipSemiColon=true
+           PROP(skipSemiColon_,this) = true;
+           // return // just method declaration (interface)
+           return undefined; // just method declaration (interface)
+       };
 
         // get owner: should be ClassDeclaration
        // var ownerClassDeclaration  = .getParent(Grammar.ClassDeclaration)
@@ -3471,6 +3484,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .produceFunctionBody c
        CALL1(produceFunctionBody_,this,c);
+     return undefined;
      }
 
 
@@ -3483,8 +3497,13 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        assert(_instanceof(this,Grammar_MethodDeclaration));
        //---------
 
-       // if no .body.statements, return //just interface
-       if (!_anyToBool(PROP(statements_,PROP(body_,this)))) {return undefined;};
+       // if no .body.statements
+       if (!_anyToBool(PROP(statements_,PROP(body_,this))))  {
+           // .skipSemiColon=true
+           PROP(skipSemiColon_,this) = true;
+           // return //just interface
+           return undefined; //just interface
+       };
 
        // if no .nameDecl, return //shim
        if (!_anyToBool(PROP(nameDecl_,this))) {return undefined;};
@@ -3514,6 +3533,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .produceFunctionBody c
        CALL1(produceFunctionBody_,this,c);
+     return undefined;
      }
 
 
@@ -3553,6 +3573,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .produceFunctionBody prefix
        CALL1(produceFunctionBody_,this,prefix);
+     return undefined;
      }
 
 
@@ -3585,20 +3606,21 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                    var namedParams = _newArray(0,NULL);
 
                    // for each paramDecl in .paramsDeclarations
-                   any _list83=PROP(paramsDeclarations_,this);
+                   any _list86=PROP(paramsDeclarations_,this);
                    { var paramDecl=undefined;
-                   for(int paramDecl__inx=0 ; paramDecl__inx<_list83.value.arr->length ; paramDecl__inx++){paramDecl=ITEM(paramDecl__inx,_list83);
+                   for(int paramDecl__inx=0 ; paramDecl__inx<_list86.value.arr->length ; paramDecl__inx++){paramDecl=ITEM(paramDecl__inx,_list86);
                        // namedParams.push paramDecl.name
                        CALL1(push_,namedParams,PROP(name_,paramDecl));
                    }};// end for each in PROP(paramsDeclarations_,this)
 
-                   // .body.out (
+                   // .body.out
                    __call(out_,PROP(body_,this),9,(any_arr){any_str("var "), new(Map,1,(any_arr){
-                       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),namedParams})}
+                       _newPair("CSL",namedParams)
                        }), any_str(";"), Producer_c_NL, CALL1(join_,namedParams,any_str("=")), any_str("=undefined;"), Producer_c_NL, any_str("switch(argc){"), Producer_c_NL});
 
+
                    // for inx=namedParams.length-1, while inx>=0, inx--
-                   for(int64_t inx=_length(namedParams) - 1; inx >= 0; ) {
+                   for(int64_t inx=_length(namedParams) - 1; inx >= 0; inx--) {
                        // .body.out "  case #{inx+1}:#{namedParams[inx]}=arguments[#{inx}];",NL
                        CALL2(out_,PROP(body_,this),_concatAny(7,(any_arr){any_str("  case "), (any_number(inx + 1)), any_str(":"), (ITEM(inx,namedParams)), any_str("=arguments["), any_number(inx), any_str("];")}), Producer_c_NL);
                    };// end for inx
@@ -3627,9 +3649,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 // if it has "catch" or "exception", insert 'try{'
 
            // for each statement in .body.statements
-           any _list84=PROP(statements_,PROP(body_,this));
+           any _list87=PROP(statements_,PROP(body_,this));
            { var statement=undefined;
-           for(int statement__inx=0 ; statement__inx<_list84.value.arr->length ; statement__inx++){statement=ITEM(statement__inx,_list84);
+           for(int statement__inx=0 ; statement__inx<_list87.value.arr->length ; statement__inx++){statement=ITEM(statement__inx,_list87);
                // if statement.specific instance of Grammar.ExceptionBlock
                if (_instanceof(PROP(specific_,statement),Grammar_ExceptionBlock))  {
                    // .body.out " try{",NL
@@ -3646,12 +3668,22 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        // .body.produce()
        CALL0(produce_,PROP(body_,this));
 
-// close the function, add source map for function default "return undefined".
+// close the function, to all functions except *constructors* (__init),
+// add default "return undefined", to emulate js behavior on C.
+// if you dot not insert a "return", the C function will return garbage.
+
+       // if not .constructor is Grammar.ConstructorDeclaration // declared as void Class__init(...)
+       if (!(__is(any_class(this.class),Grammar_ConstructorDeclaration)))  { // declared as void Class__init(...)
+           // .out "return undefined;",NL
+           CALL2(out_,this,any_str("return undefined;"), Producer_c_NL);
+       };
 
        // .out "}"
        CALL1(out_,this,any_str("}"));
+
        // .skipSemiColon = true
        PROP(skipSemiColon_,this) = true;
+     return undefined;
      }
 
         //if .lexer.out.sourceMap
@@ -3672,7 +3704,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        if (_length(PROP(args_,this)))  {
            // .out 'print(#{.args.length},(any_arr){',{CSL:.args},'})'
            CALL3(out_,this,_concatAny(3,(any_arr){any_str("print("), any_number(_length(PROP(args_,this))), any_str(",(any_arr){")}), new(Map,1,(any_arr){
-           {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),PROP(args_,this)})}
+           _newPair("CSL",PROP(args_,this))
            }), any_str("})"));
        }
        
@@ -3680,6 +3712,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            // .out 'print(0,NULL)'
            CALL1(out_,this,any_str("print(0,NULL)"));
        };
+     return undefined;
      }
 
 // --------------------
@@ -3699,12 +3732,13 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        if (_anyToNumber(PROP(lastOriginalCodeComment_,PROP(outCode_,PROP(lexer_,this)))) < _anyToNumber(PROP(lineInx_,this)))  {
          // .out {COMMENT: .lexer.infoLines[.lineInx].text}
          CALL1(out_,this,new(Map,1,(any_arr){
-         {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("COMMENT"),PROP(text_,ITEM(_anyToNumber(PROP(lineInx_,this)),PROP(infoLines_,PROP(lexer_,this))))})}
+         _newPair("COMMENT",PROP(text_,ITEM(_anyToNumber(PROP(lineInx_,this)),PROP(infoLines_,PROP(lexer_,this)))))
          }));
        };
 
        // .skipSemiColon = true
        PROP(skipSemiColon_,this) = true;
+     return undefined;
      }
 
 // --------------------
@@ -3734,6 +3768,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .skipSemiColon = true
        PROP(skipSemiColon_,this) = true;
+     return undefined;
      }
 
 
@@ -3753,6 +3788,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
            // return Environment.relativeFrom(thisModule.fileInfo.outDir,
            return Environment_relativeFrom(undefined,2,(any_arr){PROP(outDir_,PROP(fileInfo_,thisModule)), CALL1(outWithExtension_,PROP(fileInfo_,PROP(importedModule_,this)),any_str(".h"))});
+       return undefined;
        }
 
 // --------------------
@@ -3768,6 +3804,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        CALL2(outLinesAsComment_,this,PROP(lineInx_,this), _anyToBool(PROP(names_,this)) ? CALL1(lastLineInxOf_,this,PROP(names_,this)) : PROP(lineInx_,this));
        // .skipSemiColon = true
        PROP(skipSemiColon_,this) = true;
+     return undefined;
      }
 
 
@@ -3826,6 +3863,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
            // return result.join('_')
            return CALL1(join_,result,any_str("_"));
+       return undefined;
        }
 
        // method isClass
@@ -3834,6 +3872,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            //---------
            // return not .isNamespace and .findOwnMember('prototype')
            return any_number(!(_anyToBool(PROP(isNamespace_,this))) && _anyToBool(CALL1(findOwnMember_,this,any_str("prototype"))));
+       return undefined;
        }
 
        // method isMethod
@@ -3846,6 +3885,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            var prt = CALL1(findOwnMember_,this,any_str("**proto**"));
            // return prt and prt.parent and prt.parent.name is 'Function'
            return any_number(_anyToBool(prt) && _anyToBool(PROP(parent_,prt)) && __is(PROP(name_,PROP(parent_,prt)),any_str("Function")));
+       return undefined;
        }
 
        // method isProperty
@@ -3854,6 +3894,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            //---------
            // return not .isNamespace and not .isClass() and not .isMethod()
            return any_number(!(_anyToBool(PROP(isNamespace_,this))) && !(_anyToBool(CALL0(isClass_,this))) && !(_anyToBool(CALL0(isMethod_,this))));
+       return undefined;
        }
 
 // For C production, we're declaring each distinct method name (verbs)
@@ -3885,6 +3926,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                    CALL2(set_,Producer_c_allMethodNames,methodName, this);
                };
            };
+       return undefined;
        }
 
 
@@ -3898,6 +3940,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .out 'try{', .body, .exceptionBlock
        CALL3(out_,this,any_str("try{"), PROP(body_,this), PROP(exceptionBlock_,this));
+     return undefined;
      }
 
    // append to class Grammar.ExceptionBlock ###
@@ -3915,6 +3958,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
          // .out NL,'finally{', .finallyBody, '}'
          CALL4(out_,this,Producer_c_NL, any_str("finally{"), PROP(finallyBody_,this), any_str("}"));
        };
+     return undefined;
      }
 
 
@@ -3937,26 +3981,20 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            __call(out_,this,6,(any_arr){any_str("any "), switchVar, any_str("="), PROP(varRef_,this), any_str(";"), Producer_c_NL});
 
            // for each index,switchCase in .cases
-           any _list85=PROP(cases_,this);
+           any _list88=PROP(cases_,this);
            { var switchCase=undefined;
-           for(int index=0 ; index<_list85.value.arr->length ; index++){switchCase=ITEM(index,_list85);
+           for(int index=0 ; index<_list88.value.arr->length ; index++){switchCase=ITEM(index,_list88);
+
                // .outLineAsComment switchCase.lineInx
                CALL1(outLineAsComment_,this,PROP(lineInx_,switchCase));
-               // .out index>0? 'else ':'', 'if ('
-               CALL2(out_,this,index > 0 ? any_str("else ") : any_EMPTY_STR, any_str("if ("));
-               // .out {pre:'__is(#{switchVar},',CSL:switchCase.expressions, post:')', separator:'||'}
-               CALL1(out_,this,new(Map,4,(any_arr){
-               {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("pre"),_concatAny(3,(any_arr){any_str("__is("), switchVar, any_str(",")})})}, 
-               {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),PROP(expressions_,switchCase)})}, 
-               {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("post"),any_str(")")})}, 
-               {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("separator"),any_str("||")})}
-               }));
-               // .out '){'
-               CALL1(out_,this,any_str("){"));
-               // .out switchCase.body
-               CALL1(out_,this,PROP(body_,switchCase));
-               // .out NL,'}'
-               CALL2(out_,this,Producer_c_NL, any_str("}"));
+
+               // .out
+               __call(out_,this,7,(any_arr){index > 0 ? any_str("else ") : any_EMPTY_STR, any_str("if ("), new(Map,4,(any_arr){
+                   _newPair("pre",_concatAny(3,(any_arr){any_str("__is("), switchVar, any_str(",")})), 
+                   _newPair("CSL",PROP(expressions_,switchCase)), 
+                   _newPair("post",any_str(")")), 
+                   _newPair("separator",any_str("||"))
+                   }), any_str("){"), PROP(body_,switchCase), Producer_c_NL, any_str("}")});
            }};// end for each in PROP(cases_,this)
            
        }
@@ -3967,26 +4005,18 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        else {
 
          // for each index,switchCase in .cases
-         any _list86=PROP(cases_,this);
+         any _list89=PROP(cases_,this);
          { var switchCase=undefined;
-         for(int index=0 ; index<_list86.value.arr->length ; index++){switchCase=ITEM(index,_list86);
+         for(int index=0 ; index<_list89.value.arr->length ; index++){switchCase=ITEM(index,_list89);
              // .outLineAsComment switchCase.lineInx
              CALL1(outLineAsComment_,this,PROP(lineInx_,switchCase));
-             // .out index>0? 'else ':'', 'if ('
-             CALL2(out_,this,index > 0 ? any_str("else ") : any_EMPTY_STR, any_str("if ("));
-             // .out {pre:'(', CSL:switchCase.expressions, post:')', separator:'||'}
-             CALL1(out_,this,new(Map,4,(any_arr){
-             {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("pre"),any_str("(")})}, 
-             {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),PROP(expressions_,switchCase)})}, 
-             {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("post"),any_str(")")})}, 
-             {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("separator"),any_str("||")})}
-             }));
-             // .out '){'
-             CALL1(out_,this,any_str("){"));
-             // .out switchCase.body
-             CALL1(out_,this,PROP(body_,switchCase));
-             // .out NL,'}'
-             CALL2(out_,this,Producer_c_NL, any_str("}"));
+             // .out
+             __call(out_,this,7,(any_arr){index > 0 ? any_str("else ") : any_EMPTY_STR, any_str("if ("), new(Map,4,(any_arr){
+                   _newPair("pre",any_str("(")), 
+                   _newPair("CSL",PROP(expressions_,switchCase)), 
+                   _newPair("post",any_str(")")), 
+                   _newPair("separator",any_str("||"))
+                   }), any_str("){"), PROP(body_,switchCase), Producer_c_NL, any_str("}")});
          }};// end for each in PROP(cases_,this)
          
        };
@@ -3997,6 +4027,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // if .defaultBody, .out NL,'else {',.defaultBody,'}'
        if (_anyToBool(PROP(defaultBody_,this))) {CALL4(out_,this,Producer_c_NL, any_str("else {"), PROP(defaultBody_,this), any_str("}"));};
+     return undefined;
      }
 
 
@@ -4008,24 +4039,25 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        //---------
 
        // for each expression in .expressions
-       any _list87=PROP(expressions_,this);
+       any _list90=PROP(expressions_,this);
        { var expression=undefined;
-       for(int expression__inx=0 ; expression__inx<_list87.value.arr->length ; expression__inx++){expression=ITEM(expression__inx,_list87);
+       for(int expression__inx=0 ; expression__inx<_list90.value.arr->length ; expression__inx++){expression=ITEM(expression__inx,_list90);
            // expression.produceType = 'Number'
            PROP(produceType_,expression) = any_str("Number");
        }};// end for each in PROP(expressions_,this)
 
        // .out {pre:'case ', CSL:.expressions, post:':', separator:' '}
        CALL1(out_,this,new(Map,4,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("pre"),any_str("case ")})}, 
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),PROP(expressions_,this)})}, 
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("post"),any_str(":")})}, 
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("separator"),any_str(" ")})}
+       _newPair("pre",any_str("case ")), 
+       _newPair("CSL",PROP(expressions_,this)), 
+       _newPair("post",any_str(":")), 
+       _newPair("separator",any_str(" "))
        }));
        // .out .body
        CALL1(out_,this,PROP(body_,this));
        // .body.out 'break;',NL
        CALL2(out_,PROP(body_,this),any_str("break;"), Producer_c_NL);
+     return undefined;
      }
 
 
@@ -4046,15 +4078,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
            // .out '(function(',caseVar,'){',NL
            CALL4(out_,this,any_str("(function("), caseVar, any_str("){"), Producer_c_NL);
            // for each caseWhenSection in .cases
-           any _list88=PROP(cases_,this);
+           any _list91=PROP(cases_,this);
            { var caseWhenSection=undefined;
-           for(int caseWhenSection__inx=0 ; caseWhenSection__inx<_list88.value.arr->length ; caseWhenSection__inx++){caseWhenSection=ITEM(caseWhenSection__inx,_list88);
+           for(int caseWhenSection__inx=0 ; caseWhenSection__inx<_list91.value.arr->length ; caseWhenSection__inx++){caseWhenSection=ITEM(caseWhenSection__inx,_list91);
                // caseWhenSection.out 'if('
                __call(out_,caseWhenSection,6,(any_arr){any_str("if("), new(Map,4,(any_arr){
-                   {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("pre"),_concatAny(2,(any_arr){caseVar, any_str("==(")})})}, 
-                   {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),PROP(expressions_,caseWhenSection)})}, 
-                   {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("post"),any_str(")")})}, 
-                   {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("separator"),any_str("||")})}
+                   _newPair("pre",_concatAny(2,(any_arr){caseVar, any_str("==(")})), 
+                   _newPair("CSL",PROP(expressions_,caseWhenSection)), 
+                   _newPair("post",any_str(")")), 
+                   _newPair("separator",any_str("||"))
                    }), any_str(") return "), PROP(resultExpression_,caseWhenSection), any_str(";"), Producer_c_NL});
            }};// end for each in PROP(cases_,this)
 
@@ -4069,9 +4101,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        else {
 
          // for each caseWhenSection in .cases
-         any _list89=PROP(cases_,this);
+         any _list92=PROP(cases_,this);
          { var caseWhenSection=undefined;
-         for(int caseWhenSection__inx=0 ; caseWhenSection__inx<_list89.value.arr->length ; caseWhenSection__inx++){caseWhenSection=ITEM(caseWhenSection__inx,_list89);
+         for(int caseWhenSection__inx=0 ; caseWhenSection__inx<_list92.value.arr->length ; caseWhenSection__inx++){caseWhenSection=ITEM(caseWhenSection__inx,_list92);
              // .outLineAsComment caseWhenSection.lineInx
              CALL1(outLineAsComment_,this,PROP(lineInx_,caseWhenSection));
              // caseWhenSection.booleanExpression.produceType = 'Bool'
@@ -4083,6 +4115,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
          // .out '/* else */ ',.elseExpression or 'undefined'
          CALL2(out_,this,any_str("/* else */ "), __or(PROP(elseExpression_,this),any_str("undefined")));
        };
+     return undefined;
      }
 
 
@@ -4093,6 +4126,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // .out "assert(0)"
        CALL1(out_,this,any_str("assert(0)"));
+     return undefined;
      }
 
    // append to class Grammar.YieldExpression ###
@@ -4174,8 +4208,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
        // .out "yield [ ",{CSL:yieldArr}," ]"
        CALL3(out_,this,any_str("yield [ "), new(Map,1,(any_arr){
-       {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("CSL"),yieldArr})}
+       _newPair("CSL",yieldArr)
        }), any_str(" ]"));
+     return undefined;
      }
 
 
@@ -4185,6 +4220,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
      //---------
      // return OPER_TRANSLATION_map.get(name) or name
      return __or(CALL1(get_,Producer_c_OPER_TRANSLATION_map,name),name);
+   return undefined;
    }
 
 // ---------------------------------
@@ -4211,6 +4247,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
           //.out "if(",name,'.class==&Undefined_CLASSINFO) ',name,"=",expression,";",NL
          // .out "_default(&",name,",",expression,");",NL
          __call(out_,this,6,(any_arr){any_str("_default(&"), name, any_str(","), expression, any_str(");"), Producer_c_NL});
+    return undefined;
     }
 
 
@@ -4224,41 +4261,24 @@ Producer_c_coreSupportedProps = _newArray(5,(any_arr){any_str("name"), any_str("
 Producer_c_appendToCoreClassMethods = _newArray(0,NULL);
 Producer_c_DEFAULT_ARGUMENTS = any_str("(any this, len_t argc, any* arguments)");
 Producer_c_IDENTIFIER_ALIASES = new(Map,2,(any_arr){
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'on'"),any_str("true")})}, 
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'off'"),any_str("false")})}
-
+     _newPair("'on'",any_str("true")), 
+     _newPair("'off'",any_str("false"))
      });
 Producer_c_NL = any_str("\n");
 Producer_c_OPER_TRANSLATION_map = new(Map,13,(any_arr){
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'no'"),any_str("!")})}, 
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'not'"),any_str("!")})}, 
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'unary -'"),any_str("-")})}, 
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'unary +'"),any_str("+")})}, 
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'type of'"),any_str("typeof")})}, 
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'instance of'"),any_str("instanceof")})}, 
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'is'"),any_str("==")})}, 
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'isnt'"),any_str("!=")})}, 
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'<>'"),any_str("!=")})}, 
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'and'"),any_str("&&")})}, 
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'but'"),any_str("&&")})}, 
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'or'"),any_str("||")})}, 
-        
-     {&NameValuePair_CLASSINFO,&((NameValuePair_s){any_str("'has property'"),any_str("in")})}
-
+     _newPair("'no'",any_str("!")), 
+     _newPair("'not'",any_str("!")), 
+     _newPair("'unary -'",any_str("-")), 
+     _newPair("'unary +'",any_str("+")), 
+     _newPair("'type of'",any_str("typeof")), 
+     _newPair("'instance of'",any_str("instanceof")), 
+     _newPair("'is'",any_str("==")), 
+     _newPair("'isnt'",any_str("!=")), 
+     _newPair("'<>'",any_str("!=")), 
+     _newPair("'and'",any_str("&&")), 
+     _newPair("'but'",any_str("&&")), 
+     _newPair("'or'",any_str("||")), 
+     _newPair("'has property'",any_str("in"))
      });
    
 };

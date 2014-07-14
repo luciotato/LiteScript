@@ -24,6 +24,7 @@ any mkPath_dirExists(DEFAULT_ARGUMENTS); //forward declare
 
        // create path.dirname(filename), mode
        mkPath_create(undefined,2,(any_arr){path_dirname(undefined,1,(any_arr){filename}), mode});
+   return undefined;
    }
 
 
@@ -56,6 +57,7 @@ any mkPath_dirExists(DEFAULT_ARGUMENTS); //forward declare
 
        // return
        return undefined;
+   return undefined;
    }
 
 
@@ -86,6 +88,7 @@ any mkPath_dirExists(DEFAULT_ARGUMENTS); //forward declare
            // throw err //another error
            throw(err); //another error
        };
+   return undefined;
    }
 
 //-------------------------

@@ -439,7 +439,7 @@
                logger_debug(undefined,3,(any_arr){spaces, any_str("Parsed OK!->"), PROP(name_,searched)});
 
                // return astNode # parsed ok!, return instance
-               return astNode;// # parsed ok!, return instance
+               {e4c_exitTry(1);return astNode;};// # parsed ok!, return instance
            
            }catch(err){
                // if err isnt instance of ControlledError, throw err //re-raise if not ControlledError
@@ -1387,10 +1387,10 @@
 
 //-------------------------
 void ASTBase__moduleInit(void){
-       ASTBase =_newClass("ASTBase", ASTBase__init, sizeof(struct ASTBase_s), Object.value.class);
+       ASTBase =_newClass("ASTBase", ASTBase__init, sizeof(struct ASTBase_s), Object.value.classINFOptr);
    
-       _declareMethods(ASTBase.value.class, ASTBase_METHODS);
-       _declareProps(ASTBase.value.class, ASTBase_PROPS, sizeof ASTBase_PROPS);
+       _declareMethods(ASTBase, ASTBase_METHODS);
+       _declareProps(ASTBase, ASTBase_PROPS, sizeof ASTBase_PROPS);
 
    // end class ASTBase
    

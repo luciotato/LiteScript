@@ -40,10 +40,10 @@
    
    //------------------
    void fs__namespaceInit(void){
-           fs_Stat =_newClass("fs_Stat", fs_Stat__init, sizeof(struct fs_Stat_s), Object.value.class);
+           fs_Stat =_newClass("fs_Stat", fs_Stat__init, sizeof(struct fs_Stat_s), Object.value.classINFOptr);
        
-           _declareMethods(fs_Stat.value.class, fs_Stat_METHODS);
-           _declareProps(fs_Stat.value.class, fs_Stat_PROPS, sizeof fs_Stat_PROPS);
+           _declareMethods(fs_Stat, fs_Stat_METHODS);
+           _declareProps(fs_Stat, fs_Stat_PROPS, sizeof fs_Stat_PROPS);
    };
 
 

@@ -162,6 +162,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
            // return normalizeToLower(name)
            return Names_normalizeToLower(undefined,1,(any_arr){name});
        };
+    return undefined;
     }
 
 
@@ -200,6 +201,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         // #set member
        // .members.set .normalize(name), nameDecl
        CALL2(set_,PROP(members_,this),CALL1(normalize_,this,name), nameDecl);
+    return undefined;
     }
 
     // helper method findOwnMember(name) returns Declaration
@@ -213,6 +215,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 
        // return .members.get(.normalize(name))
        return CALL1(get_,PROP(members_,this),CALL1(normalize_,this,name));
+    return undefined;
     }
 
     // helper method ownMember(name)
@@ -233,6 +236,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 
        // return result
        return result;
+    return undefined;
     }
 
     // helper method getMemberCount
@@ -241,6 +245,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // return .members.size
        return PROP(size_,PROP(members_,this));
+    return undefined;
     }
 
     // helper method replaceForward ( realNameDecl: Declaration )
@@ -261,13 +266,13 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 // mix in found namedecl here
 
        // for each key,member in map realNameDecl.members
-       any _list28=PROP(members_,realNameDecl);
+       any _list31=PROP(members_,realNameDecl);
        { NameValuePair_ptr _nvp4=NULL; //name:value pair
           var key=undefined; //key
         var member=undefined; //value
-       for(int64_t member__inx=0 ; member__inx<_list28.value.arr->length ; member__inx++){
-         assert(ITEM(member__inx,_list28).value.class==&NameValuePair_CLASSINFO);
-       _nvp4 = ITEM(member__inx,_list28).value.ptr;
+       for(int64_t member__inx=0 ; member__inx<_list31.value.arr->length ; member__inx++){
+         assert(ITEM(member__inx,_list31).class==&NameValuePair_CLASSINFO);
+       _nvp4 = ITEM(member__inx,_list31).value.ptr;
          key=_nvp4->name;
          member=_nvp4->value;
           // declare member:Declaration
@@ -288,6 +293,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 
        // return true
        return true;
+    return undefined;
     }
 
     // helper method makePointTo(nameDecl:Declaration)
@@ -305,12 +311,12 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
        // .isForward = false
        PROP(isForward_,this) = false;
        // for each memberDecl in map .members
-       any _list29=PROP(members_,this);
+       any _list32=PROP(members_,this);
        { NameValuePair_ptr _nvp5=NULL; //name:value pair
         var memberDecl=undefined; //value
-       for(int64_t memberDecl__inx=0 ; memberDecl__inx<_list29.value.arr->length ; memberDecl__inx++){
-         assert(ITEM(memberDecl__inx,_list29).value.class==&NameValuePair_CLASSINFO);
-       _nvp5 = ITEM(memberDecl__inx,_list29).value.ptr;
+       for(int64_t memberDecl__inx=0 ; memberDecl__inx<_list32.value.arr->length ; memberDecl__inx++){
+         assert(ITEM(memberDecl__inx,_list32).class==&NameValuePair_CLASSINFO);
+       _nvp5 = ITEM(memberDecl__inx,_list32).value.ptr;
          memberDecl=_nvp5->value;
          // allNameDeclarations.remove memberDecl
          CALL1(remove_,Names_allNameDeclarations,memberDecl);
@@ -329,9 +335,9 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 
         // #other nameDecl pointing here are redirected
        // for each other in allNameDeclarations
-       any _list30=Names_allNameDeclarations;
+       any _list33=Names_allNameDeclarations;
        { var other=undefined;
-       for(int other__inx=0 ; other__inx<_list30.value.arr->length ; other__inx++){other=ITEM(other__inx,_list30);
+       for(int other__inx=0 ; other__inx<_list33.value.arr->length ; other__inx++){other=ITEM(other__inx,_list33);
            // if other.members is thisMembers
            if (__is(PROP(members_,other),thisMembers))  {
                // other.members = nameDecl.members
@@ -339,6 +345,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
            };
        }};// end for each in Names_allNameDeclarations
        
+    return undefined;
     }
 
     // helper method positionText
@@ -356,6 +363,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
          // return "(compiler-defined)"
          return any_str("(compiler-defined)");
        };
+    return undefined;
     }
 
 
@@ -365,6 +373,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // return "#{.positionText()} for reference: original declaration of '#{.name}'"
        return _concatAny(4,(any_arr){(CALL0(positionText_,this)), any_str(" for reference: original declaration of '"), PROP(name_,this), any_str("'")});
+    return undefined;
     }
 
 
@@ -377,6 +386,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // logger.error "#{.positionText()} #{.info()} #{msg}"
        logger_error(undefined,1,(any_arr){_concatAny(5,(any_arr){(CALL0(positionText_,this)), any_str(" "), (CALL0(info_,this)), any_str(" "), msg})});
+    return undefined;
     }
 
     // helper method warn(msg)
@@ -388,6 +398,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // logger.warning "#{.positionText()} #{.info()} #{msg}"
        logger_warning(undefined,1,(any_arr){_concatAny(5,(any_arr){(CALL0(positionText_,this)), any_str(" "), (CALL0(info_,this)), any_str(" "), msg})});
+    return undefined;
     }
 
     // helper method caseMismatch(text, actualNode:ASTBase)
@@ -414,6 +425,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
            // return true
            return true;
        };
+    return undefined;
     }
 
     // helper method addMember(nameDecl:Declaration, options:NameDeclOptions, nodeDeclared) returns Declaration
@@ -502,6 +514,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 
        // return nameDecl
        return nameDecl;
+    return undefined;
     }
 
 
@@ -512,6 +525,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         // #note: parent may point to a different node than the original declaration, if makePointTo() was used
        // return .name
        return PROP(name_,this);
+    return undefined;
     }
 
     // helper method composedName()
@@ -527,6 +541,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
        };
        // return name
        return name;
+    return undefined;
     }
 
     // helper method info()
@@ -567,6 +582,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 
        // return "'#{.composedName()}:#{type}'"
        return _concatAny(5,(any_arr){any_str("'"), (CALL0(composedName_,this)), any_str(":"), type, any_str("'")});
+    return undefined;
     }
    // Names_NameDeclOptions
    
@@ -597,6 +613,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
        // return text
        return text;
      };
+   return undefined;
    }
 
    // helper function normalizeToLower(text:string) returns string
@@ -613,6 +630,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 
      // return fixSpecialNames(text.toLowerCase())
      return Names_fixSpecialNames(undefined,1,(any_arr){CALL0(toLowerCase_,text)});
+   return undefined;
    }
 
    // helper function normalizeKeepFirst(text:string) returns String
@@ -624,8 +642,9 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 // By keeping 1st char untouched, we allow "token" and "Token" to co-exists in the same scope.
 // 'token', by name affinity, will default to type:'Token'
 
-     // return fixSpecialNames(text.slice(0,1)+text.slice(1).toLowerCase())
-     return Names_fixSpecialNames(undefined,1,(any_arr){any_number(_anyToNumber(CALL2(slice_,text,any_number(0), any_number(1))) + _anyToNumber(CALL0(toLowerCase_,CALL1(slice_,text,any_number(1)))))});
+     // return fixSpecialNames( "#{text.slice(0,1)}#{text.slice(1).toLowerCase()}" )
+     return Names_fixSpecialNames(undefined,1,(any_arr){_concatAny(2,(any_arr){(CALL2(slice_,text,any_number(0), any_number(1))), (CALL0(toLowerCase_,CALL1(slice_,text,any_number(1))))})});
+   return undefined;
    }
 
    // helper function isCapitalized(text:string) returns boolean
@@ -641,17 +660,18 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 
      // return false
      return false;
+   return undefined;
    }
 
 //-------------------------
 void Names__moduleInit(void){
 Names_allNameDeclarations = _newArray(0,NULL);
-       Names_Declaration =_newClass("Names_Declaration", Names_Declaration__init, sizeof(struct Names_Declaration_s), Object.value.class);
+       Names_Declaration =_newClass("Names_Declaration", Names_Declaration__init, sizeof(struct Names_Declaration_s), Object.value.classINFOptr);
    
-       _declareMethods(Names_Declaration.value.class, Names_Declaration_METHODS);
-       _declareProps(Names_Declaration.value.class, Names_Declaration_PROPS, sizeof Names_Declaration_PROPS);
-       Names_NameDeclOptions =_newClass("Names_NameDeclOptions", Names_NameDeclOptions__init, sizeof(struct Names_NameDeclOptions_s), Object.value.class);
+       _declareMethods(Names_Declaration, Names_Declaration_METHODS);
+       _declareProps(Names_Declaration, Names_Declaration_PROPS, sizeof Names_Declaration_PROPS);
+       Names_NameDeclOptions =_newClass("Names_NameDeclOptions", Names_NameDeclOptions__init, sizeof(struct Names_NameDeclOptions_s), Object.value.classINFOptr);
    
-       _declareMethods(Names_NameDeclOptions.value.class, Names_NameDeclOptions_METHODS);
-       _declareProps(Names_NameDeclOptions.value.class, Names_NameDeclOptions_PROPS, sizeof Names_NameDeclOptions_PROPS);
+       _declareMethods(Names_NameDeclOptions, Names_NameDeclOptions_METHODS);
+       _declareProps(Names_NameDeclOptions, Names_NameDeclOptions_PROPS, sizeof Names_NameDeclOptions_PROPS);
 };

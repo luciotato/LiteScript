@@ -9,6 +9,7 @@ extern void Environment__moduleInit(void);
 
 //--------------
    // Environment_FileInfo
+   
    extern any Environment_FileInfo; //Class Object
    
    typedef struct Environment_FileInfo_s * Environment_FileInfo_ptr;
@@ -54,6 +55,7 @@ extern any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS);
 
 //--------------
    // Environment_ImportParameterInfo
+   
    extern any Environment_ImportParameterInfo; //Class Object
    
    typedef struct Environment_ImportParameterInfo_s * Environment_ImportParameterInfo_ptr;

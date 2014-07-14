@@ -73,8 +73,8 @@ var GeneralOptions_DEFAULT_TARGET;
 //-------------------------
 void GeneralOptions__moduleInit(void){
 GeneralOptions_DEFAULT_TARGET = any_str("c");
-       GeneralOptions =_newClass("GeneralOptions", GeneralOptions__init, sizeof(struct GeneralOptions_s), Object.value.class);
+       GeneralOptions =_newClass("GeneralOptions", GeneralOptions__init, sizeof(struct GeneralOptions_s), Object.value.classINFOptr);
    
-       _declareMethods(GeneralOptions.value.class, GeneralOptions_METHODS);
-       _declareProps(GeneralOptions.value.class, GeneralOptions_PROPS, sizeof GeneralOptions_PROPS);
+       _declareMethods(GeneralOptions, GeneralOptions_METHODS);
+       _declareProps(GeneralOptions, GeneralOptions_PROPS, sizeof GeneralOptions_PROPS);
 };
