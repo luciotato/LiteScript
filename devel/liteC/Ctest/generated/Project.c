@@ -33,9 +33,11 @@
     , recurseLevel_
     };
    
-   // Project
    
-   any Project; //Class Object
+
+//--------------
+   // Project
+   any Project; //Class Project
 
 // A **Project** object acts as the rootModule for a complex AST spanning several related **Modules**
 
@@ -220,6 +222,8 @@
 
        // logger.info "\nProducing #{.options.target} at #{.options.outDir}\n"
        logger_info(undefined,1,(any_arr){_concatAny(5,(any_arr){any_str("\nProducing "), PROP(target_,PROP(options_,this)), any_str(" at "), PROP(outDir_,PROP(options_,this)), any_str("\n")})});
+       // mkPath.create .options.outDir
+       mkPath_create(undefined,1,(any_arr){PROP(outDir_,PROP(options_,this))});
 
        // for each moduleNode:Grammar.Module in map .moduleCache
        any _list6=PROP(moduleCache_,this);
@@ -527,7 +531,7 @@
 // 2. each VariableDecl, from ImportStatements
 
        // moduleNode.requireCallNodes=[]
-       PROP(requireCallNodes_,moduleNode) = _newArray(0,NULL);
+       PROP(requireCallNodes_,moduleNode) = new(Array,0,NULL);
 
        // return moduleNode
        return moduleNode;
@@ -626,25 +630,16 @@
                    // importInfo.globalImport = node.parent.global
                    PROP(globalImport_,importInfo) = PROP(global_,PROP(parent_,node));
                };
-           }
+           };
 
 // else, If the origin is a require() call
-           
-           else if (_instanceof(node,Grammar_VariableRef))  {// #require() call
-                // declare node:Grammar.VariableRef
-               // if node.accessors and node.accessors[0] instanceof Grammar.FunctionAccess
-               if (_anyToBool(PROP(accessors_,node)) && _instanceof(ITEM(0,PROP(accessors_,node)),Grammar_FunctionAccess))  {
-                   // var requireCall:Grammar.FunctionAccess = node.accessors[0]
-                   var requireCall = ITEM(0,PROP(accessors_,node));
-                   // if requireCall.args[0].expression.root.name instanceof Grammar.StringLiteral
-                   if (_instanceof(PROP(name_,PROP(root_,PROP(expression_,ITEM(0,PROP(args_,requireCall))))),Grammar_StringLiteral))  {
-                       // var stringLiteral = requireCall.args[0].expression.root.name
-                       var stringLiteral = PROP(name_,PROP(root_,PROP(expression_,ITEM(0,PROP(args_,requireCall)))));
-                       // importInfo.name = stringLiteral.getValue()
-                       PROP(name_,importInfo) = CALL0(getValue_,stringLiteral);
-                   };
-               };
-           };
+//             else if node instance of Grammar.VariableRef #require() call
+//                 declare node:Grammar.VariableRef
+//                 if node.accessors and node.accessors[0] instanceof Grammar.FunctionAccess
+//                     var requireCall:Grammar.FunctionAccess = node.accessors[0]
+//                     if requireCall.args[0].expression.root.name instanceof Grammar.StringLiteral
+//                         var stringLiteral = requireCall.args[0].expression.root.name
+//                         importInfo.name = stringLiteral.getValue()
 
 // if found a valid filename to import
 
@@ -935,9 +930,9 @@
     }
 
 
-   // append to class Grammar.VariableRef
-    // properties
-    ;
+// ### Append to class Grammar.VariableRef
+// #### Properties
+//         importedModule: Grammar.Module
 
    // append to class Grammar.ImportStatementItem
     // properties
@@ -947,8 +942,8 @@
 //-------------------------
 void Project__moduleInit(void){
        Project =_newClass("Project", Project__init, sizeof(struct Project_s), Object.value.classINFOptr);
-   
        _declareMethods(Project, Project_METHODS);
        _declareProps(Project, Project_PROPS, sizeof Project_PROPS);
+   
    
 };

@@ -11,7 +11,7 @@ compile LiteScript code.
         ASTBase, Grammar, Parser
         Names, Validate
         ControlledError, GeneralOptions
-        logger, color, Strings
+        logger, color, Strings, mkPath
 
     shim import Map
 
@@ -163,6 +163,7 @@ Validate
 Produce, for each module
 
         logger.info "\nProducing #{.options.target} at #{.options.outDir}\n"
+        mkPath.create .options.outDir
 
         for each moduleNode:Grammar.Module in map .moduleCache
 
@@ -399,6 +400,7 @@ if it was 'global import, inform, els search will be local '.','./lib' and '../l
                 else if node.parent instanceof Grammar.ImportStatement 
                     importInfo.globalImport = node.parent.global 
 
+/*
 else, If the origin is a require() call
 
             else if node instance of Grammar.VariableRef #require() call
@@ -408,6 +410,7 @@ else, If the origin is a require() call
                     if requireCall.args[0].expression.root.name instanceof Grammar.StringLiteral
                         var stringLiteral = requireCall.args[0].expression.root.name
                         importInfo.name = stringLiteral.getValue()
+*/
 
 if found a valid filename to import
 
@@ -579,9 +582,10 @@ rootModule.compilerVars.members.set(name,value)
         return .lexer.outCode.getResult().join('\n')
 
 
-### Append to class Grammar.VariableRef
+/*### Append to class Grammar.VariableRef
 #### Properties
         importedModule: Grammar.Module
+*/
 
 ### Append to class Grammar.ImportStatementItem
 #### Properties

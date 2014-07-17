@@ -2,7 +2,7 @@
 
    // class GeneralOptions
    // constructor
-   function GeneralOptions(){
+   function GeneralOptions(){ // default constructor
       // properties
             // verboseLevel = 1
             // warningLevel = 1

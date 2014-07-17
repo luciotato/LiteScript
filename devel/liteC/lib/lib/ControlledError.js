@@ -2,10 +2,10 @@
 
    // class ControlledError extends Error
    // constructor
-       function ControlledError(msg){
+   function ControlledError(msg){// default constructor: call super.constructor
+       Error.prototype.constructor.apply(this,arguments)
         // properties
             // soft: boolean
-            // code:string
             // declare valid Error.apply
            this.__proto__.__proto__ = Error.apply(null, Array.prototype.slice.call(arguments));
        };

@@ -112,7 +112,7 @@ Load filename and source code in the lexer.
 First, remember filename (for error reporting) 
 
           .filename = filename
-          .interfaceMode = filename.endsWith('interface.md')
+          .interfaceMode = filename.indexOf('.interface.') isnt -1
 
 create source lines array
 

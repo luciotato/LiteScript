@@ -247,6 +247,6 @@ any Compiler_getMessages(DEFAULT_ARGUMENTS); //forward declare
 
 //-------------------------
 void Compiler__moduleInit(void){
-Compiler_version = any_str("0.8.1");
-Compiler_buildDate = any_str("20140618");
+    Compiler_version = any_str("0.8.1");
+    Compiler_buildDate = any_str("20140618");
 };

@@ -677,7 +677,7 @@ followed by a boolean-Expression
 
 ### export class LoopControlStatement extends ASTBase
       
-`LoopControlStatement: (break|continue)`
+`LoopControlStatement: (break|continue) [loop]`
 
 This handles the `break` and `continue` keywords.
 'continue' jumps to the start of the loop (as C & Js: 'continue')
@@ -686,7 +686,7 @@ This handles the `break` and `continue` keywords.
 
       method parse()
         .control = .req('break','continue')
-
+        .opt 'loop'
 
 ### export class DoNothingStatement extends ASTBase
 

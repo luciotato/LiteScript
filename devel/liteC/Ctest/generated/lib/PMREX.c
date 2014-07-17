@@ -22,7 +22,7 @@ any PMREX_findMatchingQuote(DEFAULT_ARGUMENTS); //forward declare
        }
        //---------
        // var ranges = []
-       var ranges = _newArray(0,NULL);
+       var ranges = new(Array,0,NULL);
 
         //parse ranges in array [[from,to],[from,to]...]
        // var ch:string, range:array
@@ -34,7 +34,7 @@ any PMREX_findMatchingQuote(DEFAULT_ARGUMENTS); //forward declare
            // ch = rangesStr.charAt(inx)
            ch = CALL1(charAt_,rangesStr,inx);
            // range=[ch]
-           range = _newArray(1,(any_arr){ch});
+           range = new(Array,1,(any_arr){ch});
            // if rangesStr.charAt(inx+1) is '-'
            if (__is(CALL1(charAt_,rangesStr,any_number(_anyToNumber(inx) + 1)),any_str("-")))  {
                // inx++

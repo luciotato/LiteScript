@@ -22,7 +22,7 @@
     int64_t utf8indexFromPtr(str s, str ptr)
     {
         assert(ptr>=s);
-        size_t inx = -1;
+        int64_t inx = -1;
         for (; *s && s<=ptr; ++s) if isChar(*s) ++inx;
         return inx;
     }
@@ -36,7 +36,7 @@
             if (index<0){  // negative, from end
                 size_t len=strlen(s);
                 if (!len) return s;
-                str last=s+len-1; //point to last byte
+                str last = s+len-1; //point to last byte
                 for (; last>=s; --last) {
                     if isChar(*last) {
                         if (++index==0) break;
@@ -66,7 +66,7 @@
     }
 
     int64_t utf8lastIndexOf(str source, str searched, int64_t fromIndex) {
-        size_t index,lastIndex=-1;
+        int64_t index, lastIndex=-1;
         while (index=utf8indexOf(source,searched,index) !=-1) lastIndex=index, index++;
         return lastIndex;
     }
@@ -77,7 +77,7 @@
     {
         str start_ptr = utf8index(s, start);
         str end_ptr = utf8index(s, end);
-        if (end_ptr<start_ptr) return EMPTY_STR;
+        if (end_ptr<=start_ptr) return EMPTY_STR;
         size_t byteLen;
         char * result = (char*)mem_alloc((byteLen=end_ptr-start_ptr)+1);
         memcpy(result,start_ptr,byteLen);
@@ -85,8 +85,8 @@
         return result;
     }
 
-    str _byteslice(str src, int start, int end){
-        int len=strlen(src);
+    str _byteslice(str src, int64_t start, int64_t end){
+        int64_t len=strlen(src);
         if (start<0) {
             if(start+=len < 0) return EMPTY_STR;
         }
@@ -100,7 +100,7 @@
             end=len;
         }
 
-        int newLen;
+        int64_t newLen;
         if (newLen=end-start <=0) return EMPTY_STR;
 
         str result=mem_alloc(newLen+1);

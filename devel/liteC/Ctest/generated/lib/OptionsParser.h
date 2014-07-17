@@ -9,15 +9,13 @@ extern void OptionsParser__moduleInit(void);
 
 //--------------
    // OptionsParser
-   
-   extern any OptionsParser; //Class Object
-   
+   any OptionsParser; //Class OptionsParser
    typedef struct OptionsParser_s * OptionsParser_ptr;
    typedef struct OptionsParser_s {
-       any
-           lastIndex,
-           items
-   ;
+       //OptionsParser
+       any lastIndex;
+       any items;
+   
    } OptionsParser_s;
    
    extern void OptionsParser__init(DEFAULT_ARGUMENTS);

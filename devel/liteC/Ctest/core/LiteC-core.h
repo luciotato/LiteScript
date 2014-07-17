@@ -12,6 +12,10 @@
 
 #include <unistd.h> // process.cwd
 
+    extern any* watchedPropAddr;
+
+    extern any any_EMPTY_STR;
+
     // LiteC_init
     extern void LiteC_init(int argc, char** CharPtrPtrargv);
     extern void LiteC_addMethodSymbols(int addedMethods, str* _verb_table);
@@ -28,8 +32,14 @@
     extern int _getSymbol(str name);
     extern any _getProperty(any this, int symbol );
     extern any _getPropertyName(any this, int index);
-    // callable from ls:
+
+    //function LiteCore_getSymbol(symbolName:string) returns number
+    // get symbol (number) from Symbol name (string)
     extern any LiteCore_getSymbol(DEFAULT_ARGUMENTS);
+
+    //function LiteCore_getSymbolName(symbol:number) returns string
+    // get symbol name from Symbol (number)
+    extern any LiteCore_getSymbolName(DEFAULT_ARGUMENTS);
 
     // typedef for class's Jjmp table, and prop instance relative position table
     typedef function_ptr* _jmpTable; // _jmpTable: array of function pointers (method code)
@@ -122,18 +132,20 @@
     extern any Array_tryGet(DEFAULT_ARGUMENTS);
 
     #ifndef NDEBUG
+        #include <signal.h>
+        extern void debug_fail(str file, int line, str message);
         // access a method on the instance
         #define METHOD(symbol,this) __method(symbol,this)
         extern function_ptr __method(int symbol, any this);
         // access a property of the instance
-        #define PROP(prop,this) (*(__prop(prop,this)))
-        extern any* __prop(int prop, any this);
+        #define PROP(prop,this) (*(__prop(prop,this,__FILE__, __LINE__)))
+        extern any* __prop(int prop, any this, str file, int line);
         // access arr[index]. Access item[index]
-        #define ITEM(index,this) (*(__item(index,this)))
-        extern any* __item(int64_t index, any this);
+        #define ITEM(index,this) (*(__item(index,this,__FILE__, __LINE__)))
+        extern any* __item(int64_t index, any this, str file, int line);
         // access this.arr[index]. Access item[index] of a given property (type Array)
         #define ITEM_PROP(index,prop,this) (*(__item(index,prop,this)))
-        extern any* __item2(int index, int prop, any this);
+        extern any* __item2(int index, int prop, any this, str file, int line);
     #else
         #define METHOD(symbol,this) this.class->method[-symbol]
         #define PROP(symbol,this) this.value.prop[this.class->pos[symbol]]
@@ -174,7 +186,7 @@
         any     name;         // class name
         any     initInstance; // :Function, __init function
         //private-native
-        size_t       instanceSize; // size de la struct que crea
+        size_t       instanceSize; // sizeof struct holding instance props
         Class_ptr    super;        // super class
         _jmpTable    method;       // jmp table for the class
         _posTable    pos;        // relative property pos table for the class's instances
@@ -202,8 +214,6 @@
 // core instances -------------------
     //extern any global;
     extern any null, undefined, true, false;
-
-    #define any_EMPTY_STR ((any){&String_CLASSINFO,EMPTY_STR})
 
     #define any_str(S) (any){&String_CLASSINFO,.value.str=S} // Note: "" is NOT FALSEY. (add: .value.str=(S[0]=='\0'?NULL:S))
     //extern any any_number(double S);
@@ -299,10 +309,11 @@
     extern any _newArrayFromCharPtrPtr(len_t argc, char** argv);
     extern any Array_clone(any this, len_t argc, any* arguments);
 
-    extern len_t _length(any this);
+    extern int64_t _length(any this);
     extern any _typeof(any this);
     extern bool _instanceof(any this, any class);
     extern bool __is(any a,any b);  //js triple-equal, "==="
+    extern bool __in(any needle, len_t haystackLength, any* haystackItem);
 
     extern any _newDate(time_t value);
 
@@ -401,7 +412,10 @@
     //namespace console
     extern any console_log(DEFAULT_ARGUMENTS);
     extern any console_error(DEFAULT_ARGUMENTS);
-    void print(len_t argc, any* arguments); //shortcut for console_log
+    extern void print(len_t argc, any* arguments); //shortcut for console_log
+    extern any console_group(DEFAULT_ARGUMENTS);
+    extern any console_groupEnd(DEFAULT_ARGUMENTS);
+    extern any console_debugEnabled;
 
     //namespace process
     extern any process_argv; // namespace process - node.js compat with core object process

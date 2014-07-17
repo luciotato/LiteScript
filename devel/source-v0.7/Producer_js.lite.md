@@ -908,6 +908,30 @@ else, optional pre-condition:
 This is a very simple produce() to allow us to use the `break` and `continue` keywords.
   
       method produce() 
+
+validate usage inside a for/while
+
+        var nodeASTBase = this.parent
+        do
+
+            if .control is 'break' and nodeASTBase is instanceof Grammar.SwitchCase
+                .sayErr 'cannot use "break" from inside a "switch" statement for "historic" reasons'
+
+            else if nodeASTBase is instanceof Grammar.FunctionDeclaration
+                //if we reach function header
+                .sayErr '"{.control}" outside a for|while|do loop'
+                break
+
+            else if nodeASTBase is instanceof Grammar.ForStatement
+                or nodeASTBase is instanceof Grammar.DoLoop
+                    break //ok, break/continue used inside a loop
+
+            end if
+
+            nodeASTBase = nodeASTBase.parent
+
+        loop
+
         .out .control
 
 ### Append to class Grammar.DoNothingStatement ###
@@ -960,7 +984,7 @@ A `FreeObjectLiteral` is an object definition using key/value pairs, but in free
 `export` prefix causes the function to be included in `module.exports`
 `generator` prefix marks a 'generator' function that can be paused by `yield` (js/ES6 function*)
 
-     method produce(theProperties:array, prefix:array)
+     method produce(prefix:array)
 
 Generators are implemented in ES6 with the "function*" keyword (note the asterisk)
 
@@ -968,15 +992,7 @@ Generators are implemented in ES6 with the "function*" keyword (note the asteris
 
       var isConstructor = this instance of Grammar.ConstructorDeclaration
 
-check if this is a 'constructor', 'method' or 'function'
-
-      if isConstructor
-          # class constructor: JS's function-class-object-constructor
-          .out "function ",.getParent(Grammar.ClassDeclaration).name
-
-else, method?
-
-      else if this instance of Grammar.MethodDeclaration
+      if this instance of Grammar.MethodDeclaration
 
           #get owner where this method belongs to
           if no prefix
@@ -993,7 +1009,7 @@ else, method?
           else
               .out prefix,.name," = function",generatorMark
 
-else is a simple function
+else, it is a simple function
 
       else 
           .out "function ",.name, generatorMark
@@ -1013,11 +1029,34 @@ Produce function parameters declaration
        
       .out "(", {CSL:.paramsDeclarations}, "){", .getEOLComment()
 
+now produce function body
+
+      .produceBody
+
+if we were coding .definePropItems , close Object.defineProperty
+
+      if .definePropItems 
+          for each definePropItem in .definePropItems 
+            .out NL,",",definePropItem.name,":", definePropItem.negated? 'false':'true'
+          end for
+          .out NL,"})"
+
+If the function was adjectivated 'export', add to module.exports
+
+      if not .lexer.out.browser
+        if .export and not .default
+          .out ";",NL,{COMMENT:'export'},NL
+          .out .lexer.out.exportNamespace,'.',.name,'=',.name,";"
+          .skipSemiColon = true
+
+
+#### method produceBody()
+
 if the function has a exception block, insert 'try{'
 
       if no .body, .throwError 'function #{.name} has no body'
 
-if simple-function, insert implicit return. Example: function square(x) = x*x
+if one-line-function, code now: Example: function square(x) = x*x
 
       if .body instance of Grammar.Expression
           .out "return ", .body
@@ -1041,38 +1080,15 @@ if params defaults where included, we assign default values to arguments
               #end for
           #end if
 
-if class properties have default values...
-
-          if theProperties
-              for each propDecl in theProperties
-                propDecl.produce('this.') //property assignments
-
-now produce function body
-
           .body.produce()
 
-close the function, add source map for function default "return undefined".
+      end if one-line-function
+
+close the function, add source map for function default "return undefined" execution point
 
       .out "}"
       if .lexer.out.sourceMap
           .lexer.out.sourceMap.add ( .EndFnLineNum, 0, .lexer.out.lineNum-1, 0)
-
-if we were coding .definePropItems , close Object.defineProperty
-
-      if .definePropItems 
-          for each definePropItem in .definePropItems 
-            .out NL,",",definePropItem.name,":", definePropItem.negated? 'false':'true'
-          end for
-          .out NL,"})"
-
-If the function was adjectivated 'export', add to module.exports
-
-      if not .lexer.out.browser
-        if .export and not .default
-          .out ";",NL,{COMMENT:'export'},NL
-          .out .lexer.out.exportNamespace,'.',.name,'=',.name,";"
-          .skipSemiColon = true
-
 
 --------------------
 ### Append to class Grammar.PrintStatement ###
@@ -1167,32 +1183,44 @@ we need to get the class constructor, and separate other class items.
 
         var prefix = .getOwnerPrefix()
 
-        if theConstructor
-          theConstructor.produce theProperties, prefix
-          .out ";",NL
-        
+js: function-constructor-class-namespace-object (All-in-one)
+
+        .out "function ",.name
+
+        if theConstructor //there was a constructor body, add specified params
+            .out "(", {CSL:theConstructor.paramsDeclarations}, "){", .getEOLComment()
         else
-          #out a default "constructor"
-          .out "function ",.name,"(){"
-          if .varRefSuper
-              .out {COMMENT:["default constructor: call super.constructor"]}
-              .out NL,"    ",.varRefSuper,".prototype.constructor.apply(this,arguments)",NL
-          for each propDecl in theProperties
-              propDecl.produce('this.') //property assignments
-          .out "};",NL
+            .out "(){ // default constructor",NL
 
-          if prefix and prefix.length > 0
-              .out prefix,.name,"=",.name,";",NL //set fn as method of owner
+call super-class __init
 
-        #end if
+        if .varRefSuper
+            .out {COMMENT:["default constructor: call super.constructor"]}
+            .out NL,"    ",.varRefSuper,".prototype.constructor.apply(this,arguments)",NL
 
-Set parent class if we have one indicated
+initialize own properties
+
+        for each propDecl in theProperties
+            propDecl.produce('this.') //property assignments
+        
+        if theConstructor //there was a body
+            theConstructor.produceBody
+            .out ";",NL
+        else
+            .out "};",NL
+
+if the class is inside a namespace...
+
+        if prefix and prefix.length 
+            .out prefix,.name,"=",.name,";",NL //set declared fn-Class as method of owner-namespace
+
+Set super-class if we have one indicated
 
         if .varRefSuper
           .out {COMMENT:[.name,' (extends|proto is) ',.varRefSuper,NL]}
           .out .name,'.prototype.__proto__ = ', .varRefSuper,'.prototype;',NL 
 
-now out methods, which means create properties in the object-function-class prototype
+now out methods, meaning: create properties in the object-function-class prototype
 
         for each itemMethodDeclaration in theMethods
             itemMethodDeclaration.produce undefined, prefix

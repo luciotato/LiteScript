@@ -156,9 +156,11 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
     , toHeader_
     };
    
-   // Parser_Lexer
    
-   any Parser_Lexer; //Class Object
+
+//--------------
+   // Parser_Lexer
+   any Parser_Lexer; //Class Parser_Lexer
 
 // The Lexer class turns the input lines into an array of "infoLines"
 
@@ -196,7 +198,8 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
              _newPair("DATE",CALL0(toDateString_,PROP(now_,PROP(options_,this)))), 
              _newPair("TIME",CALL0(toTimeString_,PROP(now_,PROP(options_,this)))), 
              _newPair("TIMESTAMP",CALL0(toISOString_,PROP(now_,PROP(options_,this))))
-             });
+             })
+         ;
 
 // stringInterpolationChar starts for every file the same: "#"
 // can be changed in-file with `lexer options` directive
@@ -256,8 +259,8 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 
          // .filename = filename
          PROP(filename_,this) = filename;
-         // .interfaceMode = filename.endsWith('interface.md')
-         PROP(interfaceMode_,this) = CALL1(endsWith_,filename,any_str("interface.md"));
+         // .interfaceMode = filename.indexOf('.interface.') isnt -1
+         PROP(interfaceMode_,this) = any_number(!__is(CALL1(indexOf_,filename,any_str(".interface.")),any_number(-1)));
 
 // create source lines array
 
@@ -292,7 +295,7 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 // prepares a processed infoLines result array
 
        // var infoLines = []
-       var infoLines = _newArray(0,NULL);
+       var infoLines = new(Array,0,NULL);
 
 // Loop processing source code lines
 
@@ -481,7 +484,7 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
        if (_anyToBool(CALL0(trim_,CALL2(replaceAll_,ITEM(0,words),any_str("#"), any_str(" "))))) {return undefined;};
 
        // var sustantives = ["class","namespace","function","method","constructor","properties"];
-       var sustantives = _newArray(6,(any_arr){any_str("class"), any_str("namespace"), any_str("function"), any_str("method"), any_str("constructor"), any_str("properties")});
+       var sustantives = new(Array,6,(any_arr){any_str("class"), any_str("namespace"), any_str("function"), any_str("method"), any_str("constructor"), any_str("properties")});
 
        // var inx=1, countAdj=0, countSust=0, sustLeft=1
        var inx = any_number(1), countAdj = any_number(0), countSust = any_number(0), sustLeft = any_number(1);
@@ -493,7 +496,7 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
            if (_anyToBool(ITEM(_anyToNumber(inx),words)))  { //skip empty items
 
                // if words[inx].toLowerCase() in ["public","export","default","helper"]
-               if (CALL1(indexOf_,_newArray(4,(any_arr){any_str("public"), any_str("export"), any_str("default"), any_str("helper")}),CALL0(toLowerCase_,ITEM(_anyToNumber(inx),words))).value.number>=0)  {
+               if (__in(CALL0(toLowerCase_,ITEM(_anyToNumber(inx),words)),4,(any_arr){any_str("public"), any_str("export"), any_str("default"), any_str("helper")}))  {
                    // countAdj++ //valid
                    countAdj.value.number++; //valid
                }
@@ -594,9 +597,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
        logger_debug(undefined,1,(any_arr){any_str("---- TOKENIZE")});
 
        // for each item in .infoLines
-       any _list15=PROP(infoLines_,this);
+       any _list13=PROP(infoLines_,this);
        { var item=undefined;
-       for(int item__inx=0 ; item__inx<_list15.value.arr->length ; item__inx++){item=ITEM(item__inx,_list15);
+       for(int item__inx=0 ; item__inx<_list13.value.arr->length ; item__inx++){item=ITEM(item__inx,_list13);
 
            // try
            try{
@@ -658,13 +661,13 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 // Here we search for simple macros as __DATE__, __TIME__ , __TMESTAMP__
 
        // for each macro,value in map preprocessor_replaces
-       any _list16=Parser_preprocessor_replaces;
+       any _list14=Parser_preprocessor_replaces;
        { NameValuePair_ptr _nvp3=NULL; //name:value pair
             var macro=undefined; //key
         var value=undefined; //value
-       for(int64_t value__inx=0 ; value__inx<_list16.value.arr->length ; value__inx++){
-           assert(ITEM(value__inx,_list16).class==&NameValuePair_CLASSINFO);
-       _nvp3 = ITEM(value__inx,_list16).value.ptr;
+       for(int64_t value__inx=0 ; value__inx<_list14.value.arr->length ; value__inx++){
+           assert(ITEM(value__inx,_list14).class==&NameValuePair_CLASSINFO);
+       _nvp3 = ITEM(value__inx,_list14).value.ptr;
            macro=_nvp3->name;
            value=_nvp3->value;
            // line=line.replaceAll("__#{macro}__",value)
@@ -789,9 +792,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
          // var indent = 999
          var indent = any_number(999);
          // for each sectionLine1 in result.section
-         any _list17=PROP(section_,result);
+         any _list15=PROP(section_,result);
          { var sectionLine1=undefined;
-         for(int sectionLine1__inx=0 ; sectionLine1__inx<_list17.value.arr->length ; sectionLine1__inx++){sectionLine1=ITEM(sectionLine1__inx,_list17);
+         for(int sectionLine1__inx=0 ; sectionLine1__inx<_list15.value.arr->length ; sectionLine1__inx++){sectionLine1=ITEM(sectionLine1__inx,_list15);
            // var lineIndent=sectionLine1.countSpaces()
            var lineIndent = CALL0(countSpaces_,sectionLine1);
            // if lineIndent>=0 and lineIndent<indent
@@ -803,9 +806,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 
           // #trim indent on the left and extra right spaces
          // for each inx,sectionLine in result.section
-         any _list18=PROP(section_,result);
+         any _list16=PROP(section_,result);
          { var sectionLine=undefined;
-         for(int inx=0 ; inx<_list18.value.arr->length ; inx++){sectionLine=ITEM(inx,_list18);
+         for(int inx=0 ; inx<_list16.value.arr->length ; inx++){sectionLine=ITEM(inx,_list16);
            // result.section[inx] = sectionLine.slice(indent).trimRight()
            ITEM(inx,PROP(section_,result)) = CALL0(trimRight_,CALL1(slice_,sectionLine,indent));
          }};// end for each in PROP(section_,result)
@@ -819,9 +822,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
          // var parsed = .splitExpressions(line,.stringInterpolationChar)
          var parsed = CALL2(splitExpressions_,this,line, PROP(stringInterpolationChar_,this));
          // for each inx,item:string in parsed
-         any _list19=parsed;
+         any _list17=parsed;
          { var item=undefined;
-         for(int inx=0 ; inx<_list19.value.arr->length ; inx++){item=ITEM(inx,_list19);
+         for(int inx=0 ; inx<_list17.value.arr->length ; inx++){item=ITEM(inx,_list17);
              // if item.charAt(0) is '"' //a string part
              if (__is(CALL1(charAt_,item,any_number(0)),any_str("\"")))  { //a string part
                  // item = item.slice(1,-1) //remove quotes
@@ -896,9 +899,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
          };
 
          // for each inx,sectionLine in result.section
-         any _list20=PROP(section_,result);
+         any _list18=PROP(section_,result);
          { var sectionLine=undefined;
-         for(int inx=0 ; inx<_list20.value.arr->length ; inx++){sectionLine=ITEM(inx,_list20);
+         for(int inx=0 ; inx<_list18.value.arr->length ; inx++){sectionLine=ITEM(inx,_list18);
              // infoLines.push(new InfoLine(this, LineTypes.COMMENT, 0, sectionLine, startSourceLine+inx))
              CALL1(push_,infoLines,new(Parser_InfoLine,5,(any_arr){this, Parser_LineTypes_COMMENT, any_number(0), sectionLine, any_number(_anyToNumber(startSourceLine) + inx)}));
          }};// end for each in PROP(section_,result)
@@ -1218,7 +1221,7 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                        // .token = new Token('EOF')
                        PROP(token_,this) = new(Parser_Token,1,(any_arr){any_str("EOF")});
                        // .infoLine.tokens = [.token]
-                       PROP(tokens_,PROP(infoLine_,this)) = _newArray(1,(any_arr){PROP(token_,this)});
+                       PROP(tokens_,PROP(infoLine_,this)) = new(Array,1,(any_arr){PROP(token_,this)});
                        // .indent = -1
                        PROP(indent_,this) = any_number(-1);
                        // return
@@ -1464,7 +1467,7 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 // split expressions
 
        // if no text then return []
-       if (!_anyToBool(text)) {return _newArray(0,NULL);};
+       if (!_anyToBool(text)) {return new(Array,0,NULL);};
 
         //get quotes
        // var quotes = text.charAt(0)
@@ -1478,7 +1481,7 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
        // var delimiterPos, closerPos, itemPos, item:string;
        var delimiterPos = undefined, closerPos = undefined, itemPos = undefined, item = undefined;
        // var items=[];
-       var items = _newArray(0,NULL);
+       var items = new(Array,0,NULL);
 
         //clear start and end quotes
        // var s:string = text.slice(1,-1)
@@ -1535,9 +1538,11 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
        return items;
     return undefined;
     }
-   // Parser_Token
    
-   any Parser_Token; //Class Object
+
+//--------------
+   // Parser_Token
+   any Parser_Token; //Class Parser_Token
 
        // properties
        ;
@@ -1570,9 +1575,11 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
            return _concatAny(5,(any_arr){any_str("'"), PROP(value_,this), any_str("'("), PROP(type_,this), any_str(")")});
        return undefined;
        }
-   // Parser_InfoLine
    
-   any Parser_InfoLine; //Class Object
+
+//--------------
+   // Parser_InfoLine
+   any Parser_InfoLine; //Class Parser_InfoLine
 
      // properties
      ;
@@ -1662,9 +1669,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
        var code = PROP(text_,this);
 
        // var words=[]
-       var words = _newArray(0,NULL);
+       var words = new(Array,0,NULL);
        // var result=[]
-       var result = _newArray(0,NULL);
+       var result = new(Array,0,NULL);
        // var colInx = 0
        var colInx = any_number(0);
 
@@ -1825,7 +1832,7 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                // if words.tryGet(5) into ch is 'is' then ch = words.tryGet(6) #get it (skip optional 'is')
                if (__is((ch=CALL1(tryGet_,words,any_number(5))),any_str("is"))) {ch = CALL1(tryGet_,words,any_number(6));};
                // if ch.charAt(0) in ['"',"'"], ch = ch.slice(1,-1) #optionally quoted, remove quotes
-               if (CALL1(indexOf_,_newArray(2,(any_arr){any_str("\""), any_str("'")}),CALL1(charAt_,ch,any_number(0))).value.number>=0) {ch = CALL2(slice_,ch,any_number(1), any_number(-1));};
+               if (__in(CALL1(charAt_,ch,any_number(0)),2,(any_arr){any_str("\""), any_str("'")})) {ch = CALL2(slice_,ch,any_number(1), any_number(-1));};
                // if no ch then fail with "missing string interpolation char"  #check
                if (!_anyToBool(ch)) {throw(new(Error,1,(any_arr){any_str("missing string interpolation char")}));;};
                // lexer.stringInterpolationChar = ch
@@ -1898,7 +1905,7 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                return new(Parser_Token,2,(any_arr){any_str("PUNCT"), CALL2(slice_,chunk,any_number(0), any_number(1))});
            };
            // if chunk.slice(0,2) in ["++","--","->"]
-           if (CALL1(indexOf_,_newArray(3,(any_arr){any_str("++"), any_str("--"), any_str("->")}),CALL2(slice_,chunk,any_number(0), any_number(2))).value.number>=0)  {
+           if (__in(CALL2(slice_,chunk,any_number(0), any_number(2)),3,(any_arr){any_str("++"), any_str("--"), any_str("->")}))  {
                // return new Token('PUNCT',chunk.slice(0,2))
                return new(Parser_Token,2,(any_arr){any_str("PUNCT"), CALL2(slice_,chunk,any_number(0), any_number(2))});
            };
@@ -2047,9 +2054,11 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
            };
      return undefined;
      }
-   // Parser_LexerPos
    
-   any Parser_LexerPos; //Class Object
+
+//--------------
+   // Parser_LexerPos
+   any Parser_LexerPos; //Class Parser_LexerPos
 
      // properties
      ;
@@ -2083,9 +2092,11 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
        return _concatAny(5,(any_arr){PROP(filename_,PROP(lexer_,this)), any_str(":"), PROP(sourceLineNum_,this), any_str(":"), (any_number((_anyToNumber(__or(PROP(column_,PROP(token_,this)),any_number(0)))) + 1))});
      return undefined;
      }
-   // Parser_MultilineSection
    
-   any Parser_MultilineSection; //Class Object
+
+//--------------
+   // Parser_MultilineSection
+   any Parser_MultilineSection; //Class Parser_MultilineSection
 // This is a helper class the to get a section of text between start and end codes
 
      // properties
@@ -2128,7 +2139,7 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
        logger_debug(undefined,2,(any_arr){any_str("**** START MULTILINE "), startCode});
 
        // this.section = []
-       PROP(section_,this) = _newArray(0,NULL);
+       PROP(section_,this) = new(Array,0,NULL);
        // var startSourceLine = lexer.sourceLineNum
        var startSourceLine = PROP(sourceLineNum_,lexer);
 
@@ -2192,14 +2203,16 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
    
    //------------------
    void Parser_LineTypes__namespaceInit(void){
-       Parser_LineTypes_CODE = any_number(0);
-       Parser_LineTypes_COMMENT = any_number(1);
-       Parser_LineTypes_BLANK = any_number(2);
+           Parser_LineTypes_CODE = any_number(0);
+           Parser_LineTypes_COMMENT = any_number(1);
+           Parser_LineTypes_BLANK = any_number(2);
        // properties
        ;};
-   // Parser_OutCode
    
-   any Parser_OutCode; //Class Object
+
+//--------------
+   // Parser_OutCode
+   any Parser_OutCode; //Class Parser_OutCode
    //auto Parser_OutCode__init
    void Parser_OutCode__init(any this, len_t argc, any* arguments){
    };
@@ -2226,9 +2239,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
        // .column=1
        PROP(column_,this) = any_number(1);
        // .lines=[]
-       PROP(lines_,this) = _newArray(0,NULL);
+       PROP(lines_,this) = new(Array,0,NULL);
        // .hLines=[] //header file lines
-       PROP(hLines_,this) = _newArray(0,NULL); //header file lines
+       PROP(hLines_,this) = new(Array,0,NULL); //header file lines
 
        // .lastOriginalCodeComment = 0
        PROP(lastOriginalCodeComment_,this) = any_number(0);
@@ -2363,14 +2376,14 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
            // result = .hLines
            result = PROP(hLines_,this);
            // .hLines = []
-           PROP(hLines_,this) = _newArray(0,NULL);
+           PROP(hLines_,this) = new(Array,0,NULL);
        }
        
        else {
            // result = .lines
            result = PROP(lines_,this);
            // .lines = []
-           PROP(lines_,this) = _newArray(0,NULL);
+           PROP(lines_,this) = new(Array,0,NULL);
        };
 
        // .toHeader = false
@@ -2395,7 +2408,8 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
        return new(Map,2,(any_arr){
              _newPair("col",col), 
              _newPair("lin",any_number(_anyToNumber(PROP(lineNum_,this)) - 1))
-       });
+       })
+       ;
     return undefined;
     }
 
@@ -2443,28 +2457,28 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 //-------------------------
 void Parser__moduleInit(void){
        Parser_Lexer =_newClass("Parser_Lexer", Parser_Lexer__init, sizeof(struct Parser_Lexer_s), Object.value.classINFOptr);
-   
        _declareMethods(Parser_Lexer, Parser_Lexer_METHODS);
        _declareProps(Parser_Lexer, Parser_Lexer_PROPS, sizeof Parser_Lexer_PROPS);
-       Parser_Token =_newClass("Parser_Token", Parser_Token__init, sizeof(struct Parser_Token_s), Object.value.classINFOptr);
    
+       Parser_Token =_newClass("Parser_Token", Parser_Token__init, sizeof(struct Parser_Token_s), Object.value.classINFOptr);
        _declareMethods(Parser_Token, Parser_Token_METHODS);
        _declareProps(Parser_Token, Parser_Token_PROPS, sizeof Parser_Token_PROPS);
-       Parser_InfoLine =_newClass("Parser_InfoLine", Parser_InfoLine__init, sizeof(struct Parser_InfoLine_s), Object.value.classINFOptr);
    
+       Parser_InfoLine =_newClass("Parser_InfoLine", Parser_InfoLine__init, sizeof(struct Parser_InfoLine_s), Object.value.classINFOptr);
        _declareMethods(Parser_InfoLine, Parser_InfoLine_METHODS);
        _declareProps(Parser_InfoLine, Parser_InfoLine_PROPS, sizeof Parser_InfoLine_PROPS);
-       Parser_LexerPos =_newClass("Parser_LexerPos", Parser_LexerPos__init, sizeof(struct Parser_LexerPos_s), Object.value.classINFOptr);
    
+       Parser_LexerPos =_newClass("Parser_LexerPos", Parser_LexerPos__init, sizeof(struct Parser_LexerPos_s), Object.value.classINFOptr);
        _declareMethods(Parser_LexerPos, Parser_LexerPos_METHODS);
        _declareProps(Parser_LexerPos, Parser_LexerPos_PROPS, sizeof Parser_LexerPos_PROPS);
-       Parser_MultilineSection =_newClass("Parser_MultilineSection", Parser_MultilineSection__init, sizeof(struct Parser_MultilineSection_s), Object.value.classINFOptr);
    
+       Parser_MultilineSection =_newClass("Parser_MultilineSection", Parser_MultilineSection__init, sizeof(struct Parser_MultilineSection_s), Object.value.classINFOptr);
        _declareMethods(Parser_MultilineSection, Parser_MultilineSection_METHODS);
        _declareProps(Parser_MultilineSection, Parser_MultilineSection_PROPS, sizeof Parser_MultilineSection_PROPS);
-    Parser_LineTypes__namespaceInit();
-       Parser_OutCode =_newClass("Parser_OutCode", Parser_OutCode__init, sizeof(struct Parser_OutCode_s), Object.value.classINFOptr);
    
+       Parser_OutCode =_newClass("Parser_OutCode", Parser_OutCode__init, sizeof(struct Parser_OutCode_s), Object.value.classINFOptr);
        _declareMethods(Parser_OutCode, Parser_OutCode_METHODS);
        _declareProps(Parser_OutCode, Parser_OutCode_PROPS, sizeof Parser_OutCode_PROPS);
+   
+       Parser_LineTypes__namespaceInit();
 };

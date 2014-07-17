@@ -12,19 +12,50 @@ struct e4c_global e4c = {0};
 
 void fatal(char * msg) {
         fprintf(stderr, msg);
+        (void)fflush(stderr);
+        //raise(SIGTRAP);
         abort();
     }
 
-void e4c_newFrame(void){
+str e4c_stageStr(){
+    switch (e4c.frame[e4c.activeFrame].stage) {
+        case e4c_beginning: return "e4c_beggining";
+        case e4c_trying: return "e4c enter try{";
+        case e4c_catching: return "e4c enter catch{";
+        case e4c_finalizing: return "e4c enter finalize{";
+        case e4c_done: return "e4c_done";
+        default: return "e4c_INVALID STAGE";
+    }
+};
+
+void e4c_showStatus(){
+	fprintf(stderr, "E4C %s:%d:1 frame:%d %s\n"
+        , e4c.frame[e4c.activeFrame].file, e4c.frame[e4c.activeFrame].line
+        ,e4c.activeFrame, e4c_stageStr() );
+    (void)fflush(stderr);
+}
+
+int e4c_newFrame(str file, int line){
 
 	if(e4c.activeFrame >= E4C_MAX_FRAMES) fatal("Too many nested `try` blocks.");
 	e4c.activeFrame++;
+
+    if (!file) file=EMPTY_STR;
+	e4c.frame[e4c.activeFrame].file = file;
+	e4c.frame[e4c.activeFrame].line= line;
 	e4c.frame[e4c.activeFrame].stage = e4c_beginning;
+
+    //debug
+    e4c_showStatus();
+
+    if (e4c.activeFrame==3)
+        e4c.activeFrame=e4c.activeFrame;
+
+    return TRUE;
 }
 
-int e4c_incStage(void){
 
-	assert(e4c.frame[e4c.activeFrame].stage < e4c_done);
+int e4c_incStage(){
 
     e4c.frame[e4c.activeFrame].stage++;
     if(e4c.frame[e4c.activeFrame].stage == e4c_catching && !e4c.exception.pending) {
@@ -32,9 +63,15 @@ int e4c_incStage(void){
         // be no exception pending, so we skip executing cath block
         e4c.frame[e4c.activeFrame].stage++;
     }
+
 	if(e4c.frame[e4c.activeFrame].stage < e4c_done) {
         return 1; //continue looping - next stage; trying, catching, finally
     }
+
+    //debug
+    e4c_showStatus();
+
+    assert(e4c.frame[e4c.activeFrame].stage <= e4c_done);
 
     //else: stage is done - this frame is completed
 	e4c.activeFrame--; //new active frame is prev frame
@@ -83,12 +120,17 @@ void e4c_throw( str file, int line, any error){
             case e4c_trying:
                 // active frame is in stage "trying"
                 // jmp to active frame loop
+
+                //debug log
+                fprintf(stderr,"\n\nE4C catched longjmp frame %d\n\n",e4c.activeFrame);
+                (void)fflush(stderr);
+
+                // longjmps do not returns
                 longjmp(e4c.frame[e4c.activeFrame].jump, 1);
-                // longjmp do not returns
 
             case e4c_catching: case e4c_finalizing:
-                //exception while catch(err){} or finalize{}
-                // and throw was not insinde a new try{}
+                //throw while catch(err){} or finalize{}
+                // (and throw was not insinde a new try{})
                 e4c.activeFrame--; //check prev frame
                 break;
 

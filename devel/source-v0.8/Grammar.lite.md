@@ -182,8 +182,6 @@ Example:
   `function x ( a : string = 'some text', b, c=0)`
 
       properties
-        type: VariableRef
-        itemType: VariableRef
         aliasVarRef: VariableRef
         assignedValue: Expression
 
@@ -354,9 +352,6 @@ Examples: /*
 
 The `properties` keyword is used inside classes to define properties of the class instances.
 
-      properties
-        list: VariableDecl array
-
       declare name affinity propDecl
       
       method parse()
@@ -406,21 +401,27 @@ Defines a `try` block for trapping exceptions and handling them.
 
         .exceptionBlock = .req(ExceptionBlock)
 
-
 ### export class ExceptionBlock extends ASTBase
 
 `ExceptionBlock: (exception|catch) IDENTIFIER Body [finally Body]`
 
 Defines a `catch` block for trapping exceptions and handling them. 
-If no `try` preceded this construction, `try` is assumed at the beggining of the function
+`try` should precede this construction for 'catch' keyword.
+`try{` will be auto-inserted for the 'Exception' keyword.
 
       properties 
         catchVar:string
         body,finallyBody
 
       method parse()
-        .req 'catch','exception','Exception'
+        .keyword = .req('catch','exception','Exception')
         .lock()
+
+in order to correctly count frames to unwind on "return" from inside a try-catch
+catch"'s parent MUST BE ONLY "try"
+
+        if .keyword is 'catch' and .parent.constructor isnt TryCatch
+            .throwError "internal error, expected 'try' as 'catch' previous block"
 
 get catch variable - Note: catch variables in js are block-scoped
 
@@ -428,13 +429,30 @@ get catch variable - Note: catch variables in js are block-scoped
 
 get body 
 
-        if no .getParent(FunctionDeclaration), .sayErr "Exception/catch outside a function/method"
-
         .body = .req(Body)
 
 get optional "finally" block
 
         if .opt('finally'), .finallyBody = .req(Body)
+
+validate grammar: try=>catch / function=>exception
+
+        if .keyword is 'catch' 
+            if .parent.constructor isnt TryCatch, .sayErr '"catch" block without "try"'
+        
+        else // .keyword is 'exception'
+
+            if .parent.constructor isnt Statement 
+              or .parent.parent isnt instance of Body
+              or .parent.parent.parent isnt instance of FunctionDeclaration
+                  .sayErr '"Exception" block should be part of function/method/constructor body'
+
+here, it is a "exception" block in a FunctionDeclaration. 
+Mark the function as having an ExceptionBlock in order to
+insert "try{" at function start and also handle C-exceptions unwinding
+
+            var theFunctionDeclaration = .parent.parent.parent
+            theFunctionDeclaration.hasExceptionBlock = true
 
 
 ### export class ThrowStatement extends ASTBase
@@ -648,8 +666,6 @@ Execute the block `while` the condition is true or `until` the condition is true
 WhileUntilLoop are a simpler form of loop. The `while` form, is the same as in C and js.
 WhileUntilLoop derives from DoLoop, to use its `.produce()` method.
 
-      properties preWhileUntilExpression, body
-
       method parse()
         .preWhileUntilExpression = .req(WhileUntilExpression)
         .lock()
@@ -673,7 +689,7 @@ followed by a boolean-Expression
 
 ### export class LoopControlStatement extends ASTBase
       
-`LoopControlStatement: (break|continue)`
+`LoopControlStatement: (break|continue) [loop]`
 
 This handles the `break` and `continue` keywords.
 'continue' jumps to the start of the loop (as C & Js: 'continue')
@@ -682,7 +698,7 @@ This handles the `break` and `continue` keywords.
 
       method parse()
         .control = .req('break','continue')
-
+        .opt 'loop'
 
 ### export class DoNothingStatement extends ASTBase
 
@@ -785,7 +801,6 @@ and `array-VariableRef` is the array to iterate over
         indexVar:VariableDecl, mainVar:VariableDecl, iterable:Expression
         where:ForWhereFilter
         body
-        isMap: boolean
 
       method parse()
       
@@ -915,7 +930,7 @@ is: optional NEWLINE, then 'where' then filter-Expression
       
         declare valid .parent.preParsedVarRef
 
-        if .parent.preParsedVarRef
+        if .parent instanceof Statement and .parent.preParsedVarRef
           .lvalue  = .parent.preParsedVarRef # get already parsed VariableRef 
         else
           .lvalue  = .req(VariableRef)
@@ -1778,8 +1793,8 @@ This class groups: NumberLiteral, StringLiteral, RegExpLiteral, ArrayLiteral and
 
     public class Literal extends ASTBase
   
-      properties 
-        type = '*abstract-Literal*'
+      constructor 
+        .type = '*abstract-Literal*'
 
       method getValue()
         return .name
@@ -1794,8 +1809,8 @@ A numeric token constant. Can be anything the lexer supports, including scientif
 
     public class NumberLiteral extends Literal
 
-      properties 
-        type = 'Number'
+      constructor 
+        .type = 'Number'
 
       method parse()
         .name = .req('NUMBER')
@@ -1810,8 +1825,8 @@ The token include the enclosing quotes
 
     public class StringLiteral extends Literal
 
-      properties 
-        type = 'String'
+      constructor 
+        .type = 'String'
 
       method parse()
         .name = .req('STRING')
@@ -1827,8 +1842,8 @@ A regular expression token constant. Can be anything the lexer supports.
 
     public class RegExpLiteral extends Literal
 
-      properties 
-        type = 'RegExp'
+      constructor 
+        .type = 'RegExp'
 
       method parse()
         .name = .req('REGEX')
@@ -1852,8 +1867,10 @@ a = [
     public class ArrayLiteral extends Literal
 
       properties 
-        type = 'Array'
         items: array of Expression
+
+      constructor 
+        .type = 'Array'
 
       method parse()
         .req '[','SPACE_BRACKET'
@@ -1891,7 +1908,7 @@ For LiteC (the Litescript-to-C compiler), a ObjectLiteral crates a `Map string t
 
 ## NameValuePair
 
-`NameValuePair: (IDENTIFIER|STRING|NUMBER) ':' Expression`
+`NameValuePair: (IDENTIFIER|StringLiteral|NumberLiteral) ':' Expression`
 
 A single definition in a `ObjectLiteral` 
 a `property-name: value` pair.
@@ -1902,7 +1919,7 @@ a `property-name: value` pair.
 
       method parse()
 
-        .name = .req('IDENTIFIER','STRING','NUMBER')
+        .name = .req('IDENTIFIER',StringLiteral,NumberLiteral)
 
         .req ':'
         .lock()
@@ -1910,13 +1927,13 @@ a `property-name: value` pair.
 if it's a "dangling assignment", we assume FreeObjectLiteral
 
         if .lexer.token.type is 'NEWLINE'
-          .value = .req(FreeObjectLiteral)
+            .value = .req(FreeObjectLiteral)
 
         else
-          if .lexer.interfaceMode
-              .parseType
-          else
-              .value = .req(Expression)
+            if .lexer.interfaceMode
+                .parseType
+            else
+                .value = .req(Expression)
 
 recursive duet 2 (see ObjectLiteral)
 
@@ -2010,6 +2027,7 @@ Functions: parametrized pieces of callable code.
         paramsDeclarations: VariableDecl array
         definePropItems: DefinePropertyItem array
         body
+        hasExceptionBlock: boolean
         EndFnLineNum
 
       method parse()
@@ -2212,7 +2230,6 @@ Adds methods and properties to an existent object, e.g., Class.prototype
       properties 
         toNamespace
         varRef:VariableRef
-        body
 
       method parse()
 
@@ -2454,7 +2471,6 @@ Example:
 
       properties
         varRef: VariableRef
-        type: VariableRef
         names: VariableDecl array
         list: ImportStatementItem array
         specifier
@@ -2911,16 +2927,20 @@ check if there are cases. Require 'end'
 Helper class to parse each case
 
         properties
-            parent:CaseWhenExpression
             expressions: Expression array
             booleanExpression
             resultExpression
+
+        
 
 if there is a var, we allow a list of comma separated expressions to compare to. 
 If there is no var, we allow a single boolean-Expression.
 After: 'then', and the result-Expression
     
         method parse()
+
+            declare .parent:CaseWhenExpression
+
             if .parent.varRef 
                 .expressions = .reqSeparatedList(Expression, ",")
             else
@@ -3013,15 +3033,16 @@ Check validity of adjective-statement combination
 Check validity of adjective-statement combination 
 
         var CFVN = ['class','function','var','namespace'] 
-        for each adjective in .adjectives
 
-              var validCombinations =  
-                    export: CFVN, default: CFVN
-                    generator: ['function','method'] 
-                    nice: ['function','method'] 
-                    shim: ['function','method','class','namespace','import'] 
-                    helper:  ['function','method','class','namespace']
-                    global: ['import','declare']
+        var validCombinations =  
+              export: CFVN, default: CFVN
+              generator: ['function','method'] 
+              nice: ['function','method'] 
+              shim: ['function','method','class','namespace','import'] 
+              helper:  ['function','method','class','namespace']
+              global: ['import','declare']
+
+        for each adjective in .adjectives
 
               var valid:string array = validCombinations.get(adjective) or ['-*none*-']
               if key not in valid, .throwError "'#{adjective}' can only apply to #{valid.join('|')} not to '#{key}'"
@@ -3157,7 +3178,7 @@ Anything standing alone in it's own line, its an imperative statement (it does s
       'function': FunctionDeclaration
       'constructor': ConstructorDeclaration
       'properties': PropertiesDeclaration
-      'namespace': [NamespaceDeclaration, PropertiesDeclaration]
+      'namespace': NamespaceDeclaration
       'method': MethodDeclaration
       'var': VarStatement
       'let': VarStatement

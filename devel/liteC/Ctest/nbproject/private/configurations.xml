@@ -24,16 +24,18 @@
       </nativedebugger>
       <runprofile version="9">
         <runcommandpicklist>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -v 1</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -h</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -D PROD_C -c test</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -v 2 -D PROD_C -c test</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -v 2 -D PROD_C -D FROM_C -c test</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -v 2 -D PROD_C -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"  test -v 2 -D PROD_C -D FROM_C</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"  test -v 2 -debug -D PROD_C -D FROM_C</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"  test -v 2 -debug -D PROD_C -D FROM_C 2>error.log</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"  test -o -v 2 -debug -D PROD_C -D FROM_C 2>error.log</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"  test -o lite-out -v 2 -debug -D PROD_C -D FROM_C 2>error.log</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}"  test -v 2 -D PROD_C -D FROM_C</runcommand>
+        <runcommand>"${OUTPUT_PATH}"  test -o lite-out -v 2 -debug -D PROD_C -D FROM_C 2>error.log</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>

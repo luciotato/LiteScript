@@ -11,7 +11,7 @@
 
    // class LogOptions
    // constructor
-   function LogOptions(){
+   function LogOptions(){ // default constructor
         // properties
             // verboseLevel = 1
             // warningLevel = 1
@@ -27,7 +27,7 @@
 
    // class LogOptionsDebug
    // constructor
-   function LogOptionsDebug(){
+   function LogOptionsDebug(){ // default constructor
         // properties
             // enabled: boolean =  false
             // file   : string = 'out/debug.logger'
@@ -80,15 +80,37 @@
        if (logger.options.debugOptions.enabled) {
 
            var args = Array.prototype.slice.call(arguments);
+
+            //ifdef PROD_C
+           console.error.apply(undefined, args);
+       };
+    };
+            //else
+            //if options.debug.file
+                //fs.appendFileSync options.debug.file, '#{args.join(" ")}\r\n'
+            //else
+                //console.error.apply undefined,args
+            //endif
+
+
+    // method debugGroup
+    logger.debugGroup = function(){
+
+       // if logger.options.debugOptions.enabled
+       if (logger.options.debugOptions.enabled) {
+           console.error.apply(undefined, Array.prototype.slice.call(arguments));
+           console.group.apply(undefined, Array.prototype.slice.call(arguments));
        };
     };
 
-            //ifndef PROD_C
-            //if options.debug.file
-                //fs.appendFileSync options.debug.file, args.join(" ")+"\r\n"
-            //else
-                //console.log.apply undefined,args
-            //endif
+    // method debugGroupEnd
+    logger.debugGroupEnd = function(){
+
+       // if logger.options.debugOptions.enabled
+       if (logger.options.debugOptions.enabled) {
+           console.groupEnd();
+       };
+    };
 
     // method debugClear ### clear debug file
     logger.debugClear = function(){// ### clear debug file
@@ -215,7 +237,6 @@
        logger.messages = [];
        return result;
     };
-
 
 
     // method throwControlled(msg)

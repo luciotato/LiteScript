@@ -44,7 +44,6 @@ static str _ADD_VERBS[] = { //string name for each distinct method name
 ,     "getEOLComment"
 ,     "addSourceMap"
 ,     "levelIndent"
-,     "callOnSubTree"
 ,     "getRootNode"
 ,     "parseAccessors"
 ,     "insertAccessorAt"
@@ -63,6 +62,7 @@ static str _ADD_VERBS[] = { //string name for each distinct method name
 ,     "addToExport"
 ,     "createScope"
 ,     "tryGetOwnerNameDecl"
+,     "callOnSubTree"
 ,     "lastLineInxOf"
 ,     "assignIfUndefined"
 ,     "reset"
@@ -131,10 +131,12 @@ static str _ADD_VERBS[] = { //string name for each distinct method name
 ,     "addMethodToOwnerNameDecl"
 ,     "createReturnType"
 ,     "produceFunctionBody"
+,     "processAppendToExtends"
 ,     "produceHeader"
+,     "outClassTitleComment"
 ,     "produceStaticListMethodsAndProps"
 ,     "produceClassRegistration"
-,     "processAppendTo"
+,     "produceCallNamespaceInit"
 ,     "makeName"
 ,     "getRefFilename"
 ,     "setTypes"
@@ -171,10 +173,9 @@ static str _ADD_VERBS[] = { //string name for each distinct method name
 ,     "convertType"
 ,     "assignTypeFromValue"
 ,     "assignTypebyNameAffinity"
+,     "checkSuperChainProperties"
+,     "outSuperChainProps"
 ,     "getComposedName"
-,     "isClass"
-,     "isMethod"
-,     "isProperty"
 ,     "addToAllMethodNames"
 ,     "outWithExtension"
 ,     "searchModule"
@@ -295,7 +296,6 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 ,     "rvalue"
 ,     "preIncDec"
 ,     "postIncDec"
-,     "importedModule"
 ,     "produceType"
 ,     "calcType"
 ,     "expression"
@@ -310,6 +310,7 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 ,     "ternaryCount"
 ,     "paramsDeclarations"
 ,     "definePropItems"
+,     "hasExceptionBlock"
 ,     "EndFnLineNum"
 ,     "varRefSuper"
 ,     "toNamespace"
@@ -317,6 +318,7 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 ,     "endLineInx"
 ,     "global"
 ,     "importParameter"
+,     "importedModule"
 ,     "names"
 ,     "globVar"
 ,     "assignment"
@@ -345,9 +347,12 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 ,     "nodeDeclared"
 ,     "normalizeModeKeepFirstCase"
 ,     "isScope"
-,     "isNamespace"
 ,     "isForward"
 ,     "isDummy"
+,     "isProperty"
+,     "isMethod"
+,     "isNamespace"
+,     "superDecl"
 ,     "pointsTo"
 ,     "returnType"
 ,     "informError"
@@ -381,8 +386,8 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 //-------------------------------
 int main(int argc, char** argv) {
     LiteC_init(argc,argv);
-    LiteC_addMethodSymbols( 177, _ADD_VERBS);
-    LiteC_addPropSymbols( 193, _ADD_THINGS);
+    LiteC_addMethodSymbols( 178, _ADD_VERBS);
+    LiteC_addPropSymbols( 197, _ADD_THINGS);
     LiteC_registerShim(String,startsWith_,String_startsWith);
     LiteC_registerShim(String,endsWith_,String_endsWith);
     LiteC_registerShim(String,trimRight_,String_trimRight);

@@ -9,21 +9,19 @@ extern void Project__moduleInit(void);
 
 //--------------
    // Project
-   
-   extern any Project; //Class Object
-   
+   any Project; //Class Project
    typedef struct Project_s * Project_ptr;
    typedef struct Project_s {
-       any
-           options,
-           name,
-           moduleCache,
-           rootModule,
-           compilerVars,
-           main,
-           Producer,
-           recurseLevel
-   ;
+       //Project
+       any options;
+       any name;
+       any moduleCache;
+       any rootModule;
+       any compilerVars;
+       any main;
+       any Producer;
+       any recurseLevel;
+   
    } Project_s;
    
    extern void Project__init(DEFAULT_ARGUMENTS);

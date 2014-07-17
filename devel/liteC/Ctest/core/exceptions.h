@@ -1,10 +1,11 @@
 /*
- * exceptions4c lightweight version 1.0
+ * try-catch-finally for LiteC - LiteScript
+ * Copyright (c) 2014 Lucio M. Tato
  *
- * Copyright (c) 2014 Guillermo Calvo
- * Licensed under the GNU Lesser General Public License
+ * Credits:
+ * Started from exceptions4c lightweight version 1.0 - (c) 2014 Guillermo Calvo
+ * rewritten for LiteC
  *
- * Simplified for LiteC - LiteScript by Lucio M. Tato
  */
 
 #ifndef EXCEPTIONS4C_LITE
@@ -19,7 +20,7 @@
 
 /* Maximum number of nested `try` blocks */
 #ifndef E4C_MAX_FRAMES
-# define E4C_MAX_FRAMES 32
+    #define E4C_MAX_FRAMES 64
 #endif
 
 #ifdef NDEBUG
@@ -50,6 +51,8 @@ extern struct e4c_global{
 
         //frame info array
         struct{
+            const char * file;
+            int line;
             jmp_buf jump;
             unsigned char stage;
             int catchExecuteCount; //counter to execute catch block only once
@@ -61,70 +64,40 @@ extern struct e4c_global{
 
 } e4c;
 
-
-/* Implementation details */
-
-/*
-#define try \
-        if(e4c_try(E4C_INFO) && setjmp(e4c.jump[e4c.frames - 1]) >= 0) \
-          while(e4c_incStage()) \
-            if(e4c.frame[e4c.frames].stage == e4c_trying)
-*/
-
-/*#define try \
-    if(e4c_newFrame() && setjmp(e4c.frame[e4c.activeFrame].jump) >= 0) \
-        while(e4c_incStage()) \
-            if(e4c.frame[e4c.activeFrame].stage == e4c_trying)
-*/
-
 /*
  * try:
  *
- * 1.- create a new frame. stage=trying
- *     setjmp. record position at e4c[frame].jump (condition always true)
- *
- *  2. (for-condition)
- *     _incStage() - advance stage (returns TRUE if stage<done)
- *     => continue looping try->catch->finally UNTIL stage<e4c_done
+ * 1.- create a new frame. stage=beggining
+ * 2.- setjmp. record position at e4c[frame].jump (condition always true)
+ * 3.- while incStage() // advance stage (returns TRUE if stage<done) - loop all stages
+ * 5.      if stage == trying
+ *         ... try body
  */
 
 #define try \
-    for ( e4c_newFrame(), setjmp(e4c.frame[e4c.activeFrame].jump); e4c_incStage(); ) \
-        if(e4c.frame[e4c.activeFrame].stage == e4c_trying)
+    if(e4c_newFrame(__FILE__, __LINE__)) \
+    if(setjmp(e4c.frame[e4c.activeFrame].jump)>=0) \
+    while(e4c_incStage()) \
+        if (e4c.frame[e4c.activeFrame].stage==e4c_trying)
 
 /*
 catch:
   - if stage=catching
-  - set .uncaught=0 // caught
   - create ERRVAR variable
   - execute catch body (once)
 */
 #define catch(ERRVAR) \
-    else if(e4c_isCatching()) \
-       for(any ERRVAR=e4c.exception.error; e4c.frame[e4c.activeFrame].catchExecuteCount-- >0;)
+        else if(e4c_isCatching()) \
+            for(any ERRVAR=e4c.exception.error; e4c.frame[e4c.activeFrame].catchExecuteCount-- >0;)
 
 #define finally \
-    else if(e4c.frame[e4c.activeFrame].stage==e4c_finalizing)
+        else if(e4c.frame[e4c.activeFrame].stage==e4c_finalizing)
 
 #define throw(X) e4c_throw(E4C_INFO, X)
-/*
-#define catch(ERRVAR) \
-    else for(any ERRVAR = e4c.exception.error, e4c.frame[e4c.frames].uncaught=0; e4c.frame[e4c.frames].uncaught=0)
-*/
-
-//if(e4c.frame[e4c.frames].stage == e4c_catching) \
 
 #define fail_with(msg)  throw(_newErr(msg))
 
-//#define E4C_CATCH(ERRVAR) else if(e4c.frame[e4c.frames].stage == e4c_catching && e4c_hook(1))
-//#define E4C_CATCH(ERRVAR) else for(void * ERRVAR = e4c.err.object,e4c.frame[e4c.frames].inCatch=1; e4c.frame[e4c.frames].stage == e4c_catching && e4c_hook(1);e4c.frame[e4c.frames].inCatch=0)
-/*
- * #define E4C_CATCH(ERRVAR) \
-        else if(e4c.frame[e4c.frames].stage == e4c_catching && e4c_hook(1)) \
-             for(var ERRVAR = e4c.err.object, *__i=0; __i==0; __i=1)
-*/
-
-extern void e4c_newFrame(void);
+extern int e4c_newFrame(str file,int line); //note: make another version for #ifdef NDEBUG
 extern int e4c_incStage(void);
 
 extern void e4c_exitTry(int howManyBlocks);

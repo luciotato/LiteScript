@@ -2,7 +2,6 @@
     class ControlledError extends Error
         properties 
             soft: boolean
-            code:string
 
 
 Sadly, the Error Class in javascript is not easily subclassed. 

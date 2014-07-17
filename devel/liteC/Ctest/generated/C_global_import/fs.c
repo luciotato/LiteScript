@@ -21,9 +21,11 @@
     , mode_
     };
        
-       // fs_Stat
        
-       any fs_Stat; //Class Object
+
+//--------------
+       // fs_Stat
+       any fs_Stat; //Class fs_Stat
            // properties
            ;
 
@@ -41,14 +43,18 @@
    //------------------
    void fs__namespaceInit(void){
            fs_Stat =_newClass("fs_Stat", fs_Stat__init, sizeof(struct fs_Stat_s), Object.value.classINFOptr);
-       
            _declareMethods(fs_Stat, fs_Stat_METHODS);
            _declareProps(fs_Stat, fs_Stat_PROPS, sizeof fs_Stat_PROPS);
+       
    };
 
 
 //-------------------------
 void fs__moduleInit(void){
-    fs__namespaceInit();
+           fs_Stat =_newClass("fs_Stat", fs_Stat__init, sizeof(struct fs_Stat_s), Object.value.classINFOptr);
+           _declareMethods(fs_Stat, fs_Stat_METHODS);
+           _declareProps(fs_Stat, fs_Stat_PROPS, sizeof fs_Stat_PROPS);
+       
+       fs__namespaceInit();
     fs__nativeInit();
 };

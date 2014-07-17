@@ -46,7 +46,7 @@
 
    // class Map
    // constructor
-       function Map(){
+   function Map(){
         // properties
             // dict:Object
             // size

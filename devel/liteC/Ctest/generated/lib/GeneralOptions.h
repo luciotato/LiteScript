@@ -9,32 +9,30 @@ extern void GeneralOptions__moduleInit(void);
 
 //--------------
    // GeneralOptions
-   
-   extern any GeneralOptions; //Class Object
-   
+   any GeneralOptions; //Class GeneralOptions
    typedef struct GeneralOptions_s * GeneralOptions_ptr;
    typedef struct GeneralOptions_s {
-       any
-           verboseLevel,
-           warningLevel,
-           comments,
-           target,
-           debugEnabled,
-           skip,
-           nomap,
-           single,
-           compileIfNewer,
-           browser,
-           extraComments,
-           defines,
-           projectDir,
-           mainModuleName,
-           outDir,
-           storeMessages,
-           literalMap,
-           version,
-           now
-   ;
+       //GeneralOptions
+       any verboseLevel;
+       any warningLevel;
+       any comments;
+       any target;
+       any debugEnabled;
+       any skip;
+       any nomap;
+       any single;
+       any compileIfNewer;
+       any browser;
+       any extraComments;
+       any defines;
+       any projectDir;
+       any mainModuleName;
+       any outDir;
+       any storeMessages;
+       any literalMap;
+       any version;
+       any now;
+   
    } GeneralOptions_s;
    
    extern void GeneralOptions__init(DEFAULT_ARGUMENTS);

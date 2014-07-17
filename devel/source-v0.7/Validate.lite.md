@@ -431,9 +431,9 @@ b.3) "any" default type for vars
         anyTypeProto.addMember 'constructor',{type:"any"} //hack
         anyTypeProto.addMember 'length',{type:"int"}
 
-        var console = globalScope.addMember('console') //  any pointer, type for "arguments"
-        console.addMember('log',{type:functionProto}) // 
-        console.addMember('error',{type:functionProto}) // 
+        var console = globalScope.addMember('console') //  node.js console
+        console.addMember('log',{type:functionProto}) 
+        console.addMember('error',{type:functionProto}) 
 
         globalScope.addMember 'any_concat',{type:"Function"} //used for string interpolation
 

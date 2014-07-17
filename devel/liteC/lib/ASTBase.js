@@ -22,7 +22,7 @@
 
    // public default class ASTBase
    // constructor
-    function ASTBase(parent, name){
+   function ASTBase(parent, name){
      //      properties
         // parent: ASTBase
         // name:string, keyword:string
@@ -489,7 +489,7 @@
        var startLine = this.lexer.sourceLineNum;
        var blockIndent = this.lexer.indent;
 
-       logger.debug("optFreeFormList [" + this.constructor.name + "] parentname:" + this.parent.name + " parentIndent:" + parentIndent + ", blockIndent:" + blockIndent + ", get SeparatedList of [" + astClass.name + "] by '" + separator + "' closer:", closer || '-no-');
+       logger.debug("optFreeFormList: [" + astClass.name + " " + separator + "]*  parent:" + this.parent.name + "." + this.constructor.name + " parentIndent:" + parentIndent + ", blockIndent:" + blockIndent + ", closer:", closer || '-no-');
 
        // if blockIndent <= parentIndent #first line is same or less indented than parent - assume empty list
        if (blockIndent <= parentIndent) {// #first line is same or less indented than parent - assume empty list
@@ -908,56 +908,14 @@
     ASTBase.prototype.levelIndent = function(){
 // show indented messaged for debugging
 
-       var indent = ' ';
-       var node = this.parent;
-       // while node
-       while(node){
-         node = node.parent;
-         indent = '' + indent + '  '; //add 2 spaces
+       var indent = 0;
+       var node = this;
+       // while node.parent into node
+       while((node=node.parent)){
+           indent += 2; //add 2 spaces
        };// end loop
-       return indent;
-    };
 
-    // helper method callOnSubTree(methodSymbol,excludeClass) # recursive
-    ASTBase.prototype.callOnSubTree = function(methodSymbol, excludeClass){// # recursive
-
-// This is instance has the method, call the method on the instance
-
-     // if this.tryGetMethod(methodSymbol) into var theFunction, theFunction.call(this)
-     var theFunction=undefined;
-     if ((theFunction=this.tryGetMethod(methodSymbol))) {theFunction.call(this)};
-
-     // if excludeClass and this is instance of excludeClass, return #do not recurse on filtered's childs
-     if (excludeClass && this instanceof excludeClass) {return};
-
-// recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
-
-     // for each property name,value in this
-     var value=undefined;
-     for ( var name in this)if (this.hasOwnProperty(name)){value=this[name];
-     if(['parent', 'importedModule', 'requireCallNodes', 'exportDefault'].indexOf(name)===-1){
-
-           // if value instance of ASTBase
-           if (value instanceof ASTBase) {
-                // declare value:ASTBase
-               value.callOnSubTree(methodSymbol, excludeClass);// #recurse
-           }
-           
-           else if (value instanceof Array) {
-                // declare value:array
-               // for each item in value where item instance of ASTBase
-               for( var item__inx=0,item ; item__inx<value.length ; item__inx++){item=value[item__inx];
-                 if(item instanceof ASTBase){
-                    // declare item:ASTBase
-                   item.callOnSubTree(methodSymbol, excludeClass);
-               }};// end for each in value
-               
-           };
-           }
-           
-           }// end for each property
-     // end for
-     
+       return Strings.spaces(indent);
     };
 
 

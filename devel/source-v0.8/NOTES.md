@@ -1,8 +1,11 @@
-# module is namespace
+
+
+
+# DONE - module is namespace
 check Grammar.Module, add a .body property (as namespaces have)
 at C production, use namespace.produce to produce a module body
 
-# Append to core-class - methods - DONE
+# DONE - Append to core-class - methods 
 
 se puede hacer, hay que separarlos, y luego de inicializar el core,
 se puede llamar a algo como:
@@ -27,6 +30,21 @@ named-params, re-order upon name, Use instead of:
   - ImportParameterInfo
 remove those classes
 
+# declare property parent:CaseWhenExpression
+to declare the type of a property in a child class. El ejemplo viene de CaseWhenSection
+donde el parent (property de ASTBase) es siempre CaseWhenExpression y facilita que en
+todos los metodos de la clase se considere asi
+
+Agregar un seteo de type en el .Scope, asi el tipo de una var o prop puede estar determinado
+solo para el scope puntual. Esto soluciona el problema del declare de vars globales tambien.
+
+#allow "this" on namespaces
+"this.x" or ".x" maps to "namespace.x"
+when used alone, "this" maps to "undefined"
+
+#separate ClassDeclaration from AppendToDeclaration & NamespaceDeclaration
+AppendToDeclaration & NamespaceDeclaration really need to extend ClassDeclaration
+can they be separated?
 
 ##match foo instance of
 
@@ -119,12 +137,12 @@ C:
     }
 
 
-## add foo.class
+## NO. Already done with ".constructor" - add foo.class 
 
 for js compiles to: (foo.constructor or {name:typeof foo})
 
 
-##match foo - SUGAR
+##match foo - SUGAR FOR SWITCH - add auto-var "it"
 
     match foo
 

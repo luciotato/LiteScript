@@ -55,7 +55,7 @@ extern "C" {
         anyValue value; //union. default is any_arr, can be also .str or .number
     } any;
 
-    typedef any var; // "var" is alias for "any"
+    #define var any // "var" is alias for "any"
 
     typedef unsigned char byte;
 
@@ -106,7 +106,7 @@ extern "C" {
     extern any _newStrSize(size_t size);
 
     extern str strclone(str src);
-    extern str _byteslice(str src, int start, int end);
+    extern str _byteslice(str src, int64_t start, int64_t end);
 
 #ifdef	__cplusplus
 }

@@ -26,7 +26,19 @@
         struct stat st;
         int result;
         if (result=stat(arguments[0].value.str, &st) == -1){
-            fail_with(strerror(errno));
+            var err=new(Error,1,(any_arr){any_str(strerror(errno))});
+            str errCode;
+            switch(errno){
+                case EPERM: errCode="EPERM";break;
+                case ENOENT: errCode="ENOENT";break;
+                case EACCES: errCode="EACCES";break;
+                case EEXIST: errCode="EEXIST";break;
+                case ENOTDIR: errCode="ENOTDIR";break;
+                case EISDIR: errCode="EISDIR";break;
+                deafult:errCode="UNK";
+            }
+            PROP(code_,err)=any_str(errCode);
+            throw(err);
         }
         THIS->size = any_number(st.st_size);
         THIS->mtime= _newDate(st.st_mtime);
@@ -71,11 +83,9 @@
     any fs_existsSync( DEFAULT_ARGUMENTS ) {
         try {
             var stat=fs_statSync(this,argc,arguments);
-            e4c_exitTry(1);
-            return true;
+            {e4c_exitTry(1);return true;}
         } catch(err){
-            e4c_exitTry(1);
-            return false;
+            {e4c_exitTry(1);return false;}
         }
     };
 
@@ -107,9 +117,10 @@
 
         size_t bytes = strlen(contents);
         //open file
-        FILE *file = fopen(filename,"w");
+        FILE *file;
+        if (!(file=fopen(filename,"w"))) fail_with(strerror(errno));
         //write contents
-        fwrite(contents, 1, bytes, file);
+        fwrite(contents, 1, bytes-1, file);
         //close
         fclose(file);
 

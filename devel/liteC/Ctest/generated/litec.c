@@ -64,11 +64,11 @@ any litec_startCompilation(DEFAULT_ARGUMENTS); //forward declare
 
 //-------------------------
 void litec__moduleInit(void){
-litec_VERSION = any_str("0.8.1");
-litec_BUILD_DATE = any_str("2014-07-14T02:35:49.534Z");
-litec_usage = _concatAny(5,(any_arr){any_str("\n    LiteScript-C v"), litec_VERSION, any_str(" "), litec_BUILD_DATE, any_str("\n\n    Usage: litec main.lite.md [options]\n\n    options are:\n    -o dir           output dir. Default is './out'\n    -v, -verbose     verbose level, default is 0 (0-3)\n    -w, -warning     warning level, default is 1 (0-1)\n    -comments        comment level on generated files, default is 1 (0-2)\n    -version         print LiteScript version & exit\n\n    Advanced options:\n    -D FOO -D BAR    Defines preprocessor names (#ifdef FOO/#ifndef BAR)\n    -d, -debug       enable full compiler debug logger file at 'out/debug.logger'\n")});
-litec_args = new(OptionsParser,1,(any_arr){process_argv});
-litec_options = new(GeneralOptions,0,NULL);
+    litec_VERSION = any_str("0.8.1");
+    litec_BUILD_DATE = any_str("2014-07-17T03:22:19.344Z");
+    litec_usage = _concatAny(5,(any_arr){any_str("\n    LiteScript-C v"), litec_VERSION, any_str(" "), litec_BUILD_DATE, any_str("\n\n    Usage: litec main.lite.md [options]\n\n    options are:\n    -o dir           output dir. Default is './out'\n    -v, -verbose     verbose level, default is 0 (0-3)\n    -w, -warning     warning level, default is 1 (0-1)\n    -comments        comment level on generated files, default is 1 (0-2)\n    -version         print LiteScript version & exit\n\n    Advanced options:\n    -D FOO -D BAR    Defines preprocessor names (#ifdef FOO/#ifndef BAR)\n    -d, -debug       enable full compiler debug logger file at 'out/debug.logger'\n")});
+    litec_args = new(OptionsParser,1,(any_arr){process_argv});
+    litec_options = new(GeneralOptions,0,NULL);
    print(1,(any_arr){JSON_stringify(undefined,1,(any_arr){process_argv})});
    // if args.option('h','help')
    if (_anyToBool(CALL2(option_,litec_args,any_str("h"), any_str("help"))))  {
@@ -104,7 +104,7 @@ litec_options = new(GeneralOptions,0,NULL);
        // .debugEnabled = args.option('d',"debug")
        PROP(debugEnabled_,litec__with1) = CALL2(option_,litec_args,any_str("d"), any_str("debug"));
        // .defines = []
-       PROP(defines_,litec__with1) = _newArray(0,NULL);
+       PROP(defines_,litec__with1) = new(Array,0,NULL);
    ;
    // while args.valueFor('D') into var newDef
    var litec_newDef=undefined;

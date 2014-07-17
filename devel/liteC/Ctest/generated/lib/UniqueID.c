@@ -61,5 +61,5 @@ any UniqueID_getVarName(DEFAULT_ARGUMENTS); //forward declare
 
 //-------------------------
 void UniqueID__moduleInit(void){
-UniqueID_uniqueIds = new(Map,0,NULL);
+    UniqueID_uniqueIds = new(Map,0,NULL);
 };

@@ -19,9 +19,11 @@
     , items_
     };
    
-   // OptionsParser
    
-   any OptionsParser; //Class Object
+
+//--------------
+   // OptionsParser
+   any OptionsParser; //Class OptionsParser
 // parse command line parameters
 
     // properties
@@ -113,7 +115,7 @@
        //---------
 
        // .lastIndex = .search(['-#{shortOption}','--#{shortOption}','--#{argName}','-#{argName}'])
-       PROP(lastIndex_,this) = CALL1(search_,this,_newArray(4,(any_arr){_concatAny(2,(any_arr){any_str("-"), shortOption}), _concatAny(2,(any_arr){any_str("--"), shortOption}), _concatAny(2,(any_arr){any_str("--"), argName}), _concatAny(2,(any_arr){any_str("-"), argName})}));
+       PROP(lastIndex_,this) = CALL1(search_,this,new(Array,4,(any_arr){_concatAny(2,(any_arr){any_str("-"), shortOption}), _concatAny(2,(any_arr){any_str("--"), shortOption}), _concatAny(2,(any_arr){any_str("--"), argName}), _concatAny(2,(any_arr){any_str("-"), argName})}));
        // return .lastIndex
        return PROP(lastIndex_,this);
     return undefined;
@@ -144,7 +146,7 @@
 //-------------------------
 void OptionsParser__moduleInit(void){
        OptionsParser =_newClass("OptionsParser", OptionsParser__init, sizeof(struct OptionsParser_s), Object.value.classINFOptr);
-   
        _declareMethods(OptionsParser, OptionsParser_METHODS);
        _declareProps(OptionsParser, OptionsParser_PROPS, sizeof OptionsParser_PROPS);
+   
 };

@@ -9,17 +9,15 @@ extern void logger__moduleInit(void);
 
 //--------------
    // logger_LogOptions
-   
-   extern any logger_LogOptions; //Class Object
-   
+   any logger_LogOptions; //Class logger_LogOptions
    typedef struct logger_LogOptions_s * logger_LogOptions_ptr;
    typedef struct logger_LogOptions_s {
-       any
-           verboseLevel,
-           warningLevel,
-           storeMessages,
-           debugOptions
-   ;
+       //LogOptions
+       any verboseLevel;
+       any warningLevel;
+       any storeMessages;
+       any debugOptions;
+   
    } logger_LogOptions_s;
    
    extern void logger_LogOptions__init(DEFAULT_ARGUMENTS);
@@ -27,15 +25,13 @@ extern void logger__moduleInit(void);
 
 //--------------
    // logger_LogOptionsDebug
-   
-   extern any logger_LogOptionsDebug; //Class Object
-   
+   any logger_LogOptionsDebug; //Class logger_LogOptionsDebug
    typedef struct logger_LogOptionsDebug_s * logger_LogOptionsDebug_ptr;
    typedef struct logger_LogOptionsDebug_s {
-       any
-           enabled,
-           file
-   ;
+       //LogOptionsDebug
+       any enabled;
+       any file;
+   
    } logger_LogOptionsDebug_s;
    
    extern void logger_LogOptionsDebug__init(DEFAULT_ARGUMENTS);
@@ -47,6 +43,8 @@ extern void logger__moduleInit(void);
        extern var logger_warningCount;
        extern var logger_messages;
        extern any logger_debug(DEFAULT_ARGUMENTS);
+       extern any logger_debugGroup(DEFAULT_ARGUMENTS);
+       extern any logger_debugGroupEnd(DEFAULT_ARGUMENTS);
        extern any logger_debugClear(DEFAULT_ARGUMENTS);
        extern any logger_error(DEFAULT_ARGUMENTS);
        extern any logger_warning(DEFAULT_ARGUMENTS);

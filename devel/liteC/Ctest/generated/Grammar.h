@@ -8,16 +8,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_PrintStatement extends ASTBase
-   
-   
-   extern any Grammar_PrintStatement; //Class Object
+   // Grammar_PrintStatement
+   any Grammar_PrintStatement; //Class Grammar_PrintStatement extends ASTBase
    
    typedef struct Grammar_PrintStatement_s * Grammar_PrintStatement_ptr;
    typedef struct Grammar_PrintStatement_s {
-       any
-           args
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //PrintStatement
+       any args;
+   
    } Grammar_PrintStatement_s;
    
    extern void Grammar_PrintStatement__init(DEFAULT_ARGUMENTS);
@@ -26,16 +44,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_VarDeclList extends ASTBase
-   
-   
-   extern any Grammar_VarDeclList; //Class Object
+   // Grammar_VarDeclList
+   any Grammar_VarDeclList; //Class Grammar_VarDeclList extends ASTBase
    
    typedef struct Grammar_VarDeclList_s * Grammar_VarDeclList_ptr;
    typedef struct Grammar_VarDeclList_s {
-       any
-           list
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //VarDeclList
+       any list;
+   
    } Grammar_VarDeclList_s;
    
    extern void Grammar_VarDeclList__init(DEFAULT_ARGUMENTS);
@@ -45,13 +81,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_VarStatement extends Grammar_VarDeclList
-   
-   
-   extern any Grammar_VarStatement; //Class Object
+   // Grammar_VarStatement
+   any Grammar_VarStatement; //Class Grammar_VarStatement extends Grammar_VarDeclList
    
    typedef struct Grammar_VarStatement_s * Grammar_VarStatement_ptr;
    typedef struct Grammar_VarStatement_s {
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //VarDeclList
+       any list;
+       //VarStatement
    
    } Grammar_VarStatement_s;
    
@@ -63,20 +120,36 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_VariableDecl extends ASTBase
-   
-   
-   extern any Grammar_VariableDecl; //Class Object
+   // Grammar_VariableDecl
+   any Grammar_VariableDecl; //Class Grammar_VariableDecl extends ASTBase
    
    typedef struct Grammar_VariableDecl_s * Grammar_VariableDecl_ptr;
    typedef struct Grammar_VariableDecl_s {
-       any
-           type,
-           itemType,
-           aliasVarRef,
-           assignedValue,
-           nameDecl
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //VariableDecl
+       any aliasVarRef;
+       any assignedValue;
+       any nameDecl;
+   
    } Grammar_VariableDecl_s;
    
    extern void Grammar_VariableDecl__init(DEFAULT_ARGUMENTS);
@@ -88,19 +161,37 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_PropertiesDeclaration extends Grammar_VarDeclList
-   
-   
-   extern any Grammar_PropertiesDeclaration; //Class Object
+   // Grammar_PropertiesDeclaration
+   any Grammar_PropertiesDeclaration; //Class Grammar_PropertiesDeclaration extends Grammar_VarDeclList
    
    typedef struct Grammar_PropertiesDeclaration_s * Grammar_PropertiesDeclaration_ptr;
    typedef struct Grammar_PropertiesDeclaration_s {
-       any
-           list,
-           nameDecl,
-           declared,
-           scope
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //VarDeclList
+       any list;
+       //PropertiesDeclaration
+       any nameDecl;
+       any declared;
+   
    } Grammar_PropertiesDeclaration_s;
    
    extern void Grammar_PropertiesDeclaration__init(DEFAULT_ARGUMENTS);
@@ -110,18 +201,36 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_WithStatement extends ASTBase
-   
-   
-   extern any Grammar_WithStatement; //Class Object
+   // Grammar_WithStatement
+   any Grammar_WithStatement; //Class Grammar_WithStatement extends ASTBase
    
    typedef struct Grammar_WithStatement_s * Grammar_WithStatement_ptr;
    typedef struct Grammar_WithStatement_s {
-       any
-           varRef,
-           body,
-           nameDecl
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //WithStatement
+       any varRef;
+       any body;
+       any nameDecl;
+   
    } Grammar_WithStatement_s;
    
    extern void Grammar_WithStatement__init(DEFAULT_ARGUMENTS);
@@ -132,17 +241,35 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_TryCatch extends ASTBase
-   
-   
-   extern any Grammar_TryCatch; //Class Object
+   // Grammar_TryCatch
+   any Grammar_TryCatch; //Class Grammar_TryCatch extends ASTBase
    
    typedef struct Grammar_TryCatch_s * Grammar_TryCatch_ptr;
    typedef struct Grammar_TryCatch_s {
-       any
-           body,
-           exceptionBlock
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //TryCatch
+       any body;
+       any exceptionBlock;
+   
    } Grammar_TryCatch_s;
    
    extern void Grammar_TryCatch__init(DEFAULT_ARGUMENTS);
@@ -151,18 +278,36 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_ExceptionBlock extends ASTBase
-   
-   
-   extern any Grammar_ExceptionBlock; //Class Object
+   // Grammar_ExceptionBlock
+   any Grammar_ExceptionBlock; //Class Grammar_ExceptionBlock extends ASTBase
    
    typedef struct Grammar_ExceptionBlock_s * Grammar_ExceptionBlock_ptr;
    typedef struct Grammar_ExceptionBlock_s {
-       any
-           catchVar,
-           body,
-           finallyBody
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ExceptionBlock
+       any catchVar;
+       any body;
+       any finallyBody;
+   
    } Grammar_ExceptionBlock_s;
    
    extern void Grammar_ExceptionBlock__init(DEFAULT_ARGUMENTS);
@@ -172,17 +317,35 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_ThrowStatement extends ASTBase
-   
-   
-   extern any Grammar_ThrowStatement; //Class Object
+   // Grammar_ThrowStatement
+   any Grammar_ThrowStatement; //Class Grammar_ThrowStatement extends ASTBase
    
    typedef struct Grammar_ThrowStatement_s * Grammar_ThrowStatement_ptr;
    typedef struct Grammar_ThrowStatement_s {
-       any
-           specifier,
-           expr
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ThrowStatement
+       any specifier;
+       any expr;
+   
    } Grammar_ThrowStatement_s;
    
    extern void Grammar_ThrowStatement__init(DEFAULT_ARGUMENTS);
@@ -191,16 +354,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_ReturnStatement extends ASTBase
-   
-   
-   extern any Grammar_ReturnStatement; //Class Object
+   // Grammar_ReturnStatement
+   any Grammar_ReturnStatement; //Class Grammar_ReturnStatement extends ASTBase
    
    typedef struct Grammar_ReturnStatement_s * Grammar_ReturnStatement_ptr;
    typedef struct Grammar_ReturnStatement_s {
-       any
-           expr
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ReturnStatement
+       any expr;
+   
    } Grammar_ReturnStatement_s;
    
    extern void Grammar_ReturnStatement__init(DEFAULT_ARGUMENTS);
@@ -209,18 +390,36 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_IfStatement extends ASTBase
-   
-   
-   extern any Grammar_IfStatement; //Class Object
+   // Grammar_IfStatement
+   any Grammar_IfStatement; //Class Grammar_IfStatement extends ASTBase
    
    typedef struct Grammar_IfStatement_s * Grammar_IfStatement_ptr;
    typedef struct Grammar_IfStatement_s {
-       any
-           conditional,
-           body,
-           elseStatement
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //IfStatement
+       any conditional;
+       any body;
+       any elseStatement;
+   
    } Grammar_IfStatement_s;
    
    extern void Grammar_IfStatement__init(DEFAULT_ARGUMENTS);
@@ -229,16 +428,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_ElseIfStatement extends ASTBase
-   
-   
-   extern any Grammar_ElseIfStatement; //Class Object
+   // Grammar_ElseIfStatement
+   any Grammar_ElseIfStatement; //Class Grammar_ElseIfStatement extends ASTBase
    
    typedef struct Grammar_ElseIfStatement_s * Grammar_ElseIfStatement_ptr;
    typedef struct Grammar_ElseIfStatement_s {
-       any
-           nextIf
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ElseIfStatement
+       any nextIf;
+   
    } Grammar_ElseIfStatement_s;
    
    extern void Grammar_ElseIfStatement__init(DEFAULT_ARGUMENTS);
@@ -247,16 +464,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_ElseStatement extends ASTBase
-   
-   
-   extern any Grammar_ElseStatement; //Class Object
+   // Grammar_ElseStatement
+   any Grammar_ElseStatement; //Class Grammar_ElseStatement extends ASTBase
    
    typedef struct Grammar_ElseStatement_s * Grammar_ElseStatement_ptr;
    typedef struct Grammar_ElseStatement_s {
-       any
-           body
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ElseStatement
+       any body;
+   
    } Grammar_ElseStatement_s;
    
    extern void Grammar_ElseStatement__init(DEFAULT_ARGUMENTS);
@@ -265,18 +500,36 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_DoLoop extends ASTBase
-   
-   
-   extern any Grammar_DoLoop; //Class Object
+   // Grammar_DoLoop
+   any Grammar_DoLoop; //Class Grammar_DoLoop extends ASTBase
    
    typedef struct Grammar_DoLoop_s * Grammar_DoLoop_ptr;
    typedef struct Grammar_DoLoop_s {
-       any
-           preWhileUntilExpression,
-           body,
-           postWhileUntilExpression
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //DoLoop
+       any preWhileUntilExpression;
+       any body;
+       any postWhileUntilExpression;
+   
    } Grammar_DoLoop_s;
    
    extern void Grammar_DoLoop__init(DEFAULT_ARGUMENTS);
@@ -285,17 +538,37 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_WhileUntilLoop extends Grammar_DoLoop
-   
-   
-   extern any Grammar_WhileUntilLoop; //Class Object
+   // Grammar_WhileUntilLoop
+   any Grammar_WhileUntilLoop; //Class Grammar_WhileUntilLoop extends Grammar_DoLoop
    
    typedef struct Grammar_WhileUntilLoop_s * Grammar_WhileUntilLoop_ptr;
    typedef struct Grammar_WhileUntilLoop_s {
-       any
-           preWhileUntilExpression,
-           body
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //DoLoop
+       any preWhileUntilExpression;
+       any body;
+       any postWhileUntilExpression;
+       //WhileUntilLoop
+   
    } Grammar_WhileUntilLoop_s;
    
    extern void Grammar_WhileUntilLoop__init(DEFAULT_ARGUMENTS);
@@ -303,16 +576,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_WhileUntilExpression extends ASTBase
-   
-   
-   extern any Grammar_WhileUntilExpression; //Class Object
+   // Grammar_WhileUntilExpression
+   any Grammar_WhileUntilExpression; //Class Grammar_WhileUntilExpression extends ASTBase
    
    typedef struct Grammar_WhileUntilExpression_s * Grammar_WhileUntilExpression_ptr;
    typedef struct Grammar_WhileUntilExpression_s {
-       any
-           expr
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //WhileUntilExpression
+       any expr;
+   
    } Grammar_WhileUntilExpression_s;
    
    extern void Grammar_WhileUntilExpression__init(DEFAULT_ARGUMENTS);
@@ -321,16 +612,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_LoopControlStatement extends ASTBase
-   
-   
-   extern any Grammar_LoopControlStatement; //Class Object
+   // Grammar_LoopControlStatement
+   any Grammar_LoopControlStatement; //Class Grammar_LoopControlStatement extends ASTBase
    
    typedef struct Grammar_LoopControlStatement_s * Grammar_LoopControlStatement_ptr;
    typedef struct Grammar_LoopControlStatement_s {
-       any
-           control
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //LoopControlStatement
+       any control;
+   
    } Grammar_LoopControlStatement_s;
    
    extern void Grammar_LoopControlStatement__init(DEFAULT_ARGUMENTS);
@@ -339,13 +648,32 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_DoNothingStatement extends ASTBase
-   
-   
-   extern any Grammar_DoNothingStatement; //Class Object
+   // Grammar_DoNothingStatement
+   any Grammar_DoNothingStatement; //Class Grammar_DoNothingStatement extends ASTBase
    
    typedef struct Grammar_DoNothingStatement_s * Grammar_DoNothingStatement_ptr;
    typedef struct Grammar_DoNothingStatement_s {
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //DoNothingStatement
    
    } Grammar_DoNothingStatement_s;
    
@@ -355,105 +683,198 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_ForStatement extends ASTBase
-   
-   
-   extern any Grammar_ForStatement; //Class Object
+   // Grammar_ForStatement
+   any Grammar_ForStatement; //Class Grammar_ForStatement extends ASTBase
    
    typedef struct Grammar_ForStatement_s * Grammar_ForStatement_ptr;
    typedef struct Grammar_ForStatement_s {
-       any
-           variant
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ForStatement
+       any variant;
+   
    } Grammar_ForStatement_s;
    
    extern void Grammar_ForStatement__init(DEFAULT_ARGUMENTS);
    extern any Grammar_ForStatement_parse(DEFAULT_ARGUMENTS);
    extern any Grammar_ForStatement_declare(DEFAULT_ARGUMENTS);
-   extern any Grammar_ForStatement_evaluateAssignments(DEFAULT_ARGUMENTS);
-   extern any Grammar_ForStatement_validatePropertyAccess(DEFAULT_ARGUMENTS);
    extern any Grammar_ForStatement_produce(DEFAULT_ARGUMENTS);
    
 
 //--------------
-   // Grammar_ForEachProperty extends ASTBase
-   
-   
-   extern any Grammar_ForEachProperty; //Class Object
+   // Grammar_ForEachProperty
+   any Grammar_ForEachProperty; //Class Grammar_ForEachProperty extends ASTBase
    
    typedef struct Grammar_ForEachProperty_s * Grammar_ForEachProperty_ptr;
    typedef struct Grammar_ForEachProperty_s {
-       any
-           indexVar,
-           mainVar,
-           iterable,
-           where,
-           body
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ForEachProperty
+       any indexVar;
+       any mainVar;
+       any iterable;
+       any where;
+       any body;
+   
    } Grammar_ForEachProperty_s;
    
    extern void Grammar_ForEachProperty__init(DEFAULT_ARGUMENTS);
    extern any Grammar_ForEachProperty_parse(DEFAULT_ARGUMENTS);
+   extern any Grammar_ForEachProperty_declare(DEFAULT_ARGUMENTS);
+   extern any Grammar_ForEachProperty_evaluateAssignments(DEFAULT_ARGUMENTS);
    extern any Grammar_ForEachProperty_produce(DEFAULT_ARGUMENTS);
    
 
 //--------------
-   // Grammar_ForEachInArray extends ASTBase
-   
-   
-   extern any Grammar_ForEachInArray; //Class Object
+   // Grammar_ForEachInArray
+   any Grammar_ForEachInArray; //Class Grammar_ForEachInArray extends ASTBase
    
    typedef struct Grammar_ForEachInArray_s * Grammar_ForEachInArray_ptr;
    typedef struct Grammar_ForEachInArray_s {
-       any
-           indexVar,
-           mainVar,
-           iterable,
-           where,
-           body,
-           isMap
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ForEachInArray
+       any indexVar;
+       any mainVar;
+       any iterable;
+       any where;
+       any body;
+   
    } Grammar_ForEachInArray_s;
    
    extern void Grammar_ForEachInArray__init(DEFAULT_ARGUMENTS);
    extern any Grammar_ForEachInArray_parse(DEFAULT_ARGUMENTS);
+   extern any Grammar_ForEachInArray_declare(DEFAULT_ARGUMENTS);
+   extern any Grammar_ForEachInArray_evaluateAssignments(DEFAULT_ARGUMENTS);
+   extern any Grammar_ForEachInArray_validatePropertyAccess(DEFAULT_ARGUMENTS);
    extern any Grammar_ForEachInArray_produce(DEFAULT_ARGUMENTS);
    extern any Grammar_ForEachInArray_produceForMap(DEFAULT_ARGUMENTS);
    
 
 //--------------
-   // Grammar_ForIndexNumeric extends ASTBase
-   
-   
-   extern any Grammar_ForIndexNumeric; //Class Object
+   // Grammar_ForIndexNumeric
+   any Grammar_ForIndexNumeric; //Class Grammar_ForIndexNumeric extends ASTBase
    
    typedef struct Grammar_ForIndexNumeric_s * Grammar_ForIndexNumeric_ptr;
    typedef struct Grammar_ForIndexNumeric_s {
-       any
-           indexVar,
-           conditionPrefix,
-           endExpression,
-           increment,
-           body
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ForIndexNumeric
+       any indexVar;
+       any conditionPrefix;
+       any endExpression;
+       any increment;
+       any body;
+   
    } Grammar_ForIndexNumeric_s;
    
    extern void Grammar_ForIndexNumeric__init(DEFAULT_ARGUMENTS);
    extern any Grammar_ForIndexNumeric_parse(DEFAULT_ARGUMENTS);
+   extern any Grammar_ForIndexNumeric_declare(DEFAULT_ARGUMENTS);
    extern any Grammar_ForIndexNumeric_produce(DEFAULT_ARGUMENTS);
    
 
 //--------------
-   // Grammar_ForWhereFilter extends ASTBase
-   
-   
-   extern any Grammar_ForWhereFilter; //Class Object
+   // Grammar_ForWhereFilter
+   any Grammar_ForWhereFilter; //Class Grammar_ForWhereFilter extends ASTBase
    
    typedef struct Grammar_ForWhereFilter_s * Grammar_ForWhereFilter_ptr;
    typedef struct Grammar_ForWhereFilter_s {
-       any
-           filterExpression
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ForWhereFilter
+       any filterExpression;
+   
    } Grammar_ForWhereFilter_s;
    
    extern void Grammar_ForWhereFilter__init(DEFAULT_ARGUMENTS);
@@ -462,16 +883,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_DeleteStatement extends ASTBase
-   
-   
-   extern any Grammar_DeleteStatement; //Class Object
+   // Grammar_DeleteStatement
+   any Grammar_DeleteStatement; //Class Grammar_DeleteStatement extends ASTBase
    
    typedef struct Grammar_DeleteStatement_s * Grammar_DeleteStatement_ptr;
    typedef struct Grammar_DeleteStatement_s {
-       any
-           varRef
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //DeleteStatement
+       any varRef;
+   
    } Grammar_DeleteStatement_s;
    
    extern void Grammar_DeleteStatement__init(DEFAULT_ARGUMENTS);
@@ -480,17 +919,35 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_AssignmentStatement extends ASTBase
-   
-   
-   extern any Grammar_AssignmentStatement; //Class Object
+   // Grammar_AssignmentStatement
+   any Grammar_AssignmentStatement; //Class Grammar_AssignmentStatement extends ASTBase
    
    typedef struct Grammar_AssignmentStatement_s * Grammar_AssignmentStatement_ptr;
    typedef struct Grammar_AssignmentStatement_s {
-       any
-           lvalue,
-           rvalue
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //AssignmentStatement
+       any lvalue;
+       any rvalue;
+   
    } Grammar_AssignmentStatement_s;
    
    extern void Grammar_AssignmentStatement__init(DEFAULT_ARGUMENTS);
@@ -500,20 +957,37 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_VariableRef extends ASTBase
-   
-   
-   extern any Grammar_VariableRef; //Class Object
+   // Grammar_VariableRef
+   any Grammar_VariableRef; //Class Grammar_VariableRef extends ASTBase
    
    typedef struct Grammar_VariableRef_s * Grammar_VariableRef_ptr;
    typedef struct Grammar_VariableRef_s {
-       any
-           preIncDec,
-           postIncDec,
-           importedModule,
-           produceType,
-           calcType
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //VariableRef
+       any preIncDec;
+       any postIncDec;
+       any produceType;
+       any calcType;
+   
    } Grammar_VariableRef_s;
    
    extern void Grammar_VariableRef__init(DEFAULT_ARGUMENTS);
@@ -530,13 +1004,32 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_Accessor extends ASTBase
-   
-   
-   extern any Grammar_Accessor; //Class Object
+   // Grammar_Accessor
+   any Grammar_Accessor; //Class Grammar_Accessor extends ASTBase
    
    typedef struct Grammar_Accessor_s * Grammar_Accessor_ptr;
    typedef struct Grammar_Accessor_s {
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Accessor
    
    } Grammar_Accessor_s;
    
@@ -546,13 +1039,33 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_PropertyAccess extends Grammar_Accessor
-   
-   
-   extern any Grammar_PropertyAccess; //Class Object
+   // Grammar_PropertyAccess
+   any Grammar_PropertyAccess; //Class Grammar_PropertyAccess extends Grammar_Accessor
    
    typedef struct Grammar_PropertyAccess_s * Grammar_PropertyAccess_ptr;
    typedef struct Grammar_PropertyAccess_s {
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Accessor
+       //PropertyAccess
    
    } Grammar_PropertyAccess_s;
    
@@ -562,13 +1075,33 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_IndexAccess extends Grammar_Accessor
-   
-   
-   extern any Grammar_IndexAccess; //Class Object
+   // Grammar_IndexAccess
+   any Grammar_IndexAccess; //Class Grammar_IndexAccess extends Grammar_Accessor
    
    typedef struct Grammar_IndexAccess_s * Grammar_IndexAccess_ptr;
    typedef struct Grammar_IndexAccess_s {
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Accessor
+       //IndexAccess
    
    } Grammar_IndexAccess_s;
    
@@ -578,16 +1111,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_FunctionArgument extends ASTBase
-   
-   
-   extern any Grammar_FunctionArgument; //Class Object
+   // Grammar_FunctionArgument
+   any Grammar_FunctionArgument; //Class Grammar_FunctionArgument extends ASTBase
    
    typedef struct Grammar_FunctionArgument_s * Grammar_FunctionArgument_ptr;
    typedef struct Grammar_FunctionArgument_s {
-       any
-           expression
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //FunctionArgument
+       any expression;
+   
    } Grammar_FunctionArgument_s;
    
    extern void Grammar_FunctionArgument__init(DEFAULT_ARGUMENTS);
@@ -596,16 +1147,35 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_FunctionAccess extends Grammar_Accessor
-   
-   
-   extern any Grammar_FunctionAccess; //Class Object
+   // Grammar_FunctionAccess
+   any Grammar_FunctionAccess; //Class Grammar_FunctionAccess extends Grammar_Accessor
    
    typedef struct Grammar_FunctionAccess_s * Grammar_FunctionAccess_ptr;
    typedef struct Grammar_FunctionAccess_s {
-       any
-           args
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Accessor
+       //FunctionAccess
+       any args;
+   
    } Grammar_FunctionAccess_s;
    
    extern void Grammar_FunctionAccess__init(DEFAULT_ARGUMENTS);
@@ -614,16 +1184,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_Operand extends ASTBase
-   
-   
-   extern any Grammar_Operand; //Class Object
+   // Grammar_Operand
+   any Grammar_Operand; //Class Grammar_Operand extends ASTBase
    
    typedef struct Grammar_Operand_s * Grammar_Operand_ptr;
    typedef struct Grammar_Operand_s {
-       any
-           produceType
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Operand
+       any produceType;
+   
    } Grammar_Operand_s;
    
    extern void Grammar_Operand__init(DEFAULT_ARGUMENTS);
@@ -633,22 +1221,40 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_Oper extends ASTBase
-   
-   
-   extern any Grammar_Oper; //Class Object
+   // Grammar_Oper
+   any Grammar_Oper; //Class Grammar_Oper extends ASTBase
    
    typedef struct Grammar_Oper_s * Grammar_Oper_ptr;
    typedef struct Grammar_Oper_s {
-       any
-           negated,
-           left,
-           right,
-           pushed,
-           precedence,
-           intoVar,
-           produceType
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Oper
+       any negated;
+       any left;
+       any right;
+       any pushed;
+       any precedence;
+       any intoVar;
+       any produceType;
+   
    } Grammar_Oper_s;
    
    extern void Grammar_Oper__init(DEFAULT_ARGUMENTS);
@@ -662,16 +1268,41 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_UnaryOper extends Grammar_Oper
-   
-   
-   extern any Grammar_UnaryOper; //Class Object
+   // Grammar_UnaryOper
+   any Grammar_UnaryOper; //Class Grammar_UnaryOper extends Grammar_Oper
    
    typedef struct Grammar_UnaryOper_s * Grammar_UnaryOper_ptr;
    typedef struct Grammar_UnaryOper_s {
-       any
-           produceType
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Oper
+       any negated;
+       any left;
+       any right;
+       any pushed;
+       any precedence;
+       any intoVar;
+       any produceType;
+       //UnaryOper
+   
    } Grammar_UnaryOper_s;
    
    extern void Grammar_UnaryOper__init(DEFAULT_ARGUMENTS);
@@ -680,19 +1311,37 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_Expression extends ASTBase
-   
-   
-   extern any Grammar_Expression; //Class Object
+   // Grammar_Expression
+   any Grammar_Expression; //Class Grammar_Expression extends ASTBase
    
    typedef struct Grammar_Expression_s * Grammar_Expression_ptr;
    typedef struct Grammar_Expression_s {
-       any
-           operandCount,
-           root,
-           ternaryCount,
-           produceType
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Expression
+       any operandCount;
+       any root;
+       any ternaryCount;
+       any produceType;
+   
    } Grammar_Expression_s;
    
    extern void Grammar_Expression__init(DEFAULT_ARGUMENTS);
@@ -703,16 +1352,33 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_Literal extends ASTBase
-   
-   
-   extern any Grammar_Literal; //Class Object
+   // Grammar_Literal
+   any Grammar_Literal; //Class Grammar_Literal extends ASTBase
    
    typedef struct Grammar_Literal_s * Grammar_Literal_ptr;
    typedef struct Grammar_Literal_s {
-       any
-           type
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Literal
+   
    } Grammar_Literal_s;
    
    extern void Grammar_Literal__init(DEFAULT_ARGUMENTS);
@@ -720,16 +1386,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_NumberLiteral extends Grammar_Literal
-   
-   
-   extern any Grammar_NumberLiteral; //Class Object
+   // Grammar_NumberLiteral
+   any Grammar_NumberLiteral; //Class Grammar_NumberLiteral extends Grammar_Literal
    
    typedef struct Grammar_NumberLiteral_s * Grammar_NumberLiteral_ptr;
    typedef struct Grammar_NumberLiteral_s {
-       any
-           type
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Literal
+       //NumberLiteral
+   
    } Grammar_NumberLiteral_s;
    
    extern void Grammar_NumberLiteral__init(DEFAULT_ARGUMENTS);
@@ -737,16 +1421,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_StringLiteral extends Grammar_Literal
-   
-   
-   extern any Grammar_StringLiteral; //Class Object
+   // Grammar_StringLiteral
+   any Grammar_StringLiteral; //Class Grammar_StringLiteral extends Grammar_Literal
    
    typedef struct Grammar_StringLiteral_s * Grammar_StringLiteral_ptr;
    typedef struct Grammar_StringLiteral_s {
-       any
-           type
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Literal
+       //StringLiteral
+   
    } Grammar_StringLiteral_s;
    
    extern void Grammar_StringLiteral__init(DEFAULT_ARGUMENTS);
@@ -755,16 +1457,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_RegExpLiteral extends Grammar_Literal
-   
-   
-   extern any Grammar_RegExpLiteral; //Class Object
+   // Grammar_RegExpLiteral
+   any Grammar_RegExpLiteral; //Class Grammar_RegExpLiteral extends Grammar_Literal
    
    typedef struct Grammar_RegExpLiteral_s * Grammar_RegExpLiteral_ptr;
    typedef struct Grammar_RegExpLiteral_s {
-       any
-           type
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Literal
+       //RegExpLiteral
+   
    } Grammar_RegExpLiteral_s;
    
    extern void Grammar_RegExpLiteral__init(DEFAULT_ARGUMENTS);
@@ -772,36 +1492,76 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_ArrayLiteral extends Grammar_Literal
-   
-   
-   extern any Grammar_ArrayLiteral; //Class Object
+   // Grammar_ArrayLiteral
+   any Grammar_ArrayLiteral; //Class Grammar_ArrayLiteral extends Grammar_Literal
    
    typedef struct Grammar_ArrayLiteral_s * Grammar_ArrayLiteral_ptr;
    typedef struct Grammar_ArrayLiteral_s {
-       any
-           type,
-           items
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Literal
+       //ArrayLiteral
+       any items;
+       any nameDecl;
+   
    } Grammar_ArrayLiteral_s;
    
    extern void Grammar_ArrayLiteral__init(DEFAULT_ARGUMENTS);
    extern any Grammar_ArrayLiteral_parse(DEFAULT_ARGUMENTS);
+   extern any Grammar_ArrayLiteral_declare(DEFAULT_ARGUMENTS);
+   extern any Grammar_ArrayLiteral_getResultType(DEFAULT_ARGUMENTS);
    extern any Grammar_ArrayLiteral_produce(DEFAULT_ARGUMENTS);
    
 
 //--------------
-   // Grammar_ObjectLiteral extends Grammar_Literal
-   
-   
-   extern any Grammar_ObjectLiteral; //Class Object
+   // Grammar_ObjectLiteral
+   any Grammar_ObjectLiteral; //Class Grammar_ObjectLiteral extends Grammar_Literal
    
    typedef struct Grammar_ObjectLiteral_s * Grammar_ObjectLiteral_ptr;
    typedef struct Grammar_ObjectLiteral_s {
-       any
-           items,
-           nameDecl
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Literal
+       //ObjectLiteral
+       any items;
+       any nameDecl;
+   
    } Grammar_ObjectLiteral_s;
    
    extern void Grammar_ObjectLiteral__init(DEFAULT_ARGUMENTS);
@@ -813,17 +1573,35 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_NameValuePair extends ASTBase
-   
-   
-   extern any Grammar_NameValuePair; //Class Object
+   // Grammar_NameValuePair
+   any Grammar_NameValuePair; //Class Grammar_NameValuePair extends ASTBase
    
    typedef struct Grammar_NameValuePair_s * Grammar_NameValuePair_ptr;
    typedef struct Grammar_NameValuePair_s {
-       any
-           value,
-           nameDecl
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //NameValuePair
+       any value;
+       any nameDecl;
+   
    } Grammar_NameValuePair_s;
    
    extern void Grammar_NameValuePair__init(DEFAULT_ARGUMENTS);
@@ -834,13 +1612,36 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_FreeObjectLiteral extends Grammar_ObjectLiteral
-   
-   
-   extern any Grammar_FreeObjectLiteral; //Class Object
+   // Grammar_FreeObjectLiteral
+   any Grammar_FreeObjectLiteral; //Class Grammar_FreeObjectLiteral extends Grammar_ObjectLiteral
    
    typedef struct Grammar_FreeObjectLiteral_s * Grammar_FreeObjectLiteral_ptr;
    typedef struct Grammar_FreeObjectLiteral_s {
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Literal
+       //ObjectLiteral
+       any items;
+       any nameDecl;
+       //FreeObjectLiteral
    
    } Grammar_FreeObjectLiteral_s;
    
@@ -849,17 +1650,35 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_ParenExpression extends ASTBase
-   
-   
-   extern any Grammar_ParenExpression; //Class Object
+   // Grammar_ParenExpression
+   any Grammar_ParenExpression; //Class Grammar_ParenExpression extends ASTBase
    
    typedef struct Grammar_ParenExpression_s * Grammar_ParenExpression_ptr;
    typedef struct Grammar_ParenExpression_s {
-       any
-           expr,
-           produceType
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ParenExpression
+       any expr;
+       any produceType;
+   
    } Grammar_ParenExpression_s;
    
    extern void Grammar_ParenExpression__init(DEFAULT_ARGUMENTS);
@@ -868,23 +1687,41 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_FunctionDeclaration extends ASTBase
-   
-   
-   extern any Grammar_FunctionDeclaration; //Class Object
+   // Grammar_FunctionDeclaration
+   any Grammar_FunctionDeclaration; //Class Grammar_FunctionDeclaration extends ASTBase
    
    typedef struct Grammar_FunctionDeclaration_s * Grammar_FunctionDeclaration_ptr;
    typedef struct Grammar_FunctionDeclaration_s {
-       any
-           specifier,
-           paramsDeclarations,
-           definePropItems,
-           body,
-           EndFnLineNum,
-           nameDecl,
-           declared,
-           scope
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //FunctionDeclaration
+       any specifier;
+       any paramsDeclarations;
+       any definePropItems;
+       any body;
+       any hasExceptionBlock;
+       any EndFnLineNum;
+       any nameDecl;
+       any declared;
+   
    } Grammar_FunctionDeclaration_s;
    
    extern void Grammar_FunctionDeclaration__init(DEFAULT_ARGUMENTS);
@@ -898,16 +1735,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_DefinePropertyItem extends ASTBase
-   
-   
-   extern any Grammar_DefinePropertyItem; //Class Object
+   // Grammar_DefinePropertyItem
+   any Grammar_DefinePropertyItem; //Class Grammar_DefinePropertyItem extends ASTBase
    
    typedef struct Grammar_DefinePropertyItem_s * Grammar_DefinePropertyItem_ptr;
    typedef struct Grammar_DefinePropertyItem_s {
-       any
-           negated
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //DefinePropertyItem
+       any negated;
+   
    } Grammar_DefinePropertyItem_s;
    
    extern void Grammar_DefinePropertyItem__init(DEFAULT_ARGUMENTS);
@@ -915,13 +1770,41 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_MethodDeclaration extends Grammar_FunctionDeclaration
-   
-   
-   extern any Grammar_MethodDeclaration; //Class Object
+   // Grammar_MethodDeclaration
+   any Grammar_MethodDeclaration; //Class Grammar_MethodDeclaration extends Grammar_FunctionDeclaration
    
    typedef struct Grammar_MethodDeclaration_s * Grammar_MethodDeclaration_ptr;
    typedef struct Grammar_MethodDeclaration_s {
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //FunctionDeclaration
+       any specifier;
+       any paramsDeclarations;
+       any definePropItems;
+       any body;
+       any hasExceptionBlock;
+       any EndFnLineNum;
+       any nameDecl;
+       any declared;
+       //MethodDeclaration
    
    } Grammar_MethodDeclaration_s;
    
@@ -931,37 +1814,87 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_ClassDeclaration extends ASTBase
-   
-   
-   extern any Grammar_ClassDeclaration; //Class Object
+   // Grammar_ClassDeclaration
+   any Grammar_ClassDeclaration; //Class Grammar_ClassDeclaration extends ASTBase
    
    typedef struct Grammar_ClassDeclaration_s * Grammar_ClassDeclaration_ptr;
    typedef struct Grammar_ClassDeclaration_s {
-       any
-           varRefSuper,
-           body,
-           nameDecl
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ClassDeclaration
+       any varRefSuper;
+       any body;
+       any nameDecl;
+   
    } Grammar_ClassDeclaration_s;
    
    extern void Grammar_ClassDeclaration__init(DEFAULT_ARGUMENTS);
    extern any Grammar_ClassDeclaration_parse(DEFAULT_ARGUMENTS);
    extern any Grammar_ClassDeclaration_declare(DEFAULT_ARGUMENTS);
+   extern any Grammar_ClassDeclaration_validatePropertyAccess(DEFAULT_ARGUMENTS);
+   extern any Grammar_ClassDeclaration_processAppendToExtends(DEFAULT_ARGUMENTS);
    extern any Grammar_ClassDeclaration_produceHeader(DEFAULT_ARGUMENTS);
    extern any Grammar_ClassDeclaration_produce(DEFAULT_ARGUMENTS);
+   extern any Grammar_ClassDeclaration_outClassTitleComment(DEFAULT_ARGUMENTS);
    extern any Grammar_ClassDeclaration_produceStaticListMethodsAndProps(DEFAULT_ARGUMENTS);
    extern any Grammar_ClassDeclaration_produceClassRegistration(DEFAULT_ARGUMENTS);
    
 
 //--------------
-   // Grammar_ConstructorDeclaration extends Grammar_MethodDeclaration
-   
-   
-   extern any Grammar_ConstructorDeclaration; //Class Object
+   // Grammar_ConstructorDeclaration
+   any Grammar_ConstructorDeclaration; //Class Grammar_ConstructorDeclaration extends Grammar_MethodDeclaration
    
    typedef struct Grammar_ConstructorDeclaration_s * Grammar_ConstructorDeclaration_ptr;
    typedef struct Grammar_ConstructorDeclaration_s {
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //FunctionDeclaration
+       any specifier;
+       any paramsDeclarations;
+       any definePropItems;
+       any body;
+       any hasExceptionBlock;
+       any EndFnLineNum;
+       any nameDecl;
+       any declared;
+       //MethodDeclaration
+       //ConstructorDeclaration
    
    } Grammar_ConstructorDeclaration_s;
    
@@ -971,53 +1904,117 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_AppendToDeclaration extends Grammar_ClassDeclaration
-   
-   
-   extern any Grammar_AppendToDeclaration; //Class Object
+   // Grammar_AppendToDeclaration
+   any Grammar_AppendToDeclaration; //Class Grammar_AppendToDeclaration extends Grammar_ClassDeclaration
    
    typedef struct Grammar_AppendToDeclaration_s * Grammar_AppendToDeclaration_ptr;
    typedef struct Grammar_AppendToDeclaration_s {
-       any
-           toNamespace,
-           varRef,
-           body
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ClassDeclaration
+       any varRefSuper;
+       any body;
+       any nameDecl;
+       //AppendToDeclaration
+       any toNamespace;
+       any varRef;
+   
    } Grammar_AppendToDeclaration_s;
    
    extern void Grammar_AppendToDeclaration__init(DEFAULT_ARGUMENTS);
    extern any Grammar_AppendToDeclaration_parse(DEFAULT_ARGUMENTS);
-   extern any Grammar_AppendToDeclaration_processAppendTo(DEFAULT_ARGUMENTS);
+   extern any Grammar_AppendToDeclaration_processAppendToExtends(DEFAULT_ARGUMENTS);
    extern any Grammar_AppendToDeclaration_produceHeader(DEFAULT_ARGUMENTS);
    extern any Grammar_AppendToDeclaration_produce(DEFAULT_ARGUMENTS);
    
 
 //--------------
-   // Grammar_NamespaceDeclaration extends Grammar_ClassDeclaration
-   
-   
-   extern any Grammar_NamespaceDeclaration; //Class Object
+   // Grammar_NamespaceDeclaration
+   any Grammar_NamespaceDeclaration; //Class Grammar_NamespaceDeclaration extends Grammar_ClassDeclaration
    
    typedef struct Grammar_NamespaceDeclaration_s * Grammar_NamespaceDeclaration_ptr;
    typedef struct Grammar_NamespaceDeclaration_s {
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ClassDeclaration
+       any varRefSuper;
+       any body;
+       any nameDecl;
+       //NamespaceDeclaration
    
    } Grammar_NamespaceDeclaration_s;
    
    extern void Grammar_NamespaceDeclaration__init(DEFAULT_ARGUMENTS);
    extern any Grammar_NamespaceDeclaration_parse(DEFAULT_ARGUMENTS);
+   extern any Grammar_NamespaceDeclaration_produceCallNamespaceInit(DEFAULT_ARGUMENTS);
    extern any Grammar_NamespaceDeclaration_makeName(DEFAULT_ARGUMENTS);
    extern any Grammar_NamespaceDeclaration_produceHeader(DEFAULT_ARGUMENTS);
    extern any Grammar_NamespaceDeclaration_produce(DEFAULT_ARGUMENTS);
    
 
 //--------------
-   // Grammar_DebuggerStatement extends ASTBase
-   
-   
-   extern any Grammar_DebuggerStatement; //Class Object
+   // Grammar_DebuggerStatement
+   any Grammar_DebuggerStatement; //Class Grammar_DebuggerStatement extends ASTBase
    
    typedef struct Grammar_DebuggerStatement_s * Grammar_DebuggerStatement_ptr;
    typedef struct Grammar_DebuggerStatement_s {
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //DebuggerStatement
    
    } Grammar_DebuggerStatement_s;
    
@@ -1027,20 +2024,38 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_CompilerStatement extends ASTBase
-   
-   
-   extern any Grammar_CompilerStatement; //Class Object
+   // Grammar_CompilerStatement
+   any Grammar_CompilerStatement; //Class Grammar_CompilerStatement extends ASTBase
    
    typedef struct Grammar_CompilerStatement_s * Grammar_CompilerStatement_ptr;
    typedef struct Grammar_CompilerStatement_s {
-       any
-           kind,
-           conditional,
-           list,
-           body,
-           endLineInx
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //CompilerStatement
+       any kind;
+       any conditional;
+       any list;
+       any body;
+       any endLineInx;
+   
    } Grammar_CompilerStatement_s;
    
    extern void Grammar_CompilerStatement__init(DEFAULT_ARGUMENTS);
@@ -1049,17 +2064,35 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_ImportStatement extends ASTBase
-   
-   
-   extern any Grammar_ImportStatement; //Class Object
+   // Grammar_ImportStatement
+   any Grammar_ImportStatement; //Class Grammar_ImportStatement extends ASTBase
    
    typedef struct Grammar_ImportStatement_s * Grammar_ImportStatement_ptr;
    typedef struct Grammar_ImportStatement_s {
-       any
-           global,
-           list
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ImportStatement
+       any global;
+       any list;
+   
    } Grammar_ImportStatement_s;
    
    extern void Grammar_ImportStatement__init(DEFAULT_ARGUMENTS);
@@ -1068,18 +2101,36 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_ImportStatementItem extends ASTBase
-   
-   
-   extern any Grammar_ImportStatementItem; //Class Object
+   // Grammar_ImportStatementItem
+   any Grammar_ImportStatementItem; //Class Grammar_ImportStatementItem extends ASTBase
    
    typedef struct Grammar_ImportStatementItem_s * Grammar_ImportStatementItem_ptr;
    typedef struct Grammar_ImportStatementItem_s {
-       any
-           importParameter,
-           importedModule,
-           nameDecl
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //ImportStatementItem
+       any importParameter;
+       any importedModule;
+       any nameDecl;
+   
    } Grammar_ImportStatementItem_s;
    
    extern void Grammar_ImportStatementItem__init(DEFAULT_ARGUMENTS);
@@ -1089,21 +2140,38 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_DeclareStatement extends ASTBase
-   
-   
-   extern any Grammar_DeclareStatement; //Class Object
+   // Grammar_DeclareStatement
+   any Grammar_DeclareStatement; //Class Grammar_DeclareStatement extends ASTBase
    
    typedef struct Grammar_DeclareStatement_s * Grammar_DeclareStatement_ptr;
    typedef struct Grammar_DeclareStatement_s {
-       any
-           varRef,
-           type,
-           names,
-           list,
-           specifier,
-           globVar
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //DeclareStatement
+       any varRef;
+       any names;
+       any list;
+       any specifier;
+       any globVar;
+   
    } Grammar_DeclareStatement_s;
    
    extern void Grammar_DeclareStatement__init(DEFAULT_ARGUMENTS);
@@ -1117,16 +2185,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_DefaultAssignment extends ASTBase
-   
-   
-   extern any Grammar_DefaultAssignment; //Class Object
+   // Grammar_DefaultAssignment
+   any Grammar_DefaultAssignment; //Class Grammar_DefaultAssignment extends ASTBase
    
    typedef struct Grammar_DefaultAssignment_s * Grammar_DefaultAssignment_ptr;
    typedef struct Grammar_DefaultAssignment_s {
-       any
-           assignment
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //DefaultAssignment
+       any assignment;
+   
    } Grammar_DefaultAssignment_s;
    
    extern void Grammar_DefaultAssignment__init(DEFAULT_ARGUMENTS);
@@ -1137,16 +2223,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_EndStatement extends ASTBase
-   
-   
-   extern any Grammar_EndStatement; //Class Object
+   // Grammar_EndStatement
+   any Grammar_EndStatement; //Class Grammar_EndStatement extends ASTBase
    
    typedef struct Grammar_EndStatement_s * Grammar_EndStatement_ptr;
    typedef struct Grammar_EndStatement_s {
-       any
-           references
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //EndStatement
+       any references;
+   
    } Grammar_EndStatement_s;
    
    extern void Grammar_EndStatement__init(DEFAULT_ARGUMENTS);
@@ -1155,18 +2259,36 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_YieldExpression extends ASTBase
-   
-   
-   extern any Grammar_YieldExpression; //Class Object
+   // Grammar_YieldExpression
+   any Grammar_YieldExpression; //Class Grammar_YieldExpression extends ASTBase
    
    typedef struct Grammar_YieldExpression_s * Grammar_YieldExpression_ptr;
    typedef struct Grammar_YieldExpression_s {
-       any
-           specifier,
-           fnCall,
-           arrExpression
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //YieldExpression
+       any specifier;
+       any fnCall;
+       any arrExpression;
+   
    } Grammar_YieldExpression_s;
    
    extern void Grammar_YieldExpression__init(DEFAULT_ARGUMENTS);
@@ -1175,16 +2297,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_FunctionCall extends ASTBase
-   
-   
-   extern any Grammar_FunctionCall; //Class Object
+   // Grammar_FunctionCall
+   any Grammar_FunctionCall; //Class Grammar_FunctionCall extends ASTBase
    
    typedef struct Grammar_FunctionCall_s * Grammar_FunctionCall_ptr;
    typedef struct Grammar_FunctionCall_s {
-       any
-           varRef
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //FunctionCall
+       any varRef;
+   
    } Grammar_FunctionCall_s;
    
    extern void Grammar_FunctionCall__init(DEFAULT_ARGUMENTS);
@@ -1193,18 +2333,36 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_SwitchStatement extends ASTBase
-   
-   
-   extern any Grammar_SwitchStatement; //Class Object
+   // Grammar_SwitchStatement
+   any Grammar_SwitchStatement; //Class Grammar_SwitchStatement extends ASTBase
    
    typedef struct Grammar_SwitchStatement_s * Grammar_SwitchStatement_ptr;
    typedef struct Grammar_SwitchStatement_s {
-       any
-           varRef,
-           cases,
-           defaultBody
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //SwitchStatement
+       any varRef;
+       any cases;
+       any defaultBody;
+   
    } Grammar_SwitchStatement_s;
    
    extern void Grammar_SwitchStatement__init(DEFAULT_ARGUMENTS);
@@ -1213,17 +2371,35 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_SwitchCase extends ASTBase
-   
-   
-   extern any Grammar_SwitchCase; //Class Object
+   // Grammar_SwitchCase
+   any Grammar_SwitchCase; //Class Grammar_SwitchCase extends ASTBase
    
    typedef struct Grammar_SwitchCase_s * Grammar_SwitchCase_ptr;
    typedef struct Grammar_SwitchCase_s {
-       any
-           expressions,
-           body
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //SwitchCase
+       any expressions;
+       any body;
+   
    } Grammar_SwitchCase_s;
    
    extern void Grammar_SwitchCase__init(DEFAULT_ARGUMENTS);
@@ -1232,18 +2408,36 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_CaseWhenExpression extends ASTBase
-   
-   
-   extern any Grammar_CaseWhenExpression; //Class Object
+   // Grammar_CaseWhenExpression
+   any Grammar_CaseWhenExpression; //Class Grammar_CaseWhenExpression extends ASTBase
    
    typedef struct Grammar_CaseWhenExpression_s * Grammar_CaseWhenExpression_ptr;
    typedef struct Grammar_CaseWhenExpression_s {
-       any
-           varRef,
-           cases,
-           elseExpression
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //CaseWhenExpression
+       any varRef;
+       any cases;
+       any elseExpression;
+   
    } Grammar_CaseWhenExpression_s;
    
    extern void Grammar_CaseWhenExpression__init(DEFAULT_ARGUMENTS);
@@ -1252,19 +2446,36 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_CaseWhenSection extends ASTBase
-   
-   
-   extern any Grammar_CaseWhenSection; //Class Object
+   // Grammar_CaseWhenSection
+   any Grammar_CaseWhenSection; //Class Grammar_CaseWhenSection extends ASTBase
    
    typedef struct Grammar_CaseWhenSection_s * Grammar_CaseWhenSection_ptr;
    typedef struct Grammar_CaseWhenSection_s {
-       any
-           parent,
-           expressions,
-           booleanExpression,
-           resultExpression
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //CaseWhenSection
+       any expressions;
+       any booleanExpression;
+       any resultExpression;
+   
    } Grammar_CaseWhenSection_s;
    
    extern void Grammar_CaseWhenSection__init(DEFAULT_ARGUMENTS);
@@ -1272,19 +2483,37 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_Statement extends ASTBase
-   
-   
-   extern any Grammar_Statement; //Class Object
+   // Grammar_Statement
+   any Grammar_Statement; //Class Grammar_Statement extends ASTBase
    
    typedef struct Grammar_Statement_s * Grammar_Statement_ptr;
    typedef struct Grammar_Statement_s {
-       any
-           adjectives,
-           specific,
-           preParsedVarRef,
-           intoVars
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Statement
+       any adjectives;
+       any specific;
+       any preParsedVarRef;
+       any intoVars;
+   
    } Grammar_Statement_s;
    
    extern void Grammar_Statement__init(DEFAULT_ARGUMENTS);
@@ -1295,16 +2524,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_Body extends ASTBase
-   
-   
-   extern any Grammar_Body; //Class Object
+   // Grammar_Body
+   any Grammar_Body; //Class Grammar_Body extends ASTBase
    
    typedef struct Grammar_Body_s * Grammar_Body_ptr;
    typedef struct Grammar_Body_s {
-       any
-           statements
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Body
+       any statements;
+   
    } Grammar_Body_s;
    
    extern void Grammar_Body__init(DEFAULT_ARGUMENTS);
@@ -1319,13 +2566,34 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_SingleLineBody extends Grammar_Body
-   
-   
-   extern any Grammar_SingleLineBody; //Class Object
+   // Grammar_SingleLineBody
+   any Grammar_SingleLineBody; //Class Grammar_SingleLineBody extends Grammar_Body
    
    typedef struct Grammar_SingleLineBody_s * Grammar_SingleLineBody_ptr;
    typedef struct Grammar_SingleLineBody_s {
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Body
+       any statements;
+       //SingleLineBody
    
    } Grammar_SingleLineBody_s;
    
@@ -1335,22 +2603,42 @@ extern void Grammar__moduleInit(void);
    
 
 //--------------
-   // Grammar_Module extends Grammar_Body
-   
-   
-   extern any Grammar_Module; //Class Object
+   // Grammar_Module
+   any Grammar_Module; //Class Grammar_Module extends Grammar_Body
    
    typedef struct Grammar_Module_s * Grammar_Module_ptr;
    typedef struct Grammar_Module_s {
-       any
-           isMain,
-           exportDefault,
-           fileInfo,
-           exports,
-           exportsReplaced,
-           requireCallNodes,
-           referenceCount
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+       //Body
+       any statements;
+       //Module
+       any isMain;
+       any exportDefault;
+       any fileInfo;
+       any exports;
+       any exportsReplaced;
+       any requireCallNodes;
+       any referenceCount;
+   
    } Grammar_Module_s;
    
    extern void Grammar_Module__init(DEFAULT_ARGUMENTS);

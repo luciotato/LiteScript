@@ -295,5 +295,5 @@
 
 //-------------------------
 void Strings__moduleInit(void){
-    Strings__namespaceInit();
+       Strings__namespaceInit();
 };

@@ -1,193 +1,128 @@
-/*
- * File:   main.c
- * Author: Lucio Tato
- *
- * Created on March 12, 2014, 8:48 AM
-
-
- Done: Call via array literal
- *
- * TO DO:
- * - Know type of every var, prop & param
- *
- * x "Map" core structure:
- *      example: property members: map string to Namedeclaration
- *      methods hasKey, tryGet, get, set , add
- *      props: keys, values
- *
- *              implemented in js, via object
- *
- * x "array of string" alias for "string array"
- *
- * - ignore modulename in varRefs. e.g:
- * - do not use "->" on "constructor", only allow on type "any"
- *          if a.constructor is Grammar.Statement
- *          if (a.type==Statement)...
- *
- * - ... to denote a function with variable number of arguments (arguments:array of any)
- * - function.apply. Only for fns with arguments
- *
- * - "in Array" -> implement indexOf
- * - "typeof any -> 'string'  example:  "if typeof searched is 'string'
- *
- * - JSON, RegExp
- *
-
-
-
- */
-
-#include "LiteC-core.h"
-
-//Module Specific
-
-//import Lexer, log
-//Object Lexer = require('./Lexer');
-//Object log = require('./log');
-//Object debug = log[_Object_getProp]('debug');
-
-    struct ObjType_1 {
-          any verbose;
-          any warning;
-          any StoreMessages;
-          struct ObjType_2 {
-            any enabled;
-            any file;
-          } debug;
-    } options = { .verbose={Number,.value.number=1}
-                ,{Number,0,1}
-                ,{Number,0,1}
-                ,{  {Number,0,1}
-                   ,{String,8,.value.ptr="out/debug.log"}
-                }
+#include "test.h"
+//-------------------------
+//Module test
+//-------------------------
+any test_inRange(DEFAULT_ARGUMENTS); //forward declare
+   //-----------------------
+   // Class test_TestClass: static list of METHODS(verbs) and PROPS(things)
+   //-----------------------
+   
+   static _methodInfoArr test_TestClass_METHODS = {
+     { indexOf_, test_TestClass_indexOf },
+     { sliceJoin_, test_TestClass_sliceJoin },
+   
+   {0,0}}; //method jmp table initializer end mark
+   
+   static _posTableItem_t test_TestClass_PROPS[] = {
+   myArr_
     };
+   
+   
 
-    typedef struct ASTBase_s * ASTBase_ptr;
+//--------------
+   // test_TestClass
+   any test_TestClass; //Class test_TestClass
 
-    struct ASTBase_s {
-        any
-            parent,
-            name, keyword, type, itemType,
-            lexer,
-            lineInx,
-            sourceLineNum, column,
-            indent, locked,
-            index;
+       // properties
+       ;
 
-    };
+       // constructor new TestClass(initValue:array)
+       void test_TestClass__init(DEFAULT_ARGUMENTS){
+           // define named params
+           var initValue= argc? arguments[0] : undefined;
+           //---------
+           // .myArr = initValue
+           PROP(myArr_,this) = initValue;
+       }
 
-    #define ASTBase 32
+       // method indexOf(searched:string, fromIndex:number=0) returns number
+       any test_TestClass_indexOf(DEFAULT_ARGUMENTS){
+           assert(_instanceof(this,test_TestClass));
+           //---------
+           // define named params
+           var searched, fromIndex;
+           searched=fromIndex=undefined;
+           switch(argc){
+             case 2:fromIndex=arguments[1];
+             case 1:searched=arguments[0];
+           }
+           //---------
 
-    any ASTBase__init(any this, any arguments /*parent:ASTBase, optional name*/){
-        // validate param types, define as typecast
-        assert(this.constructor==ASTBase);
-        assert(arguments.constructor==Array);
-        //---------
-        // define named params
-        any parent,name;
-        parent=name=undefined;
-        switch(arguments.length){
-            case 2:name=arguments.value.item[1];
-            case 1:parent=arguments.value.item[0];
-        }
-        //---------
-        AS(ASTBase,this)->parent = parent;
-        AS(ASTBase,this)->name = name;
-        return this;
-    };
+           // for n=fromIndex while n<.myArr.length
+           for(int64_t n=_anyToNumber(fromIndex); n < _length(PROP(myArr_,this)); n++) {
+               // if .myArr[n] is searched, return n;
+               if (__is(ITEM(n,PROP(myArr_,this)),searched)) {return any_number(n);};
+           };// end for n
+           // return -1
+           return any_number(-1);
+       return undefined;
+       }
 
-    any ASTBase_toString(any anyThis, any arguments){
-        // validate param types, define as typecast
-        assert(anyThis.constructor==ASTBase);
-        assert(arguments.constructor==Array);
-        #define this ((ASTBase_ptr)anyThis.value.ptr)
-        //---------
-        return this->name;
-        #undef this
-    }
+       // method sliceJoin(start, endPos) returns string
+       any test_TestClass_sliceJoin(DEFAULT_ARGUMENTS){
+           assert(_instanceof(this,test_TestClass));
+           //---------
+           // define named params
+           var start, endPos;
+           start=endPos=undefined;
+           switch(argc){
+             case 2:endPos=arguments[1];
+             case 1:start=arguments[0];
+           }
+           //---------
 
+           // var len = .myArr.length
+           var len = any_number(_length(PROP(myArr_,this)));
 
+           // default endPos = len+1
+           _default(&endPos,any_number(_anyToNumber(len) + 1));
 
-//ASTBase (prototype/this) properties
+           // start = inRange( 0, start<0?len+start:start , len-1)
+           start = test_inRange(undefined,3,(any_arr){any_number(0), _anyToNumber(start) < 0 ? any_number(_anyToNumber(len) + _anyToNumber(start)) : start, any_number(_anyToNumber(len) - 1)});
 
-    // *GENERATED*
-    /*
-    any toString(any anyThis, any arguments){
-        // Core types
-        if (anyThis.constructor<=Function) return any_str(anyToStr(anyThis));
-        switch(anyThis.constructor){
-            case ASTBase:
-                return ASTBase_toString(anyThis,arguments);
-            default:
-                return any_str("[object]"); //Object_toString(anyThis,arguments);
-        }
-    }
-     */
+           // endPos = inRange( 0, endPos<0?len+endPos:endPos , len-1)
+           endPos = test_inRange(undefined,3,(any_arr){any_number(0), _anyToNumber(endPos) < 0 ? any_number(_anyToNumber(len) + _anyToNumber(endPos)) : endPos, any_number(_anyToNumber(len) - 1)});
 
-    struct args {
-        int length;
-        any* item;
-    };
+           // if start>=endPos, return ''
+           if (_anyToNumber(start) >= _anyToNumber(endPos)) {return any_EMPTY_STR;};
 
-    void test(any arguments){
-        for(int n=0;n<arguments.length;n++){
-            print(arguments.value.item[n]);
-        }
-    }
+           // var result:string = ""
+           var result = any_EMPTY_STR;
+           // for n=start to endPos
+           int64_t _end1=_anyToNumber(endPos);
+           for(int64_t n=_anyToNumber(start); n<=_end1; n++) {
+               // result = "#{result}#{.myArr[n]} ";
+               result = _concatAny(3,(any_arr){result, (ITEM(n,PROP(myArr_,this))), any_str(" ")});
+           };// end for n
 
-    void ASTBase_sayErr(ASTBase_ptr this, any msg){
+           // return result
+           return result;
+       return undefined;
+       }
+// Test
 
-    };
+   any test_inRange(DEFAULT_ARGUMENTS){// define named params
+       var min, value, max;
+       min=value=max=undefined;
+       switch(argc){
+         case 3:max=arguments[2];
+         case 2:value=arguments[1];
+         case 1:min=arguments[0];
+       }
+       //---------
+       // return case
+       return // when value<min then min
+               (_anyToNumber(value) < _anyToNumber(min)) ? (min) :
+                // when value>max then max
+               (_anyToNumber(value) > _anyToNumber(max)) ? (max) :
+       /* else */ value;
+   return undefined;
+   }
 
-int mainTest() {
-
-    LiteC_registerCoreClasses();
-
-    //register user classes
-    __registerClass(ASTBase,"ASTBase",Object,ASTBase__init,sizeof(struct ASTBase_s));
-
-    var err;
-
-    print(any_str("START"));
-
-    test( (any){Array,2,.value.item=(any_arr){any_str("positionText"), _newErr("errmsg")}});
-
-    var b = any_str("test");
-    var s = _newErr("test new Error");
-    var c = any_int(10012);
-    var d = any_number(1012341234234342430.12);
-
-    try{
-        print(any_str("TRY"));
-        print(b);
-        print(c);
-        print(d);
-        print(s);
-        print((any){Array,3,.value.item=(any_arr){c,d,s}});
-        print(String_concat(b,(any){Array,3,.value.item=(any_arr){c,d,s}}));
-
-        any s= any_str("GénericException");
-        print(String_slice(s,(any){Array,2,.value.item=(any_arr){any_int(0),any_int(6)}}));
-        print(String_slice(s,(any){Array,2,.value.item=(any_arr){any_int(6),any_int(-2)}}));
-
-        print(String_indexOf(s,(any){Array,1,.value.item=(any_arr){any_str("r")}}));
-        print(any_number(strstr(s.value.str,"r")-s.value.str));
-
-        throw(any_str("GenericException"));
-        print(any_str("AFTER THROW"));
-    }
-    catch(err) {
-        //fprintf(stderr,"caught %s",e.message);
-        print(any_str("caught!"));
-        print(err);
-        //print(_s((str)e4c.err.object));
-        //print(e.message);
-    }
-    finally {
-        //fprintf(stdout,"e4c.frames %d, e4c.frame[e4c.frames].stage %d is_catch %d\n");
-        //fprintf(stderr,"caught %s",e.message);
-        print(any_str("finally"));
-    }
-
-    return EXIT_SUCCESS;
-}
+//-------------------------
+void test__moduleInit(void){
+       test_TestClass =_newClass("test_TestClass", test_TestClass__init, sizeof(struct test_TestClass_s), Object.value.classINFOptr);
+       _declareMethods(test_TestClass, test_TestClass_METHODS);
+       _declareProps(test_TestClass, test_TestClass_PROPS, sizeof test_TestClass_PROPS);
+   
+};

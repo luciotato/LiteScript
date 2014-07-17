@@ -9,32 +9,30 @@ extern void Parser__moduleInit(void);
 
 //--------------
    // Parser_Lexer
-   
-   extern any Parser_Lexer; //Class Object
-   
+   any Parser_Lexer; //Class Parser_Lexer
    typedef struct Parser_Lexer_s * Parser_Lexer_ptr;
    typedef struct Parser_Lexer_s {
-       any
-           project,
-           filename,
-           options,
-           lines,
-           infoLines,
-           line,
-           indent,
-           lineInx,
-           sourceLineNum,
-           infoLine,
-           token,
-           index,
-           interfaceMode,
-           stringInterpolationChar,
-           last,
-           maxSourceLineNum,
-           hardError,
-           softError,
-           outCode
-   ;
+       //Lexer
+       any project;
+       any filename;
+       any options;
+       any lines;
+       any infoLines;
+       any line;
+       any indent;
+       any lineInx;
+       any sourceLineNum;
+       any infoLine;
+       any token;
+       any index;
+       any interfaceMode;
+       any stringInterpolationChar;
+       any last;
+       any maxSourceLineNum;
+       any hardError;
+       any softError;
+       any outCode;
+   
    } Parser_Lexer_s;
    
    extern void Parser_Lexer__init(DEFAULT_ARGUMENTS);
@@ -67,16 +65,14 @@ extern void Parser__moduleInit(void);
 
 //--------------
    // Parser_Token
-   
-   extern any Parser_Token; //Class Object
-   
+   any Parser_Token; //Class Parser_Token
    typedef struct Parser_Token_s * Parser_Token_ptr;
    typedef struct Parser_Token_s {
-       any
-           type,
-           value,
-           column
-   ;
+       //Token
+       any type;
+       any value;
+       any column;
+   
    } Parser_Token_s;
    
    extern void Parser_Token__init(DEFAULT_ARGUMENTS);
@@ -85,18 +81,16 @@ extern void Parser__moduleInit(void);
 
 //--------------
    // Parser_InfoLine
-   
-   extern any Parser_InfoLine; //Class Object
-   
+   any Parser_InfoLine; //Class Parser_InfoLine
    typedef struct Parser_InfoLine_s * Parser_InfoLine_ptr;
    typedef struct Parser_InfoLine_s {
-       any
-           type,
-           indent,
-           sourceLineNum,
-           text,
-           tokens
-   ;
+       //InfoLine
+       any type;
+       any indent;
+       any sourceLineNum;
+       any text;
+       any tokens;
+   
    } Parser_InfoLine_s;
    
    extern void Parser_InfoLine__init(DEFAULT_ARGUMENTS);
@@ -107,19 +101,17 @@ extern void Parser__moduleInit(void);
 
 //--------------
    // Parser_LexerPos
-   
-   extern any Parser_LexerPos; //Class Object
-   
+   any Parser_LexerPos; //Class Parser_LexerPos
    typedef struct Parser_LexerPos_s * Parser_LexerPos_ptr;
    typedef struct Parser_LexerPos_s {
-       any
-           lexer,
-           lineInx,
-           sourceLineNum,
-           index,
-           token,
-           last
-   ;
+       //LexerPos
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any index;
+       any token;
+       any last;
+   
    } Parser_LexerPos_s;
    
    extern void Parser_LexerPos__init(DEFAULT_ARGUMENTS);
@@ -128,17 +120,15 @@ extern void Parser__moduleInit(void);
 
 //--------------
    // Parser_MultilineSection
-   
-   extern any Parser_MultilineSection; //Class Object
-   
+   any Parser_MultilineSection; //Class Parser_MultilineSection
    typedef struct Parser_MultilineSection_s * Parser_MultilineSection_ptr;
    typedef struct Parser_MultilineSection_s {
-       any
-           pre,
-           section,
-           post,
-           postIndent
-   ;
+       //MultilineSection
+       any pre;
+       any section;
+       any post;
+       any postIndent;
+   
    } Parser_MultilineSection_s;
    
    extern void Parser_MultilineSection__init(DEFAULT_ARGUMENTS);
@@ -152,24 +142,22 @@ extern void Parser__moduleInit(void);
 
 //--------------
    // Parser_OutCode
-   
-   extern any Parser_OutCode; //Class Object
-   
+   any Parser_OutCode; //Class Parser_OutCode
    typedef struct Parser_OutCode_s * Parser_OutCode_ptr;
    typedef struct Parser_OutCode_s {
-       any
-           lineNum,
-           column,
-           currLine,
-           lines,
-           hLines,
-           lastOriginalCodeComment,
-           lastOutCommentLine,
-           sourceMap,
-           browser,
-           exportNamespace,
-           toHeader
-   ;
+       //OutCode
+       any lineNum;
+       any column;
+       any currLine;
+       any lines;
+       any hLines;
+       any lastOriginalCodeComment;
+       any lastOutCommentLine;
+       any sourceMap;
+       any browser;
+       any exportNamespace;
+       any toHeader;
+   
    } Parser_OutCode_s;
    
    extern void Parser_OutCode__init(DEFAULT_ARGUMENTS);

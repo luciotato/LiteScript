@@ -25,7 +25,7 @@
 
    // export class FileInfo
    // constructor
-    function FileInfo(info){
+   function FileInfo(info){
      //      properties
 
         // importInfo:ImportParameterInfo #: .name, .globalImport .interface - info passed to new
@@ -431,7 +431,7 @@
 
    // export class ImportParameterInfo
    // constructor
-   function ImportParameterInfo(){
+   function ImportParameterInfo(){ // default constructor
         // properties
             // name: string
             // isGlobalDeclare: boolean

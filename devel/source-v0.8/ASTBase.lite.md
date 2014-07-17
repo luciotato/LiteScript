@@ -401,7 +401,7 @@ First line sets indent level
         var startLine = .lexer.sourceLineNum
         var blockIndent = .lexer.indent
 
-        logger.debug "optFreeFormList [#{.constructor.name}] parentname:#{.parent.name} parentIndent:#{parentIndent}, blockIndent:#{blockIndent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no-'
+        logger.debug "optFreeFormList: [#{astClass.name} #{separator}]*  parent:#{.parent.name}.#{.constructor.name} parentIndent:#{parentIndent}, blockIndent:#{blockIndent}, closer:", closer or '-no-'
 
         if blockIndent <= parentIndent #first line is same or less indented than parent - assume empty list
           .lexer.sayErr "free-form SeparatedList: next line is same or less indented (#{blockIndent}) than parent indent (#{parentIndent}) - assume empty list"
@@ -712,36 +712,12 @@ such as `a = 1 #comment`. We want to try to add these at the end of the current 
 #### helper method levelIndent()
 show indented messaged for debugging
 
-        var indent = ' '
-        var node = .parent
-        while node
-          node = node.parent
-          indent = '#{indent}  ' //add 2 spaces
-        return indent
+        var indent = 0
+        var node = this
+        while node.parent into node
+            indent += 2 //add 2 spaces
 
-#### helper method callOnSubTree(methodSymbol,excludeClass) # recursive
-
-This is instance has the method, call the method on the instance
-
-      if this.tryGetMethod(methodSymbol) into var theFunction, theFunction.call(this)
-
-      if excludeClass and this is instance of excludeClass, return #do not recurse on filtered's childs
-
-recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
-
-      for each property name,value in this
-        where name not in ['parent','importedModule','requireCallNodes','exportDefault']
-
-            if value instance of ASTBase 
-                declare value:ASTBase
-                value.callOnSubTree methodSymbol,excludeClass #recurse
-
-            else if value instance of Array
-                declare value:array 
-                for each item in value where item instance of ASTBase
-                    declare item:ASTBase
-                    item.callOnSubTree methodSymbol,excludeClass
-      end for
+        return Strings.spaces(indent)
 
     
 #### helper method getRootNode()

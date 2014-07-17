@@ -19,16 +19,14 @@ extern void fs__nativeInit(void);
 
 //--------------
        // fs_Stat
-       
-       extern any fs_Stat; //Class Object
-       
+       any fs_Stat; //Class fs_Stat
        typedef struct fs_Stat_s * fs_Stat_ptr;
        typedef struct fs_Stat_s {
-           any
-               size,
-               mtime,
-               mode
-       ;
+           //Stat
+           any size;
+           any mtime;
+           any mode;
+       
        } fs_Stat_s;
        
        extern void fs_Stat__init(DEFAULT_ARGUMENTS);

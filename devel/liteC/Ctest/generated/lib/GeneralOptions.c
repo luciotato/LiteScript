@@ -34,9 +34,11 @@
     };
    
 var GeneralOptions_DEFAULT_TARGET;
-   // GeneralOptions
    
-   any GeneralOptions; //Class Object
+
+//--------------
+   // GeneralOptions
+   any GeneralOptions; //Class GeneralOptions
    //auto GeneralOptions__init
    void GeneralOptions__init(any this, len_t argc, any* arguments){
      PROP(verboseLevel_,this)=any_number(1);
@@ -50,7 +52,7 @@ var GeneralOptions_DEFAULT_TARGET;
      PROP(compileIfNewer_,this)=undefined;
      PROP(browser_,this)=undefined;
      PROP(extraComments_,this)=any_number(1);
-     PROP(defines_,this)=_newArray(0,NULL);
+     PROP(defines_,this)=new(Array,0,NULL);
      PROP(mainModuleName_,this)=any_str("unnamed");
      PROP(outDir_,this)=any_str("./out");
      PROP(storeMessages_,this)=false;
@@ -72,9 +74,9 @@ var GeneralOptions_DEFAULT_TARGET;
 
 //-------------------------
 void GeneralOptions__moduleInit(void){
-GeneralOptions_DEFAULT_TARGET = any_str("c");
        GeneralOptions =_newClass("GeneralOptions", GeneralOptions__init, sizeof(struct GeneralOptions_s), Object.value.classINFOptr);
-   
        _declareMethods(GeneralOptions, GeneralOptions_METHODS);
        _declareProps(GeneralOptions, GeneralOptions_PROPS, sizeof GeneralOptions_PROPS);
+   
+    GeneralOptions_DEFAULT_TARGET = any_str("c");
 };

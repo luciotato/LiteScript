@@ -42,7 +42,7 @@
 
    // public class Lexer
    // constructor
-    function Lexer(project, options){
+   function Lexer(project, options){
      //      properties
 
         // project
@@ -122,7 +122,7 @@
 // First, remember filename (for error reporting)
 
          this.filename = filename;
-         this.interfaceMode = filename.endsWith('interface.md');
+         this.interfaceMode = filename.indexOf('.interface.') !== -1;
 
 // create source lines array
 
@@ -1141,7 +1141,7 @@
 
    // class Token
    // constructor
-       function Token(type, tokenText, column){
+   function Token(type, tokenText, column){
         // properties
           // type:string
           // value:string
@@ -1175,7 +1175,7 @@
 
    // class InfoLine
    // constructor
-     function InfoLine(lexer, type, indent, text, sourceLineNum){
+   function InfoLine(lexer, type, indent, text, sourceLineNum){
       // properties
           // type
           // indent,sourceLineNum
@@ -1573,7 +1573,7 @@
 
    // helper class LexerPos
    // constructor
-     function LexerPos(lexer){
+   function LexerPos(lexer){
       // properties
         // lexer, lineInx,sourceLineNum
         // index,token,last
@@ -1598,7 +1598,7 @@
 
    // helper class MultilineSection
    // constructor
-     function MultilineSection(lexer, line, startCode, endCode){
+   function MultilineSection(lexer, line, startCode, endCode){
       // properties
 
         // pre:string, section:string array, post:string
@@ -1691,7 +1691,7 @@
 
    // public helper class OutCode
    // constructor
-   function OutCode(){
+   function OutCode(){ // default constructor
      //      properties
 
       // lineNum, column

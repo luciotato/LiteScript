@@ -20,7 +20,7 @@
 
    // public class Declaration
    // constructor
-    function Declaration(name, options, node){
+   function Declaration(name, options, node){
      //      properties
 
         // name: string
@@ -33,13 +33,32 @@
         // value
 
         // isScope: boolean
-        // isNamespace: boolean
         // isForward
         // isDummy
 
+        // isProperty: boolean
+        // isMethod: boolean
+        // isNamespace: boolean
+
      this.name = name;
      this.members = new Map(); // JSON, is "Map string to any" literal notation
-     this.nodeDeclared = node;
+
+     // if node into .nodeDeclared
+     if ((this.nodeDeclared=node)) {
+         // if node instanceof Grammar.FunctionDeclaration
+         if (node instanceof Grammar.FunctionDeclaration) {
+             this.isMethod = true;
+         }
+         
+         else if (node instanceof Grammar.VariableDecl) {
+             this.isProperty = true;
+         }
+         
+         else if (node instanceof Grammar.NamespaceDeclaration) {
+             this.isNamespace = true;
+         };
+     };
+     // end if
 
      // if options
      if (options) {
@@ -90,29 +109,28 @@
     };
 
 
-    // helper method setMember(name,nameDecl)
-    Declaration.prototype.setMember = function(name, nameDecl){
+    // helper method setMember(name,value)
+    Declaration.prototype.setMember = function(name, value){
 // force set a member
 
-       // if name is '**proto**' #setting type
-       if (name === '**proto**') {// #setting type
-
+       // if name is '**proto**'
+       if (name === '**proto**') {
             // # walk all the **proto** chain to avoid circular references
-           var actual = nameDecl;
+           var nameDecl = value;
            // do
            do{
-               // if no actual or no actual.members, break #end of chain
-               if (!actual || !actual.members) {break};
-               // if actual is this, return #circular ref, abort setting
-               if (actual === this) {return};
-           } while ((actual=actual.members.get(name)));// end loop
+               // if nameDecl isnt instance of Declaration, break #a nameDecl with a string yet to be de-reference
+               if (!(nameDecl instanceof Declaration)) {break};
+               // if nameDecl is this, return #circular ref, abort setting
+               if (nameDecl === this) {return};
+           } while ((nameDecl=nameDecl.members.get(name)));// end loop
            
        };
 
        // end if #avoid circular references
 
         // #set member
-       this.members.set(this.normalize(name), nameDecl);
+       this.members.set(this.normalize(name), value);
     };
 
     // helper method findOwnMember(name) returns Declaration
@@ -122,7 +140,7 @@
        return this.members.get(this.normalize(name));
     };
 
-    // helper method ownMember(name)
+    // helper method ownMember(name) returns Declaration
     Declaration.prototype.ownMember = function(name){
 // this method looks for a specific member, throws if not found
 
@@ -359,10 +377,11 @@
        }
        
        else {
-         type = 'Object';
+         // if .nodeDeclared and .nodeDeclared.type, type=.nodeDeclared.type
+         if (this.nodeDeclared && this.nodeDeclared.type) {type = this.nodeDeclared.type};
        };
 
-       return "'" + (this.composedName()) + ":" + type + "'";
+       return "'" + (this.composedName()) + (type ? ':' : '') + type + "'";
     };
    // export
    module.exports.Declaration = Declaration;
@@ -421,7 +440,7 @@
 
    // export class NameDeclOptions
    // constructor
-   function NameDeclOptions(){
+   function NameDeclOptions(){ // default constructor
         // properties
 
             // normalizeModeKeepFirstCase: boolean

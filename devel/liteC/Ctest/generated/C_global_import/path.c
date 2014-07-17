@@ -121,7 +121,7 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
 // var splitPathRe = /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
 
        // var result: string array = []
-       var result = _newArray(0,NULL);
+       var result = new(Array,0,NULL);
 
        // var parts = filename.split('/')
        var parts = CALL1(split_,filename,any_str("/"));
@@ -202,7 +202,7 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
 
         //filter out empty parts
        // var partsOK = []
-       var partsOK = _newArray(0,NULL);
+       var partsOK = new(Array,0,NULL);
        // for each part in resolvedPath.split('/')
        any _list1=CALL1(split_,resolvedPath,any_str("/"));
        { var part=undefined;
@@ -230,7 +230,7 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
        //---------
 
        // var
-       var isAbs = path_isAbsolute(undefined,1,(any_arr){path}), trailingSlash = any_number(__is(CALL1(charAt_,path,any_number(_length(path) - 1)),any_str("/"))), segments = CALL1(split_,path,any_str("/")), nonEmptySegments = _newArray(0,NULL);
+       var isAbs = path_isAbsolute(undefined,1,(any_arr){path}), trailingSlash = any_number(__is(CALL1(charAt_,path,any_number(_length(path) - 1)),any_str("/"))), segments = CALL1(split_,path,any_str("/")), nonEmptySegments = new(Array,0,NULL);
 
         // Normalize the path
        // for each segment in segments
@@ -258,8 +258,8 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
          path = _concatAny(2,(any_arr){path, any_str("/")});
        };
 
-       // return "{isAbs? '/' : ''}#{path}"
-       return _concatAny(2,(any_arr){any_str("{isAbs? '/' : ''}"), path});
+       // return "#{isAbs? '/' : ''}#{path}"
+       return _concatAny(2,(any_arr){(_anyToBool(isAbs) ? any_str("/") : any_EMPTY_STR), path});
    return undefined;
    }
 
@@ -357,7 +357,7 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
        };// end for i
 
        // var outputParts = []
-       var outputParts = _newArray(0,NULL);
+       var outputParts = new(Array,0,NULL);
        // for i = samePartsLength, while i < fromParts.length
        for(int64_t i=_anyToNumber(samePartsLength); i < _length(fromParts); i++) {
          // outputParts.push('..')
@@ -401,7 +401,7 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
        };// end loop
 
        // if start > endPos, return []
-       if (_anyToNumber(start) > _anyToNumber(endPos)) {return _newArray(0,NULL);};
+       if (_anyToNumber(start) > _anyToNumber(endPos)) {return new(Array,0,NULL);};
 
        // return arr.slice(start, endPos + 1)
        return CALL2(slice_,arr,start, any_number(_anyToNumber(endPos) + 1));
@@ -478,6 +478,6 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
 
 //-------------------------
 void path__moduleInit(void){
-path_sep = any_str("/");
-path_delimiter = any_str(":");
+    path_sep = any_str("/");
+    path_delimiter = any_str(":");
 };

@@ -36,7 +36,7 @@ when it is generated as a standalone executable (from generated C source code)
     
     """
 
-Get & process command line arguments
+Get & parse command line arguments
 
     print JSON.stringify(process.argv)
 

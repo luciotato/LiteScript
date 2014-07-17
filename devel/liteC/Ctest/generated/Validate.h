@@ -12,15 +12,13 @@ extern any Validate_initialize(DEFAULT_ARGUMENTS);
 
 //--------------
      // Names_ConvertResult
-     
-     extern any Names_ConvertResult; //Class Object
-     
+     any Names_ConvertResult; //Class Names_ConvertResult
      typedef struct Names_ConvertResult_s * Names_ConvertResult_ptr;
      typedef struct Names_ConvertResult_s {
-         any
-             converted,
-             failures
-     ;
+         //ConvertResult
+         any converted;
+         any failures;
+     
      } Names_ConvertResult_s;
      
      extern void Names_ConvertResult__init(DEFAULT_ARGUMENTS);

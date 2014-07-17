@@ -12,6 +12,19 @@ any Validate_tryGetGlobalPrototype(DEFAULT_ARGUMENTS); //forward declare
 any Validate_globalPrototype(DEFAULT_ARGUMENTS); //forward declare
 any Validate_addBuiltInClass(DEFAULT_ARGUMENTS); //forward declare
 any Validate_addBuiltInObject(DEFAULT_ARGUMENTS); //forward declare
+     //-----------------------
+     // Class Names_ConvertResult: static list of METHODS(verbs) and PROPS(things)
+     //-----------------------
+     
+     static _methodInfoArr Names_ConvertResult_METHODS = {
+     
+     {0,0}}; //method jmp table initializer end mark
+     
+     static _posTableItem_t Names_ConvertResult_PROPS[] = {
+     converted_
+    , failures_
+    };
+     
 any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 // Name Validation
 // ===============
@@ -171,18 +184,18 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        // logger.info "- Connect Imported"
        logger_info(undefined,1,(any_arr){any_str("- Connect Imported")});
        // for each moduleNode:Grammar.Module in map project.moduleCache
-       any _list34=PROP(moduleCache_,Validate_project);
+       any _list32=PROP(moduleCache_,Validate_project);
        { NameValuePair_ptr _nvp6=NULL; //name:value pair
         var moduleNode=undefined; //value
-       for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list34.value.arr->length ; moduleNode__inx++){
-         assert(ITEM(moduleNode__inx,_list34).class==&NameValuePair_CLASSINFO);
-       _nvp6 = ITEM(moduleNode__inx,_list34).value.ptr;
+       for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list32.value.arr->length ; moduleNode__inx++){
+         assert(ITEM(moduleNode__inx,_list32).class==&NameValuePair_CLASSINFO);
+       _nvp6 = ITEM(moduleNode__inx,_list32).value.ptr;
          moduleNode=_nvp6->value;
 
          // for each node in moduleNode.requireCallNodes
-         any _list35=PROP(requireCallNodes_,moduleNode);
+         any _list33=PROP(requireCallNodes_,moduleNode);
          { var node=undefined;
-         for(int node__inx=0 ; node__inx<_list35.value.arr->length ; node__inx++){node=ITEM(node__inx,_list35);
+         for(int node__inx=0 ; node__inx<_list33.value.arr->length ; node__inx++){node=ITEM(node__inx,_list33);
 
             // declare valid node.importedModule.exports.members
 
@@ -231,12 +244,12 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                             // a "declare global x", but "x.lite.md" do not export a class
                             // move all exported (namespace members) to global scope
                            // for each nameDecl in map moveWhat.members
-                           any _list36=PROP(members_,moveWhat);
+                           any _list34=PROP(members_,moveWhat);
                            { NameValuePair_ptr _nvp7=NULL; //name:value pair
                             var nameDecl=undefined; //value
-                           for(int64_t nameDecl__inx=0 ; nameDecl__inx<_list36.value.arr->length ; nameDecl__inx++){
-                               assert(ITEM(nameDecl__inx,_list36).class==&NameValuePair_CLASSINFO);
-                           _nvp7 = ITEM(nameDecl__inx,_list36).value.ptr;
+                           for(int64_t nameDecl__inx=0 ; nameDecl__inx<_list34.value.arr->length ; nameDecl__inx++){
+                               assert(ITEM(nameDecl__inx,_list34).class==&NameValuePair_CLASSINFO);
+                           _nvp7 = ITEM(nameDecl__inx,_list34).value.ptr;
                                nameDecl=_nvp7->value;
                                // project.rootModule.addToScope nameDecl
                                CALL1(addToScope_,PROP(rootModule_,Validate_project),nameDecl);
@@ -289,10 +302,10 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 // "Append To" declaration to this point, where 'x.y.z' can be analyzed and a reference obtained.
 // Walk the tree, and check "Append To" Methods & Properties Declarations
 
-       // logger.info "- Processing Append-To"
-       logger_info(undefined,1,(any_arr){any_str("- Processing Append-To")});
-       // walkAllNodesCalling 'processAppendTo'
-       Validate_walkAllNodesCalling(undefined,1,(any_arr){any_str("processAppendTo")});
+       // logger.info "- Processing Append-To, extends"
+       logger_info(undefined,1,(any_arr){any_str("- Processing Append-To, extends")});
+       // walkAllNodesCalling 'processAppendToExtends'
+       Validate_walkAllNodesCalling(undefined,1,(any_arr){any_str("processAppendToExtends")});
 
 
 // #### Pass 2.0 Apply Name Affinity
@@ -303,9 +316,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         // #first, try to assign type by "name affinity"
         // #(only applies when type is not specified)
        // for each nameDecl in Names.allNameDeclarations
-       any _list37=Names_allNameDeclarations;
+       any _list35=Names_allNameDeclarations;
        { var nameDecl=undefined;
-       for(int nameDecl__inx=0 ; nameDecl__inx<_list37.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list37);
+       for(int nameDecl__inx=0 ; nameDecl__inx<_list35.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list35);
            // nameDecl.assignTypebyNameAffinity()
            CALL0(assignTypebyNameAffinity_,nameDecl);
        }};// end for each in Names_allNameDeclarations
@@ -333,9 +346,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
             // #process all, sum conversion failures
            // for each nameDecl in Names.allNameDeclarations
-           any _list38=Names_allNameDeclarations;
+           any _list36=Names_allNameDeclarations;
            { var nameDecl=undefined;
-           for(int nameDecl__inx=0 ; nameDecl__inx<_list38.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list38);
+           for(int nameDecl__inx=0 ; nameDecl__inx<_list36.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list36);
                // var result = nameDecl.processConvertTypes()
                var result = CALL0(processConvertTypes_,nameDecl);
                // sumFailures += result.failures
@@ -358,9 +371,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            // opt.informError = true
            PROP(informError_,opt) = true;
            // for each nameDecl in Names.allNameDeclarations
-           any _list39=Names_allNameDeclarations;
+           any _list37=Names_allNameDeclarations;
            { var nameDecl=undefined;
-           for(int nameDecl__inx=0 ; nameDecl__inx<_list39.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list39);
+           for(int nameDecl__inx=0 ; nameDecl__inx<_list37.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list37);
                // nameDecl.processConvertTypes(opt)
                CALL1(processConvertTypes_,nameDecl,opt);
            }};// end for each in Names_allNameDeclarations
@@ -389,9 +402,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 // Inform forward declarations not fulfilled, as errors
 
        // for each nameDecl in Names.allNameDeclarations
-       any _list40=Names_allNameDeclarations;
+       any _list38=Names_allNameDeclarations;
        { var nameDecl=undefined;
-       for(int nameDecl__inx=0 ; nameDecl__inx<_list40.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list40);
+       for(int nameDecl__inx=0 ; nameDecl__inx<_list38.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list38);
 
            // if nameDecl.isForward and not nameDecl.isDummy
            if (_anyToBool(PROP(isForward_,nameDecl)) && !(_anyToBool(PROP(isDummy_,nameDecl))))  {
@@ -426,12 +439,12 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 // For all modules, for each node, if the specific AST node has methodName, call it
 
        // for each moduleNode:Grammar.Module in map project.moduleCache
-       any _list41=PROP(moduleCache_,Validate_project);
+       any _list39=PROP(moduleCache_,Validate_project);
        { NameValuePair_ptr _nvp8=NULL; //name:value pair
         var moduleNode=undefined; //value
-       for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list41.value.arr->length ; moduleNode__inx++){
-           assert(ITEM(moduleNode__inx,_list41).class==&NameValuePair_CLASSINFO);
-       _nvp8 = ITEM(moduleNode__inx,_list41).value.ptr;
+       for(int64_t moduleNode__inx=0 ; moduleNode__inx<_list39.value.arr->length ; moduleNode__inx++){
+           assert(ITEM(moduleNode__inx,_list39).class==&NameValuePair_CLASSINFO);
+       _nvp8 = ITEM(moduleNode__inx,_list39).value.ptr;
            moduleNode=_nvp8->value;
            // moduleNode.callOnSubTree methodSymbol
            CALL1(callOnSubTree_,moduleNode,methodSymbol);
@@ -453,7 +466,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
         // #clear global Names.Declaration list
        // Names.allNameDeclarations = []
-       Names_allNameDeclarations = _newArray(0,NULL);
+       Names_allNameDeclarations = new(Array,0,NULL);
 
 // initialize NameAffinity
 
@@ -576,12 +589,12 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 // move all exported from the interface file, to project.rootModule global scope
 
        // for each nameDecl in map globalInterfaceModule.exports.members
-       any _list42=PROP(members_,PROP(exports_,globalInterfaceModule));
+       any _list40=PROP(members_,PROP(exports_,globalInterfaceModule));
        { NameValuePair_ptr _nvp9=NULL; //name:value pair
         var nameDecl=undefined; //value
-       for(int64_t nameDecl__inx=0 ; nameDecl__inx<_list42.value.arr->length ; nameDecl__inx++){
-           assert(ITEM(nameDecl__inx,_list42).class==&NameValuePair_CLASSINFO);
-       _nvp9 = ITEM(nameDecl__inx,_list42).value.ptr;
+       for(int64_t nameDecl__inx=0 ; nameDecl__inx<_list40.value.arr->length ; nameDecl__inx++){
+           assert(ITEM(nameDecl__inx,_list40).class==&NameValuePair_CLASSINFO);
+       _nvp9 = ITEM(nameDecl__inx,_list40).value.ptr;
            nameDecl=_nvp9->value;
            // project.rootModule.addToSpecificScope globalScope, nameDecl
            CALL2(addToSpecificScope_,PROP(rootModule_,Validate_project),Validate_globalScope, nameDecl);
@@ -738,7 +751,8 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
      // var nameDecl = new Names.Declaration( name,{isBuiltIn:true},node )
      var nameDecl = new(Names_Declaration,3,(any_arr){name, new(Map,1,(any_arr){
      _newPair("isBuiltIn",true)
-     }), node});
+     })
+, node});
      // globalScope.addMember nameDecl
      CALL1(addMember_,Validate_globalScope,nameDecl);
 
@@ -777,7 +791,8 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
      // var nameDecl = new Names.Declaration(name, {isBuiltIn:true},node)
      var nameDecl = new(Names_Declaration,3,(any_arr){name, new(Map,1,(any_arr){
      _newPair("isBuiltIn",true)
-     }), node});
+     })
+, node});
      // globalScope.addMember nameDecl
      CALL1(addMember_,Validate_globalScope,nameDecl);
      // nameDecl.getMembersFromObjProperties Environment.getGlobalObject(name)
@@ -801,9 +816,11 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
    // append to namespace Names
 
      // class ConvertResult
-     // Names_ConvertResult
      
-     any Names_ConvertResult; //Class Object
+
+//--------------
+     // Names_ConvertResult
+     any Names_ConvertResult; //Class Names_ConvertResult
      //auto Names_ConvertResult__init
      void Names_ConvertResult__init(any this, len_t argc, any* arguments){
        PROP(converted_,this)=any_number(0);
@@ -1144,7 +1161,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 // now set var type (unless is "null" or "undefined", because they destroy type info)
 
      // if valueNameDecl instance of Names.Declaration
-     if (_instanceof(valueNameDecl,Names_Declaration) && CALL1(indexOf_,_newArray(2,(any_arr){any_str("undefined"), any_str("null")}),PROP(name_,valueNameDecl)).value.number==-1)  {
+     if (_instanceof(valueNameDecl,Names_Declaration) && !(__in(PROP(name_,valueNameDecl),2,(any_arr){any_str("undefined"), any_str("null")})))  {
 
            // var theType
            var theType = undefined;
@@ -1208,13 +1225,13 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                // if not possibleClassRef and .name.length>=6
                if (!(_anyToBool(possibleClassRef)) && _length(PROP(name_,this)) >= 6)  {
                    // for each affinityName,classRef in map nameAffinity.members
-                   any _list43=PROP(members_,Validate_nameAffinity);
+                   any _list41=PROP(members_,Validate_nameAffinity);
                    { NameValuePair_ptr _nvp10=NULL; //name:value pair
                         var affinityName=undefined; //key
                     var classRef=undefined; //value
-                   for(int64_t classRef__inx=0 ; classRef__inx<_list43.value.arr->length ; classRef__inx++){
-                       assert(ITEM(classRef__inx,_list43).class==&NameValuePair_CLASSINFO);
-                   _nvp10 = ITEM(classRef__inx,_list43).value.ptr;
+                   for(int64_t classRef__inx=0 ; classRef__inx<_list41.value.arr->length ; classRef__inx++){
+                       assert(ITEM(classRef__inx,_list41).class==&NameValuePair_CLASSINFO);
+                   _nvp10 = ITEM(classRef__inx,_list41).value.ptr;
                        affinityName=_nvp10->name;
                        classRef=_nvp10->value;
                        // if asClassName.endsWith(affinityName)
@@ -1817,6 +1834,78 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //               return
 //         return ownerDecl
 
+    // helper method callOnSubTree(methodSymbol,excludeClass) # recursive
+    any ASTBase_callOnSubTree(DEFAULT_ARGUMENTS){
+     assert(_instanceof(this,ASTBase));
+     //---------
+     // define named params
+     var methodSymbol, excludeClass;
+     methodSymbol=excludeClass=undefined;
+     switch(argc){
+       case 2:excludeClass=arguments[1];
+       case 1:methodSymbol=arguments[0];
+     }
+     //---------
+
+// This is instance has the method, call the method on the instance
+
+     // logger.debugGroup "callOnSubTree #{.constructor.name}.#{LiteCore.getSymbolName(methodSymbol)}() - '#{.name}'"
+     logger_debugGroup(undefined,1,(any_arr){_concatAny(7,(any_arr){any_str("callOnSubTree "), PROP(name_,any_class(this.class)), any_str("."), (LiteCore_getSymbolName(undefined,1,(any_arr){methodSymbol})), any_str("() - '"), PROP(name_,this), any_str("'")})});
+
+     // if this.tryGetMethod(methodSymbol) into var theFunction
+     var theFunction=undefined;
+     if (_anyToBool((theFunction=CALL1(tryGetMethod_,this,methodSymbol))))  {
+           // logger.debug "calling #{.constructor.name}.#{LiteCore.getSymbolName(methodSymbol)}() - '#{.name}'"
+           logger_debug(undefined,1,(any_arr){_concatAny(7,(any_arr){any_str("calling "), PROP(name_,any_class(this.class)), any_str("."), (LiteCore_getSymbolName(undefined,1,(any_arr){methodSymbol})), any_str("() - '"), PROP(name_,this), any_str("'")})});
+           // theFunction.call(this)
+           __apply(theFunction,this,0,NULL);
+     };
+
+     // if excludeClass and this is instance of excludeClass, return #do not recurse on filtered's childs
+     if (_anyToBool(excludeClass) && _instanceof(this,excludeClass)) {return undefined;};
+
+// recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
+
+     // for each property name,value in this
+     len_t _list42_len=this.class->instanceSize / sizeof(any);
+     any name=undefined;
+     any value=undefined;
+     for(int value__inx=0 ; value__inx<_list42_len ; value__inx++){value=this.value.prop[value__inx];
+           name= _getPropertyName(this,value__inx);
+       // where name not in ['constructor','parent','importedModule','requireCallNodes','exportDefault']
+       if(!(__in(name,5,(any_arr){any_str("constructor"), any_str("parent"), any_str("importedModule"), any_str("requireCallNodes"), any_str("exportDefault")}))){
+
+           // if value instance of ASTBase
+           if (_instanceof(value,ASTBase))  {
+                // declare value:ASTBase
+               // value.callOnSubTree methodSymbol,excludeClass #recurse
+               CALL2(callOnSubTree_,value,methodSymbol, excludeClass);// #recurse
+           }
+           
+           else if (_instanceof(value,Array))  {
+                // declare value:array
+               // logger.debug "callOnSubArray #{.constructor.name}.#{name}[]"
+               logger_debug(undefined,1,(any_arr){_concatAny(5,(any_arr){any_str("callOnSubArray "), PROP(name_,any_class(this.class)), any_str("."), name, any_str("[]")})});
+               // for each item in value where item instance of ASTBase
+               any _list43=value;
+               { var item=undefined;
+               for(int item__inx=0 ; item__inx<_list43.value.arr->length ; item__inx++){item=ITEM(item__inx,_list43);
+                 // for each item in value where item instance of ASTBase
+               if(_instanceof(item,ASTBase)){
+                    // declare item:ASTBase
+                   // item.callOnSubTree methodSymbol,excludeClass
+                   CALL2(callOnSubTree_,item,methodSymbol, excludeClass);
+               }}};// end for each in value
+               
+           };
+     }};// end for each property in this
+     // end for
+
+     // logger.debugGroupEnd
+     logger_debugGroupEnd(undefined,0,NULL);
+    return undefined;
+    }
+
 // ----
 // ## Methods added to specific Grammar Classes to handle scope, var & members declaration
 
@@ -2003,7 +2092,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
 // AppendToDeclarations do not "declare" anything at this point.
 // AppendToDeclarations add to a existing classes or namespaces.
-// The adding is delayed until pass:"processAppendTo", where
+// The adding is delayed until pass:"processAppendToExtends", where
 // append-To var reference is searched in the scope
 // and methods and properties are added.
 // This need to be done after all declarations.
@@ -2023,10 +2112,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // if isNamespace
        if (_anyToBool(isNamespace))  {
+
            // .nameDecl = .declareName(.name)
            PROP(nameDecl_,this) = CALL1(declareName_,this,PROP(name_,this));
-           // .nameDecl.isNamespace = true
-           PROP(isNamespace_,PROP(nameDecl_,this)) = true;
        }
        
        else {
@@ -2115,6 +2203,70 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
     }
 
 
+    // method validatePropertyAccess()
+    any Grammar_ClassDeclaration_validatePropertyAccess(DEFAULT_ARGUMENTS){
+       assert(_instanceof(this,Grammar_ClassDeclaration));
+       //---------
+
+// in the pass "Validating Property Access", for a "ClassDeclaration"
+// we check for duplicate property names in the super-class-chain
+
+       // if .constructor isnt Grammar.ClassDeclaration, return // exclude child classes
+       if (!__is(any_class(this.class),Grammar_ClassDeclaration)) {return undefined;};
+
+       // var prt:Names.Declaration = .nameDecl.ownMember('prototype')
+       var prt = CALL1(ownMember_,PROP(nameDecl_,this),any_str("prototype"));
+       // for each propNameDecl in map prt.members where propNameDecl.isProperty
+       any _list46=PROP(members_,prt);
+       { NameValuePair_ptr _nvp11=NULL; //name:value pair
+        var propNameDecl=undefined; //value
+       for(int64_t propNameDecl__inx=0 ; propNameDecl__inx<_list46.value.arr->length ; propNameDecl__inx++){
+               assert(ITEM(propNameDecl__inx,_list46).class==&NameValuePair_CLASSINFO);
+       _nvp11 = ITEM(propNameDecl__inx,_list46).value.ptr;
+               propNameDecl=_nvp11->value;
+         // for each propNameDecl in map prt.members where propNameDecl.isProperty
+       if(_anyToBool(PROP(isProperty_,propNameDecl))){
+               // propNameDecl.checkSuperChainProperties .nameDecl.superDecl
+               CALL1(checkSuperChainProperties_,propNameDecl,PROP(superDecl_,PROP(nameDecl_,this)));
+       }}};// end for each in map PROP(members_,prt)
+       
+    return undefined;
+    }
+
+
+
+
+   // append to class Grammar.ArrayLiteral ###
+
+    // properties nameDecl
+    ;
+
+    // method declare
+    any Grammar_ArrayLiteral_declare(DEFAULT_ARGUMENTS){
+       assert(_instanceof(this,Grammar_ArrayLiteral));
+       //---------
+
+// When producing C-code, an ArrayLiteral creates a "new(Array" at module level
+
+       // if project.options.target is 'c'
+       if (__is(PROP(target_,PROP(options_,Validate_project)),any_str("c")))  {
+           // .nameDecl = .declareName(UniqueID.getVarName('_literalArray'))
+           PROP(nameDecl_,this) = CALL1(declareName_,this,UniqueID_getVarName(undefined,1,(any_arr){any_str("_literalArray")}));
+           // .getParent(Grammar.Module).addToScope .nameDecl
+           CALL1(addToScope_,CALL1(getParent_,this,Grammar_Module),PROP(nameDecl_,this));
+       };
+    return undefined;
+    }
+
+    // method getResultType
+    any Grammar_ArrayLiteral_getResultType(DEFAULT_ARGUMENTS){
+         assert(_instanceof(this,Grammar_ArrayLiteral));
+         //---------
+         // return tryGetGlobalPrototype('Array')
+         return Validate_tryGetGlobalPrototype(undefined,1,(any_arr){any_str("Array")});
+    return undefined;
+    }
+
    // append to class Grammar.ObjectLiteral ###
 
     // properties nameDecl
@@ -2125,15 +2277,22 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        assert(_instanceof(this,Grammar_ObjectLiteral));
        //---------
 
-// When producing C-code, a ObjectLiteral creates a "Map string to any" on the fly,
+// When producing C-code, an ObjectLiteral creates a "Map string to any" on the fly,
 // but it does not declare a valid type/class.
 
-       // if project.options.target is 'c', return
-       if (__is(PROP(target_,PROP(options_,Validate_project)),any_str("c"))) {return undefined;};
-
-        // declare valid .parent.nameDecl
-       // .nameDecl = .parent.nameDecl or .declareName(UniqueID.getVarName('*ObjectLiteral*'))
-       PROP(nameDecl_,this) = __or(PROP(nameDecl_,PROP(parent_,this)),CALL1(declareName_,this,UniqueID_getVarName(undefined,1,(any_arr){any_str("*ObjectLiteral*")})));
+       // if project.options.target is 'c'
+       if (__is(PROP(target_,PROP(options_,Validate_project)),any_str("c")))  {
+           // .nameDecl = .declareName(UniqueID.getVarName('_literalMap'))
+           PROP(nameDecl_,this) = CALL1(declareName_,this,UniqueID_getVarName(undefined,1,(any_arr){any_str("_literalMap")}));
+           // .getParent(Grammar.Module).addToScope .nameDecl
+           CALL1(addToScope_,CALL1(getParent_,this,Grammar_Module),PROP(nameDecl_,this));
+       }
+       
+       else {
+            // declare valid .parent.nameDecl
+           // .nameDecl = .parent.nameDecl or .declareName(UniqueID.getVarName('*ObjectLiteral*'))
+           PROP(nameDecl_,this) = __or(PROP(nameDecl_,PROP(parent_,this)),CALL1(declareName_,this,UniqueID_getVarName(undefined,1,(any_arr){any_str("*ObjectLiteral*")})));
+       };
     return undefined;
     }
 
@@ -2181,7 +2340,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 // check if we can determine type from value
 
        // if .type and .type instance of Names.Declaration and .type.name not in ["undefined","null"]
-       if (_anyToBool(PROP(type_,this)) && _instanceof(PROP(type_,this),Names_Declaration) && CALL1(indexOf_,_newArray(2,(any_arr){any_str("undefined"), any_str("null")}),PROP(name_,PROP(type_,this))).value.number==-1)  {
+       if (_anyToBool(PROP(type_,this)) && _instanceof(PROP(type_,this),Names_Declaration) && !(__in(PROP(name_,PROP(type_,this)),2,(any_arr){any_str("undefined"), any_str("null")})))  {
            // .nameDecl.setMember '**proto**', .type
            CALL2(setMember_,PROP(nameDecl_,this),any_str("**proto**"), PROP(type_,this));
        }
@@ -2196,7 +2355,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
    // append to class Grammar.FunctionDeclaration ###
 // `FunctionDeclaration: '[export][generator] (function|method|constructor) [name] '(' FunctionParameterDecl* ')' Block`
 
-    // properties nameDecl, declared:boolean, scope:Names.Declaration
+    // properties
     ;
 
     // method declare() ## function, methods and constructors
@@ -2318,9 +2477,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
      // if .paramsDeclarations
      if (_anyToBool(PROP(paramsDeclarations_,this)))  {
        // for each varDecl in .paramsDeclarations
-       any _list46=PROP(paramsDeclarations_,this);
+       any _list47=PROP(paramsDeclarations_,this);
        { var varDecl=undefined;
-       for(int varDecl__inx=0 ; varDecl__inx<_list46.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list46);
+       for(int varDecl__inx=0 ; varDecl__inx<_list47.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list47);
          // varDecl.declareInScope
          __call(declareInScope_,varDecl,0,NULL);
        }};// end for each in PROP(paramsDeclarations_,this)
@@ -2429,8 +2588,8 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
    // append to class Grammar.AppendToDeclaration ###
 
-    // method processAppendTo()
-    any Grammar_AppendToDeclaration_processAppendTo(DEFAULT_ARGUMENTS){
+    // method processAppendToExtends()
+    any Grammar_AppendToDeclaration_processAppendToExtends(DEFAULT_ARGUMENTS){
      assert(_instanceof(this,Grammar_AppendToDeclaration));
      //---------
 // when target is '.c' we do not allow treating classes as namespaces
@@ -2463,9 +2622,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
      if (_anyToBool(prt)) {ownerDecl = prt;};
 
      // for each item in .body.statements
-     any _list47=PROP(statements_,PROP(body_,this));
+     any _list48=PROP(statements_,PROP(body_,this));
      { var item=undefined;
-     for(int item__inx=0 ; item__inx<_list47.value.arr->length ; item__inx++){item=ITEM(item__inx,_list47);
+     for(int item__inx=0 ; item__inx<_list48.value.arr->length ; item__inx++){item=ITEM(item__inx,_list48);
 
          // switch item.specific.constructor
          any _switch4=any_class(PROP(specific_,item).class);
@@ -2520,9 +2679,76 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
     }
 
 
+   // append to class Names.Declaration ###
+    // properties
+    ;
+
+    // method checkSuperChainProperties(superClassNameDecl)
+    any Names_Declaration_checkSuperChainProperties(DEFAULT_ARGUMENTS){
+       assert(_instanceof(this,Names_Declaration));
+       //---------
+       // define named params
+       var superClassNameDecl= argc? arguments[0] : undefined;
+       //---------
+
+       // if no superClassNameDecl, return
+       if (!_anyToBool(superClassNameDecl)) {return undefined;};
+
+// Check for duplicate class properties in the super class
+
+       // if superClassNameDecl.findOwnMember('prototype') into var superPrt:Names.Declaration
+       var superPrt=undefined;
+       if (_anyToBool((superPrt=CALL1(findOwnMember_,superClassNameDecl,any_str("prototype")))))  {
+
+           // if superPrt.findOwnMember(.name) into var originalNameDecl
+           var originalNameDecl=undefined;
+           if (_anyToBool((originalNameDecl=CALL1(findOwnMember_,superPrt,PROP(name_,this)))))  {
+               // .sayErr "Duplicated property. super class [#{superClassNameDecl}] already has a property '#{this}'"
+               CALL1(sayErr_,this,_concatAny(5,(any_arr){any_str("Duplicated property. super class ["), superClassNameDecl, any_str("] already has a property '"), this, any_str("'")}));
+               // originalNameDecl.sayErr "for reference, original declaration."
+               CALL1(sayErr_,originalNameDecl,any_str("for reference, original declaration."));
+           };
+
+// recurse with super's super. Here we're using recursion as a loop device à la Haskell
+// (instead of a simpler "while .superDecl into node" loop. Just to be fancy)
+
+           // .checkSuperChainProperties superClassNameDecl.superDecl
+           CALL1(checkSuperChainProperties_,this,PROP(superDecl_,superClassNameDecl));
+       };
+    return undefined;
+    }
+
+   // append to class Grammar.ClassDeclaration ###
+
+    // method processAppendToExtends()
+    any Grammar_ClassDeclaration_processAppendToExtends(DEFAULT_ARGUMENTS){
+     assert(_instanceof(this,Grammar_ClassDeclaration));
+     //---------
+// In Class's processAppendToExtends we try to get a reference to the superclass
+// and then store the superclass nameDecl in the class nameDecl
+
+// get referenced super class
+
+     // if .varRefSuper
+     if (_anyToBool(PROP(varRefSuper_,this)))  {
+         // if no .varRefSuper.tryGetReference() into var superClassNameDecl
+         var superClassNameDecl=undefined;
+         if (!(_anyToBool((superClassNameDecl=CALL0(tryGetReference_,PROP(varRefSuper_,this))))))  {
+             // .sayErr "class #{.name} extends '#{.varRefSuper}'. Reference is not fully declared"
+             CALL1(sayErr_,this,_concatAny(5,(any_arr){any_str("class "), PROP(name_,this), any_str(" extends '"), PROP(varRefSuper_,this), any_str("'. Reference is not fully declared")}));
+             // return //if no superClassNameDecl found
+             return undefined; //if no superClassNameDecl found
+         };
+
+         // .nameDecl.superDecl = superClassNameDecl
+         PROP(superDecl_,PROP(nameDecl_,this)) = superClassNameDecl;
+     };
+    return undefined;
+    }
+
    // append to class Grammar.PropertiesDeclaration ###
 
-    // properties nameDecl, declared:boolean, scope:Names.Declaration
+    // properties
     ;
 
     // method declare(informError)
@@ -2536,20 +2762,20 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // var opt= new Names.NameDeclOptions
        var opt = new(Names_NameDeclOptions,0,NULL);
-       // if .tryGetOwnerNameDecl(informError) into var owner
-       var owner=undefined;
-       if (_anyToBool((owner=CALL1(tryGetOwnerNameDecl_,this,informError))))  {
+       // if .tryGetOwnerNameDecl(informError) into var ownerNameDecl
+       var ownerNameDecl=undefined;
+       if (_anyToBool((ownerNameDecl=CALL1(tryGetOwnerNameDecl_,this,informError))))  {
 
            // for each varDecl in .list
-           any _list48=PROP(list_,this);
+           any _list49=PROP(list_,this);
            { var varDecl=undefined;
-           for(int varDecl__inx=0 ; varDecl__inx<_list48.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list48);
+           for(int varDecl__inx=0 ; varDecl__inx<_list49.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list49);
                // opt.type = varDecl.type
                PROP(type_,opt) = PROP(type_,varDecl);
                // opt.itemType = varDecl.itemType
                PROP(itemType_,opt) = PROP(itemType_,varDecl);
-               // varDecl.nameDecl = varDecl.addMemberTo(owner,varDecl.name,opt)
-               PROP(nameDecl_,varDecl) = CALL3(addMemberTo_,varDecl,owner, PROP(name_,varDecl), opt);
+               // varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl,varDecl.name,opt)
+               PROP(nameDecl_,varDecl) = CALL3(addMemberTo_,varDecl,ownerNameDecl, PROP(name_,varDecl), opt);
            }};// end for each in PROP(list_,this)
 
            // .declared = true
@@ -2564,9 +2790,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        //---------
 
        // for each varDecl in .list
-       any _list49=PROP(list_,this);
+       any _list50=PROP(list_,this);
        { var varDecl=undefined;
-       for(int varDecl__inx=0 ; varDecl__inx<_list49.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list49);
+       for(int varDecl__inx=0 ; varDecl__inx<_list50.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list50);
            // varDecl.getTypeFromAssignedValue
            __call(getTypeFromAssignedValue_,varDecl,0,NULL);
        }};// end for each in PROP(list_,this)
@@ -2583,98 +2809,120 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        assert(_instanceof(this,Grammar_ForStatement));
        //---------
 
-// a ForStatement has a 'Scope'. Add, if they exists, indexVar & mainVar
-
-        // declare valid .variant.indexVar:Grammar.VariableDecl
-        // declare valid .variant.mainVar:Grammar.VariableDecl
-        // declare valid .variant.iterable:Grammar.VariableRef
+// a ForStatement has a 'Scope', indexVar & mainVar belong to the scope
 
        // .createScope
        __call(createScope_,this,0,NULL);
-       // if .variant.indexVar, .variant.indexVar.declareInScope
-       if (_anyToBool(PROP(indexVar_,PROP(variant_,this)))) {__call(declareInScope_,PROP(indexVar_,PROP(variant_,this)),0,NULL);};
-
-       // if .variant.mainVar
-       if (_anyToBool(PROP(mainVar_,PROP(variant_,this))))  {
-           // if .variant.iterable, default .variant.mainVar.type = .variant.iterable.itemType
-           if (_anyToBool(PROP(iterable_,PROP(variant_,this)))) {_default(&PROP(type_,PROP(mainVar_,PROP(variant_,this))),PROP(itemType_,PROP(iterable_,PROP(variant_,this))));
-           ;};
-           // .variant.mainVar.declareInScope
-           __call(declareInScope_,PROP(mainVar_,PROP(variant_,this)),0,NULL);
-       };
     return undefined;
     }
 
-        //debug:
-        //.sayErr "ForStatement - pass declare"
-        //console.log "index",.variant.indexVar, .indexNameDecl? .indexNameDecl.toString():undefined
-        //console.log "main",.variant.mainVar, .mainNameDecl? .mainNameDecl.toString(): undefined
+   // append to class Grammar.ForEachProperty ###
 
-
-    // method evaluateAssignments() # Grammar.ForStatement
-    any Grammar_ForStatement_evaluateAssignments(DEFAULT_ARGUMENTS){
-       assert(_instanceof(this,Grammar_ForStatement));
+    // method declare()
+    any Grammar_ForEachProperty_declare(DEFAULT_ARGUMENTS){
+       assert(_instanceof(this,Grammar_ForEachProperty));
        //---------
 
-        // declare valid .variant.iterable.getResultType
+       // default .mainVar.type = .iterable.itemType
+       _default(&PROP(type_,PROP(mainVar_,this)),PROP(itemType_,PROP(iterable_,this)));
+       // .mainVar.declareInScope
+       __call(declareInScope_,PROP(mainVar_,this),0,NULL);
+
+       // if .indexVar, .indexVar.declareInScope
+       if (_anyToBool(PROP(indexVar_,this))) {__call(declareInScope_,PROP(indexVar_,this),0,NULL);};
+    return undefined;
+    }
+
+    // method evaluateAssignments()
+    any Grammar_ForEachProperty_evaluateAssignments(DEFAULT_ARGUMENTS){
+       assert(_instanceof(this,Grammar_ForEachProperty));
+       //---------
+
+// ForEachProperty: index is: string for js (property name) and number for C (symbol)
+
+       // var indexType = project.options.target is 'js'? 'String':'Number'
+       var indexType = __is(PROP(target_,PROP(options_,Validate_project)),any_str("js")) ? any_str("String") : any_str("Number");
+       // .indexVar.nameDecl.setMember('**proto**',globalPrototype(indexType))
+       CALL2(setMember_,PROP(nameDecl_,PROP(indexVar_,this)),any_str("**proto**"), Validate_globalPrototype(undefined,1,(any_arr){indexType}));
+    return undefined;
+    }
+
+   // append to class Grammar.ForEachInArray ###
+
+    // method declare()
+    any Grammar_ForEachInArray_declare(DEFAULT_ARGUMENTS){
+       assert(_instanceof(this,Grammar_ForEachInArray));
+       //---------
+
+       // default .mainVar.type = .iterable.itemType
+       _default(&PROP(type_,PROP(mainVar_,this)),PROP(itemType_,PROP(iterable_,this)));
+       // .mainVar.declareInScope
+       __call(declareInScope_,PROP(mainVar_,this),0,NULL);
+
+       // if .indexVar, .indexVar.declareInScope
+       if (_anyToBool(PROP(indexVar_,this))) {__call(declareInScope_,PROP(indexVar_,this),0,NULL);};
+    return undefined;
+    }
+
+    // method evaluateAssignments()
+    any Grammar_ForEachInArray_evaluateAssignments(DEFAULT_ARGUMENTS){
+       assert(_instanceof(this,Grammar_ForEachInArray));
+       //---------
 
 // ForEachInArray:
 // If no mainVar.type, guess type from iterable's itemType
 
-       // if .variant instanceof Grammar.ForEachInArray
-       if (_instanceof(PROP(variant_,this),Grammar_ForEachInArray))  {
-           // if no .variant.mainVar.nameDecl.findOwnMember('**proto**')
-           if (!_anyToBool(CALL1(findOwnMember_,PROP(nameDecl_,PROP(mainVar_,PROP(variant_,this))),any_str("**proto**"))))  {
-               // var iterableType:Names.Declaration = .variant.iterable.getResultType()
-               var iterableType = CALL0(getResultType_,PROP(iterable_,PROP(variant_,this)));
-               // if iterableType and iterableType.findOwnMember('**item type**')  into var itemType
-               var itemType=undefined;
-               if (_anyToBool(iterableType) && _anyToBool((itemType=CALL1(findOwnMember_,iterableType,any_str("**item type**")))))  {
-                   // .variant.mainVar.nameDecl.setMember('**proto**',itemType)
-                   CALL2(setMember_,PROP(nameDecl_,PROP(mainVar_,PROP(variant_,this))),any_str("**proto**"), itemType);
-               };
+       // if no .mainVar.nameDecl.findOwnMember('**proto**')
+       if (!_anyToBool(CALL1(findOwnMember_,PROP(nameDecl_,PROP(mainVar_,this)),any_str("**proto**"))))  {
+           // var iterableType:Names.Declaration = .iterable.getResultType()
+           var iterableType = CALL0(getResultType_,PROP(iterable_,this));
+           // if iterableType and iterableType.findOwnMember('**item type**')  into var itemType
+           var itemType=undefined;
+           if (_anyToBool(iterableType) && _anyToBool((itemType=CALL1(findOwnMember_,iterableType,any_str("**item type**")))))  {
+               // .mainVar.nameDecl.setMember('**proto**',itemType)
+               CALL2(setMember_,PROP(nameDecl_,PROP(mainVar_,this)),any_str("**proto**"), itemType);
            };
-       }
-
-// ForEachProperty: index is string (property name)
-       
-       else if (_instanceof(PROP(variant_,this),Grammar_ForEachProperty))  {
-           // .variant.indexVar.nameDecl.setMember('**proto**',globalPrototype('String'))
-           CALL2(setMember_,PROP(nameDecl_,PROP(indexVar_,PROP(variant_,this))),any_str("**proto**"), Validate_globalPrototype(undefined,1,(any_arr){any_str("String")}));
        };
     return undefined;
     }
 
-
-    // method validatePropertyAccess() # Grammar.ForStatement
-    any Grammar_ForStatement_validatePropertyAccess(DEFAULT_ARGUMENTS){
-       assert(_instanceof(this,Grammar_ForStatement));
+    // method validatePropertyAccess()
+    any Grammar_ForEachInArray_validatePropertyAccess(DEFAULT_ARGUMENTS){
+       assert(_instanceof(this,Grammar_ForEachInArray));
        //---------
 // ForEachInArray: check if the iterable has a .length property.
 
-       // if .variant instanceof Grammar.ForEachInArray
-       if (_instanceof(PROP(variant_,this),Grammar_ForEachInArray))  {
+       // if .isMap, return
+       if (_anyToBool(PROP(isMap_,this))) {return undefined;};
 
-            // declare valid .variant.iterable.getResultType
+       // var iterableType:Names.Declaration = .iterable.getResultType()
+       var iterableType = CALL0(getResultType_,PROP(iterable_,this));
 
-           // var iterableType:Names.Declaration = .variant.iterable.getResultType()
-           var iterableType = CALL0(getResultType_,PROP(iterable_,PROP(variant_,this)));
-
-           // if no iterableType
-           if (!_anyToBool(iterableType))  {
-              // #.sayErr "ForEachInArray: no type declared for: '#{.variant.iterable}'"
-             //do nothing
-             ;
-           }
-              // #.sayErr "ForEachInArray: no type declared for: '#{.variant.iterable}'"
-           
-           else if (!_anyToBool(PROP(isMap_,PROP(variant_,this))) && !_anyToBool(CALL1(findMember_,iterableType,any_str("length"))))  {
-             // .sayErr "ForEachInArray: no .length property declared in '#{.variant.iterable}' type:'#{iterableType.toString()}'"
-             CALL1(sayErr_,this,_concatAny(5,(any_arr){any_str("ForEachInArray: no .length property declared in '"), PROP(iterable_,PROP(variant_,this)), any_str("' type:'"), (CALL0(toString_,iterableType)), any_str("'")}));
-             // logger.error iterableType.originalDeclarationPosition()
-             logger_error(undefined,1,(any_arr){CALL0(originalDeclarationPosition_,iterableType)});
-           };
+       // if no iterableType
+       if (!_anyToBool(iterableType))  {
+            // #.sayErr "ForEachInArray: no type declared for: '#{.iterable}'"
+           //do nothing
+           ;
+       }
+       
+       else if (!_anyToBool(CALL1(findMember_,iterableType,any_str("length"))))  {
+           // .sayErr "ForEachInArray: no .length property declared in '#{.iterable}' type:'#{iterableType.toString()}'"
+           CALL1(sayErr_,this,_concatAny(5,(any_arr){any_str("ForEachInArray: no .length property declared in '"), PROP(iterable_,this), any_str("' type:'"), (CALL0(toString_,iterableType)), any_str("'")}));
+           // logger.error iterableType.originalDeclarationPosition()
+           logger_error(undefined,1,(any_arr){CALL0(originalDeclarationPosition_,iterableType)});
        };
+    return undefined;
+    }
+
+   // append to class Grammar.ForIndexNumeric ###
+
+    // method declare()
+    any Grammar_ForIndexNumeric_declare(DEFAULT_ARGUMENTS){
+       assert(_instanceof(this,Grammar_ForIndexNumeric));
+       //---------
+
+       // .indexVar.declareInScope
+       __call(declareInScope_,PROP(indexVar_,this),0,NULL);
     return undefined;
     }
 
@@ -2694,7 +2942,8 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        // .addToScope .catchVar,{type:globalPrototype('Error')}
        CALL2(addToScope_,this,PROP(catchVar_,this), new(Map,1,(any_arr){
        _newPair("type",Validate_globalPrototype(undefined,1,(any_arr){any_str("Error")}))
-       }));
+       })
+       );
      return undefined;
      }
 
@@ -2705,7 +2954,7 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
 // `VariableRef` is a Variable Reference.
 
-    // method validatePropertyAccess() # Grammar.VariableRef
+    // method validatePropertyAccess()
     any Grammar_VariableRef_validatePropertyAccess(DEFAULT_ARGUMENTS){
        assert(_instanceof(this,Grammar_VariableRef));
        //---------
@@ -2739,9 +2988,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        if (_anyToBool(__or(any_number(!_anyToBool(actualVar)),any_number(!_anyToBool(PROP(accessors_,this)))))) {return undefined;};
 
        // for each ac in .accessors
-       any _list50=PROP(accessors_,this);
+       any _list51=PROP(accessors_,this);
        { var ac=undefined;
-       for(int ac__inx=0 ; ac__inx<_list50.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list50);
+       for(int ac__inx=0 ; ac__inx<_list51.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list51);
             // declare valid ac.name
 
 // for PropertyAccess, check if the property name is valid
@@ -2835,9 +3084,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        var partial = PROP(name_,this);
 
        // for each ac in .accessors
-       any _list51=PROP(accessors_,this);
+       any _list52=PROP(accessors_,this);
        { var ac=undefined;
-       for(int ac__inx=0 ; ac__inx<_list51.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list51);
+       for(int ac__inx=0 ; ac__inx<_list52.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list52);
             // declare valid ac.name
 
 // for PropertyAccess
@@ -3140,9 +3389,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
          };
 
          // for each varDecl in .names
-         any _list52=PROP(names_,this);
+         any _list53=PROP(names_,this);
          { var varDecl=undefined;
-         for(int varDecl__inx=0 ; varDecl__inx<_list52.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list52);
+         for(int varDecl__inx=0 ; varDecl__inx<_list53.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list53);
              // .addMemberTo reference, varDecl.createNameDeclaration()
              CALL2(addMemberTo_,this,reference, CALL0(createNameDeclaration_,varDecl));
          }};// end for each in PROP(names_,this)
@@ -3151,12 +3400,12 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
 // else: declare (name affinity|var) (VariableDecl,)
      
-     else if (CALL1(indexOf_,_newArray(2,(any_arr){any_str("affinity"), any_str("var")}),PROP(specifier_,this)).value.number>=0)  {
+     else if (__in(PROP(specifier_,this),2,(any_arr){any_str("affinity"), any_str("var")}))  {
 
          // for each varDecl in .names
-         any _list53=PROP(names_,this);
+         any _list54=PROP(names_,this);
          { var varDecl=undefined;
-         for(int varDecl__inx=0 ; varDecl__inx<_list53.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list53);
+         for(int varDecl__inx=0 ; varDecl__inx<_list54.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list54);
 
            // varDecl.nameDecl = varDecl.createNameDeclaration()
            PROP(nameDecl_,varDecl) = CALL0(createNameDeclaration_,varDecl);
@@ -3289,14 +3538,15 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
            // actualVar = .tryGetFromScope(.varRef.name,{informError:true})
            actualVar = CALL2(tryGetFromScope_,this,PROP(name_,PROP(varRef_,this)), new(Map,1,(any_arr){
            _newPair("informError",true)
-           }));
+           })
+           );
            // if no actualVar, return
            if (!_anyToBool(actualVar)) {return undefined;};
 
            // for each ac in .varRef.accessors
-           any _list54=PROP(accessors_,PROP(varRef_,this));
+           any _list55=PROP(accessors_,PROP(varRef_,this));
            { var ac=undefined;
-           for(int ac__inx=0 ; ac__inx<_list54.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list54);
+           for(int ac__inx=0 ; ac__inx<_list55.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list55);
                 // declare valid ac.name
 
                // if ac isnt instance of Grammar.PropertyAccess
@@ -3350,9 +3600,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
        var nameDecl = undefined;
 
        // for each name in arguments.toArray()
-       any _list55=_newArray(argc,arguments);
+       any _list56=_newArray(argc,arguments);
        { var name=undefined;
-       for(int name__inx=0 ; name__inx<_list55.value.arr->length ; name__inx++){name=ITEM(name__inx,_list55);
+       for(int name__inx=0 ; name__inx<_list56.value.arr->length ; name__inx++){name=ITEM(name__inx,_list56);
            // nameDecl = globalScope.addMember(name)
            nameDecl = CALL1(addMember_,Validate_globalScope,name);
            // nameDecl.addMember 'prototype'
@@ -3371,5 +3621,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 
 //-------------------------
 void Validate__moduleInit(void){
+         Names_ConvertResult =_newClass("Names_ConvertResult", Names_ConvertResult__init, sizeof(struct Names_ConvertResult_s), Object.value.classINFOptr);
+         _declareMethods(Names_ConvertResult, Names_ConvertResult_METHODS);
+         _declareProps(Names_ConvertResult, Names_ConvertResult_PROPS, sizeof Names_ConvertResult_PROPS);
+     
    
 };

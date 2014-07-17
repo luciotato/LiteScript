@@ -157,7 +157,7 @@ var splitPathRe = /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$
         if path and trailingSlash
           path = '#{path}/'
         
-        return "{isAbs? '/' : ''}#{path}"
+        return "#{isAbs? '/' : ''}#{path}"
       
 
 // posix version

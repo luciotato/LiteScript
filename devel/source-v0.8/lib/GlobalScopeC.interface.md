@@ -332,6 +332,8 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
 
         method log
         method error
+        method group
+        method groupEnd
 
 ### public namespace process
 

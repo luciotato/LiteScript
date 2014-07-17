@@ -33,7 +33,6 @@
      { getEOLComment_, ASTBase_getEOLComment },
      { addSourceMap_, ASTBase_addSourceMap },
      { levelIndent_, ASTBase_levelIndent },
-     { callOnSubTree_, ASTBase_callOnSubTree },
      { getRootNode_, ASTBase_getRootNode },
      { compilerVar_, ASTBase_compilerVar },
      { parseAccessors_, ASTBase_parseAccessors },
@@ -53,6 +52,7 @@
      { addToExport_, ASTBase_addToExport },
      { createScope_, ASTBase_createScope },
      { tryGetOwnerNameDecl_, ASTBase_tryGetOwnerNameDecl },
+     { callOnSubTree_, ASTBase_callOnSubTree },
      { lastLineInxOf_, ASTBase_lastLineInxOf },
      { assignIfUndefined_, ASTBase_assignIfUndefined },
    
@@ -80,9 +80,11 @@
     , skipSemiColon_
     };
    
-   // ASTBase
    
-   any ASTBase; //Class Object
+
+//--------------
+   // ASTBase
+   any ASTBase; //Class ASTBase
 
 // This class serves as a base class on top of which Grammar classes are defined.
 // It contains basic functions to parse a token stream.
@@ -564,7 +566,7 @@
        // var item
        var item = undefined;
        // var list=[]
-       var list = _newArray(0,NULL);
+       var list = new(Array,0,NULL);
 
        // do
        while(TRUE){
@@ -599,7 +601,7 @@
 // Start optSeparatedList
 
        // var result = []
-       var result = _newArray(0,NULL);
+       var result = new(Array,0,NULL);
        // var optSepar
        var optSepar = undefined;
 
@@ -704,7 +706,7 @@
 // The item list ends when a closer is found or when indentation changes
 
        // var result = []
-       var result = _newArray(0,NULL);
+       var result = new(Array,0,NULL);
        // var lastItemSourceLine = -1
        var lastItemSourceLine = any_number(-1);
        // var separatorAfterItem
@@ -722,8 +724,8 @@
        // var blockIndent = .lexer.indent
        var blockIndent = PROP(indent_,PROP(lexer_,this));
 
-       // logger.debug "optFreeFormList [#{.constructor.name}] parentname:#{.parent.name} parentIndent:#{parentIndent}, blockIndent:#{blockIndent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no-'
-       logger_debug(undefined,2,(any_arr){_concatAny(13,(any_arr){any_str("optFreeFormList ["), PROP(name_,any_class(this.class)), any_str("] parentname:"), PROP(name_,PROP(parent_,this)), any_str(" parentIndent:"), parentIndent, any_str(", blockIndent:"), blockIndent, any_str(", get SeparatedList of ["), PROP(name_,astClass), any_str("] by '"), separator, any_str("' closer:")}), __or(closer,any_str("-no-"))});
+       // logger.debug "optFreeFormList: [#{astClass.name} #{separator}]*  parent:#{.parent.name}.#{.constructor.name} parentIndent:#{parentIndent}, blockIndent:#{blockIndent}, closer:", closer or '-no-'
+       logger_debug(undefined,2,(any_arr){_concatAny(13,(any_arr){any_str("optFreeFormList: ["), PROP(name_,astClass), any_str(" "), separator, any_str("]*  parent:"), PROP(name_,PROP(parent_,this)), any_str("."), PROP(name_,any_class(this.class)), any_str(" parentIndent:"), parentIndent, any_str(", blockIndent:"), blockIndent, any_str(", closer:")}), __or(closer,any_str("-no-"))});
 
        // if blockIndent <= parentIndent #first line is same or less indented than parent - assume empty list
        if (_anyToNumber(blockIndent) <= _anyToNumber(parentIndent))  {// #first line is same or less indented than parent - assume empty list
@@ -861,7 +863,7 @@
 // and syntax error reporting
 
        // var msg = []
-       var msg = _newArray(0,NULL);
+       var msg = new(Array,0,NULL);
        // for each i in args
        any _list10=args;
        { var i=undefined;
@@ -1268,79 +1270,18 @@
        //---------
 // show indented messaged for debugging
 
-       // var indent = ' '
-       var indent = any_str(" ");
-       // var node = .parent
-       var node = PROP(parent_,this);
-       // while node
-       while(_anyToBool(node)){
-         // node = node.parent
-         node = PROP(parent_,node);
-         // indent = '#{indent}  ' //add 2 spaces
-         indent = _concatAny(2,(any_arr){indent, any_str("  ")}); //add 2 spaces
+       // var indent = 0
+       var indent = any_number(0);
+       // var node = this
+       var node = this;
+       // while node.parent into node
+       while(_anyToBool((node=PROP(parent_,node)))){
+           // indent += 2 //add 2 spaces
+           indent.value.number += 2; //add 2 spaces
        };// end loop
-       // return indent
-       return indent;
-    return undefined;
-    }
 
-    // helper method callOnSubTree(methodSymbol,excludeClass) # recursive
-    any ASTBase_callOnSubTree(DEFAULT_ARGUMENTS){
-     assert(_instanceof(this,ASTBase));
-     //---------
-     // define named params
-     var methodSymbol, excludeClass;
-     methodSymbol=excludeClass=undefined;
-     switch(argc){
-       case 2:excludeClass=arguments[1];
-       case 1:methodSymbol=arguments[0];
-     }
-     //---------
-
-// This is instance has the method, call the method on the instance
-
-     // if this.tryGetMethod(methodSymbol) into var theFunction, theFunction.call(this)
-     var theFunction=undefined;
-     if (_anyToBool((theFunction=CALL1(tryGetMethod_,this,methodSymbol)))) {__apply(theFunction,this,0,NULL);};
-
-     // if excludeClass and this is instance of excludeClass, return #do not recurse on filtered's childs
-     if (_anyToBool(excludeClass) && _instanceof(this,excludeClass)) {return undefined;};
-
-// recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
-
-     // for each property name,value in this
-     len_t _list13_len=this.class->instanceSize / sizeof(any);
-     any name=undefined;
-     any value=undefined;
-     for(int value__inx=0 ; value__inx<_list13_len ; value__inx++){value=this.value.prop[value__inx];
-           name= _getPropertyName(this,value__inx);
-       // where name not in ['parent','importedModule','requireCallNodes','exportDefault']
-       if(CALL1(indexOf_,_newArray(4,(any_arr){any_str("parent"), any_str("importedModule"), any_str("requireCallNodes"), any_str("exportDefault")}),name).value.number==-1){
-
-           // if value instance of ASTBase
-           if (_instanceof(value,ASTBase))  {
-                // declare value:ASTBase
-               // value.callOnSubTree methodSymbol,excludeClass #recurse
-               CALL2(callOnSubTree_,value,methodSymbol, excludeClass);// #recurse
-           }
-           
-           else if (_instanceof(value,Array))  {
-                // declare value:array
-               // for each item in value where item instance of ASTBase
-               any _list14=value;
-               { var item=undefined;
-               for(int item__inx=0 ; item__inx<_list14.value.arr->length ; item__inx++){item=ITEM(item__inx,_list14);
-                 // for each item in value where item instance of ASTBase
-               if(_instanceof(item,ASTBase)){
-                    // declare item:ASTBase
-                   // item.callOnSubTree methodSymbol,excludeClass
-                   CALL2(callOnSubTree_,item,methodSymbol, excludeClass);
-               }}};// end for each in value
-               
-           };
-     }};// end for each property in this
-     // end for
-     
+       // return Strings.spaces(indent)
+       return Strings_spaces(undefined,1,(any_arr){indent});
     return undefined;
     }
 
@@ -1388,9 +1329,9 @@
 //-------------------------
 void ASTBase__moduleInit(void){
        ASTBase =_newClass("ASTBase", ASTBase__init, sizeof(struct ASTBase_s), Object.value.classINFOptr);
-   
        _declareMethods(ASTBase, ASTBase_METHODS);
        _declareProps(ASTBase, ASTBase_PROPS, sizeof ASTBase_PROPS);
+   
 
    // end class ASTBase
    

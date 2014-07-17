@@ -32,11 +32,10 @@ var Names_allNameDeclarations;
      { convertType_, Names_Declaration_convertType },
      { assignTypeFromValue_, Names_Declaration_assignTypeFromValue },
      { assignTypebyNameAffinity_, Names_Declaration_assignTypebyNameAffinity },
+     { checkSuperChainProperties_, Names_Declaration_checkSuperChainProperties },
+     { outSuperChainProps_, Names_Declaration_outSuperChainProps },
      { addToAllProperties_, Names_Declaration_addToAllProperties },
      { getComposedName_, Names_Declaration_getComposedName },
-     { isClass_, Names_Declaration_isClass },
-     { isMethod_, Names_Declaration_isMethod },
-     { isProperty_, Names_Declaration_isProperty },
      { addToAllMethodNames_, Names_Declaration_addToAllMethodNames },
    
    {0,0}}; //method jmp table initializer end mark
@@ -51,9 +50,12 @@ var Names_allNameDeclarations;
     , itemType_
     , value_
     , isScope_
-    , isNamespace_
     , isForward_
     , isDummy_
+    , isProperty_
+    , isMethod_
+    , isNamespace_
+    , superDecl_
     };
    
 any Names_fixSpecialNames(DEFAULT_ARGUMENTS); //forward declare
@@ -80,9 +82,11 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
     , informError_
     };
    
-   // Names_Declaration
    
-   any Names_Declaration; //Class Object
+
+//--------------
+   // Names_Declaration
+   any Names_Declaration; //Class Names_Declaration
 
     // properties
     ;
@@ -105,8 +109,26 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
      PROP(name_,this) = name;
      // .members = new Map // JSON, is "Map string to any" literal notation
      PROP(members_,this) = new(Map,0,NULL); // JSON, is "Map string to any" literal notation
-     // .nodeDeclared = node
-     PROP(nodeDeclared_,this) = node;
+
+     // if node into .nodeDeclared
+     if (_anyToBool((PROP(nodeDeclared_,this)=node)))  {
+         // if node instanceof Grammar.FunctionDeclaration
+         if (_instanceof(node,Grammar_FunctionDeclaration))  {
+             // .isMethod = true
+             PROP(isMethod_,this) = true;
+         }
+         
+         else if (_instanceof(node,Grammar_VariableDecl))  {
+             // .isProperty = true
+             PROP(isProperty_,this) = true;
+         }
+         
+         else if (_instanceof(node,Grammar_NamespaceDeclaration))  {
+             // .isNamespace = true
+             PROP(isNamespace_,this) = true;
+         };
+     };
+     // end if
 
      // if options
      if (_anyToBool(options))  {
@@ -166,41 +188,40 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
     }
 
 
-    // helper method setMember(name,nameDecl)
+    // helper method setMember(name,value)
     any Names_Declaration_setMember(DEFAULT_ARGUMENTS){
        assert(_instanceof(this,Names_Declaration));
        //---------
        // define named params
-       var name, nameDecl;
-       name=nameDecl=undefined;
+       var name, value;
+       name=value=undefined;
        switch(argc){
-         case 2:nameDecl=arguments[1];
+         case 2:value=arguments[1];
          case 1:name=arguments[0];
        }
        //---------
 // force set a member
 
-       // if name is '**proto**' #setting type
-       if (__is(name,any_str("**proto**")))  {// #setting type
-
+       // if name is '**proto**'
+       if (__is(name,any_str("**proto**")))  {
             // # walk all the **proto** chain to avoid circular references
-           // var actual = nameDecl
-           var actual = nameDecl;
+           // var nameDecl = value
+           var nameDecl = value;
            // do
            do{
-               // if no actual or no actual.members, break #end of chain
-               if (_anyToBool(__or(any_number(!_anyToBool(actual)),any_number(!_anyToBool(PROP(members_,actual)))))) {break;};
-               // if actual is this, return #circular ref, abort setting
-               if (__is(actual,this)) {return undefined;};
-           } while (_anyToBool((actual=CALL1(get_,PROP(members_,actual),name))));// end loop
+               // if nameDecl isnt instance of Declaration, break #a nameDecl with a string yet to be de-reference
+               if (!(_instanceof(nameDecl,Names_Declaration))) {break;};
+               // if nameDecl is this, return #circular ref, abort setting
+               if (__is(nameDecl,this)) {return undefined;};
+           } while (_anyToBool((nameDecl=CALL1(get_,PROP(members_,nameDecl),name))));// end loop
            
        };
 
        // end if #avoid circular references
 
         // #set member
-       // .members.set .normalize(name), nameDecl
-       CALL2(set_,PROP(members_,this),CALL1(normalize_,this,name), nameDecl);
+       // .members.set .normalize(name), value
+       CALL2(set_,PROP(members_,this),CALL1(normalize_,this,name), value);
     return undefined;
     }
 
@@ -218,7 +239,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
     return undefined;
     }
 
-    // helper method ownMember(name)
+    // helper method ownMember(name) returns Declaration
     any Names_Declaration_ownMember(DEFAULT_ARGUMENTS){
        assert(_instanceof(this,Names_Declaration));
        //---------
@@ -266,13 +287,13 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 // mix in found namedecl here
 
        // for each key,member in map realNameDecl.members
-       any _list31=PROP(members_,realNameDecl);
+       any _list29=PROP(members_,realNameDecl);
        { NameValuePair_ptr _nvp4=NULL; //name:value pair
           var key=undefined; //key
         var member=undefined; //value
-       for(int64_t member__inx=0 ; member__inx<_list31.value.arr->length ; member__inx++){
-         assert(ITEM(member__inx,_list31).class==&NameValuePair_CLASSINFO);
-       _nvp4 = ITEM(member__inx,_list31).value.ptr;
+       for(int64_t member__inx=0 ; member__inx<_list29.value.arr->length ; member__inx++){
+         assert(ITEM(member__inx,_list29).class==&NameValuePair_CLASSINFO);
+       _nvp4 = ITEM(member__inx,_list29).value.ptr;
          key=_nvp4->name;
          member=_nvp4->value;
           // declare member:Declaration
@@ -311,12 +332,12 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
        // .isForward = false
        PROP(isForward_,this) = false;
        // for each memberDecl in map .members
-       any _list32=PROP(members_,this);
+       any _list30=PROP(members_,this);
        { NameValuePair_ptr _nvp5=NULL; //name:value pair
         var memberDecl=undefined; //value
-       for(int64_t memberDecl__inx=0 ; memberDecl__inx<_list32.value.arr->length ; memberDecl__inx++){
-         assert(ITEM(memberDecl__inx,_list32).class==&NameValuePair_CLASSINFO);
-       _nvp5 = ITEM(memberDecl__inx,_list32).value.ptr;
+       for(int64_t memberDecl__inx=0 ; memberDecl__inx<_list30.value.arr->length ; memberDecl__inx++){
+         assert(ITEM(memberDecl__inx,_list30).class==&NameValuePair_CLASSINFO);
+       _nvp5 = ITEM(memberDecl__inx,_list30).value.ptr;
          memberDecl=_nvp5->value;
          // allNameDeclarations.remove memberDecl
          CALL1(remove_,Names_allNameDeclarations,memberDecl);
@@ -335,9 +356,9 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 
         // #other nameDecl pointing here are redirected
        // for each other in allNameDeclarations
-       any _list33=Names_allNameDeclarations;
+       any _list31=Names_allNameDeclarations;
        { var other=undefined;
-       for(int other__inx=0 ; other__inx<_list33.value.arr->length ; other__inx++){other=ITEM(other__inx,_list33);
+       for(int other__inx=0 ; other__inx<_list31.value.arr->length ; other__inx++){other=ITEM(other__inx,_list31);
            // if other.members is thisMembers
            if (__is(PROP(members_,other),thisMembers))  {
                // other.members = nameDecl.members
@@ -576,17 +597,19 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
        }
        
        else {
-         // type='Object'
-         type = any_str("Object");
+         // if .nodeDeclared and .nodeDeclared.type, type=.nodeDeclared.type
+         if (_anyToBool(PROP(nodeDeclared_,this)) && _anyToBool(PROP(type_,PROP(nodeDeclared_,this)))) {type = PROP(type_,PROP(nodeDeclared_,this));};
        };
 
-       // return "'#{.composedName()}:#{type}'"
-       return _concatAny(5,(any_arr){any_str("'"), (CALL0(composedName_,this)), any_str(":"), type, any_str("'")});
+       // return "'#{.composedName()}#{type?':'else''}#{type}'"
+       return _concatAny(5,(any_arr){any_str("'"), (CALL0(composedName_,this)), (_anyToBool(type) ? any_str(":") : any_EMPTY_STR), type, any_str("'")});
     return undefined;
     }
-   // Names_NameDeclOptions
    
-   any Names_NameDeclOptions; //Class Object
+
+//--------------
+   // Names_NameDeclOptions
+   any Names_NameDeclOptions; //Class Names_NameDeclOptions
    //auto Names_NameDeclOptions__init
    void Names_NameDeclOptions__init(any this, len_t argc, any* arguments){
    };
@@ -604,7 +627,7 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
      //---------
 
      // if text in ['__proto__','NaN','Infinity','undefined','null','false','true','constructor'] # not good names
-     if (CALL1(indexOf_,_newArray(8,(any_arr){any_str("__proto__"), any_str("NaN"), any_str("Infinity"), any_str("undefined"), any_str("null"), any_str("false"), any_str("true"), any_str("constructor")}),text).value.number>=0)  {// # not good names
+     if (__in(text,8,(any_arr){any_str("__proto__"), any_str("NaN"), any_str("Infinity"), any_str("undefined"), any_str("null"), any_str("false"), any_str("true"), any_str("constructor")}))  {// # not good names
        // return '|#{text}|'
        return _concatAny(3,(any_arr){any_str("|"), text, any_str("|")});
      }
@@ -665,13 +688,13 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 
 //-------------------------
 void Names__moduleInit(void){
-Names_allNameDeclarations = _newArray(0,NULL);
        Names_Declaration =_newClass("Names_Declaration", Names_Declaration__init, sizeof(struct Names_Declaration_s), Object.value.classINFOptr);
-   
        _declareMethods(Names_Declaration, Names_Declaration_METHODS);
        _declareProps(Names_Declaration, Names_Declaration_PROPS, sizeof Names_Declaration_PROPS);
-       Names_NameDeclOptions =_newClass("Names_NameDeclOptions", Names_NameDeclOptions__init, sizeof(struct Names_NameDeclOptions_s), Object.value.classINFOptr);
    
+       Names_NameDeclOptions =_newClass("Names_NameDeclOptions", Names_NameDeclOptions__init, sizeof(struct Names_NameDeclOptions_s), Object.value.classINFOptr);
        _declareMethods(Names_NameDeclOptions, Names_NameDeclOptions_METHODS);
        _declareProps(Names_NameDeclOptions, Names_NameDeclOptions_PROPS, sizeof Names_NameDeclOptions_PROPS);
+   
+    Names_allNameDeclarations = new(Array,0,NULL);
 };

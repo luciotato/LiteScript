@@ -61,9 +61,11 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
     , createFile_
     };
    
-   // Environment_FileInfo
    
-   any Environment_FileInfo; //Class Object
+
+//--------------
+   // Environment_FileInfo
+   any Environment_FileInfo; //Class Environment_FileInfo
 
     // properties
     ;
@@ -93,7 +95,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
        // this.dir = path.resolve(path.dirname(name))
        PROP(dir_,this) = path_resolve(undefined,1,(any_arr){path_dirname(undefined,1,(any_arr){name})});
        // this.hasPath = name.charAt(0) in [path.sep,'.']
-       PROP(hasPath_,this) = any_number(CALL1(indexOf_,_newArray(2,(any_arr){path_sep, any_str(".")}),CALL1(charAt_,name,any_number(0))).value.number>=0);
+       PROP(hasPath_,this) = any_number(__in(CALL1(charAt_,name,any_number(0)),2,(any_arr){path_sep, any_str(".")}));
        // this.sourcename = path.basename(name)
        PROP(sourcename_,this) = path_basename(undefined,1,(any_arr){name});
        // this.isInterface = this.sourcename.indexOf('.interface.') isnt -1
@@ -167,13 +169,13 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
            // if this.hasPath #specific path indicated
            if (_anyToBool(PROP(hasPath_,this)))  {// #specific path indicated
                // search = [ path.resolve(importingModuleFileInfo.dir,this.importInfo.name)]
-               search = _newArray(1,(any_arr){path_resolve(undefined,2,(any_arr){PROP(dir_,importingModuleFileInfo), PROP(name_,PROP(importInfo_,this))})});
+               search = new(Array,1,(any_arr){path_resolve(undefined,2,(any_arr){PROP(dir_,importingModuleFileInfo), PROP(name_,PROP(importInfo_,this))})});
            }
            
            else {
                 // #normal: search local ./ & .[projectDir]/lib
                // search = [
-               search = _newArray(2,(any_arr){path_join(undefined,2,(any_arr){PROP(dir_,importingModuleFileInfo), PROP(name_,PROP(importInfo_,this))}), path_join(undefined,3,(any_arr){Environment_projectDir, any_str("/lib"), PROP(name_,PROP(importInfo_,this))})});
+               search = new(Array,2,(any_arr){path_join(undefined,2,(any_arr){PROP(dir_,importingModuleFileInfo), PROP(name_,PROP(importInfo_,this))}), path_join(undefined,3,(any_arr){Environment_projectDir, any_str("/lib"), PROP(name_,PROP(importInfo_,this))})});
 
                // if targetExt is "c"
                if (__is(Environment_targetExt,any_str("c")))  {
@@ -185,13 +187,13 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
 
 
            // for each item in search
-           any _list56=search;
+           any _list57=search;
            { var item=undefined;
-           for(int item__inx=0 ; item__inx<_list56.value.arr->length ; item__inx++){item=ITEM(item__inx,_list56);
+           for(int item__inx=0 ; item__inx<_list57.value.arr->length ; item__inx++){item=ITEM(item__inx,_list57);
                // for each ext in ['.lite.md','.md','.interface.md','.js']
-               any _list57=_newArray(4,(any_arr){any_str(".lite.md"), any_str(".md"), any_str(".interface.md"), any_str(".js")});
+               any _list58=new(Array,4,(any_arr){any_str(".lite.md"), any_str(".md"), any_str(".interface.md"), any_str(".js")});
                { var ext=undefined;
-               for(int ext__inx=0 ; ext__inx<_list57.value.arr->length ; ext__inx++){ext=ITEM(ext__inx,_list57);
+               for(int ext__inx=0 ; ext__inx<_list58.value.arr->length ; ext__inx++){ext=ITEM(ext__inx,_list58);
                    // if fs.existsSync("#{item}#{ext}" into full)
                    if (_anyToBool(fs_existsSync(undefined,1,(any_arr){(full=_concatAny(2,(any_arr){item, ext}))})))  {
                        // found=full
@@ -199,7 +201,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
                        // break
                        break;
                    };
-               }};// end for each in _newArray(4,(any_arr){any_str(".lite.md"), any_str(".md"), any_str(".interface.md"), any_str(".js")})
+               }};// end for each in new(Array,4,(any_arr){any_str(".lite.md"), any_str(".md"), any_str(".interface.md"), any_str(".js")})
                // end for
                // if found, break
                if (_anyToBool(found)) {break;};
@@ -247,7 +249,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
 
         // based on result extension
        // this.isLite = this.extension in ['.md','.lite']
-       PROP(isLite_,this) = any_number(CALL1(indexOf_,_newArray(2,(any_arr){any_str(".md"), any_str(".lite")}),PROP(extension_,this)).value.number>=0);
+       PROP(isLite_,this) = any_number(__in(PROP(extension_,this),2,(any_arr){any_str(".md"), any_str(".lite")}));
        // this.outExtension = not this.isLite and this.extension? this.extension else ".#{targetExt}"
        PROP(outExtension_,this) = !(_anyToBool(PROP(isLite_,this))) && _anyToBool(PROP(extension_,this)) ? PROP(extension_,this) : _concatAny(2,(any_arr){any_str("."), Environment_targetExt});
 
@@ -333,9 +335,11 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
        return undefined;
     return undefined;
     }
-   // Environment_ImportParameterInfo
    
-   any Environment_ImportParameterInfo; //Class Object
+
+//--------------
+   // Environment_ImportParameterInfo
+   any Environment_ImportParameterInfo; //Class Environment_ImportParameterInfo
    //auto Environment_ImportParameterInfo__init
    void Environment_ImportParameterInfo__init(any this, len_t argc, any* arguments){
    };
@@ -510,7 +514,7 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
     //
 
        // return name in ['isNaN','parseFloat','parseInt','isFinite'
-       return any_number(CALL1(indexOf_,_newArray(12,(any_arr){any_str("isNaN"), any_str("parseFloat"), any_str("parseInt"), any_str("isFinite"), any_str("decodeURI"), any_str("decodeURIComponent"), any_str("encodeURI"), any_str("encodeURIComponent"), any_str("eval"), any_str("console"), any_str("process"), any_str("require")}),name).value.number>=0);
+       return any_number(__in(name,12,(any_arr){any_str("isNaN"), any_str("parseFloat"), any_str("parseInt"), any_str("isFinite"), any_str("decodeURI"), any_str("decodeURIComponent"), any_str("encodeURI"), any_str("encodeURIComponent"), any_str("eval"), any_str("console"), any_str("process"), any_str("require")}));
    return undefined;
    }
 
@@ -574,12 +578,12 @@ any Environment_fileInfoNewFile(DEFAULT_ARGUMENTS); //forward declare
 //-------------------------
 void Environment__moduleInit(void){
        Environment_FileInfo =_newClass("Environment_FileInfo", Environment_FileInfo__init, sizeof(struct Environment_FileInfo_s), Object.value.classINFOptr);
-   
        _declareMethods(Environment_FileInfo, Environment_FileInfo_METHODS);
        _declareProps(Environment_FileInfo, Environment_FileInfo_PROPS, sizeof Environment_FileInfo_PROPS);
-       Environment_ImportParameterInfo =_newClass("Environment_ImportParameterInfo", Environment_ImportParameterInfo__init, sizeof(struct Environment_ImportParameterInfo_s), Object.value.classINFOptr);
    
+       Environment_ImportParameterInfo =_newClass("Environment_ImportParameterInfo", Environment_ImportParameterInfo__init, sizeof(struct Environment_ImportParameterInfo_s), Object.value.classINFOptr);
        _declareMethods(Environment_ImportParameterInfo, Environment_ImportParameterInfo_METHODS);
        _declareProps(Environment_ImportParameterInfo, Environment_ImportParameterInfo_PROPS, sizeof Environment_ImportParameterInfo_PROPS);
+   
    
 };

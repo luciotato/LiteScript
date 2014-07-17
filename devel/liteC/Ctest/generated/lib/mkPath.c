@@ -70,7 +70,7 @@ any mkPath_dirExists(DEFAULT_ARGUMENTS); //forward declare
        // if fs.statSync(dirPath).isDirectory()
        if (_anyToBool(CALL0(isDirectory_,fs_statSync(undefined,1,(any_arr){dirPath}))))  {
            // return true //ok! exists and is a directory
-           return true; //ok! exists and is a directory
+           {e4c_exitTry(1);return true;}; //ok! exists and is a directory
        }
        
        else {
@@ -84,7 +84,7 @@ any mkPath_dirExists(DEFAULT_ARGUMENTS); //forward declare
 
             //if dir does not exists, return false
            // if err.code is 'ENOENT', return false
-           if (__is(PROP(code_,err),any_str("ENOENT"))) {return false;};
+           if (__is(PROP(code_,err),any_str("ENOENT"))) {{e4c_exitTry(1);return false;};};
            // throw err //another error
            throw(err); //another error
        };

@@ -19,6 +19,7 @@
    var logger = require('./lib/logger.js');
    var color = require('./lib/color.js');
    var Strings = require('./lib/Strings.js');
+   var mkPath = require('./lib/mkPath.js');
 
    // shim import Map
    var Map = require('./lib/Map.js');
@@ -43,7 +44,7 @@
 // ----------------
    // export default class Project
    // constructor
-    function Project(filename, options){
+   function Project(filename, options){
      //      properties
 
         // options: GeneralOptions
@@ -173,6 +174,7 @@
 
 // Produce, for each module
 
+       mkPath.create(this.options.outDir);
        logger.info("\nProducing " + this.options.target + " at " + this.options.outDir + "\n");
 
        // for each moduleNode:Grammar.Module in map .moduleCache
@@ -466,22 +468,16 @@
                else if (node.parent instanceof Grammar.ImportStatement) {
                    importInfo.globalImport = node.parent.global;
                };
-           }
+           };
 
 // else, If the origin is a require() call
-           
-           else if (node instanceof Grammar.VariableRef) {// #require() call
-                // declare node:Grammar.VariableRef
-               // if node.accessors and node.accessors[0] instanceof Grammar.FunctionAccess
-               if (node.accessors && node.accessors[0] instanceof Grammar.FunctionAccess) {
-                   var requireCall = node.accessors[0];
-                   // if requireCall.args[0].expression.root.name instanceof Grammar.StringLiteral
-                   if (requireCall.args[0].expression.root.name instanceof Grammar.StringLiteral) {
-                       var stringLiteral = requireCall.args[0].expression.root.name;
-                       importInfo.name = stringLiteral.getValue();
-                   };
-               };
-           };
+//             else if node instance of Grammar.VariableRef #require() call
+//                 declare node:Grammar.VariableRef
+//                 if node.accessors and node.accessors[0] instanceof Grammar.FunctionAccess
+//                     var requireCall:Grammar.FunctionAccess = node.accessors[0]
+//                     if requireCall.args[0].expression.root.name instanceof Grammar.StringLiteral
+//                         var stringLiteral = requireCall.args[0].expression.root.name
+//                         importInfo.name = stringLiteral.getValue()
 
 // if found a valid filename to import
 
@@ -697,10 +693,9 @@
     };
 
 
-   // append to class Grammar.VariableRef
-     //      properties
-        // importedModule: Grammar.Module
-    
+// ### Append to class Grammar.VariableRef
+// #### Properties
+//         importedModule: Grammar.Module
 
    // append to class Grammar.ImportStatementItem
      //      properties

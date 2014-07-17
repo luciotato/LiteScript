@@ -277,8 +277,8 @@
 // "Append To" declaration to this point, where 'x.y.z' can be analyzed and a reference obtained.
 // Walk the tree, and check "Append To" Methods & Properties Declarations
 
-       logger.info("- Processing Append-To");
-       walkAllNodesCalling('processAppendTo');
+       logger.info("- Processing Append-To, extends");
+       walkAllNodesCalling('processAppendToExtends');
 
 
 // #### Pass 2.0 Apply Name Affinity
@@ -687,7 +687,7 @@
 
      // class ConvertResult
      // constructor
-     function ConvertResult(){
+     function ConvertResult(){ // default constructor
         // properties
           // converted:number=0
           // failures:number=0
@@ -1443,6 +1443,55 @@
 //               return
 //         return ownerDecl
 
+    // helper method callOnSubTree(methodSymbol,excludeClass) # recursive
+    ASTBase.prototype.callOnSubTree = function(methodSymbol, excludeClass){// # recursive
+
+// This is instance has the method, call the method on the instance
+
+     logger.debugGroup("callOnSubTree " + this.constructor.name + "." + (LiteCore.getSymbolName(methodSymbol)) + "() - '" + this.name + "'");
+
+     // if this.tryGetMethod(methodSymbol) into var theFunction
+     var theFunction=undefined;
+     if ((theFunction=this.tryGetMethod(methodSymbol))) {
+           logger.debug("calling " + this.constructor.name + "." + (LiteCore.getSymbolName(methodSymbol)) + "() - '" + this.name + "'");
+           theFunction.call(this);
+     };
+
+     // if excludeClass and this is instance of excludeClass, return #do not recurse on filtered's childs
+     if (excludeClass && this instanceof excludeClass) {return};
+
+// recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
+
+     // for each property name,value in this
+     var value=undefined;
+     for ( var name in this)if (this.hasOwnProperty(name)){value=this[name];
+     if(['constructor', 'parent', 'importedModule', 'requireCallNodes', 'exportDefault'].indexOf(name)===-1){
+
+           // if value instance of ASTBase
+           if (value instanceof ASTBase) {
+                // declare value:ASTBase
+               value.callOnSubTree(methodSymbol, excludeClass);// #recurse
+           }
+           
+           else if (value instanceof Array) {
+                // declare value:array
+               logger.debug("callOnSubArray " + this.constructor.name + "." + name + "[]");
+               // for each item in value where item instance of ASTBase
+               for( var item__inx=0,item ; item__inx<value.length ; item__inx++){item=value[item__inx];
+                 if(item instanceof ASTBase){
+                    // declare item:ASTBase
+                   item.callOnSubTree(methodSymbol, excludeClass);
+               }};// end for each in value
+               
+           };
+           }
+           
+           }// end for each property
+     // end for
+
+     logger.debugGroupEnd();
+    };
+
 // ----
 // ## Methods added to specific Grammar Classes to handle scope, var & members declaration
 
@@ -1583,7 +1632,7 @@
 
 // AppendToDeclarations do not "declare" anything at this point.
 // AppendToDeclarations add to a existing classes or namespaces.
-// The adding is delayed until pass:"processAppendTo", where
+// The adding is delayed until pass:"processAppendToExtends", where
 // append-To var reference is searched in the scope
 // and methods and properties are added.
 // This need to be done after all declarations.
@@ -1600,8 +1649,8 @@
 
        // if isNamespace
        if (isNamespace) {
+
            this.nameDecl = this.declareName(this.name);
-           this.nameDecl.isNamespace = true;
        }
        
        else {
@@ -1675,6 +1724,52 @@
     };
 
 
+    // method validatePropertyAccess()
+    Grammar.ClassDeclaration.prototype.validatePropertyAccess = function(){
+
+// in the pass "Validating Property Access", for a "ClassDeclaration"
+// we check for duplicate property names in the super-class-chain
+
+       // if .constructor isnt Grammar.ClassDeclaration, return // exclude child classes
+       if (this.constructor !== Grammar.ClassDeclaration) {return};
+
+       var prt = this.nameDecl.ownMember('prototype');
+       // for each propNameDecl in map prt.members where propNameDecl.isProperty
+       var propNameDecl=undefined;
+       if(!prt.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
+       for ( var propNameDecl__propName in prt.members.dict) if (prt.members.dict.hasOwnProperty(propNameDecl__propName)){propNameDecl=prt.members.dict[propNameDecl__propName];
+       if(propNameDecl.isProperty){
+               propNameDecl.checkSuperChainProperties(this.nameDecl.superDecl);
+               }
+               
+               }// end for each property
+       
+    };
+
+
+
+
+   // append to class Grammar.ArrayLiteral ###
+
+     // properties nameDecl
+
+    // method declare
+    Grammar.ArrayLiteral.prototype.declare = function(){
+
+// When producing C-code, an ArrayLiteral creates a "new(Array" at module level
+
+       // if project.options.target is 'c'
+       if (project.options.target === 'c') {
+           this.nameDecl = this.declareName(UniqueID.getVarName('_literalArray'));
+           this.getParent(Grammar.Module).addToScope(this.nameDecl);
+       };
+    };
+
+    // method getResultType
+    Grammar.ArrayLiteral.prototype.getResultType = function(){
+         return tryGetGlobalPrototype('Array');
+    };
+
    // append to class Grammar.ObjectLiteral ###
 
      // properties nameDecl
@@ -1682,14 +1777,19 @@
     // method declare
     Grammar.ObjectLiteral.prototype.declare = function(){
 
-// When producing C-code, a ObjectLiteral creates a "Map string to any" on the fly,
+// When producing C-code, an ObjectLiteral creates a "Map string to any" on the fly,
 // but it does not declare a valid type/class.
 
-       // if project.options.target is 'c', return
-       if (project.options.target === 'c') {return};
-
-        // declare valid .parent.nameDecl
-       this.nameDecl = this.parent.nameDecl || this.declareName(UniqueID.getVarName('*ObjectLiteral*'));
+       // if project.options.target is 'c'
+       if (project.options.target === 'c') {
+           this.nameDecl = this.declareName(UniqueID.getVarName('_literalMap'));
+           this.getParent(Grammar.Module).addToScope(this.nameDecl);
+       }
+       
+       else {
+            // declare valid .parent.nameDecl
+           this.nameDecl = this.parent.nameDecl || this.declareName(UniqueID.getVarName('*ObjectLiteral*'));
+       };
     };
 
 // When producing the LiteScript-to-C compiler, a ObjectLiteral's return type is 'Map string to any'
@@ -1739,7 +1839,9 @@
    // append to class Grammar.FunctionDeclaration ###
 // `FunctionDeclaration: '[export][generator] (function|method|constructor) [name] '(' FunctionParameterDecl* ')' Block`
 
-     // properties nameDecl, declared:boolean, scope:Names.Declaration
+     // properties
+        // nameDecl
+        // declared:boolean
 
     // method declare() ## function, methods and constructors
     Grammar.FunctionDeclaration.prototype.declare = function(){// ## function, methods and constructors
@@ -1924,8 +2026,8 @@
 
    // append to class Grammar.AppendToDeclaration ###
 
-    // method processAppendTo()
-    Grammar.AppendToDeclaration.prototype.processAppendTo = function(){
+    // method processAppendToExtends()
+    Grammar.AppendToDeclaration.prototype.processAppendToExtends = function(){
 // when target is '.c' we do not allow treating classes as namespaces
 // so an "append to namespace classX" should throw an error
 
@@ -2001,24 +2103,78 @@
     };
 
 
+   // append to class Names.Declaration ###
+     //      properties
+      // superDecl : Names.Declaration //nameDecl of the super class
+
+    // method checkSuperChainProperties(superClassNameDecl)
+    Names.Declaration.prototype.checkSuperChainProperties = function(superClassNameDecl){
+
+       // if no superClassNameDecl, return
+       if (!superClassNameDecl) {return};
+
+// Check for duplicate class properties in the super class
+
+       // if superClassNameDecl.findOwnMember('prototype') into var superPrt:Names.Declaration
+       var superPrt=undefined;
+       if ((superPrt=superClassNameDecl.findOwnMember('prototype'))) {
+
+           // if superPrt.findOwnMember(.name) into var originalNameDecl
+           var originalNameDecl=undefined;
+           if ((originalNameDecl=superPrt.findOwnMember(this.name))) {
+               this.sayErr("Duplicated property. super class [" + superClassNameDecl + "] already has a property '" + this + "'");
+               originalNameDecl.sayErr("for reference, original declaration.");
+           };
+
+// recurse with super's super. Here we're using recursion as a loop device à la Haskell
+// (instead of a simpler "while .superDecl into node" loop. Just to be fancy)
+
+           this.checkSuperChainProperties(superClassNameDecl.superDecl);
+       };
+    };
+
+   // append to class Grammar.ClassDeclaration ###
+
+    // method processAppendToExtends()
+    Grammar.ClassDeclaration.prototype.processAppendToExtends = function(){
+// In Class's processAppendToExtends we try to get a reference to the superclass
+// and then store the superclass nameDecl in the class nameDecl
+
+// get referenced super class
+
+     // if .varRefSuper
+     if (this.varRefSuper) {
+         // if no .varRefSuper.tryGetReference() into var superClassNameDecl
+         var superClassNameDecl=undefined;
+         if (!((superClassNameDecl=this.varRefSuper.tryGetReference()))) {
+             this.sayErr("class " + this.name + " extends '" + this.varRefSuper + "'. Reference is not fully declared");
+             return; //if no superClassNameDecl found
+         };
+
+         this.nameDecl.superDecl = superClassNameDecl;
+     };
+    };
+
    // append to class Grammar.PropertiesDeclaration ###
 
-     // properties nameDecl, declared:boolean, scope:Names.Declaration
+     // properties
+        // nameDecl
+        // declared:boolean
 
     // method declare(informError)
     Grammar.PropertiesDeclaration.prototype.declare = function(informError){
 // Add all properties as members of its owner object (normally: class.prototype)
 
        var opt = new Names.NameDeclOptions();
-       // if .tryGetOwnerNameDecl(informError) into var owner
-       var owner=undefined;
-       if ((owner=this.tryGetOwnerNameDecl(informError))) {
+       // if .tryGetOwnerNameDecl(informError) into var ownerNameDecl
+       var ownerNameDecl=undefined;
+       if ((ownerNameDecl=this.tryGetOwnerNameDecl(informError))) {
 
            // for each varDecl in .list
            for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
                opt.type = varDecl.type;
                opt.itemType = varDecl.itemType;
-               varDecl.nameDecl = varDecl.addMemberTo(owner, varDecl.name, opt);
+               varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl, varDecl.name, opt);
            };// end for each in this.list
 
            this.declared = true;
@@ -2042,84 +2198,91 @@
     // method declare()
     Grammar.ForStatement.prototype.declare = function(){
 
-// a ForStatement has a 'Scope'. Add, if they exists, indexVar & mainVar
-
-        // declare valid .variant.indexVar:Grammar.VariableDecl
-        // declare valid .variant.mainVar:Grammar.VariableDecl
-        // declare valid .variant.iterable:Grammar.VariableRef
+// a ForStatement has a 'Scope', indexVar & mainVar belong to the scope
 
        this.createScope();
-       // if .variant.indexVar, .variant.indexVar.declareInScope
-       if (this.variant.indexVar) {this.variant.indexVar.declareInScope()};
-
-       // if .variant.mainVar
-       if (this.variant.mainVar) {
-           // if .variant.iterable, default .variant.mainVar.type = .variant.iterable.itemType
-           if (this.variant.iterable) {if(this.variant.mainVar.type===undefined) this.variant.mainVar.type=this.variant.iterable.itemType;
-           };
-           this.variant.mainVar.declareInScope();
-       };
     };
 
-        //debug:
-        //.sayErr "ForStatement - pass declare"
-        //console.log "index",.variant.indexVar, .indexNameDecl? .indexNameDecl.toString():undefined
-        //console.log "main",.variant.mainVar, .mainNameDecl? .mainNameDecl.toString(): undefined
+   // append to class Grammar.ForEachProperty ###
 
+    // method declare()
+    Grammar.ForEachProperty.prototype.declare = function(){
 
-    // method evaluateAssignments() # Grammar.ForStatement
-    Grammar.ForStatement.prototype.evaluateAssignments = function(){// # Grammar.ForStatement
+       // default .mainVar.type = .iterable.itemType
+       if(this.mainVar.type===undefined) this.mainVar.type=this.iterable.itemType;
+       this.mainVar.declareInScope();
 
-        // declare valid .variant.iterable.getResultType
+       // if .indexVar, .indexVar.declareInScope
+       if (this.indexVar) {this.indexVar.declareInScope()};
+    };
+
+    // method evaluateAssignments()
+    Grammar.ForEachProperty.prototype.evaluateAssignments = function(){
+
+// ForEachProperty: index is: string for js (property name) and number for C (symbol)
+
+       var indexType = project.options.target === 'js' ? 'String' : 'Number';
+       this.indexVar.nameDecl.setMember('**proto**', globalPrototype(indexType));
+    };
+
+   // append to class Grammar.ForEachInArray ###
+
+    // method declare()
+    Grammar.ForEachInArray.prototype.declare = function(){
+
+       // default .mainVar.type = .iterable.itemType
+       if(this.mainVar.type===undefined) this.mainVar.type=this.iterable.itemType;
+       this.mainVar.declareInScope();
+
+       // if .indexVar, .indexVar.declareInScope
+       if (this.indexVar) {this.indexVar.declareInScope()};
+    };
+
+    // method evaluateAssignments()
+    Grammar.ForEachInArray.prototype.evaluateAssignments = function(){
 
 // ForEachInArray:
 // If no mainVar.type, guess type from iterable's itemType
 
-       // if .variant instanceof Grammar.ForEachInArray
-       if (this.variant instanceof Grammar.ForEachInArray) {
-           // if no .variant.mainVar.nameDecl.findOwnMember('**proto**')
-           if (!this.variant.mainVar.nameDecl.findOwnMember('**proto**')) {
-               var iterableType = this.variant.iterable.getResultType();
-               // if iterableType and iterableType.findOwnMember('**item type**')  into var itemType
-               var itemType=undefined;
-               if (iterableType && (itemType=iterableType.findOwnMember('**item type**'))) {
-                   this.variant.mainVar.nameDecl.setMember('**proto**', itemType);
-               };
+       // if no .mainVar.nameDecl.findOwnMember('**proto**')
+       if (!this.mainVar.nameDecl.findOwnMember('**proto**')) {
+           var iterableType = this.iterable.getResultType();
+           // if iterableType and iterableType.findOwnMember('**item type**')  into var itemType
+           var itemType=undefined;
+           if (iterableType && (itemType=iterableType.findOwnMember('**item type**'))) {
+               this.mainVar.nameDecl.setMember('**proto**', itemType);
            };
-       }
-
-// ForEachProperty: index is string (property name)
-       
-       else if (this.variant instanceof Grammar.ForEachProperty) {
-           this.variant.indexVar.nameDecl.setMember('**proto**', globalPrototype('String'));
        };
     };
 
-
-    // method validatePropertyAccess() # Grammar.ForStatement
-    Grammar.ForStatement.prototype.validatePropertyAccess = function(){// # Grammar.ForStatement
+    // method validatePropertyAccess()
+    Grammar.ForEachInArray.prototype.validatePropertyAccess = function(){
 // ForEachInArray: check if the iterable has a .length property.
 
-       // if .variant instanceof Grammar.ForEachInArray
-       if (this.variant instanceof Grammar.ForEachInArray) {
+       // if .isMap, return
+       if (this.isMap) {return};
 
-            // declare valid .variant.iterable.getResultType
+       var iterableType = this.iterable.getResultType();
 
-           var iterableType = this.variant.iterable.getResultType();
-
-           // if no iterableType
-           if (!iterableType) {
-              // #.sayErr "ForEachInArray: no type declared for: '#{.variant.iterable}'"
-             // do nothing
-             null;
-           }
-              // #.sayErr "ForEachInArray: no type declared for: '#{.variant.iterable}'"
-           
-           else if (!this.variant.isMap && !iterableType.findMember('length')) {
-             this.sayErr("ForEachInArray: no .length property declared in '" + this.variant.iterable + "' type:'" + (iterableType.toString()) + "'");
-             logger.error(iterableType.originalDeclarationPosition());
-           };
+       // if no iterableType
+       if (!iterableType) {
+            // #.sayErr "ForEachInArray: no type declared for: '#{.iterable}'"
+           // do nothing
+           null;
+       }
+       
+       else if (!iterableType.findMember('length')) {
+           this.sayErr("ForEachInArray: no .length property declared in '" + this.iterable + "' type:'" + (iterableType.toString()) + "'");
+           logger.error(iterableType.originalDeclarationPosition());
        };
+    };
+
+   // append to class Grammar.ForIndexNumeric ###
+
+    // method declare()
+    Grammar.ForIndexNumeric.prototype.declare = function(){
+
+       this.indexVar.declareInScope();
     };
 
 
@@ -2142,8 +2305,8 @@
 
 // `VariableRef` is a Variable Reference.
 
-    // method validatePropertyAccess() # Grammar.VariableRef
-    Grammar.VariableRef.prototype.validatePropertyAccess = function(){// # Grammar.VariableRef
+    // method validatePropertyAccess()
+    Grammar.VariableRef.prototype.validatePropertyAccess = function(){
 
        // if .parent is instance of Grammar.DeclareStatement
        if (this.parent instanceof Grammar.DeclareStatement) {

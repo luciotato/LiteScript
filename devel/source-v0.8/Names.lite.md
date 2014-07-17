@@ -25,9 +25,12 @@ Module vars
         value
 
         isScope: boolean
-        isNamespace: boolean
         isForward
         isDummy
+
+        isProperty: boolean
+        isMethod: boolean
+        isNamespace: boolean
 
      declare name affinity nameDecl
 
@@ -35,7 +38,15 @@ Module vars
       
       .name = name
       .members = new Map // JSON, is "Map string to any" literal notation
-      .nodeDeclared = node
+
+      if node into .nodeDeclared
+          if node instanceof Grammar.FunctionDeclaration
+              .isMethod = true
+          else if node instanceof Grammar.VariableDecl
+              .isProperty = true
+          else if node instanceof Grammar.NamespaceDeclaration
+              .isNamespace = true
+      end if
 
       if options 
           if options.normalizeModeKeepFirstCase, .normalizeModeKeepFirstCase=true
@@ -65,29 +76,28 @@ keep a list of all NameDeclarations
             return normalizeToLower(name)
 
 
-#### Helper method setMember(name,nameDecl)
+#### Helper method setMember(name,value)
 force set a member
 
-        if name is '**proto**' #setting type
-
+        if name is '**proto**'
             # walk all the **proto** chain to avoid circular references
-            var actual = nameDecl
+            var nameDecl = value
             do 
-                if no actual or no actual.members, break #end of chain
-                if actual is this, return #circular ref, abort setting 
-            loop while actual.members.get(name) into actual #next in chain
+                if nameDecl isnt instance of Declaration, break #a nameDecl with a string yet to be de-reference
+                if nameDecl is this, return #circular ref, abort setting 
+            loop while nameDecl.members.get(name) into nameDecl #next in chain
 
         end if #avoid circular references
 
         #set member
-        .members.set .normalize(name), nameDecl
+        .members.set .normalize(name), value
 
 #### Helper method findOwnMember(name) returns Declaration
 this method looks for 'name' in Declaration members
 
         return .members.get(.normalize(name))
 
-#### Helper method ownMember(name)
+#### Helper method ownMember(name) returns Declaration
 this method looks for a specific member, throws if not found
 
         if no .findOwnMember(name) into var result
@@ -244,9 +254,9 @@ else, if it wasnt a forward declaration, then is a duplicated error
                   type = "#{nameDecltype.parent.name}.#{type}"
               end if 
         else
-          type='Object'
+          if .nodeDeclared and .nodeDeclared.type, type=.nodeDeclared.type
 
-        return "'#{.composedName()}:#{type}'"
+        return "'#{.composedName()}#{type?':'else''}#{type}'"
 
 
 #Module helper functions 

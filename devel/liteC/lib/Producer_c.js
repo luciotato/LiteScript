@@ -58,7 +58,7 @@
 
 // create _dispatcher.c & .h
 
-       module.exports.dispatcherModule = new Grammar.Module(project);
+       module.exports.dispatcherModule = new Grammar.Module();
         // declare valid project.options
        module.exports.dispatcherModule.lexer = new Parser.Lexer(project, project.options);
 
@@ -185,6 +185,13 @@
 
        this.out(new Map().fromObject({COMMENT: 'propery names'}), NL, NL, "static str _ADD_THINGS[] = { //string name for each distinct property name", NL, new Map().fromObject({pre: '    "', CSL: allPropertyNames.keys(), post: '"\n'}), '};', NL, NL);
 
+// All literal Maps & arrays
+
+// for each nameDecl in map .scope.members
+//             where nameDecl.nodeDeclared instanceof Grammar.Literal
+//                 .out nameDecl,";",NL
+//         
+
 // _dispatcher.c contains main function
 
        this.out("\n\n\n//-------------------------------", NL, "int main(int argc, char** argv) {", NL, '    LiteC_init(argc,argv);', NL, '    LiteC_addMethodSymbols( ' + allMethodNames.size + ', _ADD_VERBS);', NL, '    LiteC_addPropSymbols( ' + allPropertyNames.size + ', _ADD_THINGS);', NL);
@@ -280,6 +287,31 @@
 
        this.out("\n\n//-------------------------", NL, "void ", prefix, "__moduleInit(void){", NL);
 
+//         for each nameDecl in map .scope.members
+//             if nameDecl.nodeDeclared instanceof Grammar.ObjectLiteral
+//                 .out nameDecl, "=new(Map,"
+//                 var objectLiteral = nameDecl.nodeDeclared
+//                 if no objectLiteral.items or objectLiteral.items.length is 0
+//                     .out "0,NULL"
+//                 else
+//                     .out
+//                         objectLiteral.items.length,',(any_arr){'
+//                         {CSL:objectLiteral.items}
+//                         NL,"}"
+//                 .out ");",NL
+//             else if nameDecl.nodeDeclared instanceof Grammar.ArrayLiteral
+//                 .out nameDecl,"=new(Array,"
+//                 var arrayLiteral = nameDecl.nodeDeclared
+//                 if no arrayLiteral.items or arrayLiteral.items.length is 0
+//                     .out "0,NULL"
+//                 else
+//                     // e.g.: LiteScript:   var list = [a,b,c]
+//                     // e.g.: "C": any list = (any){Array_TYPEID,.value.arr=&(Array_s){3,.item=(any_arr){a,b,c}}};
+//                     .out arrayLiteral.items.length,",(any_arr){",{CSL:arrayLiteral.items},"}"
+//                 .out ");",NL
+//         end for
+//         
+
        this.produceMainFunctionBody(prefix);
 
        // if .fileInfo.isInterface // add call to native hand-coded C support for this module
@@ -324,19 +356,28 @@
 
        // if nameDeclClass.nodeDeclared and nameDeclClass.nodeDeclared.name is "*Global Scope*"
        if (nameDeclClass.nodeDeclared && nameDeclClass.nodeDeclared.name === "*Global Scope*") {
-            // is append to a core class
+
+// for each method declaration in .body
+
            // for each item in .body.statements
            for( var item__inx=0,item ; item__inx<this.body.statements.length ; item__inx++){item=this.body.statements[item__inx];
              if(item.specific.constructor === Grammar.MethodDeclaration){
                     // declare item.specific: Grammar.MethodDeclaration
-                   // if no item.specific.nameDecl, continue //shim
+
+                   // if no item.specific.nameDecl, continue // do not process, is a shim
                    if (!item.specific.nameDecl) {continue};
-                    // keep a list of all methods appended to core-defined classes (like String)
-                    // they require a special registration, because the class pre-exists in core
+
+// keep a list of all methods appended to core-defined classes (like String)
+// they require a special registration, because the class pre-exists in core
+
                    appendToCoreClassMethods.push(item.specific);
-                    //also add to allMethods, since the class is core, is not declared in this project
+
+// also add to allMethods, since the class is core, is not declared in this project
+
                    item.specific.nameDecl.addToAllMethodNames();
-                    // out header
+
+// out header
+
                    this.out('extern any ', item.specific.nameDecl.getComposedName(), "(DEFAULT_ARGUMENTS);", NL);
            }};// end for each in this.body.statements
            
@@ -355,8 +396,12 @@
 
 
    // append to class Grammar.NamespaceDeclaration ###
-
 // namespaces are like modules inside modules
+
+    // method produceCallNamespaceInit()
+    Grammar.NamespaceDeclaration.prototype.produceCallNamespaceInit = function(){
+       this.out('    ', this.makeName(), '__namespaceInit();', NL);
+    };
 
     // method makeName()
     Grammar.NamespaceDeclaration.prototype.makeName = function(){
@@ -408,12 +453,12 @@
        if(!this.nameDecl.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
        for ( var member__propName in this.nameDecl.members.dict) if (this.nameDecl.members.dict.hasOwnProperty(member__propName)){member=this.nameDecl.members.dict[member__propName];
        if(['constructor', 'length', 'prototype'].indexOf(member.name)===-1){
-               // if member.isProperty()
-               if (member.isProperty()) {
+               // if member.isProperty
+               if (member.isProperty) {
                    this.out('    extern var ', prefix, '_', member.name, ';', NL);
                }
                
-               else if (member.isMethod()) {
+               else if (member.isMethod) {
                    this.out('    extern any ', prefix, '_', member.name, '(DEFAULT_ARGUMENTS);', NL);
                };
                }
@@ -467,15 +512,29 @@
 
 // header
 
-       this.out("\n\n//--------------", NL, new Map().fromObject({COMMENT: c}), this.varRefSuper ? [' extends ', this.varRefSuper, NL] : '', NL, NL, "extern any ", c, "; //Class Object", NL, NL);
+       this.outClassTitleComment(c);
 
 // In C we create a struct for "instance properties" of each class
 
-        // declare struct
        this.out("typedef struct ", c, "_s * ", c, "_ptr;", NL, "typedef struct ", c, "_s {", NL);
 
-        // add each prop
-       var count = 0;
+// out all properties, from the start of the "super-extends" chain
+
+       this.nameDecl.outSuperChainProps(this);
+
+// close instance struct
+
+       this.out(NL, "} ", c, "_s;", NL, NL);
+
+// and declare extern for class __init
+
+        //declare extern for this class methods
+       this.out("extern void ", c, "__init(DEFAULT_ARGUMENTS);", NL);
+
+
+// add each prop to "all properties list", each method to "all methods list"
+// and declare extern for each class method
+
        var classMethods = [];
 
        var prt = this.nameDecl.findOwnMember('prototype');
@@ -484,45 +543,23 @@
        if(!prt.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
        for ( var prtNameDecl__propName in prt.members.dict) if (prt.members.dict.hasOwnProperty(prtNameDecl__propName)){prtNameDecl=prt.members.dict[prtNameDecl__propName];
        if(['constructor', 'length', 'prototype'].indexOf(prtNameDecl.name)===-1){
-               // if prtNameDecl.isProperty()
-               if (prtNameDecl.isProperty()) {
+               // if prtNameDecl.isProperty
+               if (prtNameDecl.isProperty) {
+                    // keep a list of all classes props
                    prtNameDecl.addToAllProperties();
-                   // if count
-                   if (count) {
-                       this.out(',', NL);
-                   }
-                   
-                   else {
-                       this.out('    any', NL);
-                   };
-
-                   this.out('        ', prtNameDecl.name);
-                   count++;
                }
+                    // keep a list of all classes props
                
                else {
-                    // list of this class methods
-                   classMethods.push(prtNameDecl.name);
-
                     // keep a list of all classes methods
                    prtNameDecl.addToAllMethodNames();
+
+                    //declare extern for this class methods
+                   this.out("extern any ", c, "_", prtNameDecl.name, "(DEFAULT_ARGUMENTS);", NL);
                };
                }
                
                }// end for each property
-
-
-       // if count, .out NL,';'
-       if (count) {this.out(NL, ';')};
-       this.out(NL, "} ", c, "_s;", NL, NL);
-
-       this.out("extern void ", c, "__init(DEFAULT_ARGUMENTS);", NL);
-
-        //declare extern for this class methods
-       // for each methodName in classMethods
-       for( var methodName__inx=0,methodName ; methodName__inx<classMethods.length ; methodName__inx++){methodName=classMethods[methodName__inx];
-           this.out("extern any ", c, "_", methodName, "(DEFAULT_ARGUMENTS);", NL);
-       };// end for each in classMethods
        
     };
 
@@ -533,13 +570,13 @@
        // if no .nameDecl, return //shim class
        if (!this.nameDecl) {return};
 
-       var c = this.nameDecl.getComposedName();
-
         //logger.debug "produce body class",c
 
 // this is the class body, goes on the .c file,
 
-       this.out(new Map().fromObject({COMMENT: c}), NL, NL, 'any ' + c + '; //Class Object', NL);
+       var c = this.nameDecl.getComposedName();
+
+       this.outClassTitleComment(c);
 
        var hasConstructor = undefined;
        // for each index,item in .body.statements
@@ -572,9 +609,18 @@
            this.out("};", NL);
        };
 
-       this.body.produce();
+// produce class body
 
+       this.body.produce();
        this.skipSemiColon = true;
+    };
+
+
+// -------------------------------------
+    // helper method outClassTitleComment(c:string)
+    Grammar.ClassDeclaration.prototype.outClassTitleComment = function(c){
+
+       this.out("\n\n//--------------", NL, new Map().fromObject({COMMENT: c}), NL, 'any ' + c + '; //Class ', c, this.varRefSuper ? [' extends ', this.varRefSuper, NL] : '', NL);
     };
 
 
@@ -583,6 +629,10 @@
     Grammar.ClassDeclaration.prototype.produceStaticListMethodsAndProps = function(){
 
 // static definition info for each class: list of _METHODS and _PROPS
+
+        //skip NamespaceDeclaration & AppendToDeclaration (both derived from ClassDeclaration)
+       // if .constructor isnt Grammar.ClassDeclaration, return
+       if (this.constructor !== Grammar.ClassDeclaration) {return};
 
        var c = this.nameDecl.getComposedName();
 
@@ -595,8 +645,8 @@
        if(!prt.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
        for ( var nameDecl__propName in prt.members.dict) if (prt.members.dict.hasOwnProperty(nameDecl__propName)){nameDecl=prt.members.dict[nameDecl__propName];
        if(['constructor', 'length', 'prototype'].indexOf(nameDecl.name)===-1){
-               // if nameDecl.isMethod()
-               if (nameDecl.isMethod()) {
+               // if nameDecl.isMethod
+               if (nameDecl.isMethod) {
                    this.out('  { ' + (makeSymbolName(nameDecl.name)) + ', ' + c + '_' + nameDecl.name + ' },', NL);
                }
                
@@ -613,24 +663,48 @@
     // method produceClassRegistration
     Grammar.ClassDeclaration.prototype.produceClassRegistration = function(){
 
-       var c = this.nameDecl.getComposedName();
-       var superClass = undefined;
-       // if .varRefSuper
-       if (this.varRefSuper) {
-           superClass = this.varRefSuper.tryGetReference();
-           // if no superClass, .throwError "cannot get a reference to #{.varRefSuper}"
-           if (!superClass) {this.throwError("cannot get a reference to " + this.varRefSuper)};
-           superClass = superClass.getComposedName();
-       }
-       
-       else {
-           superClass = "Object";
-       };
+        //skip NamespaceDeclaration & AppendToDeclaration (both derived from ClassDeclaration)
+       // if .constructor isnt Grammar.ClassDeclaration, return
+       if (this.constructor !== Grammar.ClassDeclaration) {return};
 
-       this.out('    ' + c + ' =_newClass("' + c + '", ' + c + '__init, sizeof(struct ' + c + '_s), ' + superClass + '.value.classINFOptr);', NL, NL, '    _declareMethods(' + c + ', ' + c + '_METHODS);', NL, '    _declareProps(' + c + ', ' + c + '_PROPS, sizeof ' + c + '_PROPS);', NL);
+       var c = this.nameDecl.getComposedName();
+
+       var superName = this.nameDecl.superDecl ? this.nameDecl.superDecl.getComposedName() : 'Object';
+
+       this.out('    ' + c + ' =_newClass("' + c + '", ' + c + '__init, sizeof(struct ' + c + '_s), ' + superName + '.value.classINFOptr);', NL, '    _declareMethods(' + c + ', ' + c + '_METHODS);', NL, '    _declareProps(' + c + ', ' + c + '_PROPS, sizeof ' + c + '_PROPS);', NL, NL);
     };
 
 // -------------------------------------
+   // append to class Names.Declaration
+    // method outSuperChainProps(node:Grammar.ClassDeclaration) #recursive
+    Names.Declaration.prototype.outSuperChainProps = function(node){// #recursive
+
+// out all properties of a class, including those of the super's-chain
+
+       // if .superDecl, .superDecl.outSuperChainProps node #recurse
+       if (this.superDecl) {this.superDecl.outSuperChainProps(node)};
+
+       node.out('    //', this.name, NL);
+       var prt = this.ownMember('prototype');
+       // if no prt, .sayErr "class #{.name} has no prototype"
+       if (!prt) {this.sayErr("class " + this.name + " has no prototype")};
+
+       // for each prtNameDecl in map prt.members
+       var prtNameDecl=undefined;
+       if(!prt.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
+       for ( var prtNameDecl__propName in prt.members.dict) if (prt.members.dict.hasOwnProperty(prtNameDecl__propName)){prtNameDecl=prt.members.dict[prtNameDecl__propName];
+       if(['constructor', 'length', 'prototype'].indexOf(prtNameDecl.name)===-1){
+               // if prtNameDecl.isProperty
+               if (prtNameDecl.isProperty) {
+                   node.out('    any ', prtNameDecl.name, ";", NL);
+               };
+               }
+               
+               }// end for each property
+       
+    };
+
+
 
    // append to class Grammar.Body
 
@@ -736,6 +810,11 @@
                produceSecond.push(item.specific);// #recurses
            }
            
+           else if (item.specific.constructor === Grammar.AppendToDeclaration) {
+               item.specific.callOnSubTree('produceStaticListMethodsAndProps'); //if there are internal classes
+               produceThird.push(item);
+           }
+           
            else if (item.isDeclaration()) {
                produceThird.push(item);
            };
@@ -759,8 +838,17 @@
     // method produceMainFunctionBody(prefix)
     Grammar.Body.prototype.produceMainFunctionBody = function(prefix){
 
-// assign values for module vars.
-// if there is var or properties with assigned values, produce those assignment
+// First: register user classes
+
+       this.callOnSubTree('produceClassRegistration');
+
+// Second: recurse for namespaces
+
+       this.callOnSubTree('produceCallNamespaceInit');
+
+// Third: assign values for module vars.
+// if there is var or properties with assigned values, produce those assignment.
+// User classes must be registered previously, in case the module vars use them as initial values.
 
        // for each item in .statements
        for( var item__inx=0,item ; item__inx<this.statements.length ; item__inx++){item=this.statements[item__inx];
@@ -769,32 +857,11 @@
                // for each variableDecl in item.specific.list
                for( var variableDecl__inx=0,variableDecl ; variableDecl__inx<item.specific.list.length ; variableDecl__inx++){variableDecl=item.specific.list[variableDecl__inx];
                  if(variableDecl.assignedValue){
-                       this.out(prefix, '_', variableDecl.name, ' = ', variableDecl.assignedValue, ";", NL);
+                       this.out('    ', prefix, '_', variableDecl.name, ' = ', variableDecl.assignedValue, ";", NL);
                }};// end for each in item.specific.list
                
        }};// end for each in this.statements
 
-       // for each item in .statements
-       for( var item__inx=0,item ; item__inx<this.statements.length ; item__inx++){item=this.statements[item__inx];
-
-// register user classes
-
-           // if item.specific.constructor is Grammar.ClassDeclaration
-           if (item.specific.constructor === Grammar.ClassDeclaration) {
-                // declare item.specific:Grammar.ClassDeclaration
-               item.specific.produceClassRegistration();
-           }
-
-// recurse for namespaces
-           
-           else if (item.specific.constructor === Grammar.NamespaceDeclaration) {
-                // declare item.specific:Grammar.NamespaceDeclaration
-                // #call namespaceInit
-               this.out('    ', item.specific.makeName(), '__namespaceInit();', NL);
-           };
-       };// end for each in this.statements
-
-       // end for
 
         // all other loose statements in module body
        this.produceLooseExecutableStatements();
@@ -949,11 +1016,26 @@
 // we're "returning" to
 
        var countTryBlocks = 0;
-       var node = this;
-       // while node.getParent(Grammar.TryCatch) into node //includes catch & finally (parts of try)
-       while((node=node.getParent(Grammar.TryCatch))){
-           countTryBlocks++;
+       var node = this.parent;
+       // do until node instance of Grammar.FunctionDeclaration
+       while(!(node instanceof Grammar.FunctionDeclaration)){
+
+           // if node.constructor is Grammar.TryCatch
+           if (node.constructor === Grammar.TryCatch) {
+                //a return inside a "TryCatch" block
+               countTryBlocks++; //we need to explicitly unwind
+           };
+
+           node = node.parent;
        };// end loop
+
+// we reached function header here.
+// if the function had a ExceptionBlock, we need to unwind
+// because an auto "try{" is inserted at function start
+
+        // declare node:Grammar.FunctionDeclaration
+       // if node.hasExceptionBlock, countTryBlocks++
+       if (node.hasExceptionBlock) {countTryBlocks++};
 
        // if countTryBlocks
        if (countTryBlocks) {
@@ -1081,9 +1163,6 @@
 // 5) `no`      *'falsey' check*       `if no options then options={}`
 // 6) `~`       *bit-unary-negation*   `a = ~xC0 + 5`
 
-      // properties
-        // produceType: string
-
      // method produce()
      Grammar.UnaryOper.prototype.produce = function(){
 
@@ -1195,11 +1274,19 @@
        switch(this.name){
        
        case 'in':
-           this.out(toAnyPre, "CALL1(indexOf_,", this.right, ",", this.left, ").value.number", this.negated ? "==-1" : ">=0", toAnyPost);
+           // if .right.name instanceof Grammar.ArrayLiteral
+           if (this.right.name instanceof Grammar.ArrayLiteral) {
+               var haystack = this.right.name;
+               this.out(toAnyPre, prepend, "__in(", this.left, ",", haystack.items.length, ",(any_arr){", new Map().fromObject({CSL: haystack.items}), "})", append, toAnyPost);
+           }
+           
+           else {
+               this.out(toAnyPre, "CALL1(indexOf_,", this.right, ",", this.left, ").value.number", this.negated ? "==-1" : ">=0", toAnyPost);
+           };
            break;
            
        case 'has property':
-           this.out(toAnyPre, "indexOf(", this.right, ",1,(any_arr){", this.left, "}).value.number", this.negated ? "==-1" : ">=0", toAnyPost);
+           this.throwError("NOT IMPLEMENTED YET for C");
            break;
            
        case 'into':
@@ -1981,7 +2068,7 @@
        if (coreSupportedProps.indexOf(name)===-1 && !(allPropertyNames.has(name))) {
            // if allMethodNames.has(name)
            if (allMethodNames.has(name)) {
-               this.sayErr("A method named '" + name + "' is already defined. Cannot reuse the symbol for a property");
+               this.sayErr("Ambiguity: A method named '" + name + "' is already defined. Cannot reuse the symbol for a property");
                allMethodNames.get(name).sayErr("declaration of method '" + name + "'");
            }
            
@@ -2476,8 +2563,38 @@
 
      // method produce()
      Grammar.LoopControlStatement.prototype.produce = function(){
+
+// validate usage inside a for/while
+
+       var nodeASTBase = this.parent;
+       // do
+       while(true){
+
+           // if .control is 'break' and nodeASTBase is instanceof Grammar.SwitchCase
+           if (this.control === 'break' && nodeASTBase instanceof Grammar.SwitchCase) {
+               this.sayErr('cannot use "break" from inside a "switch" statement for "historic" reasons');
+           }
+           
+           else if (nodeASTBase instanceof Grammar.FunctionDeclaration) {
+                //if we reach function header
+               this.sayErr('"{.control}" outside a for|while|do loop');
+               // break loop
+               break;
+           }
+           
+           else if (nodeASTBase instanceof Grammar.ForStatement || nodeASTBase instanceof Grammar.DoLoop) {
+                   // break loop //ok, break/continue used inside a loop
+                   break; //ok, break/continue used inside a loop
+           };
+
+           // end if
+
+           nodeASTBase = nodeASTBase.parent;
+       };// end loop
+
        this.out(this.control);
      };
+
 
    // append to class Grammar.DoNothingStatement ###
 
@@ -2500,12 +2617,13 @@
 
    // append to class Grammar.ArrayLiteral ###
 
-// A `ArrayLiteral` is a definition of a list like `[1, a, 2+3]`. We just pass this through to JavaScript.
+// A `ArrayLiteral` is a definition of a list like `[1, a, 2+3]`.
+// On js we just pass this through, on C we create the array on the fly
 
      // method produce()
      Grammar.ArrayLiteral.prototype.produce = function(){
 
-       this.out("_newArray(");
+       this.out("new(Array,");
 
        // if no .items or .items.length is 0
        if (!this.items || this.items.length === 0) {
@@ -2513,25 +2631,17 @@
        }
        
        else {
-            // e.g.: LiteScript:   var list = [a,b,c]
-            // e.g.: "C": any list = (any){Array_TYPEID,.value.arr=&(Array_s){3,.item=(any_arr){a,b,c}}};
-           this.out(this.items.length, ",(any_arr){", new Map().fromObject({CSL: this.items}), "}");
+           this.out(this.items.length, ',(any_arr){', new Map().fromObject({CSL: this.items}), '}');
        };
 
        this.out(")");
      };
 
-// else
-//             // e.g.: LiteScript:   var list = [a,b,c]
-//             // e.g.: "C": any list = (any){Array_TYPEID,.value.arr=&(Array_s){3,.item=(any_arr){a,b,c}}};
-//             .out "(any){Array_TYPEID,.value.arr=&(Array_s){#{.items.length},.item=(any_arr){",{CSL:.items},"}}}"
-//         
-
 
    // append to class Grammar.NameValuePair ###
 
-// A `NameValuePair` is a single item in an object definition.
-// Since we copy js for this, we pass this straight through
+// A `NameValuePair` is a single item in an Map definition.
+// we call _newPair to create a new NameValuePair
 
      // method produce()
      Grammar.NameValuePair.prototype.produce = function(){
@@ -2550,20 +2660,24 @@
 
 // A `ObjectLiteral` is an object definition using key/value pairs like `{a:1,b:2}`.
 // JavaScript supports this syntax, so we just pass it through.
+// C99 does only support "static" initializers for structs.
 
      // method produce()
      Grammar.ObjectLiteral.prototype.produce = function(){
+
+       this.out("new(Map,");
+
        // if no .items or .items.length is 0
        if (!this.items || this.items.length === 0) {
-           this.out("new(Map,0,NULL)");
+           this.out("0,NULL");
        }
        
        else {
-            //.out "{",{CSL:.items},"}"
-           this.out('new(Map,', this.items.length, ',(any_arr){', new Map().fromObject({CSL: this.items}), NL, "})");
+           this.out(this.items.length, ',(any_arr){', new Map().fromObject({CSL: this.items}), NL, "}");
        };
-     };
 
+       this.out(")", NL);
+     };
 
    // append to class Grammar.ConstructorDeclaration ###
 
@@ -2586,6 +2700,13 @@
        var c = ownerClassDeclaration.nameDecl.getComposedName();
 
        this.out("void ", c, "__init(DEFAULT_ARGUMENTS){", NL);
+
+// auto call supper init
+
+       // if ownerClassDeclaration.varRefSuper
+       if (ownerClassDeclaration.varRefSuper) {
+           this.out("  ", new Map().fromObject({COMMENT: "auto call super class __init"}), NL, "  ", ownerClassDeclaration.varRefSuper, "__init(this,argc,arguments);", NL);
+       };
 
 // On the constructor, assign initial values for properties.
 // Initialize (non-undefined) properties with assigned values.
@@ -2717,32 +2838,26 @@
        
        else {
 
-// if it has "catch" or "exception", insert 'try{'
+// if it has a exception block, insert 'try{'
 
-           // for each statement in .body.statements
-           for( var statement__inx=0,statement ; statement__inx<this.body.statements.length ; statement__inx++){statement=this.body.statements[statement__inx];
-               // if statement.specific instance of Grammar.ExceptionBlock
-               if (statement.specific instanceof Grammar.ExceptionBlock) {
-                   this.body.out(" try{", NL);
-                   // break
-                   break;
-               };
-           };// end for each in this.body.statements
-           
-       };
+           // if .hasExceptionBlock, .body.out " try{",NL
+           if (this.hasExceptionBlock) {this.body.out(" try{", NL)};
 
 // now produce function body
 
-       this.body.produce();
+           this.body.produce();
 
 // close the function, to all functions except *constructors* (__init),
 // add default "return undefined", to emulate js behavior on C.
 // if you dot not insert a "return", the C function will return garbage.
 
-       // if not .constructor is Grammar.ConstructorDeclaration // declared as void Class__init(...)
-       if (!(this.constructor === Grammar.ConstructorDeclaration)) { // declared as void Class__init(...)
-           this.out("return undefined;", NL);
+           // if not .constructor is Grammar.ConstructorDeclaration // declared as void Class__init(...)
+           if (!(this.constructor === Grammar.ConstructorDeclaration)) { // declared as void Class__init(...)
+               this.out("return undefined;", NL);
+           };
        };
+
+// close function
 
        this.out("}");
 
@@ -2886,24 +3001,6 @@
            return result.join('_');
        };
 
-       // method isClass
-       Names.Declaration.prototype.isClass = function(){
-           return !(this.isNamespace) && this.findOwnMember('prototype');
-       };
-
-       // method isMethod
-       Names.Declaration.prototype.isMethod = function(){
-           // if .isNamespace or .isClass(), return false
-           if (this.isNamespace || this.isClass()) {return false};
-           var prt = this.findOwnMember('**proto**');
-           return prt && prt.parent && prt.parent.name === 'Function';
-       };
-
-       // method isProperty
-       Names.Declaration.prototype.isProperty = function(){
-           return !(this.isNamespace) && !(this.isClass()) && !(this.isMethod());
-       };
-
 // For C production, we're declaring each distinct method name (verbs)
 
        // method addToAllMethodNames()
@@ -2914,12 +3011,12 @@
            if (coreSupportedMethods.indexOf(methodName)===-1 && !(allMethodNames.has(methodName))) {
                // if allPropertyNames.has(methodName)
                if (allPropertyNames.has(methodName)) {
-                   this.sayErr("A property '" + methodName + "' is already defined. Cannot reuse the symbol for a method.");
+                   this.sayErr("Ambiguity: A property '" + methodName + "' is already defined. Cannot reuse the symbol for a method.");
                    allPropertyNames.get(methodName).sayErr("Definition of property '" + methodName + "'.");
                }
                
                else if (coreSupportedProps.indexOf(methodName)>=0) {
-                   this.sayErr("A property '" + methodName + "' is defined in core. Cannot reuse the symbol for a method.");
+                   this.sayErr("Ambiguity: A property '" + methodName + "' is defined in core. Cannot reuse the symbol for a method.");
                }
                
                else {
@@ -2947,7 +3044,7 @@
 
        // if .finallyBody
        if (this.finallyBody) {
-         this.out(NL, 'finally{', this.finallyBody, '}');
+           this.out(NL, 'finally{', this.finallyBody, '}');
        };
      };
 

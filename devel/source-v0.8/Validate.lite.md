@@ -268,8 +268,8 @@ Since 'append to [class|object] x.y.z' statement can add to any object, we delay
 "Append To" declaration to this point, where 'x.y.z' can be analyzed and a reference obtained.
 Walk the tree, and check "Append To" Methods & Properties Declarations
 
-        logger.info "- Processing Append-To"
-        walkAllNodesCalling 'processAppendTo'
+        logger.info "- Processing Append-To, extends"
+        walkAllNodesCalling 'processAppendToExtends'
 
 
 #### Pass 2.0 Apply Name Affinity
@@ -1214,6 +1214,37 @@ check if owner is class (namespace) or class.prototype (class)
         return ownerDecl
 */
 
+#### helper method callOnSubTree(methodSymbol,excludeClass) # recursive
+
+This is instance has the method, call the method on the instance
+
+      logger.debugGroup "callOnSubTree #{.constructor.name}.#{LiteCore.getSymbolName(methodSymbol)}() - '#{.name}'"
+  
+      if this.tryGetMethod(methodSymbol) into var theFunction 
+            logger.debug "calling #{.constructor.name}.#{LiteCore.getSymbolName(methodSymbol)}() - '#{.name}'"
+            theFunction.call(this)
+
+      if excludeClass and this is instance of excludeClass, return #do not recurse on filtered's childs
+
+recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
+
+      for each property name,value in this
+        where name not in ['constructor','parent','importedModule','requireCallNodes','exportDefault']
+
+            if value instance of ASTBase 
+                declare value:ASTBase
+                value.callOnSubTree methodSymbol,excludeClass #recurse
+
+            else if value instance of Array
+                declare value:array 
+                logger.debug "callOnSubArray #{.constructor.name}.#{name}[]"
+                for each item in value where item instance of ASTBase
+                    declare item:ASTBase
+                    item.callOnSubTree methodSymbol,excludeClass
+      end for
+
+      logger.debugGroupEnd
+
 ----
 ## Methods added to specific Grammar Classes to handle scope, var & members declaration
 
@@ -1319,7 +1350,7 @@ also AppendToDeclaration and NamespaceDeclaration (child classes).
 
 AppendToDeclarations do not "declare" anything at this point. 
 AppendToDeclarations add to a existing classes or namespaces. 
-The adding is delayed until pass:"processAppendTo", where
+The adding is delayed until pass:"processAppendToExtends", where
 append-To var reference is searched in the scope 
 and methods and properties are added. 
 This need to be done after all declarations.
@@ -1333,10 +1364,11 @@ Check if it is a class or a namespace
 
         var opt = new Names.NameDeclOptions
 
-        if isNamespace
+        if isNamespace 
+
             .nameDecl = .declareName(.name)
-            .nameDecl.isNamespace = true
-        else
+
+        else 
 
 if is a class adjectivated "shim", do not declare if already exists
     
@@ -1391,19 +1423,51 @@ add to nameAffinity
                 nameAffinity.members.set .name, .nameDecl
 
 
+#### method validatePropertyAccess() 
+
+in the pass "Validating Property Access", for a "ClassDeclaration"
+we check for duplicate property names in the super-class-chain
+
+        if .constructor isnt Grammar.ClassDeclaration, return // exclude child classes
+
+        var prt:Names.Declaration = .nameDecl.ownMember('prototype')
+        for each propNameDecl in map prt.members where propNameDecl.isProperty
+                propNameDecl.checkSuperChainProperties .nameDecl.superDecl
+
+
+
+
+### Append to class Grammar.ArrayLiteral ###
+
+     properties nameDecl
+
+     method declare
+
+When producing C-code, an ArrayLiteral creates a "new(Array" at module level
+
+        if project.options.target is 'c'
+            .nameDecl = .declareName(UniqueID.getVarName('_literalArray'))
+            .getParent(Grammar.Module).addToScope .nameDecl
+        
+     method getResultType
+          return tryGetGlobalPrototype('Array')
+
 ### Append to class Grammar.ObjectLiteral ###
 
      properties nameDecl
 
      method declare
 
-When producing C-code, a ObjectLiteral creates a "Map string to any" on the fly, 
+When producing C-code, an ObjectLiteral creates a "Map string to any" on the fly, 
 but it does not declare a valid type/class.
 
-        if project.options.target is 'c', return
-
-        declare valid .parent.nameDecl
-        .nameDecl = .parent.nameDecl or .declareName(UniqueID.getVarName('*ObjectLiteral*'))
+        if project.options.target is 'c'
+            .nameDecl = .declareName(UniqueID.getVarName('_literalMap'))
+            .getParent(Grammar.Module).addToScope .nameDecl
+        
+        else
+            declare valid .parent.nameDecl
+            .nameDecl = .parent.nameDecl or .declareName(UniqueID.getVarName('*ObjectLiteral*'))
 
 When producing the LiteScript-to-C compiler, a ObjectLiteral's return type is 'Map string to any'
 
@@ -1440,7 +1504,9 @@ check if we can determine type from value
 ### Append to class Grammar.FunctionDeclaration ###
 `FunctionDeclaration: '[export][generator] (function|method|constructor) [name] '(' FunctionParameterDecl* ')' Block`
 
-     properties nameDecl, declared:boolean, scope:Names.Declaration
+     properties 
+        nameDecl 
+        declared:boolean
 
 #### Method declare() ## function, methods and constructors
 
@@ -1590,7 +1656,7 @@ else, it's a simple type
 
 ### Append to class Grammar.AppendToDeclaration ###
 
-#### method processAppendTo() 
+#### method processAppendToExtends() 
 when target is '.c' we do not allow treating classes as namespaces
 so an "append to namespace classX" should throw an error
     
@@ -1648,20 +1714,58 @@ a class appended to a namespace
                   .sayErr 'unexpected "#{item.specific.constructor.name}" inside Append-to Declaration'
 
 
+### Append to class Names.Declaration ###
+#### Properties 
+      superDecl : Names.Declaration //nameDecl of the super class
+
+#### method checkSuperChainProperties(superClassNameDecl)
+
+        if no superClassNameDecl, return 
+
+Check for duplicate class properties in the super class
+
+        if superClassNameDecl.findOwnMember('prototype') into var superPrt:Names.Declaration
+            
+            if superPrt.findOwnMember(.name) into var originalNameDecl
+                .sayErr "Duplicated property. super class [#{superClassNameDecl}] already has a property '#{this}'"
+                originalNameDecl.sayErr "for reference, original declaration."
+
+recurse with super's super. Here we're using recursion as a loop device à la Haskell
+(instead of a simpler "while .superDecl into node" loop. Just to be fancy)
+
+            .checkSuperChainProperties superClassNameDecl.superDecl
+
+### Append to class Grammar.ClassDeclaration ###
+
+#### method processAppendToExtends() 
+In Class's processAppendToExtends we try to get a reference to the superclass
+and then store the superclass nameDecl in the class nameDecl
+    
+get referenced super class
+
+      if .varRefSuper 
+          if no .varRefSuper.tryGetReference() into var superClassNameDecl
+              .sayErr "class #{.name} extends '#{.varRefSuper}'. Reference is not fully declared"
+              return //if no superClassNameDecl found
+
+          .nameDecl.superDecl = superClassNameDecl
+
 ### Append to class Grammar.PropertiesDeclaration ###
 
-     properties nameDecl, declared:boolean, scope:Names.Declaration
+     properties 
+        nameDecl 
+        declared:boolean 
 
 #### method declare(informError) 
 Add all properties as members of its owner object (normally: class.prototype)
 
         var opt= new Names.NameDeclOptions
-        if .tryGetOwnerNameDecl(informError) into var owner 
+        if .tryGetOwnerNameDecl(informError) into var ownerNameDecl 
 
             for each varDecl in .list
                 opt.type = varDecl.type
                 opt.itemType = varDecl.itemType
-                varDecl.nameDecl = varDecl.addMemberTo(owner,varDecl.name,opt)
+                varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl,varDecl.name,opt)
 
             .declared = true
 
@@ -1676,59 +1780,65 @@ Add all properties as members of its owner object (normally: class.prototype)
 
 #### method declare()
 
-a ForStatement has a 'Scope'. Add, if they exists, indexVar & mainVar
-
-        declare valid .variant.indexVar:Grammar.VariableDecl
-        declare valid .variant.mainVar:Grammar.VariableDecl
-        declare valid .variant.iterable:Grammar.VariableRef
+a ForStatement has a 'Scope', indexVar & mainVar belong to the scope
 
         .createScope
-        if .variant.indexVar, .variant.indexVar.declareInScope
 
-        if .variant.mainVar
-            if .variant.iterable, default .variant.mainVar.type = .variant.iterable.itemType
-            .variant.mainVar.declareInScope
+### Append to class Grammar.ForEachProperty ###
 
-        //debug:
-        //.sayErr "ForStatement - pass declare"
-        //console.log "index",.variant.indexVar, .indexNameDecl? .indexNameDecl.toString():undefined
-        //console.log "main",.variant.mainVar, .mainNameDecl? .mainNameDecl.toString(): undefined
+#### method declare()
 
+        default .mainVar.type = .iterable.itemType
+        .mainVar.declareInScope
 
-#### method evaluateAssignments() # Grammar.ForStatement
+        if .indexVar, .indexVar.declareInScope
 
-        declare valid .variant.iterable.getResultType
+#### method evaluateAssignments() 
+
+ForEachProperty: index is: string for js (property name) and number for C (symbol)
+
+        var indexType = project.options.target is 'js'? 'String':'Number'
+        .indexVar.nameDecl.setMember('**proto**',globalPrototype(indexType))
+
+### Append to class Grammar.ForEachInArray ###
+
+#### method declare()
+
+        default .mainVar.type = .iterable.itemType
+        .mainVar.declareInScope
+
+        if .indexVar, .indexVar.declareInScope
+
+#### method evaluateAssignments() 
 
 ForEachInArray:
 If no mainVar.type, guess type from iterable's itemType
 
-        if .variant instanceof Grammar.ForEachInArray
-            if no .variant.mainVar.nameDecl.findOwnMember('**proto**')
-                var iterableType:Names.Declaration = .variant.iterable.getResultType()          
-                if iterableType and iterableType.findOwnMember('**item type**')  into var itemType
-                    .variant.mainVar.nameDecl.setMember('**proto**',itemType)
+        if no .mainVar.nameDecl.findOwnMember('**proto**')
+            var iterableType:Names.Declaration = .iterable.getResultType()          
+            if iterableType and iterableType.findOwnMember('**item type**')  into var itemType
+                .mainVar.nameDecl.setMember('**proto**',itemType)
 
-ForEachProperty: index is string (property name)
-
-        else if .variant instanceof Grammar.ForEachProperty
-            .variant.indexVar.nameDecl.setMember('**proto**',globalPrototype('String'))
-
-
-#### method validatePropertyAccess() # Grammar.ForStatement
+#### method validatePropertyAccess() 
 ForEachInArray: check if the iterable has a .length property.
 
-        if .variant instanceof Grammar.ForEachInArray
+        if .isMap, return
 
-            declare valid .variant.iterable.getResultType
+        var iterableType:Names.Declaration = .iterable.getResultType()
 
-            var iterableType:Names.Declaration = .variant.iterable.getResultType()
+        if no iterableType 
+            #.sayErr "ForEachInArray: no type declared for: '#{.iterable}'"
+            do nothing
 
-            if no iterableType 
-              #.sayErr "ForEachInArray: no type declared for: '#{.variant.iterable}'"
-              do nothing
-            else if no .variant.isMap and no iterableType.findMember('length')
-              .sayErr "ForEachInArray: no .length property declared in '#{.variant.iterable}' type:'#{iterableType.toString()}'"
-              logger.error iterableType.originalDeclarationPosition()
+        else if no iterableType.findMember('length')
+            .sayErr "ForEachInArray: no .length property declared in '#{.iterable}' type:'#{iterableType.toString()}'"
+            logger.error iterableType.originalDeclarationPosition()
+
+### Append to class Grammar.ForIndexNumeric ###
+
+#### method declare()
+
+        .indexVar.declareInScope
 
 
 ### Append to class Grammar.ExceptionBlock
@@ -1748,7 +1858,7 @@ Exception blocks have a scope
 
 `VariableRef` is a Variable Reference. 
 
-#### method validatePropertyAccess() # Grammar.VariableRef
+#### method validatePropertyAccess() 
 
         if .parent is instance of Grammar.DeclareStatement
             declare valid .parent.specifier

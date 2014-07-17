@@ -8,17 +8,19 @@ extern void ControlledError__moduleInit(void);
    
 
 //--------------
-   // ControlledError extends Error
-   
-   
-   extern any ControlledError; //Class Object
+   // ControlledError
+   any ControlledError; //Class ControlledError extends Error
    
    typedef struct ControlledError_s * ControlledError_ptr;
    typedef struct ControlledError_s {
-       any
-           soft,
-           code
-   ;
+       //Error
+       any name;
+       any message;
+       any stack;
+       any code;
+       //ControlledError
+       any soft;
+   
    } ControlledError_s;
    
    extern void ControlledError__init(DEFAULT_ARGUMENTS);

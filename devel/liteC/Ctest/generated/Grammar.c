@@ -62,9 +62,7 @@ var Grammar_operatorsPrecedence;
    {0,0}}; //method jmp table initializer end mark
    
    static _posTableItem_t Grammar_VariableDecl_PROPS[] = {
-   type_
-    , itemType_
-    , aliasVarRef_
+   aliasVarRef_
     , assignedValue_
     , nameDecl_
     };
@@ -81,10 +79,8 @@ var Grammar_operatorsPrecedence;
    {0,0}}; //method jmp table initializer end mark
    
    static _posTableItem_t Grammar_PropertiesDeclaration_PROPS[] = {
-   list_
-    , nameDecl_
+   nameDecl_
     , declared_
-    , scope_
     };
    
    //-----------------------
@@ -236,9 +232,7 @@ var Grammar_operatorsPrecedence;
    {0,0}}; //method jmp table initializer end mark
    
    static _posTableItem_t Grammar_WhileUntilLoop_PROPS[] = {
-   preWhileUntilExpression_
-    , body_
-    };
+   };
    
    //-----------------------
    // Class Grammar_WhileUntilExpression: static list of METHODS(verbs) and PROPS(things)
@@ -288,8 +282,6 @@ var Grammar_operatorsPrecedence;
    static _methodInfoArr Grammar_ForStatement_METHODS = {
      { parse_, Grammar_ForStatement_parse },
      { declare_, Grammar_ForStatement_declare },
-     { evaluateAssignments_, Grammar_ForStatement_evaluateAssignments },
-     { validatePropertyAccess_, Grammar_ForStatement_validatePropertyAccess },
      { produce_, Grammar_ForStatement_produce },
    
    {0,0}}; //method jmp table initializer end mark
@@ -304,6 +296,8 @@ var Grammar_operatorsPrecedence;
    
    static _methodInfoArr Grammar_ForEachProperty_METHODS = {
      { parse_, Grammar_ForEachProperty_parse },
+     { declare_, Grammar_ForEachProperty_declare },
+     { evaluateAssignments_, Grammar_ForEachProperty_evaluateAssignments },
      { produce_, Grammar_ForEachProperty_produce },
    
    {0,0}}; //method jmp table initializer end mark
@@ -322,6 +316,9 @@ var Grammar_operatorsPrecedence;
    
    static _methodInfoArr Grammar_ForEachInArray_METHODS = {
      { parse_, Grammar_ForEachInArray_parse },
+     { declare_, Grammar_ForEachInArray_declare },
+     { evaluateAssignments_, Grammar_ForEachInArray_evaluateAssignments },
+     { validatePropertyAccess_, Grammar_ForEachInArray_validatePropertyAccess },
      { produce_, Grammar_ForEachInArray_produce },
      { produceForMap_, Grammar_ForEachInArray_produceForMap },
    
@@ -333,7 +330,6 @@ var Grammar_operatorsPrecedence;
     , iterable_
     , where_
     , body_
-    , isMap_
     };
    
    //-----------------------
@@ -342,6 +338,7 @@ var Grammar_operatorsPrecedence;
    
    static _methodInfoArr Grammar_ForIndexNumeric_METHODS = {
      { parse_, Grammar_ForIndexNumeric_parse },
+     { declare_, Grammar_ForIndexNumeric_declare },
      { produce_, Grammar_ForIndexNumeric_produce },
    
    {0,0}}; //method jmp table initializer end mark
@@ -419,7 +416,6 @@ var Grammar_operatorsPrecedence;
    static _posTableItem_t Grammar_VariableRef_PROPS[] = {
    preIncDec_
     , postIncDec_
-    , importedModule_
     , produceType_
     , calcType_
     };
@@ -545,8 +541,7 @@ var Grammar_unaryOperators;
    {0,0}}; //method jmp table initializer end mark
    
    static _posTableItem_t Grammar_UnaryOper_PROPS[] = {
-   produceType_
-    };
+   };
    
    //-----------------------
    // Class Grammar_Expression: static list of METHODS(verbs) and PROPS(things)
@@ -577,8 +572,7 @@ var Grammar_unaryOperators;
    {0,0}}; //method jmp table initializer end mark
    
    static _posTableItem_t Grammar_Literal_PROPS[] = {
-   type_
-    };
+   };
    
    //-----------------------
    // Class Grammar_NumberLiteral: static list of METHODS(verbs) and PROPS(things)
@@ -590,8 +584,7 @@ var Grammar_unaryOperators;
    {0,0}}; //method jmp table initializer end mark
    
    static _posTableItem_t Grammar_NumberLiteral_PROPS[] = {
-   type_
-    };
+   };
    
    //-----------------------
    // Class Grammar_StringLiteral: static list of METHODS(verbs) and PROPS(things)
@@ -604,8 +597,7 @@ var Grammar_unaryOperators;
    {0,0}}; //method jmp table initializer end mark
    
    static _posTableItem_t Grammar_StringLiteral_PROPS[] = {
-   type_
-    };
+   };
    
    //-----------------------
    // Class Grammar_RegExpLiteral: static list of METHODS(verbs) and PROPS(things)
@@ -617,8 +609,7 @@ var Grammar_unaryOperators;
    {0,0}}; //method jmp table initializer end mark
    
    static _posTableItem_t Grammar_RegExpLiteral_PROPS[] = {
-   type_
-    };
+   };
    
    //-----------------------
    // Class Grammar_ArrayLiteral: static list of METHODS(verbs) and PROPS(things)
@@ -626,13 +617,15 @@ var Grammar_unaryOperators;
    
    static _methodInfoArr Grammar_ArrayLiteral_METHODS = {
      { parse_, Grammar_ArrayLiteral_parse },
+     { declare_, Grammar_ArrayLiteral_declare },
+     { getResultType_, Grammar_ArrayLiteral_getResultType },
      { produce_, Grammar_ArrayLiteral_produce },
    
    {0,0}}; //method jmp table initializer end mark
    
    static _posTableItem_t Grammar_ArrayLiteral_PROPS[] = {
-   type_
-    , items_
+   items_
+    , nameDecl_
     };
    
    //-----------------------
@@ -717,10 +710,10 @@ var Grammar_unaryOperators;
     , paramsDeclarations_
     , definePropItems_
     , body_
+    , hasExceptionBlock_
     , EndFnLineNum_
     , nameDecl_
     , declared_
-    , scope_
     };
    
    //-----------------------
@@ -756,8 +749,11 @@ var Grammar_unaryOperators;
    static _methodInfoArr Grammar_ClassDeclaration_METHODS = {
      { parse_, Grammar_ClassDeclaration_parse },
      { declare_, Grammar_ClassDeclaration_declare },
+     { validatePropertyAccess_, Grammar_ClassDeclaration_validatePropertyAccess },
+     { processAppendToExtends_, Grammar_ClassDeclaration_processAppendToExtends },
      { produceHeader_, Grammar_ClassDeclaration_produceHeader },
      { produce_, Grammar_ClassDeclaration_produce },
+     { outClassTitleComment_, Grammar_ClassDeclaration_outClassTitleComment },
      { produceStaticListMethodsAndProps_, Grammar_ClassDeclaration_produceStaticListMethodsAndProps },
      { produceClassRegistration_, Grammar_ClassDeclaration_produceClassRegistration },
    
@@ -788,7 +784,7 @@ var Grammar_unaryOperators;
    
    static _methodInfoArr Grammar_AppendToDeclaration_METHODS = {
      { parse_, Grammar_AppendToDeclaration_parse },
-     { processAppendTo_, Grammar_AppendToDeclaration_processAppendTo },
+     { processAppendToExtends_, Grammar_AppendToDeclaration_processAppendToExtends },
      { produceHeader_, Grammar_AppendToDeclaration_produceHeader },
      { produce_, Grammar_AppendToDeclaration_produce },
    
@@ -797,7 +793,6 @@ var Grammar_unaryOperators;
    static _posTableItem_t Grammar_AppendToDeclaration_PROPS[] = {
    toNamespace_
     , varRef_
-    , body_
     };
    
    //-----------------------
@@ -806,6 +801,7 @@ var Grammar_unaryOperators;
    
    static _methodInfoArr Grammar_NamespaceDeclaration_METHODS = {
      { parse_, Grammar_NamespaceDeclaration_parse },
+     { produceCallNamespaceInit_, Grammar_NamespaceDeclaration_produceCallNamespaceInit },
      { makeName_, Grammar_NamespaceDeclaration_makeName },
      { produceHeader_, Grammar_NamespaceDeclaration_produceHeader },
      { produce_, Grammar_NamespaceDeclaration_produce },
@@ -895,7 +891,6 @@ var Grammar_unaryOperators;
    
    static _posTableItem_t Grammar_DeclareStatement_PROPS[] = {
    varRef_
-    , type_
     , names_
     , list_
     , specifier_
@@ -1019,8 +1014,7 @@ var Grammar_unaryOperators;
    {0,0}}; //method jmp table initializer end mark
    
    static _posTableItem_t Grammar_CaseWhenSection_PROPS[] = {
-   parent_
-    , expressions_
+   expressions_
     , booleanExpression_
     , resultExpression_
     };
@@ -1103,9 +1097,12 @@ var Grammar_unaryOperators;
 var Grammar_StatementsDirect;
 var Grammar_AccessorsDirect;
 any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
-   // Grammar_PrintStatement
    
-   any Grammar_PrintStatement; //Class Object
+
+//--------------
+   // Grammar_PrintStatement
+   any Grammar_PrintStatement; //Class Grammar_PrintStatement extends ASTBase
+   
    //auto Grammar_PrintStatement__init
    void Grammar_PrintStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1135,9 +1132,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(args_,this) = CALL2(optSeparatedList_,this,Grammar_Expression, any_str(","));
      return undefined;
      }
-   // Grammar_VarDeclList
    
-   any Grammar_VarDeclList; //Class Object
+
+//--------------
+   // Grammar_VarDeclList
+   any Grammar_VarDeclList; //Class Grammar_VarDeclList extends ASTBase
+   
    //auto Grammar_VarDeclList__init
    void Grammar_VarDeclList__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1155,9 +1155,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(list_,this) = CALL2(reqSeparatedList_,this,Grammar_VariableDecl, any_str(","));
      return undefined;
      }
-   // Grammar_VarStatement
    
-   any Grammar_VarStatement; //Class Object
+
+//--------------
+   // Grammar_VarStatement
+   any Grammar_VarStatement; //Class Grammar_VarStatement extends Grammar_VarDeclList
+   
    //auto Grammar_VarStatement__init
    void Grammar_VarStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1180,9 +1183,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        __call(parseList_,this,0,NULL);
      return undefined;
      }
-   // Grammar_VariableDecl
    
-   any Grammar_VariableDecl; //Class Object
+
+//--------------
+   // Grammar_VariableDecl
+   any Grammar_VariableDecl; //Class Grammar_VariableDecl extends ASTBase
+   
    //auto Grammar_VariableDecl__init
    void Grammar_VariableDecl__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1292,9 +1298,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        };
      return undefined;
      }
-   // Grammar_PropertiesDeclaration
    
-   any Grammar_PropertiesDeclaration; //Class Object
+
+//--------------
+   // Grammar_PropertiesDeclaration
+   any Grammar_PropertiesDeclaration; //Class Grammar_PropertiesDeclaration extends Grammar_VarDeclList
+   
    //auto Grammar_PropertiesDeclaration__init
    void Grammar_PropertiesDeclaration__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1304,9 +1313,6 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 // `PropertiesDeclaration: [namespace] properties (VariableDecl,)`
 
 // The `properties` keyword is used inside classes to define properties of the class instances.
-
-     // properties
-     ;
 
       // declare name affinity propDecl
 
@@ -1322,9 +1328,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        __call(parseList_,this,0,NULL);
      return undefined;
      }
-   // Grammar_WithStatement
    
-   any Grammar_WithStatement; //Class Object
+
+//--------------
+   // Grammar_WithStatement
+   any Grammar_WithStatement; //Class Grammar_WithStatement extends ASTBase
+   
    //auto Grammar_WithStatement__init
    void Grammar_WithStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1363,9 +1372,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(body_,this) = CALL1(req_,this,Grammar_Body);
      return undefined;
      }
-   // Grammar_TryCatch
    
-   any Grammar_TryCatch; //Class Object
+
+//--------------
+   // Grammar_TryCatch
+   any Grammar_TryCatch; //Class Grammar_TryCatch extends ASTBase
+   
    //auto Grammar_TryCatch__init
    void Grammar_TryCatch__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1394,9 +1406,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(exceptionBlock_,this) = CALL1(req_,this,Grammar_ExceptionBlock);
      return undefined;
      }
-   // Grammar_ExceptionBlock
    
-   any Grammar_ExceptionBlock; //Class Object
+
+//--------------
+   // Grammar_ExceptionBlock
+   any Grammar_ExceptionBlock; //Class Grammar_ExceptionBlock extends ASTBase
+   
    //auto Grammar_ExceptionBlock__init
    void Grammar_ExceptionBlock__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1406,7 +1421,8 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 // `ExceptionBlock: (exception|catch) IDENTIFIER Body [finally Body]`
 
 // Defines a `catch` block for trapping exceptions and handling them.
-// If no `try` preceded this construction, `try` is assumed at the beggining of the function
+// `try` should precede this construction for 'catch' keyword.
+// `try{` will be auto-inserted for the 'Exception' keyword.
 
      // properties
      ;
@@ -1415,10 +1431,19 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
      any Grammar_ExceptionBlock_parse(DEFAULT_ARGUMENTS){
        assert(_instanceof(this,Grammar_ExceptionBlock));
        //---------
-       // .req 'catch','exception','Exception'
-       CALL3(req_,this,any_str("catch"), any_str("exception"), any_str("Exception"));
+       // .keyword = .req('catch','exception','Exception')
+       PROP(keyword_,this) = CALL3(req_,this,any_str("catch"), any_str("exception"), any_str("Exception"));
        // .lock()
        CALL0(lock_,this);
+
+// in order to correctly count frames to unwind on "return" from inside a try-catch
+// catch"'s parent MUST BE ONLY "try"
+
+       // if .keyword is 'catch' and .parent.constructor isnt TryCatch
+       if (__is(PROP(keyword_,this),any_str("catch")) && !__is(any_class(PROP(parent_,this).class),Grammar_TryCatch))  {
+           // .throwError "internal error, expected 'try' as 'catch' previous block"
+           CALL1(throwError_,this,any_str("internal error, expected 'try' as 'catch' previous block"));
+       };
 
 // get catch variable - Note: catch variables in js are block-scoped
 
@@ -1427,9 +1452,6 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 
 // get body
 
-       // if no .getParent(FunctionDeclaration), .sayErr "Exception/catch outside a function/method"
-       if (!_anyToBool(CALL1(getParent_,this,Grammar_FunctionDeclaration))) {CALL1(sayErr_,this,any_str("Exception/catch outside a function/method"));};
-
        // .body = .req(Body)
        PROP(body_,this) = CALL1(req_,this,Grammar_Body);
 
@@ -1437,11 +1459,40 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // if .opt('finally'), .finallyBody = .req(Body)
        if (_anyToBool(CALL1(opt_,this,any_str("finally")))) {PROP(finallyBody_,this) = CALL1(req_,this,Grammar_Body);};
+
+// validate grammar: try=>catch / function=>exception
+
+       // if .keyword is 'catch'
+       if (__is(PROP(keyword_,this),any_str("catch")))  {
+           // if .parent.constructor isnt TryCatch, .sayErr '"catch" block without "try"'
+           if (!__is(any_class(PROP(parent_,this).class),Grammar_TryCatch)) {CALL1(sayErr_,this,any_str("\"catch\" block without \"try\""));};
+       }
+       
+       else {
+
+           // if .parent.constructor isnt Statement
+           if (_anyToBool(__or(__or(any_number(!__is(any_class(PROP(parent_,this).class),Grammar_Statement)),any_number(!(_instanceof(PROP(parent_,PROP(parent_,this)),Grammar_Body)))),any_number(!(_instanceof(PROP(parent_,PROP(parent_,PROP(parent_,this))),Grammar_FunctionDeclaration))))))  {
+                 // .sayErr '"Exception" block should be part of function/method/constructor body'
+                 CALL1(sayErr_,this,any_str("\"Exception\" block should be part of function/method/constructor body"));
+           };
+
+// here, it is a "exception" block in a FunctionDeclaration.
+// Mark the function as having an ExceptionBlock in order to
+// insert "try{" at function start and also handle C-exceptions unwinding
+
+           // var theFunctionDeclaration = .parent.parent.parent
+           var theFunctionDeclaration = PROP(parent_,PROP(parent_,PROP(parent_,this)));
+           // theFunctionDeclaration.hasExceptionBlock = true
+           PROP(hasExceptionBlock_,theFunctionDeclaration) = true;
+       };
      return undefined;
      }
-   // Grammar_ThrowStatement
    
-   any Grammar_ThrowStatement; //Class Object
+
+//--------------
+   // Grammar_ThrowStatement
+   any Grammar_ThrowStatement; //Class Grammar_ThrowStatement extends ASTBase
+   
    //auto Grammar_ThrowStatement__init
    void Grammar_ThrowStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1472,9 +1523,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(expr_,this) = CALL1(req_,this,Grammar_Expression);// #trow expression
      return undefined;
      }
-   // Grammar_ReturnStatement
    
-   any Grammar_ReturnStatement; //Class Object
+
+//--------------
+   // Grammar_ReturnStatement
+   any Grammar_ReturnStatement; //Class Grammar_ReturnStatement extends ASTBase
+   
    //auto Grammar_ReturnStatement__init
    void Grammar_ReturnStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1498,9 +1552,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(expr_,this) = CALL1(opt_,this,Grammar_Expression);
      return undefined;
      }
-   // Grammar_IfStatement
    
-   any Grammar_IfStatement; //Class Object
+
+//--------------
+   // Grammar_IfStatement
+   any Grammar_IfStatement; //Class Grammar_IfStatement extends ASTBase
+   
    //auto Grammar_IfStatement__init
    void Grammar_IfStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1580,9 +1637,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(elseStatement_,this) = CALL2(opt_,this,Grammar_ElseIfStatement, Grammar_ElseStatement);
      return undefined;
      }
-   // Grammar_ElseIfStatement
    
-   any Grammar_ElseIfStatement; //Class Object
+
+//--------------
+   // Grammar_ElseIfStatement
+   any Grammar_ElseIfStatement; //Class Grammar_ElseIfStatement extends ASTBase
+   
    //auto Grammar_ElseIfStatement__init
    void Grammar_ElseIfStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1615,9 +1675,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(nextIf_,this) = CALL1(req_,this,Grammar_IfStatement);
      return undefined;
      }
-   // Grammar_ElseStatement
    
-   any Grammar_ElseStatement; //Class Object
+
+//--------------
+   // Grammar_ElseStatement
+   any Grammar_ElseStatement; //Class Grammar_ElseStatement extends ASTBase
+   
    //auto Grammar_ElseStatement__init
    void Grammar_ElseStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1643,9 +1706,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(body_,this) = CALL1(req_,this,Grammar_Body);
      return undefined;
      }
-   // Grammar_DoLoop
    
-   any Grammar_DoLoop; //Class Object
+
+//--------------
+   // Grammar_DoLoop
+   any Grammar_DoLoop; //Class Grammar_DoLoop extends ASTBase
+   
    //auto Grammar_DoLoop__init
    void Grammar_DoLoop__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1691,9 +1757,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        };
      return undefined;
      }
-   // Grammar_WhileUntilLoop
    
-   any Grammar_WhileUntilLoop; //Class Object
+
+//--------------
+   // Grammar_WhileUntilLoop
+   any Grammar_WhileUntilLoop; //Class Grammar_WhileUntilLoop extends Grammar_DoLoop
+   
    //auto Grammar_WhileUntilLoop__init
    void Grammar_WhileUntilLoop__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1705,9 +1774,6 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 // Execute the block `while` the condition is true or `until` the condition is true.
 // WhileUntilLoop are a simpler form of loop. The `while` form, is the same as in C and js.
 // WhileUntilLoop derives from DoLoop, to use its `.produce()` method.
-
-     // properties preWhileUntilExpression, body
-     ;
 
      // method parse()
      any Grammar_WhileUntilLoop_parse(DEFAULT_ARGUMENTS){
@@ -1721,9 +1787,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(body_,this) = CALL1(opt_,this,Grammar_Body);
      return undefined;
      }
-   // Grammar_WhileUntilExpression
    
-   any Grammar_WhileUntilExpression; //Class Object
+
+//--------------
+   // Grammar_WhileUntilExpression
+   any Grammar_WhileUntilExpression; //Class Grammar_WhileUntilExpression extends ASTBase
+   
    //auto Grammar_WhileUntilExpression__init
    void Grammar_WhileUntilExpression__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1750,16 +1819,19 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(expr_,this) = CALL1(req_,this,Grammar_Expression);
      return undefined;
      }
-   // Grammar_LoopControlStatement
    
-   any Grammar_LoopControlStatement; //Class Object
+
+//--------------
+   // Grammar_LoopControlStatement
+   any Grammar_LoopControlStatement; //Class Grammar_LoopControlStatement extends ASTBase
+   
    //auto Grammar_LoopControlStatement__init
    void Grammar_LoopControlStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
        ASTBase__init(this,argc,arguments);
    };
 
-// `LoopControlStatement: (break|continue)`
+// `LoopControlStatement: (break|continue) [loop]`
 
 // This handles the `break` and `continue` keywords.
 // 'continue' jumps to the start of the loop (as C & Js: 'continue')
@@ -1773,11 +1845,16 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        //---------
        // .control = .req('break','continue')
        PROP(control_,this) = CALL2(req_,this,any_str("break"), any_str("continue"));
+       // .opt 'loop'
+       CALL1(opt_,this,any_str("loop"));
      return undefined;
      }
-   // Grammar_DoNothingStatement
    
-   any Grammar_DoNothingStatement; //Class Object
+
+//--------------
+   // Grammar_DoNothingStatement
+   any Grammar_DoNothingStatement; //Class Grammar_DoNothingStatement extends ASTBase
+   
    //auto Grammar_DoNothingStatement__init
    void Grammar_DoNothingStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1796,9 +1873,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        CALL1(req_,this,any_str("nothing"));
      return undefined;
      }
-   // Grammar_ForStatement
    
-   any Grammar_ForStatement; //Class Object
+
+//--------------
+   // Grammar_ForStatement
+   any Grammar_ForStatement; //Class Grammar_ForStatement extends ASTBase
+   
    //auto Grammar_ForStatement__init
    void Grammar_ForStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1831,9 +1911,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(variant_,this) = CALL3(req_,this,Grammar_ForEachProperty, Grammar_ForEachInArray, Grammar_ForIndexNumeric);
      return undefined;
      }
-   // Grammar_ForEachProperty
    
-   any Grammar_ForEachProperty; //Class Object
+
+//--------------
+   // Grammar_ForEachProperty
+   any Grammar_ForEachProperty; //Class Grammar_ForEachProperty extends ASTBase
+   
    //auto Grammar_ForEachProperty__init
    void Grammar_ForEachProperty__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1890,9 +1973,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(body_,this) = CALL1(req_,this,Grammar_Body);
      return undefined;
      }
-   // Grammar_ForEachInArray
    
-   any Grammar_ForEachInArray; //Class Object
+
+//--------------
+   // Grammar_ForEachInArray
+   any Grammar_ForEachInArray; //Class Grammar_ForEachInArray extends ASTBase
+   
    //auto Grammar_ForEachInArray__init
    void Grammar_ForEachInArray__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1950,9 +2036,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(body_,this) = CALL1(req_,this,Grammar_Body);
      return undefined;
      }
-   // Grammar_ForIndexNumeric
    
-   any Grammar_ForIndexNumeric; //Class Object
+
+//--------------
+   // Grammar_ForIndexNumeric
+   any Grammar_ForIndexNumeric; //Class Grammar_ForIndexNumeric extends ASTBase
+   
    //auto Grammar_ForIndexNumeric__init
    void Grammar_ForIndexNumeric__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -1998,9 +2087,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(body_,this) = CALL1(req_,this,Grammar_Body);
      return undefined;
      }
-   // Grammar_ForWhereFilter
    
-   any Grammar_ForWhereFilter; //Class Object
+
+//--------------
+   // Grammar_ForWhereFilter
+   any Grammar_ForWhereFilter; //Class Grammar_ForWhereFilter extends ASTBase
+   
    //auto Grammar_ForWhereFilter__init
    void Grammar_ForWhereFilter__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -2037,9 +2129,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        };
      return undefined;
      }
-   // Grammar_DeleteStatement
    
-   any Grammar_DeleteStatement; //Class Object
+
+//--------------
+   // Grammar_DeleteStatement
+   any Grammar_DeleteStatement; //Class Grammar_DeleteStatement extends ASTBase
+   
    //auto Grammar_DeleteStatement__init
    void Grammar_DeleteStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -2062,9 +2157,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(varRef_,this) = CALL1(req_,this,Grammar_VariableRef);
      return undefined;
      }
-   // Grammar_AssignmentStatement
    
-   any Grammar_AssignmentStatement; //Class Object
+
+//--------------
+   // Grammar_AssignmentStatement
+   any Grammar_AssignmentStatement; //Class Grammar_AssignmentStatement extends ASTBase
+   
    //auto Grammar_AssignmentStatement__init
    void Grammar_AssignmentStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -2084,8 +2182,8 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 
         // declare valid .parent.preParsedVarRef
 
-       // if .parent.preParsedVarRef
-       if (_anyToBool(PROP(preParsedVarRef_,PROP(parent_,this))))  {
+       // if .parent instanceof Statement and .parent.preParsedVarRef
+       if (_instanceof(PROP(parent_,this),Grammar_Statement) && _anyToBool(PROP(preParsedVarRef_,PROP(parent_,this))))  {
          // .lvalue  = .parent.preParsedVarRef # get already parsed VariableRef
          PROP(lvalue_,this) = PROP(preParsedVarRef_,PROP(parent_,this));// # get already parsed VariableRef
        }
@@ -2114,9 +2212,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        };
      return undefined;
      }
-   // Grammar_VariableRef
    
-   any Grammar_VariableRef; //Class Object
+
+//--------------
+   // Grammar_VariableRef
+   any Grammar_VariableRef; //Class Grammar_VariableRef extends ASTBase
+   
    //auto Grammar_VariableRef__init
    void Grammar_VariableRef__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -2174,7 +2275,7 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
             // #we must allow 'not' and 'has' as method names, (jQuery uses "not", Map uses "has").
             // #They're classsified as "Opers", but they're valid identifiers in this context
            // if .lexer.token.value in ['not','has']
-           if (CALL1(indexOf_,_newArray(2,(any_arr){any_str("not"), any_str("has")}),PROP(value_,PROP(token_,PROP(lexer_,this)))).value.number>=0)  {
+           if (__in(PROP(value_,PROP(token_,PROP(lexer_,this))),2,(any_arr){any_str("not"), any_str("has")}))  {
                // member = .lexer.nextToken() //get not|has as identifier
                member = CALL0(nextToken_,PROP(lexer_,this)); //get not|has as identifier
            }
@@ -2315,9 +2416,9 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        // if .accessors
        if (_anyToBool(PROP(accessors_,this)))  {
          // for each ac in .accessors
-         any _list21=PROP(accessors_,this);
+         any _list19=PROP(accessors_,this);
          { var ac=undefined;
-         for(int ac__inx=0 ; ac__inx<_list21.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list21);
+         for(int ac__inx=0 ; ac__inx<_list19.value.arr->length ; ac__inx++){ac=ITEM(ac__inx,_list19);
            // result = "#{result}#{ac.toString()}"
            result = _concatAny(2,(any_arr){result, (CALL0(toString_,ac))});
          }};// end for each in PROP(accessors_,this)
@@ -2327,9 +2428,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        return _concatAny(2,(any_arr){result, (__or(PROP(postIncDec_,this),any_EMPTY_STR))});
      return undefined;
      }
-   // Grammar_Accessor
    
-   any Grammar_Accessor; //Class Object
+
+//--------------
+   // Grammar_Accessor
+   any Grammar_Accessor; //Class Grammar_Accessor extends ASTBase
+   
    //auto Grammar_Accessor__init
    void Grammar_Accessor__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -2352,9 +2456,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        throw(new(Error,1,(any_arr){any_str("abstract")}));;
      return undefined;
      }
-   // Grammar_PropertyAccess
    
-   any Grammar_PropertyAccess; //Class Object
+
+//--------------
+   // Grammar_PropertyAccess
+   any Grammar_PropertyAccess; //Class Grammar_PropertyAccess extends Grammar_Accessor
+   
    //auto Grammar_PropertyAccess__init
    void Grammar_PropertyAccess__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -2376,7 +2483,7 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
         // #we must allow 'not' and 'has' as method names, (jQuery uses "not", Map uses "has").
         // #They're classsified as "Opers", but they're valid identifiers in this context
        // if .lexer.token.value in ['not','has']
-       if (CALL1(indexOf_,_newArray(2,(any_arr){any_str("not"), any_str("has")}),PROP(value_,PROP(token_,PROP(lexer_,this)))).value.number>=0)  {
+       if (__in(PROP(value_,PROP(token_,PROP(lexer_,this))),2,(any_arr){any_str("not"), any_str("has")}))  {
            // .name = .lexer.token.value //get "not"|"has" as identifier
            PROP(name_,this) = PROP(value_,PROP(token_,PROP(lexer_,this))); //get "not"|"has" as identifier
            // .lexer.nextToken() //advance
@@ -2398,9 +2505,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        return _concatAny(2,(any_arr){any_str("."), PROP(name_,this)});
      return undefined;
      }
-   // Grammar_IndexAccess
    
-   any Grammar_IndexAccess; //Class Object
+
+//--------------
+   // Grammar_IndexAccess
+   any Grammar_IndexAccess; //Class Grammar_IndexAccess extends Grammar_Accessor
+   
    //auto Grammar_IndexAccess__init
    void Grammar_IndexAccess__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -2436,9 +2546,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        return any_str("[...]");
      return undefined;
      }
-   // Grammar_FunctionArgument
    
-   any Grammar_FunctionArgument; //Class Object
+
+//--------------
+   // Grammar_FunctionArgument
+   any Grammar_FunctionArgument; //Class Grammar_FunctionArgument extends ASTBase
+   
    //auto Grammar_FunctionArgument__init
    void Grammar_FunctionArgument__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -2478,9 +2591,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(expression_,this) = CALL1(req_,this,Grammar_Expression);
      return undefined;
      }
-   // Grammar_FunctionAccess
    
-   any Grammar_FunctionAccess; //Class Object
+
+//--------------
+   // Grammar_FunctionAccess
+   any Grammar_FunctionAccess; //Class Grammar_FunctionAccess extends Grammar_Accessor
+   
    //auto Grammar_FunctionAccess__init
    void Grammar_FunctionAccess__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -2515,9 +2631,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        return any_str("(...)");
      return undefined;
      }
-   // Grammar_Operand
    
-   any Grammar_Operand; //Class Object
+
+//--------------
+   // Grammar_Operand
+   any Grammar_Operand; //Class Grammar_Operand extends ASTBase
+   
    //auto Grammar_Operand__init
    void Grammar_Operand__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -2556,9 +2675,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        
      return undefined;
      }
-   // Grammar_Oper
    
-   any Grammar_Oper; //Class Object
+
+//--------------
+   // Grammar_Oper
+   any Grammar_Oper; //Class Grammar_Oper extends ASTBase
+   
    //auto Grammar_Oper__init
    void Grammar_Oper__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -2730,9 +2852,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        };
      return undefined;
      }
-   // Grammar_UnaryOper
    
-   any Grammar_UnaryOper; //Class Object
+
+//--------------
+   // Grammar_UnaryOper
+   any Grammar_UnaryOper; //Class Grammar_UnaryOper extends Grammar_Oper
+   
    //auto Grammar_UnaryOper__init
    void Grammar_UnaryOper__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -2799,9 +2924,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 
      // end parse
      
-   // Grammar_Expression
    
-   any Grammar_Expression; //Class Object
+
+//--------------
+   // Grammar_Expression
+   any Grammar_Expression; //Class Grammar_Expression extends ASTBase
+   
    //auto Grammar_Expression__init
    void Grammar_Expression__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -2820,7 +2948,7 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
         // declare valid .root.name.type
 
        // var arr = []
-       var arr = _newArray(0,NULL);
+       var arr = new(Array,0,NULL);
        // .operandCount = 0
        PROP(operandCount_,this) = any_number(0);
        // .ternaryCount = 0
@@ -2933,9 +3061,9 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 // so `a = new MyClass` turns into `a = new MyClass()`
 
        // for each index,item in arr
-       any _list22=arr;
+       any _list20=arr;
        { var item=undefined;
-       for(int index=0 ; index<_list22.value.arr->length ; index++){item=ITEM(index,_list22);
+       for(int index=0 ; index<_list20.value.arr->length ; index++){item=ITEM(index,_list20);
             // declare item:UnaryOper
            // if item instanceof UnaryOper and item.name is 'new'
            if (_instanceof(item,Grammar_UnaryOper) && __is(PROP(name_,item),any_str("new")))  {
@@ -3054,9 +3182,9 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
          // var minPrecedenceInx = 100
          var minPrecedenceInx = any_number(100);
          // for each inx,item in arr
-         any _list23=arr;
+         any _list21=arr;
          { var item=undefined;
-         for(int inx=0 ; inx<_list23.value.arr->length ; inx++){item=ITEM(inx,_list23);
+         for(int inx=0 ; inx<_list21.value.arr->length ; inx++){item=ITEM(inx,_list21);
 
             //debug "item at #{inx} #{item.name}, Oper? #{item instanceof Oper}. precedence:",item.precedence
             // declare valid item.precedence
@@ -3137,18 +3265,20 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 
      // end method
      
-   // Grammar_Literal
    
-   any Grammar_Literal; //Class Object
-   //auto Grammar_Literal__init
-   void Grammar_Literal__init(any this, len_t argc, any* arguments){
-       // //auto call super class __init
-       ASTBase__init(this,argc,arguments);
-     PROP(type_,this)=any_str("*abstract-Literal*");
-   };
 
-     // properties
-     ;
+//--------------
+   // Grammar_Literal
+   any Grammar_Literal; //Class Grammar_Literal extends ASTBase
+   
+
+     // constructor
+     void Grammar_Literal__init(DEFAULT_ARGUMENTS){
+       // auto call super class __init
+       ASTBase__init(this,argc,arguments);
+       // .type = '*abstract-Literal*'
+       PROP(type_,this) = any_str("*abstract-Literal*");
+     }
 
      // method getValue()
      any Grammar_Literal_getValue(DEFAULT_ARGUMENTS){
@@ -3158,18 +3288,20 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        return PROP(name_,this);
      return undefined;
      }
-   // Grammar_NumberLiteral
    
-   any Grammar_NumberLiteral; //Class Object
-   //auto Grammar_NumberLiteral__init
-   void Grammar_NumberLiteral__init(any this, len_t argc, any* arguments){
-       // //auto call super class __init
-       Grammar_Literal__init(this,argc,arguments);
-     PROP(type_,this)=any_str("Number");
-   };
 
-     // properties
-     ;
+//--------------
+   // Grammar_NumberLiteral
+   any Grammar_NumberLiteral; //Class Grammar_NumberLiteral extends Grammar_Literal
+   
+
+     // constructor
+     void Grammar_NumberLiteral__init(DEFAULT_ARGUMENTS){
+       // auto call super class __init
+       Grammar_Literal__init(this,argc,arguments);
+       // .type = 'Number'
+       PROP(type_,this) = any_str("Number");
+     }
 
      // method parse()
      any Grammar_NumberLiteral_parse(DEFAULT_ARGUMENTS){
@@ -3179,18 +3311,20 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(name_,this) = CALL1(req_,this,any_str("NUMBER"));
      return undefined;
      }
-   // Grammar_StringLiteral
    
-   any Grammar_StringLiteral; //Class Object
-   //auto Grammar_StringLiteral__init
-   void Grammar_StringLiteral__init(any this, len_t argc, any* arguments){
-       // //auto call super class __init
-       Grammar_Literal__init(this,argc,arguments);
-     PROP(type_,this)=any_str("String");
-   };
 
-     // properties
-     ;
+//--------------
+   // Grammar_StringLiteral
+   any Grammar_StringLiteral; //Class Grammar_StringLiteral extends Grammar_Literal
+   
+
+     // constructor
+     void Grammar_StringLiteral__init(DEFAULT_ARGUMENTS){
+       // auto call super class __init
+       Grammar_Literal__init(this,argc,arguments);
+       // .type = 'String'
+       PROP(type_,this) = any_str("String");
+     }
 
      // method parse()
      any Grammar_StringLiteral_parse(DEFAULT_ARGUMENTS){
@@ -3209,18 +3343,20 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        return CALL2(slice_,PROP(name_,this),any_number(1), any_number(-1));// #remove quotes
      return undefined;
      }
-   // Grammar_RegExpLiteral
    
-   any Grammar_RegExpLiteral; //Class Object
-   //auto Grammar_RegExpLiteral__init
-   void Grammar_RegExpLiteral__init(any this, len_t argc, any* arguments){
-       // //auto call super class __init
-       Grammar_Literal__init(this,argc,arguments);
-     PROP(type_,this)=any_str("RegExp");
-   };
 
-     // properties
-     ;
+//--------------
+   // Grammar_RegExpLiteral
+   any Grammar_RegExpLiteral; //Class Grammar_RegExpLiteral extends Grammar_Literal
+   
+
+     // constructor
+     void Grammar_RegExpLiteral__init(DEFAULT_ARGUMENTS){
+       // auto call super class __init
+       Grammar_Literal__init(this,argc,arguments);
+       // .type = 'RegExp'
+       PROP(type_,this) = any_str("RegExp");
+     }
 
      // method parse()
      any Grammar_RegExpLiteral_parse(DEFAULT_ARGUMENTS){
@@ -3230,18 +3366,23 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(name_,this) = CALL1(req_,this,any_str("REGEX"));
      return undefined;
      }
-   // Grammar_ArrayLiteral
    
-   any Grammar_ArrayLiteral; //Class Object
-   //auto Grammar_ArrayLiteral__init
-   void Grammar_ArrayLiteral__init(any this, len_t argc, any* arguments){
-       // //auto call super class __init
-       Grammar_Literal__init(this,argc,arguments);
-     PROP(type_,this)=any_str("Array");
-   };
+
+//--------------
+   // Grammar_ArrayLiteral
+   any Grammar_ArrayLiteral; //Class Grammar_ArrayLiteral extends Grammar_Literal
+   
 
      // properties
      ;
+
+     // constructor
+     void Grammar_ArrayLiteral__init(DEFAULT_ARGUMENTS){
+       // auto call super class __init
+       Grammar_Literal__init(this,argc,arguments);
+       // .type = 'Array'
+       PROP(type_,this) = any_str("Array");
+     }
 
      // method parse()
      any Grammar_ArrayLiteral_parse(DEFAULT_ARGUMENTS){
@@ -3255,9 +3396,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(items_,this) = CALL3(optSeparatedList_,this,Grammar_Expression, any_str(","), any_str("]"));// # closer "]" required
      return undefined;
      }
-   // Grammar_ObjectLiteral
    
-   any Grammar_ObjectLiteral; //Class Object
+
+//--------------
+   // Grammar_ObjectLiteral
+   any Grammar_ObjectLiteral; //Class Grammar_ObjectLiteral extends Grammar_Literal
+   
    //auto Grammar_ObjectLiteral__init
    void Grammar_ObjectLiteral__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3292,18 +3436,21 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
          var callback= argc? arguments[0] : undefined;
          //---------
          // for each nameValue in .items
-         any _list24=PROP(items_,this);
+         any _list22=PROP(items_,this);
          { var nameValue=undefined;
-         for(int nameValue__inx=0 ; nameValue__inx<_list24.value.arr->length ; nameValue__inx++){nameValue=ITEM(nameValue__inx,_list24);
+         for(int nameValue__inx=0 ; nameValue__inx<_list22.value.arr->length ; nameValue__inx++){nameValue=ITEM(nameValue__inx,_list22);
            // nameValue.forEach(callback)
            CALL1(forEach_,nameValue,callback);
          }};// end for each in PROP(items_,this)
          
      return undefined;
      }
-   // Grammar_NameValuePair
    
-   any Grammar_NameValuePair; //Class Object
+
+//--------------
+   // Grammar_NameValuePair
+   any Grammar_NameValuePair; //Class Grammar_NameValuePair extends ASTBase
+   
    //auto Grammar_NameValuePair__init
    void Grammar_NameValuePair__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3318,8 +3465,8 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        assert(_instanceof(this,Grammar_NameValuePair));
        //---------
 
-       // .name = .req('IDENTIFIER','STRING','NUMBER')
-       PROP(name_,this) = CALL3(req_,this,any_str("IDENTIFIER"), any_str("STRING"), any_str("NUMBER"));
+       // .name = .req('IDENTIFIER',StringLiteral,NumberLiteral)
+       PROP(name_,this) = CALL3(req_,this,any_str("IDENTIFIER"), Grammar_StringLiteral, Grammar_NumberLiteral);
 
        // .req ':'
        CALL1(req_,this,any_str(":"));
@@ -3330,21 +3477,21 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 
        // if .lexer.token.type is 'NEWLINE'
        if (__is(PROP(type_,PROP(token_,PROP(lexer_,this))),any_str("NEWLINE")))  {
-         // .value = .req(FreeObjectLiteral)
-         PROP(value_,this) = CALL1(req_,this,Grammar_FreeObjectLiteral);
+           // .value = .req(FreeObjectLiteral)
+           PROP(value_,this) = CALL1(req_,this,Grammar_FreeObjectLiteral);
        }
        
        else {
-         // if .lexer.interfaceMode
-         if (_anyToBool(PROP(interfaceMode_,PROP(lexer_,this))))  {
-             // .parseType
-             __call(parseType_,this,0,NULL);
-         }
-         
-         else {
-             // .value = .req(Expression)
-             PROP(value_,this) = CALL1(req_,this,Grammar_Expression);
-         };
+           // if .lexer.interfaceMode
+           if (_anyToBool(PROP(interfaceMode_,PROP(lexer_,this))))  {
+               // .parseType
+               __call(parseType_,this,0,NULL);
+           }
+           
+           else {
+               // .value = .req(Expression)
+               PROP(value_,this) = CALL1(req_,this,Grammar_Expression);
+           };
        };
      return undefined;
      }
@@ -3375,9 +3522,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 
      // end helper recursive functions
      
-   // Grammar_FreeObjectLiteral
    
-   any Grammar_FreeObjectLiteral; //Class Object
+
+//--------------
+   // Grammar_FreeObjectLiteral
+   any Grammar_FreeObjectLiteral; //Class Grammar_FreeObjectLiteral extends Grammar_ObjectLiteral
+   
    //auto Grammar_FreeObjectLiteral__init
    void Grammar_FreeObjectLiteral__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3396,9 +3546,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(items_,this) = CALL2(reqSeparatedList_,this,Grammar_NameValuePair, any_str(","));
      return undefined;
      }
-   // Grammar_ParenExpression
    
-   any Grammar_ParenExpression; //Class Object
+
+//--------------
+   // Grammar_ParenExpression
+   any Grammar_ParenExpression; //Class Grammar_ParenExpression extends ASTBase
+   
    //auto Grammar_ParenExpression__init
    void Grammar_ParenExpression__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3424,9 +3577,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        CALL1(req_,this,any_str(")"));
      return undefined;
      }
-   // Grammar_FunctionDeclaration
    
-   any Grammar_FunctionDeclaration; //Class Object
+
+//--------------
+   // Grammar_FunctionDeclaration
+   any Grammar_FunctionDeclaration; //Class Grammar_FunctionDeclaration extends ASTBase
+   
    //auto Grammar_FunctionDeclaration__init
    void Grammar_FunctionDeclaration__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3465,7 +3621,7 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
            // .name = .opt('IDENTIFIER')
            PROP(name_,this) = CALL1(opt_,this,any_str("IDENTIFIER"));
            // if .name in ['main','__init','new'], .sayErr '"#{.name}" is a reserved function name'
-           if (CALL1(indexOf_,_newArray(3,(any_arr){any_str("main"), any_str("__init"), any_str("new")}),PROP(name_,this)).value.number>=0) {CALL1(sayErr_,this,_concatAny(3,(any_arr){any_str("\""), PROP(name_,this), any_str("\" is a reserved function name")}));};
+           if (__in(PROP(name_,this),3,(any_arr){any_str("main"), any_str("__init"), any_str("new")})) {CALL1(sayErr_,this,_concatAny(3,(any_arr){any_str("\""), PROP(name_,this), any_str("\" is a reserved function name")}));};
        };
 
 // get parameter members, and function body
@@ -3498,7 +3654,7 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
             // # after '->' we accept function params w/o parentheses.
             // # get parameter names (name:type only), up to [NEWLINE] or '='
            // .paramsDeclarations=[]
-           PROP(paramsDeclarations_,this) = _newArray(0,NULL);
+           PROP(paramsDeclarations_,this) = new(Array,0,NULL);
            // until .lexer.token.type is 'NEWLINE' or .lexer.token.value is '='
            while(!(_anyToBool(__or(any_number(__is(PROP(type_,PROP(token_,PROP(lexer_,this))),any_str("NEWLINE"))),any_number(__is(PROP(value_,PROP(token_,PROP(lexer_,this))),any_str("="))))))){
                // if .paramsDeclarations.length, .req ','
@@ -3544,9 +3700,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        
      return undefined;
      }
-   // Grammar_DefinePropertyItem
    
-   any Grammar_DefinePropertyItem; //Class Object
+
+//--------------
+   // Grammar_DefinePropertyItem
+   any Grammar_DefinePropertyItem; //Class Grammar_DefinePropertyItem extends ASTBase
+   
    //auto Grammar_DefinePropertyItem__init
    void Grammar_DefinePropertyItem__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3571,9 +3730,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(name_,this) = CALL3(req_,this,any_str("enumerable"), any_str("configurable"), any_str("writable"));
      return undefined;
      }
-   // Grammar_MethodDeclaration
    
-   any Grammar_MethodDeclaration; //Class Object
+
+//--------------
+   // Grammar_MethodDeclaration
+   any Grammar_MethodDeclaration; //Class Grammar_MethodDeclaration extends Grammar_FunctionDeclaration
+   
    //auto Grammar_MethodDeclaration__init
    void Grammar_MethodDeclaration__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3613,9 +3775,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        __call(parseParametersAndBody_,this,0,NULL);
      return undefined;
      }
-   // Grammar_ClassDeclaration
    
-   any Grammar_ClassDeclaration; //Class Object
+
+//--------------
+   // Grammar_ClassDeclaration
+   any Grammar_ClassDeclaration; //Class Grammar_ClassDeclaration extends ASTBase
+   
    //auto Grammar_ClassDeclaration__init
    void Grammar_ClassDeclaration__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3667,9 +3832,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        CALL4(validate_,PROP(body_,this),Grammar_PropertiesDeclaration, Grammar_ConstructorDeclaration, Grammar_MethodDeclaration, Grammar_DeclareStatement);
      return undefined;
      }
-   // Grammar_ConstructorDeclaration
    
-   any Grammar_ConstructorDeclaration; //Class Object
+
+//--------------
+   // Grammar_ConstructorDeclaration
+   any Grammar_ConstructorDeclaration; //Class Grammar_ConstructorDeclaration extends Grammar_MethodDeclaration
+   
    //auto Grammar_ConstructorDeclaration__init
    void Grammar_ConstructorDeclaration__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3709,9 +3877,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        __call(parseParametersAndBody_,this,0,NULL);
      return undefined;
      }
-   // Grammar_AppendToDeclaration
    
-   any Grammar_AppendToDeclaration; //Class Object
+
+//--------------
+   // Grammar_AppendToDeclaration
+   any Grammar_AppendToDeclaration; //Class Grammar_AppendToDeclaration extends Grammar_ClassDeclaration
+   
    //auto Grammar_AppendToDeclaration__init
    void Grammar_AppendToDeclaration__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3753,9 +3924,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        CALL3(validate_,PROP(body_,this),Grammar_PropertiesDeclaration, Grammar_MethodDeclaration, Grammar_ClassDeclaration);
      return undefined;
      }
-   // Grammar_NamespaceDeclaration
    
-   any Grammar_NamespaceDeclaration; //Class Object
+
+//--------------
+   // Grammar_NamespaceDeclaration
+   any Grammar_NamespaceDeclaration; //Class Grammar_NamespaceDeclaration extends Grammar_ClassDeclaration
+   
    //auto Grammar_NamespaceDeclaration__init
    void Grammar_NamespaceDeclaration__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3784,9 +3958,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        CALL4(validate_,PROP(body_,this),Grammar_PropertiesDeclaration, Grammar_MethodDeclaration, Grammar_ClassDeclaration, Grammar_NamespaceDeclaration);
      return undefined;
      }
-   // Grammar_DebuggerStatement
    
-   any Grammar_DebuggerStatement; //Class Object
+
+//--------------
+   // Grammar_DebuggerStatement
+   any Grammar_DebuggerStatement; //Class Grammar_DebuggerStatement extends ASTBase
+   
    //auto Grammar_DebuggerStatement__init
    void Grammar_DebuggerStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3800,9 +3977,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(name_,this) = CALL1(req_,this,any_str("debugger"));
      return undefined;
      }
-   // Grammar_CompilerStatement
    
-   any Grammar_CompilerStatement; //Class Object
+
+//--------------
+   // Grammar_CompilerStatement
+   any Grammar_CompilerStatement; //Class Grammar_CompilerStatement extends ASTBase
+   
    //auto Grammar_CompilerStatement__init
    void Grammar_CompilerStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3871,9 +4051,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        };
      return undefined;
      }
-   // Grammar_ImportStatement
    
-   any Grammar_ImportStatement; //Class Object
+
+//--------------
+   // Grammar_ImportStatement
+   any Grammar_ImportStatement; //Class Grammar_ImportStatement extends ASTBase
+   
    //auto Grammar_ImportStatement__init
    void Grammar_ImportStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3903,18 +4086,21 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        // var parentModule = .getParent(Module)
        var parentModule = CALL1(getParent_,this,Grammar_Module);
        // for each item in .list
-       any _list25=PROP(list_,this);
+       any _list23=PROP(list_,this);
        { var item=undefined;
-       for(int item__inx=0 ; item__inx<_list25.value.arr->length ; item__inx++){item=ITEM(item__inx,_list25);
+       for(int item__inx=0 ; item__inx<_list23.value.arr->length ; item__inx++){item=ITEM(item__inx,_list23);
            // parentModule.requireCallNodes.push item
            CALL1(push_,PROP(requireCallNodes_,parentModule),item);
        }};// end for each in PROP(list_,this)
        
      return undefined;
      }
-   // Grammar_ImportStatementItem
    
-   any Grammar_ImportStatementItem; //Class Object
+
+//--------------
+   // Grammar_ImportStatementItem
+   any Grammar_ImportStatementItem; //Class Grammar_ImportStatementItem extends ASTBase
+   
    //auto Grammar_ImportStatementItem__init
    void Grammar_ImportStatementItem__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3941,9 +4127,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        };
      return undefined;
      }
-   // Grammar_DeclareStatement
    
-   any Grammar_DeclareStatement; //Class Object
+
+//--------------
+   // Grammar_DeclareStatement
+   any Grammar_DeclareStatement; //Class Grammar_DeclareStatement extends ASTBase
+   
    //auto Grammar_DeclareStatement__init
    void Grammar_DeclareStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -3973,9 +4162,9 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
              // var parentModule = .getParent(Module)
              var parentModule = CALL1(getParent_,this,Grammar_Module);
              // for each item in .list
-             any _list26=PROP(list_,this);
+             any _list24=PROP(list_,this);
              { var item=undefined;
-             for(int item__inx=0 ; item__inx<_list26.value.arr->length ; item__inx++){item=ITEM(item__inx,_list26);
+             for(int item__inx=0 ; item__inx<_list24.value.arr->length ; item__inx++){item=ITEM(item__inx,_list24);
                  // parentModule.requireCallNodes.push item
                  CALL1(push_,PROP(requireCallNodes_,parentModule),item);
              }};// end for each in PROP(list_,this)
@@ -4051,9 +4240,9 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
            // .names = .reqSeparatedList(VariableDecl,',')
            PROP(names_,this) = CALL2(reqSeparatedList_,this,Grammar_VariableDecl, any_str(","));
            // for each varDecl in .names
-           any _list27=PROP(names_,this);
+           any _list25=PROP(names_,this);
            { var varDecl=undefined;
-           for(int varDecl__inx=0 ; varDecl__inx<_list27.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list27);
+           for(int varDecl__inx=0 ; varDecl__inx<_list25.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list25);
               // if (varDecl.type and varDecl.type isnt 'any') or varDecl.assignedValue
               if (_anyToBool(__or((any_number(_anyToBool(PROP(type_,varDecl)) && !__is(PROP(type_,varDecl),any_str("any")))),PROP(assignedValue_,varDecl))))  {
                  // .sayErr "declare name affinity: expected 'name,name,...'"
@@ -4067,9 +4256,9 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
            // .names = .reqSeparatedList(VariableDecl,',')
            PROP(names_,this) = CALL2(reqSeparatedList_,this,Grammar_VariableDecl, any_str(","));
            // for each varDecl in .names
-           any _list28=PROP(names_,this);
+           any _list26=PROP(names_,this);
            { var varDecl=undefined;
-           for(int varDecl__inx=0 ; varDecl__inx<_list28.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list28);
+           for(int varDecl__inx=0 ; varDecl__inx<_list26.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list26);
               // if varDecl.assignedValue
               if (_anyToBool(PROP(assignedValue_,varDecl)))  {
                  // .sayErr "declare var. Cannot assign value in .interface.md file."
@@ -4096,9 +4285,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 
      // end method parse
      
-   // Grammar_DefaultAssignment
    
-   any Grammar_DefaultAssignment; //Class Object
+
+//--------------
+   // Grammar_DefaultAssignment
+   any Grammar_DefaultAssignment; //Class Grammar_DefaultAssignment extends ASTBase
+   
    //auto Grammar_DefaultAssignment__init
    void Grammar_DefaultAssignment__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -4122,9 +4314,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        PROP(assignment_,this) = CALL1(req_,this,Grammar_AssignmentStatement);
      return undefined;
      }
-   // Grammar_EndStatement
    
-   any Grammar_EndStatement; //Class Object
+
+//--------------
+   // Grammar_EndStatement
+   any Grammar_EndStatement; //Class Grammar_EndStatement extends ASTBase
+   
    //auto Grammar_EndStatement__init
    void Grammar_EndStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -4145,7 +4340,7 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        // .lock()
        CALL0(lock_,this);
        // .references=[]
-       PROP(references_,this) = _newArray(0,NULL);
+       PROP(references_,this) = new(Array,0,NULL);
 
        // var block:ASTBase
        var block = undefined;
@@ -4190,9 +4385,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        
      return undefined;
      }
-   // Grammar_YieldExpression
    
-   any Grammar_YieldExpression; //Class Object
+
+//--------------
+   // Grammar_YieldExpression
+   any Grammar_YieldExpression; //Class Grammar_YieldExpression extends ASTBase
+   
    //auto Grammar_YieldExpression__init
    void Grammar_YieldExpression__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -4233,9 +4431,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        };
      return undefined;
      }
-   // Grammar_FunctionCall
    
-   any Grammar_FunctionCall; //Class Object
+
+//--------------
+   // Grammar_FunctionCall
+   any Grammar_FunctionCall; //Class Grammar_FunctionCall extends ASTBase
+   
    //auto Grammar_FunctionCall__init
    void Grammar_FunctionCall__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -4318,9 +4519,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        CALL1(addAccessor_,PROP(varRef_,this),functionAccess);
      return undefined;
      }
-   // Grammar_SwitchStatement
    
-   any Grammar_SwitchStatement; //Class Object
+
+//--------------
+   // Grammar_SwitchStatement
+   any Grammar_SwitchStatement; //Class Grammar_SwitchStatement extends ASTBase
+   
    //auto Grammar_SwitchStatement__init
    void Grammar_SwitchStatement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -4341,7 +4545,7 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        // .varRef = .opt(VariableRef)
        PROP(varRef_,this) = CALL1(opt_,this,Grammar_VariableRef);
        // .cases=[]
-       PROP(cases_,this) = _newArray(0,NULL);
+       PROP(cases_,this) = new(Array,0,NULL);
 
 // Loop processing: 'NEWLINE','case' or 'default'
 
@@ -4375,9 +4579,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        if (!_length(PROP(cases_,this))) {CALL1(throwError_,this,any_str("no 'case' found after 'switch'"));};
      return undefined;
      }
-   // Grammar_SwitchCase
    
-   any Grammar_SwitchCase; //Class Object
+
+//--------------
+   // Grammar_SwitchCase
+   any Grammar_SwitchCase; //Class Grammar_SwitchCase extends ASTBase
+   
    //auto Grammar_SwitchCase__init
    void Grammar_SwitchCase__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -4400,9 +4607,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
            PROP(body_,this) = CALL0(reqBody_,this);
        return undefined;
        }
-   // Grammar_CaseWhenExpression
    
-   any Grammar_CaseWhenExpression; //Class Object
+
+//--------------
+   // Grammar_CaseWhenExpression
+   any Grammar_CaseWhenExpression; //Class Grammar_CaseWhenExpression extends ASTBase
+   
    //auto Grammar_CaseWhenExpression__init
    void Grammar_CaseWhenExpression__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -4423,7 +4633,7 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        // .varRef = .opt(VariableRef)
        PROP(varRef_,this) = CALL1(opt_,this,Grammar_VariableRef);
        // .cases=[]
-       PROP(cases_,this) = _newArray(0,NULL);
+       PROP(cases_,this) = new(Array,0,NULL);
 
 // Loop processing: 'NEWLINE','when' or 'else' until 'end'
 
@@ -4464,9 +4674,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        CALL1(req_,this,any_str("end"));
      return undefined;
      }
-   // Grammar_CaseWhenSection
    
-   any Grammar_CaseWhenSection; //Class Object
+
+//--------------
+   // Grammar_CaseWhenSection
+   any Grammar_CaseWhenSection; //Class Grammar_CaseWhenSection extends ASTBase
+   
    //auto Grammar_CaseWhenSection__init
    void Grammar_CaseWhenSection__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -4477,6 +4690,8 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        // properties
        ;
 
+
+
 // if there is a var, we allow a list of comma separated expressions to compare to.
 // If there is no var, we allow a single boolean-Expression.
 // After: 'then', and the result-Expression
@@ -4485,6 +4700,9 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        any Grammar_CaseWhenSection_parse(DEFAULT_ARGUMENTS){
            assert(_instanceof(this,Grammar_CaseWhenSection));
            //---------
+
+            // declare .parent:CaseWhenExpression
+
            // if .parent.varRef
            if (_anyToBool(PROP(varRef_,PROP(parent_,this))))  {
                // .expressions = .reqSeparatedList(Expression, ",")
@@ -4502,14 +4720,17 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
            PROP(resultExpression_,this) = CALL1(req_,this,Grammar_Expression);
        return undefined;
        }
-   // Grammar_Statement
    
-   any Grammar_Statement; //Class Object
+
+//--------------
+   // Grammar_Statement
+   any Grammar_Statement; //Class Grammar_Statement extends ASTBase
+   
    //auto Grammar_Statement__init
    void Grammar_Statement__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
        ASTBase__init(this,argc,arguments);
-     PROP(adjectives_,this)=_newArray(0,NULL);
+     PROP(adjectives_,this)=new(Array,0,NULL);
    };
 
      // properties
@@ -4592,25 +4813,27 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 // Check validity of adjective-statement combination
 
        // var CFVN = ['class','function','var','namespace']
-       var CFVN = _newArray(4,(any_arr){any_str("class"), any_str("function"), any_str("var"), any_str("namespace")});
-       // for each adjective in .adjectives
-       any _list29=PROP(adjectives_,this);
-       { var adjective=undefined;
-       for(int adjective__inx=0 ; adjective__inx<_list29.value.arr->length ; adjective__inx++){adjective=ITEM(adjective__inx,_list29);
+       var CFVN = new(Array,4,(any_arr){any_str("class"), any_str("function"), any_str("var"), any_str("namespace")});
 
-             // var validCombinations =
-             var validCombinations = new(Map,7,(any_arr){
-                   _newPair("export",CFVN), 
-                   _newPair("default",CFVN), 
-                   _newPair("generator",_newArray(2,(any_arr){any_str("function"), any_str("method")})), 
-                   _newPair("nice",_newArray(2,(any_arr){any_str("function"), any_str("method")})), 
-                   _newPair("shim",_newArray(5,(any_arr){any_str("function"), any_str("method"), any_str("class"), any_str("namespace"), any_str("import")})), 
-                   _newPair("helper",_newArray(4,(any_arr){any_str("function"), any_str("method"), any_str("class"), any_str("namespace")})), 
-                   _newPair("global",_newArray(2,(any_arr){any_str("import"), any_str("declare")}))
-                   });
+       // var validCombinations =
+       var validCombinations = new(Map,7,(any_arr){
+             _newPair("export",CFVN), 
+             _newPair("default",CFVN), 
+             _newPair("generator",new(Array,2,(any_arr){any_str("function"), any_str("method")})), 
+             _newPair("nice",new(Array,2,(any_arr){any_str("function"), any_str("method")})), 
+             _newPair("shim",new(Array,5,(any_arr){any_str("function"), any_str("method"), any_str("class"), any_str("namespace"), any_str("import")})), 
+             _newPair("helper",new(Array,4,(any_arr){any_str("function"), any_str("method"), any_str("class"), any_str("namespace")})), 
+             _newPair("global",new(Array,2,(any_arr){any_str("import"), any_str("declare")}))
+             })
+       ;
+
+       // for each adjective in .adjectives
+       any _list27=PROP(adjectives_,this);
+       { var adjective=undefined;
+       for(int adjective__inx=0 ; adjective__inx<_list27.value.arr->length ; adjective__inx++){adjective=ITEM(adjective__inx,_list27);
 
              // var valid:string array = validCombinations.get(adjective) or ['-*none*-']
-             var valid = __or(CALL1(get_,validCombinations,adjective),_newArray(1,(any_arr){any_str("-*none*-")}));
+             var valid = __or(CALL1(get_,validCombinations,adjective),new(Array,1,(any_arr){any_str("-*none*-")}));
              // if key not in valid, .throwError "'#{adjective}' can only apply to #{valid.join('|')} not to '#{key}'"
              if (CALL1(indexOf_,valid,key).value.number==-1) {CALL1(throwError_,this,_concatAny(7,(any_arr){any_str("'"), adjective, any_str("' can only apply to "), (CALL1(join_,valid,any_str("|"))), any_str(" not to '"), key, any_str("'")}));};
        }};// end for each in PROP(adjectives_,this)
@@ -4623,7 +4846,7 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        // var moduleNode:Module = .getParent(Module)
        var moduleNode = CALL1(getParent_,this,Grammar_Module);
        // if .specific.constructor in [ClassDeclaration,NamespaceDeclaration] and moduleNode.fileInfo.base is .specific.name
-       if (CALL1(indexOf_,_newArray(2,(any_arr){Grammar_ClassDeclaration, Grammar_NamespaceDeclaration}),any_class(PROP(specific_,this).class)).value.number>=0 && __is(PROP(base_,PROP(fileInfo_,moduleNode)),PROP(name_,PROP(specific_,this))))  {
+       if (__in(any_class(PROP(specific_,this).class),2,(any_arr){Grammar_ClassDeclaration, Grammar_NamespaceDeclaration}) && __is(PROP(base_,PROP(fileInfo_,moduleNode)),PROP(name_,PROP(specific_,this))))  {
            // .adjectives.push 'export','default'
            CALL2(push_,PROP(adjectives_,this),any_str("export"), any_str("default"));
        };
@@ -4637,9 +4860,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        };
      return undefined;
      }
-   // Grammar_Body
    
-   any Grammar_Body; //Class Object
+
+//--------------
+   // Grammar_Body
+   any Grammar_Body; //Class Grammar_Body extends ASTBase
+   
    //auto Grammar_Body__init
    void Grammar_Body__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -4690,11 +4916,11 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        var validArray = _newArray(argc,arguments);
 
        // for each stm in .statements
-       any _list30=PROP(statements_,this);
+       any _list28=PROP(statements_,this);
        { var stm=undefined;
-       for(int stm__inx=0 ; stm__inx<_list30.value.arr->length ; stm__inx++){stm=ITEM(stm__inx,_list30);
+       for(int stm__inx=0 ; stm__inx<_list28.value.arr->length ; stm__inx++){stm=ITEM(stm__inx,_list28);
          // where stm.specific.constructor not in [EndStatement,CompilerStatement] //always Valid
-           if(CALL1(indexOf_,_newArray(2,(any_arr){Grammar_EndStatement, Grammar_CompilerStatement}),any_class(PROP(specific_,stm).class)).value.number==-1){
+           if(!(__in(any_class(PROP(specific_,stm).class),2,(any_arr){Grammar_EndStatement, Grammar_CompilerStatement}))){
 
                // if stm.specific.constructor not in validArray
                if (CALL1(indexOf_,validArray,any_class(PROP(specific_,stm).class)).value.number==-1)  {
@@ -4705,9 +4931,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        
      return undefined;
      }
-   // Grammar_SingleLineBody
    
-   any Grammar_SingleLineBody; //Class Object
+
+//--------------
+   // Grammar_SingleLineBody
+   any Grammar_SingleLineBody; //Class Grammar_SingleLineBody extends Grammar_Body
+   
    //auto Grammar_SingleLineBody__init
    void Grammar_SingleLineBody__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -4725,9 +4954,12 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
        CALL0(returnToken_,PROP(lexer_,this));// #return closing NEWLINE
      return undefined;
      }
-   // Grammar_Module
    
-   any Grammar_Module; //Class Object
+
+//--------------
+   // Grammar_Module
+   any Grammar_Module; //Class Grammar_Module extends Grammar_Body
+   
    //auto Grammar_Module__init
    void Grammar_Module__init(any this, len_t argc, any* arguments){
        // //auto call super class __init
@@ -4791,7 +5023,7 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
            }
            //---------
            // if no .accessors, .accessors = []
-           if (!_anyToBool(PROP(accessors_,this))) {PROP(accessors_,this) = _newArray(0,NULL);};
+           if (!_anyToBool(PROP(accessors_,this))) {PROP(accessors_,this) = new(Array,0,NULL);};
            // if type of item is 'string', item = new PropertyAccess(this, item)
            if (__is(_typeof(item),any_str("string"))) {item = new(Grammar_PropertyAccess,2,(any_arr){this, item});};
            // .accessors.splice position,0,item
@@ -4806,7 +5038,7 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
            var item= argc? arguments[0] : undefined;
            //---------
            // if no .accessors, .accessors = []
-           if (!_anyToBool(PROP(accessors_,this))) {PROP(accessors_,this) = _newArray(0,NULL);};
+           if (!_anyToBool(PROP(accessors_,this))) {PROP(accessors_,this) = new(Array,0,NULL);};
            // .insertAccessorAt .accessors.length, item
            CALL2(insertAccessorAt_,this,any_number(_length(PROP(accessors_,this))), item);
            // .executes = item instance of FunctionAccess
@@ -4858,7 +5090,7 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
      //---------
       // #auto-capitalize core classes when used as type annotations
      // if name in ['string','array','number','object','function','boolean','map']
-     if (CALL1(indexOf_,_newArray(7,(any_arr){any_str("string"), any_str("array"), any_str("number"), any_str("object"), any_str("function"), any_str("boolean"), any_str("map")}),name).value.number>=0)  {
+     if (__in(name,7,(any_arr){any_str("string"), any_str("array"), any_str("number"), any_str("object"), any_str("function"), any_str("boolean"), any_str("map")}))  {
        // return "#{name.slice(0,1).toUpperCase()}#{name.slice(1)}"
        return _concatAny(2,(any_arr){(CALL0(toUpperCase_,CALL2(slice_,name,any_number(0), any_number(1)))), (CALL1(slice_,name,any_number(1)))});
      };
@@ -4962,340 +5194,344 @@ any Grammar_autoCapitalizeCoreClasses(DEFAULT_ARGUMENTS); //forward declare
 
 //-------------------------
 void Grammar__moduleInit(void){
-Grammar_RESERVED_WORDS = _newArray(73,(any_arr){any_str("namespace"), any_str("function"), any_str("async"), any_str("class"), any_str("method"), any_str("if"), any_str("then"), any_str("else"), any_str("switch"), any_str("when"), any_str("case"), any_str("end"), any_str("null"), any_str("true"), any_str("false"), any_str("undefined"), any_str("and"), any_str("or"), any_str("but"), any_str("no"), any_str("not"), any_str("has"), any_str("hasnt"), any_str("property"), any_str("properties"), any_str("new"), any_str("is"), any_str("isnt"), any_str("prototype"), any_str("do"), any_str("loop"), any_str("while"), any_str("until"), any_str("for"), any_str("to"), any_str("break"), any_str("continue"), any_str("return"), any_str("try"), any_str("catch"), any_str("throw"), any_str("raise"), any_str("fail"), any_str("exception"), any_str("finally"), any_str("with"), any_str("arguments"), any_str("in"), any_str("instanceof"), any_str("typeof"), any_str("var"), any_str("let"), any_str("default"), any_str("delete"), any_str("interface"), any_str("implements"), any_str("yield"), any_str("like"), any_str("this"), any_str("super"), any_str("export"), any_str("compiler"), any_str("compile"), any_str("debugger"), any_str("char"), any_str("short"), any_str("long"), any_str("int"), any_str("unsigned"), any_str("void"), any_str("NULL"), any_str("bool"), any_str("assert")});
-Grammar_operatorsPrecedence = _newArray(36,(any_arr){any_str("++"), any_str("--"), any_str("unary -"), any_str("unary +"), any_str("~"), any_str("&"), any_str("^"), any_str("|"), any_str(">>"), any_str("<<"), any_str("new"), any_str("type of"), any_str("instance of"), any_str("has property"), any_str("*"), any_str("/"), any_str("%"), any_str("+"), any_str("-"), any_str("into"), any_str("in"), any_str(">"), any_str("<"), any_str(">="), any_str("<="), any_str("is"), any_str("<>"), any_str("!=="), any_str("like"), any_str("no"), any_str("not"), any_str("and"), any_str("but"), any_str("or"), any_str("?"), any_str(":")});
-Grammar_OPERAND_DIRECT_TYPE = new(Map,4,(any_arr){
-         _newPair("'STRING'",Grammar_StringLiteral), 
-         _newPair("'NUMBER'",Grammar_NumberLiteral), 
-         _newPair("'REGEX'",Grammar_RegExpLiteral), 
-         _newPair("'SPACE_BRACKET'",Grammar_ArrayLiteral)
-         });
-Grammar_OPERAND_DIRECT_TOKEN = new(Map,7,(any_arr){
-         _newPair("'('",Grammar_ParenExpression), 
-         _newPair("'['",Grammar_ArrayLiteral), 
-         _newPair("'{'",Grammar_ObjectLiteral), 
-         _newPair("'function'",Grammar_FunctionDeclaration), 
-         _newPair("'->'",Grammar_FunctionDeclaration), 
-         _newPair("'case'",Grammar_CaseWhenExpression), 
-         _newPair("'yield'",Grammar_YieldExpression)
-         });
-Grammar_unaryOperators = _newArray(8,(any_arr){any_str("new"), any_str("-"), any_str("no"), any_str("not"), any_str("type"), any_str("typeof"), any_str("~"), any_str("+")});
-Grammar_StatementsDirect = new(Map,38,(any_arr){
-     _newPair("'class'",Grammar_ClassDeclaration), 
-     _newPair("'Class'",Grammar_ClassDeclaration), 
-     _newPair("'append'",Grammar_AppendToDeclaration), 
-     _newPair("'Append'",Grammar_AppendToDeclaration), 
-     _newPair("'function'",Grammar_FunctionDeclaration), 
-     _newPair("'constructor'",Grammar_ConstructorDeclaration), 
-     _newPair("'properties'",Grammar_PropertiesDeclaration), 
-     _newPair("'namespace'",_newArray(2,(any_arr){Grammar_NamespaceDeclaration, Grammar_PropertiesDeclaration})), 
-     _newPair("'method'",Grammar_MethodDeclaration), 
-     _newPair("'var'",Grammar_VarStatement), 
-     _newPair("'let'",Grammar_VarStatement), 
-     _newPair("'default'",Grammar_DefaultAssignment), 
-     _newPair("'if'",Grammar_IfStatement), 
-     _newPair("'when'",Grammar_IfStatement), 
-     _newPair("'for'",Grammar_ForStatement), 
-     _newPair("'while'",Grammar_WhileUntilLoop), 
-     _newPair("'until'",Grammar_WhileUntilLoop), 
-     _newPair("'do'",_newArray(2,(any_arr){Grammar_DoNothingStatement, Grammar_DoLoop})), 
-     _newPair("'break'",Grammar_LoopControlStatement), 
-     _newPair("'switch'",Grammar_SwitchStatement), 
-     _newPair("'continue'",Grammar_LoopControlStatement), 
-     _newPair("'end'",Grammar_EndStatement), 
-     _newPair("'return'",Grammar_ReturnStatement), 
-     _newPair("'with'",Grammar_WithStatement), 
-     _newPair("'print'",Grammar_PrintStatement), 
-     _newPair("'throw'",Grammar_ThrowStatement), 
-     _newPair("'raise'",Grammar_ThrowStatement), 
-     _newPair("'fail'",Grammar_ThrowStatement), 
-     _newPair("'try'",Grammar_TryCatch), 
-     _newPair("'exception'",Grammar_ExceptionBlock), 
-     _newPair("'Exception'",Grammar_ExceptionBlock), 
-     _newPair("'debugger'",Grammar_DebuggerStatement), 
-     _newPair("'declare'",Grammar_DeclareStatement), 
-     _newPair("'import'",Grammar_ImportStatement), 
-     _newPair("'delete'",Grammar_DeleteStatement), 
-     _newPair("'compile'",Grammar_CompilerStatement), 
-     _newPair("'compiler'",Grammar_CompilerStatement), 
-     _newPair("'yield'",Grammar_YieldExpression)
-     });
-Grammar_AccessorsDirect = new(Map,3,(any_arr){
-       _newPair("'.'",Grammar_PropertyAccess), 
-       _newPair("'['",Grammar_IndexAccess), 
-       _newPair("'('",Grammar_FunctionAccess)
-       });
        Grammar_PrintStatement =_newClass("Grammar_PrintStatement", Grammar_PrintStatement__init, sizeof(struct Grammar_PrintStatement_s), ASTBase.value.classINFOptr);
-   
        _declareMethods(Grammar_PrintStatement, Grammar_PrintStatement_METHODS);
        _declareProps(Grammar_PrintStatement, Grammar_PrintStatement_PROPS, sizeof Grammar_PrintStatement_PROPS);
-       Grammar_VarDeclList =_newClass("Grammar_VarDeclList", Grammar_VarDeclList__init, sizeof(struct Grammar_VarDeclList_s), ASTBase.value.classINFOptr);
    
+       Grammar_VarDeclList =_newClass("Grammar_VarDeclList", Grammar_VarDeclList__init, sizeof(struct Grammar_VarDeclList_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_VarDeclList, Grammar_VarDeclList_METHODS);
        _declareProps(Grammar_VarDeclList, Grammar_VarDeclList_PROPS, sizeof Grammar_VarDeclList_PROPS);
-       Grammar_VarStatement =_newClass("Grammar_VarStatement", Grammar_VarStatement__init, sizeof(struct Grammar_VarStatement_s), Grammar_VarDeclList.value.classINFOptr);
    
+       Grammar_VarStatement =_newClass("Grammar_VarStatement", Grammar_VarStatement__init, sizeof(struct Grammar_VarStatement_s), Grammar_VarDeclList.value.classINFOptr);
        _declareMethods(Grammar_VarStatement, Grammar_VarStatement_METHODS);
        _declareProps(Grammar_VarStatement, Grammar_VarStatement_PROPS, sizeof Grammar_VarStatement_PROPS);
-       Grammar_VariableDecl =_newClass("Grammar_VariableDecl", Grammar_VariableDecl__init, sizeof(struct Grammar_VariableDecl_s), ASTBase.value.classINFOptr);
    
+       Grammar_VariableDecl =_newClass("Grammar_VariableDecl", Grammar_VariableDecl__init, sizeof(struct Grammar_VariableDecl_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_VariableDecl, Grammar_VariableDecl_METHODS);
        _declareProps(Grammar_VariableDecl, Grammar_VariableDecl_PROPS, sizeof Grammar_VariableDecl_PROPS);
-       Grammar_PropertiesDeclaration =_newClass("Grammar_PropertiesDeclaration", Grammar_PropertiesDeclaration__init, sizeof(struct Grammar_PropertiesDeclaration_s), Grammar_VarDeclList.value.classINFOptr);
    
+       Grammar_PropertiesDeclaration =_newClass("Grammar_PropertiesDeclaration", Grammar_PropertiesDeclaration__init, sizeof(struct Grammar_PropertiesDeclaration_s), Grammar_VarDeclList.value.classINFOptr);
        _declareMethods(Grammar_PropertiesDeclaration, Grammar_PropertiesDeclaration_METHODS);
        _declareProps(Grammar_PropertiesDeclaration, Grammar_PropertiesDeclaration_PROPS, sizeof Grammar_PropertiesDeclaration_PROPS);
-       Grammar_WithStatement =_newClass("Grammar_WithStatement", Grammar_WithStatement__init, sizeof(struct Grammar_WithStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_WithStatement =_newClass("Grammar_WithStatement", Grammar_WithStatement__init, sizeof(struct Grammar_WithStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_WithStatement, Grammar_WithStatement_METHODS);
        _declareProps(Grammar_WithStatement, Grammar_WithStatement_PROPS, sizeof Grammar_WithStatement_PROPS);
-       Grammar_TryCatch =_newClass("Grammar_TryCatch", Grammar_TryCatch__init, sizeof(struct Grammar_TryCatch_s), ASTBase.value.classINFOptr);
    
+       Grammar_TryCatch =_newClass("Grammar_TryCatch", Grammar_TryCatch__init, sizeof(struct Grammar_TryCatch_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_TryCatch, Grammar_TryCatch_METHODS);
        _declareProps(Grammar_TryCatch, Grammar_TryCatch_PROPS, sizeof Grammar_TryCatch_PROPS);
-       Grammar_ExceptionBlock =_newClass("Grammar_ExceptionBlock", Grammar_ExceptionBlock__init, sizeof(struct Grammar_ExceptionBlock_s), ASTBase.value.classINFOptr);
    
+       Grammar_ExceptionBlock =_newClass("Grammar_ExceptionBlock", Grammar_ExceptionBlock__init, sizeof(struct Grammar_ExceptionBlock_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ExceptionBlock, Grammar_ExceptionBlock_METHODS);
        _declareProps(Grammar_ExceptionBlock, Grammar_ExceptionBlock_PROPS, sizeof Grammar_ExceptionBlock_PROPS);
-       Grammar_ThrowStatement =_newClass("Grammar_ThrowStatement", Grammar_ThrowStatement__init, sizeof(struct Grammar_ThrowStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_ThrowStatement =_newClass("Grammar_ThrowStatement", Grammar_ThrowStatement__init, sizeof(struct Grammar_ThrowStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ThrowStatement, Grammar_ThrowStatement_METHODS);
        _declareProps(Grammar_ThrowStatement, Grammar_ThrowStatement_PROPS, sizeof Grammar_ThrowStatement_PROPS);
-       Grammar_ReturnStatement =_newClass("Grammar_ReturnStatement", Grammar_ReturnStatement__init, sizeof(struct Grammar_ReturnStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_ReturnStatement =_newClass("Grammar_ReturnStatement", Grammar_ReturnStatement__init, sizeof(struct Grammar_ReturnStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ReturnStatement, Grammar_ReturnStatement_METHODS);
        _declareProps(Grammar_ReturnStatement, Grammar_ReturnStatement_PROPS, sizeof Grammar_ReturnStatement_PROPS);
-       Grammar_IfStatement =_newClass("Grammar_IfStatement", Grammar_IfStatement__init, sizeof(struct Grammar_IfStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_IfStatement =_newClass("Grammar_IfStatement", Grammar_IfStatement__init, sizeof(struct Grammar_IfStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_IfStatement, Grammar_IfStatement_METHODS);
        _declareProps(Grammar_IfStatement, Grammar_IfStatement_PROPS, sizeof Grammar_IfStatement_PROPS);
-       Grammar_ElseIfStatement =_newClass("Grammar_ElseIfStatement", Grammar_ElseIfStatement__init, sizeof(struct Grammar_ElseIfStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_ElseIfStatement =_newClass("Grammar_ElseIfStatement", Grammar_ElseIfStatement__init, sizeof(struct Grammar_ElseIfStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ElseIfStatement, Grammar_ElseIfStatement_METHODS);
        _declareProps(Grammar_ElseIfStatement, Grammar_ElseIfStatement_PROPS, sizeof Grammar_ElseIfStatement_PROPS);
-       Grammar_ElseStatement =_newClass("Grammar_ElseStatement", Grammar_ElseStatement__init, sizeof(struct Grammar_ElseStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_ElseStatement =_newClass("Grammar_ElseStatement", Grammar_ElseStatement__init, sizeof(struct Grammar_ElseStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ElseStatement, Grammar_ElseStatement_METHODS);
        _declareProps(Grammar_ElseStatement, Grammar_ElseStatement_PROPS, sizeof Grammar_ElseStatement_PROPS);
-       Grammar_DoLoop =_newClass("Grammar_DoLoop", Grammar_DoLoop__init, sizeof(struct Grammar_DoLoop_s), ASTBase.value.classINFOptr);
    
+       Grammar_DoLoop =_newClass("Grammar_DoLoop", Grammar_DoLoop__init, sizeof(struct Grammar_DoLoop_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_DoLoop, Grammar_DoLoop_METHODS);
        _declareProps(Grammar_DoLoop, Grammar_DoLoop_PROPS, sizeof Grammar_DoLoop_PROPS);
-       Grammar_WhileUntilLoop =_newClass("Grammar_WhileUntilLoop", Grammar_WhileUntilLoop__init, sizeof(struct Grammar_WhileUntilLoop_s), Grammar_DoLoop.value.classINFOptr);
    
+       Grammar_WhileUntilLoop =_newClass("Grammar_WhileUntilLoop", Grammar_WhileUntilLoop__init, sizeof(struct Grammar_WhileUntilLoop_s), Grammar_DoLoop.value.classINFOptr);
        _declareMethods(Grammar_WhileUntilLoop, Grammar_WhileUntilLoop_METHODS);
        _declareProps(Grammar_WhileUntilLoop, Grammar_WhileUntilLoop_PROPS, sizeof Grammar_WhileUntilLoop_PROPS);
-       Grammar_WhileUntilExpression =_newClass("Grammar_WhileUntilExpression", Grammar_WhileUntilExpression__init, sizeof(struct Grammar_WhileUntilExpression_s), ASTBase.value.classINFOptr);
    
+       Grammar_WhileUntilExpression =_newClass("Grammar_WhileUntilExpression", Grammar_WhileUntilExpression__init, sizeof(struct Grammar_WhileUntilExpression_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_WhileUntilExpression, Grammar_WhileUntilExpression_METHODS);
        _declareProps(Grammar_WhileUntilExpression, Grammar_WhileUntilExpression_PROPS, sizeof Grammar_WhileUntilExpression_PROPS);
-       Grammar_LoopControlStatement =_newClass("Grammar_LoopControlStatement", Grammar_LoopControlStatement__init, sizeof(struct Grammar_LoopControlStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_LoopControlStatement =_newClass("Grammar_LoopControlStatement", Grammar_LoopControlStatement__init, sizeof(struct Grammar_LoopControlStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_LoopControlStatement, Grammar_LoopControlStatement_METHODS);
        _declareProps(Grammar_LoopControlStatement, Grammar_LoopControlStatement_PROPS, sizeof Grammar_LoopControlStatement_PROPS);
-       Grammar_DoNothingStatement =_newClass("Grammar_DoNothingStatement", Grammar_DoNothingStatement__init, sizeof(struct Grammar_DoNothingStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_DoNothingStatement =_newClass("Grammar_DoNothingStatement", Grammar_DoNothingStatement__init, sizeof(struct Grammar_DoNothingStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_DoNothingStatement, Grammar_DoNothingStatement_METHODS);
        _declareProps(Grammar_DoNothingStatement, Grammar_DoNothingStatement_PROPS, sizeof Grammar_DoNothingStatement_PROPS);
-       Grammar_ForStatement =_newClass("Grammar_ForStatement", Grammar_ForStatement__init, sizeof(struct Grammar_ForStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_ForStatement =_newClass("Grammar_ForStatement", Grammar_ForStatement__init, sizeof(struct Grammar_ForStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ForStatement, Grammar_ForStatement_METHODS);
        _declareProps(Grammar_ForStatement, Grammar_ForStatement_PROPS, sizeof Grammar_ForStatement_PROPS);
-       Grammar_ForEachProperty =_newClass("Grammar_ForEachProperty", Grammar_ForEachProperty__init, sizeof(struct Grammar_ForEachProperty_s), ASTBase.value.classINFOptr);
    
+       Grammar_ForEachProperty =_newClass("Grammar_ForEachProperty", Grammar_ForEachProperty__init, sizeof(struct Grammar_ForEachProperty_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ForEachProperty, Grammar_ForEachProperty_METHODS);
        _declareProps(Grammar_ForEachProperty, Grammar_ForEachProperty_PROPS, sizeof Grammar_ForEachProperty_PROPS);
-       Grammar_ForEachInArray =_newClass("Grammar_ForEachInArray", Grammar_ForEachInArray__init, sizeof(struct Grammar_ForEachInArray_s), ASTBase.value.classINFOptr);
    
+       Grammar_ForEachInArray =_newClass("Grammar_ForEachInArray", Grammar_ForEachInArray__init, sizeof(struct Grammar_ForEachInArray_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ForEachInArray, Grammar_ForEachInArray_METHODS);
        _declareProps(Grammar_ForEachInArray, Grammar_ForEachInArray_PROPS, sizeof Grammar_ForEachInArray_PROPS);
-       Grammar_ForIndexNumeric =_newClass("Grammar_ForIndexNumeric", Grammar_ForIndexNumeric__init, sizeof(struct Grammar_ForIndexNumeric_s), ASTBase.value.classINFOptr);
    
+       Grammar_ForIndexNumeric =_newClass("Grammar_ForIndexNumeric", Grammar_ForIndexNumeric__init, sizeof(struct Grammar_ForIndexNumeric_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ForIndexNumeric, Grammar_ForIndexNumeric_METHODS);
        _declareProps(Grammar_ForIndexNumeric, Grammar_ForIndexNumeric_PROPS, sizeof Grammar_ForIndexNumeric_PROPS);
-       Grammar_ForWhereFilter =_newClass("Grammar_ForWhereFilter", Grammar_ForWhereFilter__init, sizeof(struct Grammar_ForWhereFilter_s), ASTBase.value.classINFOptr);
    
+       Grammar_ForWhereFilter =_newClass("Grammar_ForWhereFilter", Grammar_ForWhereFilter__init, sizeof(struct Grammar_ForWhereFilter_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ForWhereFilter, Grammar_ForWhereFilter_METHODS);
        _declareProps(Grammar_ForWhereFilter, Grammar_ForWhereFilter_PROPS, sizeof Grammar_ForWhereFilter_PROPS);
-       Grammar_DeleteStatement =_newClass("Grammar_DeleteStatement", Grammar_DeleteStatement__init, sizeof(struct Grammar_DeleteStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_DeleteStatement =_newClass("Grammar_DeleteStatement", Grammar_DeleteStatement__init, sizeof(struct Grammar_DeleteStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_DeleteStatement, Grammar_DeleteStatement_METHODS);
        _declareProps(Grammar_DeleteStatement, Grammar_DeleteStatement_PROPS, sizeof Grammar_DeleteStatement_PROPS);
-       Grammar_AssignmentStatement =_newClass("Grammar_AssignmentStatement", Grammar_AssignmentStatement__init, sizeof(struct Grammar_AssignmentStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_AssignmentStatement =_newClass("Grammar_AssignmentStatement", Grammar_AssignmentStatement__init, sizeof(struct Grammar_AssignmentStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_AssignmentStatement, Grammar_AssignmentStatement_METHODS);
        _declareProps(Grammar_AssignmentStatement, Grammar_AssignmentStatement_PROPS, sizeof Grammar_AssignmentStatement_PROPS);
-       Grammar_VariableRef =_newClass("Grammar_VariableRef", Grammar_VariableRef__init, sizeof(struct Grammar_VariableRef_s), ASTBase.value.classINFOptr);
    
+       Grammar_VariableRef =_newClass("Grammar_VariableRef", Grammar_VariableRef__init, sizeof(struct Grammar_VariableRef_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_VariableRef, Grammar_VariableRef_METHODS);
        _declareProps(Grammar_VariableRef, Grammar_VariableRef_PROPS, sizeof Grammar_VariableRef_PROPS);
-       Grammar_Accessor =_newClass("Grammar_Accessor", Grammar_Accessor__init, sizeof(struct Grammar_Accessor_s), ASTBase.value.classINFOptr);
    
+       Grammar_Accessor =_newClass("Grammar_Accessor", Grammar_Accessor__init, sizeof(struct Grammar_Accessor_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_Accessor, Grammar_Accessor_METHODS);
        _declareProps(Grammar_Accessor, Grammar_Accessor_PROPS, sizeof Grammar_Accessor_PROPS);
-       Grammar_PropertyAccess =_newClass("Grammar_PropertyAccess", Grammar_PropertyAccess__init, sizeof(struct Grammar_PropertyAccess_s), Grammar_Accessor.value.classINFOptr);
    
+       Grammar_PropertyAccess =_newClass("Grammar_PropertyAccess", Grammar_PropertyAccess__init, sizeof(struct Grammar_PropertyAccess_s), Grammar_Accessor.value.classINFOptr);
        _declareMethods(Grammar_PropertyAccess, Grammar_PropertyAccess_METHODS);
        _declareProps(Grammar_PropertyAccess, Grammar_PropertyAccess_PROPS, sizeof Grammar_PropertyAccess_PROPS);
-       Grammar_IndexAccess =_newClass("Grammar_IndexAccess", Grammar_IndexAccess__init, sizeof(struct Grammar_IndexAccess_s), Grammar_Accessor.value.classINFOptr);
    
+       Grammar_IndexAccess =_newClass("Grammar_IndexAccess", Grammar_IndexAccess__init, sizeof(struct Grammar_IndexAccess_s), Grammar_Accessor.value.classINFOptr);
        _declareMethods(Grammar_IndexAccess, Grammar_IndexAccess_METHODS);
        _declareProps(Grammar_IndexAccess, Grammar_IndexAccess_PROPS, sizeof Grammar_IndexAccess_PROPS);
-       Grammar_FunctionArgument =_newClass("Grammar_FunctionArgument", Grammar_FunctionArgument__init, sizeof(struct Grammar_FunctionArgument_s), ASTBase.value.classINFOptr);
    
+       Grammar_FunctionArgument =_newClass("Grammar_FunctionArgument", Grammar_FunctionArgument__init, sizeof(struct Grammar_FunctionArgument_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_FunctionArgument, Grammar_FunctionArgument_METHODS);
        _declareProps(Grammar_FunctionArgument, Grammar_FunctionArgument_PROPS, sizeof Grammar_FunctionArgument_PROPS);
-       Grammar_FunctionAccess =_newClass("Grammar_FunctionAccess", Grammar_FunctionAccess__init, sizeof(struct Grammar_FunctionAccess_s), Grammar_Accessor.value.classINFOptr);
    
+       Grammar_FunctionAccess =_newClass("Grammar_FunctionAccess", Grammar_FunctionAccess__init, sizeof(struct Grammar_FunctionAccess_s), Grammar_Accessor.value.classINFOptr);
        _declareMethods(Grammar_FunctionAccess, Grammar_FunctionAccess_METHODS);
        _declareProps(Grammar_FunctionAccess, Grammar_FunctionAccess_PROPS, sizeof Grammar_FunctionAccess_PROPS);
-       Grammar_Operand =_newClass("Grammar_Operand", Grammar_Operand__init, sizeof(struct Grammar_Operand_s), ASTBase.value.classINFOptr);
    
+       Grammar_Operand =_newClass("Grammar_Operand", Grammar_Operand__init, sizeof(struct Grammar_Operand_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_Operand, Grammar_Operand_METHODS);
        _declareProps(Grammar_Operand, Grammar_Operand_PROPS, sizeof Grammar_Operand_PROPS);
-       Grammar_Oper =_newClass("Grammar_Oper", Grammar_Oper__init, sizeof(struct Grammar_Oper_s), ASTBase.value.classINFOptr);
    
+       Grammar_Oper =_newClass("Grammar_Oper", Grammar_Oper__init, sizeof(struct Grammar_Oper_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_Oper, Grammar_Oper_METHODS);
        _declareProps(Grammar_Oper, Grammar_Oper_PROPS, sizeof Grammar_Oper_PROPS);
-       Grammar_UnaryOper =_newClass("Grammar_UnaryOper", Grammar_UnaryOper__init, sizeof(struct Grammar_UnaryOper_s), Grammar_Oper.value.classINFOptr);
    
+       Grammar_UnaryOper =_newClass("Grammar_UnaryOper", Grammar_UnaryOper__init, sizeof(struct Grammar_UnaryOper_s), Grammar_Oper.value.classINFOptr);
        _declareMethods(Grammar_UnaryOper, Grammar_UnaryOper_METHODS);
        _declareProps(Grammar_UnaryOper, Grammar_UnaryOper_PROPS, sizeof Grammar_UnaryOper_PROPS);
-       Grammar_Expression =_newClass("Grammar_Expression", Grammar_Expression__init, sizeof(struct Grammar_Expression_s), ASTBase.value.classINFOptr);
    
+       Grammar_Expression =_newClass("Grammar_Expression", Grammar_Expression__init, sizeof(struct Grammar_Expression_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_Expression, Grammar_Expression_METHODS);
        _declareProps(Grammar_Expression, Grammar_Expression_PROPS, sizeof Grammar_Expression_PROPS);
-       Grammar_Literal =_newClass("Grammar_Literal", Grammar_Literal__init, sizeof(struct Grammar_Literal_s), ASTBase.value.classINFOptr);
    
+       Grammar_Literal =_newClass("Grammar_Literal", Grammar_Literal__init, sizeof(struct Grammar_Literal_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_Literal, Grammar_Literal_METHODS);
        _declareProps(Grammar_Literal, Grammar_Literal_PROPS, sizeof Grammar_Literal_PROPS);
-       Grammar_NumberLiteral =_newClass("Grammar_NumberLiteral", Grammar_NumberLiteral__init, sizeof(struct Grammar_NumberLiteral_s), Grammar_Literal.value.classINFOptr);
    
+       Grammar_NumberLiteral =_newClass("Grammar_NumberLiteral", Grammar_NumberLiteral__init, sizeof(struct Grammar_NumberLiteral_s), Grammar_Literal.value.classINFOptr);
        _declareMethods(Grammar_NumberLiteral, Grammar_NumberLiteral_METHODS);
        _declareProps(Grammar_NumberLiteral, Grammar_NumberLiteral_PROPS, sizeof Grammar_NumberLiteral_PROPS);
-       Grammar_StringLiteral =_newClass("Grammar_StringLiteral", Grammar_StringLiteral__init, sizeof(struct Grammar_StringLiteral_s), Grammar_Literal.value.classINFOptr);
    
+       Grammar_StringLiteral =_newClass("Grammar_StringLiteral", Grammar_StringLiteral__init, sizeof(struct Grammar_StringLiteral_s), Grammar_Literal.value.classINFOptr);
        _declareMethods(Grammar_StringLiteral, Grammar_StringLiteral_METHODS);
        _declareProps(Grammar_StringLiteral, Grammar_StringLiteral_PROPS, sizeof Grammar_StringLiteral_PROPS);
-       Grammar_RegExpLiteral =_newClass("Grammar_RegExpLiteral", Grammar_RegExpLiteral__init, sizeof(struct Grammar_RegExpLiteral_s), Grammar_Literal.value.classINFOptr);
    
+       Grammar_RegExpLiteral =_newClass("Grammar_RegExpLiteral", Grammar_RegExpLiteral__init, sizeof(struct Grammar_RegExpLiteral_s), Grammar_Literal.value.classINFOptr);
        _declareMethods(Grammar_RegExpLiteral, Grammar_RegExpLiteral_METHODS);
        _declareProps(Grammar_RegExpLiteral, Grammar_RegExpLiteral_PROPS, sizeof Grammar_RegExpLiteral_PROPS);
-       Grammar_ArrayLiteral =_newClass("Grammar_ArrayLiteral", Grammar_ArrayLiteral__init, sizeof(struct Grammar_ArrayLiteral_s), Grammar_Literal.value.classINFOptr);
    
+       Grammar_ArrayLiteral =_newClass("Grammar_ArrayLiteral", Grammar_ArrayLiteral__init, sizeof(struct Grammar_ArrayLiteral_s), Grammar_Literal.value.classINFOptr);
        _declareMethods(Grammar_ArrayLiteral, Grammar_ArrayLiteral_METHODS);
        _declareProps(Grammar_ArrayLiteral, Grammar_ArrayLiteral_PROPS, sizeof Grammar_ArrayLiteral_PROPS);
-       Grammar_ObjectLiteral =_newClass("Grammar_ObjectLiteral", Grammar_ObjectLiteral__init, sizeof(struct Grammar_ObjectLiteral_s), Grammar_Literal.value.classINFOptr);
    
+       Grammar_ObjectLiteral =_newClass("Grammar_ObjectLiteral", Grammar_ObjectLiteral__init, sizeof(struct Grammar_ObjectLiteral_s), Grammar_Literal.value.classINFOptr);
        _declareMethods(Grammar_ObjectLiteral, Grammar_ObjectLiteral_METHODS);
        _declareProps(Grammar_ObjectLiteral, Grammar_ObjectLiteral_PROPS, sizeof Grammar_ObjectLiteral_PROPS);
-       Grammar_NameValuePair =_newClass("Grammar_NameValuePair", Grammar_NameValuePair__init, sizeof(struct Grammar_NameValuePair_s), ASTBase.value.classINFOptr);
    
+       Grammar_NameValuePair =_newClass("Grammar_NameValuePair", Grammar_NameValuePair__init, sizeof(struct Grammar_NameValuePair_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_NameValuePair, Grammar_NameValuePair_METHODS);
        _declareProps(Grammar_NameValuePair, Grammar_NameValuePair_PROPS, sizeof Grammar_NameValuePair_PROPS);
-       Grammar_FreeObjectLiteral =_newClass("Grammar_FreeObjectLiteral", Grammar_FreeObjectLiteral__init, sizeof(struct Grammar_FreeObjectLiteral_s), Grammar_ObjectLiteral.value.classINFOptr);
    
+       Grammar_FreeObjectLiteral =_newClass("Grammar_FreeObjectLiteral", Grammar_FreeObjectLiteral__init, sizeof(struct Grammar_FreeObjectLiteral_s), Grammar_ObjectLiteral.value.classINFOptr);
        _declareMethods(Grammar_FreeObjectLiteral, Grammar_FreeObjectLiteral_METHODS);
        _declareProps(Grammar_FreeObjectLiteral, Grammar_FreeObjectLiteral_PROPS, sizeof Grammar_FreeObjectLiteral_PROPS);
-       Grammar_ParenExpression =_newClass("Grammar_ParenExpression", Grammar_ParenExpression__init, sizeof(struct Grammar_ParenExpression_s), ASTBase.value.classINFOptr);
    
+       Grammar_ParenExpression =_newClass("Grammar_ParenExpression", Grammar_ParenExpression__init, sizeof(struct Grammar_ParenExpression_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ParenExpression, Grammar_ParenExpression_METHODS);
        _declareProps(Grammar_ParenExpression, Grammar_ParenExpression_PROPS, sizeof Grammar_ParenExpression_PROPS);
-       Grammar_FunctionDeclaration =_newClass("Grammar_FunctionDeclaration", Grammar_FunctionDeclaration__init, sizeof(struct Grammar_FunctionDeclaration_s), ASTBase.value.classINFOptr);
    
+       Grammar_FunctionDeclaration =_newClass("Grammar_FunctionDeclaration", Grammar_FunctionDeclaration__init, sizeof(struct Grammar_FunctionDeclaration_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_FunctionDeclaration, Grammar_FunctionDeclaration_METHODS);
        _declareProps(Grammar_FunctionDeclaration, Grammar_FunctionDeclaration_PROPS, sizeof Grammar_FunctionDeclaration_PROPS);
-       Grammar_DefinePropertyItem =_newClass("Grammar_DefinePropertyItem", Grammar_DefinePropertyItem__init, sizeof(struct Grammar_DefinePropertyItem_s), ASTBase.value.classINFOptr);
    
+       Grammar_DefinePropertyItem =_newClass("Grammar_DefinePropertyItem", Grammar_DefinePropertyItem__init, sizeof(struct Grammar_DefinePropertyItem_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_DefinePropertyItem, Grammar_DefinePropertyItem_METHODS);
        _declareProps(Grammar_DefinePropertyItem, Grammar_DefinePropertyItem_PROPS, sizeof Grammar_DefinePropertyItem_PROPS);
-       Grammar_MethodDeclaration =_newClass("Grammar_MethodDeclaration", Grammar_MethodDeclaration__init, sizeof(struct Grammar_MethodDeclaration_s), Grammar_FunctionDeclaration.value.classINFOptr);
    
+       Grammar_MethodDeclaration =_newClass("Grammar_MethodDeclaration", Grammar_MethodDeclaration__init, sizeof(struct Grammar_MethodDeclaration_s), Grammar_FunctionDeclaration.value.classINFOptr);
        _declareMethods(Grammar_MethodDeclaration, Grammar_MethodDeclaration_METHODS);
        _declareProps(Grammar_MethodDeclaration, Grammar_MethodDeclaration_PROPS, sizeof Grammar_MethodDeclaration_PROPS);
-       Grammar_ClassDeclaration =_newClass("Grammar_ClassDeclaration", Grammar_ClassDeclaration__init, sizeof(struct Grammar_ClassDeclaration_s), ASTBase.value.classINFOptr);
    
+       Grammar_ClassDeclaration =_newClass("Grammar_ClassDeclaration", Grammar_ClassDeclaration__init, sizeof(struct Grammar_ClassDeclaration_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ClassDeclaration, Grammar_ClassDeclaration_METHODS);
        _declareProps(Grammar_ClassDeclaration, Grammar_ClassDeclaration_PROPS, sizeof Grammar_ClassDeclaration_PROPS);
-       Grammar_ConstructorDeclaration =_newClass("Grammar_ConstructorDeclaration", Grammar_ConstructorDeclaration__init, sizeof(struct Grammar_ConstructorDeclaration_s), Grammar_MethodDeclaration.value.classINFOptr);
    
+       Grammar_ConstructorDeclaration =_newClass("Grammar_ConstructorDeclaration", Grammar_ConstructorDeclaration__init, sizeof(struct Grammar_ConstructorDeclaration_s), Grammar_MethodDeclaration.value.classINFOptr);
        _declareMethods(Grammar_ConstructorDeclaration, Grammar_ConstructorDeclaration_METHODS);
        _declareProps(Grammar_ConstructorDeclaration, Grammar_ConstructorDeclaration_PROPS, sizeof Grammar_ConstructorDeclaration_PROPS);
-       Grammar_AppendToDeclaration =_newClass("Grammar_AppendToDeclaration", Grammar_AppendToDeclaration__init, sizeof(struct Grammar_AppendToDeclaration_s), Grammar_ClassDeclaration.value.classINFOptr);
    
+       Grammar_AppendToDeclaration =_newClass("Grammar_AppendToDeclaration", Grammar_AppendToDeclaration__init, sizeof(struct Grammar_AppendToDeclaration_s), Grammar_ClassDeclaration.value.classINFOptr);
        _declareMethods(Grammar_AppendToDeclaration, Grammar_AppendToDeclaration_METHODS);
        _declareProps(Grammar_AppendToDeclaration, Grammar_AppendToDeclaration_PROPS, sizeof Grammar_AppendToDeclaration_PROPS);
-       Grammar_NamespaceDeclaration =_newClass("Grammar_NamespaceDeclaration", Grammar_NamespaceDeclaration__init, sizeof(struct Grammar_NamespaceDeclaration_s), Grammar_ClassDeclaration.value.classINFOptr);
    
+       Grammar_NamespaceDeclaration =_newClass("Grammar_NamespaceDeclaration", Grammar_NamespaceDeclaration__init, sizeof(struct Grammar_NamespaceDeclaration_s), Grammar_ClassDeclaration.value.classINFOptr);
        _declareMethods(Grammar_NamespaceDeclaration, Grammar_NamespaceDeclaration_METHODS);
        _declareProps(Grammar_NamespaceDeclaration, Grammar_NamespaceDeclaration_PROPS, sizeof Grammar_NamespaceDeclaration_PROPS);
-       Grammar_DebuggerStatement =_newClass("Grammar_DebuggerStatement", Grammar_DebuggerStatement__init, sizeof(struct Grammar_DebuggerStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_DebuggerStatement =_newClass("Grammar_DebuggerStatement", Grammar_DebuggerStatement__init, sizeof(struct Grammar_DebuggerStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_DebuggerStatement, Grammar_DebuggerStatement_METHODS);
        _declareProps(Grammar_DebuggerStatement, Grammar_DebuggerStatement_PROPS, sizeof Grammar_DebuggerStatement_PROPS);
-       Grammar_CompilerStatement =_newClass("Grammar_CompilerStatement", Grammar_CompilerStatement__init, sizeof(struct Grammar_CompilerStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_CompilerStatement =_newClass("Grammar_CompilerStatement", Grammar_CompilerStatement__init, sizeof(struct Grammar_CompilerStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_CompilerStatement, Grammar_CompilerStatement_METHODS);
        _declareProps(Grammar_CompilerStatement, Grammar_CompilerStatement_PROPS, sizeof Grammar_CompilerStatement_PROPS);
-       Grammar_ImportStatement =_newClass("Grammar_ImportStatement", Grammar_ImportStatement__init, sizeof(struct Grammar_ImportStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_ImportStatement =_newClass("Grammar_ImportStatement", Grammar_ImportStatement__init, sizeof(struct Grammar_ImportStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ImportStatement, Grammar_ImportStatement_METHODS);
        _declareProps(Grammar_ImportStatement, Grammar_ImportStatement_PROPS, sizeof Grammar_ImportStatement_PROPS);
-       Grammar_ImportStatementItem =_newClass("Grammar_ImportStatementItem", Grammar_ImportStatementItem__init, sizeof(struct Grammar_ImportStatementItem_s), ASTBase.value.classINFOptr);
    
+       Grammar_ImportStatementItem =_newClass("Grammar_ImportStatementItem", Grammar_ImportStatementItem__init, sizeof(struct Grammar_ImportStatementItem_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_ImportStatementItem, Grammar_ImportStatementItem_METHODS);
        _declareProps(Grammar_ImportStatementItem, Grammar_ImportStatementItem_PROPS, sizeof Grammar_ImportStatementItem_PROPS);
-       Grammar_DeclareStatement =_newClass("Grammar_DeclareStatement", Grammar_DeclareStatement__init, sizeof(struct Grammar_DeclareStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_DeclareStatement =_newClass("Grammar_DeclareStatement", Grammar_DeclareStatement__init, sizeof(struct Grammar_DeclareStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_DeclareStatement, Grammar_DeclareStatement_METHODS);
        _declareProps(Grammar_DeclareStatement, Grammar_DeclareStatement_PROPS, sizeof Grammar_DeclareStatement_PROPS);
-       Grammar_DefaultAssignment =_newClass("Grammar_DefaultAssignment", Grammar_DefaultAssignment__init, sizeof(struct Grammar_DefaultAssignment_s), ASTBase.value.classINFOptr);
    
+       Grammar_DefaultAssignment =_newClass("Grammar_DefaultAssignment", Grammar_DefaultAssignment__init, sizeof(struct Grammar_DefaultAssignment_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_DefaultAssignment, Grammar_DefaultAssignment_METHODS);
        _declareProps(Grammar_DefaultAssignment, Grammar_DefaultAssignment_PROPS, sizeof Grammar_DefaultAssignment_PROPS);
-       Grammar_EndStatement =_newClass("Grammar_EndStatement", Grammar_EndStatement__init, sizeof(struct Grammar_EndStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_EndStatement =_newClass("Grammar_EndStatement", Grammar_EndStatement__init, sizeof(struct Grammar_EndStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_EndStatement, Grammar_EndStatement_METHODS);
        _declareProps(Grammar_EndStatement, Grammar_EndStatement_PROPS, sizeof Grammar_EndStatement_PROPS);
-       Grammar_YieldExpression =_newClass("Grammar_YieldExpression", Grammar_YieldExpression__init, sizeof(struct Grammar_YieldExpression_s), ASTBase.value.classINFOptr);
    
+       Grammar_YieldExpression =_newClass("Grammar_YieldExpression", Grammar_YieldExpression__init, sizeof(struct Grammar_YieldExpression_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_YieldExpression, Grammar_YieldExpression_METHODS);
        _declareProps(Grammar_YieldExpression, Grammar_YieldExpression_PROPS, sizeof Grammar_YieldExpression_PROPS);
-       Grammar_FunctionCall =_newClass("Grammar_FunctionCall", Grammar_FunctionCall__init, sizeof(struct Grammar_FunctionCall_s), ASTBase.value.classINFOptr);
    
+       Grammar_FunctionCall =_newClass("Grammar_FunctionCall", Grammar_FunctionCall__init, sizeof(struct Grammar_FunctionCall_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_FunctionCall, Grammar_FunctionCall_METHODS);
        _declareProps(Grammar_FunctionCall, Grammar_FunctionCall_PROPS, sizeof Grammar_FunctionCall_PROPS);
-       Grammar_SwitchStatement =_newClass("Grammar_SwitchStatement", Grammar_SwitchStatement__init, sizeof(struct Grammar_SwitchStatement_s), ASTBase.value.classINFOptr);
    
+       Grammar_SwitchStatement =_newClass("Grammar_SwitchStatement", Grammar_SwitchStatement__init, sizeof(struct Grammar_SwitchStatement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_SwitchStatement, Grammar_SwitchStatement_METHODS);
        _declareProps(Grammar_SwitchStatement, Grammar_SwitchStatement_PROPS, sizeof Grammar_SwitchStatement_PROPS);
-       Grammar_SwitchCase =_newClass("Grammar_SwitchCase", Grammar_SwitchCase__init, sizeof(struct Grammar_SwitchCase_s), ASTBase.value.classINFOptr);
    
+       Grammar_SwitchCase =_newClass("Grammar_SwitchCase", Grammar_SwitchCase__init, sizeof(struct Grammar_SwitchCase_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_SwitchCase, Grammar_SwitchCase_METHODS);
        _declareProps(Grammar_SwitchCase, Grammar_SwitchCase_PROPS, sizeof Grammar_SwitchCase_PROPS);
-       Grammar_CaseWhenExpression =_newClass("Grammar_CaseWhenExpression", Grammar_CaseWhenExpression__init, sizeof(struct Grammar_CaseWhenExpression_s), ASTBase.value.classINFOptr);
    
+       Grammar_CaseWhenExpression =_newClass("Grammar_CaseWhenExpression", Grammar_CaseWhenExpression__init, sizeof(struct Grammar_CaseWhenExpression_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_CaseWhenExpression, Grammar_CaseWhenExpression_METHODS);
        _declareProps(Grammar_CaseWhenExpression, Grammar_CaseWhenExpression_PROPS, sizeof Grammar_CaseWhenExpression_PROPS);
-       Grammar_CaseWhenSection =_newClass("Grammar_CaseWhenSection", Grammar_CaseWhenSection__init, sizeof(struct Grammar_CaseWhenSection_s), ASTBase.value.classINFOptr);
    
+       Grammar_CaseWhenSection =_newClass("Grammar_CaseWhenSection", Grammar_CaseWhenSection__init, sizeof(struct Grammar_CaseWhenSection_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_CaseWhenSection, Grammar_CaseWhenSection_METHODS);
        _declareProps(Grammar_CaseWhenSection, Grammar_CaseWhenSection_PROPS, sizeof Grammar_CaseWhenSection_PROPS);
-       Grammar_Statement =_newClass("Grammar_Statement", Grammar_Statement__init, sizeof(struct Grammar_Statement_s), ASTBase.value.classINFOptr);
    
+       Grammar_Statement =_newClass("Grammar_Statement", Grammar_Statement__init, sizeof(struct Grammar_Statement_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_Statement, Grammar_Statement_METHODS);
        _declareProps(Grammar_Statement, Grammar_Statement_PROPS, sizeof Grammar_Statement_PROPS);
-       Grammar_Body =_newClass("Grammar_Body", Grammar_Body__init, sizeof(struct Grammar_Body_s), ASTBase.value.classINFOptr);
    
+       Grammar_Body =_newClass("Grammar_Body", Grammar_Body__init, sizeof(struct Grammar_Body_s), ASTBase.value.classINFOptr);
        _declareMethods(Grammar_Body, Grammar_Body_METHODS);
        _declareProps(Grammar_Body, Grammar_Body_PROPS, sizeof Grammar_Body_PROPS);
-       Grammar_SingleLineBody =_newClass("Grammar_SingleLineBody", Grammar_SingleLineBody__init, sizeof(struct Grammar_SingleLineBody_s), Grammar_Body.value.classINFOptr);
    
+       Grammar_SingleLineBody =_newClass("Grammar_SingleLineBody", Grammar_SingleLineBody__init, sizeof(struct Grammar_SingleLineBody_s), Grammar_Body.value.classINFOptr);
        _declareMethods(Grammar_SingleLineBody, Grammar_SingleLineBody_METHODS);
        _declareProps(Grammar_SingleLineBody, Grammar_SingleLineBody_PROPS, sizeof Grammar_SingleLineBody_PROPS);
-       Grammar_Module =_newClass("Grammar_Module", Grammar_Module__init, sizeof(struct Grammar_Module_s), Grammar_Body.value.classINFOptr);
    
+       Grammar_Module =_newClass("Grammar_Module", Grammar_Module__init, sizeof(struct Grammar_Module_s), Grammar_Body.value.classINFOptr);
        _declareMethods(Grammar_Module, Grammar_Module_METHODS);
        _declareProps(Grammar_Module, Grammar_Module_PROPS, sizeof Grammar_Module_PROPS);
+   
+    Grammar_RESERVED_WORDS = new(Array,73,(any_arr){any_str("namespace"), any_str("function"), any_str("async"), any_str("class"), any_str("method"), any_str("if"), any_str("then"), any_str("else"), any_str("switch"), any_str("when"), any_str("case"), any_str("end"), any_str("null"), any_str("true"), any_str("false"), any_str("undefined"), any_str("and"), any_str("or"), any_str("but"), any_str("no"), any_str("not"), any_str("has"), any_str("hasnt"), any_str("property"), any_str("properties"), any_str("new"), any_str("is"), any_str("isnt"), any_str("prototype"), any_str("do"), any_str("loop"), any_str("while"), any_str("until"), any_str("for"), any_str("to"), any_str("break"), any_str("continue"), any_str("return"), any_str("try"), any_str("catch"), any_str("throw"), any_str("raise"), any_str("fail"), any_str("exception"), any_str("finally"), any_str("with"), any_str("arguments"), any_str("in"), any_str("instanceof"), any_str("typeof"), any_str("var"), any_str("let"), any_str("default"), any_str("delete"), any_str("interface"), any_str("implements"), any_str("yield"), any_str("like"), any_str("this"), any_str("super"), any_str("export"), any_str("compiler"), any_str("compile"), any_str("debugger"), any_str("char"), any_str("short"), any_str("long"), any_str("int"), any_str("unsigned"), any_str("void"), any_str("NULL"), any_str("bool"), any_str("assert")});
+    Grammar_operatorsPrecedence = new(Array,36,(any_arr){any_str("++"), any_str("--"), any_str("unary -"), any_str("unary +"), any_str("~"), any_str("&"), any_str("^"), any_str("|"), any_str(">>"), any_str("<<"), any_str("new"), any_str("type of"), any_str("instance of"), any_str("has property"), any_str("*"), any_str("/"), any_str("%"), any_str("+"), any_str("-"), any_str("into"), any_str("in"), any_str(">"), any_str("<"), any_str(">="), any_str("<="), any_str("is"), any_str("<>"), any_str("!=="), any_str("like"), any_str("no"), any_str("not"), any_str("and"), any_str("but"), any_str("or"), any_str("?"), any_str(":")});
+    Grammar_OPERAND_DIRECT_TYPE = new(Map,4,(any_arr){
+         _newPair("STRING",Grammar_StringLiteral), 
+         _newPair("NUMBER",Grammar_NumberLiteral), 
+         _newPair("REGEX",Grammar_RegExpLiteral), 
+         _newPair("SPACE_BRACKET",Grammar_ArrayLiteral)
+         })
+;
+    Grammar_OPERAND_DIRECT_TOKEN = new(Map,7,(any_arr){
+         _newPair("(",Grammar_ParenExpression), 
+         _newPair("[",Grammar_ArrayLiteral), 
+         _newPair("{",Grammar_ObjectLiteral), 
+         _newPair("function",Grammar_FunctionDeclaration), 
+         _newPair("->",Grammar_FunctionDeclaration), 
+         _newPair("case",Grammar_CaseWhenExpression), 
+         _newPair("yield",Grammar_YieldExpression)
+         })
+;
+    Grammar_unaryOperators = new(Array,8,(any_arr){any_str("new"), any_str("-"), any_str("no"), any_str("not"), any_str("type"), any_str("typeof"), any_str("~"), any_str("+")});
+    Grammar_StatementsDirect = new(Map,38,(any_arr){
+     _newPair("class",Grammar_ClassDeclaration), 
+     _newPair("Class",Grammar_ClassDeclaration), 
+     _newPair("append",Grammar_AppendToDeclaration), 
+     _newPair("Append",Grammar_AppendToDeclaration), 
+     _newPair("function",Grammar_FunctionDeclaration), 
+     _newPair("constructor",Grammar_ConstructorDeclaration), 
+     _newPair("properties",Grammar_PropertiesDeclaration), 
+     _newPair("namespace",Grammar_NamespaceDeclaration), 
+     _newPair("method",Grammar_MethodDeclaration), 
+     _newPair("var",Grammar_VarStatement), 
+     _newPair("let",Grammar_VarStatement), 
+     _newPair("default",Grammar_DefaultAssignment), 
+     _newPair("if",Grammar_IfStatement), 
+     _newPair("when",Grammar_IfStatement), 
+     _newPair("for",Grammar_ForStatement), 
+     _newPair("while",Grammar_WhileUntilLoop), 
+     _newPair("until",Grammar_WhileUntilLoop), 
+     _newPair("do",new(Array,2,(any_arr){Grammar_DoNothingStatement, Grammar_DoLoop})), 
+     _newPair("break",Grammar_LoopControlStatement), 
+     _newPair("switch",Grammar_SwitchStatement), 
+     _newPair("continue",Grammar_LoopControlStatement), 
+     _newPair("end",Grammar_EndStatement), 
+     _newPair("return",Grammar_ReturnStatement), 
+     _newPair("with",Grammar_WithStatement), 
+     _newPair("print",Grammar_PrintStatement), 
+     _newPair("throw",Grammar_ThrowStatement), 
+     _newPair("raise",Grammar_ThrowStatement), 
+     _newPair("fail",Grammar_ThrowStatement), 
+     _newPair("try",Grammar_TryCatch), 
+     _newPair("exception",Grammar_ExceptionBlock), 
+     _newPair("Exception",Grammar_ExceptionBlock), 
+     _newPair("debugger",Grammar_DebuggerStatement), 
+     _newPair("declare",Grammar_DeclareStatement), 
+     _newPair("import",Grammar_ImportStatement), 
+     _newPair("delete",Grammar_DeleteStatement), 
+     _newPair("compile",Grammar_CompilerStatement), 
+     _newPair("compiler",Grammar_CompilerStatement), 
+     _newPair("yield",Grammar_YieldExpression)
+     })
+;
+    Grammar_AccessorsDirect = new(Map,3,(any_arr){
+       _newPair(".",Grammar_PropertyAccess), 
+       _newPair("[",Grammar_IndexAccess), 
+       _newPair("(",Grammar_FunctionAccess)
+       })
+;
    
 };

@@ -30,9 +30,11 @@
     , file_
     };
    
-   // logger_LogOptions
    
-   any logger_LogOptions; //Class Object
+
+//--------------
+   // logger_LogOptions
+   any logger_LogOptions; //Class logger_LogOptions
    //auto logger_LogOptions__init
    void logger_LogOptions__init(any this, len_t argc, any* arguments){
        PROP(verboseLevel_,this)=any_number(1);
@@ -42,9 +44,11 @@
    };
        // properties
        ;
-   // logger_LogOptionsDebug
    
-   any logger_LogOptionsDebug; //Class Object
+
+//--------------
+   // logger_LogOptionsDebug
+   any logger_LogOptionsDebug; //Class logger_LogOptionsDebug
    //auto logger_LogOptionsDebug__init
    void logger_LogOptionsDebug__init(any this, len_t argc, any* arguments){
        PROP(enabled_,this)=false;
@@ -68,16 +72,44 @@
 
            // var args = arguments.toArray()
            var args = _newArray(argc,arguments);
+
+            //ifdef PROD_C
+           // console.error.apply undefined,args
+           __applyArr(any_func(console_error),undefined,args);
+       };
+    return undefined;
+    }
+            //else
+            //if options.debug.file
+                //fs.appendFileSync options.debug.file, '#{args.join(" ")}\r\n'
+            //else
+                //console.error.apply undefined,args
+            //endif
+
+
+    // method debugGroup
+    any logger_debugGroup(DEFAULT_ARGUMENTS){
+
+       // if logger.options.debugOptions.enabled
+       if (_anyToBool(PROP(enabled_,PROP(debugOptions_,logger_options))))  {
+           // console.error.apply undefined,arguments
+           __applyArr(any_func(console_error),undefined,_newArray(argc,arguments));
+           // console.group.apply undefined,arguments
+           __applyArr(any_func(console_group),undefined,_newArray(argc,arguments));
        };
     return undefined;
     }
 
-            //ifndef PROD_C
-            //if options.debug.file
-                //fs.appendFileSync options.debug.file, args.join(" ")+"\r\n"
-            //else
-                //console.log.apply undefined,args
-            //endif
+    // method debugGroupEnd
+    any logger_debugGroupEnd(DEFAULT_ARGUMENTS){
+
+       // if logger.options.debugOptions.enabled
+       if (_anyToBool(PROP(enabled_,PROP(debugOptions_,logger_options))))  {
+           // console.groupEnd
+           console_groupEnd(undefined,0,NULL);
+       };
+    return undefined;
+    }
 
     // method debugClear ### clear debug file
     any logger_debugClear(DEFAULT_ARGUMENTS){
@@ -233,12 +265,11 @@
        // var result = logger.messages
        var result = logger_messages;
        // logger.messages =[]
-       logger_messages = _newArray(0,NULL);
+       logger_messages = new(Array,0,NULL);
        // return result
        return result;
     return undefined;
     }
-
 
 
     // method throwControlled(msg)
@@ -258,22 +289,22 @@
    
    //------------------
    void logger__namespaceInit(void){
-    logger_options = new(logger_LogOptions,0,NULL);
-    logger_errorCount = any_number(0);
-    logger_warningCount = any_number(0);
-    logger_messages = _newArray(0,NULL);
+        logger_options = new(logger_LogOptions,0,NULL);
+        logger_errorCount = any_number(0);
+        logger_warningCount = any_number(0);
+        logger_messages = new(Array,0,NULL);
     ;};
    
 
 //-------------------------
 void logger__moduleInit(void){
        logger_LogOptions =_newClass("logger_LogOptions", logger_LogOptions__init, sizeof(struct logger_LogOptions_s), Object.value.classINFOptr);
-   
        _declareMethods(logger_LogOptions, logger_LogOptions_METHODS);
        _declareProps(logger_LogOptions, logger_LogOptions_PROPS, sizeof logger_LogOptions_PROPS);
-       logger_LogOptionsDebug =_newClass("logger_LogOptionsDebug", logger_LogOptionsDebug__init, sizeof(struct logger_LogOptionsDebug_s), Object.value.classINFOptr);
    
+       logger_LogOptionsDebug =_newClass("logger_LogOptionsDebug", logger_LogOptionsDebug__init, sizeof(struct logger_LogOptionsDebug_s), Object.value.classINFOptr);
        _declareMethods(logger_LogOptionsDebug, logger_LogOptionsDebug_METHODS);
        _declareProps(logger_LogOptionsDebug, logger_LogOptionsDebug_PROPS, sizeof logger_LogOptionsDebug_PROPS);
-    logger__namespaceInit();
+   
+       logger__namespaceInit();
 };

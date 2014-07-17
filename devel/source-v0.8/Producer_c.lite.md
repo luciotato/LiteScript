@@ -57,7 +57,7 @@ Method get a trailing "_" if they're a C reserved word
 
 create _dispatcher.c & .h
 
-        dispatcherModule = new Grammar.Module(project)
+        dispatcherModule = new Grammar.Module()
         declare valid project.options
         dispatcherModule.lexer = new Parser.Lexer(project, project.options)
 
@@ -169,6 +169,13 @@ all  distinct property names
             {pre:'    "', CSL:allPropertyNames.keys(), post:'"\n'}
             '};',NL,NL
 
+All literal Maps & arrays
+
+        /*for each nameDecl in map .scope.members
+            where nameDecl.nodeDeclared instanceof Grammar.Literal
+                .out nameDecl,";",NL
+        */
+
 _dispatcher.c contains main function
 
         .out 
@@ -270,6 +277,41 @@ __moduleInit: module main function
             "\n\n//-------------------------",NL
             "void ",prefix,"__moduleInit(void){",NL
 
+        /*
+        for each nameDecl in map .scope.members
+
+            if nameDecl.nodeDeclared instanceof Grammar.ObjectLiteral
+
+                .out nameDecl, "=new(Map,"
+
+                var objectLiteral = nameDecl.nodeDeclared
+                if no objectLiteral.items or objectLiteral.items.length is 0
+                    .out "0,NULL"
+                else
+                    .out 
+                        objectLiteral.items.length,',(any_arr){'
+                        {CSL:objectLiteral.items}
+                        NL,"}"
+                
+                .out ");",NL
+
+            else if nameDecl.nodeDeclared instanceof Grammar.ArrayLiteral
+
+                .out nameDecl,"=new(Array,"
+
+                var arrayLiteral = nameDecl.nodeDeclared
+                if no arrayLiteral.items or arrayLiteral.items.length is 0
+                    .out "0,NULL"
+                else
+                    // e.g.: LiteScript:   var list = [a,b,c]
+                    // e.g.: "C": any list = (any){Array_TYPEID,.value.arr=&(Array_s){3,.item=(any_arr){a,b,c}}};
+                    .out arrayLiteral.items.length,",(any_arr){",{CSL:arrayLiteral.items},"}"
+
+                .out ");",NL
+
+        end for
+        */
+
         .produceMainFunctionBody prefix
 
         if .fileInfo.isInterface // add call to native hand-coded C support for this module 
@@ -307,19 +349,28 @@ Append-to body contains properties and methods definitions.
                 return //nothing more to do if it's "append to namespace"
 
 handle methods added to core classes
-        
+
         if nameDeclClass.nodeDeclared and nameDeclClass.nodeDeclared.name is "*Global Scope*"
-            // is append to a core class
+
+for each method declaration in .body
+
             for each item in .body.statements
                 where item.specific.constructor is Grammar.MethodDeclaration 
                     declare item.specific: Grammar.MethodDeclaration 
-                    if no item.specific.nameDecl, continue //shim
-                    // keep a list of all methods appended to core-defined classes (like String)
-                    // they require a special registration, because the class pre-exists in core
+
+                    if no item.specific.nameDecl, continue // do not process, is a shim
+
+keep a list of all methods appended to core-defined classes (like String)
+they require a special registration, because the class pre-exists in core
+
                     appendToCoreClassMethods.push item.specific
-                    //also add to allMethods, since the class is core, is not declared in this project
+
+also add to allMethods, since the class is core, is not declared in this project
+
                     item.specific.nameDecl.addToAllMethodNames
-                    // out header
+
+out header
+
                     .out 'extern any ',item.specific.nameDecl.getComposedName(),"(DEFAULT_ARGUMENTS);",NL                            
 
 
@@ -332,8 +383,10 @@ handle methods added to core classes
 
 
 ### Append to class Grammar.NamespaceDeclaration ###
-
 namespaces are like modules inside modules
+
+#### method produceCallNamespaceInit()
+        .out '    ',.makeName(),'__namespaceInit();',NL
 
 #### method makeName()
 
@@ -373,9 +426,9 @@ all namespace methods & props are public
         var namespaceMethods=[]
         for each member in map .nameDecl.members
             where member.name not in ['constructor','length','prototype']
-                if member.isProperty()
+                if member.isProperty
                     .out '    extern var ',prefix,'_',member.name,';',NL
-                else if member.isMethod()
+                else if member.isMethod
                     .out '    extern any ',prefix,'_',member.name,'(DEFAULT_ARGUMENTS);',NL
             
          // recurse, add internal classes and namespaces
@@ -425,68 +478,58 @@ __namespaceInit function
 
 header
 
-        .out 
-            "\n\n//--------------",NL
-            {COMMENT:c} 
-            .varRefSuper? [' extends ',.varRefSuper,NL] else '', NL
-            NL
-            "extern any ",c,"; //Class Object",NL,NL
+        .outClassTitleComment c
 
 In C we create a struct for "instance properties" of each class 
 
-        // declare struct
         .out 
             "typedef struct ",c,"_s * ",c,"_ptr;",NL
             "typedef struct ",c,"_s {",NL
 
-        // add each prop
-        var count=0
+out all properties, from the start of the "super-extends" chain
+
+        .nameDecl.outSuperChainProps this
+
+close instance struct
+
+        .out NL,"} ",c,"_s;",NL,NL
+
+and declare extern for class __init
+
+        //declare extern for this class methods
+        .out "extern void ",c,"__init(DEFAULT_ARGUMENTS);",NL
+
+
+add each prop to "all properties list", each method to "all methods list"
+and declare extern for each class method
+
         var classMethods=[]
 
         var prt = .nameDecl.findOwnMember('prototype')
         for each prtNameDecl in map prt.members
             where prtNameDecl.name not in ['constructor','length','prototype']
-                if prtNameDecl.isProperty()
+                if prtNameDecl.isProperty
+                    // keep a list of all classes props
                     prtNameDecl.addToAllProperties
-                    if count
-                        .out ',',NL
-                    else
-                        .out '    any',NL
-
-                    .out '        ',prtNameDecl.name
-                    count++
-
                 else
-                    // list of this class methods
-                    classMethods.push prtNameDecl.name
-
                     // keep a list of all classes methods
                     prtNameDecl.addToAllMethodNames 
 
-
-        if count, .out NL,';'
-        .out NL,"} ",c,"_s;",NL,NL
-
-        .out "extern void ",c,"__init(DEFAULT_ARGUMENTS);",NL
-
-        //declare extern for this class methods
-        for each methodName in classMethods
-            .out "extern any ",c,"_",methodName,"(DEFAULT_ARGUMENTS);",NL
+                    //declare extern for this class methods
+                    .out "extern any ",c,"_",prtNameDecl.name,"(DEFAULT_ARGUMENTS);",NL
 
 
 #### method produce()
 
         if no .nameDecl, return //shim class
 
-        var c = .nameDecl.getComposedName()
-
         //logger.debug "produce body class",c
 
 this is the class body, goes on the .c file,
 
-        .out 
-            {COMMENT:c},NL,NL
-            'any #{c}; //Class Object',NL
+        var c = .nameDecl.getComposedName()
+
+        .outClassTitleComment c
 
         var hasConstructor: boolean
         for each index,item in .body.statements
@@ -513,15 +556,29 @@ default constructor
             // end default constructor
             .out "};",NL
 
-        .body.produce
+produce class body
 
+        .body.produce
         .skipSemiColon = true
+
+
+-------------------------------------
+#### helper method outClassTitleComment(c:string)
+
+        .out 
+            "\n\n//--------------",NL
+            {COMMENT:c},NL
+            'any #{c}; //Class ',c
+            .varRefSuper? [' extends ',.varRefSuper,NL] else '', NL
 
 
 -------------------------------------
 #### method produceStaticListMethodsAndProps
 
 static definition info for each class: list of _METHODS and _PROPS
+
+        //skip NamespaceDeclaration & AppendToDeclaration (both derived from ClassDeclaration)
+        if .constructor isnt Grammar.ClassDeclaration, return 
 
         var c = .nameDecl.getComposedName()
 
@@ -536,7 +593,7 @@ static definition info for each class: list of _METHODS and _PROPS
         var prt = .nameDecl.findOwnMember('prototype')
         for each nameDecl in map prt.members
             where nameDecl.name not in ['constructor','length','prototype']
-                if nameDecl.isMethod()
+                if nameDecl.isMethod
                     .out '  { #{makeSymbolName(nameDecl.name)}, #{c}_#{nameDecl.name} },',NL
                 else
                     propList.push makeSymbolName(nameDecl.name)
@@ -550,21 +607,36 @@ static definition info for each class: list of _METHODS and _PROPS
 
 #### method produceClassRegistration
 
+        //skip NamespaceDeclaration & AppendToDeclaration (both derived from ClassDeclaration)
+        if .constructor isnt Grammar.ClassDeclaration, return 
+
         var c = .nameDecl.getComposedName()
-        var superClass
-        if .varRefSuper
-            superClass = .varRefSuper.tryGetReference()
-            if no superClass, .throwError "cannot get a reference to #{.varRefSuper}"
-            superClass = superClass.getComposedName()
-        else
-            superClass = "Object"
+
+        var superName = .nameDecl.superDecl? .nameDecl.superDecl.getComposedName() else 'Object' 
 
         .out 
-            '    #{c} =_newClass("#{c}", #{c}__init, sizeof(struct #{c}_s), #{superClass}.value.classINFOptr);',NL,NL
+            '    #{c} =_newClass("#{c}", #{c}__init, sizeof(struct #{c}_s), #{superName}.value.classINFOptr);',NL
             '    _declareMethods(#{c}, #{c}_METHODS);',NL
-            '    _declareProps(#{c}, #{c}_PROPS, sizeof #{c}_PROPS);',NL
+            '    _declareProps(#{c}, #{c}_PROPS, sizeof #{c}_PROPS);',NL,NL
 
 -------------------------------------
+### Append to class Names.Declaration
+#### method outSuperChainProps(node:Grammar.ClassDeclaration) #recursive
+
+out all properties of a class, including those of the super's-chain
+
+        if .superDecl, .superDecl.outSuperChainProps node #recurse
+
+        node.out '    //',.name,NL
+        var prt = .ownMember('prototype')
+        if no prt, .sayErr "class #{.name} has no prototype"
+
+        for each prtNameDecl in map prt.members
+            where prtNameDecl.name not in ['constructor','length','prototype']
+                if prtNameDecl.isProperty
+                    node.out '    any ',prtNameDecl.name,";",NL
+
+
 
 ### Append to class Grammar.Body 
 
@@ -645,6 +717,10 @@ produce body sustance: vars & other functions declarations
                 declare item.specific:Grammar.NamespaceDeclaration
                 produceSecond.push item.specific #recurses
 
+            else if item.specific.constructor is Grammar.AppendToDeclaration
+                item.specific.callOnSubTree 'produceStaticListMethodsAndProps' //if there are internal classes
+                produceThird.push item
+
             else if item.isDeclaration()
                 produceThird.push item
         
@@ -659,32 +735,25 @@ produce body sustance: vars & other functions declarations
 
 #### method produceMainFunctionBody(prefix)
 
-assign values for module vars.
-if there is var or properties with assigned values, produce those assignment
+First: register user classes
+
+        .callOnSubTree 'produceClassRegistration'
+
+Second: recurse for namespaces 
+
+        .callOnSubTree 'produceCallNamespaceInit'
+
+Third: assign values for module vars.
+if there is var or properties with assigned values, produce those assignment.
+User classes must be registered previously, in case the module vars use them as initial values.
 
         for each item in .statements 
             where item.specific instanceof Grammar.VarDeclList //for modules:VarStatement, for Namespaces: PropertiesDeclaration
                 declare item.specific:Grammar.VarDeclList
                 for each variableDecl in item.specific.list
                     where variableDecl.assignedValue
-                        .out prefix,'_',variableDecl.name,' = ', variableDecl.assignedValue,";",NL
+                        .out '    ',prefix,'_',variableDecl.name,' = ', variableDecl.assignedValue,";",NL
 
-        for each item in .statements
-
-register user classes
-
-            if item.specific.constructor is Grammar.ClassDeclaration
-                declare item.specific:Grammar.ClassDeclaration
-                item.specific.produceClassRegistration
-
-recurse for namespaces 
-
-            else if item.specific.constructor is Grammar.NamespaceDeclaration
-                declare item.specific:Grammar.NamespaceDeclaration
-                #call namespaceInit
-                .out '    ',item.specific.makeName(),'__namespaceInit();',NL
-
-        end for
 
         // all other loose statements in module body
         .produceLooseExecutableStatements()
@@ -805,11 +874,24 @@ called above, pre-declare vars from 'into var x' assignment-expression
 we need to unwind try-catch blocks, to calculate to which active exception frame
 we're "returning" to
 
-        var countTryBlocks=0
-        var node=this
-        while node.getParent(Grammar.TryCatch) into node //includes catch & finally (parts of try)
-            countTryBlocks++
-        
+        var countTryBlocks = 0
+        var node:ASTBase = this.parent
+        do until node instance of Grammar.FunctionDeclaration
+
+            if node.constructor is Grammar.TryCatch
+                //a return inside a "TryCatch" block
+                countTryBlocks++ //we need to explicitly unwind
+
+            node = node.parent
+        loop 
+
+we reached function header here.
+if the function had a ExceptionBlock, we need to unwind
+because an auto "try{" is inserted at function start
+
+        declare node:Grammar.FunctionDeclaration
+        if node.hasExceptionBlock, countTryBlocks++ 
+
         if countTryBlocks
             .out "{e4c_exitTry(",countTryBlocks,");"
 
@@ -910,9 +992,6 @@ Examples:
 5) `no`      *'falsey' check*       `if no options then options={}` 
 6) `~`       *bit-unary-negation*   `a = ~xC0 + 5`
 
-      properties
-        produceType: string 
-
       method produce() 
         
         var translated = operTranslate(.name)
@@ -1004,12 +1083,17 @@ example: `char not in myString` -> `indexOf(char,myString)==-1`
 
         switch .name 
           case 'in':
-            .out toAnyPre,"CALL1(indexOf_,",.right,",",.left,").value.number", .negated? "==-1" : ">=0",toAnyPost
+            if .right.name instanceof Grammar.ArrayLiteral
+                var haystack:Grammar.ArrayLiteral = .right.name
+                .out toAnyPre,prepend,"__in(",.left,",",haystack.items.length,",(any_arr){",{CSL:haystack.items},"})",append,toAnyPost
+            else
+                .out toAnyPre,"CALL1(indexOf_,",.right,",",.left,").value.number", .negated? "==-1" : ">=0",toAnyPost
 
 2) *'has property'* operator, requires swapping left and right operands and to use js: `in`
 
           case 'has property':
-            .out toAnyPre,"indexOf(",.right,",1,(any_arr){",.left,"}).value.number", .negated? "==-1" : ">=0",toAnyPost
+            .throwError "NOT IMPLEMENTED YET for C"
+            //.out toAnyPre,"indexOf(",.right,",1,(any_arr){",.left,"}).value.number", .negated? "==-1" : ">=0",toAnyPost
 
 3) *'into'* operator (assignment-expression), requires swapping left and right operands and to use: `=`
 
@@ -1632,7 +1716,7 @@ var with__1=frontDoor;
         var name = .name
         if name not in coreSupportedProps and not allPropertyNames.has(name) 
             if allMethodNames.has(name)
-                .sayErr "A method named '#{name}' is already defined. Cannot reuse the symbol for a property"
+                .sayErr "Ambiguity: A method named '#{name}' is already defined. Cannot reuse the symbol for a property"
                 allMethodNames.get(name).sayErr "declaration of method '#{name}'"
             else if name in coreSupportedMethods
                 .sayErr "'#{name}' is declared in as a core method. Cannot use the symbol for a property"
@@ -2071,7 +2155,32 @@ else, optional pre-condition:
 This is a very simple produce() to allow us to use the `break` and `continue` keywords.
   
       method produce() 
+
+validate usage inside a for/while
+
+        var nodeASTBase = this.parent
+        do
+
+            if .control is 'break' and nodeASTBase is instanceof Grammar.SwitchCase
+                .sayErr 'cannot use "break" from inside a "switch" statement for "historic" reasons'
+
+            else if nodeASTBase is instanceof Grammar.FunctionDeclaration
+                //if we reach function header
+                .sayErr '"{.control}" outside a for|while|do loop'
+                break loop
+
+            else if nodeASTBase is instanceof Grammar.ForStatement
+                or nodeASTBase is instanceof Grammar.DoLoop
+                    break loop //ok, break/continue used inside a loop
+
+            end if
+
+            nodeASTBase = nodeASTBase.parent
+
+        loop
+
         .out .control
+
 
 ### Append to class Grammar.DoNothingStatement ###
 
@@ -2090,34 +2199,25 @@ A `ParenExpression` is just a normal expression surrounded by parentheses.
 
 ### Append to class Grammar.ArrayLiteral ###
 
-A `ArrayLiteral` is a definition of a list like `[1, a, 2+3]`. We just pass this through to JavaScript.
+A `ArrayLiteral` is a definition of a list like `[1, a, 2+3]`. 
+On js we just pass this through, on C we create the array on the fly
 
       method produce() 
+      
+        .out "new(Array,"
 
-        .out "_newArray("
-        
         if no .items or .items.length is 0
             .out "0,NULL"
         else
-            // e.g.: LiteScript:   var list = [a,b,c]
-            // e.g.: "C": any list = (any){Array_TYPEID,.value.arr=&(Array_s){3,.item=(any_arr){a,b,c}}};
-            .out .items.length,",(any_arr){",{CSL:.items},"}"
-
+            .out .items.length, ',(any_arr){', {CSL:.items}, '}'
+        
         .out ")"
-
-        /*else
-
-            // e.g.: LiteScript:   var list = [a,b,c]
-            // e.g.: "C": any list = (any){Array_TYPEID,.value.arr=&(Array_s){3,.item=(any_arr){a,b,c}}};
-
-            .out "(any){Array_TYPEID,.value.arr=&(Array_s){#{.items.length},.item=(any_arr){",{CSL:.items},"}}}"
-        */
 
 
 ### Append to class Grammar.NameValuePair ###
 
-A `NameValuePair` is a single item in an object definition. 
-Since we copy js for this, we pass this straight through 
+A `NameValuePair` is a single item in an Map definition. 
+we call _newPair to create a new NameValuePair
 
       method produce() 
         var strName = .name
@@ -2132,17 +2232,21 @@ Since we copy js for this, we pass this straight through
 
 A `ObjectLiteral` is an object definition using key/value pairs like `{a:1,b:2}`. 
 JavaScript supports this syntax, so we just pass it through. 
+C99 does only support "static" initializers for structs.
 
       method produce()
-        if no .items or .items.length is 0
-            .out "new(Map,0,NULL)"
-        else
-            //.out "{",{CSL:.items},"}"
-            .out 
-                'new(Map,',.items.length,',(any_arr){'
-                {CSL:.items}
-                NL,"})"
 
+        .out "new(Map,"
+
+        if no .items or .items.length is 0
+            .out "0,NULL"
+        else
+            .out 
+                .items.length,',(any_arr){'
+                {CSL:.items}
+                NL,"}"
+        
+        .out ")",NL
 
 ### Append to class Grammar.ConstructorDeclaration ###
 
@@ -2161,6 +2265,13 @@ Produce a Constructor
         var c = ownerClassDeclaration.nameDecl.getComposedName()
 
         .out "void ",c,"__init(DEFAULT_ARGUMENTS){",NL
+
+auto call supper init
+
+        if ownerClassDeclaration.varRefSuper
+            .out 
+                "  ",{COMMENT:"auto call super class __init"},NL
+                "  ",ownerClassDeclaration.varRefSuper,"__init(this,argc,arguments);",NL
 
 On the constructor, assign initial values for properties.
 Initialize (non-undefined) properties with assigned values.
@@ -2272,23 +2383,22 @@ if single line body, insert return. Example: `function square(x) = x*x`
 
         else
 
-if it has "catch" or "exception", insert 'try{'
+if it has a exception block, insert 'try{'
 
-            for each statement in .body.statements
-                if statement.specific instance of Grammar.ExceptionBlock
-                    .body.out " try{",NL
-                    break
+            if .hasExceptionBlock, .body.out " try{",NL
 
 now produce function body
 
-        .body.produce()
+            .body.produce()
 
 close the function, to all functions except *constructors* (__init), 
 add default "return undefined", to emulate js behavior on C. 
 if you dot not insert a "return", the C function will return garbage.
 
-        if not .constructor is Grammar.ConstructorDeclaration // declared as void Class__init(...)
-            .out "return undefined;",NL
+            if not .constructor is Grammar.ConstructorDeclaration // declared as void Class__init(...)
+                .out "return undefined;",NL
+
+close function
 
         .out "}"
 
@@ -2399,17 +2509,6 @@ Except is the same name as the top namespace|class (auto export default).
 
             return result.join('_')
 
-        method isClass
-            return not .isNamespace and .findOwnMember('prototype')
-
-        method isMethod
-            if .isNamespace or .isClass(), return false
-            var prt = .findOwnMember('**proto**')
-            return prt and prt.parent and prt.parent.name is 'Function'
-
-        method isProperty
-            return not .isNamespace and not .isClass() and not .isMethod()
-
 For C production, we're declaring each distinct method name (verbs)
 
         method addToAllMethodNames() 
@@ -2417,10 +2516,10 @@ For C production, we're declaring each distinct method name (verbs)
 
             if methodName not in coreSupportedMethods and not allMethodNames.has(methodName) 
                 if allPropertyNames.has(methodName)
-                    .sayErr "A property '#{methodName}' is already defined. Cannot reuse the symbol for a method."
+                    .sayErr "Ambiguity: A property '#{methodName}' is already defined. Cannot reuse the symbol for a method."
                     allPropertyNames.get(methodName).sayErr "Definition of property '#{methodName}'."
                 else if methodName in coreSupportedProps
-                    .sayErr "A property '#{methodName}' is defined in core. Cannot reuse the symbol for a method."
+                    .sayErr "Ambiguity: A property '#{methodName}' is defined in core. Cannot reuse the symbol for a method."
 
                 else
                     allMethodNames.set methodName, this
@@ -2440,7 +2539,7 @@ For C production, we're declaring each distinct method name (verbs)
         .out NL,'}catch(',.catchVar,'){', .body, '}'
 
         if .finallyBody
-          .out NL,'finally{', .finallyBody, '}'
+            .out NL,'finally{', .finallyBody, '}'
 
 
 ### Append to class Grammar.SwitchStatement ###

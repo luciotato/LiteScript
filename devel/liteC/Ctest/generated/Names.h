@@ -10,25 +10,26 @@ extern var Names_allNameDeclarations;
 
 //--------------
    // Names_Declaration
-   
-   extern any Names_Declaration; //Class Object
-   
+   any Names_Declaration; //Class Names_Declaration
    typedef struct Names_Declaration_s * Names_Declaration_ptr;
    typedef struct Names_Declaration_s {
-       any
-           name,
-           members,
-           nodeDeclared,
-           parent,
-           normalizeModeKeepFirstCase,
-           type,
-           itemType,
-           value,
-           isScope,
-           isNamespace,
-           isForward,
-           isDummy
-   ;
+       //Declaration
+       any name;
+       any members;
+       any nodeDeclared;
+       any parent;
+       any normalizeModeKeepFirstCase;
+       any type;
+       any itemType;
+       any value;
+       any isScope;
+       any isForward;
+       any isDummy;
+       any isProperty;
+       any isMethod;
+       any isNamespace;
+       any superDecl;
+   
    } Names_Declaration_s;
    
    extern void Names_Declaration__init(DEFAULT_ARGUMENTS);
@@ -56,32 +57,29 @@ extern var Names_allNameDeclarations;
    extern any Names_Declaration_convertType(DEFAULT_ARGUMENTS);
    extern any Names_Declaration_assignTypeFromValue(DEFAULT_ARGUMENTS);
    extern any Names_Declaration_assignTypebyNameAffinity(DEFAULT_ARGUMENTS);
+   extern any Names_Declaration_checkSuperChainProperties(DEFAULT_ARGUMENTS);
+   extern any Names_Declaration_outSuperChainProps(DEFAULT_ARGUMENTS);
    extern any Names_Declaration_addToAllProperties(DEFAULT_ARGUMENTS);
    extern any Names_Declaration_getComposedName(DEFAULT_ARGUMENTS);
-   extern any Names_Declaration_isClass(DEFAULT_ARGUMENTS);
-   extern any Names_Declaration_isMethod(DEFAULT_ARGUMENTS);
-   extern any Names_Declaration_isProperty(DEFAULT_ARGUMENTS);
    extern any Names_Declaration_addToAllMethodNames(DEFAULT_ARGUMENTS);
    
 
 //--------------
    // Names_NameDeclOptions
-   
-   extern any Names_NameDeclOptions; //Class Object
-   
+   any Names_NameDeclOptions; //Class Names_NameDeclOptions
    typedef struct Names_NameDeclOptions_s * Names_NameDeclOptions_ptr;
    typedef struct Names_NameDeclOptions_s {
-       any
-           normalizeModeKeepFirstCase,
-           pointsTo,
-           type,
-           itemType,
-           returnType,
-           value,
-           isForward,
-           isDummy,
-           informError
-   ;
+       //NameDeclOptions
+       any normalizeModeKeepFirstCase;
+       any pointsTo;
+       any type;
+       any itemType;
+       any returnType;
+       any value;
+       any isForward;
+       any isDummy;
+       any informError;
+   
    } Names_NameDeclOptions_s;
    
    extern void Names_NameDeclOptions__init(DEFAULT_ARGUMENTS);

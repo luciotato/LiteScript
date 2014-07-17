@@ -55,12 +55,26 @@ Implementation
 
             var args = arguments.toArray()
 
-            #ifndef PROD_C
+            #ifdef PROD_C
+            console.error.apply undefined,args
+            #else
             if options.debug.file
-                fs.appendFileSync options.debug.file, args.join(" ")+"\r\n"
+                fs.appendFileSync options.debug.file, '#{args.join(" ")}\r\n'
             else
-                console.log.apply undefined,args
+                console.error.apply undefined,args
             #endif
+
+
+#### method debugGroup
+
+        if logger.options.debugOptions.enabled
+            console.error.apply undefined,arguments
+            console.group.apply undefined,arguments
+
+#### method debugGroupEnd
+
+        if logger.options.debugOptions.enabled
+            console.groupEnd
 
 #### method debugClear ### clear debug file
 
@@ -155,7 +169,6 @@ get & clear
         var result = logger.messages
         logger.messages =[]
         return result
-
 
 
 #### method throwControlled(msg)

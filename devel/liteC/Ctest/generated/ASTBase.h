@@ -9,32 +9,30 @@ extern void ASTBase__moduleInit(void);
 
 //--------------
    // ASTBase
-   
-   extern any ASTBase; //Class Object
-   
+   any ASTBase; //Class ASTBase
    typedef struct ASTBase_s * ASTBase_ptr;
    typedef struct ASTBase_s {
-       any
-           parent,
-           name,
-           keyword,
-           type,
-           keyType,
-           itemType,
-           extraInfo,
-           lexer,
-           lineInx,
-           sourceLineNum,
-           column,
-           indent,
-           locked,
-           accessors,
-           executes,
-           hasSideEffects,
-           isMap,
-           scope,
-           skipSemiColon
-   ;
+       //ASTBase
+       any parent;
+       any name;
+       any keyword;
+       any type;
+       any keyType;
+       any itemType;
+       any extraInfo;
+       any lexer;
+       any lineInx;
+       any sourceLineNum;
+       any column;
+       any indent;
+       any locked;
+       any accessors;
+       any executes;
+       any hasSideEffects;
+       any isMap;
+       any scope;
+       any skipSemiColon;
+   
    } ASTBase_s;
    
    extern void ASTBase__init(DEFAULT_ARGUMENTS);
@@ -64,7 +62,6 @@ extern void ASTBase__moduleInit(void);
    extern any ASTBase_getEOLComment(DEFAULT_ARGUMENTS);
    extern any ASTBase_addSourceMap(DEFAULT_ARGUMENTS);
    extern any ASTBase_levelIndent(DEFAULT_ARGUMENTS);
-   extern any ASTBase_callOnSubTree(DEFAULT_ARGUMENTS);
    extern any ASTBase_getRootNode(DEFAULT_ARGUMENTS);
    extern any ASTBase_compilerVar(DEFAULT_ARGUMENTS);
    extern any ASTBase_parseAccessors(DEFAULT_ARGUMENTS);
@@ -84,6 +81,7 @@ extern void ASTBase__moduleInit(void);
    extern any ASTBase_addToExport(DEFAULT_ARGUMENTS);
    extern any ASTBase_createScope(DEFAULT_ARGUMENTS);
    extern any ASTBase_tryGetOwnerNameDecl(DEFAULT_ARGUMENTS);
+   extern any ASTBase_callOnSubTree(DEFAULT_ARGUMENTS);
    extern any ASTBase_lastLineInxOf(DEFAULT_ARGUMENTS);
    extern any ASTBase_assignIfUndefined(DEFAULT_ARGUMENTS);
 #endif
