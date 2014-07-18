@@ -4,6 +4,7 @@
     <logicalFolder name="core" displayName="core" projectFiles="true">
       <itemPath>core/LiteC-core.c</itemPath>
       <itemPath>core/LiteC-core.h</itemPath>
+      <itemPath>core/PMREX-native.c</itemPath>
       <itemPath>core/any.c</itemPath>
       <itemPath>core/any.h</itemPath>
       <itemPath>core/exceptions.c</itemPath>
@@ -30,7 +31,6 @@
         <itemPath>generated/lib/GeneralOptions.h</itemPath>
         <itemPath>generated/lib/OptionsParser.c</itemPath>
         <itemPath>generated/lib/OptionsParser.h</itemPath>
-        <itemPath>generated/lib/PMREX.c</itemPath>
         <itemPath>generated/lib/PMREX.h</itemPath>
         <itemPath>generated/lib/Strings.c</itemPath>
         <itemPath>generated/lib/Strings.h</itemPath>
@@ -92,6 +92,7 @@
   <sourceRootList>
     <Elem>generated</Elem>
     <Elem>core</Elem>
+    <Elem>include/gc</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -106,9 +107,6 @@
           <standard>3</standard>
         </cTool>
         <linkerTool>
-          <linkerAddLib>
-            <pElem>lib</pElem>
-          </linkerAddLib>
           <linkerLibItems>
             <linkerLibLibItem>gc</linkerLibLibItem>
           </linkerLibItems>
@@ -117,6 +115,8 @@
       <item path="core/LiteC-core.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="core/LiteC-core.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="core/PMREX-native.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="core/any.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -199,8 +199,6 @@
       </item>
       <item path="generated/lib/OptionsParser.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="generated/lib/PMREX.c" ex="false" tool="0" flavor2="0">
-      </item>
       <item path="generated/lib/PMREX.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated/lib/Strings.c" ex="false" tool="0" flavor2="0">
@@ -238,7 +236,8 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <developmentMode>5</developmentMode>
+          <developmentMode>6</developmentMode>
+          <standard>3</standard>
           <preprocessorList>
             <Elem>NDEBUG</Elem>
           </preprocessorList>
@@ -252,10 +251,17 @@
         <asmTool>
           <developmentMode>5</developmentMode>
         </asmTool>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerLibFileItem>include/libgc.so</linkerLibFileItem>
+          </linkerLibItems>
+        </linkerTool>
       </compileType>
       <item path="core/LiteC-core.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="core/LiteC-core.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="core/PMREX-native.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="core/any.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -330,8 +336,6 @@
       <item path="generated/lib/OptionsParser.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="generated/lib/OptionsParser.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="generated/lib/PMREX.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="generated/lib/PMREX.h" ex="false" tool="3" flavor2="0">
       </item>

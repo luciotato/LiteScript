@@ -106,10 +106,10 @@ Operators precedence
 The order of symbols here determines operators precedence
 
     var operatorsPrecedence = [ 
-      '++','--', 'unary -', 'unary +', '~' ,'&', '^' ,'|'
+      '++','--', 'unary -', 'unary +', '~' ,'bitand', '^' ,'bitor'
       ,'>>','<<'
       ,'new','type of','instance of','has property'
-      ,'*','/','%','+','-'
+      ,'*','/','%','+','-','&'
       ,'into','in'
       ,'>','<','>=','<=','is','<>','!==','like'
       ,'no','not','and','but','or'
@@ -916,7 +916,7 @@ is: optional NEWLINE, then 'where' then filter-Expression
 ### export class AssignmentStatement extends ASTBase
       
 `AssignmentStatement: VariableRef ASSIGN Expression`
-<br>`ASSIGN: ("="|"+="|"-="|"*="|"/=")`
+<br>`ASSIGN: ("="|"+="|"-="|"*="|"/="|"&=")`
 
       properties lvalue:VariableRef, rvalue:Expression
 
@@ -929,7 +929,7 @@ is: optional NEWLINE, then 'where' then filter-Expression
         else
           .lvalue  = .req(VariableRef)
 
-require an assignment symbol: ("="|"+="|"-="|"*="|"/=")
+require an assignment symbol: ("="|"+="|"-="|"*="|"/="|"&=")
 
         .name = .req('ASSIGN')
         .lock()
@@ -1322,8 +1322,9 @@ it must be a variable ref
 ## Oper
 
 ```
-Oper: ('~'|'&'|'^'|'|'|'>>'|'<<'
+Oper: ('~'|bitor|bitand|'^'|'|'|'>>'|'<<'
         |'*'|'/'|'+'|'-'|mod
+        |'&'
         |instance of|instanceof
         |'>'|'<'|'>='|'<='
         |is|'==='|isnt|is not|'!=='
@@ -1341,10 +1342,11 @@ If an Oper is found after an Operand, a second Operand is expected.
 Operators can include:
 * arithmetic operations "*"|"/"|"+"|"-"
 * boolean operations "and"|"or"
+* string concat oper "&"
 * `in` collection check.  (js: `indexOx()>=0`)
 * instance class checks   (js: instanceof)
 * short-if ternary expressions ? :
-* bit operations (|&)
+* bit operations (bitor,bitand)
 * `has property` object property check (js: 'propName in object')
 
 ### public class Oper extends ASTBase

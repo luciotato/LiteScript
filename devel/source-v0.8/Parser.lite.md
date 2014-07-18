@@ -243,9 +243,11 @@ Create infoLine, with computed indent, text, and source code line num reference
         loop #process next source line
 
 now we have a infoLine array, tokenized, ready to be parsed
-clear source lines from memory
+if we do not need to produce comments with original source
+for reference at produced .c or .js, clear source lines from memory 
 
-        .lines = undefined
+        if no .options.comments
+            .lines = undefined
 
         return infoLines
   
@@ -539,7 +541,7 @@ ifdef, #ifndef, #else and #endif should be the first thing on the line
         var startRef = "while processing #ifdef started on line #{startSourceLine}"
 
         words = line.slice(pos).split(' ')
-        var conditional = words[1]
+        var conditional = words.tryGet(1)
         if no conditional, .throwErr "#ifdef; missing conditional"
         var defValue = .project.compilerVar(conditional)
         if invert, defValue = not defValue //if it was "#ifndef"
@@ -556,12 +558,12 @@ ifdef, #ifndef, #else and #endif should be the first thing on the line
                 line = line.trim()
                 if line.charAt(0) is '#' and line.charAt(1) isnt '#' //expected: "#else, #endif #end if"
                     words = line.split(' ')
-                    switch words[0] 
+                    switch words.tryGet(0)
                         case '#else':
                             .replaceSourceLine .line.replaceAll("#else","//else")
                             defValue = not defValue
                         case "#end":
-                            if words[1] isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
+                            if words.tryGet(1) isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
                             endFound = true
                         case "#endif":
                             endFound = true
@@ -586,7 +588,7 @@ ifdef, #ifndef, #else and #endif should be the first thing on the line
 Methods getPos() and setPos() are used to save and restore a specific lexer position in code
 When a AST node parse() fails, the lexer position is rewound to try another AST class
 
-#### method getPos()
+#### method getPos() returns LexerPos
         #return {lineInx:.lineInx, index:.index, sourceLineNum:.sourceLineNum, token:.token, last:.last}
         return new LexerPos(this)
 
@@ -980,7 +982,7 @@ If there was no match, this is a bad token and we will abort compilation here.
 
                 var errPosString=''
                 while errPosString.length<colInx
-                    errPosString+=' '
+                    errPosString='#{errPosString} '
 
                 logger.error code
                 logger.error '#{errPosString}^'
@@ -1149,11 +1151,11 @@ ASSIGN are symbols triggering the assignment statements.
 In LiteScript, assignment is a *statement* not a *expression*
 
   ['ASSIGN',/^=/],
-  ['ASSIGN',/^[\+\-\*\/]=/ ], # = += -= *= /=
+  ['ASSIGN',/^[\+\-\*\/\&]=/ ], # = += -= *= /= &=
 
             if chunk.startsWith("=")
                 return new Token('ASSIGN',chunk.slice(0,1))
-            if chunk.charAt(0) in "+-*/" and chunk.charAt(1) is "=" 
+            if chunk.charAt(0) in "+-*/&" and chunk.charAt(1) is "=" 
                 return new Token('ASSIGN',chunk.slice(0,2))
 
 Regex tokens are regular expressions. The javascript producer, just passes the raw regex to JavaScript.
@@ -1319,14 +1321,20 @@ It also handles SourceMap generation for Chrome Developer Tools debugger and Fir
 
       lineNum, column
       currLine:string
+
+      toHeader:boolean
       lines:string array
       hLines:string array
+
       lastOriginalCodeComment
       lastOutCommentLine
       sourceMap
       browser:boolean
+
       exportNamespace
-      toHeader:boolean
+
+      orTempVarCount=0 //helper temp vars to code js "or" in C, using ternary ?:
+
 
 #### Method start(options)
 Initialize output array
@@ -1365,7 +1373,7 @@ create a empty one
 append text to line 
 
         if text
-            .currLine += text
+            .currLine &= text
             .column += text.length
 
 

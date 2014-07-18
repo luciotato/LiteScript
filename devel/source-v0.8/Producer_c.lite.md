@@ -34,7 +34,7 @@ Method get a trailing "_" if they're a C reserved word
 
     var coreSupportedMethods = [
         "toString"
-        "tryGetMethod","tryGetProperty","getProperty", "getPropertyName"
+        "tryGetMethod","tryGetProperty","getProperty", "getPropertyName","hasProperty"
         "has", "get", "set", "clear", "delete", "keys"
         "slice", "split", "indexOf", "lastIndexOf", "concat"
         "toUpperCase", "toLowerCase","charAt", "replaceAll","trim"
@@ -43,7 +43,7 @@ Method get a trailing "_" if they're a C reserved word
     ]
 
     var coreSupportedProps = [
-        'name','value','message','stack','code'
+        'name','size','value','message','stack','code'
     ]
 
     public var dispatcherModule: Grammar.Module
@@ -268,6 +268,11 @@ Now produce the .c file,
             "//Module ",prefix, .fileInfo.isInterface? ' - INTERFACE':'',NL
             "//-------------------------",NL
 
+        //space to insert __or temp vars
+        var insertPos=.lexer.outCode.lines.length
+        .lexer.outCode.blankLine
+        .lexer.outCode.blankLine
+
         // add sustance for the module
         .produceSustance prefix
 
@@ -318,6 +323,17 @@ __moduleInit: module main function
             .out NL,'    ',prefix,"__nativeInit();"
 
         .out NL,"};",NL
+
+insert at .c file start, helper tempvars for 'or' expressions short-circuit evaluation
+
+        if .lexer.outCode.orTempVarCount
+            .lexer.outCode.lines[insertPos++] = "//helper tempvars for 'or' expressions short-circuit evaluation"
+            var list = "any __or1"
+            for n=2 to .lexer.outCode.orTempVarCount
+                list &= ",__or#{n}"
+            list &=";"
+            .lexer.outCode.lines[insertPos] = list
+
 
         .skipSemiColon = true
 
@@ -718,7 +734,7 @@ produce body sustance: vars & other functions declarations
                 produceSecond.push item.specific #recurses
 
             else if item.specific.constructor is Grammar.AppendToDeclaration
-                item.specific.callOnSubTree 'produceStaticListMethodsAndProps' //if there are internal classes
+                item.specific.callOnSubTree LiteCore.getSymbol('produceStaticListMethodsAndProps') //if there are internal classes
                 produceThird.push item
 
             else if item.isDeclaration()
@@ -737,11 +753,11 @@ produce body sustance: vars & other functions declarations
 
 First: register user classes
 
-        .callOnSubTree 'produceClassRegistration'
+        .callOnSubTree LiteCore.getSymbol('produceClassRegistration')
 
 Second: recurse for namespaces 
 
-        .callOnSubTree 'produceCallNamespaceInit'
+        .callOnSubTree LiteCore.getSymbol('produceCallNamespaceInit')
 
 Third: assign values for module vars.
 if there is var or properties with assigned values, produce those assignment.
@@ -794,14 +810,19 @@ add comment lines, in the same position as the source
 
 To ease reading of compiled code, add original Lite line as comment 
 
-        if .lexer.options.comments
-          if .lexer.outCode.lastOriginalCodeComment<.lineInx
-            if not (.specific.constructor in [
-                Grammar.CompilerStatement, Grammar.DeclareStatement 
-                Grammar.DoNothingStatement
-              ])
-              .out {COMMENT: .lexer.infoLines[.lineInx].text.trim()},NL
-          .lexer.outCode.lastOriginalCodeComment = .lineInx
+        if .lexer.options.comments // and .lexer.outCode.lastOriginalCodeComment<.lineInx
+               
+            var commentTo =  .lastSourceLineNum
+            if .specific has property "body"
+                or .specific is instance of Grammar.IfStatement
+                or .specific is instance of Grammar.WithStatement
+                or .specific is instance of Grammar.ForStatement
+                or .specific is instance of Grammar.SwitchStatement
+                    commentTo =  .sourceLineNum
+
+            .outSourceLinesAsComment .sourceLineNum, commentTo
+
+            .lexer.outCode.lastOriginalCodeComment = commentTo
 
 Each statement in its own line
 
@@ -811,8 +832,7 @@ Each statement in its own line
 if there are one or more 'into var x' in a expression in this statement, 
 declare vars before the statement (exclude body of FunctionDeclaration)
 
-        var methodToCall = LiteCore.getSymbol('declareIntoVar')
-        this.callOnSubTree methodToCall, excludeClass=Grammar.Body
+        this.callOnSubTree LiteCore.getSymbol('declareIntoVar'), excludeClass=Grammar.Body
 
 call the specific statement (if,for,print,if,function,class,etc) .produce()
 
@@ -826,7 +846,7 @@ then NEWLINE
         if not .specific.skipSemiColon
           .addSourceMap mark
           .out ";"
-          if not .specific.body
+          if not .specific has property "body"
             .out .getEOLComment()
 
 helper function to determine if a statement is a declaration (can be outside a funcion in "C")
@@ -967,9 +987,12 @@ or the only Operand of a unary oper.
             .name.produceType = .produceType
             .out .name
 
-        else //ParenExpression
-            declare valid .name.produceType
-            .name.produceType = .produceType
+        else if .name instance of Grammar.ParenExpression
+            declare .name:Grammar.ParenExpression
+            .name.expr.produceType = .produceType
+            .out .name.expr, .accessors
+
+        else //other
             .out .name, .accessors
 
         end if
@@ -1089,10 +1112,13 @@ example: `char not in myString` -> `indexOf(char,myString)==-1`
             else
                 .out toAnyPre,"CALL1(indexOf_,",.right,",",.left,").value.number", .negated? "==-1" : ">=0",toAnyPost
 
-2) *'has property'* operator, requires swapping left and right operands and to use js: `in`
+2) *'has property'* operator
+js => requires swapping left and right operands and to use js's: `in`
+Lite-C => use Object.hasProperty(left,1,(any_arr){right}) which mimics js's "in"
 
           case 'has property':
-            .throwError "NOT IMPLEMENTED YET for C"
+            .out toAnyPre,prepend,"_hasProperty(",.left,",",.right,")",append,toAnyPost
+            //.throwError "NOT IMPLEMENTED YET for C"
             //.out toAnyPre,"indexOf(",.right,",1,(any_arr){",.left,"}).value.number", .negated? "==-1" : ">=0",toAnyPost
 
 3) *'into'* operator (assignment-expression), requires swapping left and right operands and to use: `=`
@@ -1123,15 +1149,28 @@ example: `char not in myString` -> `indexOf(char,myString)==-1`
             .right.produceType = 'any'
             .out toAnyPre,.negated?'!':'', '__is(',.left,',',.right,')',toAnyPost
 
-6) js's '||' operator returns first expression if it's true, second expression is first is false, 0 if both are false
-   so it can be used to set a default value if first value is undefined,0,null or ""
-   C's '||' operator, returns 1 (not the first expression. Expressions are discarded in C's ||)
+6) js's '||' operator returns first expression if "thruthy", second expression is first is "falsey"
+   so it can be used to set a default value if first value is "falsey" i.e: undefined,0,null or ""
+
+   C's '||' operator, returns 1 or 0 (not the first expression or the second. Expressions are discarded in C's ||)
+
+ We'll use a ternary operator to emulate js behavior
+
+code js "||" in C, using ternary if ?:                
+js: `A || B` 
+C: `any __or1;`
+   `(_anyToBool(__or1=A)? __or1 : B)`
 
           case 'or':
+            .lexer.outCode.orTempVarCount++
+            var orTmp = '__or#{.lexer.outCode.orTempVarCount}'
+
             .left.produceType = 'any'
             .right.produceType = 'any'
             if .produceType and .produceType isnt 'any', .out '_anyTo',.produceType,'('
-            .out '__or(',.left,',',.right,')'
+            
+            .out '(_anyToBool(#{orTmp}=',.left,')? #{orTmp} : ',.right,')'
+
             if .produceType and .produceType isnt 'any', .out ')'
 
 modulus is only for integers. for doubles, you need fmod (and link the math.lib)
@@ -1143,6 +1182,14 @@ we convert to int, as js seems to do.
             .right.produceType = 'Number'
             .out '(int64_t)',.left,' % (int64_t)',.right
             if .produceType and .produceType isnt 'Number', .out ')'
+
+string concat: & 
+
+          case '&':
+            if .produceType is 'Number', .throwError 'cannot use & to concat and produce a number'
+            .left.produceType = 'any'
+            .right.produceType = 'any'
+            .out "_concatAny(2,(any_arr){",.left,',',.right,'})'
 
 else we have a direct translatable operator. 
 We out: left,operator,right
@@ -1483,6 +1530,7 @@ else, for FunctionAccess
                     callParams = [","] // new(Class,argc,arguments*)
                     //add arguments: count,(any_arr){...}
                     .addArguments functionAccess.args, callParams
+                    callParams.push ")" //close 
 
                 else
                     var fnNameArray:array = result.pop() //take fn name 
@@ -1499,12 +1547,13 @@ else, for FunctionAccess
 
                         //add arguments: count,(any_arr){...}
                         .addArguments functionAccess.args, callParams
+                        callParams.push ")" //close function(undefined,arg,any* arguments)
 
                     else
                         //method call
 
                         //to ease C-code reading, use macros CALL1 to CALL4 if possible
-                        if functionAccess.args and functionAccess.args.length<=4
+                        if false /*functionAccess.args and functionAccess.args.length<=4*/
 
                             // __call enclose all
                             fnNameArray.unshift "CALL#{functionAccess.args.length}(" 
@@ -1517,16 +1566,43 @@ else, for FunctionAccess
 
                         else // do not use macros CALL1 to CALL4
 
-                            // __call enclose all
-                            fnNameArray.unshift "__call(" 
+                            /*
+                            // METHOD()(... ) enclose all
+                            fnNameArray.unshift "METHOD(" 
                             // here goes methodName
                             fnNameArray.push "," // __call(symbol_ *,*
                             // here: instance reference as 2nd param (this value)
                             result.unshift fnNameArray //prepend __call(methodName, ...instanceof
                             //options.validations.push ["assert("].concat(callParams,".type>TYPE_NULL);")
-                            callParams = [","]
+                            callParams = [")("]
+                            */
+                            var simpleVar = result.length is 1 and result[0].length is 1
+                            if simpleVar
+                                var simpleVarName = result[0][0]
+                                // METHOD()(... ) enclose all
+                                fnNameArray.unshift ["METHOD("]
+                                // here goes methodName
+                                fnNameArray.push ","
+                                result.unshift fnNameArray
+                                // here: 1st instance reference 
+                                result.push [")(",simpleVarName] // METHOD(symbol_,this)(this
+                                //options.validations.push ["assert("].concat(callParams,".type>TYPE_NULL);")
+                                callParams = [","]
+        
+                            else
+                                // METHOD()(... ) enclose all
+                                fnNameArray.unshift "__call(" 
+                                // here goes methodName
+                                fnNameArray.push "," // __call(symbol_ *,*
+                                // here: instance reference as 2nd param (this value)
+                                result.unshift fnNameArray //prepend __call(methodName, ...instanceof
+                                //options.validations.push ["assert("].concat(callParams,".type>TYPE_NULL);")
+                                callParams = [","]
+                            end if
+
                             //add arguments: count,(any_arr){...}
                             .addArguments functionAccess.args, callParams
+                            callParams.push ")" //close 
 
                         end if
                 
@@ -1534,7 +1610,6 @@ else, for FunctionAccess
 
                 end if //callNew
 
-                callParams.push ")" //close __call(symbol,this,argc, any* arguments )  | function(undefined,arg,any* arguments)
                 result.push callParams
 
                 if actualVar, actualVar = actualVar.findMember('**return type**')
@@ -1612,8 +1687,20 @@ and next property access should be on defined members of the type
         switch oper
             case "+=","-=","*=","/=":
 
+                if oper is '+='
+                    var rresultNameDecl = .rvalue.getResultType() 
+                    if rresultNameDecl and rresultNameDecl.isInstanceof('String')
+                        .sayErr """
+                                You should not use += to concat strings. use string concat oper: & or interpolation instead.
+                                e.g.: DO: "a &= b"  vs.  DO NOT: a += b
+                                """
+
                 .rvalue.produceType = 'Number'
                 .out .lvalue,extraLvalue,' ', oper,' ',.rvalue
+
+            case "&=": //string concat
+                .rvalue.produceType = 'any'
+                .out .lvalue, '=', "_concatAny(2,(any_arr){",.lvalue,',',.rvalue,'})'
 
             default:
                 .rvalue.produceType = 'any'
@@ -1874,11 +1961,15 @@ If 'var' was adjectivated 'export', add to exportNamespace
 
       method produce() 
 
+        .outSourceLineAsComment .sourceLineNum
+
         .out NL,"else ", .nextIf
 
 ### Append to class Grammar.ElseStatement ###
 
       method produce()
+
+        .outSourceLineAsComment .sourceLineNum
 
         .out NL,"else {", .body, "}"
 
@@ -1909,6 +2000,8 @@ Since al 3 cases are closed with '}; //comment', we skip statement semicolon
 
 Create a default index var name if none was provided
 
+        .out "{",NL //enclose defined temp vars in their own scope
+
         var listName, uniqueName = UniqueID.getVarName('list')  #unique temp listName var name
         declare valid .iterable.root.name.hasSideEffects
         if .iterable.operandCount>1 or .iterable.root.name.hasSideEffects or .iterable.root.name instanceof Grammar.Literal
@@ -1919,31 +2012,32 @@ Create a default index var name if none was provided
 
 create a var holding object property count
 
-        .out "len_t ",uniqueName,"_len=",listName,'.class->instanceSize / sizeof(any);' ,NL
+        .out "len_t __propCount=",listName,'.class->instanceSize / sizeof(any);' ,NL
 
         var startValue = "0"
         var intIndexVarName = '#{.mainVar.name}__inx';
+
         if .indexVar 
             .out "any ",.indexVar.name,"=undefined;",NL
 
         .out "any ",.mainVar.name,"=undefined;",NL
 
         .out 
-            "for(int ", intIndexVarName,"=", startValue
-            " ; ",intIndexVarName,"<",uniqueName,"_len"
-            " ; ",intIndexVarName,"++){"
+            "for(int __propIndex=", startValue
+            " ; __propIndex < __propCount"
+            " ; __propIndex++ ){"
 
-        .body.out .mainVar.name,"=",listName,".value.prop[",intIndexVarName,"];",NL
+        .body.out .mainVar.name,"=",listName,".value.prop[__propIndex];",NL
         
         if .indexVar 
-            .body.out .indexVar.name,"= _getPropertyName(",listName,",",intIndexVarName,");",NL
+            .body.out .indexVar.name,"= _getPropertyNameAtIndex(",listName,",__propIndex);",NL
 
         if .where 
           .out '  ',.where,"{",.body,"}"
         else 
           .out .body
 
-        .out "};",{COMMENT:["end for each property in ",.iterable]},NL
+        .out "}};",{COMMENT:["end for each property in ",.iterable]},NL
 
 ### Append to class Grammar.ForEachInArray
 ### Variant 2) 'for each index' to loop over *Array indexes and items*
@@ -1991,23 +2085,22 @@ include mainVar.name in a bracket block to contain scope
 
 ####  method produceForMap(listName)
 
-        var intIndexVarName = "#{.mainVar.name}__inx" # unique map numeric index
-        var nvp = UniqueID.getVarName('nvp') # pointer to name-value pair[inx]
-
-        .out "{ NameValuePair_ptr ",nvp,"=NULL; //name:value pair",NL
-        if .indexVar, .body.out " var ",.indexVar.name,"=undefined; //key",NL 
-        .out " var ",.mainVar.name,"=undefined; //value",NL
+        .out 
+            "{" //enclose in a block to limit scope of loop vars
+            "NameValuePair_ptr __nvp=NULL; //name:value pair",NL
+            "int64_t __len=MAPSIZE(",listName,"); //how many pairs",NL
+            
+        if .indexVar, .out "var ",.indexVar.name,"=undefined; //key",NL 
+        .out "var ",.mainVar.name,"=undefined; //value",NL
 
         .out 
-            "for(int64_t ",intIndexVarName,"=0"
-            " ; ",intIndexVarName,"<",listName,".value.arr->length"
-            " ; ",intIndexVarName,"++){",NL
+            "for(int64_t __inx=0"
+            " ; __inx < __len"
+            " ; __inx++ ){",NL
 
-        .body.out "assert(ITEM(",intIndexVarName,",",listName,").class==&NameValuePair_CLASSINFO);",NL
-        
-        .out nvp," = ITEM(",intIndexVarName,",",listName,").value.ptr;",NL //get nv pair
-        if .indexVar, .body.out .indexVar.name,"=",nvp,"->name;",NL //get key
-        .body.out .mainVar.name,"=",nvp,"->value;",NL //get value
+        .body.out "__nvp = MAPITEM( __inx,",listName,");",NL //get nv pair ptr
+        if .indexVar, .body.out .indexVar.name,"= __nvp->name;",NL //get key
+        .body.out .mainVar.name,"= __nvp->value;",NL //get value
 
         if .where 
           .out '  ',.where,"{",.body,"}" //filter condition
@@ -2111,15 +2204,14 @@ when you have a `until` condition, you need to negate the expression
 to produce a `while` condition. (`while NOT x` is equivalent to `until x`)
 
         .expr.produceType = 'Bool'
-        .expr.produce(negated=negated)
+        .expr.produce negated
 
 
 ### Append to class Grammar.DoLoop ###
 
       method produce() 
 
-Note: **WhileUntilLoop** symbol has **DoLoop** as *prototype*, so this *.produce()* method
-is used by both symbols.
+Note: **WhileUntilLoop** extends **DoLoop**, so this *.produce()* method is used by both symbols.
 
         if .postWhileUntilExpression 
 
@@ -2309,7 +2401,7 @@ Produce a Method
         if isClass 
             .body.out 
                 "assert(_instanceof(this,",c,"));",NL
-                "//---------",NL 
+                "//---------"
 
         .produceFunctionBody c
 
@@ -2349,7 +2441,7 @@ start body
         // function named params
         if .paramsDeclarations and .paramsDeclarations.length
 
-                .body.out "// define named params",NL
+                .body.out NL,"// define named params",NL
 
                 if .paramsDeclarations.length is 1
                     .body.out "var ",.paramsDeclarations[0].name,"= argc? arguments[0] : undefined;",NL
@@ -2713,6 +2805,9 @@ Many LiteScript operators can be easily mapped one-to-one with their JavaScript 
 
       'type of':      'typeof'
       'instance of':  'instanceof'
+
+      'bitand':       '&'
+      'bitor':        '|'
 
       'is':           '=='
       'isnt':         '!='

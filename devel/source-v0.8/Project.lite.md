@@ -64,6 +64,8 @@ Initialize this project. Project has a cache for required modules.
 As with node's `require` mechanism, a module, 
 when imported|required is only compiled once and then cached.
     
+        console.time 'Init Project'
+
         .name = 'Project'
 
         .options = options
@@ -138,17 +140,21 @@ by parsing the file: "lib/GlobalScopeJS.interface.md"
 
         Validate.initialize this 
 
-In 'options' we receive also the target code to generate. (default is 'js')
+        console.timeEnd 'Init Project'
 
 #### Method compile()
 
 Import & compile the main module. The main module will, in turn, 'import' and 'compile' 
 -if not cached-, all dependent modules. 
 
+        console.time 'Parse'
+
         var importInfo = new Environment.ImportParameterInfo
         importInfo.name = .options.mainModuleName
         .main = .importModule(.rootModule, importInfo)
         .main.isMain = true
+
+        console.timeEnd 'Parse'
 
         if logger.errorCount is 0
             logger.info "\nParsed OK"
@@ -157,11 +163,14 @@ Validate
 
         if no .options.skip 
             logger.info "Validating"
+            console.time 'Validate'
             Validate.validate this
+            console.timeEnd 'Validate'
             if logger.errorCount, logger.throwControlled '#{logger.errorCount} errors'
 
 Produce, for each module
 
+        console.time 'Produce'
         logger.info "\nProducing #{.options.target} at #{.options.outDir}\n"
         mkPath.create .options.outDir
 
@@ -228,6 +237,8 @@ save to disk / add to external cache
         #ifdef PROD_C
         if no logger.errorCount, Producer_c.postProduction this
         #endif
+
+        console.timeEnd 'Produce'
 
 #### Method compileFile(filename) returns Grammar.Module
 
@@ -356,7 +367,7 @@ We create a empty a empty `.requireCallNodes[]`, to hold:
 
         moduleNode.lexer.outCode.browser = .options.browser
 
-        if .options.extraComments
+        if .options.comments>=2
             moduleNode.lexer.outCode.put "//Compiled by LiteScript compiler v#{.options.version}, source: #{moduleNode.fileInfo.filename}"
             moduleNode.lexer.outCode.startNewLine
 

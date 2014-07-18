@@ -46,7 +46,7 @@ int e4c_newFrame(str file, int line){
 	e4c.frame[e4c.activeFrame].stage = e4c_beginning;
 
     //debug
-    e4c_showStatus();
+    //e4c_showStatus();
 
     if (e4c.activeFrame==3)
         e4c.activeFrame=e4c.activeFrame;
@@ -69,7 +69,7 @@ int e4c_incStage(){
     }
 
     //debug
-    e4c_showStatus();
+    //e4c_showStatus();
 
     assert(e4c.frame[e4c.activeFrame].stage <= e4c_done);
 
@@ -122,8 +122,8 @@ void e4c_throw( str file, int line, any error){
                 // jmp to active frame loop
 
                 //debug log
-                fprintf(stderr,"\n\nE4C catched longjmp frame %d\n\n",e4c.activeFrame);
-                (void)fflush(stderr);
+                //fprintf(stderr,"\n\nE4C catched longjmp frame %d\n\n",e4c.activeFrame);
+                //(void)fflush(stderr);
 
                 // longjmps do not returns
                 longjmp(e4c.frame[e4c.activeFrame].jump, 1);

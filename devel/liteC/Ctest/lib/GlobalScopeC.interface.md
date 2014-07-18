@@ -11,6 +11,7 @@ global Classes pre-created are:
 ### Namespace LiteCore
 
         method getSymbol(name:string) returns number
+        method getSymbolName(symbol:number) returns number
 
 ## classes declared in the compiler 
 
@@ -333,8 +334,12 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
         method log
         method error
         method debug
+        
         method group
         method groupEnd
+
+        method time(key:string)
+        method timeEnd(key:string)
 
 ### public namespace process
 

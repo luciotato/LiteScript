@@ -197,19 +197,15 @@
        // method replaceQuoted(text:string, rep:string)
        Strings.replaceQuoted = function(text, rep){
 
-           var p = 0, pb = undefined;
+           var p = 0;
 
-           // do
-           while(true){
+// look for first quote (single or double?),
+// loop until no quotes found
 
-                //get first quote (single or double?)
-               p = text.indexOf('"', p);
-               pb = text.indexOf("'", p);
-               // if pb>=0 and (p is -1 or pb<p), p=pb
-               if (pb >= 0 && (p === -1 || pb < p)) {p = pb};
+           var anyQuote = '"' + "'";
 
-               // if p<0, break //no more quotes
-               if (p < 0) {break};
+           // do while PMREX.findRanges(text,p,anyQuote) into p  < text.length
+           while((p=PMREX.findRanges(text, p, anyQuote)) < text.length){
 
                // if text.slice(p,p+3) is '"""' //ignore triple quotes (valid token)
                if (text.slice(p, p + 3) === '"""') { //ignore triple quotes (valid token)

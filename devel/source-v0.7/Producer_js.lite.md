@@ -1416,6 +1416,9 @@ Many LiteScript operators can be easily mapped one-to-one with their JavaScript 
       'unary -':      '-'
       'unary +':      '+'
 
+      '&':            '+'  //string concat
+      '&=':           '+='  //string concat
+
       'type of':      'typeof'
       'instance of':  'instanceof'
 

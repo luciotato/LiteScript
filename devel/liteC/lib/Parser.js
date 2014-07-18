@@ -286,9 +286,13 @@
        };// end loop
 
 // now we have a infoLine array, tokenized, ready to be parsed
-// clear source lines from memory
+// if we do not need to produce comments with original source
+// for reference at produced .c or .js, clear source lines from memory
 
-       this.lines = undefined;
+       // if no .options.comments
+       if (!this.options.comments) {
+           this.lines = undefined;
+       };
 
        return infoLines;
     };
@@ -390,8 +394,8 @@
            if (words[0].length < 3) {this.throwErr("MarkDown Title-keyword, expected at least indent 4: '### '")};
 
            // for recogn=1 to inx //each recognized word, convert to lowercase
-           var _end2=inx;
-           for( var recogn=1; recogn<=_end2; recogn++) {
+           var _end3=inx;
+           for( var recogn=1; recogn<=_end3; recogn++) {
                words[recogn] = words[recogn].toLowerCase();
            };// end for recogn
 
@@ -694,7 +698,7 @@
        var startRef = "while processing #ifdef started on line " + startSourceLine;
 
        words = line.slice(pos).split(' ');
-       var conditional = words[1];
+       var conditional = words.tryGet(1);
        // if no conditional, .throwErr "#ifdef; missing conditional"
        if (!conditional) {this.throwErr("#ifdef; missing conditional")};
        var defValue = this.project.compilerVar(conditional);
@@ -718,8 +722,8 @@
                // if line.charAt(0) is '#' and line.charAt(1) isnt '#' //expected: "#else, #endif #end if"
                if (line.charAt(0) === '#' && line.charAt(1) !== '#') { //expected: "#else, #endif #end if"
                    words = line.split(' ');
-                   // switch words[0]
-                   switch(words[0]){
+                   // switch words.tryGet(0)
+                   switch(words.tryGet(0)){
                    
                    case '#else':
                            this.replaceSourceLine(this.line.replaceAll("#else", "//else"));
@@ -727,8 +731,8 @@
                            break;
                            
                    case "#end":
-                           // if words[1] isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
-                           if (words[1] !== 'if') {this.throwErr("expected '#end if', read '" + line + "' " + startRef)};
+                           // if words.tryGet(1) isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
+                           if (words.tryGet(1) !== 'if') {this.throwErr("expected '#end if', read '" + line + "' " + startRef)};
                            endFound = true;
                            break;
                            
@@ -768,7 +772,7 @@
 // Methods getPos() and setPos() are used to save and restore a specific lexer position in code
 // When a AST node parse() fails, the lexer position is rewound to try another AST class
 
-    // method getPos()
+    // method getPos() returns LexerPos
     Lexer.prototype.getPos = function(){
         // #return {lineInx:.lineInx, index:.index, sourceLineNum:.sourceLineNum, token:.token, last:.last}
        return new LexerPos(this);
@@ -1260,7 +1264,7 @@
                var errPosString = '';
                // while errPosString.length<colInx
                while(errPosString.length < colInx){
-                   errPosString += ' ';
+                   errPosString = '' + errPosString + ' ';
                };// end loop
 
                logger.error(code);
@@ -1478,14 +1482,14 @@
 // In LiteScript, assignment is a *statement* not a *expression*
 
   // ['ASSIGN',/^=/],
-  // ['ASSIGN',/^[\+\-\*\/]=/ ], # = += -= *= /=
+  // ['ASSIGN',/^[\+\-\*\/\&]=/ ], # = += -= *= /= &=
 
            // if chunk.startsWith("=")
            if (chunk.startsWith("=")) {
                return new Token('ASSIGN', chunk.slice(0, 1));
            };
-           // if chunk.charAt(0) in "+-*/" and chunk.charAt(1) is "="
-           if ("+-*/".indexOf(chunk.charAt(0))>=0 && chunk.charAt(1) === "=") {
+           // if chunk.charAt(0) in "+-*/&" and chunk.charAt(1) is "="
+           if ("+-*/&".indexOf(chunk.charAt(0))>=0 && chunk.charAt(1) === "=") {
                return new Token('ASSIGN', chunk.slice(0, 2));
            };
 
@@ -1696,15 +1700,22 @@
 
       // lineNum, column
       // currLine:string
+
+      // toHeader:boolean
       // lines:string array
       // hLines:string array
+
       // lastOriginalCodeComment
       // lastOutCommentLine
       // sourceMap
       // browser:boolean
+
       // exportNamespace
-      // toHeader:boolean
+
+      // orTempVarCount=0 //helper temp vars to code js "or" in C, using ternary ?:
+        this.orTempVarCount=0;
    };
+
 
     // method start(options)
     OutCode.prototype.start = function(options){

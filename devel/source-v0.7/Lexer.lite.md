@@ -825,7 +825,7 @@ ASSIGN are symbols triggering the assignment statements.
 In LiteScript, assignment is a *statement* not a *expression*
 
         ['ASSIGN',/^=/],
-        ['ASSIGN',/^[\+\-\*\/]=/ ], # = += -= *= /=
+        ['ASSIGN',/^[\+\-\*\/\&]=/ ], # = += -= *= /= &=
 
 Postfix and prefix ++ and -- are considered 'LITERAL' 
 They're not considered 'operators' since they do no introduce a new operand.

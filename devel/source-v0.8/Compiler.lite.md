@@ -73,9 +73,13 @@ Create a 'Project' to hold the main module and dependant modules
 
         options.version = version
 
+        console.time 'Total Compile Project'
+
         var project = new Project(mainModule, options)
 
         project.compile
+
+        console.timeEnd 'Total Compile Project'
 
         return project
 

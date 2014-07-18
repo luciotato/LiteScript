@@ -30,8 +30,9 @@
 
     // symbol core functions (also specific on Object_)
     extern int _getSymbol(str name);
+    extern int _hasProperty(any this, any name);
     extern any _getProperty(any this, int symbol );
-    extern any _getPropertyName(any this, int index);
+    extern any _getPropertyNameAtIndex(any this, int index);
 
     //function LiteCore_getSymbol(symbolName:string) returns number
     // get symbol (number) from Symbol name (string)
@@ -61,7 +62,7 @@
     typedef struct _propertyInfoItem _propertyInfoArr[];
 
     // core methods, negative ints
-    #define _CORE_METHODS_MAX 33 // means -1..-_CORE_METHODS_MAX are valid method symbols
+    #define _CORE_METHODS_MAX 34 // means -1..-_CORE_METHODS_MAX are valid method symbols
     // means 1.._CORE_METHODS_MAX are used jmpTable indexes, so initial TABLE_LENGTH(jmpTable)=_CORE_METHODS_MAX+1
     // 0 is a reserved jmpTable index (TABLE_LENGTH is stored there), but symbol:0 is PROPERTY constructor:Class
     enum _CORE_METHODS_ENUM {
@@ -93,7 +94,8 @@
         ,tryGetMethod_
         ,tryGetProperty_
         ,getProperty_
-        ,getPropertyName_
+        ,getPropertyNameAtIndex_
+        ,hasProperty_
 
         ,has_
         ,get_
@@ -114,6 +116,7 @@
         name_, //class name
         initInstance_, //class __init:Function
 
+        size_, //Map.size
         value_, //NameValuePair
 
         message_, //error.message
@@ -131,44 +134,11 @@
 
     extern any Array_tryGet(DEFAULT_ARGUMENTS);
 
-    #ifndef NDEBUG
-        #include <signal.h>
-        extern void debug_fail(str file, int line, str message);
-        // access a method on the instance
-        #define METHOD(symbol,this) __method(symbol,this)
-        extern function_ptr __method(int symbol, any this);
-        // access a property of the instance
-        #define PROP(prop,this) (*(__prop(prop,this,__FILE__, __LINE__)))
-        extern any* __prop(int prop, any this, str file, int line);
-        // access arr[index]. Access item[index]
-        #define ITEM(index,this) (*(__item(index,this,__FILE__, __LINE__)))
-        extern any* __item(int64_t index, any this, str file, int line);
-        // access this.arr[index]. Access item[index] of a given property (type Array)
-        #define ITEM_PROP(index,prop,this) (*(__item(index,prop,this)))
-        extern any* __item2(int index, int prop, any this, str file, int line);
-    #else
-        #define METHOD(symbol,this) this.class->method[-symbol]
-        #define PROP(symbol,this) this.value.prop[this.class->pos[symbol]]
-        #define ITEM(index,anyArr) anyArr.value.arr[index]
-        #define ITEM_PROP(index,symbol,this) this.value.prop[this.class.pos[symbol]].value.arr[index]
-    #endif
-
     #define NO_ARGS 0,NULL
     #define ARG1(A1) 1,(any_arr){A1}
     #define ARG2(A1,A2) 2,(any_arr){A1,A2}
     #define ARG3(A1,A2,A3) 3,(any_arr){A1,A2,A3}
     #define ARG4(A1,A2,A3,A4) 4,(any_arr){A1,A2,A3,A4}
-
-    extern any __call(int symbol, DEFAULT_ARGUMENTS);
-    extern any __apply(any anyFunc, DEFAULT_ARGUMENTS);
-    extern any __applyArr(any anyFunc, any this, any anyArr);
-
-    #define CALL(symbol,this) __call(symbol,this,0,NULL)
-    #define CALL0(symbol,this) __call(symbol,this,0,NULL)
-    #define CALL1(symbol,this,A1) __call(symbol,this,1,(any_arr){A1})
-    #define CALL2(symbol,this,A1,A2) __call(symbol,this,2,(any_arr){A1,A2})
-    #define CALL3(symbol,this,A1,A2,A3) __call(symbol,this,3,(any_arr){A1,A2,A3})
-    #define CALL4(symbol,this,A1,A2,A3,A4) __call(symbol,this,4,(any_arr){A1,A2,A3,A4})
 
     void _default(any* variable,any value);
 
@@ -204,6 +174,7 @@
 
     extern struct Class_s Error_CLASSINFO;
     extern struct Class_s Array_CLASSINFO;
+    extern struct Class_s Map_CLASSINFO;
     extern struct Class_s NameValuePair_CLASSINFO;
 
 // core Class objects -------------------
@@ -257,19 +228,11 @@
     typedef struct Array_s * Array_ptr;
     typedef struct Array_s {
         //private-native
+        size_t allocd;
         len_t length;
         any* item;
     } Array_s;
     extern any Array; //class object
-
-    //Map
-    typedef struct Map_s * Map_ptr;
-    typedef struct Map_s { // extends Array
-        //private-native // Array
-        len_t length;
-        any* item;
-    } Map_s;
-    extern any Map; //class object
 
     //NameValuePair
     typedef struct NameValuePair_s * NameValuePair_ptr;
@@ -278,12 +241,23 @@
     } NameValuePair_s;
     extern any NameValuePair; //class object
 
+    //Map
+    typedef struct Map_s * Map_ptr;
+    typedef struct Map_s { // extends Array
+        any size;
+        //private-native
+        Array_s array; // Array of NameValuePair
+        int64_t current; //last-found | current nvp index | -1
+    } Map_s;
+    extern any Map; //class object
+
     //Buffer
     typedef struct Buffer_s * Buffer_ptr;
     typedef struct Buffer_s {
         //private-native
-        size_t used;
+        uint32_t allocd, used;
         char* ptr;
+        //char isMallocd;
     } Buffer_s;
     extern any Buffer; //class object
 
@@ -328,11 +302,54 @@
     extern any _concatAny(len_t argc, any* arguments);
     extern any _stringJoin(str initial, len_t argc, any* arguments, str separ);
 
-    #ifdef NCHECKARGS
-    #define assert_args(this, argc, arguments, required, total, classes) (__ASSERT_VOID_CAST (0))
+    #ifndef NDEBUG
+        extern void assert_args(DEFAULT_ARGUMENTS, int required, int total, any anyClass, ...);
     #else
-    extern void assert_args(DEFAULT_ARGUMENTS, int required, int total, Class_ptr class, ...);
+        #define assert_args(...) (__ASSERT_VOID_CAST (0))
     #endif
+
+    #define MAPSIZE(this) ((Map_ptr)this.value.ptr)->array.length
+    #ifndef NDEBUG
+        #include <signal.h>
+        extern void debug_fail(str file, int line, str message);
+        // access a method on the instance
+        #define METHOD(symbol,this) __method(symbol,this)
+        extern function_ptr __method(int symbol, any this);
+        // access a property of the instance
+        #define PROP(prop,this) (*(__prop(prop,this,__FILE__, __LINE__)))
+        extern any* __prop(int prop, any this, str file, int line);
+        // access arr[index]. Access item[index]
+        #define ITEM(index,this) (*(__item(index,this,__FILE__, __LINE__)))
+        extern any* __item(int64_t index, any this, str file, int line);
+        // access this.arr[index]. Access item[index] of a given property (type Array)
+        #define ITEM_PROP(index,prop,this) (*(__item(index,prop,this)))
+        extern any* __item2(int index, int prop, any this, str file, int line);
+        // access map.array[index]. get a NVP by index, used to implement for each in map, w/o iterators
+        #define MAPITEM(index,this) _map_getNVP(index,this,__FILE__, __LINE__)
+        extern NameValuePair_ptr _map_getNVP(int64_t index, any this, str file, int line);
+    #else
+        #define METHOD(symbol,this) (this.class->method[-symbol])
+        #define PROP(symbol,this) this.value.prop[this.class->pos[symbol]]
+        #define ITEM(index,anyArr) anyArr.value.arr->item[(len_t)index]
+        #define ITEM_PROP(index,symbol,this) this.value.prop[this.class.pos[symbol]].value.arr[index]
+        #define MAPITEM(index,this) ((NameValuePair_ptr)((Map_ptr)this.value.ptr)->array.item[index].value.ptr)
+    #endif
+
+    //#ifndef NDEBUG
+    extern any __call(int symbol, DEFAULT_ARGUMENTS);
+    extern any __apply(any anyFunc, DEFAULT_ARGUMENTS);
+    extern any __applyArr(any anyFunc, any this, any anyArr);
+
+    #define CALL(symbol,this) __call(symbol,this,0,NULL)
+    #define CALL0(symbol,this) __call(symbol,this,0,NULL)
+    #define CALL1(symbol,this,A1) __call(symbol,this,1,(any_arr){A1})
+    /*#define CALL(symbol,this) __call(symbol,this,0,NULL)
+    #define CALL0(symbol,this) __call(symbol,this,0,NULL)
+    #define CALL1(symbol,this,A1) __call(symbol,this,1,(any_arr){A1})
+    #define CALL2(symbol,this,A1,A2) __call(symbol,this,2,(any_arr){A1,A2})
+    #define CALL3(symbol,this,A1,A2,A3) __call(symbol,this,3,(any_arr){A1,A2,A3})
+    #define CALL4(symbol,this,A1,A2,A3,A4) __call(symbol,this,4,(any_arr){A1,A2,A3,A4})
+     * */
 
     extern str __concatToNULL(str first,...);
 
@@ -363,7 +380,8 @@
     extern any Object_tryGetMethod(DEFAULT_ARGUMENTS); // from method symbol
     extern any Object_getProperty(DEFAULT_ARGUMENTS); // from prop symbol, throws
     extern any Object_tryGetProperty(DEFAULT_ARGUMENTS); // from prop symbol, returns undefined
-    extern any Object_getPropertyName(DEFAULT_ARGUMENTS); // from prop index, throws
+    extern any Object_getPropertyNameAtIndex(DEFAULT_ARGUMENTS); // from prop index, throws
+    extern any Object_hasProperty(DEFAULT_ARGUMENTS); //from name, returns true or false
 
     extern void Error__init(DEFAULT_ARGUMENTS);
 
@@ -416,6 +434,8 @@
     extern any console_group(DEFAULT_ARGUMENTS);
     extern any console_groupEnd(DEFAULT_ARGUMENTS);
     extern any console_debugEnabled;
+    extern any console_time(DEFAULT_ARGUMENTS);
+    extern any console_timeEnd(DEFAULT_ARGUMENTS);
 
     //namespace process
     extern any process_argv; // namespace process - node.js compat with core object process

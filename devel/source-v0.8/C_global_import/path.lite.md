@@ -86,9 +86,17 @@ var splitPathRe = /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$
         var basename:string = parts.slice(-1)[0] //last part
         result.push basename
 
-        // now extension
-        result.push ".#{basename.split('.').slice(-1)}" //.last part of filename.split(.)
+now the extension.
+split on ".", last is extension
 
+        parts=basename.split('.') 
+
+        if parts.length is 1 //no extension, only filename
+            result.push "" 
+        else
+            result.push ".#{parts.pop()}" 
+            
+            
         return result
   
   // path.resolve([from ...], to)

@@ -32,8 +32,12 @@ parse command line parameters
 
 #### helper method getPos(shortOption,argName)
 
-        .lastIndex = .search(['-#{shortOption}','--#{shortOption}','--#{argName}','-#{argName}'])
-        return .lastIndex
+search several possible forms of the option, e.g. -o --o -outdir --outdir
+
+        var forms=['-#{shortOption}','--#{shortOption}']
+        if argName, forms.push('--#{argName}','-#{argName}')
+
+        return .search(forms) into .lastIndex
 
 #### helper method search(list:array)
         for each item in list

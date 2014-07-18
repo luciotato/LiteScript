@@ -2414,6 +2414,7 @@
        Literal.prototype.constructor.apply(this,arguments)
       // properties
         // items: NameValuePair array
+        // produceType: string
    };
    // ObjectLiteral (extends|proto is) Literal
    ObjectLiteral.prototype.__proto__ = Literal.prototype;
@@ -2493,11 +2494,9 @@
 
          callback.call(this);
 
-          // #if ObjectLiteral, recurse
-          // declare valid .value.root.name
          // if .value.root.name instanceof ObjectLiteral
          if (this.value.root.name instanceof ObjectLiteral) {
-            // declare valid .value.root.name.forEach
+            // declare .value.root.name:ObjectLiteral
            this.value.root.name.forEach(callback);// # recurse
          };
      };
@@ -2757,17 +2756,18 @@
        this.lock();
 
 // require method name. Note: jQuery uses 'not' and 'has' as method names, so here we
-// take any token, and check if it's valid identifier
+// take any token, and check if it's a valid identifier
 
         //.name = .req('IDENTIFIER')
-       this.name = this.lexer.token.value;
+       var name = this.lexer.token.value;
 
-       var p = PMREX.whileRanges(this.name, 0, "a-zA-Z$_"); //start with one or more letters
-       // if p>=0, p = PMREX.whileRanges(.name,p,"0-9a-zA-Z$_") //can have numbers
-       if (p >= 0) {p = PMREX.whileRanges(this.name, p, "0-9a-zA-Z$_")};
-       // if p < .name.length, .throwError 'invalid method name: "#{.name}"'
-       if (p < this.name.length) {this.throwError('invalid method name: "' + this.name + '"')};
+       var p = PMREX.whileRanges(name, 0, "a-zA-Z$_"); //start with one or more letters
+       // if p>=0, p = PMREX.whileRanges(name,p,"0-9a-zA-Z$_") //can have numbers
+       if (p >= 0) {p = PMREX.whileRanges(name, p, "0-9a-zA-Z$_")};
+       // if p < name.length, .throwError 'invalid method name: "#{name}"'
+       if (p < name.length) {this.throwError('invalid method name: "' + name + '"')};
 
+       this.name = name;
        this.lexer.nextToken();
 
 // now parse parameters and body (as with any function)
@@ -3891,6 +3891,8 @@
         // specific: ASTBase //specific statement, e.g.: :VarDeclaration, :PropertiesDeclaration, :FunctionDeclaration
         // preParsedVarRef
         // intoVars
+
+        // lastSourceLineNum
          this.adjectives=[];
    };
    // Statement (extends|proto is) ASTBase
@@ -3949,6 +3951,13 @@
        // end if - statement parse tries
 
 // If we reached here, we have parsed a valid statement.
+
+// remember where the full statment ends
+
+       this.lastSourceLineNum = this.lexer.maxSourceLineNum;
+       // if .lastSourceLineNum<.sourceLineNum, .lastSourceLineNum = .sourceLineNum
+       if (this.lastSourceLineNum < this.sourceLineNum) {this.lastSourceLineNum = this.sourceLineNum};
+
 // Check validity of adjective-statement combination
 
        key = key.toLowerCase();
@@ -3989,8 +3998,8 @@
 
        // if .hasAdjective('export') and .hasAdjective('default')
        if (this.hasAdjective('export') && this.hasAdjective('default')) {
-           // if moduleNode.exportDefault, .throwError "only one 'export default' can be defined"
-           if (moduleNode.exportDefault) {this.throwError("only one 'export default' can be defined")};
+           // if moduleNode.exportDefault, .throwError "only one 'export default' per module can be defined"
+           if (moduleNode.exportDefault) {this.throwError("only one 'export default' per module can be defined")};
            moduleNode.exportDefault = this.specific;
        };
      };

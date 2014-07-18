@@ -1891,6 +1891,7 @@ For LiteC (the Litescript-to-C compiler), a ObjectLiteral crates a `Map string t
 
       properties 
         items: NameValuePair array
+        produceType: string
 
       method parse()
         .req '{'
@@ -1941,10 +1942,8 @@ recursive duet 2 (see ObjectLiteral)
 
           callback.call(this) 
 
-          #if ObjectLiteral, recurse
-          declare valid .value.root.name
           if .value.root.name instanceof ObjectLiteral
-            declare valid .value.root.name.forEach
+            declare .value.root.name:ObjectLiteral
             .value.root.name.forEach callback # recurse
 
       end helper recursive functions
@@ -2129,15 +2128,16 @@ Examples:
         .lock()
 
 require method name. Note: jQuery uses 'not' and 'has' as method names, so here we 
-take any token, and check if it's valid identifier
+take any token, and check if it's a valid identifier
 
         //.name = .req('IDENTIFIER') 
-        .name = .lexer.token.value 
+        var name = .lexer.token.value 
 
-        var p = PMREX.whileRanges(.name,0,"a-zA-Z$_") //start with one or more letters
-        if p>=0, p = PMREX.whileRanges(.name,p,"0-9a-zA-Z$_") //can have numbers
-        if p < .name.length, .throwError 'invalid method name: "#{.name}"'
+        var p = PMREX.whileRanges(name,0,"a-zA-Z$_") //start with one or more letters
+        if p>=0, p = PMREX.whileRanges(name,p,"0-9a-zA-Z$_") //can have numbers
+        if p < name.length, .throwError 'invalid method name: "#{name}"'
 
+        .name = name
         .lexer.nextToken
 
 now parse parameters and body (as with any function)
@@ -2981,6 +2981,8 @@ Statement: ( AssignmentStatement | fnCall-VariableRef [ ["("] (Expression,) [")"
         preParsedVarRef
         intoVars
 
+        lastSourceLineNum
+
       method parse()
 
         var key
@@ -3025,6 +3027,12 @@ Then we require a AssignmentStatement or FunctionCall
         end if - statement parse tries
 
 If we reached here, we have parsed a valid statement. 
+
+remember where the full statment ends
+
+        .lastSourceLineNum = .lexer.maxSourceLineNum 
+        if .lastSourceLineNum<.sourceLineNum, .lastSourceLineNum = .sourceLineNum
+
 Check validity of adjective-statement combination 
         
         key = key.toLowerCase()
@@ -3057,7 +3065,7 @@ Also, if the class/namespace has the same name as the file, it's automagically "
             .adjectives.push 'export','default'
 
         if .hasAdjective('export') and .hasAdjective('default')
-            if moduleNode.exportDefault, .throwError "only one 'export default' can be defined"
+            if moduleNode.exportDefault, .throwError "only one 'export default' per module can be defined"
             moduleNode.exportDefault = .specific
 
 

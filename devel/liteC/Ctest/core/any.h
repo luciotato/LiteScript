@@ -95,13 +95,11 @@ extern "C" {
     extern str _int32ToStr(int32_t a);
     extern str _int64ToStr(int64_t a);
     extern str _uint32ToStr(uint32_t a);
-    extern str _uint64ToStr(uint64_t a);
+    extern str _uint64ToStr(uint64_t a, int decPlaces);
     extern str _numberToStr(double a);
 
     // convert to Number
     //extern any Number(DEFAULT_ARGUMENTS);
-
-    #define TRUNCkb(X) ( (X+(1<<10))>>10<<10 )
 
     extern any _newStrSize(size_t size);
 

@@ -12,6 +12,7 @@
             <sourceRootList>
                 <sourceRootElem>generated</sourceRootElem>
                 <sourceRootElem>core</sourceRootElem>
+                <sourceRootElem>include/gc</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>

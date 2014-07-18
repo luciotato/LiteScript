@@ -1448,7 +1448,7 @@
 
 // This is instance has the method, call the method on the instance
 
-     logger.debugGroup("callOnSubTree " + this.constructor.name + "." + (LiteCore.getSymbolName(methodSymbol)) + "() - '" + this.name + "'");
+      //logger.debugGroup "callOnSubTree #{.constructor.name}.#{LiteCore.getSymbolName(methodSymbol)}() - '#{.name}'"
 
      // if this.tryGetMethod(methodSymbol) into var theFunction
      var theFunction=undefined;
@@ -1475,7 +1475,7 @@
            
            else if (value instanceof Array) {
                 // declare value:array
-               logger.debug("callOnSubArray " + this.constructor.name + "." + name + "[]");
+                //logger.debug "callOnSubArray #{.constructor.name}.#{name}[]"
                // for each item in value where item instance of ASTBase
                for( var item__inx=0,item ; item__inx<value.length ; item__inx++){item=value[item__inx];
                  if(item instanceof ASTBase){
@@ -1488,9 +1488,10 @@
            
            }// end for each property
      // end for
-
-     logger.debugGroupEnd();
+     
     };
+
+      //logger.debugGroupEnd
 
 // ----
 // ## Methods added to specific Grammar Classes to handle scope, var & members declaration
@@ -2295,7 +2296,9 @@
 // Exception blocks have a scope
 
        this.createScope();
-       this.addToScope(this.catchVar, new Map().fromObject({type: globalPrototype('Error')}));
+       var opt = new Names.NameDeclOptions();
+       opt.type = globalPrototype('Error');
+       this.addToScope(this.catchVar, opt);
      };
 
 
@@ -2698,6 +2701,7 @@
                };
                 // #add as member to nameAffinity, referencing class decl (.nodeDeclared)
                varDecl.nameDecl.nodeDeclared = classDecl;
+                // declare varDecl.name:string
                nameAffinity.members.set(varDecl.name.capitalized(), classDecl.nameDecl);
            };
          };// end for each in this.names

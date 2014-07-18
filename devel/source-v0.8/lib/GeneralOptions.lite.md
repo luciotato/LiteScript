@@ -12,7 +12,6 @@
             single = undefined
             compileIfNewer = undefined
             browser =undefined
-            extraComments =1
             defines: array of string = []
 
             projectDir:string 

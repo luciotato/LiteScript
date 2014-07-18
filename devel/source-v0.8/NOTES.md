@@ -136,6 +136,43 @@ C:
         fail with "Unexpected class. foo is #{foo.class.name}"
     }
 
+# Lite-Core
+
+add "Iterable" interface, make map "iterable"
+
+    interface iterable
+        method movePreStart //moves to pre-first element (index -1, BOF)
+        method moveNext // returns true if there's a next item to move to, else false
+
+        method getCurrent //return currentItem
+
+        method getBookmark
+        method moveToBookmark
+
+replace "for each in map X" implementation to use iterable interface to map
+
+Note: JS/MDN seems to implement the "EOF" signal for iterators by throwwing a "StopIteration" Exception.
+Not a good use of exceptions IMHO.
+
+
+
+# DONE-  add a string concatenation operator?
+
+maybe & ?
+
+    a = a & ": " & b
+    a &= b
+
+
+# validate required and optional parameters
+
+  caso: estaba llamando a 
+    lexer.out.put x, "bar", "important"
+
+  pero lexer.out.put SOLO ACEPTA UN PARAM STRING
+
+  por lo que no decia nada pero "bar" e "important" nunca se imprimian
+
 
 ## NO. Already done with ".constructor" - add foo.class 
 

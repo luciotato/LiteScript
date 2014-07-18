@@ -1218,7 +1218,7 @@ check if owner is class (namespace) or class.prototype (class)
 
 This is instance has the method, call the method on the instance
 
-      logger.debugGroup "callOnSubTree #{.constructor.name}.#{LiteCore.getSymbolName(methodSymbol)}() - '#{.name}'"
+      //logger.debugGroup "callOnSubTree #{.constructor.name}.#{LiteCore.getSymbolName(methodSymbol)}() - '#{.name}'"
   
       if this.tryGetMethod(methodSymbol) into var theFunction 
             logger.debug "calling #{.constructor.name}.#{LiteCore.getSymbolName(methodSymbol)}() - '#{.name}'"
@@ -1237,13 +1237,13 @@ recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
 
             else if value instance of Array
                 declare value:array 
-                logger.debug "callOnSubArray #{.constructor.name}.#{name}[]"
+                //logger.debug "callOnSubArray #{.constructor.name}.#{name}[]"
                 for each item in value where item instance of ASTBase
                     declare item:ASTBase
                     item.callOnSubTree methodSymbol,excludeClass
       end for
 
-      logger.debugGroupEnd
+      //logger.debugGroupEnd
 
 ----
 ## Methods added to specific Grammar Classes to handle scope, var & members declaration
@@ -1849,7 +1849,9 @@ ForEachInArray: check if the iterable has a .length property.
 Exception blocks have a scope
 
         .createScope
-        .addToScope .catchVar,{type:globalPrototype('Error')}
+        var opt=new Names.NameDeclOptions
+        opt.type= globalPrototype('Error')
+        .addToScope .catchVar,opt
 
 
 ### Append to class Grammar.VariableRef ### Helper methods
@@ -2188,6 +2190,7 @@ else: declare (name affinity|var) (VariableDecl,)
                     return
                 #add as member to nameAffinity, referencing class decl (.nodeDeclared)
                 varDecl.nameDecl.nodeDeclared = classDecl
+                declare varDecl.name:string
                 nameAffinity.members.set varDecl.name.capitalized(), classDecl.nameDecl
 
 if .specifier is 'on-the-fly', the type will be converted on next passes over the created Names.Declaration.

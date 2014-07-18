@@ -14,7 +14,6 @@
             // single = undefined
             // compileIfNewer = undefined
             // browser =undefined
-            // extraComments =1
             // defines: array of string = []
 
             // projectDir:string
@@ -38,7 +37,6 @@
          this.single=undefined;
          this.compileIfNewer=undefined;
          this.browser=undefined;
-         this.extraComments=1;
          this.defines=[];
          this.mainModuleName='unnamed';
          this.outDir='./out';

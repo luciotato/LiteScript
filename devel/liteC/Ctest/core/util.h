@@ -27,7 +27,17 @@ extern "C" {
     #define TRUE 1
     #define FALSE 0
 
-    #include "gc.h"
+    #ifdef NO_GC
+        #define MALLOC malloc
+        #define REALLOC realloc
+        //#define GET_BLOCK_SIZE malloc_usable_size
+    #else
+        #define MALLOC GC_malloc
+        #define REALLOC GC_realloc
+        #define GET_BLOCK_SIZE GC_size
+
+        #include "gc.h"
+    #endif
 
     extern void* mem_alloc(size_t size);
     extern void* mem_realloc(void* ptr, size_t size);

@@ -89,7 +89,7 @@ get mainModuleName
 
     if no args.items.length
         console.error "Missing file.lite.md to compile\nlite -h for help"
-        process.exit 2
+        process.exit 
 
     //only main module name should be left
     if args.items.length>1

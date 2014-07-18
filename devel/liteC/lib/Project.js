@@ -61,6 +61,8 @@
 // As with node's `require` mechanism, a module,
 // when imported|required is only compiled once and then cached.
 
+       console.time('Init Project');
+
        this.name = 'Project';
 
        this.options = options;
@@ -142,9 +144,9 @@
 // by parsing the file: "lib/GlobalScopeJS.interface.md"
 
        Validate.initialize(this);
-    };
 
-// In 'options' we receive also the target code to generate. (default is 'js')
+       console.timeEnd('Init Project');
+    };
 
     // method compile()
     Project.prototype.compile = function(){
@@ -152,10 +154,14 @@
 // Import & compile the main module. The main module will, in turn, 'import' and 'compile'
 // -if not cached-, all dependent modules.
 
+       console.time('Parse');
+
        var importInfo = new Environment.ImportParameterInfo();
        importInfo.name = this.options.mainModuleName;
        this.main = this.importModule(this.rootModule, importInfo);
        this.main.isMain = true;
+
+       console.timeEnd('Parse');
 
        // if logger.errorCount is 0
        if (logger.errorCount === 0) {
@@ -167,15 +173,18 @@
        // if no .options.skip
        if (!this.options.skip) {
            logger.info("Validating");
+           console.time('Validate');
            Validate.validate(this);
+           console.timeEnd('Validate');
            // if logger.errorCount, logger.throwControlled '#{logger.errorCount} errors'
            if (logger.errorCount) {logger.throwControlled('' + logger.errorCount + ' errors')};
        };
 
 // Produce, for each module
 
-       mkPath.create(this.options.outDir);
+       console.time('Produce');
        logger.info("\nProducing " + this.options.target + " at " + this.options.outDir + "\n");
+       mkPath.create(this.options.outDir);
 
        // for each moduleNode:Grammar.Module in map .moduleCache
        var moduleNode=undefined;
@@ -254,8 +263,10 @@
         //ifdef PROD_C
        // if no logger.errorCount, Producer_c.postProduction this
        if (!logger.errorCount) {Producer_c.postProduction(this)};
-    };
         //endif
+
+       console.timeEnd('Produce');
+    };
 
     // method compileFile(filename) returns Grammar.Module
     Project.prototype.compileFile = function(filename){
@@ -406,8 +417,8 @@
 
        moduleNode.lexer.outCode.browser = this.options.browser;
 
-       // if .options.extraComments
-       if (this.options.extraComments) {
+       // if .options.comments>=2
+       if (this.options.comments >= 2) {
            moduleNode.lexer.outCode.put("//Compiled by LiteScript compiler v" + this.options.version + ", source: " + moduleNode.fileInfo.filename);
            moduleNode.lexer.outCode.startNewLine();
        };

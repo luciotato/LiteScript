@@ -40,9 +40,9 @@
    var allMethodNames = new Map().fromObject({}); // all distinct methodnames, to declare method symbols
    var allPropertyNames = new Map().fromObject({}); // all distinct propname, to declare props symbols
 
-   var coreSupportedMethods = ["toString", "tryGetMethod", "tryGetProperty", "getProperty", "getPropertyName", "has", "get", "set", "clear", "delete", "keys", "slice", "split", "indexOf", "lastIndexOf", "concat", "toUpperCase", "toLowerCase", "charAt", "replaceAll", "trim", "toDateString", "toTimeString", "toUTCString", "toISOString", "shift", "push", "unshift", "pop", "join", "splice"];
+   var coreSupportedMethods = ["toString", "tryGetMethod", "tryGetProperty", "getProperty", "getPropertyName", "hasProperty", "has", "get", "set", "clear", "delete", "keys", "slice", "split", "indexOf", "lastIndexOf", "concat", "toUpperCase", "toLowerCase", "charAt", "replaceAll", "trim", "toDateString", "toTimeString", "toUTCString", "toISOString", "shift", "push", "unshift", "pop", "join", "splice"];
 
-   var coreSupportedProps = ['name', 'value', 'message', 'stack', 'code'];
+   var coreSupportedProps = ['name', 'size', 'value', 'message', 'stack', 'code'];
 
    var dispatcherModule = undefined;
    // export
@@ -91,8 +91,8 @@
    function normalizeDefine(name){
        var chr = undefined, result = "";
        // for n=0 to name.length
-       var _end4=name.length;
-       for( var n=0; n<=_end4; n++) {
+       var _end6=name.length;
+       for( var n=0; n<=_end6; n++) {
            chr = name.charAt(n).toUpperCase();
            // if chr<'A' or chr>'Z', chr="_"
            if (chr < 'A' || chr > 'Z') {chr = "_"};
@@ -280,6 +280,11 @@
 
        this.out(new Map().fromObject({h: 0}), '#include "' + prefix + '.h"', NL, NL, "//-------------------------", NL, "//Module ", prefix, this.fileInfo.isInterface ? ' - INTERFACE' : '', NL, "//-------------------------", NL);
 
+        //space to insert __or temp vars
+       var insertPos = this.lexer.outCode.lines.length;
+       this.lexer.outCode.blankLine();
+       this.lexer.outCode.blankLine();
+
         // add sustance for the module
        this.produceSustance(prefix);
 
@@ -320,6 +325,22 @@
        };
 
        this.out(NL, "};", NL);
+
+// insert at .c file start, helper tempvars for 'or' expressions short-circuit evaluation
+
+       // if .lexer.outCode.orTempVarCount
+       if (this.lexer.outCode.orTempVarCount) {
+           this.lexer.outCode.lines[insertPos++] = "//helper tempvars for 'or' expressions short-circuit evaluation";
+           var list = "any __or1";
+           // for n=2 to .lexer.outCode.orTempVarCount
+           var _end7=this.lexer.outCode.orTempVarCount;
+           for( var n=2; n<=_end7; n++) {
+               list += ",__or" + n;
+           };// end for n
+           list += ";";
+           this.lexer.outCode.lines[insertPos] = list;
+       };
+
 
        this.skipSemiColon = true;
 
@@ -811,7 +832,7 @@
            }
            
            else if (item.specific.constructor === Grammar.AppendToDeclaration) {
-               item.specific.callOnSubTree('produceStaticListMethodsAndProps'); //if there are internal classes
+               item.specific.callOnSubTree(LiteCore.getSymbol('produceStaticListMethodsAndProps')); //if there are internal classes
                produceThird.push(item);
            }
            
@@ -840,11 +861,11 @@
 
 // First: register user classes
 
-       this.callOnSubTree('produceClassRegistration');
+       this.callOnSubTree(LiteCore.getSymbol('produceClassRegistration'));
 
 // Second: recurse for namespaces
 
-       this.callOnSubTree('produceCallNamespaceInit');
+       this.callOnSubTree(LiteCore.getSymbol('produceCallNamespaceInit'));
 
 // Third: assign values for module vars.
 // if there is var or properties with assigned values, produce those assignment.
@@ -917,16 +938,18 @@
 
 // To ease reading of compiled code, add original Lite line as comment
 
-       // if .lexer.options.comments
-       if (this.lexer.options.comments) {
-         // if .lexer.outCode.lastOriginalCodeComment<.lineInx
-         if (this.lexer.outCode.lastOriginalCodeComment < this.lineInx) {
-           // if not (.specific.constructor in [
-           if (!(([Grammar.CompilerStatement, Grammar.DeclareStatement, Grammar.DoNothingStatement].indexOf(this.specific.constructor)>=0))) {
-             this.out(new Map().fromObject({COMMENT: this.lexer.infoLines[this.lineInx].text.trim()}), NL);
+       // if .lexer.options.comments // and .lexer.outCode.lastOriginalCodeComment<.lineInx
+       if (this.lexer.options.comments) { // and .lexer.outCode.lastOriginalCodeComment<.lineInx
+
+           var commentTo = this.lastSourceLineNum;
+           // if .specific has property "body"
+           if ("body" in this.specific || this.specific instanceof Grammar.IfStatement || this.specific instanceof Grammar.WithStatement || this.specific instanceof Grammar.ForStatement || this.specific instanceof Grammar.SwitchStatement) {
+                   commentTo = this.sourceLineNum;
            };
-         };
-         this.lexer.outCode.lastOriginalCodeComment = this.lineInx;
+
+           this.outSourceLinesAsComment(this.sourceLineNum, commentTo);
+
+           this.lexer.outCode.lastOriginalCodeComment = commentTo;
        };
 
 // Each statement in its own line
@@ -939,8 +962,7 @@
 // if there are one or more 'into var x' in a expression in this statement,
 // declare vars before the statement (exclude body of FunctionDeclaration)
 
-       var methodToCall = LiteCore.getSymbol('declareIntoVar');
-       this.callOnSubTree(methodToCall, Grammar.Body);
+       this.callOnSubTree(LiteCore.getSymbol('declareIntoVar'), Grammar.Body);
 
 // call the specific statement (if,for,print,if,function,class,etc) .produce()
 
@@ -955,8 +977,8 @@
        if (!(this.specific.skipSemiColon)) {
          this.addSourceMap(mark);
          this.out(";");
-         // if not .specific.body
-         if (!(this.specific.body)) {
+         // if not .specific has property "body"
+         if (!("body" in this.specific)) {
            this.out(this.getEOLComment());
          };
        };
@@ -1135,9 +1157,13 @@
            this.out(this.name);
        }
        
+       else if (this.name instanceof Grammar.ParenExpression) {
+            // declare .name:Grammar.ParenExpression
+           this.name.expr.produceType = this.produceType;
+           this.out(this.name.expr, this.accessors);
+       }
+       
        else {
-            // declare valid .name.produceType
-           this.name.produceType = this.produceType;
            this.out(this.name, this.accessors);
        };
 
@@ -1286,7 +1312,7 @@
            break;
            
        case 'has property':
-           this.throwError("NOT IMPLEMENTED YET for C");
+           this.out(toAnyPre, prepend, "_hasProperty(", this.left, ",", this.right, ")", append, toAnyPost);
            break;
            
        case 'into':
@@ -1315,11 +1341,16 @@
            break;
            
        case 'or':
+           this.lexer.outCode.orTempVarCount++;
+           var orTmp = '__or' + this.lexer.outCode.orTempVarCount;
+
            this.left.produceType = 'any';
            this.right.produceType = 'any';
            // if .produceType and .produceType isnt 'any', .out '_anyTo',.produceType,'('
            if (this.produceType && this.produceType !== 'any') {this.out('_anyTo', this.produceType, '(')};
-           this.out('__or(', this.left, ',', this.right, ')');
+
+           this.out('(_anyToBool(' + orTmp + '=', this.left, ')? ' + orTmp + ' : ', this.right, ')');
+
            // if .produceType and .produceType isnt 'any', .out ')'
            if (this.produceType && this.produceType !== 'any') {this.out(')')};
            break;
@@ -1332,6 +1363,14 @@
            this.out('(int64_t)', this.left, ' % (int64_t)', this.right);
            // if .produceType and .produceType isnt 'Number', .out ')'
            if (this.produceType && this.produceType !== 'Number') {this.out(')')};
+           break;
+           
+       case '&':
+           // if .produceType is 'Number', .throwError 'cannot use & to concat and produce a number'
+           if (this.produceType === 'Number') {this.throwError('cannot use & to concat and produce a number')};
+           this.left.produceType = 'any';
+           this.right.produceType = 'any';
+           this.out("_concatAny(2,(any_arr){", this.left, ',', this.right, '})');
            break;
            
        default:
@@ -1778,6 +1817,7 @@
                    callParams = [","]; // new(Class,argc,arguments*)
                     //add arguments: count,(any_arr){...}
                    this.addArguments(functionAccess.args, callParams);
+                   callParams.push(")"); //close
                }
                
                else {
@@ -1800,14 +1840,15 @@
 
                         //add arguments: count,(any_arr){...}
                        this.addArguments(functionAccess.args, callParams);
+                       callParams.push(")"); //close function(undefined,arg,any* arguments)
                    }
                    
                    else {
                         //method call
 
                         //to ease C-code reading, use macros CALL1 to CALL4 if possible
-                       // if functionAccess.args and functionAccess.args.length<=4
-                       if (functionAccess.args && functionAccess.args.length <= 4) {
+                       // if false //functionAccess.args and functionAccess.args.length<=4
+                       if (false) { //functionAccess.args and functionAccess.args.length<=4
 
                             // __call enclose all
                            fnNameArray.unshift("CALL" + functionAccess.args.length + "(");
@@ -1821,16 +1862,45 @@
                        
                        else {
 
-                            // __call enclose all
-                           fnNameArray.unshift("__call(");
-                            // here goes methodName
-                           fnNameArray.push(","); // __call(symbol_ *,*
-                            // here: instance reference as 2nd param (this value)
-                           result.unshift(fnNameArray); //prepend __call(methodName, ...instanceof
-                            //options.validations.push ["assert("].concat(callParams,".type>TYPE_NULL);")
-                           callParams = [","];
+//                             // METHOD()(... ) enclose all
+//                             fnNameArray.unshift "METHOD("
+//                             // here goes methodName
+//                             fnNameArray.push "," // __call(symbol_ *,*
+//                             // here: instance reference as 2nd param (this value)
+//                             result.unshift fnNameArray //prepend __call(methodName, ...instanceof
+//                             //options.validations.push ["assert("].concat(callParams,".type>TYPE_NULL);")
+//                             callParams = [")("]
+//                             
+                           var simpleVar = result.length === 1 && result[0].length === 1;
+                           // if simpleVar
+                           if (simpleVar) {
+                               var simpleVarName = result[0][0];
+                                // METHOD()(... ) enclose all
+                               fnNameArray.unshift(["METHOD("]);
+                                // here goes methodName
+                               fnNameArray.push(",");
+                               result.unshift(fnNameArray);
+                                // here: 1st instance reference
+                               result.push([")(", simpleVarName]); // METHOD(symbol_,this)(this
+                                //options.validations.push ["assert("].concat(callParams,".type>TYPE_NULL);")
+                               callParams = [","];
+                           }
+                           
+                           else {
+                                // METHOD()(... ) enclose all
+                               fnNameArray.unshift("__call(");
+                                // here goes methodName
+                               fnNameArray.push(","); // __call(symbol_ *,*
+                                // here: instance reference as 2nd param (this value)
+                               result.unshift(fnNameArray); //prepend __call(methodName, ...instanceof
+                                //options.validations.push ["assert("].concat(callParams,".type>TYPE_NULL);")
+                               callParams = [","];
+                           };
+                           // end if
+
                             //add arguments: count,(any_arr){...}
                            this.addArguments(functionAccess.args, callParams);
+                           callParams.push(")"); //close
                        };
 
                        // end if
@@ -1843,7 +1913,6 @@
 
                // end if //callNew
 
-               callParams.push(")"); //close __call(symbol,this,argc, any* arguments )  | function(undefined,arg,any* arguments)
                result.push(callParams);
 
                // if actualVar, actualVar = actualVar.findMember('**return type**')
@@ -1942,8 +2011,22 @@
        
        case "+=": case "-=": case "*=": case "/=":
 
+               // if oper is '+='
+               if (oper === '+=') {
+                   var rresultNameDecl = this.rvalue.getResultType();
+                   // if rresultNameDecl and rresultNameDecl.isInstanceof('String')
+                   if (rresultNameDecl && rresultNameDecl.isInstanceof('String')) {
+                       this.sayErr("You should not use += to concat strings. use string concat oper: & or interpolation instead.\ne.g.: DO: \"a &= b\"  vs.  DO NOT: a += b");
+                   };
+               };
+
                this.rvalue.produceType = 'Number';
                this.out(this.lvalue, extraLvalue, ' ', oper, ' ', this.rvalue);
+               break;
+               
+       case "&=":
+               this.rvalue.produceType = 'any';
+               this.out(this.lvalue, '=', "_concatAny(2,(any_arr){", this.lvalue, ',', this.rvalue, '})');
                break;
                
        default:
@@ -2232,6 +2315,8 @@
      // method produce()
      Grammar.ElseIfStatement.prototype.produce = function(){
 
+       this.outSourceLineAsComment(this.sourceLineNum);
+
        this.out(NL, "else ", this.nextIf);
      };
 
@@ -2239,6 +2324,8 @@
 
      // method produce()
      Grammar.ElseStatement.prototype.produce = function(){
+
+       this.outSourceLineAsComment(this.sourceLineNum);
 
        this.out(NL, "else {", this.body, "}");
      };
@@ -2273,6 +2360,8 @@
 
 // Create a default index var name if none was provided
 
+       this.out("{", NL); //enclose defined temp vars in their own scope
+
        var listName = undefined, uniqueName = UniqueID.getVarName('list');// #unique temp listName var name
         // declare valid .iterable.root.name.hasSideEffects
        // if .iterable.operandCount>1 or .iterable.root.name.hasSideEffects or .iterable.root.name instanceof Grammar.Literal
@@ -2287,10 +2376,11 @@
 
 // create a var holding object property count
 
-       this.out("len_t ", uniqueName, "_len=", listName, '.class->instanceSize / sizeof(any);', NL);
+       this.out("len_t __propCount=", listName, '.class->instanceSize / sizeof(any);', NL);
 
        var startValue = "0";
        var intIndexVarName = '' + this.mainVar.name + '__inx';
+
        // if .indexVar
        if (this.indexVar) {
            this.out("any ", this.indexVar.name, "=undefined;", NL);
@@ -2298,13 +2388,13 @@
 
        this.out("any ", this.mainVar.name, "=undefined;", NL);
 
-       this.out("for(int ", intIndexVarName, "=", startValue, " ; ", intIndexVarName, "<", uniqueName, "_len", " ; ", intIndexVarName, "++){");
+       this.out("for(int __propIndex=", startValue, " ; __propIndex < __propCount", " ; __propIndex++ ){");
 
-       this.body.out(this.mainVar.name, "=", listName, ".value.prop[", intIndexVarName, "];", NL);
+       this.body.out(this.mainVar.name, "=", listName, ".value.prop[__propIndex];", NL);
 
        // if .indexVar
        if (this.indexVar) {
-           this.body.out(this.indexVar.name, "= _getPropertyName(", listName, ",", intIndexVarName, ");", NL);
+           this.body.out(this.indexVar.name, "= _getPropertyNameAtIndex(", listName, ",__propIndex);", NL);
        };
 
        // if .where
@@ -2316,7 +2406,7 @@
          this.out(this.body);
        };
 
-       this.out("};", new Map().fromObject({COMMENT: ["end for each property in ", this.iterable]}), NL);
+       this.out("}};", new Map().fromObject({COMMENT: ["end for each property in ", this.iterable]}), NL);
      };
 
    // append to class Grammar.ForEachInArray
@@ -2375,22 +2465,18 @@
      // method produceForMap(listName)
      Grammar.ForEachInArray.prototype.produceForMap = function(listName){
 
-       var intIndexVarName = "" + this.mainVar.name + "__inx";// # unique map numeric index
-       var nvp = UniqueID.getVarName('nvp');// # pointer to name-value pair[inx]
+       this.out("{", "NameValuePair_ptr __nvp=NULL; //name:value pair", NL, "int64_t __len=MAPSIZE(", listName, "); //how many pairs", NL);
 
-       this.out("{ NameValuePair_ptr ", nvp, "=NULL; //name:value pair", NL);
-       // if .indexVar, .body.out " var ",.indexVar.name,"=undefined; //key",NL
-       if (this.indexVar) {this.body.out(" var ", this.indexVar.name, "=undefined; //key", NL)};
-       this.out(" var ", this.mainVar.name, "=undefined; //value", NL);
+       // if .indexVar, .out "var ",.indexVar.name,"=undefined; //key",NL
+       if (this.indexVar) {this.out("var ", this.indexVar.name, "=undefined; //key", NL)};
+       this.out("var ", this.mainVar.name, "=undefined; //value", NL);
 
-       this.out("for(int64_t ", intIndexVarName, "=0", " ; ", intIndexVarName, "<", listName, ".value.arr->length", " ; ", intIndexVarName, "++){", NL);
+       this.out("for(int64_t __inx=0", " ; __inx < __len", " ; __inx++ ){", NL);
 
-       this.body.out("assert(ITEM(", intIndexVarName, ",", listName, ").class==&NameValuePair_CLASSINFO);", NL);
-
-       this.out(nvp, " = ITEM(", intIndexVarName, ",", listName, ").value.ptr;", NL); //get nv pair
-       // if .indexVar, .body.out .indexVar.name,"=",nvp,"->name;",NL //get key
-       if (this.indexVar) {this.body.out(this.indexVar.name, "=", nvp, "->name;", NL)};
-       this.body.out(this.mainVar.name, "=", nvp, "->value;", NL); //get value
+       this.body.out("__nvp = MAPITEM( __inx,", listName, ");", NL); //get nv pair ptr
+       // if .indexVar, .body.out .indexVar.name,"= __nvp->name;",NL //get key
+       if (this.indexVar) {this.body.out(this.indexVar.name, "= __nvp->name;", NL)};
+       this.body.out(this.mainVar.name, "= __nvp->value;", NL); //get value
 
        // if .where
        if (this.where) {
@@ -2520,8 +2606,7 @@
      // method produce()
      Grammar.DoLoop.prototype.produce = function(){
 
-// Note: **WhileUntilLoop** symbol has **DoLoop** as *prototype*, so this *.produce()* method
-// is used by both symbols.
+// Note: **WhileUntilLoop** extends **DoLoop**, so this *.produce()* method is used by both symbols.
 
        // if .postWhileUntilExpression
        if (this.postWhileUntilExpression) {
@@ -2749,7 +2834,7 @@
         //assert 'this' parameter class
        // if isClass
        if (isClass) {
-           this.body.out("assert(_instanceof(this,", c, "));", NL, "//---------", NL);
+           this.body.out("assert(_instanceof(this,", c, "));", NL, "//---------");
        };
 
        this.produceFunctionBody(c);
@@ -2797,7 +2882,7 @@
        // if .paramsDeclarations and .paramsDeclarations.length
        if (this.paramsDeclarations && this.paramsDeclarations.length) {
 
-               this.body.out("// define named params", NL);
+               this.body.out(NL, "// define named params", NL);
 
                // if .paramsDeclarations.length is 1
                if (this.paramsDeclarations.length === 1) {
@@ -3249,6 +3334,8 @@
      'unary +': '+', 
      'type of': 'typeof', 
      'instance of': 'instanceof', 
+     'bitand': '&', 
+     'bitor': '|', 
      'is': '==', 
      'isnt': '!=', 
      '<>': '!=', 

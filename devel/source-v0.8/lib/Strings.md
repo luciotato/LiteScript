@@ -121,16 +121,14 @@ replace every quoted string inside text, by rep
 
         method replaceQuoted(text:string, rep:string)
 
-            var p = 0, pb
+            var p = 0
 
-            do
+look for first quote (single or double?),
+loop until no quotes found 
 
-                //get first quote (single or double?)
-                p = text.indexOf('"',p)
-                pb = text.indexOf("'",p)
-                if pb>=0 and (p is -1 or pb<p), p=pb
-                
-                if p<0, break //no more quotes
+            var anyQuote = '"' & "'"
+
+            do while PMREX.findRanges(text,p,anyQuote) into p  < text.length
 
                 if text.slice(p,p+3) is '"""' //ignore triple quotes (valid token)
                     p+=3

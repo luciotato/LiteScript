@@ -36,6 +36,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/core/LiteC-core.o \
+	${OBJECTDIR}/core/PMREX-native.o \
 	${OBJECTDIR}/core/any.o \
 	${OBJECTDIR}/core/exceptions.o \
 	${OBJECTDIR}/core/fs-native.o \
@@ -55,7 +56,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/generated/lib/Environment.o \
 	${OBJECTDIR}/generated/lib/GeneralOptions.o \
 	${OBJECTDIR}/generated/lib/OptionsParser.o \
-	${OBJECTDIR}/generated/lib/PMREX.o \
 	${OBJECTDIR}/generated/lib/Strings.o \
 	${OBJECTDIR}/generated/lib/UniqueID.o \
 	${OBJECTDIR}/generated/lib/color.o \
@@ -78,7 +78,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-Llib -lgc
+LDLIBSOPTIONS=-lgc
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -92,6 +92,11 @@ ${OBJECTDIR}/core/LiteC-core.o: core/LiteC-core.c
 	${MKDIR} -p ${OBJECTDIR}/core
 	${RM} "$@.d"
 	$(COMPILE.c) -g -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/LiteC-core.o core/LiteC-core.c
+
+${OBJECTDIR}/core/PMREX-native.o: core/PMREX-native.c 
+	${MKDIR} -p ${OBJECTDIR}/core
+	${RM} "$@.d"
+	$(COMPILE.c) -g -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/PMREX-native.o core/PMREX-native.c
 
 ${OBJECTDIR}/core/any.o: core/any.c 
 	${MKDIR} -p ${OBJECTDIR}/core
@@ -187,11 +192,6 @@ ${OBJECTDIR}/generated/lib/OptionsParser.o: generated/lib/OptionsParser.c
 	${MKDIR} -p ${OBJECTDIR}/generated/lib
 	${RM} "$@.d"
 	$(COMPILE.c) -g -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/OptionsParser.o generated/lib/OptionsParser.c
-
-${OBJECTDIR}/generated/lib/PMREX.o: generated/lib/PMREX.c 
-	${MKDIR} -p ${OBJECTDIR}/generated/lib
-	${RM} "$@.d"
-	$(COMPILE.c) -g -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/PMREX.o generated/lib/PMREX.c
 
 ${OBJECTDIR}/generated/lib/Strings.o: generated/lib/Strings.c 
 	${MKDIR} -p ${OBJECTDIR}/generated/lib

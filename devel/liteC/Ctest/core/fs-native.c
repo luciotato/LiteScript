@@ -21,7 +21,7 @@
     void fs_Stat__init(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,fs_Stat));
         assert(this.class->instanceSize==sizeof(fs_Stat_s));
-        assert_args( this,argc,arguments, 1,1,&String_CLASSINFO);
+        assert_args( this,argc,arguments, 1,1, String);
 
         struct stat st;
         int result;
@@ -57,22 +57,22 @@
     //namespace fs
 
     any fs_statSync(DEFAULT_ARGUMENTS){
-        assert_args( this,argc,arguments, 1,1,&String_CLASSINFO);
+        assert_args( this,argc,arguments, 1,1, String);
         return new(fs_Stat,1,(any_arr){arguments[0]});
     }
 
     any fs_unlinkSync( DEFAULT_ARGUMENTS ) {
-        assert_args( this,argc,arguments, 1,1,&String_CLASSINFO);
+        assert_args( this,argc,arguments, 1,1, String);
         if (unlink(arguments[0].value.str) == -1){
             fail_with(strerror(errno));
         }
     };
 
     any fs_mkdirSync( DEFAULT_ARGUMENTS ) {
-        assert_args( this,argc,arguments,1,2,&String_CLASSINFO,&Number_CLASSINFO);
+        assert_args( this,argc,arguments,1,2, String,Number);
         mode_t mode = 0;
         if (argc>1) mode=arguments[1].value.number;
-        if (!mode) mode=0x777;
+        if (!mode) mode=0777;
         if (mkdir(arguments[0].value.str,mode) == -1){
             fail_with(strerror(errno));
         }
@@ -111,16 +111,16 @@
     }
 
     any fs_writeFileSync(DEFAULT_ARGUMENTS) {
-        assert_args( this,argc,arguments, 2,2,&String_CLASSINFO,&String_CLASSINFO);
+        assert_args( this,argc,arguments, 2,2,String,String);
         str filename = arguments[0].value.str;
         str contents = arguments[1].value.str;
 
         size_t bytes = strlen(contents);
         //open file
         FILE *file;
-        if (!(file=fopen(filename,"w"))) fail_with(strerror(errno));
+        if (!(file=fopen(filename,"w"))) fail_with(_concatToNULL("at fs_writeFileSync('",filename,"'). ", strerror(errno),NULL));
         //write contents
-        fwrite(contents, 1, bytes-1, file);
+        fwrite(contents, 1, bytes, file);
         //close
         fclose(file);
 

@@ -24,15 +24,25 @@
    // constructor
    function ASTBase(parent, name){
      //      properties
+
         // parent: ASTBase
+
         // name:string, keyword:string
 
         // type, keyType, itemType
-        // extraInfo // if parse failed, extra information
 
-        // lexer: Parser.Lexer, lineInx
+        // lexer: Parser.Lexer
+
+// AST node position in source
+
+        // lineInx
         // sourceLineNum, column
-        // indent, locked
+        // indent
+
+// wile-parsing info
+
+        // locked: boolean
+        // extraInfo // if parse failed, extra information
 
        this.parent = parent;
        this.name = name;
@@ -74,8 +84,8 @@
 // **getParent** method searchs up the AST tree until a specfied node class is found
 
        var node = this.parent;
-       // while node and not(node instanceof searchedClass)
-       while(node && !((node instanceof searchedClass))){
+       // while node and node isnt instance of searchedClass
+       while(node && !(node instanceof searchedClass)){
            node = node.parent;// # move to parent
        };// end loop
        return node;
@@ -195,10 +205,6 @@
 // Remember the actual position, to rewind if all the arguments to `opt` fail
 
        var startPos = this.lexer.getPos();
-
-        // declare on startPos
-          // index,sourceLineNum,column,token
-        // declare valid startPos.token.column
 
         // #debug
        var spaces = this.levelIndent();
@@ -550,10 +556,14 @@
 
            result.push(item);
 
-// newline after item (before comma or closer) is optional
+// record where the list ends - for accurate sorucemaps (function's end)
+// and to add commented original litescript source at C-generation
 
            // if item.sourceLineNum>.lexer.maxSourceLineNum, .lexer.maxSourceLineNum=item.sourceLineNum
            if (item.sourceLineNum > this.lexer.maxSourceLineNum) {this.lexer.maxSourceLineNum = item.sourceLineNum};
+
+// newline after item (before comma or closer) is optional
+
            this.opt('NEWLINE');
 
 // separator (comma|semicolon) is optional,
@@ -645,9 +655,9 @@
 
 // if it is the first thing in the line, out indentation
 
-         // if not rawOut.currLine and .indent > 1
-         if (!(rawOut.currLine) && this.indent > 1) {
-             rawOut.put(Strings.spaces(this.indent - 1));
+         // if not rawOut.currLine and .indent > 0
+         if (!(rawOut.currLine) && this.indent > 0) {
+             rawOut.put(Strings.spaces(this.indent));
          };
 
 // if it is an AST node, call .produce()
@@ -763,6 +773,32 @@
     };
 
 
+    // helper method outSourceLineAsComment(sourceLineNum)
+    ASTBase.prototype.outSourceLineAsComment = function(sourceLineNum){
+
+// Note: check if we can remove "outLineAsComment" and use this instead
+
+       var line = this.lexer.lines[sourceLineNum - 1];
+       var indent = line.countSpaces();
+
+       this.lexer.outCode.ensureNewLine();
+       this.lexer.outCode.put('' + (line.slice(0, indent)) + '//' + (line.slice(indent)));
+       this.lexer.outCode.startNewLine();
+    };
+
+    // helper method outSourceLinesAsComment(fromLineNum,toLineNum)
+    ASTBase.prototype.outSourceLinesAsComment = function(fromLineNum, toLineNum){
+
+       // if no .lexer.options.comments, return
+       if (!this.lexer.options.comments) {return};
+       // for i=fromLineNum to toLineNum
+       var _end1=toLineNum;
+       for( var i=fromLineNum; i<=_end1; i++) {
+           this.outSourceLineAsComment(i);
+       };// end for i
+       
+    };
+
     // helper method outLineAsComment(preComment,lineInx)
     ASTBase.prototype.outLineAsComment = function(preComment, lineInx){
 // out a full source line as comment into produced code
@@ -812,7 +848,6 @@
        this.lexer.outCode.lastOutCommentLine = lineInx;
     };
 
-
     // helper method outLinesAsComment(fromLine,toLine)
     ASTBase.prototype.outLinesAsComment = function(fromLine, toLine){
 
@@ -828,8 +863,8 @@
        this.lexer.outCode.currLine = undefined;// #clear indents
 
        // for i=fromLine to toLine
-       var _end1=toLine;
-       for( var i=fromLine; i<=_end1; i++) {
+       var _end2=toLine;
+       for( var i=fromLine; i<=_end2; i++) {
            this.outLineAsComment(i);
        };// end for i
        

@@ -19,15 +19,25 @@ This class serves as a base class on top of which Grammar classes are defined.
 It contains basic functions to parse a token stream.
 
 #### properties
+
         parent: ASTBase 
+
         name:string, keyword:string
 
         type, keyType, itemType
-        extraInfo // if parse failed, extra information 
 
-        lexer: Parser.Lexer, lineInx
+        lexer: Parser.Lexer 
+
+AST node position in source
+
+        lineInx
         sourceLineNum, column
-        indent, locked
+        indent 
+
+wile-parsing info
+
+        locked: boolean
+        extraInfo // if parse failed, extra information 
 
 #### Constructor (parent:ASTBase, name)
 
@@ -63,7 +73,7 @@ Once locked, any **req**uired token not present causes compilation to fail.
 **getParent** method searchs up the AST tree until a specfied node class is found
 
         var node = this.parent
-        while node and not(node instanceof searchedClass)
+        while node and node isnt instance of searchedClass
             node = node.parent # move to parent
         return node
 
@@ -159,10 +169,6 @@ Method start:
 Remember the actual position, to rewind if all the arguments to `opt` fail
 
         var startPos = .lexer.getPos()
-
-        declare on startPos
-          index,sourceLineNum,column,token
-        declare valid startPos.token.column
 
         #debug
         var spaces = .levelIndent()
@@ -450,9 +456,13 @@ add item to result
 
             result.push(item)
 
-newline after item (before comma or closer) is optional
+record where the list ends - for accurate sorucemaps (function's end)
+and to add commented original litescript source at C-generation
 
             if item.sourceLineNum>.lexer.maxSourceLineNum, .lexer.maxSourceLineNum=item.sourceLineNum
+
+newline after item (before comma or closer) is optional
+
             .opt('NEWLINE')
 
 separator (comma|semicolon) is optional, 
@@ -523,8 +533,8 @@ skip empty items
 
 if it is the first thing in the line, out indentation
 
-          if not rawOut.currLine and .indent > 1
-              rawOut.put Strings.spaces(.indent-1)
+          if not rawOut.currLine and .indent > 0
+              rawOut.put Strings.spaces(.indent)
 
 if it is an AST node, call .produce()
 
@@ -610,6 +620,23 @@ Last option, out item.toString()
         end loop, next item
 
 
+#### helper method outSourceLineAsComment(sourceLineNum)
+
+Note: check if we can remove "outLineAsComment" and use this instead
+        
+        var line = .lexer.lines[sourceLineNum-1]
+        var indent = line.countSpaces()
+
+        .lexer.outCode.ensureNewLine
+        .lexer.outCode.put '#{line.slice(0,indent)}//#{line.slice(indent)}'
+        .lexer.outCode.startNewLine
+
+#### helper method outSourceLinesAsComment(fromLineNum,toLineNum)
+
+        if no .lexer.options.comments, return 
+        for i=fromLineNum to toLineNum
+            .outSourceLineAsComment i
+      
 #### helper method outLineAsComment(preComment,lineInx)
 out a full source line as comment into produced code
 
@@ -645,7 +672,6 @@ out as comment
 
         .lexer.outCode.lastOutCommentLine = lineInx
 
-      
 #### helper method outLinesAsComment(fromLine,toLine)
 
         if no .lexer.options.comments, return 
