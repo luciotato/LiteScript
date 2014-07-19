@@ -2,8 +2,7 @@
 //-------------------------
 //Module ASTBase
 //-------------------------
-//helper tempvars for 'or' expressions short-circuit evaluation
-any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,__or13,__or14,__or15,__or16;
+#include "ASTBase.c.extra"
     //-----------------------
     // Class ASTBase: static list of METHODS(verbs) and PROPS(things)
     //-----------------------
@@ -31,9 +30,6 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
       { out_, ASTBase_out },
       { outSourceLineAsComment_, ASTBase_outSourceLineAsComment },
       { outSourceLinesAsComment_, ASTBase_outSourceLinesAsComment },
-      { outLineAsComment_, ASTBase_outLineAsComment },
-      { outLinesAsComment_, ASTBase_outLinesAsComment },
-      { outPrevLinesComments_, ASTBase_outPrevLinesComments },
       { getEOLComment_, ASTBase_getEOLComment },
       { addSourceMap_, ASTBase_addSourceMap },
       { levelIndent_, ASTBase_levelIndent },
@@ -89,32 +85,33 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
 //--------------
     // ASTBase
     any ASTBase; //Class ASTBase
-
-// This class serves as a base class on top of which Grammar classes are defined.
-// It contains basic functions to parse a token stream.
-
+//The Abstract Syntax Tree (AST) Base class
+//-----------------------------------------
+//This module defines the base abstract syntax tree class used by the grammar. 
+//It's main purpose is to provide utility methods used in the grammar 
+//for **req**uired tokens, **opt**ional tokens 
+//and comma or semicolon **Separated Lists** of symbols.
+//Dependencies
+    //import Parser, ControlledError
+    //import logger, Strings 
+    //
+    //shim import LiteCore, Map
+//### public default Class ASTBase 
+//This class serves as a base class on top of which Grammar classes are defined.
+//It contains basic functions to parse a token stream.
 //#### properties
-//
         //parent: ASTBase 
-//
         //name:string, keyword:string
-//
         //type, keyType, itemType
-//
         //lexer: Parser.Lexer 
-//
 //AST node position in source
-//
         //lineInx
         //sourceLineNum, column
         //indent 
-//
 //wile-parsing info
-//
         //locked: boolean
         //extraInfo // if parse failed, extra information 
      ;
-
 //#### Constructor (parent:ASTBase, name)
      void ASTBase__init(DEFAULT_ARGUMENTS){
         
@@ -126,22 +123,17 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
           case 1:parent=arguments[0];
         }
         //---------
-
         //.parent = parent
         PROP(parent_,this) = parent;
         //.name = name
         PROP(name_,this) = name;
-
-// Get lexer from parent
-
+//Get lexer from parent
         //if parent
         if (_anyToBool(parent))  {
             //.lexer = parent.lexer
             PROP(lexer_,this) = PROP(lexer_,parent);
-
-// Remember this node source position.
-// Also remember line index in tokenized lines, and indent
-
+//Remember this node source position.
+//Also remember line index in tokenized lines, and indent
             //if .lexer 
             if (_anyToBool(PROP(lexer_,this)))  {
                 //.sourceLineNum = .lexer.sourceLineNum
@@ -155,24 +147,20 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
             };
         };
      }
-
-        // #debug "created [#.constructor.name] indent #.indent col:#.column #{.lexer? .lexer.token:''}"
-
-// ------------------------------------------------------------------------
+        //#debug "created [#.constructor.name] indent #.indent col:#.column #{.lexer? .lexer.token:''}"
+//------------------------------------------------------------------------
 //#### method lock()
      any ASTBase_lock(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
         //---------
-// **lock** marks this node as "locked", meaning we are certain this is the right class
-// for the given syntax. For example, if the `FunctionDeclaration` class see the token `function`,
-// we are certain this is the right class to use, so we 'lock()'.
-// Once locked, any **req**uired token not present causes compilation to fail.
-
+//**lock** marks this node as "locked", meaning we are certain this is the right class
+//for the given syntax. For example, if the `FunctionDeclaration` class see the token `function`,
+//we are certain this is the right class to use, so we 'lock()'. 
+//Once locked, any **req**uired token not present causes compilation to fail.
         //.locked = true
         PROP(locked_,this) = true;
      return undefined;
      }
-
 //#### helper method getParent(searchedClass)
      any ASTBase_getParent(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -180,8 +168,7 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         // define named params
         var searchedClass= argc? arguments[0] : undefined;
         //---------
-// **getParent** method searchs up the AST tree until a specfied node class is found
-
+//**getParent** method searchs up the AST tree until a specfied node class is found
         //var node = this.parent
         var node = PROP(parent_,this);
         //while node and node isnt instance of searchedClass
@@ -193,31 +180,25 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         return node;
      return undefined;
      }
-
-
 //#### helper method positionText() 
      any ASTBase_positionText(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
         //---------
-
         //if not .lexer or no .sourceLineNum, return "(compiler-defined)"    
         if (_anyToBool((_anyToBool(__or1=any_number(!(_anyToBool(PROP(lexer_,this)))))? __or1 : any_number(!_anyToBool(PROP(sourceLineNum_,this)))))) {return any_str("(compiler-defined)");};
         //return "#{.lexer.filename}:#{.sourceLineNum}:#{.column or 0}"
-        return _concatAny(5,(any_arr){PROP(filename_,PROP(lexer_,this)), any_str(":"), PROP(sourceLineNum_,this), any_str(":"), (_anyToBool(__or2=PROP(column_,this))? __or2 : any_number(0))});
+        return _concatAny(5,PROP(filename_,PROP(lexer_,this)), any_str(":"), PROP(sourceLineNum_,this), any_str(":"), (_anyToBool(__or2=PROP(column_,this))? __or2 : any_number(0)));
      return undefined;
      }
-
+  //
 //#### helper method toString()
      any ASTBase_toString(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
         //---------
-
         //return "[#{.constructor.name}]"
-        return _concatAny(3,(any_arr){any_str("["), PROP(name_,any_class(this.class)), any_str("]")});
+        return _concatAny(3,any_str("["), PROP(name_,any_class(this.class)), any_str("]"));
      return undefined;
      }
-
-
 //#### helper method sayErr(msg)
      any ASTBase_sayErr(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -225,12 +206,10 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         // define named params
         var msg= argc? arguments[0] : undefined;
         //---------
-
         //logger.error .positionText(), msg
         logger_error(undefined,2,(any_arr){METHOD(positionText_,this)(this,0,NULL), msg});
      return undefined;
      }
-
 //#### helper method warn(msg)
      any ASTBase_warn(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -238,12 +217,10 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         // define named params
         var msg= argc? arguments[0] : undefined;
         //---------
-
         //logger.warning .positionText(), msg
         logger_warning(undefined,2,(any_arr){METHOD(positionText_,this)(this,0,NULL), msg});
      return undefined;
      }
-
 //#### method throwError(msg)
      any ASTBase_throwError(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -251,18 +228,14 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         // define named params
         var msg= argc? arguments[0] : undefined;
         //---------
-// **throwError** add node position info and throws a 'controlled' error.
-
-// A 'controlled' error, shows only err.message
-
-// A 'un-controlled' error is an unhandled exception in the compiler code itself,
-// and it shows error message *and stack trace*.
-
+//**throwError** add node position info and throws a 'controlled' error.
+//A 'controlled' error, shows only err.message
+//A 'un-controlled' error is an unhandled exception in the compiler code itself, 
+//and it shows error message *and stack trace*.
         //logger.throwControlled "#{.positionText()}. #{msg}"
-        logger_throwControlled(undefined,1,(any_arr){_concatAny(3,(any_arr){METHOD(positionText_,this)(this,0,NULL), any_str(". "), msg})});
+        logger_throwControlled(undefined,1,(any_arr){_concatAny(3,METHOD(positionText_,this)(this,0,NULL), any_str(". "), msg)});
      return undefined;
      }
-
 //#### method throwParseFailed(msg)
      any ASTBase_throwParseFailed(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -270,49 +243,43 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         // define named params
         var msg= argc? arguments[0] : undefined;
         //---------
-// throws a parseFailed-error
-
-// During a node.parse(), if there is a token mismatch, a "parse failed" is raised.
-// "parse failed" signals a failure to parse the tokens from the stream,
-// however the syntax might still be valid for another AST node.
-// If the AST node was locked-on-target, it is a hard-error.
-// If the AST node was NOT locked, it's a soft-error, and will not abort compilation
-// as the parent node will try other AST classes against the token stream before failing.
-
-        //var err = new Error("#{.positionText()}. #{msg}")
+//throws a parseFailed-error
+//During a node.parse(), if there is a token mismatch, a "parse failed" is raised.
+//"parse failed" signals a failure to parse the tokens from the stream, 
+//however the syntax might still be valid for another AST node. 
+//If the AST node was locked-on-target, it is a hard-error.
+//If the AST node was NOT locked, it's a soft-error, and will not abort compilation 
+//as the parent node will try other AST classes against the token stream before failing.
+        ////var err = new Error("#{.positionText()}. #{msg}")
         //var cErr = new ControlledError("#{.lexer.posToString()}. #{msg}")
-        var cErr = new(ControlledError,1,(any_arr){_concatAny(3,(any_arr){__call(posToString_,PROP(lexer_,this),0,NULL), any_str(". "), msg})});
+        var cErr = new(ControlledError,1,(any_arr){_concatAny(3,__call(posToString_,PROP(lexer_,this),0,NULL), any_str(". "), msg)});
         //cErr.soft = not .locked
         PROP(soft_,cErr) = any_number(!(_anyToBool(PROP(locked_,this))));
         //throw cErr
         throw(cErr);
      return undefined;
      }
-
 //#### method parse()
      any ASTBase_parse(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
         //---------
-// abstract method representing the TRY-Parse of the node.
-// Child classes _must_ override this method
-
+//abstract method representing the TRY-Parse of the node.
+//Child classes _must_ override this method
+      //
         //.throwError 'Parser Not Implemented'
         METHOD(throwError_,this)(this,1,(any_arr){any_str("Parser Not Implemented")});
      return undefined;
      }
-
 //#### method produce()
      any ASTBase_produce(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
         //---------
-// **produce()** is the method to produce target code
-// Target code produces should override this, if the default production isnt: `.out .name`
-
+//**produce()** is the method to produce target code
+//Target code produces should override this, if the default production isnt: `.out .name`
         //.out .name
         METHOD(out_,this)(this,1,(any_arr){PROP(name_,this)});
      return undefined;
      }
-
 //#### method parseDirect(key, directMap)
      any ASTBase_parseDirect(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -325,84 +292,65 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
           case 1:key=arguments[0];
         }
         //---------
-
-// We use a DIRECT associative array to pick the exact AST node to parse
-// based on the actual token value or type.
-// This speeds up parsing, avoiding parsing by trial & error
-
-// Check keyword
-
+//We use a DIRECT associative array to pick the exact AST node to parse 
+//based on the actual token value or type.
+//This speeds up parsing, avoiding parsing by trial & error
+//Check keyword
         //if directMap.get(key) into var param
         var param=undefined;
         if (_anyToBool((param=METHOD(get_,directMap)(directMap,1,(any_arr){key}))))  {
-
-// try parse by calling .opt, accept Array as param
-
+//try parse by calling .opt, accept Array as param
+            //
             //var statement = param instance of Array ? 
             var statement = _instanceof(param,Array) ? __applyArr(__classMethodFunc(opt_ ,ASTBase),this,param) : METHOD(opt_,this)(this,1,(any_arr){param});
-
-// return parsed statement or nothing
-
+                    //ASTBase.prototype.opt.apply(this, param) 
+                    //: .opt(param)
+//return parsed statement or nothing
             //return statement
             return statement;
         };
      return undefined;
      }
-
-
-
 //#### Method opt() returns ASTBase
      any ASTBase_opt(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
         //---------
-// **opt** (optional) is for optional parts of a grammar. It attempts to parse
-// the token stream using one of the classes or token types specified.
-// This method takes a variable number of arguments.
-// For example:
-  // calling `.opt IfStatement, Expression, 'IDENTIFIER'`
-  // would attempt to parse the token stream first as an `IfStatement`. If that fails, it would attempt
-  // to use the `Expression` class. If that fails, it will accept a token of type `IDENTIFIER`.
-  // If all of those fail, it will return `undefined`.
-
-// Method start:
-// Remember the actual position, to rewind if all the arguments to `opt` fail
-
+//**opt** (optional) is for optional parts of a grammar. It attempts to parse 
+//the token stream using one of the classes or token types specified.
+//This method takes a variable number of arguments.
+//For example:
+  //calling `.opt IfStatement, Expression, 'IDENTIFIER'`
+  //would attempt to parse the token stream first as an `IfStatement`. If that fails, it would attempt
+  //to use the `Expression` class. If that fails, it will accept a token of type `IDENTIFIER`.
+  //If all of those fail, it will return `undefined`.
+//Method start:
+//Remember the actual position, to rewind if all the arguments to `opt` fail
         //var startPos = .lexer.getPos()
         var startPos = __call(getPos_,PROP(lexer_,this),0,NULL);
-
-        // #debug
+        //#debug
         //var spaces = .levelIndent()
         var spaces = METHOD(levelIndent_,this)(this,0,NULL);
-
-// For each argument, -a class or a string-, we will attempt to parse the token stream
-// with the class, or match the token type to the string.
-
+//For each argument, -a class or a string-, we will attempt to parse the token stream 
+//with the class, or match the token type to the string.
         //for each searched in arguments.toArray()
         any _list9=_newArray(argc,arguments);
         { var searched=undefined;
         for(int searched__inx=0 ; searched__inx<_list9.value.arr->length ; searched__inx++){searched=ITEM(searched__inx,_list9);
-
-// skip empty, null & undefined
-
+        
+//skip empty, null & undefined
           //if no searched, continue
           if (!_anyToBool(searched)) {continue;};
-
-// determine value or type
-// For strings we check the token **value** or **TYPE** (if searched is all-uppercase)
-
+//determine value or type
+//For strings we check the token **value** or **TYPE** (if searched is all-uppercase)
           //if typeof searched is 'string'
           if (__is(_typeof(searched),any_str("string")))  {
-
             //declare searched:string
-            // declare searched:string
-
-            // #debug spaces, .constructor.name,'TRY',searched, 'on', .lexer.token.toString()
-
+            
+            //#debug spaces, .constructor.name,'TRY',searched, 'on', .lexer.token.toString()
             //var isTYPE = searched.charAt(0)>="A" and searched.charAt(0)<="Z" and searched is searched.toUpperCase()
             var isTYPE = any_number(_anyToNumber(METHOD(charAt_,searched)(searched,1,(any_arr){any_number(0)})) >= 'A' && _anyToNumber(METHOD(charAt_,searched)(searched,1,(any_arr){any_number(0)})) <= 'Z' && __is(searched,METHOD(toUpperCase_,searched)(searched,0,NULL)));
             //var found
             var found = undefined;
-
             //if isTYPE 
             if (_anyToBool(isTYPE))  {
               //found = .lexer.token.type is searched
@@ -414,23 +362,18 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
               //found = .lexer.token.value is searched
               found = any_number(__is(PROP(value_,PROP(token_,PROP(lexer_,this))),searched));
             };
-
             //if found
             if (_anyToBool(found))  {
-
-// Ok, type/value found! now we return: token.value
-// Note: we shouldnt return the 'token' object, because returning objects (here and in js)
-// is a "pass by reference". You return a "pointer" to the object.
-// If we return the 'token' object, the calling function will recive a "pointer"
-// and it can inadvertedly alter the token object in the token stream. (it should not, leads to subtle bugs)
-
+//Ok, type/value found! now we return: token.value
+//Note: we shouldnt return the 'token' object, because returning objects (here and in js) 
+//is a "pass by reference". You return a "pointer" to the object.
+//If we return the 'token' object, the calling function will recive a "pointer"
+//and it can inadvertedly alter the token object in the token stream. (it should not, leads to subtle bugs)
               //logger.debug spaces, .constructor.name,'matched OK:',searched, .lexer.token.value
               logger_debug(undefined,5,(any_arr){spaces, PROP(name_,any_class(this.class)), any_str("matched OK:"), searched, PROP(value_,PROP(token_,PROP(lexer_,this)))});
               //var result = .lexer.token.value 
               var result = PROP(value_,PROP(token_,PROP(lexer_,this)));
-
-// Advance a token, .lexer.token always has next token
-
+//Advance a token, .lexer.token always has next token
               //.lexer.nextToken()
               __call(nextToken_,PROP(lexer_,this),0,NULL);
               //return result
@@ -440,126 +383,98 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
           //else
           
           else {
-
-// "searched" is an AST class
-
+//"searched" is an AST class
             //declare searched:Function //class
-            // declare searched:Function //class
-
+            
             //logger.debug spaces, .constructor.name,'TRY',searched.name, 'on', .lexer.token.toString()
             logger_debug(undefined,6,(any_arr){spaces, PROP(name_,any_class(this.class)), any_str("TRY"), PROP(name_,searched), any_str("on"), __call(toString_,PROP(token_,PROP(lexer_,this)),0,NULL)});
-
-// if the argument is an AST node class, we instantiate the class and try the `parse()` method.
-// `parse()` can fail with `ParseFailed` if the syntax do not match
-
+//if the argument is an AST node class, we instantiate the class and try the `parse()` method.
+//`parse()` can fail with `ParseFailed` if the syntax do not match
             //try
             try{
-
                 //var astNode:ASTBase = new searched(this) # create required ASTNode, to try parse
                 var astNode = new(searched,1,(any_arr){this});// # create required ASTNode, to try parse
-
                 //astNode.parse() # if it can't parse, will raise an exception
                 METHOD(parse_,astNode)(astNode,0,NULL);// # if it can't parse, will raise an exception
-
                 //logger.debug spaces, 'Parsed OK!->',searched.name
                 logger_debug(undefined,3,(any_arr){spaces, any_str("Parsed OK!->"), PROP(name_,searched)});
-
                 //return astNode # parsed ok!, return instance
                 {e4c_exitTry(1);return astNode;};// # parsed ok!, return instance
             
             }catch(err){
+            //catch err
                 //if err isnt instance of ControlledError, throw err //re-raise if not ControlledError
                 if (!(_instanceof(err,ControlledError))) {throw(err);};
                 //declare err:ControlledError
-                // declare err:ControlledError
-
-// If parsing fail, but the AST node were not 'locked' on target, (a soft-error),
-// we will try other AST nodes.
-
+                
+                //
+//If parsing fail, but the AST node were not 'locked' on target, (a soft-error),
+//we will try other AST nodes.
                 //if err.soft
                 if (_anyToBool(PROP(soft_,err)))  {
                     //.lexer.softError = err
                     PROP(softError_,PROP(lexer_,this)) = err;
                     //logger.debug spaces, searched.name,'parse failed.',err.message
                     logger_debug(undefined,4,(any_arr){spaces, PROP(name_,searched), any_str("parse failed."), PROP(message_,err)});
-
-// rewind the token stream, to try other AST nodes
-
+//rewind the token stream, to try other AST nodes
                     //logger.debug "<<REW to", "#{startPos.sourceLineNum}:#{startPos.token.column or 0} [#{startPos.index}]", startPos.token.toString()
-                    logger_debug(undefined,3,(any_arr){any_str("<<REW to"), _concatAny(6,(any_arr){PROP(sourceLineNum_,startPos), any_str(":"), (_anyToBool(__or3=PROP(column_,PROP(token_,startPos)))? __or3 : any_number(0)), any_str(" ["), PROP(index_,startPos), any_str("]")}), __call(toString_,PROP(token_,startPos),0,NULL)});
+                    logger_debug(undefined,3,(any_arr){any_str("<<REW to"), _concatAny(6,PROP(sourceLineNum_,startPos), any_str(":"), (_anyToBool(__or3=PROP(column_,PROP(token_,startPos)))? __or3 : any_number(0)), any_str(" ["), PROP(index_,startPos), any_str("]")), __call(toString_,PROP(token_,startPos),0,NULL)});
                     //.lexer.setPos startPos
                     __call(setPos_,PROP(lexer_,this),1,(any_arr){startPos});
                 }
                 //else
                 
                 else {
-
-// else: it's a hard-error. The AST node were locked-on-target.
-// We abort parsing and throw.
-
-                    // # the first hard-error is the most informative, the others are cascading ones
+//else: it's a hard-error. The AST node were locked-on-target.
+//We abort parsing and throw.
+                    //# the first hard-error is the most informative, the others are cascading ones
                     //if .lexer.hardError is null, .lexer.hardError = err
                     if (__is(PROP(hardError_,PROP(lexer_,this)),null)) {PROP(hardError_,PROP(lexer_,this)) = err;};
-
-// raise up, abort parsing
-
+//raise up, abort parsing
+              //
                     //raise err
                     throw(err);
                 };
-
                 //end if - type of error
                 
             };
-
             //end catch
             
           };
-
+            //
           //end if - string or class
           
         }};// end for each in _newArray(argc,arguments)
-
         //end loop - try the next argument
-
-// No more arguments.
-// `opt` returns `undefined` if none of the arguments can be use to parse the token stream.
-
+        
+//No more arguments.
+//`opt` returns `undefined` if none of the arguments can be use to parse the token stream.
         //return undefined
         return undefined;
      return undefined;
      }
-
      //end method opt
-
-
+     
 //#### method req() returns ASTBase
      any ASTBase_req(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
         //---------
-
-// **req** (required) if for required symbols of the grammar. It works the same way as `opt`
-// except that it throws an error if none of the arguments can be used to parse the stream.
-
-// We first call `opt` to see what we get. If a value is returned, the function was successful,
-// so we just return the node that `opt` found.
-
-// else, If `opt` returned nothing, we give the user a useful error.
-
+//**req** (required) if for required symbols of the grammar. It works the same way as `opt` 
+//except that it throws an error if none of the arguments can be used to parse the stream.
+//We first call `opt` to see what we get. If a value is returned, the function was successful,
+//so we just return the node that `opt` found.
+//else, If `opt` returned nothing, we give the user a useful error.
         //var result = ASTBase.prototype.opt.apply(this,arguments)
         var result = __applyArr(__classMethodFunc(opt_ ,ASTBase),this,_newArray(argc,arguments));
-
         //if no result 
         if (!_anyToBool(result))  {
           //.throwParseFailed "#{.constructor.name}:#{.extraInfo or ''} found #{.lexer.token.toString()} but #{.listArgs(arguments)} required"
-          METHOD(throwParseFailed_,this)(this,1,(any_arr){_concatAny(8,(any_arr){PROP(name_,any_class(this.class)), any_str(":"), (_anyToBool(__or4=PROP(extraInfo_,this))? __or4 : any_EMPTY_STR), any_str(" found "), __call(toString_,PROP(token_,PROP(lexer_,this)),0,NULL), any_str(" but "), METHOD(listArgs_,this)(this,1,(any_arr){_newArray(argc,arguments)}), any_str(" required")})});
+          METHOD(throwParseFailed_,this)(this,1,(any_arr){_concatAny(8,PROP(name_,any_class(this.class)), any_str(":"), (_anyToBool(__or4=PROP(extraInfo_,this))? __or4 : any_EMPTY_STR), any_str(" found "), __call(toString_,PROP(token_,PROP(lexer_,this)),0,NULL), any_str(" but "), METHOD(listArgs_,this)(this,1,(any_arr){_newArray(argc,arguments)}), any_str(" required"))});
         };
-
         //return result
         return result;
      return undefined;
      }
-
-
 //#### method reqOneOf(arr)
      any ASTBase_reqOneOf(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -567,8 +482,8 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         // define named params
         var arr= argc? arguments[0] : undefined;
         //---------
-// (performance) call req only if next token (value) in list
-
+//(performance) call req only if next token (value) in list
+        //
         //if .lexer.token.value in arr
         if (CALL1(indexOf_,arr,PROP(value_,PROP(token_,PROP(lexer_,this)))).value.number>=0)  {
             //return ASTBase.prototype.req.apply(this,arr)
@@ -582,19 +497,16 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         };
      return undefined;
      }
-
-
 //#### method optList()
      any ASTBase_optList(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
         //---------
-// this generic method will look for zero or more of the requested classes,
-
+//this generic method will look for zero or more of the requested classes,
         //var item
         var item = undefined;
         //var list=[]
         var list = new(Array,0,NULL);
-
+        //
         //do
         while(TRUE){
           //item = ASTBase.prototype.opt.apply(this,arguments)
@@ -604,13 +516,11 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
           //list.push item
           METHOD(push_,list)(list,1,(any_arr){item});
         };// end loop
-
+        //loop
         //return list.length? list : undefined
         return _length(list) ? list : undefined;
      return undefined;
      }
-
-
 //#### method optSeparatedList(astClass:ASTBase, separator, closer) #[Separated Lists]
      any ASTBase_optSeparatedList(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -624,97 +534,74 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
           case 1:astClass=arguments[0];
         }
         //---------
-
-// Start optSeparatedList
-
+//Start optSeparatedList
         //var result = []
         var result = new(Array,0,NULL);
         //var optSepar
         var optSepar = undefined;
-
-// except the requested closer is NEWLINE,
-// NEWLINE is included as an optional extra separator
-// and also we allow a free-form mode list
-
+//except the requested closer is NEWLINE, 
+//NEWLINE is included as an optional extra separator 
+//and also we allow a free-form mode list
         //if closer isnt 'NEWLINE' #Except required closer *IS* NEWLINE
         if (!__is(closer,any_str("NEWLINE")))  {// #Except required closer *IS* NEWLINE
-
-// if the list starts with a NEWLINE,
-// assume an indented free-form mode separated list,
-// where NEWLINE is a valid separator.
-
+//if the list starts with a NEWLINE, 
+//assume an indented free-form mode separated list, 
+//where NEWLINE is a valid separator.
             //if .lexer.token.type is 'NEWLINE'
             if (__is(PROP(type_,PROP(token_,PROP(lexer_,this))),any_str("NEWLINE")))  {
                 //return .optFreeFormList( astClass, separator, closer )
                 return METHOD(optFreeFormList_,this)(this,3,(any_arr){astClass, separator, closer});
             };
-
-// else normal list, but NEWLINE is accepted as optional before and after separator
-
+//else normal list, but NEWLINE is accepted as optional before and after separator
             //optSepar = 'NEWLINE' #newline is optional before and after separator
             optSepar = any_str("NEWLINE");// #newline is optional before and after separator
         };
-
-// normal separated list,
-// loop until closer found
-
+//normal separated list, 
+//loop until closer found
         //logger.debug "optSeparatedList [#{.constructor.name}] indent:#{.indent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer-'
-        logger_debug(undefined,2,(any_arr){_concatAny(9,(any_arr){any_str("optSeparatedList ["), PROP(name_,any_class(this.class)), any_str("] indent:"), PROP(indent_,this), any_str(", get SeparatedList of ["), PROP(name_,astClass), any_str("] by '"), separator, any_str("' closer:")}), (_anyToBool(__or5=closer)? __or5 : any_str("-no closer-"))});
-
+        logger_debug(undefined,2,(any_arr){_concatAny(9,any_str("optSeparatedList ["), PROP(name_,any_class(this.class)), any_str("] indent:"), PROP(indent_,this), any_str(", get SeparatedList of ["), PROP(name_,astClass), any_str("] by '"), separator, any_str("' closer:")), (_anyToBool(__or5=closer)? __or5 : any_str("-no closer-"))});
         //var startLine = .lexer.sourceLineNum
         var startLine = PROP(sourceLineNum_,PROP(lexer_,this));
         //do until .opt(closer) or .lexer.token.type is 'EOF'
         while(!(_anyToBool((_anyToBool(__or6=METHOD(opt_,this)(this,1,(any_arr){closer}))? __or6 : any_number(__is(PROP(type_,PROP(token_,PROP(lexer_,this))),any_str("EOF"))))))){
-
-// get a item
-
+//get a item
             //var item = .req(astClass)
             var item = METHOD(req_,this)(this,1,(any_arr){astClass});
             //.lock()
             METHOD(lock_,this)(this,0,NULL);
-
-// add item to result
-
+//add item to result
             //result.push(item)
             METHOD(push_,result)(result,1,(any_arr){item});
-
-// newline after item (before comma or closer) is optional
-
+//newline after item (before comma or closer) is optional
             //var consumedNewLine = .opt(optSepar)
             var consumedNewLine = METHOD(opt_,this)(this,1,(any_arr){optSepar});
-
-// if, after newline, we got the closer, then exit.
-
+//if, after newline, we got the closer, then exit. 
             //if .opt(closer) then break #closer found
             if (_anyToBool(METHOD(opt_,this)(this,1,(any_arr){closer}))) {break;};
-
-// here, a 'separator' (comma/semicolon) means: 'there is another item'.
-// Any token other than 'separator' means 'end of list'
-
+//here, a 'separator' (comma/semicolon) means: 'there is another item'.
+//Any token other than 'separator' means 'end of list'
             //if no .opt(separator)
             if (!_anyToBool(METHOD(opt_,this)(this,1,(any_arr){separator})))  {
-                // # any token other than comma/semicolon means 'end of comma separated list'
-                // # but if a closer was required, then "other" token is an error
+                //# any token other than comma/semicolon means 'end of comma separated list'
+                //# but if a closer was required, then "other" token is an error
                 //if closer, .throwError "Expected '#{closer}' to end list started at line #{startLine}, got '#{.lexer.token.value}'"
-                if (_anyToBool(closer)) {METHOD(throwError_,this)(this,1,(any_arr){_concatAny(7,(any_arr){any_str("Expected '"), closer, any_str("' to end list started at line "), startLine, any_str(", got '"), PROP(value_,PROP(token_,PROP(lexer_,this))), any_str("'")})});};
+                if (_anyToBool(closer)) {METHOD(throwError_,this)(this,1,(any_arr){_concatAny(7,any_str("Expected '"), closer, any_str("' to end list started at line "), startLine, any_str(", got '"), PROP(value_,PROP(token_,PROP(lexer_,this))), any_str("'"))});};
                 //if consumedNewLine, .lexer.returnToken()
                 if (_anyToBool(consumedNewLine)) {__call(returnToken_,PROP(lexer_,this),0,NULL);};
                 //break # if no error, end of list
                 break;// # if no error, end of list
             };
             //end if
-
-// optional newline after comma
-
+            
+//optional newline after comma 
             //.opt(optSepar)
             METHOD(opt_,this)(this,1,(any_arr){optSepar});
         };// end loop
-
+        //loop #try get next item
         //return result
         return result;
      return undefined;
      }
-
 //#### Method optFreeFormList(astClass:ASTBase, separator, closer)
      any ASTBase_optFreeFormList(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -728,10 +615,8 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
           case 1:astClass=arguments[0];
         }
         //---------
-
-// In "freeForm Mode", each item stands in its own line, and commas (separators) are optional.
-// The item list ends when a closer is found or when indentation changes
-
+//In "freeForm Mode", each item stands in its own line, and commas (separators) are optional.
+//The item list ends when a closer is found or when indentation changes
         //var result = []
         var result = new(Array,0,NULL);
         //var lastItemSourceLine = -1
@@ -740,120 +625,89 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         var separatorAfterItem = undefined;
         //var parentIndent = .parent.indent
         var parentIndent = PROP(indent_,PROP(parent_,this));
-
-// FreeFormList should start with NEWLINE
-// First line sets indent level
-
+//FreeFormList should start with NEWLINE
+//First line sets indent level
         //.req "NEWLINE"
         METHOD(req_,this)(this,1,(any_arr){any_str("NEWLINE")});
         //var startLine = .lexer.sourceLineNum
         var startLine = PROP(sourceLineNum_,PROP(lexer_,this));
         //var blockIndent = .lexer.indent
         var blockIndent = PROP(indent_,PROP(lexer_,this));
-
         //logger.debug "optFreeFormList: [#{astClass.name} #{separator}]*  parent:#{.parent.name}.#{.constructor.name} parentIndent:#{parentIndent}, blockIndent:#{blockIndent}, closer:", closer or '-no-'
-        logger_debug(undefined,2,(any_arr){_concatAny(13,(any_arr){any_str("optFreeFormList: ["), PROP(name_,astClass), any_str(" "), separator, any_str("]*  parent:"), PROP(name_,PROP(parent_,this)), any_str("."), PROP(name_,any_class(this.class)), any_str(" parentIndent:"), parentIndent, any_str(", blockIndent:"), blockIndent, any_str(", closer:")}), (_anyToBool(__or7=closer)? __or7 : any_str("-no-"))});
-
+        logger_debug(undefined,2,(any_arr){_concatAny(13,any_str("optFreeFormList: ["), PROP(name_,astClass), any_str(" "), separator, any_str("]*  parent:"), PROP(name_,PROP(parent_,this)), any_str("."), PROP(name_,any_class(this.class)), any_str(" parentIndent:"), parentIndent, any_str(", blockIndent:"), blockIndent, any_str(", closer:")), (_anyToBool(__or7=closer)? __or7 : any_str("-no-"))});
         //if blockIndent <= parentIndent #first line is same or less indented than parent - assume empty list
         if (_anyToNumber(blockIndent) <= _anyToNumber(parentIndent))  {// #first line is same or less indented than parent - assume empty list
           //.lexer.sayErr "free-form SeparatedList: next line is same or less indented (#{blockIndent}) than parent indent (#{parentIndent}) - assume empty list"
-          __call(sayErr_,PROP(lexer_,this),1,(any_arr){_concatAny(5,(any_arr){any_str("free-form SeparatedList: next line is same or less indented ("), blockIndent, any_str(") than parent indent ("), parentIndent, any_str(") - assume empty list")})});
+          __call(sayErr_,PROP(lexer_,this),1,(any_arr){_concatAny(5,any_str("free-form SeparatedList: next line is same or less indented ("), blockIndent, any_str(") than parent indent ("), parentIndent, any_str(") - assume empty list"))});
           //return result
           return result;
         };
-
-// now loop until closer or an indent change
-
-        // #if closer found (`]`, `)`, `}`), end of list
+//now loop until closer or an indent change
+        //#if closer found (`]`, `)`, `}`), end of list
         //do until .opt(closer) or .lexer.token.type is 'EOF'
         while(!(_anyToBool((_anyToBool(__or8=METHOD(opt_,this)(this,1,(any_arr){closer}))? __or8 : any_number(__is(PROP(type_,PROP(token_,PROP(lexer_,this))),any_str("EOF"))))))){
-
-// check for indent changes
-
+//check for indent changes
             //logger.debug "freeForm Mode .lexer.indent:#{.lexer.indent} block indent:#{blockIndent} parentIndent:#{parentIndent}"
-            logger_debug(undefined,1,(any_arr){_concatAny(6,(any_arr){any_str("freeForm Mode .lexer.indent:"), PROP(indent_,PROP(lexer_,this)), any_str(" block indent:"), blockIndent, any_str(" parentIndent:"), parentIndent})});
+            logger_debug(undefined,1,(any_arr){_concatAny(6,any_str("freeForm Mode .lexer.indent:"), PROP(indent_,PROP(lexer_,this)), any_str(" block indent:"), blockIndent, any_str(" parentIndent:"), parentIndent)});
             //if .lexer.indent isnt blockIndent
             if (!__is(PROP(indent_,PROP(lexer_,this)),blockIndent))  {
-
-// indent changed:
-// if a closer was specified, indent change before the closer means error (line misaligned)
-
+//indent changed:
+//if a closer was specified, indent change before the closer means error (line misaligned)
                   //if closer 
                   if (_anyToBool(closer))  {
                     //.lexer.throwErr "Misaligned indent: #{.lexer.indent}. Expected #{blockIndent}, or '#{closer}' to end block started at line #{startLine}"
-                    __call(throwErr_,PROP(lexer_,this),1,(any_arr){_concatAny(8,(any_arr){any_str("Misaligned indent: "), PROP(indent_,PROP(lexer_,this)), any_str(". Expected "), blockIndent, any_str(", or '"), closer, any_str("' to end block started at line "), startLine})});
+                    __call(throwErr_,PROP(lexer_,this),1,(any_arr){_concatAny(8,any_str("Misaligned indent: "), PROP(indent_,PROP(lexer_,this)), any_str(". Expected "), blockIndent, any_str(", or '"), closer, any_str("' to end block started at line "), startLine)});
                   };
-
-// check for excesive indent
-
+//check for excesive indent
                   //if .lexer.indent > blockIndent
                   if (_anyToNumber(PROP(indent_,PROP(lexer_,this))) > _anyToNumber(blockIndent))  {
                     //.lexer.throwErr "Misaligned indent: #{.lexer.indent}. Expected #{blockIndent} to continue block, or #{parentIndent} to close block started at line #{startLine}"
-                    __call(throwErr_,PROP(lexer_,this),1,(any_arr){_concatAny(8,(any_arr){any_str("Misaligned indent: "), PROP(indent_,PROP(lexer_,this)), any_str(". Expected "), blockIndent, any_str(" to continue block, or "), parentIndent, any_str(" to close block started at line "), startLine})});
+                    __call(throwErr_,PROP(lexer_,this),1,(any_arr){_concatAny(8,any_str("Misaligned indent: "), PROP(indent_,PROP(lexer_,this)), any_str(". Expected "), blockIndent, any_str(" to continue block, or "), parentIndent, any_str(" to close block started at line "), startLine)});
                   };
-
-// else, if no closer specified, and indent decreased => end of list
-
+//else, if no closer specified, and indent decreased => end of list
                   //break #end of list
                   break;// #end of list
             };
-
             //end if
-
-// check for more than one statement on the same line, with no separator
-
+            
+//check for more than one statement on the same line, with no separator
             //if not separatorAfterItem and .lexer.sourceLineNum is lastItemSourceLine 
             if (!(_anyToBool(separatorAfterItem)) && __is(PROP(sourceLineNum_,PROP(lexer_,this)),lastItemSourceLine))  {
                 //.lexer.sayErr "More than one [#{astClass.name}] on line #{lastItemSourceLine}. Missing ( ) on function call?"
-                __call(sayErr_,PROP(lexer_,this),1,(any_arr){_concatAny(5,(any_arr){any_str("More than one ["), PROP(name_,astClass), any_str("] on line "), lastItemSourceLine, any_str(". Missing ( ) on function call?")})});
+                __call(sayErr_,PROP(lexer_,this),1,(any_arr){_concatAny(5,any_str("More than one ["), PROP(name_,astClass), any_str("] on line "), lastItemSourceLine, any_str(". Missing ( ) on function call?"))});
             };
-
             //lastItemSourceLine = .lexer.sourceLineNum
             lastItemSourceLine = PROP(sourceLineNum_,PROP(lexer_,this));
-
-// else, get a item
-
+//else, get a item
             //var item = .req(astClass)
             var item = METHOD(req_,this)(this,1,(any_arr){astClass});
             //.lock()
             METHOD(lock_,this)(this,0,NULL);
-
-// add item to result
-
+//add item to result
             //result.push(item)
             METHOD(push_,result)(result,1,(any_arr){item});
-
-// record where the list ends - for accurate sorucemaps (function's end)
-// and to add commented original litescript source at C-generation
-
+//record where the list ends - for accurate sorucemaps (function's end)
+//and to add commented original litescript source at C-generation
             //if item.sourceLineNum>.lexer.maxSourceLineNum, .lexer.maxSourceLineNum=item.sourceLineNum
             if (_anyToNumber(PROP(sourceLineNum_,item)) > _anyToNumber(PROP(maxSourceLineNum_,PROP(lexer_,this)))) {PROP(maxSourceLineNum_,PROP(lexer_,this)) = PROP(sourceLineNum_,item);};
-
-// newline after item (before comma or closer) is optional
-
+//newline after item (before comma or closer) is optional
             //.opt('NEWLINE')
             METHOD(opt_,this)(this,1,(any_arr){any_str("NEWLINE")});
-
-// separator (comma|semicolon) is optional,
-// NEWLINE also is optional and valid
-
+//separator (comma|semicolon) is optional, 
+//NEWLINE also is optional and valid 
             //separatorAfterItem = .opt(separator)
             separatorAfterItem = METHOD(opt_,this)(this,1,(any_arr){separator});
             //.opt('NEWLINE')
             METHOD(opt_,this)(this,1,(any_arr){any_str("NEWLINE")});
         };// end loop
-
+        //loop #try get next item
         //logger.debug "END freeFormMode [#{.constructor.name}] blockIndent:#{blockIndent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer-'
-        logger_debug(undefined,2,(any_arr){_concatAny(9,(any_arr){any_str("END freeFormMode ["), PROP(name_,any_class(this.class)), any_str("] blockIndent:"), blockIndent, any_str(", get SeparatedList of ["), PROP(name_,astClass), any_str("] by '"), separator, any_str("' closer:")}), (_anyToBool(__or9=closer)? __or9 : any_str("-no closer-"))});
-
-        //if closer then .opt('NEWLINE') # consume optional newline after closer in free-form mode
-
+        logger_debug(undefined,2,(any_arr){_concatAny(9,any_str("END freeFormMode ["), PROP(name_,any_class(this.class)), any_str("] blockIndent:"), blockIndent, any_str(", get SeparatedList of ["), PROP(name_,astClass), any_str("] by '"), separator, any_str("' closer:")), (_anyToBool(__or9=closer)? __or9 : any_str("-no closer-"))});
+        ////if closer then .opt('NEWLINE') # consume optional newline after closer in free-form mode
         //return result
         return result;
      return undefined;
      }
-
-
 //#### method reqSeparatedList(astClass:ASTBase, separator, closer)
      any ASTBase_reqSeparatedList(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -867,22 +721,18 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
           case 1:astClass=arguments[0];
         }
         //---------
-// **reqSeparatedList** is the same as `optSeparatedList` except that it throws an error
-// if the list is empty
-
-// First, call optSeparatedList
-
+//**reqSeparatedList** is the same as `optSeparatedList` except that it throws an error 
+//if the list is empty
+        //
+//First, call optSeparatedList
         //var result:ASTBase array = .optSeparatedList(astClass, separator, closer)
         var result = METHOD(optSeparatedList_,this)(this,3,(any_arr){astClass, separator, closer});
         //if result.length is 0, .throwParseFailed "#{.constructor.name}: Get list: At least one [#{astClass.name}] was expected"
-        if (__is(any_number(_length(result)),any_number(0))) {METHOD(throwParseFailed_,this)(this,1,(any_arr){_concatAny(4,(any_arr){PROP(name_,any_class(this.class)), any_str(": Get list: At least one ["), PROP(name_,astClass), any_str("] was expected")})});};
-
+        if (__is(any_number(_length(result)),any_number(0))) {METHOD(throwParseFailed_,this)(this,1,(any_arr){_concatAny(4,PROP(name_,any_class(this.class)), any_str(": Get list: At least one ["), PROP(name_,astClass), any_str("] was expected"))});};
         //return result
         return result;
      return undefined;
      }
-
-
 //#### helper method listArgs(args:Object array)
      any ASTBase_listArgs(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -890,23 +740,21 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         // define named params
         var args= argc? arguments[0] : undefined;
         //---------
-// listArgs list arguments (from opt or req). used for debugging
-// and syntax error reporting
-
+//listArgs list arguments (from opt or req). used for debugging
+//and syntax error reporting
         //var msg = []
         var msg = new(Array,0,NULL);
         //for each i in args
         any _list10=args;
         { var i=undefined;
         for(int i__inx=0 ; i__inx<_list10.value.arr->length ; i__inx++){i=ITEM(i__inx,_list10);
-
+        
             //declare valid i.name
-            // declare valid i.name
-
+            
             //if typeof i is 'string'
             if (__is(_typeof(i),any_str("string")))  {
                 //msg.push("'#{i}'")
-                METHOD(push_,msg)(msg,1,(any_arr){_concatAny(3,(any_arr){any_str("'"), i, any_str("'")})});
+                METHOD(push_,msg)(msg,1,(any_arr){_concatAny(3,any_str("'"), i, any_str("'"))});
             }
             //else if i
             
@@ -914,13 +762,13 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
                 //if typeof i is 'function'
                 if (__is(_typeof(i),any_str("function")))  {
                   //msg.push("[#{i.name}]")
-                  METHOD(push_,msg)(msg,1,(any_arr){_concatAny(3,(any_arr){any_str("["), PROP(name_,i), any_str("]")})});
+                  METHOD(push_,msg)(msg,1,(any_arr){_concatAny(3,any_str("["), PROP(name_,i), any_str("]"))});
                 }
                 //else
                 
                 else {
                   //msg.push("<#{i.name}>")
-                  METHOD(push_,msg)(msg,1,(any_arr){_concatAny(3,(any_arr){any_str("<"), PROP(name_,i), any_str(">")})});
+                  METHOD(push_,msg)(msg,1,(any_arr){_concatAny(3,any_str("<"), PROP(name_,i), any_str(">"))});
                 };
             }
             //else
@@ -930,186 +778,154 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
                 METHOD(push_,msg)(msg,1,(any_arr){any_str("[null]")});
             };
         }};// end for each in args
-
         //return msg.join('|')
         return METHOD(join_,msg)(msg,1,(any_arr){any_str("|")});
      return undefined;
      }
-
-
-
-// Helper functions for code generation
-// =====================================
-
+//Helper functions for code generation
+//=====================================
 //#### helper method out()
      any ASTBase_out(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
         //---------
-
-// *out* is a helper function for code generation
-// It evaluates and output its arguments. uses .lexer.out
-
+//*out* is a helper function for code generation
+//It evaluates and output its arguments. uses .lexer.out
         //var rawOut = .lexer.outCode
         var rawOut = PROP(outCode_,PROP(lexer_,this));
-
         //for each item in arguments.toArray()
         any _list11=_newArray(argc,arguments);
         { var item=undefined;
         for(int item__inx=0 ; item__inx<_list11.value.arr->length ; item__inx++){item=ITEM(item__inx,_list11);
-
-// skip empty items
-
+        
+//skip empty items
           //if no item, continue
           if (!_anyToBool(item)) {continue;};
-
-// if it is the first thing in the line, out indentation
-
+//if it is the first thing in the line, out indentation
           //if not rawOut.currLine and .indent > 0
           if (!(_anyToBool(PROP(currLine_,rawOut))) && _anyToNumber(PROP(indent_,this)) > 0)  {
-              //rawOut.put Strings.spaces(.indent)
-              METHOD(put_,rawOut)(rawOut,1,(any_arr){Strings_spaces(undefined,1,(any_arr){PROP(indent_,this)})});
+              //rawOut.put String.spaces(.indent)
+              METHOD(put_,rawOut)(rawOut,1,(any_arr){String_spaces(undefined,1,(any_arr){PROP(indent_,this)})});
           };
-
-// if it is an AST node, call .produce()
-
+//if it is an AST node, call .produce()
           //if item instance of ASTBase 
           if (_instanceof(item,ASTBase))  {
               //declare item:ASTBase 
-              // declare item:ASTBase
+              
               //item.produce()
               METHOD(produce_,item)(item,0,NULL);
           }
-
-// New line char means "start new line"
+//New line char means "start new line"
           //else if item is '\n' 
           
           else if (__is(item,any_str("\n")))  {
             //rawOut.startNewLine()
             METHOD(startNewLine_,rawOut)(rawOut,0,NULL);
           }
-
-// a simple string, out the string
+//a simple string, out the string
           //else if type of item is 'string'
           
           else if (__is(_typeof(item),any_str("string")))  {
             //rawOut.put item
             METHOD(put_,rawOut)(rawOut,1,(any_arr){item});
           }
-
-// if the object is an array, resolve with a recursive call
+            //
+//if the object is an array, resolve with a recursive call
           //else if item instance of Array
           
           else if (_instanceof(item,Array))  {
-              // # Recursive #
+              //# Recursive #
               //ASTBase.prototype.out.apply this,item 
               __applyArr(__classMethodFunc(out_ ,ASTBase),this,item);
           }
-
-// else, Object codes
+//else, Object codes
           //else if item instanceof Map
           
           else if (_instanceof(item,Map))  {
-
               //declare item: Map string to any
-              // declare item: Map string to any
-
-            // expected keys:
-            //  COMMENT:string, NLI, CSL:Object array, freeForm, h
-
-// {CSL:arr} -> output the array as Comma Separated List
-
+              
+            //// expected keys:
+            ////  COMMENT:string, NLI, CSL:Object array, freeForm, h
+            //
+//{CSL:arr} -> output the array as Comma Separated List
+ //
               //if item.get('CSL') into var CSL:array
               var CSL=undefined;
               var comment=undefined;
               var header=undefined;
               if (_anyToBool((CSL=METHOD(get_,item)(item,1,(any_arr){any_str("CSL")}))))  {
-
-                  // additional keys: pre,post,separator
+                  //// additional keys: pre,post,separator
                   //var separator = item.get('separator') or ', '
                   var separator = (_anyToBool(__or10=METHOD(get_,item)(item,1,(any_arr){any_str("separator")}))? __or10 : any_str(", "));
-
+                  //
                   //for each inx,listItem in CSL
                   any _list12=CSL;
                   { var listItem=undefined;
                   for(int inx=0 ; inx<_list12.value.arr->length ; inx++){listItem=ITEM(inx,_list12);
-
+                  
                     //declare valid listItem.out
-                    // declare valid listItem.out
-
+                    
                     //if inx>0 
                     if (inx > 0)  {
                       //rawOut.put separator
                       METHOD(put_,rawOut)(rawOut,1,(any_arr){separator});
                     };
-
                     //if item.get('freeForm')
                     if (_anyToBool(METHOD(get_,item)(item,1,(any_arr){any_str("freeForm")})))  {
                         //rawOut.put '\n        '
                         METHOD(put_,rawOut)(rawOut,1,(any_arr){any_str("\n        ")});
                     };
-
-                    // #recurse
+                    //#recurse
                     //.out item.get('pre'), listItem, item.get('post')
                     METHOD(out_,this)(this,3,(any_arr){METHOD(get_,item)(item,1,(any_arr){any_str("pre")}), listItem, METHOD(get_,item)(item,1,(any_arr){any_str("post")})});
                   }};// end for each in CSL
-
                   //end for
-
+                  
                   //if item.get('freeForm'), rawOut.put '\n' # (prettier generated code)
                   if (_anyToBool(METHOD(get_,item)(item,1,(any_arr){any_str("freeForm")}))) {METHOD(put_,rawOut)(rawOut,1,(any_arr){any_str("\n")});};
               }
-
-// {COMMENT:text} --> output text as a comment
+//{COMMENT:text} --> output text as a comment 
+ //
               //else if item.get('COMMENT') into var comment:string
               
               else if (_anyToBool((comment=METHOD(get_,item)(item,1,(any_arr){any_str("COMMENT")}))))  {
-
                   //if no .lexer or .lexer.options.comments #comments level > 0
                   if (_anyToBool((_anyToBool(__or11=any_number(!_anyToBool(PROP(lexer_,this))))? __or11 : PROP(comments_,PROP(options_,PROP(lexer_,this))))))  {// #comments level > 0
-
-                      // # prepend // if necessary
+                      //# prepend // if necessary
                       //if type of item isnt 'string' or not comment.startsWith("//"), rawOut.put "// "
                       if (_anyToBool((_anyToBool(__or12=any_number(!__is(_typeof(item),any_str("string"))))? __or12 : any_number(!(_anyToBool(METHOD(startsWith_,comment)(comment,1,(any_arr){any_str("//")}))))))) {METHOD(put_,rawOut)(rawOut,1,(any_arr){any_str("// ")});};
                       //.out comment
                       METHOD(out_,this)(this,1,(any_arr){comment});
                   };
               }
-
-// {h:1/0} --> enable/disabe output to header file
+//{h:1/0} --> enable/disabe output to header file
+ //
               //else if item.get('h') into var header:number isnt undefined
               
               else if (!__is((header=METHOD(get_,item)(item,1,(any_arr){any_str("h")})),undefined))  {
-                  //rawOut.startNewLine
-                  METHOD(startNewLine_,rawOut)(rawOut,0,NULL);
-                  //rawOut.toHeader = header
-                  PROP(toHeader_,rawOut) = header;
+                  //rawOut.setHeader header
+                  METHOD(setHeader_,rawOut)(rawOut,1,(any_arr){header});
               }
               //else 
               
               else {
                   //.sayErr "ASTBase method out, item:map: unrecognized map keys: #{item}"
-                  METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(2,(any_arr){any_str("ASTBase method out, item:map: unrecognized map keys: "), item})});
+                  METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(2,any_str("ASTBase method out, item:map: unrecognized map keys: "), item)});
               };
           }
-
-// Last option, out item.toString()
+//Last option, out item.toString()
           //else
           
           else {
               //rawOut.put item.toString() # try item.toString()
               METHOD(put_,rawOut)(rawOut,1,(any_arr){METHOD(toString_,item)(item,0,NULL)});// # try item.toString()
           };
-
           //end if
           
         }};// end for each in _newArray(argc,arguments)
-
         //end loop, next item
         
      return undefined;
      }
-
-
 //#### helper method outSourceLineAsComment(sourceLineNum)
      any ASTBase_outSourceLineAsComment(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -1117,23 +933,33 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         // define named params
         var sourceLineNum= argc? arguments[0] : undefined;
         //---------
-
-// Note: check if we can remove "outLineAsComment" and use this instead
-
+//Note: check if we can remove "outLineAsComment" and use this instead
+        //if .lexer.outCode.lastOutCommentLine < sourceLineNum
+        if (_anyToNumber(PROP(lastOutCommentLine_,PROP(outCode_,PROP(lexer_,this)))) < _anyToNumber(sourceLineNum))  {
+            //.lexer.outCode.lastOutCommentLine = sourceLineNum
+            PROP(lastOutCommentLine_,PROP(outCode_,PROP(lexer_,this))) = sourceLineNum;
+        };
+        //
+        //if sourceLineNum<1, return 
+        if (_anyToNumber(sourceLineNum) < 1) {return undefined;};
         //var line = .lexer.lines[sourceLineNum-1]
         var line = ITEM(_anyToNumber(sourceLineNum) - 1,PROP(lines_,PROP(lexer_,this)));
+        //if no line, return
+        if (!_anyToBool(line)) {return undefined;};
         //var indent = line.countSpaces()
         var indent = METHOD(countSpaces_,line)(line,0,NULL);
-
         //.lexer.outCode.ensureNewLine
         __call(ensureNewLine_,PROP(outCode_,PROP(lexer_,this)),0,NULL);
-        //.lexer.outCode.put '#{line.slice(0,indent)}//#{line.slice(indent)}'
-        __call(put_,PROP(outCode_,PROP(lexer_,this)),1,(any_arr){_concatAny(3,(any_arr){METHOD(slice_,line)(line,2,(any_arr){any_number(0), indent}), any_str("//"), METHOD(slice_,line)(line,1,(any_arr){indent})})});
+        //.lexer.outCode.put line.slice(0,indent)
+        __call(put_,PROP(outCode_,PROP(lexer_,this)),1,(any_arr){METHOD(slice_,line)(line,2,(any_arr){any_number(0), indent})});
+        //.lexer.outCode.put "//"
+        __call(put_,PROP(outCode_,PROP(lexer_,this)),1,(any_arr){any_str("//")});
+        //.lexer.outCode.put line.slice(indent)
+        __call(put_,PROP(outCode_,PROP(lexer_,this)),1,(any_arr){METHOD(slice_,line)(line,1,(any_arr){indent})});
         //.lexer.outCode.startNewLine
         __call(startNewLine_,PROP(outCode_,PROP(lexer_,this)),0,NULL);
      return undefined;
      }
-
 //#### helper method outSourceLinesAsComment(fromLineNum,toLineNum)
      any ASTBase_outSourceLinesAsComment(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -1146,9 +972,13 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
           case 1:fromLineNum=arguments[0];
         }
         //---------
-
         //if no .lexer.options.comments, return 
         if (!_anyToBool(PROP(comments_,PROP(options_,PROP(lexer_,this))))) {return undefined;};
+        //if no fromLineNum or fromLineNum<.lexer.outCode.lastOutCommentLine+1
+        if (_anyToBool((_anyToBool(__or13=any_number(!_anyToBool(fromLineNum)))? __or13 : any_number(_anyToNumber(fromLineNum) < _anyToNumber(PROP(lastOutCommentLine_,PROP(outCode_,PROP(lexer_,this)))) + 1))))  {
+              //fromLineNum = .lexer.outCode.lastOutCommentLine+1
+              fromLineNum = any_number(_anyToNumber(PROP(lastOutCommentLine_,PROP(outCode_,PROP(lexer_,this)))) + 1);
+        };
         //for i=fromLineNum to toLineNum
         int64_t _end3=_anyToNumber(toLineNum);
         for(int64_t i=_anyToNumber(fromLineNum); i<=_end3; i++) {
@@ -1158,180 +988,71 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         
      return undefined;
      }
-
+///*      
 //#### helper method outLineAsComment(preComment,lineInx)
-     any ASTBase_outLineAsComment(DEFAULT_ARGUMENTS){
-        assert(_instanceof(this,ASTBase));
-        //---------
-        // define named params
-        var preComment, lineInx;
-        preComment=lineInx=undefined;
-        switch(argc){
-          case 2:lineInx=arguments[1];
-          case 1:preComment=arguments[0];
-        }
-        //---------
-// out a full source line as comment into produced code
-
+//out a full source line as comment into produced code
         //if no .lexer.options.comments, return 
-        if (!_anyToBool(PROP(comments_,PROP(options_,PROP(lexer_,this))))) {return undefined;};
-
-// manage optional parameters
-
+//manage optional parameters
         //if no lineInx
-        if (!_anyToBool(lineInx))  {
           //lineInx = preComment
-          lineInx = preComment;
           //preComment = ""
-          preComment = any_EMPTY_STR;
-        }
         //else
-        
-        else {
           //preComment="#{preComment}: "
-          preComment = _concatAny(2,(any_arr){preComment, any_str(": ")});
-        };
-
-// validate index
-
+//validate index
         //if no .lexer, return logger.error("ASTBase.outLineAsComment #{lineInx}: NO LEXER")
-        if (!_anyToBool(PROP(lexer_,this))) {return logger_error(undefined,1,(any_arr){_concatAny(3,(any_arr){any_str("ASTBase.outLineAsComment "), lineInx, any_str(": NO LEXER")})});};
-
         //var line = .lexer.infoLines[lineInx]
-        var line = ITEM(_anyToNumber(lineInx),PROP(infoLines_,PROP(lexer_,this)));
         //if no line, return logger.error("ASTBase.outLineAsComment #{lineInx}: NO LINE")
-        if (!_anyToBool(line)) {return logger_error(undefined,1,(any_arr){_concatAny(3,(any_arr){any_str("ASTBase.outLineAsComment "), lineInx, any_str(": NO LINE")})});};
-
         //if line.type is Parser.LineTypes.BLANK
-        if (__is(PROP(type_,line),Parser_LineTypes_BLANK))  {
             //.lexer.outCode.blankLine
-            __call(blankLine_,PROP(outCode_,PROP(lexer_,this)),0,NULL);
             //return
-            return undefined;
-        };
-
-// out as comment
-
+//out as comment
         //var prepend=""
-        var prepend = any_EMPTY_STR;
         //if preComment or not line.text.startsWith("//"), prepend="// "
-        if (_anyToBool((_anyToBool(__or13=preComment)? __or13 : any_number(!(_anyToBool(__call(startsWith_,PROP(text_,line),1,(any_arr){any_str("//")}))))))) {prepend = any_str("// ");};
-        //if no .lexer.outCode.currLine, prepend="#{Strings.spaces(line.indent)}#{prepend}"
-        if (!_anyToBool(PROP(currLine_,PROP(outCode_,PROP(lexer_,this))))) {prepend = _concatAny(2,(any_arr){Strings_spaces(undefined,1,(any_arr){PROP(indent_,line)}), prepend});};
+        //if no .lexer.outCode.currLine, prepend="#{String.spaces(line.indent)}#{prepend}"
         //if preComment or line.text, .lexer.outCode.put "#{prepend}#{preComment}#{line.text}"
-        if (_anyToBool((_anyToBool(__or14=preComment)? __or14 : PROP(text_,line)))) {__call(put_,PROP(outCode_,PROP(lexer_,this)),1,(any_arr){_concatAny(3,(any_arr){prepend, preComment, PROP(text_,line)})});};
-
         //.lexer.outCode.startNewLine
-        __call(startNewLine_,PROP(outCode_,PROP(lexer_,this)),0,NULL);
-
         //.lexer.outCode.lastOutCommentLine = lineInx
-        PROP(lastOutCommentLine_,PROP(outCode_,PROP(lexer_,this))) = lineInx;
-     return undefined;
-     }
-
+//*/
+///*
 //#### helper method outLinesAsComment(fromLine,toLine)
-     any ASTBase_outLinesAsComment(DEFAULT_ARGUMENTS){
-        assert(_instanceof(this,ASTBase));
-        //---------
-        // define named params
-        var fromLine, toLine;
-        fromLine=toLine=undefined;
-        switch(argc){
-          case 2:toLine=arguments[1];
-          case 1:fromLine=arguments[0];
-        }
-        //---------
-
         //if no .lexer.options.comments, return 
-        if (!_anyToBool(PROP(comments_,PROP(options_,PROP(lexer_,this))))) {return undefined;};
-
-        // # if line has something and is not spaces
+        //# if line has something and is not spaces
         //if .lexer.outCode.currLine and .lexer.outCode.currLine.trim()
-        if (_anyToBool(PROP(currLine_,PROP(outCode_,PROP(lexer_,this)))) && _anyToBool(__call(trim_,PROP(currLine_,PROP(outCode_,PROP(lexer_,this))),0,NULL)))  {
             //.lexer.outCode.startNewLine()
-            __call(startNewLine_,PROP(outCode_,PROP(lexer_,this)),0,NULL);
-        };
-
         //.lexer.outCode.currLine = undefined #clear indents
-        PROP(currLine_,PROP(outCode_,PROP(lexer_,this))) = undefined;// #clear indents
-
         //for i=fromLine to toLine
-        int64_t _end4=_anyToNumber(toLine);
-        for(int64_t i=_anyToNumber(fromLine); i<=_end4; i++) {
             //.outLineAsComment i
-            METHOD(outLineAsComment_,this)(this,1,(any_arr){any_number(i)});
-        };// end for i
-        
-     return undefined;
-     }
-
-
 //#### helper method outPrevLinesComments(startFrom) 
-     any ASTBase_outPrevLinesComments(DEFAULT_ARGUMENTS){
-      assert(_instanceof(this,ASTBase));
-      //---------
-      // define named params
-      var startFrom= argc? arguments[0] : undefined;
-      //---------
-
-// outPrevLinesComments helper method: output comments from previous lines
-// before the statement
-
+//outPrevLinesComments helper method: output comments from previous lines
+//before the statement
       //if no .lexer.options.comments, return 
-      if (!_anyToBool(PROP(comments_,PROP(options_,PROP(lexer_,this))))) {return undefined;};
-
       //var inx = startFrom or .lineInx or 0
-      var inx = (_anyToBool(__or15=(_anyToBool(__or16=startFrom)? __or16 : PROP(lineInx_,this)))? __or15 : any_number(0));
       //if inx<1, return
-      if (_anyToNumber(inx) < 1) {return undefined;};
-
       //default .lexer.outCode.lastOutCommentLine = -1
-      _default(&PROP(lastOutCommentLine_,PROP(outCode_,PROP(lexer_,this))),any_number(-1));
-
-// find comment lines in the previous lines of code.
-
+//find comment lines in the previous lines of code. 
       //var preInx = inx
-      var preInx = inx;
       //while preInx and preInx>.lexer.outCode.lastOutCommentLine 
-      while(_anyToBool(preInx) && _anyToNumber(preInx) > _anyToNumber(PROP(lastOutCommentLine_,PROP(outCode_,PROP(lexer_,this))))){
           //preInx--
-          preInx.value.number--;
           //if .lexer.infoLines[preInx].type is Parser.LineTypes.CODE 
-          if (__is(PROP(type_,ITEM(_anyToNumber(preInx),PROP(infoLines_,PROP(lexer_,this)))),Parser_LineTypes_CODE))  {
               //preInx++
-              preInx.value.number++;
               //break
-              break;
-          };
-      };// end loop
-
-// Output prev comments lines (also blank lines)
-
+//Output prev comments lines (also blank lines)
       //.outLinesAsComment preInx, inx-1
-      METHOD(outLinesAsComment_,this)(this,2,(any_arr){preInx, any_number(_anyToNumber(inx) - 1)});
-     return undefined;
-     }
-
-    // #end method
-
-
+    //#end method
+//*/
 //#### helper method getEOLComment() 
      any ASTBase_getEOLComment(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
         //---------
-// getEOLComment: get the comment at the end of the line
-
-// Check for "postfix" comments. These are comments that occur at the end of the line,
-// such as `a = 1 #comment`. We want to try to add these at the end of the current JavaScript line.
-
+//getEOLComment: get the comment at the end of the line
+//Check for "postfix" comments. These are comments that occur at the end of the line,
+//such as `a = 1 #comment`. We want to try to add these at the end of the current JavaScript line.
         //if no .lexer.options.comments, return 
         if (!_anyToBool(PROP(comments_,PROP(options_,PROP(lexer_,this))))) {return undefined;};
-
         //var inx = .lineInx
         var inx = PROP(lineInx_,this);
         //var infoLine = .lexer.infoLines[inx]
         var infoLine = ITEM(_anyToNumber(inx),PROP(infoLines_,PROP(lexer_,this)));
-
         //if infoLine.tokens and infoLine.tokens.length
         if (_anyToBool(PROP(tokens_,infoLine)) && _length(PROP(tokens_,infoLine)))  {
             //var lastToken = infoLine.tokens[infoLine.tokens.length-1]
@@ -1339,12 +1060,11 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
             //if lastToken.type is 'COMMENT'
             if (__is(PROP(type_,lastToken),any_str("COMMENT")))  {
                 //return "#{lastToken.value.startsWith('//')? '' else '//'} #{lastToken.value}"
-                return _concatAny(3,(any_arr){_anyToBool(__call(startsWith_,PROP(value_,lastToken),1,(any_arr){any_str("//")})) ? any_EMPTY_STR : any_str("//"), any_str(" "), PROP(value_,lastToken)});
+                return _concatAny(3,_anyToBool(__call(startsWith_,PROP(value_,lastToken),1,(any_arr){any_str("//")})) ? any_EMPTY_STR : any_str("//"), any_str(" "), PROP(value_,lastToken));
             };
         };
      return undefined;
      }
-
 //#### helper method addSourceMap(mark)
      any ASTBase_addSourceMap(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -1352,19 +1072,15 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         // define named params
         var mark= argc? arguments[0] : undefined;
         //---------
-
         //.lexer.outCode.addSourceMap mark, .sourceLineNum, .column, .indent
         __call(addSourceMap_,PROP(outCode_,PROP(lexer_,this)),4,(any_arr){mark, PROP(sourceLineNum_,this), PROP(column_,this), PROP(indent_,this)});
      return undefined;
      }
-
-
 //#### helper method levelIndent()
      any ASTBase_levelIndent(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
         //---------
-// show indented messaged for debugging
-
+//show indented messaged for debugging
         //var indent = 0
         var indent = any_number(0);
         //var node = this
@@ -1374,21 +1090,17 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
             //indent += 2 //add 2 spaces
             indent.value.number += 2; //add 2 spaces
         };// end loop
-
-        //return Strings.spaces(indent)
-        return Strings_spaces(undefined,1,(any_arr){indent});
+        //return String.spaces(indent)
+        return String_spaces(undefined,1,(any_arr){indent});
      return undefined;
      }
-
-
+    //
 //#### helper method getRootNode()
      any ASTBase_getRootNode(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
         //---------
-
-// **getRootNode** method moves up in the AST up to the node holding the global scope ("root").
-// "root" node has parent = Project
-
+//**getRootNode** method moves up in the AST up to the node holding the global scope ("root").
+//"root" node has parent = Project 
         //var node = this
         var node = this;
         //while node.parent instanceof ASTBase
@@ -1400,8 +1112,6 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         return node;
      return undefined;
      }
-
-
 //#### helper method compilerVar(name) 
      any ASTBase_compilerVar(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,ASTBase));
@@ -1409,17 +1119,14 @@ any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,_
         // define named params
         var name= argc? arguments[0] : undefined;
         //---------
-
-// helper function compilerVar(name)
-// return root.compilerVars.members.get(name)
-
+//helper function compilerVar(name)
+//return root.compilerVars.members.get(name)
         //return .getRootNode().parent.compilerVars.members.get(name) 
         return __call(get_,PROP(members_,PROP(compilerVars_,PROP(parent_,METHOD(getRootNode_,this)(this,0,NULL)))),1,(any_arr){name});
      return undefined;
      }
-    //import Parser, ControlledError
-    //import logger, Strings 
-    //shim import LiteCore, Map
+    
+    
     
 
 //-------------------------
@@ -1428,7 +1135,6 @@ void ASTBase__moduleInit(void){
         _declareMethods(ASTBase, ASTBase_METHODS);
         _declareProps(ASTBase, ASTBase_PROPS, sizeof ASTBase_PROPS);
     
-
     //end class ASTBase
     
 };

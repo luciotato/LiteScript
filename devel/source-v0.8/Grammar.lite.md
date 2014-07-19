@@ -2166,7 +2166,7 @@ Defines a new class with an optional parent class. properties and methods go ins
 
 Control: class names should be Capitalized, except: jQuery
 
-        if not .lexer.interfaceMode and not Strings.isCapitalized(.name)
+        if not .lexer.interfaceMode and not String.isCapitalized(.name)
             .lexer.sayErr "class names should be Capitalized: class #{.name}"
 
 Now parse optional `,(extend|proto is|inherits from)` setting the super class

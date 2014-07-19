@@ -93,137 +93,137 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/ctest: ${OBJECTFILES}
 ${OBJECTDIR}/core/LiteC-core.o: core/LiteC-core.c 
 	${MKDIR} -p ${OBJECTDIR}/core
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/LiteC-core.o core/LiteC-core.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/LiteC-core.o core/LiteC-core.c
 
 ${OBJECTDIR}/core/PMREX-native.o: core/PMREX-native.c 
 	${MKDIR} -p ${OBJECTDIR}/core
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/PMREX-native.o core/PMREX-native.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/PMREX-native.o core/PMREX-native.c
 
 ${OBJECTDIR}/core/any.o: core/any.c 
 	${MKDIR} -p ${OBJECTDIR}/core
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/any.o core/any.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/any.o core/any.c
 
 ${OBJECTDIR}/core/exceptions.o: core/exceptions.c 
 	${MKDIR} -p ${OBJECTDIR}/core
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/exceptions.o core/exceptions.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/exceptions.o core/exceptions.c
 
 ${OBJECTDIR}/core/fs-native.o: core/fs-native.c 
 	${MKDIR} -p ${OBJECTDIR}/core
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/fs-native.o core/fs-native.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/fs-native.o core/fs-native.c
 
 ${OBJECTDIR}/core/util.o: core/util.c 
 	${MKDIR} -p ${OBJECTDIR}/core
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/util.o core/util.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/util.o core/util.c
 
 ${OBJECTDIR}/generated/ASTBase.o: generated/ASTBase.c 
 	${MKDIR} -p ${OBJECTDIR}/generated
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/ASTBase.o generated/ASTBase.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/ASTBase.o generated/ASTBase.c
 
 ${OBJECTDIR}/generated/C_global_import/fs.o: generated/C_global_import/fs.c 
 	${MKDIR} -p ${OBJECTDIR}/generated/C_global_import
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/C_global_import/fs.o generated/C_global_import/fs.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/C_global_import/fs.o generated/C_global_import/fs.c
 
 ${OBJECTDIR}/generated/C_global_import/path.o: generated/C_global_import/path.c 
 	${MKDIR} -p ${OBJECTDIR}/generated/C_global_import
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/C_global_import/path.o generated/C_global_import/path.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/C_global_import/path.o generated/C_global_import/path.c
 
 ${OBJECTDIR}/generated/Compiler.o: generated/Compiler.c 
 	${MKDIR} -p ${OBJECTDIR}/generated
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Compiler.o generated/Compiler.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Compiler.o generated/Compiler.c
 
 ${OBJECTDIR}/generated/Grammar.o: generated/Grammar.c 
 	${MKDIR} -p ${OBJECTDIR}/generated
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Grammar.o generated/Grammar.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Grammar.o generated/Grammar.c
 
 ${OBJECTDIR}/generated/Names.o: generated/Names.c 
 	${MKDIR} -p ${OBJECTDIR}/generated
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Names.o generated/Names.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Names.o generated/Names.c
 
 ${OBJECTDIR}/generated/Parser.o: generated/Parser.c 
 	${MKDIR} -p ${OBJECTDIR}/generated
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Parser.o generated/Parser.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Parser.o generated/Parser.c
 
 ${OBJECTDIR}/generated/Producer_c.o: generated/Producer_c.c 
 	${MKDIR} -p ${OBJECTDIR}/generated
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Producer_c.o generated/Producer_c.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Producer_c.o generated/Producer_c.c
 
 ${OBJECTDIR}/generated/Project.o: generated/Project.c 
 	${MKDIR} -p ${OBJECTDIR}/generated
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Project.o generated/Project.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Project.o generated/Project.c
 
 ${OBJECTDIR}/generated/Validate.o: generated/Validate.c 
 	${MKDIR} -p ${OBJECTDIR}/generated
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Validate.o generated/Validate.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/Validate.o generated/Validate.c
 
 ${OBJECTDIR}/generated/_dispatcher.o: generated/_dispatcher.c 
 	${MKDIR} -p ${OBJECTDIR}/generated
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/_dispatcher.o generated/_dispatcher.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/_dispatcher.o generated/_dispatcher.c
 
 ${OBJECTDIR}/generated/lib/ControlledError.o: generated/lib/ControlledError.c 
 	${MKDIR} -p ${OBJECTDIR}/generated/lib
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/ControlledError.o generated/lib/ControlledError.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/ControlledError.o generated/lib/ControlledError.c
 
 ${OBJECTDIR}/generated/lib/Environment.o: generated/lib/Environment.c 
 	${MKDIR} -p ${OBJECTDIR}/generated/lib
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/Environment.o generated/lib/Environment.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/Environment.o generated/lib/Environment.c
 
 ${OBJECTDIR}/generated/lib/GeneralOptions.o: generated/lib/GeneralOptions.c 
 	${MKDIR} -p ${OBJECTDIR}/generated/lib
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/GeneralOptions.o generated/lib/GeneralOptions.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/GeneralOptions.o generated/lib/GeneralOptions.c
 
 ${OBJECTDIR}/generated/lib/OptionsParser.o: generated/lib/OptionsParser.c 
 	${MKDIR} -p ${OBJECTDIR}/generated/lib
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/OptionsParser.o generated/lib/OptionsParser.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/OptionsParser.o generated/lib/OptionsParser.c
 
 ${OBJECTDIR}/generated/lib/Strings.o: generated/lib/Strings.c 
 	${MKDIR} -p ${OBJECTDIR}/generated/lib
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/Strings.o generated/lib/Strings.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/Strings.o generated/lib/Strings.c
 
 ${OBJECTDIR}/generated/lib/UniqueID.o: generated/lib/UniqueID.c 
 	${MKDIR} -p ${OBJECTDIR}/generated/lib
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/UniqueID.o generated/lib/UniqueID.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/UniqueID.o generated/lib/UniqueID.c
 
 ${OBJECTDIR}/generated/lib/color.o: generated/lib/color.c 
 	${MKDIR} -p ${OBJECTDIR}/generated/lib
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/color.o generated/lib/color.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/color.o generated/lib/color.c
 
 ${OBJECTDIR}/generated/lib/logger.o: generated/lib/logger.c 
 	${MKDIR} -p ${OBJECTDIR}/generated/lib
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/logger.o generated/lib/logger.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/logger.o generated/lib/logger.c
 
 ${OBJECTDIR}/generated/lib/mkPath.o: generated/lib/mkPath.c 
 	${MKDIR} -p ${OBJECTDIR}/generated/lib
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/mkPath.o generated/lib/mkPath.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/lib/mkPath.o generated/lib/mkPath.c
 
 ${OBJECTDIR}/generated/litec.o: generated/litec.c 
 	${MKDIR} -p ${OBJECTDIR}/generated
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/litec.o generated/litec.c
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated/litec.o generated/litec.c
 
 # Subprojects
 .build-subprojects:

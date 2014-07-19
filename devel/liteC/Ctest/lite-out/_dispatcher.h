@@ -44,9 +44,6 @@ enum _VERBS { //a symbol for each distinct method name
     out_,
     outSourceLineAsComment_,
     outSourceLinesAsComment_,
-    outLineAsComment_,
-    outLinesAsComment_,
-    outPrevLinesComments_,
     getEOLComment_,
     addSourceMap_,
     levelIndent_,
@@ -97,18 +94,21 @@ enum _VERBS { //a symbol for each distinct method name
     tokenizeLine_,
     recognizeToken_,
     start_,
+    setHeader_,
     put_,
     startNewLine_,
     ensureNewLine_,
     blankLine_,
     getResult_,
+    close_,
     markSourceMap_,
+    append_,
+    saveLine_,
     startsWith_,
     endsWith_,
     trimRight_,
     trimLeft_,
     capitalized_,
-    countSpaces_,
     quoted_,
     rpad_,
     remove_,
@@ -259,13 +259,18 @@ enum _THINGS { //a symbol for each distinct property name
     postIndent_,
     lineNum_,
     currLine_,
-    toHeader_,
-    hLines_,
+    header_,
+    fileMode_,
+    filenames_,
+    fileIsOpen_,
+    fHandles_,
     lastOriginalCodeComment_,
     lastOutCommentLine_,
     sourceMap_,
     exportNamespace_,
     orTempVarCount_,
+    used_,
+    buf_,
     debugOptions_,
     enabled_,
     file_,
@@ -400,11 +405,11 @@ _LAST_THING};
 #include "lib/logger.h"
 #include "lib/Strings.h"
 #include "lib/PMREX.h"
+#include "lib/mkPath.h"
 #include "Grammar.h"
 #include "lib/UniqueID.h"
 #include "Names.h"
 #include "Validate.h"
 #include "lib/Environment.h"
-#include "lib/mkPath.h"
 #include "Producer_c.h"
 #endif

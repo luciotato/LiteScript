@@ -2,8 +2,7 @@
 //-------------------------
 //Module OptionsParser
 //-------------------------
-
-
+#include "OptionsParser.c.extra"
     //-----------------------
     // Class OptionsParser: static list of METHODS(verbs) and PROPS(things)
     //-----------------------
@@ -26,30 +25,26 @@
 //--------------
     // OptionsParser
     any OptionsParser; //Class OptionsParser
-// parse command line parameters
-
+//### class OptionsParser
+//parse command line parameters
 //#### properties
         //lastIndex
         //items: Array of string
      ;
-
 //#### constructor(argv:array)
      void OptionsParser__init(DEFAULT_ARGUMENTS){
         
         // define named params
         var argv= argc? arguments[0] : undefined;
         //---------
-
         //if argv.length and argv[0] is 'node' 
         if (_length(argv) && __is(ITEM(0,argv),any_str("node")))  {
                 //argv=argv.slice(1) //remove 'node' if calling as a script
                 argv = METHOD(slice_,argv)(argv,1,(any_arr){any_number(1)}); //remove 'node' if calling as a script
         };
-
         //.items = argv.slice(1) //remove this script/exe 'litec.out' from command line arguments
         PROP(items_,this) = METHOD(slice_,argv)(argv,1,(any_arr){any_number(1)}); //remove this script/exe 'litec.out' from command line arguments
      }
-
 //#### method option(shortOption,argName)
      any OptionsParser_option(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,OptionsParser));
@@ -62,7 +57,7 @@
           case 1:shortOption=arguments[0];
         }
         //---------
-
+       // 
         //if .getPos(shortOption,argName) into var pos >= 0
         var pos=undefined;
         if (_anyToNumber((pos=METHOD(getPos_,this)(this,2,(any_arr){shortOption, argName}))) >= 0)  {
@@ -71,12 +66,11 @@
             //return true
             return true;
         };
-
+       // 
         //return false
         return false;
      return undefined;
      }
-
 //#### method valueFor(shortOption,argName) returns string
      any OptionsParser_valueFor(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,OptionsParser));
@@ -89,7 +83,7 @@
           case 1:shortOption=arguments[0];
         }
         //---------
-
+       // 
         //if .getPos(shortOption,argName) into var pos >= 0
         var pos=undefined;
         if (_anyToNumber((pos=METHOD(getPos_,this)(this,2,(any_arr){shortOption, argName}))) >= 0)  {
@@ -100,12 +94,11 @@
             //return value
             return value;
         };
-
+       // 
         //return undefined
         return undefined;
      return undefined;
      }
-
 //#### helper method getPos(shortOption,argName)
      any OptionsParser_getPos(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,OptionsParser));
@@ -118,19 +111,15 @@
           case 1:shortOption=arguments[0];
         }
         //---------
-
-// search several possible forms of the option, e.g. -o --o -outdir --outdir
-
+//search several possible forms of the option, e.g. -o --o -outdir --outdir
         //var forms=['-#{shortOption}','--#{shortOption}']
-        var forms = new(Array,2,(any_arr){_concatAny(2,(any_arr){any_str("-"), shortOption}), _concatAny(2,(any_arr){any_str("--"), shortOption})});
+        var forms = new(Array,2,(any_arr){_concatAny(2,any_str("-"), shortOption), _concatAny(2,any_str("--"), shortOption)});
         //if argName, forms.push('--#{argName}','-#{argName}')
-        if (_anyToBool(argName)) {METHOD(push_,forms)(forms,2,(any_arr){_concatAny(2,(any_arr){any_str("--"), argName}), _concatAny(2,(any_arr){any_str("-"), argName})});};
-
+        if (_anyToBool(argName)) {METHOD(push_,forms)(forms,2,(any_arr){_concatAny(2,any_str("--"), argName), _concatAny(2,any_str("-"), argName)});};
         //return .search(forms) into .lastIndex
         return (PROP(lastIndex_,this)=METHOD(search_,this)(this,1,(any_arr){forms}));
      return undefined;
      }
-
 //#### helper method search(list:array)
      any OptionsParser_search(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,OptionsParser));
@@ -142,6 +131,7 @@
         any _list4=list;
         { var item=undefined;
         for(int item__inx=0 ; item__inx<_list4.value.arr->length ; item__inx++){item=ITEM(item__inx,_list4);
+        
             //var result = .items.indexOf(item)
             var result = __call(indexOf_,PROP(items_,this),1,(any_arr){item});
             //if result >=0, return result

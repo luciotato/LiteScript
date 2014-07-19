@@ -40,7 +40,7 @@
    var allMethodNames = new Map().fromObject({}); // all distinct methodnames, to declare method symbols
    var allPropertyNames = new Map().fromObject({}); // all distinct propname, to declare props symbols
 
-   var coreSupportedMethods = ["toString", "tryGetMethod", "tryGetProperty", "getProperty", "getPropertyName", "hasProperty", "has", "get", "set", "clear", "delete", "keys", "slice", "split", "indexOf", "lastIndexOf", "concat", "toUpperCase", "toLowerCase", "charAt", "replaceAll", "trim", "toDateString", "toTimeString", "toUTCString", "toISOString", "shift", "push", "unshift", "pop", "join", "splice"];
+   var coreSupportedMethods = ["toString", "tryGetMethod", "tryGetProperty", "getProperty", "getPropertyName", "hasProperty", "has", "get", "set", "clear", "delete", "keys", "slice", "split", "indexOf", "lastIndexOf", "concat", "toUpperCase", "toLowerCase", "charAt", "replaceAll", "trim", "substr", "countSpaces", "toDateString", "toTimeString", "toUTCString", "toISOString", "copy", "write", "shift", "push", "unshift", "pop", "join", "splice"];
 
    var coreSupportedProps = ['name', 'size', 'value', 'message', 'stack', 'code'];
 
@@ -65,21 +65,24 @@
        project.redirectOutput(module.exports.dispatcherModule.lexer.outCode); // all Lexers now out here
 
        module.exports.dispatcherModule.fileInfo = Environment.fileInfoNewFile("_dispatcher", project.options.target);
+
+       module.exports.dispatcherModule.lexer.outCode.fileMode = true;
+       module.exports.dispatcherModule.lexer.outCode.filenames[0] = module.exports.dispatcherModule.fileInfo.outFilename;
+       module.exports.dispatcherModule.lexer.outCode.filenames[1] = '' + (module.exports.dispatcherModule.fileInfo.outFilename.slice(0, -1)) + 'h';
+
        module.exports.dispatcherModule.produceDispatcher(project);
 
-       var resultLines = module.exports.dispatcherModule.lexer.outCode.getResult(); //get .c file contents
-       // if resultLines.length
-       if (resultLines.length) {
-           Environment.externalCacheSave(module.exports.dispatcherModule.fileInfo.outFilename, resultLines);
-       };
+       module.exports.dispatcherModule.lexer.outCode.close();
 
-       resultLines = module.exports.dispatcherModule.lexer.outCode.getResult(1); //get .h file contents
-       // if resultLines.length
-       if (resultLines.length) {
-           Environment.externalCacheSave('' + (module.exports.dispatcherModule.fileInfo.outFilename.slice(0, -1)) + 'h', resultLines);
-       };
+//         var resultLines:string array =  dispatcherModule.lexer.outCode.getResult() //get .c file contents
+//         if resultLines.length
+//             Environment.externalCacheSave dispatcherModule.fileInfo.outFilename,resultLines
+//         resultLines =  dispatcherModule.lexer.outCode.getResult(1) //get .h file contents
+//         if resultLines.length
+//             Environment.externalCacheSave '#{dispatcherModule.fileInfo.outFilename.slice(0,-1)}h',resultLines
+//         
 
-       logger.msg("" + color.green + "[OK] -> " + module.exports.dispatcherModule.fileInfo.outRelFilename + " " + color.normal);
+       logger.info("" + color.green + "[OK] -> " + module.exports.dispatcherModule.fileInfo.outRelFilename + " " + color.normal);
        logger.extra();// #blank line
    };
    // export
@@ -226,11 +229,10 @@
            this.out('    ', nodeModule.fileInfo.base, '__moduleInit();', NL);
        };// end for each in moduleList
 
-// call main module __init
+// call main module __init (main program execution),
+// and before exit, call LiteC_finish
 
-       this.out('\n\n    ', project.main.fileInfo.base, '__moduleInit();', NL);
-
-       this.out('}', NL, new Map().fromObject({COMMENT: 'end main'}), NL);
+       this.out('\n\n    ', project.main.fileInfo.base, '__moduleInit();', NL, '\n\n    LiteC_finish();', NL, '} //end main', NL);
     };
 
 
@@ -246,11 +248,10 @@
 
         // declare valid .parent.fileInfo.outFilename
        var dispatcherFull = "" + (Environment.dirName(this.parent.fileInfo.outFilename)) + "/_dispatcher.h";
-       this.out('#include "' + (Environment.relativeFrom(thisBase, dispatcherFull)) + '"', NL);
+       var dispatcherRel = Environment.relativeFrom(thisBase, dispatcherFull);
+       this.out('#include "', dispatcherRel, '"', NL);
 
        var prefix = this.fileInfo.base;
-
-// header
 
        this.out("//-------------------------", NL, "//Module ", prefix, NL, "//-------------------------", NL);
 
@@ -281,9 +282,8 @@
        this.out(new Map().fromObject({h: 0}), '#include "' + prefix + '.h"', NL, NL, "//-------------------------", NL, "//Module ", prefix, this.fileInfo.isInterface ? ' - INTERFACE' : '', NL, "//-------------------------", NL);
 
         //space to insert __or temp vars
-       var insertPos = this.lexer.outCode.lines.length;
-       this.lexer.outCode.blankLine();
-       this.lexer.outCode.blankLine();
+       this.out('#include "' + this.fileInfo.base + '.c.extra"', NL);
+       this.lexer.outCode.filenames[2] = "" + this.fileInfo.outFilename + ".extra";
 
         // add sustance for the module
        this.produceSustance(prefix);
@@ -328,18 +328,15 @@
 
 // insert at .c file start, helper tempvars for 'or' expressions short-circuit evaluation
 
-       // if .lexer.outCode.orTempVarCount
-       if (this.lexer.outCode.orTempVarCount) {
-           this.lexer.outCode.lines[insertPos++] = "//helper tempvars for 'or' expressions short-circuit evaluation";
-           var list = "any __or1";
-           // for n=2 to .lexer.outCode.orTempVarCount
-           var _end7=this.lexer.outCode.orTempVarCount;
-           for( var n=2; n<=_end7; n++) {
-               list += ",__or" + n;
-           };// end for n
-           list += ";";
-           this.lexer.outCode.lines[insertPos] = list;
-       };
+       this.out(new Map().fromObject({h: 2}), "//helper tempvars for 'or' expressions short-circuit evaluation", NL, "any __or1");
+
+       // for n=2 to .lexer.outCode.orTempVarCount
+       var _end7=this.lexer.outCode.orTempVarCount;
+       for( var n=2; n<=_end7; n++) {
+           this.out(",__or" + n);
+       };// end for n
+
+       this.out(";", new Map().fromObject({h: 1}));
 
 
        this.skipSemiColon = true;
@@ -369,8 +366,8 @@
 
        // if .toNamespace
        if (this.toNamespace) {
-               this.body.produceDeclaredExternProps(nameDeclClass.getComposedName(), true);
-               return; //nothing more to do if it's "append to namespace"
+           this.body.produceDeclaredExternProps(nameDeclClass.getComposedName(), true);
+           return; //nothing more to do if it's "append to namespace"
        };
 
 // handle methods added to core classes
@@ -581,9 +578,24 @@
                }
                
                }// end for each property
+
+// methods in the class as namespace
+
+       // for each classMethodNameDecl in map .nameDecl.members
+       var classMethodNameDecl=undefined;
+       if(!this.nameDecl.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
+       for ( var classMethodNameDecl__propName in this.nameDecl.members.dict) if (this.nameDecl.members.dict.hasOwnProperty(classMethodNameDecl__propName)){classMethodNameDecl=this.nameDecl.members.dict[classMethodNameDecl__propName];
+       if(classMethodNameDecl.name !== 'prototype' && classMethodNameDecl.name.charAt(0) !== '*'){
+               // if not classMethodNameDecl.isProperty
+               if (!(classMethodNameDecl.isProperty)) {
+                    //declare extern for this class as namespace method
+                   this.out("extern any ", c, "_", classMethodNameDecl.name, "(DEFAULT_ARGUMENTS); //class as namespace", NL);
+               };
+               }
+               
+               }// end for each property
        
     };
-
 
     // method produce()
     Grammar.ClassDeclaration.prototype.produce = function(){
@@ -766,7 +778,7 @@
                    if (isPublic) {this.out('extern var ', new Map().fromObject({pre: prefix, CSL: item.specific.getNames()}), ";", NL)};
                    break;
                    
-           case Grammar.FunctionDeclaration:
+           case Grammar.FunctionDeclaration: case Grammar.MethodDeclaration:
                     // declare item.specific:Grammar.FunctionDeclaration
                     //export module function
                    // if isPublic, .out 'extern any ',prefix,item.specific.name,"(DEFAULT_ARGUMENTS);",NL
@@ -934,7 +946,8 @@
 
 // add comment lines, in the same position as the source
 
-       this.outPrevLinesComments();
+       this.outSourceLinesAsComment(0, this.sourceLineNum - 1);
+        //.outPrevLinesComments()
 
 // To ease reading of compiled code, add original Lite line as comment
 
@@ -1370,7 +1383,7 @@
            if (this.produceType === 'Number') {this.throwError('cannot use & to concat and produce a number')};
            this.left.produceType = 'any';
            this.right.produceType = 'any';
-           this.out("_concatAny(2,(any_arr){", this.left, ',', this.right, '})');
+           this.out("_concatAny(2,", this.left, ',', this.right, ')');
            break;
            
        default:
@@ -1760,7 +1773,8 @@
                    actualVar = undefined;
                }
                
-               else if (actualVar && actualVar.isNamespace) { //just namespace access
+               else if (actualVar && (actualVar.isNamespace || actualVar.findOwnMember('prototype'))) {
+                    //just namespace access or accessing a "property" of a class "as namespace"
                    var prevArr = result.pop();
                    prevArr.push("_", ac.name);
                    result.push(prevArr);
@@ -1832,14 +1846,17 @@
                        // if fnNameArray[0] is '_concatAny'
                        if (fnNameArray[0] === '_concatAny') {
                            callParams = []; // no "thisValue" for internal _concatAny, just params to concat
+                            //add arguments: count,...
+                           this.addArguments(functionAccess.args, callParams, true);
                        }
+                            //add arguments: count,...
                        
                        else {
                            callParams = ["undefined", ","]; //this==undefined as in js "use strict" mode
+                            //add arguments: count,(any_arr){...}
+                           this.addArguments(functionAccess.args, callParams);
                        };
 
-                        //add arguments: count,(any_arr){...}
-                       this.addArguments(functionAccess.args, callParams);
                        callParams.push(")"); //close function(undefined,arg,any* arguments)
                    }
                    
@@ -1977,13 +1994,16 @@
      };
 
 
-     // helper method addArguments(args:array , callParams:array)
-     Grammar.VariableRef.prototype.addArguments = function(args, callParams){
+     // helper method addArguments(args:array , callParams:array, skipAnyArr:boolean)
+     Grammar.VariableRef.prototype.addArguments = function(args, callParams, skipAnyArr){
+
+       var pre = skipAnyArr ? '' : '(any_arr){';
+       var post = skipAnyArr ? '' : '}';
 
         //add arguments[]
        // if args and args.length
        if (args && args.length) {
-           callParams.push("" + args.length + ",(any_arr){", new Map().fromObject({CSL: args}), "}");
+           callParams.push("" + args.length + ",", pre, new Map().fromObject({CSL: args}), post);
        }
        
        else {
@@ -2026,7 +2046,7 @@
                
        case "&=":
                this.rvalue.produceType = 'any';
-               this.out(this.lvalue, '=', "_concatAny(2,(any_arr){", this.lvalue, ',', this.rvalue, '})');
+               this.out(this.lvalue, '=', "_concatAny(2,", this.lvalue, ',', this.rvalue, ')');
                break;
                
        default:
@@ -2304,7 +2324,8 @@
 
        // if .elseStatement
        if (this.elseStatement) {
-           this.outPrevLinesComments(this.elseStatement.lineInx - 1);
+           this.outSourceLinesAsComment(0, this.elseStatement.sourceLineNum - 1);
+            //.outPrevLinesComments .elseStatement.lineInx-1
            this.elseStatement.produce();
        };
      };
@@ -2563,7 +2584,10 @@
 
      // method produce()
      Grammar.ForWhereFilter.prototype.produce = function(){
-       this.outLineAsComment(this.lineInx);
+
+        //.outLineAsComment .lineInx
+       this.outSourceLineAsComment(this.sourceLineNum);
+
        this.filterExpression.produceType = 'Bool';
        this.out('if(', this.filterExpression, ')');
      };
@@ -2998,7 +3022,8 @@
 
 // first, out as comment this line
 
-       this.outLineAsComment(this.lineInx);
+        //.outLineAsComment .lineInx
+       this.outSourceLineAsComment(this.sourceLineNum);
 
 // if it's a conditional compile, output body is option is Set
 
@@ -3033,7 +3058,7 @@
 
      // method produce()
      Grammar.DeclareStatement.prototype.produce = function(){
-       this.outLinesAsComment(this.lineInx, this.names ? this.lastLineInxOf(this.names) : this.lineInx);
+        //.outLinesAsComment .lineInx, .names? .lastLineInxOf(.names) : .lineInx
        this.skipSemiColon = true;
      };
 
@@ -3151,7 +3176,8 @@
            // for each index,switchCase in .cases
            for( var index=0,switchCase ; index<this.cases.length ; index++){switchCase=this.cases[index];
 
-               this.outLineAsComment(switchCase.lineInx);
+                //.outLineAsComment switchCase.lineInx
+               this.outSourceLineAsComment(switchCase.sourceLineNum);
 
                this.out(index > 0 ? 'else ' : '', 'if (', new Map().fromObject({pre: '__is(' + switchVar + ',', CSL: switchCase.expressions, post: ')', separator: '||'}), '){', switchCase.body, NL, '}');
            };// end for each in this.cases
@@ -3165,7 +3191,10 @@
 
          // for each index,switchCase in .cases
          for( var index=0,switchCase ; index<this.cases.length ; index++){switchCase=this.cases[index];
-             this.outLineAsComment(switchCase.lineInx);
+
+              //.outLineAsComment switchCase.lineInx
+             this.outSourceLineAsComment(switchCase.sourceLineNum);
+
              this.out(index > 0 ? 'else ' : '', 'if (', new Map().fromObject({pre: '(', CSL: switchCase.expressions, post: ')', separator: '||'}), '){', switchCase.body, NL, '}');
          };// end for each in this.cases
          
@@ -3224,7 +3253,10 @@
 
          // for each caseWhenSection in .cases
          for( var caseWhenSection__inx=0,caseWhenSection ; caseWhenSection__inx<this.cases.length ; caseWhenSection__inx++){caseWhenSection=this.cases[caseWhenSection__inx];
-             this.outLineAsComment(caseWhenSection.lineInx);
+
+              //.outLineAsComment caseWhenSection.lineInx
+             this.outSourceLineAsComment(caseWhenSection.sourceLineNum);
+
              caseWhenSection.booleanExpression.produceType = 'Bool';
              caseWhenSection.out('(', caseWhenSection.booleanExpression, ') ? (', caseWhenSection.resultExpression, ') :', NL);
          };// end for each in this.cases

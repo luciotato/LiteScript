@@ -95,13 +95,11 @@ extern "C" {
     extern str _int32ToStr(int32_t a);
     extern str _int64ToStr(int64_t a);
     extern str _uint32ToStr(uint32_t a);
-    extern str _uint64ToStr(uint64_t a, int decPlaces);
+    extern str _uint64ToStr(uint64_t a);
     extern str _numberToStr(double a);
 
     // convert to Number
     //extern any Number(DEFAULT_ARGUMENTS);
-
-    extern any _newStrSize(size_t size);
 
     extern str strclone(str src);
     extern str _byteslice(str src, int64_t start, int64_t end);

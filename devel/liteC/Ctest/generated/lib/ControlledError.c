@@ -2,8 +2,7 @@
 //-------------------------
 //Module ControlledError
 //-------------------------
-
-
+#include "ControlledError.c.extra"
     //-----------------------
     // Class ControlledError: static list of METHODS(verbs) and PROPS(things)
     //-----------------------
@@ -27,6 +26,7 @@
         // //auto call super class __init
         Error__init(this,argc,arguments);
     };
+    //class ControlledError extends Error
         //properties 
             //soft: boolean
         ;

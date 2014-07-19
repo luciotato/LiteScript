@@ -11,7 +11,7 @@ global Classes pre-created are:
 ### Namespace LiteCore
 
         method getSymbol(name:string) returns number
-        method getSymbolName(symbol:number) returns number
+        method getSymbolName(symbol) returns string
 
 ## classes declared in the compiler 
 
@@ -100,6 +100,8 @@ global Classes pre-created are:
         //method trimLeft() 
         //method trimRight() 
 
+        method countSpaces returns number
+
         /*method link() 
         method anchor() 
         method fontcolor() 
@@ -120,6 +122,10 @@ global Classes pre-created are:
         //method endsWith() 
 
         //method contains() 
+
+### Append to namespace String 
+
+        method spaces(howMany) returns string
 
 /*
 ### Append to class Number
@@ -243,9 +249,22 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
         method toString()
 
 
+### public class Buffer
+
+        properties  
+            length
+
+        method copy(dest:Buffer)
+
+        method write(text:string, offset)
+        
+    append to namespace Buffer
+
+        method byteLength(s:string)
 
 ### public class RegExp
 
+/*
         properties
             source:string
             global:boolean
@@ -253,10 +272,11 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
             multiline:boolean
             lastIndex:number
         
-        method exec() 
-        method test() 
+*/
+        //method exec() 
+        //method test() 
         method toString() 
-        method compile() 
+        //method compile() 
 
 /*    
     append to namespace RegExp
@@ -334,7 +354,7 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
         method log
         method error
         method debug
-        
+
         method group
         method groupEnd
 

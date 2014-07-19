@@ -15,6 +15,18 @@ extern void fs__nativeInit(void);
         extern any fs_statSync(DEFAULT_ARGUMENTS);
         extern any fs_unlinkSync(DEFAULT_ARGUMENTS);
         extern any fs_mkdirSync(DEFAULT_ARGUMENTS);
+        extern any fs_openSync(DEFAULT_ARGUMENTS);
+        extern any fs_writeSync(DEFAULT_ARGUMENTS);
+        extern any fs_closeSync(DEFAULT_ARGUMENTS);
+        extern any fs_existsSync(DEFAULT_ARGUMENTS);
+        extern any fs_readFileSync(DEFAULT_ARGUMENTS);
+        extern any fs_writeFileSync(DEFAULT_ARGUMENTS);
+        extern any fs_statSync(DEFAULT_ARGUMENTS);
+        extern any fs_unlinkSync(DEFAULT_ARGUMENTS);
+        extern any fs_mkdirSync(DEFAULT_ARGUMENTS);
+        extern any fs_openSync(DEFAULT_ARGUMENTS);
+        extern any fs_writeSync(DEFAULT_ARGUMENTS);
+        extern any fs_closeSync(DEFAULT_ARGUMENTS);
         
 
 //--------------

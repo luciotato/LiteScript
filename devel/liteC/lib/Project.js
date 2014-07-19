@@ -213,43 +213,53 @@
 
 // produce & get result target code
 
+               moduleNode.lexer.outCode.filenames[0] = moduleNode.fileInfo.outFilename;
+               moduleNode.lexer.outCode.filenames[1] = '' + (moduleNode.fileInfo.outFilename.slice(0, -1)) + 'h';
+               moduleNode.lexer.outCode.fileMode = true; //direct out to file
+
                this.produceModule(moduleNode);
-               var resultLines = moduleNode.lexer.outCode.getResult();
 
-// save to disk / add to external cache
+               moduleNode.lexer.outCode.close();
+               result = "" + moduleNode.lexer.outCode.lineNum + " lines";
 
-               Environment.externalCacheSave(moduleNode.fileInfo.outFilename, resultLines);
-               result = "" + resultLines.length + " lines";
+               // if not moduleNode.lexer.outCode.fileMode
+               if (!(moduleNode.lexer.outCode.fileMode)) {
 
-                //ifdef PROD_C
-               resultLines = moduleNode.lexer.outCode.getResult(1); //get .h file contents
-               // if resultLines.length
-               if (resultLines.length) {
-                   Environment.externalCacheSave('' + (moduleNode.fileInfo.outFilename.slice(0, -1)) + 'h', resultLines);
+                   var resultLines = moduleNode.lexer.outCode.getResult();
+
+                    // save to disk
+
+                   Environment.externalCacheSave(moduleNode.fileInfo.outFilename, resultLines);
+                   result = "" + resultLines.length + " lines";
+
+                    //ifdef PROD_C
+                   resultLines = moduleNode.lexer.outCode.getResult(1); //get .h file contents
+                   // if resultLines.length
+                   if (resultLines.length) {
+                       Environment.externalCacheSave('' + (moduleNode.fileInfo.outFilename.slice(0, -1)) + 'h', resultLines);
+                   };
+                   // end if
+                   
                };
-               // end if
+
+                    //else
+                    //if moduleNode.lexer.out.sourceMap
+
+                        //Environment.externalCacheSave moduleNode.fileInfo.outFilename+'.map',
+                                //moduleNode.lexer.out.sourceMap.generate({
+                                              //generatedFile: moduleNode.fileInfo.basename+moduleNode.fileInfo.outExtension
+                                              //sourceFiles  : [moduleNode.fileInfo.sourcename]
+                                              //})
+                    //end if
+                    //endif
+
+               // end if //direct out to file
                
            };
 
-                //else
-                //if moduleNode.lexer.out.sourceMap
-
-                    //Environment.externalCacheSave moduleNode.fileInfo.outFilename+'.map',
-                            //moduleNode.lexer.out.sourceMap.generate({
-                                          //generatedFile: moduleNode.fileInfo.basename+moduleNode.fileInfo.outExtension
-                                          //sourceFiles  : [moduleNode.fileInfo.sourcename]
-                                          //})
-                //end if
-                //endif
-
-//                 var exportedArray = moduleNode.exports.toExportArray()
-//                 var cacheContents = JSON.stringify({required:[], exported:exportedArray},null,2)
-//                 Environment.externalCacheSave(moduleNode.fileInfo.outExportRequired, cacheContents)
-//                 
-
            // end if
 
-           logger.msg("" + color.green + "[OK] " + result + " -> " + moduleNode.fileInfo.outRelFilename + " " + color.normal);
+           logger.info(color.green, "[OK]", result, " -> ", moduleNode.fileInfo.outRelFilename, color.normal);
            logger.extra();// #blank line
          };
          }
@@ -291,7 +301,7 @@
 // Compilation:
 // Load source -> Lexer/Tokenize -> Parse/create AST
 
-       logger.info(Strings.spaces(this.recurseLevel * 2), "compile: '" + (Environment.relativeFrom(this.options.projectDir, filename)) + "'");
+       logger.info(String.spaces(this.recurseLevel * 2), "compile: '" + (Environment.relativeFrom(this.options.projectDir, filename)) + "'");
 
 // Load source code, parse
 
@@ -513,7 +523,7 @@
         // declare valid .recurseLevel
 
        this.recurseLevel++;
-       var indent = Strings.spaces(this.recurseLevel * 2);
+       var indent = String.spaces(this.recurseLevel * 2);
 
        logger.info("");
        logger.info(indent, "'" + importingModule.fileInfo.relFilename + "' imports '" + importInfo.name + "'");

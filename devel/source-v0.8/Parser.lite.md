@@ -24,7 +24,10 @@ then each CODE line is *Tokenized*, getting a `tokens[]` array
         ControlledError, GeneralOptions
         logger, Strings
 
-    shim import Map,PMREX
+
+    global import fs
+
+    shim import Map, PMREX, mkPath
 
 module vars
 
@@ -572,7 +575,7 @@ ifdef, #ifndef, #else and #endif should be the first thing on the line
                     end switch
                 else
                     // comment line if .compilerVar not defined (or processing #else)
-                    if not defValue, .replaceSourceLine "#{Strings.spaces(indent)}//#{line}"
+                    if not defValue, .replaceSourceLine "#{String.spaces(indent)}//#{line}"
                 end if
             end if              
         loop until endFound
@@ -838,7 +841,7 @@ split expressions
             
             var start = delimiterPos + 1
 
-            closerPos = Strings.findMatchingPair(s,start,"}")
+            closerPos = String.findMatchingPair(s,start,"}")
 
             if closerPos<0
                 .throwErr "unmatched '#{delimiter}{' at string: #{text}"
@@ -1020,7 +1023,8 @@ with a call to core function "concat"
 
                 #ifdef PROD_C
                     
-                    // code a call to "concat" to handle string interpolation
+                    // code a litescript call to "_concatAny" to handle string interpolation
+                    // (the producer will add argc)
                     var composed = new InfoLine(lexer, LineTypes.CODE, token.column, 
                         "_concatAny(#{parsed.join(',')})", .sourceLineNum  )
 
@@ -1255,7 +1259,7 @@ check if startCode is in the line, if not found, exit
             return 
 
         // get rid of quoted strings. Still there?
-        if Strings.replaceQuoted(line,"").indexOf(startCode)<0
+        if String.replaceQuoted(line,"").indexOf(startCode)<0
             return #no 
 
 ok, found startCode, initialize
@@ -1320,11 +1324,16 @@ It also handles SourceMap generation for Chrome Developer Tools debugger and Fir
 #### Properties
 
       lineNum, column
-      currLine:string
+      currLine: DynBuffer
 
-      toHeader:boolean
-      lines:string array
-      hLines:string array
+      header:number //out to different files, 0:.c/.js 1:.h 2:.extra
+      fileMode:boolean // if output directly to file
+      filenames=['','',''] //filename for each group
+      fileIsOpen=[false,false,false] //filename for each group
+      fHandles=[null,null,null] //file handle for each group
+
+
+      lines:array  // array of array of string lines[header][0..n]
 
       lastOriginalCodeComment
       lastOutCommentLine
@@ -1344,8 +1353,7 @@ Initialize output array
 
         .lineNum=1
         .column=1
-        .lines=[]
-        .hLines=[] //header file lines
+        .lines=[[],[],[]]
         
         .lastOriginalCodeComment = 0
         .lastOutCommentLine = 0
@@ -1360,6 +1368,11 @@ if sourceMap option is set, and we're in node generating .js
               .sourceMap = new SourceMap
         #end if
 
+#### Method setHeader(num)
+
+        .startNewLine
+        .header = num
+
 #### Method put(text:string)
 put a string into produced code
 
@@ -1367,14 +1380,12 @@ if no current line
 create a empty one
 
         if .currLine is undefined
-            .currLine=""
+            .currLine=new DynBuffer(128)
             .column=1
 
 append text to line 
 
-        if text
-            .currLine &= text
-            .column += text.length
+        if text, .column += .currLine.append(text)
 
 
 #### Method startNewLine()
@@ -1382,13 +1393,26 @@ Start New Line into produced code
 
 send the current line
 
-          if .currLine or .currLine is ""
-              logger.debug  .lineNum, .currLine
-              if .toHeader
-                .hLines.push .currLine
+          if .currLine
+
+              if .fileMode
+                  if no .fileIsOpen[.header]
+                      // make sure output dir exists
+                      var filename = .filenames[.header] 
+                      mkPath.toFile(filename);
+                      .fHandles[.header]=fs.openSync(filename,'w')
+                      .fileIsOpen[.header] = true
+
+                  .currLine.saveLine .fHandles[.header]
+
               else
-                .lines.push .currLine
-                .lineNum++
+                  .lines[.header].push .currLine.toString()
+              
+              if .header is 0
+                  .lineNum++
+                  #ifndef NDEBUG
+                  logger.debug  .lineNum, .currLine.toString()
+                  #endif
 
 clear current line
 
@@ -1400,31 +1424,38 @@ if there's something on the line, start a new one
 
           if .currLine, .startNewLine
 
-
 #### Method blankLine()
 
           .startNewLine
-          .currLine=""
+          .put ""
           .startNewLine
 
 
 #### method getResult(header:boolean) returns array of string
 get result and clear memory      
 
-        .toHeader = header
+        .header = header
         .startNewLine() #close last line
         var result
-        if header
-            result = .hLines
-            .hLines = []
-        else
-            result = .lines
-            .lines = []
+        result = .lines[header]
+        .lines[header] = []
 
-        .toHeader = false
         return result
 
+#### method close()
+
+        if .fileMode
+
+            for header=0 to 2
+
+                if .fileIsOpen[header]
+
+                    fs.closeSync .fHandles[header]
+                    .fileIsOpen[header] = false
+
+
 #### helper method markSourceMap(indent) returns object
+
         var col = .column 
         if not .currLine, col += indent-1
         return {
@@ -1442,4 +1473,36 @@ get result and clear memory
                 lin,col
             .sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
         #endif
+
+
+### Class DynBuffer
+
+        properties
+            used = 0
+            buf :Buffer
+
+
+        constructor new DynBuffer(size)
+            .buf = new Buffer(size)
+
+
+        method append(text:string)
+
+          var byteLen = Buffer.byteLength(text)
+
+          if .used + byteLen > .buf.length
+
+              var nbuf = new Buffer(.used + byteLen + 32)
+              .buf.copy nbuf
+              .buf = nbuf //replace
+
+          .used += .buf.write(text,.used)
+
+          return byteLen
+
+
+        method saveLine(fd)
+
+          fs.writeSync fd, .buf,0,.used
+          fs.writeSync fd, "\n"
 

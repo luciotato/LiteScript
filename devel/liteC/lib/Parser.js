@@ -27,9 +27,14 @@
    var logger = require('./lib/logger.js');
    var Strings = require('./lib/Strings.js');
 
-   // shim import Map,PMREX
+
+   // global import fs
+   var fs = require('fs');
+
+   // shim import Map, PMREX, mkPath
    var Map = require('./lib/Map.js');
    var PMREX = require('./lib/PMREX.js');
+   var mkPath = require('./lib/mkPath.js');
 
 // module vars
 
@@ -394,8 +399,8 @@
            if (words[0].length < 3) {this.throwErr("MarkDown Title-keyword, expected at least indent 4: '### '")};
 
            // for recogn=1 to inx //each recognized word, convert to lowercase
-           var _end3=inx;
-           for( var recogn=1; recogn<=_end3; recogn++) {
+           var _end2=inx;
+           for( var recogn=1; recogn<=_end2; recogn++) {
                words[recogn] = words[recogn].toLowerCase();
            };// end for recogn
 
@@ -750,8 +755,8 @@
                
                else {
                     // comment line if .compilerVar not defined (or processing #else)
-                   // if not defValue, .replaceSourceLine "#{Strings.spaces(indent)}//#{line}"
-                   if (!(defValue)) {this.replaceSourceLine("" + (Strings.spaces(indent)) + "//" + line)};
+                   // if not defValue, .replaceSourceLine "#{String.spaces(indent)}//#{line}"
+                   if (!(defValue)) {this.replaceSourceLine("" + (String.spaces(indent)) + "//" + line)};
                };
                // end if
                
@@ -1092,7 +1097,7 @@
 
            var start = delimiterPos + 1;
 
-           closerPos = Strings.findMatchingPair(s, start, "}");
+           closerPos = String.findMatchingPair(s, start, "}");
 
            // if closerPos<0
            if (closerPos < 0) {
@@ -1308,7 +1313,8 @@
 
                 //ifdef PROD_C
 
-                    // code a call to "concat" to handle string interpolation
+                    // code a litescript call to "_concatAny" to handle string interpolation
+                    // (the producer will add argc)
                    var composed = new InfoLine(lexer, LineTypes.CODE, token.column, "_concatAny(" + (parsed.join(',')) + ")", this.sourceLineNum);
 
                 //else //-> JavaScript
@@ -1618,8 +1624,8 @@
        };
 
         // get rid of quoted strings. Still there?
-       // if Strings.replaceQuoted(line,"").indexOf(startCode)<0
-       if (Strings.replaceQuoted(line, "").indexOf(startCode) < 0) {
+       // if String.replaceQuoted(line,"").indexOf(startCode)<0
+       if (String.replaceQuoted(line, "").indexOf(startCode) < 0) {
            return;// #no
        };
 
@@ -1699,11 +1705,16 @@
      //      properties
 
       // lineNum, column
-      // currLine:string
+      // currLine: DynBuffer
 
-      // toHeader:boolean
-      // lines:string array
-      // hLines:string array
+      // header:number //out to different files, 0:.c/.js 1:.h 2:.extra
+      // fileMode:boolean // if output directly to file
+      // filenames=['','',''] //filename for each group
+      // fileIsOpen=[false,false,false] //filename for each group
+      // fHandles=[null,null,null] //file handle for each group
+
+
+      // lines:array  // array of array of string lines[header][0..n]
 
       // lastOriginalCodeComment
       // lastOutCommentLine
@@ -1713,6 +1724,9 @@
       // exportNamespace
 
       // orTempVarCount=0 //helper temp vars to code js "or" in C, using ternary ?:
+        this.filenames=['', '', ''];
+        this.fileIsOpen=[false, false, false];
+        this.fHandles=[null, null, null];
         this.orTempVarCount=0;
    };
 
@@ -1726,8 +1740,7 @@
 
        this.lineNum = 1;
        this.column = 1;
-       this.lines = [];
-       this.hLines = []; //header file lines
+       this.lines = [[], [], []];
 
        this.lastOriginalCodeComment = 0;
        this.lastOutCommentLine = 0;
@@ -1744,6 +1757,13 @@
               //.sourceMap = new SourceMap
         //end if
 
+    // method setHeader(num)
+    OutCode.prototype.setHeader = function(num){
+
+       this.startNewLine();
+       this.header = num;
+    };
+
     // method put(text:string)
     OutCode.prototype.put = function(text){
 // put a string into produced code
@@ -1753,17 +1773,14 @@
 
        // if .currLine is undefined
        if (this.currLine === undefined) {
-           this.currLine = "";
+           this.currLine = new DynBuffer(128);
            this.column = 1;
        };
 
 // append text to line
 
-       // if text
-       if (text) {
-           this.currLine += text;
-           this.column += text.length;
-       };
+       // if text, .column += .currLine.append(text)
+       if (text) {this.column += this.currLine.append(text)};
     };
 
 
@@ -1773,19 +1790,35 @@
 
 // send the current line
 
-         // if .currLine or .currLine is ""
-         if (this.currLine || this.currLine === "") {
-             logger.debug(this.lineNum, this.currLine);
-             // if .toHeader
-             if (this.toHeader) {
-               this.hLines.push(this.currLine);
+         // if .currLine
+         if (this.currLine) {
+
+             // if .fileMode
+             if (this.fileMode) {
+                 // if no .fileIsOpen[.header]
+                 if (!this.fileIsOpen[this.header]) {
+                      // make sure output dir exists
+                     var filename = this.filenames[this.header];
+                     mkPath.toFile(filename);
+                     this.fHandles[this.header] = fs.openSync(filename, 'w');
+                     this.fileIsOpen[this.header] = true;
+                 };
+
+                 this.currLine.saveLine(this.fHandles[this.header]);
              }
              
              else {
-               this.lines.push(this.currLine);
-               this.lineNum++;
+                 this.lines[this.header].push(this.currLine.toString());
+             };
+
+             // if .header is 0
+             if (this.header === 0) {
+                 this.lineNum++;
+                  //ifndef NDEBUG
+                 logger.debug(this.lineNum, this.currLine.toString());
              };
          };
+                  //endif
 
 // clear current line
 
@@ -1801,12 +1834,11 @@
          if (this.currLine) {this.startNewLine()};
     };
 
-
     // method blankLine()
     OutCode.prototype.blankLine = function(){
 
          this.startNewLine();
-         this.currLine = "";
+         this.put("");
          this.startNewLine();
     };
 
@@ -1815,26 +1847,40 @@
     OutCode.prototype.getResult = function(header){
 // get result and clear memory
 
-       this.toHeader = header;
+       this.header = header;
        this.startNewLine();// #close last line
        var result = undefined;
-       // if header
-       if (header) {
-           result = this.hLines;
-           this.hLines = [];
-       }
-       
-       else {
-           result = this.lines;
-           this.lines = [];
-       };
+       result = this.lines[header];
+       this.lines[header] = [];
 
-       this.toHeader = false;
        return result;
     };
 
+    // method close()
+    OutCode.prototype.close = function(){
+
+       // if .fileMode
+       if (this.fileMode) {
+
+           // for header=0 to 2
+           var _end3=2;
+           for( var header=0; header<=_end3; header++) {
+
+               // if .fileIsOpen[header]
+               if (this.fileIsOpen[header]) {
+
+                   fs.closeSync(this.fHandles[header]);
+                   this.fileIsOpen[header] = false;
+               };
+           };// end for header
+           
+       };
+    };
+
+
     // helper method markSourceMap(indent) returns object
     OutCode.prototype.markSourceMap = function(indent){
+
        var col = this.column;
        // if not .currLine, col += indent-1
        if (!(this.currLine)) {col += indent - 1};
@@ -1857,4 +1903,43 @@
                 //lin,col
             //.sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
         //endif
+
+
+   // class DynBuffer
+   // constructor
+   function DynBuffer(size){
+        // properties
+            // used = 0
+            // buf :Buffer
+           this.used=0;
+           this.buf = new Buffer(size);
+       };
+
+
+       // method append(text:string)
+       DynBuffer.prototype.append = function(text){
+
+         var byteLen = Buffer.byteLength(text);
+
+         // if .used + byteLen > .buf.length
+         if (this.used + byteLen > this.buf.length) {
+
+             var nbuf = new Buffer(this.used + byteLen + 32);
+             this.buf.copy(nbuf);
+             this.buf = nbuf; //replace
+         };
+
+         this.used += this.buf.write(text, this.used);
+
+         return byteLen;
+       };
+
+
+       // method saveLine(fd)
+       DynBuffer.prototype.saveLine = function(fd){
+
+         fs.writeSync(fd, this.buf, 0, this.used);
+         fs.writeSync(fd, "\n");
+       };
+   // end class DynBuffer
 

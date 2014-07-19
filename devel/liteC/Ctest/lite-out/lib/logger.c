@@ -2,8 +2,7 @@
 //-------------------------
 //Module logger
 //-------------------------
-
-
+#include "logger.c.extra"
     //-----------------------
     // Class logger_LogOptions: static list of METHODS(verbs) and PROPS(things)
     //-----------------------
@@ -44,6 +43,12 @@
         PROP(storeMessages_,this)=false;
         PROP(debugOptions_,this)=new(logger_LogOptionsDebug,0,NULL);
     };
+//Logger Utility
+//==============
+    //import color, ControlledError
+//options
+//-------
+    //class LogOptions
         //properties
             //verboseLevel = 1
             //warningLevel = 1
@@ -60,6 +65,7 @@
         PROP(enabled_,this)=false;
         PROP(file_,this)=any_str("out/debug.logger");
     };
+    //class LogOptionsDebug
         //properties
             //enabled: boolean =  false
             //file   : string = 'out/debug.logger'
@@ -68,36 +74,46 @@
     //NAMESPACE logger
     //-------------------------
      var logger_options, logger_errorCount, logger_warningCount, logger_messages;
-
-// Implementation
-// ---------------
-
+//Dependencies:
+//-------------
+    ////ifndef PROD_C
+////
+    ////if type of process isnt 'undefined' #only import if we're on node
+        ////global import fs
+        ////import mkPath
+////
+    ////endif
+//## Main namespace
+//### Namespace logger
+//#### properties 
+        //options:LogOptions = new LogOptions
+        //errorCount = 0
+        //warningCount = 0
+//if options.storeMessages, messages are pused at messages[]
+//instead of console.
+        //messages: string Array = []
+//Implementation
+//---------------
 //#### method debug
      any logger_debug(DEFAULT_ARGUMENTS){
-
         //if logger.options.debugOptions.enabled
         if (_anyToBool(PROP(enabled_,PROP(debugOptions_,logger_options))))  {
-
             //var args = arguments.toArray()
             var args = _newArray(argc,arguments);
-
-            //ifdef PROD_C
+            ////ifdef PROD_C
             //console.error.apply undefined,args
             __applyArr(any_func(console_error),undefined,args);
         };
      return undefined;
      }
-            //else
-            //if options.debug.file
-                //fs.appendFileSync options.debug.file, '#{args.join(" ")}\r\n'
-            //else
-                //console.error.apply undefined,args
-            //endif
-
-
+            ////else
+            ////if options.debug.file
+                ////fs.appendFileSync options.debug.file, '#{args.join(" ")}\r\n'
+            ////else
+                ////console.error.apply undefined,args
+            ////endif
 //#### method debugGroup
      any logger_debugGroup(DEFAULT_ARGUMENTS){
-
         //if logger.options.debugOptions.enabled
         if (_anyToBool(PROP(enabled_,PROP(debugOptions_,logger_options))))  {
             //console.error.apply undefined,arguments
@@ -107,10 +123,8 @@
         };
      return undefined;
      }
-
 //#### method debugGroupEnd
      any logger_debugGroupEnd(DEFAULT_ARGUMENTS){
-
         //if logger.options.debugOptions.enabled
         if (_anyToBool(PROP(enabled_,PROP(debugOptions_,logger_options))))  {
             //console.groupEnd
@@ -118,48 +132,38 @@
         };
      return undefined;
      }
-
 //#### method debugClear ### clear debug file
      any logger_debugClear(DEFAULT_ARGUMENTS){
-
-        //ifdef PROD_C
+        ////ifdef PROD_C
         //do nothing
         //do nothing
         ;
      return undefined;
      }
-        //else
-        //mkPath.toFile options.debug.file
-        //fs.writeFileSync options.debug.file,""
-        //endif
-
-
+        ////else
+        ////mkPath.toFile options.debug.file
+        ////fs.writeFileSync options.debug.file,""
+        ////endif
 //#### method error
      any logger_error(DEFAULT_ARGUMENTS){
-
-// increment error count
-
+    //
+//increment error count 
         //logger.errorCount++
         logger_errorCount.value.number++;
         //var args = arguments.toArray()
         var args = _newArray(argc,arguments);
-
-// add "ERROR:", send to debug logger
-
+//add "ERROR:", send to debug logger
         //args.unshift('ERROR:')
         METHOD(unshift_,args)(args,1,(any_arr){any_str("ERROR:")});
         //logger.debug.apply undefined,args
         __applyArr(any_func(logger_debug),undefined,args);
-
-// if messages should be stored...
-
+//if messages should be stored...
         //if logger.options.storeMessages
         if (_anyToBool(PROP(storeMessages_,logger_options)))  {
             //logger.messages.push args.join(" ")
             __call(push_,logger_messages,1,(any_arr){METHOD(join_,args)(args,1,(any_arr){any_str(" ")})});
         }
-
-// else, add red color, send to stderr
+//else, add red color, send to stderr
         //else
         
         else {
@@ -172,11 +176,8 @@
         };
      return undefined;
      }
-
-
 //#### method warning
      any logger_warning(DEFAULT_ARGUMENTS){
-
         //logger.warningCount++
         logger_warningCount.value.number++;
         //var args = arguments.toArray()
@@ -185,19 +186,16 @@
         METHOD(unshift_,args)(args,1,(any_arr){any_str("WARNING:")});
         //logger.debug.apply(undefined,args)
         __applyArr(any_func(logger_debug),undefined,args);
-
+        //
         //if logger.options.warningLevel > 0
         if (_anyToNumber(PROP(warningLevel_,logger_options)) > 0)  {
-
-// if messages should be stored...
-
+//if messages should be stored...
             //if logger.options.storeMessages
             if (_anyToBool(PROP(storeMessages_,logger_options)))  {
                 //logger.messages.push args.join(" ")
                 __call(push_,logger_messages,1,(any_arr){METHOD(join_,args)(args,1,(any_arr){any_str(" ")})});
             }
-
-// else, add yellow color, send to stderr
+//else, add yellow color, send to stderr
             //else
             
             else {
@@ -211,27 +209,22 @@
         };
      return undefined;
      }
-
+        //
 //#### method msg
      any logger_msg(DEFAULT_ARGUMENTS){
-
         //var args = arguments.toArray()
         var args = _newArray(argc,arguments);
-
         //logger.debug.apply(undefined,args)
         __applyArr(any_func(logger_debug),undefined,args);
         //if logger.options.verboseLevel >= 1
         if (_anyToNumber(PROP(verboseLevel_,logger_options)) >= 1)  {
-
-// if messages should be stored...
-
+//if messages should be stored...
             //if logger.options.storeMessages
             if (_anyToBool(PROP(storeMessages_,logger_options)))  {
                 //logger.messages.push args.join(" ")
                 __call(push_,logger_messages,1,(any_arr){METHOD(join_,args)(args,1,(any_arr){any_str(" ")})});
             }
-
-// else, send to console
+//else, send to console
             //else 
             
             else {
@@ -241,11 +234,8 @@
         };
      return undefined;
      }
-
-
 //#### method info
      any logger_info(DEFAULT_ARGUMENTS){
-
         //var args = arguments.toArray()
         var args = _newArray(argc,arguments);
         //if logger.options.verboseLevel >= 2
@@ -255,10 +245,8 @@
         };
      return undefined;
      }
-
 //#### method extra
      any logger_extra(DEFAULT_ARGUMENTS){
-
         //var args = arguments.toArray()
         var args = _newArray(argc,arguments);
         //if logger.options.verboseLevel >= 3
@@ -268,12 +256,9 @@
         };
      return undefined;
      }
-
-
 //#### method getMessages
      any logger_getMessages(DEFAULT_ARGUMENTS){
-// get & clear
-
+//get & clear
         //var result = logger.messages
         var result = logger_messages;
         //logger.messages =[]
@@ -282,17 +267,14 @@
         return result;
      return undefined;
      }
-
-
 //#### method throwControlled(msg)
      any logger_throwControlled(DEFAULT_ARGUMENTS){
         
         // define named params
         var msg= argc? arguments[0] : undefined;
         //---------
-// Throws Error, but with a "controlled" flag set,
-// to differentiate from unexpected compiler errors
-
+//Throws Error, but with a "controlled" flag set, 
+//to differentiate from unexpected compiler errors
         //logger.debug "Controlled ERROR:", msg
         logger_debug(undefined,2,(any_arr){any_str("Controlled ERROR:"), msg});
         //throw new ControlledError(msg)
@@ -306,18 +288,7 @@
          logger_errorCount = any_number(0);
          logger_warningCount = any_number(0);
          logger_messages = new(Array,0,NULL);
-//#### properties 
-//
-        //options:LogOptions = new LogOptions
-        //errorCount = 0
-        //warningCount = 0
-//
-//if options.storeMessages, messages are pused at messages[]
-//instead of console.
-//
-        //messages: string Array = []
      ;};
-    //import color, ControlledError
     
 
 //-------------------------

@@ -973,8 +973,8 @@
 // Auto-assign type by name affinity.
 // If no type specified, check project.nameAffinity
 
-       // if .nodeDeclared and not Strings.isCapitalized(.name) and .name isnt 'prototype'
-       if (this.nodeDeclared && !(Strings.isCapitalized(this.name)) && this.name !== 'prototype') {
+       // if .nodeDeclared and not String.isCapitalized(.name) and .name isnt 'prototype'
+       if (this.nodeDeclared && !(String.isCapitalized(this.name)) && this.name !== 'prototype') {
 
            // if not .findOwnMember('**proto**')
            if (!(this.findOwnMember('**proto**'))) {
@@ -1180,8 +1180,8 @@
            // if options and options.isForward
            if (options && options.isForward) {
                found = this.addToScope(name, options);
-               // if options.isDummy and Strings.isCapitalized(name) #let's assume is a class
-               if (options.isDummy && Strings.isCapitalized(name)) {// #let's assume is a class
+               // if options.isDummy and String.isCapitalized(name) #let's assume is a class
+               if (options.isDummy && String.isCapitalized(name)) {// #let's assume is a class
                    this.addMemberTo(found, 'prototype', options);
                };
            };
@@ -2041,18 +2041,18 @@
          return; //if no ownerDecl found
      };
 
-     var prt = ownerDecl.findOwnMember('prototype');
-
-     // if project.options.target is 'c'
-     if (project.options.target === 'c') {
-         // if .toNamespace and prt
-         if (this.toNamespace && prt) {
-             this.sayErr("Append to: '" + this.varRef + "'. For C production, canot add to class as namespace.");
-         };
+     // if not .toNamespace
+     if (!(this.toNamespace)) {
+          //if is "append to class"
+         // if no ownerDecl.findOwnMember('prototype') into var prt, .throwError "class '#{ownerDecl}' has no prototype"
+         var prt=undefined;
+         if (!((prt=ownerDecl.findOwnMember('prototype')))) {this.throwError("class '" + ownerDecl + "' has no prototype")};
+         ownerDecl = prt; // append to class, adds to prototype
      };
 
-     // if prt, ownerDecl=prt // append to class, adds to prototype
-     if (prt) {ownerDecl = prt};
+      //if project.options.target is 'c'
+      //    if .toNamespace and prt
+      //        .sayErr "Append to: '#{.varRef}'. For C production, cannot append to class as namespace."
 
      // for each item in .body.statements
      for( var item__inx=0,item ; item__inx<this.body.statements.length ; item__inx++){item=this.body.statements[item__inx];
@@ -2656,8 +2656,8 @@
          opt.isForward = true;
          var reference = this.tryGetFromScope(this.name, opt);
 
-         // if Strings.isCapitalized(reference.name) //let's assume is a Class
-         if (Strings.isCapitalized(reference.name)) { //let's assume is a Class
+         // if String.isCapitalized(reference.name) //let's assume is a Class
+         if (String.isCapitalized(reference.name)) { //let's assume is a Class
              // if no reference.findOwnMember('prototype'), reference.addMember('prototype')
              if (!reference.findOwnMember('prototype')) {reference.addMember('prototype')};
              reference = reference.findOwnMember('prototype');

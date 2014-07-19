@@ -18,6 +18,7 @@
 
     // LiteC_init
     extern void LiteC_init(int argc, char** CharPtrPtrargv);
+    extern void LiteC_finish();
     extern void LiteC_addMethodSymbols(int addedMethods, str* _verb_table);
     extern void LiteC_addPropSymbols(int addedProps, str* _things_table);
 
@@ -62,7 +63,7 @@
     typedef struct _propertyInfoItem _propertyInfoArr[];
 
     // core methods, negative ints
-    #define _CORE_METHODS_MAX 34 // means -1..-_CORE_METHODS_MAX are valid method symbols
+    #define _CORE_METHODS_MAX 37 // means -1..-_CORE_METHODS_MAX are valid method symbols
     // means 1.._CORE_METHODS_MAX are used jmpTable indexes, so initial TABLE_LENGTH(jmpTable)=_CORE_METHODS_MAX+1
     // 0 is a reserved jmpTable index (TABLE_LENGTH is stored there), but symbol:0 is PROPERTY constructor:Class
     enum _CORE_METHODS_ENUM {
@@ -79,6 +80,9 @@
         ,toDateString_
         ,toTimeString_
 
+        ,copy_  //Buffer
+        ,write_
+
         ,slice_
         ,split_
         ,indexOf_
@@ -90,6 +94,7 @@
         ,replaceAll_
         ,trim_
         ,substr_
+        ,countSpaces_
 
         ,tryGetMethod_
         ,tryGetProperty_
@@ -177,10 +182,14 @@
     extern struct Class_s Map_CLASSINFO;
     extern struct Class_s NameValuePair_CLASSINFO;
 
+    extern struct Class_s Buffer_CLASSINFO;
+    extern struct Class_s FileDescriptor_CLASSINFO;
+
 // core Class objects -------------------
     //extern any Global;
     extern any Null, Undefined, String, Number, Date, NaN, Infinity;
     extern any Object, Class, Function, Error, Array, Map, NameValuePair;
+    extern any Buffer, FileDescriptor;
 
 // core instances -------------------
     //extern any global;
@@ -257,7 +266,7 @@
         //private-native
         uint32_t allocd, used;
         char* ptr;
-        //char isMallocd;
+        char bufferInx,isMallocd;
     } Buffer_s;
     extern any Buffer; //class object
 
@@ -299,11 +308,13 @@
     extern any parseFloat(DEFAULT_ARGUMENTS);
     extern any parseInt(DEFAULT_ARGUMENTS);
 
-    extern any _concatAny(len_t argc, any* arguments);
-    extern any _stringJoin(str initial, len_t argc, any* arguments, str separ);
+    extern any _concatAny(len_t argc,any arg,...);
+
+    extern any _arrayJoin(str initial, len_t argc, any* arguments, str separ);
 
     #ifndef NDEBUG
-        extern void assert_args(DEFAULT_ARGUMENTS, int required, int total, any anyClass, ...);
+        #define assert_args(...) _assert_args(this,argc,arguments,__FILE__,__LINE__,__VA_ARGS__)
+        void _assert_args(DEFAULT_ARGUMENTS, str file, int line, int required, int total, any anyClass, ...);
     #else
         #define assert_args(...) (__ASSERT_VOID_CAST (0))
     #endif
@@ -354,6 +365,11 @@
     extern str __concatToNULL(str first,...);
 
     extern Buffer_s _newBuffer();
+    extern any Buffer_write(DEFAULT_ARGUMENTS);
+    extern any Buffer_copy(DEFAULT_ARGUMENTS);
+    extern any Buffer_byteLength(DEFAULT_ARGUMENTS); //as namespace method
+
+    extern void _freeBuffer(Buffer_s *dbuf);
     extern void _Buffer_addBytes(Buffer_s *dbuf, str ptr, size_t size);
     extern void _Buffer_addStr  (Buffer_s *dbuf, str s);
     extern void _Buffer_concatToNULL(Buffer_s *dbuf, str arg,...);
@@ -393,6 +409,9 @@
     extern any String_slice(DEFAULT_ARGUMENTS);
     extern any String_concat(DEFAULT_ARGUMENTS);
     extern any String_substr(DEFAULT_ARGUMENTS);
+    extern any String_countSpaces(DEFAULT_ARGUMENTS);
+    //String as namespace methods
+    extern any String_spaces(DEFAULT_ARGUMENTS);
 
     extern void Date_init(DEFAULT_ARGUMENTS);
     extern any Date_toISOString(DEFAULT_ARGUMENTS);

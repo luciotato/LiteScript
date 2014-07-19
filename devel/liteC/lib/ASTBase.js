@@ -657,7 +657,7 @@
 
          // if not rawOut.currLine and .indent > 0
          if (!(rawOut.currLine) && this.indent > 0) {
-             rawOut.put(Strings.spaces(this.indent));
+             rawOut.put(String.spaces(this.indent));
          };
 
 // if it is an AST node, call .produce()
@@ -749,8 +749,7 @@
 // {h:1/0} --> enable/disabe output to header file
              
              else if ((header=item.get('h')) !== undefined) {
-                 rawOut.startNewLine();
-                 rawOut.toHeader = header;
+                 rawOut.setHeader(header);
              }
              
              else {
@@ -778,11 +777,24 @@
 
 // Note: check if we can remove "outLineAsComment" and use this instead
 
+       // if .lexer.outCode.lastOutCommentLine < sourceLineNum
+       if (this.lexer.outCode.lastOutCommentLine < sourceLineNum) {
+           this.lexer.outCode.lastOutCommentLine = sourceLineNum;
+       };
+
+       // if sourceLineNum<1, return
+       if (sourceLineNum < 1) {return};
+
        var line = this.lexer.lines[sourceLineNum - 1];
+       // if no line, return
+       if (!line) {return};
+
        var indent = line.countSpaces();
 
        this.lexer.outCode.ensureNewLine();
-       this.lexer.outCode.put('' + (line.slice(0, indent)) + '//' + (line.slice(indent)));
+       this.lexer.outCode.put(line.slice(0, indent));
+       this.lexer.outCode.put("//");
+       this.lexer.outCode.put(line.slice(indent));
        this.lexer.outCode.startNewLine();
     };
 
@@ -791,6 +803,12 @@
 
        // if no .lexer.options.comments, return
        if (!this.lexer.options.comments) {return};
+
+       // if no fromLineNum or fromLineNum<.lexer.outCode.lastOutCommentLine+1
+       if (!fromLineNum || fromLineNum < this.lexer.outCode.lastOutCommentLine + 1) {
+             fromLineNum = this.lexer.outCode.lastOutCommentLine + 1;
+       };
+
        // for i=fromLineNum to toLineNum
        var _end1=toLineNum;
        for( var i=fromLineNum; i<=_end1; i++) {
@@ -799,115 +817,55 @@
        
     };
 
-    // helper method outLineAsComment(preComment,lineInx)
-    ASTBase.prototype.outLineAsComment = function(preComment, lineInx){
+// #### helper method outLineAsComment(preComment,lineInx)
 // out a full source line as comment into produced code
-
-       // if no .lexer.options.comments, return
-       if (!this.lexer.options.comments) {return};
-
+//         if no .lexer.options.comments, return
 // manage optional parameters
-
-       // if no lineInx
-       if (!lineInx) {
-         lineInx = preComment;
-         preComment = "";
-       }
-       
-       else {
-         preComment = "" + preComment + ": ";
-       };
-
+//         if no lineInx
+//           lineInx = preComment
+//           preComment = ""
+//         else
+//           preComment="#{preComment}: "
 // validate index
-
-       // if no .lexer, return logger.error("ASTBase.outLineAsComment #{lineInx}: NO LEXER")
-       if (!this.lexer) {return logger.error("ASTBase.outLineAsComment " + lineInx + ": NO LEXER")};
-
-       var line = this.lexer.infoLines[lineInx];
-       // if no line, return logger.error("ASTBase.outLineAsComment #{lineInx}: NO LINE")
-       if (!line) {return logger.error("ASTBase.outLineAsComment " + lineInx + ": NO LINE")};
-
-       // if line.type is Parser.LineTypes.BLANK
-       if (line.type === Parser.LineTypes.BLANK) {
-           this.lexer.outCode.blankLine();
-           return;
-       };
-
+//         if no .lexer, return logger.error("ASTBase.outLineAsComment #{lineInx}: NO LEXER")
+//         var line = .lexer.infoLines[lineInx]
+//         if no line, return logger.error("ASTBase.outLineAsComment #{lineInx}: NO LINE")
+//         if line.type is Parser.LineTypes.BLANK
+//             .lexer.outCode.blankLine
+//             return
 // out as comment
+//         var prepend=""
+//         if preComment or not line.text.startsWith("//"), prepend="// "
+//         if no .lexer.outCode.currLine, prepend="#{String.spaces(line.indent)}#{prepend}"
+//         if preComment or line.text, .lexer.outCode.put "#{prepend}#{preComment}#{line.text}"
+//         .lexer.outCode.startNewLine
+//         .lexer.outCode.lastOutCommentLine = lineInx
 
-       var prepend = "";
-       // if preComment or not line.text.startsWith("//"), prepend="// "
-       if (preComment || !(line.text.startsWith("//"))) {prepend = "// "};
-       // if no .lexer.outCode.currLine, prepend="#{Strings.spaces(line.indent)}#{prepend}"
-       if (!this.lexer.outCode.currLine) {prepend = "" + (Strings.spaces(line.indent)) + prepend};
-       // if preComment or line.text, .lexer.outCode.put "#{prepend}#{preComment}#{line.text}"
-       if (preComment || line.text) {this.lexer.outCode.put("" + prepend + preComment + line.text)};
-
-       this.lexer.outCode.startNewLine();
-
-       this.lexer.outCode.lastOutCommentLine = lineInx;
-    };
-
-    // helper method outLinesAsComment(fromLine,toLine)
-    ASTBase.prototype.outLinesAsComment = function(fromLine, toLine){
-
-       // if no .lexer.options.comments, return
-       if (!this.lexer.options.comments) {return};
-
-        // # if line has something and is not spaces
-       // if .lexer.outCode.currLine and .lexer.outCode.currLine.trim()
-       if (this.lexer.outCode.currLine && this.lexer.outCode.currLine.trim()) {
-           this.lexer.outCode.startNewLine();
-       };
-
-       this.lexer.outCode.currLine = undefined;// #clear indents
-
-       // for i=fromLine to toLine
-       var _end2=toLine;
-       for( var i=fromLine; i<=_end2; i++) {
-           this.outLineAsComment(i);
-       };// end for i
-       
-    };
-
-
-    // helper method outPrevLinesComments(startFrom)
-    ASTBase.prototype.outPrevLinesComments = function(startFrom){
-
+// #### helper method outLinesAsComment(fromLine,toLine)
+//         if no .lexer.options.comments, return
+//         # if line has something and is not spaces
+//         if .lexer.outCode.currLine and .lexer.outCode.currLine.trim()
+//             .lexer.outCode.startNewLine()
+//         .lexer.outCode.currLine = undefined #clear indents
+//         for i=fromLine to toLine
+//             .outLineAsComment i
+// #### helper method outPrevLinesComments(startFrom)
 // outPrevLinesComments helper method: output comments from previous lines
 // before the statement
-
-     // if no .lexer.options.comments, return
-     if (!this.lexer.options.comments) {return};
-
-     var inx = startFrom || this.lineInx || 0;
-     // if inx<1, return
-     if (inx < 1) {return};
-
-     // default .lexer.outCode.lastOutCommentLine = -1
-     if(this.lexer.outCode.lastOutCommentLine===undefined) this.lexer.outCode.lastOutCommentLine=-1;
-
+//       if no .lexer.options.comments, return
+//       var inx = startFrom or .lineInx or 0
+//       if inx<1, return
+//       default .lexer.outCode.lastOutCommentLine = -1
 // find comment lines in the previous lines of code.
-
-     var preInx = inx;
-     // while preInx and preInx>.lexer.outCode.lastOutCommentLine
-     while(preInx && preInx > this.lexer.outCode.lastOutCommentLine){
-         preInx--;
-         // if .lexer.infoLines[preInx].type is Parser.LineTypes.CODE
-         if (this.lexer.infoLines[preInx].type === Parser.LineTypes.CODE) {
-             preInx++;
-             // break
-             break;
-         };
-     };// end loop
-
+//       var preInx = inx
+//       while preInx and preInx>.lexer.outCode.lastOutCommentLine
+//           preInx--
+//           if .lexer.infoLines[preInx].type is Parser.LineTypes.CODE
+//               preInx++
+//               break
 // Output prev comments lines (also blank lines)
-
-     this.outLinesAsComment(preInx, inx - 1);
-    };
-
-    // #end method
-
+//       .outLinesAsComment preInx, inx-1
+//     #end method
 
     // helper method getEOLComment()
     ASTBase.prototype.getEOLComment = function(){
@@ -950,7 +908,7 @@
            indent += 2; //add 2 spaces
        };// end loop
 
-       return Strings.spaces(indent);
+       return String.spaces(indent);
     };
 
 

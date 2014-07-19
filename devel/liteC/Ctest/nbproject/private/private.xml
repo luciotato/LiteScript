@@ -4,7 +4,7 @@
         <activeConfTypeElem>1</activeConfTypeElem>
         <activeConfIndexElem>0</activeConfIndexElem>
     </data>
-    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="9">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="11">
         <file>
             <url>core/fs.c</url>
             <bookmark id="2">
@@ -17,17 +17,22 @@
             <url>core/LiteC-core.c</url>
             <bookmark id="9">
                 <name/>
-                <line>251</line>
+                <line>255</line>
                 <key/>
             </bookmark>
             <bookmark id="6">
                 <name/>
-                <line>531</line>
+                <line>538</line>
                 <key/>
             </bookmark>
-            <bookmark id="3">
+            <bookmark id="11">
                 <name/>
-                <line>1265</line>
+                <line>1312</line>
+                <key/>
+            </bookmark>
+            <bookmark id="10">
+                <name/>
+                <line>1425</line>
                 <key/>
             </bookmark>
         </file>
@@ -35,7 +40,7 @@
             <url>core/LiteC-core.h</url>
             <bookmark id="1">
                 <name/>
-                <line>178</line>
+                <line>186</line>
                 <key/>
             </bookmark>
         </file>
@@ -50,9 +55,14 @@
     </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest/generated/lib/Strings.c</file>
+            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest/core/util.c</file>
+            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest/generated/Parser.c</file>
             <file>file:/home/ltato/LiteScript/devel/liteC/Ctest/core/LiteC-core.c</file>
-            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest/generated/ASTBase.c</file>
+            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest/generated/Validate.c</file>
+            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest/core/any.h</file>
             <file>file:/home/ltato/LiteScript/devel/liteC/Ctest/generated/Grammar.c</file>
+            <file>file:/home/ltato/LiteScript/devel/liteC/Ctest/core/LiteC-core.h</file>
         </group>
     </open-files>
 </project-private>

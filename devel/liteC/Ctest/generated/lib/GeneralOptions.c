@@ -2,8 +2,7 @@
 //-------------------------
 //Module GeneralOptions
 //-------------------------
-
-
+#include "GeneralOptions.c.extra"
     //-----------------------
     // Class GeneralOptions: static list of METHODS(verbs) and PROPS(things)
     //-----------------------
@@ -58,7 +57,7 @@ var GeneralOptions_DEFAULT_TARGET;
       PROP(storeMessages_,this)=false;
       PROP(now_,this)=new(Date,0,NULL);
     };
-
+//### class GeneralOptions
       //properties
             //verboseLevel = 1
             //warningLevel = 1
@@ -71,26 +70,25 @@ var GeneralOptions_DEFAULT_TARGET;
             //compileIfNewer = undefined
             //browser =undefined
             //defines: array of string = []
-//
             //projectDir:string 
             //mainModuleName:string = 'unnamed'
             //outDir = './out'
-//
             //storeMessages: boolean = false
             //literalMap: boolean // produce "new Map()" on "{}"" instead of a js object
             //// activated with: 'lexer options literal map', required to make C-production of ls-code
-//
             //version: string
-//
             //now: Date = new Date()
       ;
-
       //method toString
       any GeneralOptions_toString(DEFAULT_ARGUMENTS){
             assert(_instanceof(this,GeneralOptions));
             //---------
+            //return """
+                //outDir:#{.outDir}
+                //verbose:#{.verboseLevel}
+                //defines:#{.defines.join()}
                 //"""
-            return _concatAny(6,(any_arr){any_str("outDir:"), PROP(outDir_,this), any_str("\nverbose:"), PROP(verboseLevel_,this), any_str("\ndefines:"), __call(join_,PROP(defines_,this),0,NULL)});
+            return _concatAny(6,any_str("outDir:"), PROP(outDir_,this), any_str("\nverbose:"), PROP(verboseLevel_,this), any_str("\ndefines:"), __call(join_,PROP(defines_,this),0,NULL));
       return undefined;
       }
 

@@ -158,7 +158,7 @@
         return (str)buf;
     }
 
-    str _uint64ToStr(uint64_t a, int decPlaces){
+    str _uint64ToStr(uint64_t a){ //, int decPlaces){
         const int32_t BUFSZ = 32;
         int32_t radix = 10;
         char* buf = mem_alloc(BUFSZ);
@@ -166,7 +166,7 @@
         buf[pos=BUFSZ-1]='\0';
         do {
             buf[--pos]=__numberSymbols[a%radix];
-            if (--decPlaces==0) buf[--pos]='.';
+            //if (--decPlaces==0) buf[--pos]='.';
         } while(a=a/radix);
 
         if(pos)memmove(buf,buf+pos,BUFSZ-pos); //left aling

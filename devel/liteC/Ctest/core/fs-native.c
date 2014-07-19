@@ -21,7 +21,7 @@
     void fs_Stat__init(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,fs_Stat));
         assert(this.class->instanceSize==sizeof(fs_Stat_s));
-        assert_args( this,argc,arguments, 1,1, String);
+        assert_args( 1,1, String);
 
         struct stat st;
         int result;
@@ -57,19 +57,19 @@
     //namespace fs
 
     any fs_statSync(DEFAULT_ARGUMENTS){
-        assert_args( this,argc,arguments, 1,1, String);
+        assert_args( 1,1, String);
         return new(fs_Stat,1,(any_arr){arguments[0]});
     }
 
     any fs_unlinkSync( DEFAULT_ARGUMENTS ) {
-        assert_args( this,argc,arguments, 1,1, String);
+        assert_args( 1,1, String);
         if (unlink(arguments[0].value.str) == -1){
             fail_with(strerror(errno));
         }
     };
 
     any fs_mkdirSync( DEFAULT_ARGUMENTS ) {
-        assert_args( this,argc,arguments,1,2, String,Number);
+        assert_args( 1,2, String,Number);
         mode_t mode = 0;
         if (argc>1) mode=arguments[1].value.number;
         if (!mode) mode=0777;
@@ -111,7 +111,7 @@
     }
 
     any fs_writeFileSync(DEFAULT_ARGUMENTS) {
-        assert_args( this,argc,arguments, 2,2,String,String);
+        assert_args( 2,2,String,String);
         str filename = arguments[0].value.str;
         str contents = arguments[1].value.str;
 
@@ -124,6 +124,53 @@
         //close
         fclose(file);
 
+    }
+
+    //method openSync(filename:string, mode:string)
+    any fs_openSync(DEFAULT_ARGUMENTS) {
+        assert_args( 2,2,String,String);
+        str filename = arguments[0].value.str;
+        str mode = arguments[1].value.str;
+
+        //open file
+        FILE* file;
+        if (!(file=fopen(filename,mode))) fail_with(_concatToNULL("at fs_openSync('" ,filename, "','" ,mode, "'). " ,strerror(errno), NULL));
+
+        return (any){&FileDescriptor_CLASSINFO,file};
+    }
+
+    any fs_closeSync(DEFAULT_ARGUMENTS) {
+        assert_args( 1,1,FileDescriptor);
+        FILE* fd = (FILE*) arguments[0].value.ptr;
+        if (fclose(fd)!=0) fail_with(_concatToNULL("at fs_close ", strerror(errno),NULL));
+    }
+
+    //method writeSync(fd, buf, start, count)
+    any fs_writeSync(DEFAULT_ARGUMENTS) {
+        assert_args( 2,4,FileDescriptor,Undefined,Number,Number);
+        FILE* fd = (FILE*) arguments[0].value.ptr;
+
+        len_t start = arguments[2].value.number;
+        len_t size = arguments[3].value.number;
+
+        str contents;
+        if (arguments[1].class==&Buffer_CLASSINFO){
+            Buffer_s* buf = arguments[1].value.ptr;
+            contents = buf->ptr;
+            size = buf->used;
+        }
+        else if (arguments[1].class==&String_CLASSINFO){
+            contents = arguments[1].value.str;
+            size = strlen(contents);
+        }
+        else {
+            fail_with(_concatToNULL(
+                "fs_writeSync: expected argument #2 to be Buffer or String"
+                ,NULL));
+        }
+
+        //write contents
+        fwrite(contents, 1, size, fd);
     }
 
     //native required initialization

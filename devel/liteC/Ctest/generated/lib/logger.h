@@ -53,4 +53,15 @@ extern void logger__moduleInit(void);
         extern any logger_extra(DEFAULT_ARGUMENTS);
         extern any logger_getMessages(DEFAULT_ARGUMENTS);
         extern any logger_throwControlled(DEFAULT_ARGUMENTS);
+     extern any logger_debug(DEFAULT_ARGUMENTS);
+     extern any logger_debugGroup(DEFAULT_ARGUMENTS);
+     extern any logger_debugGroupEnd(DEFAULT_ARGUMENTS);
+     extern any logger_debugClear(DEFAULT_ARGUMENTS);
+     extern any logger_error(DEFAULT_ARGUMENTS);
+     extern any logger_warning(DEFAULT_ARGUMENTS);
+     extern any logger_msg(DEFAULT_ARGUMENTS);
+     extern any logger_info(DEFAULT_ARGUMENTS);
+     extern any logger_extra(DEFAULT_ARGUMENTS);
+     extern any logger_getMessages(DEFAULT_ARGUMENTS);
+     extern any logger_throwControlled(DEFAULT_ARGUMENTS);
 #endif

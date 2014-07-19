@@ -845,7 +845,7 @@ now set var type (unless is "null" or "undefined", because they destroy type inf
 Auto-assign type by name affinity. 
 If no type specified, check project.nameAffinity
         
-        if .nodeDeclared and not Strings.isCapitalized(.name) and .name isnt 'prototype'
+        if .nodeDeclared and not String.isCapitalized(.name) and .name isnt 'prototype'
 
             if not .findOwnMember('**proto**')
 
@@ -991,7 +991,7 @@ if it is not found,check options: a) inform error. b) declare foward.
 
             if options and options.isForward
                 found = .addToScope(name,options)  
-                if options.isDummy and Strings.isCapitalized(name) #let's assume is a class
+                if options.isDummy and String.isCapitalized(name) #let's assume is a class
                     .addMemberTo(found,'prototype',options)
 
         #end if - check declared variables 
@@ -1666,13 +1666,14 @@ get referenced class/namespace
           .sayErr "Append to: '#{.varRef}'. Reference is not fully declared"
           return //if no ownerDecl found
 
-      var prt=ownerDecl.findOwnMember('prototype')
+      if not .toNamespace
+          //if is "append to class"
+          if no ownerDecl.findOwnMember('prototype') into var prt, .throwError "class '#{ownerDecl}' has no prototype"
+          ownerDecl=prt // append to class, adds to prototype
 
-      if project.options.target is 'c'
-          if .toNamespace and prt
-              .sayErr "Append to: '#{.varRef}'. For C production, canot add to class as namespace."
-
-      if prt, ownerDecl=prt // append to class, adds to prototype
+      //if project.options.target is 'c'
+      //    if .toNamespace and prt
+      //        .sayErr "Append to: '#{.varRef}'. For C production, cannot append to class as namespace."
 
       for each item in .body.statements
 
@@ -2161,7 +2162,7 @@ declare valid x.y.z
           opt.isForward = true
           var reference = .tryGetFromScope(.name,opt)
 
-          if Strings.isCapitalized(reference.name) //let's assume is a Class
+          if String.isCapitalized(reference.name) //let's assume is a Class
               if no reference.findOwnMember('prototype'), reference.addMember('prototype')
               reference=reference.findOwnMember('prototype')
 

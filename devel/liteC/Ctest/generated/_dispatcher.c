@@ -40,9 +40,6 @@ static str _ADD_VERBS[] = { //string name for each distinct method name
 ,     "out"
 ,     "outSourceLineAsComment"
 ,     "outSourceLinesAsComment"
-,     "outLineAsComment"
-,     "outLinesAsComment"
-,     "outPrevLinesComments"
 ,     "getEOLComment"
 ,     "addSourceMap"
 ,     "levelIndent"
@@ -93,18 +90,21 @@ static str _ADD_VERBS[] = { //string name for each distinct method name
 ,     "tokenizeLine"
 ,     "recognizeToken"
 ,     "start"
+,     "setHeader"
 ,     "put"
 ,     "startNewLine"
 ,     "ensureNewLine"
 ,     "blankLine"
 ,     "getResult"
+,     "close"
 ,     "markSourceMap"
+,     "append"
+,     "saveLine"
 ,     "startsWith"
 ,     "endsWith"
 ,     "trimRight"
 ,     "trimLeft"
 ,     "capitalized"
-,     "countSpaces"
 ,     "quoted"
 ,     "rpad"
 ,     "remove"
@@ -255,13 +255,18 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 ,     "postIndent"
 ,     "lineNum"
 ,     "currLine"
-,     "toHeader"
-,     "hLines"
+,     "header"
+,     "fileMode"
+,     "filenames"
+,     "fileIsOpen"
+,     "fHandles"
 ,     "lastOriginalCodeComment"
 ,     "lastOutCommentLine"
 ,     "sourceMap"
 ,     "exportNamespace"
 ,     "orTempVarCount"
+,     "used"
+,     "buf"
 ,     "debugOptions"
 ,     "enabled"
 ,     "file"
@@ -389,13 +394,12 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 int main(int argc, char** argv) {
     LiteC_init(argc,argv);
     LiteC_addMethodSymbols( 180, _ADD_VERBS);
-    LiteC_addPropSymbols( 197, _ADD_THINGS);
+    LiteC_addPropSymbols( 202, _ADD_THINGS);
     LiteC_registerShim(String,startsWith_,String_startsWith);
     LiteC_registerShim(String,endsWith_,String_endsWith);
     LiteC_registerShim(String,trimRight_,String_trimRight);
     LiteC_registerShim(String,trimLeft_,String_trimLeft);
     LiteC_registerShim(String,capitalized_,String_capitalized);
-    LiteC_registerShim(String,countSpaces_,String_countSpaces);
     LiteC_registerShim(String,quoted_,String_quoted);
     LiteC_registerShim(String,rpad_,String_rpad);
     LiteC_registerShim(Array,remove_,Array_remove);
@@ -412,15 +416,17 @@ int main(int argc, char** argv) {
     logger__moduleInit();
     Strings__moduleInit();
     PMREX__moduleInit();
+    mkPath__moduleInit();
     Grammar__moduleInit();
     UniqueID__moduleInit();
     Names__moduleInit();
     Validate__moduleInit();
     Environment__moduleInit();
-    mkPath__moduleInit();
     Producer_c__moduleInit();
 
 
     litec__moduleInit();
-}
-// end main
+
+
+    LiteC_finish();
+} //end main

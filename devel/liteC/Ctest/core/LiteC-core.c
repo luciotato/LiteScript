@@ -39,6 +39,9 @@
         ,"toDateString"
         ,"toTimeString"
 
+        ,"copy"  //Buffer
+        ,"write"
+
         ,"slice"
         ,"split"
         ,"indexOf"
@@ -50,6 +53,7 @@
         ,"replaceAll"
         ,"trim"
         ,"substr"
+        ,"countSpaces"
 
         ,"tryGetMethod"
         ,"tryGetProperty"
@@ -288,12 +292,15 @@
     struct Class_s Array_CLASSINFO;
     struct Class_s Map_CLASSINFO;
     struct Class_s NameValuePair_CLASSINFO;
+    struct Class_s Buffer_CLASSINFO;
+    struct Class_s FileDescriptor_CLASSINFO;
 
 // core Class objects -------------------
     //any Global;
     any Null, Undefined, String, Number, Date, Boolean;
-    any Object, Class, Function, Error, Array, Map, NameValuePair;
     any NaN, Infinity;
+    any Object, Class, Function, Error, Array, Map, NameValuePair;
+    any Buffer, FileDescriptor;
 
 // core instances -------------------
     //any global;
@@ -543,8 +550,7 @@
                 return n;
             }
         }
-        throw(_concatAny(3, (any_arr){
-              any_str("invalid symbol: '"), any_str(name), any_str("'")}));
+        throw(_concatAny(3, any_str("invalid symbol: '"), any_str(name), any_str("'")));
     }
 
     //callable from LiteScript
@@ -614,10 +620,10 @@
         if (symbol==0) return any_class(this.class);  //symbol:0 is "constructor":Class
         any* propPtr = _getPropPtr(this,symbol);
         if (propPtr==NULL){
-            throw(_concatAny(6,(any_arr){
+            throw(_concatAny(6,
                     any_str("no property '"), any_str(_symbol[symbol]), any_str("' (symbol:"),  any_number(symbol),
-                    any_str(") for class "),this.class->name
-            }));
+                    any_str(") for class "), this.class->name
+            ));
         }
         return *propPtr;
     }
@@ -737,7 +743,7 @@
 
     any Error_toString( any this, len_t argc, any* arguments ) {
         assert(argc==0);
-        return _concatAny(3,(any_arr){this.class->name,any_str(": "),this.value.err->message});
+        return _concatAny(3, this.class->name, any_str(": "), this.value.err->message);
     };
 
    //----------------------
@@ -816,7 +822,11 @@
                 _Buffer_addStr(&b,newStr);
                 searchPtr=foundPtr+searchedLen;
             }
-            else { if (searchPtr==this.value.str) return this;//never found => not changed  // not found
+            else {
+                if (searchPtr==this.value.str) {
+                    _freeBuffer(&b);
+                    return this; //never found => not changed  // not found
+                }
                 _Buffer_addBytes(&b, searchPtr, thisLen-(searchPtr-this.value.str)); //add rest of string (excluding \0)
                 break;
             }
@@ -848,11 +858,24 @@
     }
 
     // concat
-    any _concatAny(len_t argc, any* arguments) {
-        return _stringJoin(NULL, argc, arguments, NULL);
+    any _concatAny(len_t argc, any arg,...) {
+        assert(argc>0);
+        int32_t count=0;
+        va_list argPointer; //create prt to arguments
+        va_start(argPointer, arg); //make argPointer point to first argument *after* arg
+
+        Buffer_s dbuf = _newBuffer();
+
+        while(argc--){
+           if (arg.class!=&String_CLASSINFO) arg = METHOD(toString_,arg)(arg,0,NULL);
+           _Buffer_addStr(&dbuf,arg.value.str);
+           arg=va_arg(argPointer,any); //next
+        }
+        return _Buffer_toString(&dbuf); //close & convert to any
     }
 
-    any _stringJoin(str initial, len_t argc, any* items, str separ){
+    //concat all items, with a optional separ
+    any _arrayJoin(str initial, len_t argc, any* items, str separ){
 
         int32_t count=0;
 
@@ -862,17 +885,19 @@
             count++;
         }
 
-        for(int32_t n=0;n<argc;n++){
+        any item;
+        for(int32_t n=0; n<argc; n++){
             if (separ && count++) _Buffer_addStr(&buf,separ);
-            any s = METHOD(toString_,items[n])(items[n],0,NULL);
-            _Buffer_addStr(&buf,s.value.str);
+            item=items[n];
+            if (item.class!=&String_CLASSINFO) item = METHOD(toString_,item)(item,0,NULL);
+            _Buffer_addStr(&buf,item.value.str);
         };
         return _Buffer_toString(&buf); //close & convert to any
     }
 
     any String_concat(any this, len_t argc, any* arguments){
         if (argc==0) return (any){&String_CLASSINFO,this.value.str};
-        return _stringJoin(this.value.str,argc,arguments,NULL);
+        return _arrayJoin(this.value.str,argc,arguments,NULL);
     }
 
    any String_trim(any this, len_t argc, any* arguments) {
@@ -949,6 +974,24 @@
         }
         return result;
    }
+
+   any String_countSpaces(DEFAULT_ARGUMENTS){
+       int count=0;
+       for(str s=this.value.str; *s; s++){
+           if(*s!=' ') break;
+           count++;
+       }
+       return any_number(count);
+    }
+
+   any String_spaces(DEFAULT_ARGUMENTS){ //as namespace method
+       assert_args(1,1,Number);
+       int count=arguments[0].value.number;
+       var result=_newStringSize(count+1);
+       memset(result.value.str,' ',count);
+       result.value.str[count]=0;
+       return result;
+    }
 
    //----------------------
    // Array methods
@@ -1126,7 +1169,7 @@
         //---------
         // define named params
         str separ= argc? arguments[0].value.str: ",";
-        return _stringJoin(NULL, this.value.arr->length, this.value.arr->item, separ);
+        return _arrayJoin(NULL, this.value.arr->length, this.value.arr->item, separ);
     }
 
     any Array_clear(any this, len_t argc, any* arguments) {
@@ -1264,9 +1307,10 @@
 
     any _DateTo(time_t t, str format, int local){
         struct tm * tm_s_ptr = local?localtime(&t):gmtime(&t); // Convert to Local/GMT
-        char buf[128];
-        strftime(buf,sizeof buf,format,tm_s_ptr );
-        return any_str(buf);
+        const int SIZE = 64;
+        any result = _newStringSize(SIZE);
+        strftime(result.value.str,SIZE,format,tm_s_ptr );
+        return result;
     }
     any Date_toString(DEFAULT_ARGUMENTS){
         return _DateTo(this.value.time,"%a %B %d %Y %T GMT%z (%Z)",0);
@@ -1371,18 +1415,19 @@
     any console_timers;
 
     any console_time(DEFAULT_ARGUMENTS) {
-        assert_args(this,argc,arguments,1,1,String);
+        assert_args(1,1,String);
         Map_set(console_timers,2,(any_arr){arguments[0],any_number(clock()}));
     }
 
     any console_timeEnd(DEFAULT_ARGUMENTS) {
-        assert_args(this,argc,arguments,1,1,String);
+        assert_args(1,1,String);
         clock_t now=clock();
         var start=Map_get(console_timers,1,&(arguments[0]));
         if (start.class==&Undefined_CLASSINFO){
             console_log(undefined,3,(any_arr){any_str("'"),arguments[0],any_str("' is not a valid console_timer")});
         }
-        console_log(undefined,3,(any_arr){arguments[0],any_str(_uint64ToStr(now-(int64_t)start.value.number,3)),any_str("ms")});
+        str milliseconds = utf8slice(_uint64ToStr(now-(int64_t)start.value.number), 0, -3);
+        console_log(undefined,3,(any_arr){arguments[0],any_str(milliseconds),any_str(" ms")});
         Map_delete(console_timers,1, (any_arr){arguments[0]});
     }
 
@@ -1403,32 +1448,121 @@
     // Buffer
     //-------------
 
-    /*
-    #define Buffer_NUMBUFFERS 30
-    #define Buffer_BUFSIZE 96
-    char Buffer_buffers [Buffer_NUMBUFFERS][Buffer_BUFSIZE];
-    int Buffer_buffers_length=0;
-    int Buffer_mallocd_count=0;
-
-    Buffer_s _allocBuffer(){
-        if (Buffer_buffers_length>=Buffer_NUMBUFFERS) fatal ("out of buffers");
-        return (Buffer_s){.used=0, .allocd=Buffer_BUFSIZE, .ptr=&(Buffer_buffers[Buffer_buffers_length++])};
-    }
-    */
-
+    //parse times change radically if you change initial buffer size
     #define BUFFER_POWER2 6 // 2^5=32, 2^6=64, 2^7=128
-
     #define TRUNCkb(X) ( (X+(1<<BUFFER_POWER2))>>BUFFER_POWER2<<BUFFER_POWER2 )
 
+    // non-allocd buffers
+    #define Buffer_NUMBUFFERS 30
+    #define Buffer_BUFSIZE 256
+    char Buffer_buffers_SPACE[Buffer_NUMBUFFERS][256];
+    char* Buffer_buffersStart=(char*)&Buffer_buffers_SPACE;
+    int Buffer_buffers_length=0;
+    int Buffer_mallocd_count=0;
+    int Buffer_REallocd_count=0;
+    int Buffer_to_mallocd_string_count=0;
+
+    any Buffer_byteLength(DEFAULT_ARGUMENTS){
+        assert_args(1,1,String);
+        return any_number(strlen(arguments[0].value.str));
+    }
+
+    any Buffer_copy(DEFAULT_ARGUMENTS){
+        assert_args(1,1,Buffer);
+        Buffer_s* me=(Buffer_ptr)this.value.ptr;
+        Buffer_s* dest = arguments[0].value.ptr;
+        if (dest->allocd<me->used) {
+            fail_with("dest buffer too small");
+        }
+        memmove(dest->ptr,me->ptr,me->used);
+        dest->used = me->used;
+    }
+
+    any Buffer_write(DEFAULT_ARGUMENTS){
+        assert_args(2,2,String,Number);
+        Buffer_s* me=(Buffer_ptr)this.value.ptr;
+        len_t len = strlen(arguments[0].value.str);
+        len_t start = arguments[1].value.number;
+        if (start+len>=me->allocd) fail_with("buffer overflow");
+        memmove(me->ptr+start, arguments[0].value.str, len);
+        me->used += len;
+        return any_number(len);
+    }
+
+    void _Buffer_report(){
+        fprintf(stderr,
+                "----------\n"
+                "Buffer_buffers_length %d\n"
+                "Buffer_mallocd_count  %d\n"
+                "Buffer_REallocd_count %d\n"
+                "Buffer_to_mallocd_string_count %d\n"
+                ,Buffer_buffers_length
+                ,Buffer_mallocd_count
+                ,Buffer_REallocd_count
+                ,Buffer_to_mallocd_string_count
+       );
+    };
+
+    Buffer_s _newBuffer(){
+        if (Buffer_buffers_length>=Buffer_NUMBUFFERS) fatal ("out of buffers");
+        Buffer_s result= {
+                .used=0,
+                .allocd=Buffer_BUFSIZE,
+                .bufferInx=Buffer_buffers_length,
+                .isMallocd = 0,
+                .ptr= Buffer_buffersStart+(Buffer_buffers_length*Buffer_BUFSIZE)
+        };
+        *result.ptr=0;
+        Buffer_buffers_length++;
+        return result;
+    }
+
+    void Buffer__init(DEFAULT_ARGUMENTS){
+        assert_args(1,1,Number);
+
+        len_t size=Buffer_BUFSIZE;
+        if (argc>=1) size=arguments[0].value.number;
+        if (size<=0) size=Buffer_BUFSIZE;
+
+        Buffer_s result = {
+                .used=0,
+                .allocd=size,
+                .bufferInx=Buffer_buffers_length,
+                .isMallocd = 1,
+                .ptr= mem_alloc(size)
+        };
+
+        *((Buffer_ptr)this.value.ptr) = result;
+    }
+
+    void _freeBuffer(Buffer_s *dbuf){
+        if (dbuf->bufferInx==Buffer_buffers_length-1) Buffer_buffers_length--;
+    }
+    /*
     Buffer_s _newBuffer(){
         return (Buffer_s){.used=0, .allocd=1<<BUFFER_POWER2, .ptr=mem_alloc(1<<BUFFER_POWER2)};
+    }
+    */
+    void _Buffer_toMallocd(Buffer_s *dbuf, size_t newSize){
+        assert(!dbuf->isMallocd);
+        dbuf->isMallocd=1; //mark as mallocd
+        str newSpace = mem_alloc(newSize);
+        memcpy(newSpace, dbuf->ptr, dbuf->used);
+        dbuf->ptr = newSpace;
     }
 
     void _Buffer_addBytes(Buffer_s *dbuf, str ptr, size_t addSize){
         if (dbuf->used + addSize > dbuf->allocd){
             uint64_t newSize=TRUNCkb((uint64_t)dbuf->allocd + addSize);
             if (newSize>UINT32_MAX) fail_with("_Buffer_add: newSize>UINT32_MAX");
-            dbuf->ptr = mem_realloc(dbuf->ptr, newSize);
+            if (!dbuf->isMallocd) {
+                Buffer_mallocd_count++;
+                _Buffer_toMallocd(dbuf,newSize);
+            }
+            else {
+                Buffer_REallocd_count++;
+                dbuf->ptr = mem_realloc(dbuf->ptr, newSize);
+            }
             dbuf->allocd = newSize;
         }
         memcpy(dbuf->ptr + dbuf->used, ptr, addSize);
@@ -1458,9 +1592,13 @@
 
     any _Buffer_toString(Buffer_s* dbuf){
         _Buffer_add0(dbuf);
+        if (!dbuf->isMallocd) {
+            Buffer_to_mallocd_string_count++;
+            _Buffer_toMallocd(dbuf,dbuf->used);
+        }
+        _freeBuffer(dbuf); // toString means "free" because buffer is converted to malloc'd
         return any_str(dbuf->ptr); //convert to any
     }
-
 
     int64_t _length(any this){
         return this.class==&String_CLASSINFO ? utf8len(this.value.ptr)
@@ -1523,21 +1661,36 @@
     }
 
     #ifndef NDEBUG
-    void assert_args(DEFAULT_ARGUMENTS, int required, int total, any anyClass, ...){
+    void _assert_args(DEFAULT_ARGUMENTS, str file, int line, int required, int total, any anyClass, ...){
         assert(required>0 && total>0);
-        if(argc<required) fail_with(_concatToNULL("required at least ",_int64ToStr(required)," arguments",NULL));
+        if(argc<required) {
+            fail_with(_concatToNULL(
+                file,":",_int64ToStr(line)," required at least ",
+                _int64ToStr(required)," arguments"
+                ,NULL));
+        }
 
         va_list classes;
         va_start (classes, anyClass);
 
         for(int order=1; order<=argc && order<=total; order++) {
-            if(order>required && arguments->class==&Undefined_CLASSINFO){
+
+            if(anyClass.value.classINFOptr == &Undefined_CLASSINFO) {
+                // #order parameter can be any
+                null; //do nothing
+            }
+            else if(order>required && arguments->class==&Undefined_CLASSINFO){
                 null; //undefined, if not required, is OK
             }
-            else if(anyClass.value.classINFOptr != arguments++->class) {
-               fail_with(_concatToNULL("expected argument ",_int64ToStr(order)," to be a ",anyClass.value.classINFOptr->name.value.str,NULL));
+            else if(anyClass.value.classINFOptr != arguments->class) {
+                fail_with(_concatToNULL(
+                    file,":",_int64ToStr(line)," expected argument #",
+                    _int64ToStr(order)," to be a ",anyClass.value.classINFOptr->name.value.str
+                    ,NULL));
             }
-           anyClass=va_arg(classes,any);
+
+            arguments++;
+            anyClass=va_arg(classes,any);
         }
     };
     #endif
@@ -1689,6 +1842,7 @@
         M( replaceAll )
         M( trim )
         M( substr )
+        M( countSpaces )
     M_END
     #undef M
 
@@ -1752,15 +1906,24 @@
         M( keys )
     M_END
     #undef M
-
     static _posTableItem_t Map_PROPS[] = {
             size_
         };
 
+    //NameValuePair
     static _posTableItem_t NameValuePair_PROPS[] = {
             name_,
             value_
         };
+
+    // Buffer
+    #define M(symbol) { symbol##_, Buffer_##symbol },
+    static _methodInfoArr Buffer_CORE_METHODS = {
+        M( write )
+        M( copy )
+    M_END
+    #undef M
+
 
 //-------------------
 // init lib util
@@ -1937,9 +2100,20 @@
         WITHCLASSINFO(NameValuePair); // only internal
         _declareProps(NameValuePair, NameValuePair_PROPS, sizeof NameValuePair_PROPS);
 
+        WITHCLASSINFO(Buffer); // only internal props (allocd, used, ptr)
+        _declareMethods(Buffer, Buffer_CORE_METHODS);
+
+        FROMOBJECT(FileDescriptor,"FileDescriptor");
+
+        //console module vars
         console_timers = new(Map,0,NULL);
 
         //init process_argv with program arguments
         process_argv = _newArrayFromCharPtrPtr(argc,CharPtrPtrargv);
     };
+
+    void LiteC_finish(){
+        _Buffer_report();
+    }
+
 

@@ -32,7 +32,7 @@ when it is generated as a standalone executable (from generated C source code)
 
     Advanced options:
     -D FOO -D BAR    Defines preprocessor names (#ifdef FOO/#ifndef BAR)
-    -d, -debug       enable full compiler debug logger file at 'out/debug.logger'
+    -d, -debug       enable full compiler debug log file at 'out/debug.logger'
     
     """
 

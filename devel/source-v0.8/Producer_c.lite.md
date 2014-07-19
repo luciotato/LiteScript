@@ -37,8 +37,9 @@ Method get a trailing "_" if they're a C reserved word
         "tryGetMethod","tryGetProperty","getProperty", "getPropertyName","hasProperty"
         "has", "get", "set", "clear", "delete", "keys"
         "slice", "split", "indexOf", "lastIndexOf", "concat"
-        "toUpperCase", "toLowerCase","charAt", "replaceAll","trim"
+        "toUpperCase", "toLowerCase","charAt", "replaceAll","trim","substr","countSpaces"
         "toDateString","toTimeString","toUTCString","toISOString"
+        "copy", "write" //Buffer
         "shift","push","unshift", "pop", "join","splice"
     ]
 
@@ -64,8 +65,16 @@ create _dispatcher.c & .h
         project.redirectOutput dispatcherModule.lexer.outCode // all Lexers now out here        
 
         dispatcherModule.fileInfo = Environment.fileInfoNewFile("_dispatcher", project.options.target)
+
+        dispatcherModule.lexer.outCode.fileMode=true
+        dispatcherModule.lexer.outCode.filenames[0] = dispatcherModule.fileInfo.outFilename
+        dispatcherModule.lexer.outCode.filenames[1] = '#{dispatcherModule.fileInfo.outFilename.slice(0,-1)}h'
+
         dispatcherModule.produceDispatcher project
 
+        dispatcherModule.lexer.outCode.close
+
+        /*
         var resultLines:string array =  dispatcherModule.lexer.outCode.getResult() //get .c file contents
         if resultLines.length
             Environment.externalCacheSave dispatcherModule.fileInfo.outFilename,resultLines
@@ -73,8 +82,9 @@ create _dispatcher.c & .h
         resultLines =  dispatcherModule.lexer.outCode.getResult(1) //get .h file contents
         if resultLines.length
             Environment.externalCacheSave '#{dispatcherModule.fileInfo.outFilename.slice(0,-1)}h',resultLines
+        */
 
-        logger.msg "#{color.green}[OK] -> #{dispatcherModule.fileInfo.outRelFilename} #{color.normal}"
+        logger.info "#{color.green}[OK] -> #{dispatcherModule.fileInfo.outRelFilename} #{color.normal}"
         logger.extra #blank line
 
     end function
@@ -207,11 +217,16 @@ call __ModuleInit for all the imported modules. call the base modules init first
         for each nodeModule in moduleList
             .out '    ',nodeModule.fileInfo.base,'__moduleInit();',NL 
 
-call main module __init
+call main module __init (main program execution),
+and before exit, call LiteC_finish
 
-        .out '\n\n    ',project.main.fileInfo.base,'__moduleInit();',NL 
-
-        .out '}',NL, {COMMENT: 'end main'},NL
+        .out 
+            '\n\n    ',project.main.fileInfo.base,'__moduleInit();'
+            NL
+            '\n\n    LiteC_finish();'
+            NL 
+            '} //end main'
+            NL
 
 
 #### method produce() # Module
@@ -228,11 +243,10 @@ default #includes:
 
         declare valid .parent.fileInfo.outFilename
         var dispatcherFull = "#{Environment.dirName(.parent.fileInfo.outFilename)}/_dispatcher.h"
-        .out '#include "#{Environment.relativeFrom(thisBase,dispatcherFull)}"',NL
+        var dispatcherRel = Environment.relativeFrom(thisBase,dispatcherFull)
+        .out '#include "', dispatcherRel, '"',NL
 
         var prefix=.fileInfo.base
-
-header
 
         .out 
             "//-------------------------",NL
@@ -269,9 +283,8 @@ Now produce the .c file,
             "//-------------------------",NL
 
         //space to insert __or temp vars
-        var insertPos=.lexer.outCode.lines.length
-        .lexer.outCode.blankLine
-        .lexer.outCode.blankLine
+        .out '#include "#{.fileInfo.base}.c.extra"',NL
+        .lexer.outCode.filenames[2] = "#{.fileInfo.outFilename}.extra"
 
         // add sustance for the module
         .produceSustance prefix
@@ -326,13 +339,15 @@ __moduleInit: module main function
 
 insert at .c file start, helper tempvars for 'or' expressions short-circuit evaluation
 
-        if .lexer.outCode.orTempVarCount
-            .lexer.outCode.lines[insertPos++] = "//helper tempvars for 'or' expressions short-circuit evaluation"
-            var list = "any __or1"
-            for n=2 to .lexer.outCode.orTempVarCount
-                list &= ",__or#{n}"
-            list &=";"
-            .lexer.outCode.lines[insertPos] = list
+        .out 
+            {h:2}
+            "//helper tempvars for 'or' expressions short-circuit evaluation",NL
+            "any __or1"
+
+        for n=2 to .lexer.outCode.orTempVarCount
+            .out ",__or#{n}"
+
+        .out ";", {h:1}
 
 
         .skipSemiColon = true
@@ -361,8 +376,8 @@ Append-to body contains properties and methods definitions.
         if no nameDeclClass, return .sayErr("append to: no reference found")
 
         if .toNamespace
-                .body.produceDeclaredExternProps nameDeclClass.getComposedName(), true
-                return //nothing more to do if it's "append to namespace"
+            .body.produceDeclaredExternProps nameDeclClass.getComposedName(), true
+            return //nothing more to do if it's "append to namespace"
 
 handle methods added to core classes
 
@@ -534,6 +549,13 @@ and declare extern for each class method
                     //declare extern for this class methods
                     .out "extern any ",c,"_",prtNameDecl.name,"(DEFAULT_ARGUMENTS);",NL
 
+methods in the class as namespace
+
+        for each classMethodNameDecl in map .nameDecl.members
+            where classMethodNameDecl.name isnt 'prototype' and classMethodNameDecl.name.charAt(0) isnt '*'
+                if not classMethodNameDecl.isProperty
+                    //declare extern for this class as namespace method
+                    .out "extern any ",c,"_",classMethodNameDecl.name,"(DEFAULT_ARGUMENTS); //class as namespace",NL
 
 #### method produce()
 
@@ -684,7 +706,7 @@ A "Body" is an ordered list of statements.
                     declare item.specific:Grammar.VarStatement
                     if isPublic, .out 'extern var ',{pre:prefix, CSL:item.specific.getNames()},";",NL
 
-                case Grammar.FunctionDeclaration:
+                case Grammar.FunctionDeclaration, Grammar.MethodDeclaration: //method: append to class xx - when is a core class
                     declare item.specific:Grammar.FunctionDeclaration
                     //export module function
                     if isPublic, .out 'extern any ',prefix,item.specific.name,"(DEFAULT_ARGUMENTS);",NL
@@ -806,7 +828,8 @@ after adding any comment lines preceding the statement
 
 add comment lines, in the same position as the source
 
-        .outPrevLinesComments()
+        .outSourceLinesAsComment 0, .sourceLineNum-1
+        //.outPrevLinesComments()
 
 To ease reading of compiled code, add original Lite line as comment 
 
@@ -1189,7 +1212,7 @@ string concat: &
             if .produceType is 'Number', .throwError 'cannot use & to concat and produce a number'
             .left.produceType = 'any'
             .right.produceType = 'any'
-            .out "_concatAny(2,(any_arr){",.left,',',.right,'})'
+            .out "_concatAny(2,",.left,',',.right,')'
 
 else we have a direct translatable operator. 
 We out: left,operator,right
@@ -1482,7 +1505,8 @@ for PropertyAccess
                     inx+=1 //skip fn.call and args
                     actualVar = undefined
 
-                else if actualVar and actualVar.isNamespace //just namespace access
+                else if actualVar and (actualVar.isNamespace or actualVar.findOwnMember('prototype'))
+                    //just namespace access or accessing a "property" of a class "as namespace"
                     var prevArr:array = result.pop() 
                     prevArr.push "_",ac.name
                     result.push prevArr
@@ -1542,11 +1566,13 @@ else, for FunctionAccess
 
                         if fnNameArray[0] is '_concatAny'
                             callParams =[] // no "thisValue" for internal _concatAny, just params to concat
+                            //add arguments: count,...
+                            .addArguments functionAccess.args, callParams, skipAnyArr=true
                         else
                             callParams = ["undefined", ","] //this==undefined as in js "use strict" mode
+                            //add arguments: count,(any_arr){...}
+                            .addArguments functionAccess.args, callParams
 
-                        //add arguments: count,(any_arr){...}
-                        .addArguments functionAccess.args, callParams
                         callParams.push ")" //close function(undefined,arg,any* arguments)
 
                     else
@@ -1663,11 +1689,14 @@ and next property access should be on defined members of the type
         return typeStr
 
     
-      helper method addArguments(args:array , callParams:array)
+      helper method addArguments(args:array , callParams:array, skipAnyArr:boolean)
+
+        var pre=skipAnyArr?'' else '(any_arr){'
+        var post=skipAnyArr?'' else '}'
 
         //add arguments[] 
         if args and args.length
-            callParams.push "#{args.length},(any_arr){",{CSL:args},"}"
+            callParams.push "#{args.length},",pre,{CSL:args},post
             //,freeForm:true,indent:String.spaces(8)
         else
             callParams.push "0,NULL"
@@ -1700,7 +1729,7 @@ and next property access should be on defined members of the type
 
             case "&=": //string concat
                 .rvalue.produceType = 'any'
-                .out .lvalue, '=', "_concatAny(2,(any_arr){",.lvalue,',',.rvalue,'})'
+                .out .lvalue, '=', "_concatAny(2,",.lvalue,',',.rvalue,')'
 
             default:
                 .rvalue.produceType = 'any'
@@ -1953,7 +1982,8 @@ If 'var' was adjectivated 'export', add to exportNamespace
             .out .body, "}"
 
         if .elseStatement
-            .outPrevLinesComments .elseStatement.lineInx-1
+            .outSourceLinesAsComment 0, .elseStatement.sourceLineNum-1
+            //.outPrevLinesComments .elseStatement.lineInx-1
             .elseStatement.produce()
 
 
@@ -2176,7 +2206,10 @@ if no increment specified, the default is indexVar++/--
 `ForWhereFilter: [where Expression]`
 
       method produce()
-        .outLineAsComment .lineInx
+
+        //.outLineAsComment .lineInx
+        .outSourceLineAsComment .sourceLineNum
+
         .filterExpression.produceType='Bool'
         .out 'if(',.filterExpression,')'
 
@@ -2534,7 +2567,8 @@ Marks the end of a block. It's just a comment for javascript
 
 first, out as comment this line
 
-        .outLineAsComment .lineInx
+        //.outLineAsComment .lineInx
+        .outSourceLineAsComment .sourceLineNum
 
 if it's a conditional compile, output body is option is Set
 
@@ -2562,7 +2596,7 @@ if it's a conditional compile, output body is option is Set
 Out as comments
 
       method produce()
-        .outLinesAsComment .lineInx, .names? .lastLineInxOf(.names) : .lineInx
+        //.outLinesAsComment .lineInx, .names? .lastLineInxOf(.names) : .lineInx
         .skipSemiColon = true
 
 
@@ -2648,7 +2682,8 @@ we produce as chained if-else, using == to switchValue
 
             for each index,switchCase in .cases
 
-                .outLineAsComment switchCase.lineInx
+                //.outLineAsComment switchCase.lineInx
+                .outSourceLineAsComment switchCase.sourceLineNum
 
                 .out 
                     index>0? 'else ' : '' 
@@ -2664,7 +2699,10 @@ with the casee expresions
         else
 
           for each index,switchCase in .cases
-              .outLineAsComment switchCase.lineInx
+
+              //.outLineAsComment switchCase.lineInx
+              .outSourceLineAsComment switchCase.sourceLineNum
+
               .out 
                     index>0? 'else ' : '' 
                     'if (', {pre:'(', CSL:switchCase.expressions, post:')', separator:'||'}
@@ -2714,7 +2752,10 @@ else, it's a var-less case. we code it as chained ternary operators
         else
 
           for each caseWhenSection in .cases
-              .outLineAsComment caseWhenSection.lineInx
+
+              //.outLineAsComment caseWhenSection.lineInx
+              .outSourceLineAsComment caseWhenSection.sourceLineNum
+
               caseWhenSection.booleanExpression.produceType = 'Bool'
               caseWhenSection.out '(',caseWhenSection.booleanExpression,') ? (', caseWhenSection.resultExpression,') :',NL
 

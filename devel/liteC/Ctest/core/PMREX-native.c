@@ -16,7 +16,7 @@ int PMREX_ranges_length=0;
 
 //### public function whileRanges(chunk:string, start, rangesStr:string)
     any PMREX_whileRanges(DEFAULT_ARGUMENTS){
-        assert_args(this,argc,arguments, 3, 3, String, Number, String);
+        assert_args(3, 3, String, Number, String);
         // define named params
         str chunk = arguments[0].value.str;
         int start = arguments[1].value.number;
@@ -67,7 +67,7 @@ int PMREX_ranges_length=0;
 
 //### public function findRanges(chunk:string, start, rangesStr:string)
     any PMREX_findRanges(DEFAULT_ARGUMENTS){
-        assert_args(this,argc,arguments, 3, 3, String, Number, String);
+        assert_args(3, 3, String, Number, String);
         // define named params
         str chunk = arguments[0].value.str;
         int start = arguments[1].value.number;
@@ -163,7 +163,7 @@ int PMREX_ranges_length=0;
     }
 
     any PMREX_whileUnescaped(DEFAULT_ARGUMENTS){
-        assert_args(this,argc,arguments, 3, 3, String, Number, String);
+        assert_args(3, 3, String, Number, String);
         // define named params
         str chunk = arguments[0].value.str;
         int start = arguments[1].value.number;
@@ -174,7 +174,7 @@ int PMREX_ranges_length=0;
 
 //### public function findMatchingQuote(chunk:string, start)
     any PMREX_findMatchingQuote(DEFAULT_ARGUMENTS){
-        assert_args(this,argc,arguments, 2, 2, String, Number);
+        assert_args(2, 2, String, Number);
         str chunk = arguments[0].value.str;
         int start = arguments[1].value.number;
 

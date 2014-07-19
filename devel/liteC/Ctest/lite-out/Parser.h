@@ -149,9 +149,12 @@ extern void Parser__moduleInit(void);
         any lineNum;
         any column;
         any currLine;
-        any toHeader;
+        any header;
+        any fileMode;
+        any filenames;
+        any fileIsOpen;
+        any fHandles;
         any lines;
-        any hLines;
         any lastOriginalCodeComment;
         any lastOutCommentLine;
         any sourceMap;
@@ -163,11 +166,29 @@ extern void Parser__moduleInit(void);
     
     extern void Parser_OutCode__init(DEFAULT_ARGUMENTS);
     extern any Parser_OutCode_start(DEFAULT_ARGUMENTS);
+    extern any Parser_OutCode_setHeader(DEFAULT_ARGUMENTS);
     extern any Parser_OutCode_put(DEFAULT_ARGUMENTS);
     extern any Parser_OutCode_startNewLine(DEFAULT_ARGUMENTS);
     extern any Parser_OutCode_ensureNewLine(DEFAULT_ARGUMENTS);
     extern any Parser_OutCode_blankLine(DEFAULT_ARGUMENTS);
     extern any Parser_OutCode_getResult(DEFAULT_ARGUMENTS);
+    extern any Parser_OutCode_close(DEFAULT_ARGUMENTS);
     extern any Parser_OutCode_markSourceMap(DEFAULT_ARGUMENTS);
     extern any Parser_OutCode_addSourceMap(DEFAULT_ARGUMENTS);
+    
+
+//--------------
+    // Parser_DynBuffer
+    any Parser_DynBuffer; //Class Parser_DynBuffer
+    typedef struct Parser_DynBuffer_s * Parser_DynBuffer_ptr;
+    typedef struct Parser_DynBuffer_s {
+        //DynBuffer
+        any used;
+        any buf;
+    
+    } Parser_DynBuffer_s;
+    
+    extern void Parser_DynBuffer__init(DEFAULT_ARGUMENTS);
+    extern any Parser_DynBuffer_append(DEFAULT_ARGUMENTS);
+    extern any Parser_DynBuffer_saveLine(DEFAULT_ARGUMENTS);
 #endif

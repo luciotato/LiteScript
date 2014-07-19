@@ -534,7 +534,7 @@ skip empty items
 if it is the first thing in the line, out indentation
 
           if not rawOut.currLine and .indent > 0
-              rawOut.put Strings.spaces(.indent)
+              rawOut.put String.spaces(.indent)
 
 if it is an AST node, call .produce()
 
@@ -604,8 +604,7 @@ else, Object codes
 {h:1/0} --> enable/disabe output to header file
  
               else if item.get('h') into var header:number isnt undefined
-                  rawOut.startNewLine
-                  rawOut.toHeader = header
+                  rawOut.setHeader header
 
               else 
                   .sayErr "ASTBase method out, item:map: unrecognized map keys: #{item}"
@@ -623,20 +622,34 @@ Last option, out item.toString()
 #### helper method outSourceLineAsComment(sourceLineNum)
 
 Note: check if we can remove "outLineAsComment" and use this instead
+
+        if .lexer.outCode.lastOutCommentLine < sourceLineNum
+            .lexer.outCode.lastOutCommentLine = sourceLineNum
         
+        if sourceLineNum<1, return 
+
         var line = .lexer.lines[sourceLineNum-1]
+        if no line, return
+
         var indent = line.countSpaces()
 
         .lexer.outCode.ensureNewLine
-        .lexer.outCode.put '#{line.slice(0,indent)}//#{line.slice(indent)}'
+        .lexer.outCode.put line.slice(0,indent)
+        .lexer.outCode.put "//"
+        .lexer.outCode.put line.slice(indent)
         .lexer.outCode.startNewLine
 
 #### helper method outSourceLinesAsComment(fromLineNum,toLineNum)
 
         if no .lexer.options.comments, return 
+
+        if no fromLineNum or fromLineNum<.lexer.outCode.lastOutCommentLine+1
+              fromLineNum = .lexer.outCode.lastOutCommentLine+1
+
         for i=fromLineNum to toLineNum
             .outSourceLineAsComment i
-      
+
+/*      
 #### helper method outLineAsComment(preComment,lineInx)
 out a full source line as comment into produced code
 
@@ -665,13 +678,16 @@ out as comment
 
         var prepend=""
         if preComment or not line.text.startsWith("//"), prepend="// "
-        if no .lexer.outCode.currLine, prepend="#{Strings.spaces(line.indent)}#{prepend}"
+        if no .lexer.outCode.currLine, prepend="#{String.spaces(line.indent)}#{prepend}"
         if preComment or line.text, .lexer.outCode.put "#{prepend}#{preComment}#{line.text}"
 
         .lexer.outCode.startNewLine
 
         .lexer.outCode.lastOutCommentLine = lineInx
 
+*/
+
+/*
 #### helper method outLinesAsComment(fromLine,toLine)
 
         if no .lexer.options.comments, return 
@@ -712,7 +728,7 @@ Output prev comments lines (also blank lines)
       .outLinesAsComment preInx, inx-1
 
     #end method
-
+*/
 
 #### helper method getEOLComment() 
 getEOLComment: get the comment at the end of the line
@@ -743,7 +759,7 @@ show indented messaged for debugging
         while node.parent into node
             indent += 2 //add 2 spaces
 
-        return Strings.spaces(indent)
+        return String.spaces(indent)
 
     
 #### helper method getRootNode()

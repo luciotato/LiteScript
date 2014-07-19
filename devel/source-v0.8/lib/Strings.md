@@ -53,29 +53,14 @@ Also add 'remove' to class Array
             return '#{quoteChar}#{this}#{quoteChar}'
 
         shim method rpad(howMany)
-            return .concat(Strings.spaces(howMany-.length))
+            return .concat(String.spaces(howMany-.length))
 
 
-### Append to class Array
+### append to namespace String
 
-method remove(element)
+        shim method spaces(howMany)
+            return String.repeat(" ",howMany)
 
-        method remove(element)  [not enumerable, not writable, configurable]
-
-            if this.indexOf(element) into var inx >= 0
-                 return this.splice(inx,1)
-
-        end method
-
-        //property last [not enumerable]
-        //    get: function
-        //        return .length-1
-
-
-### namespace Strings
-
-        method spaces(howMany)
-            return Strings.repeat(" ",howMany)
 
 repeat(str, howMany)
 
@@ -142,3 +127,21 @@ loop until no quotes found
             loop
             
             return text
+
+
+### Append to class Array
+
+method remove(element)
+
+        method remove(element)  [not enumerable, not writable, configurable]
+
+            if this.indexOf(element) into var inx >= 0
+                 return this.splice(inx,1)
+
+        end method
+
+        //property last [not enumerable]
+        //    get: function
+        //        return .length-1
+
+

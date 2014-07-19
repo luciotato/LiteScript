@@ -90,7 +90,113 @@
        // shim method rpad(howMany)
        if (!String.prototype.rpad)
        String.prototype.rpad = function(howMany){
-           return this.concat(Strings.spaces(howMany - this.length));
+           return this.concat(String.spaces(howMany - this.length));
+       };
+
+
+   // append to namespace String
+
+       // shim method spaces(howMany)
+       if (!String.spaces)
+       String.spaces = function(howMany){
+           return String.repeat(" ", howMany);
+       };
+
+
+// repeat(str, howMany)
+
+       // shim method repeat(str,howMany)
+       if (!String.repeat)
+       String.repeat = function(str, howMany){
+
+           // if howMany<=0, return ""
+           if (howMany <= 0) {return ""};
+
+           var a = '';
+           // while howMany--
+           while(howMany--){
+               a = "" + a + str;
+           };// end loop
+
+           return a;
+       };
+
+
+// Checks if a name is Capitalized, unicode aware.
+// capitalized is like: /^[A-Z]+[$_a-z0-9]+$/ ,but unicode aware.
+
+       // method isCapitalized(text:string) returns boolean
+       String.isCapitalized = function(text){
+           // if text and text.charAt(0) is text.charAt(0).toUpperCase()
+           if (text && text.charAt(0) === text.charAt(0).toUpperCase()) {
+               // if text.length is 1, return true;
+               if (text.length === 1) {return true};
+
+               // for n=1 while n<text.length
+               for( var n=1; n < text.length; n++) {
+                   // if text.charAt(n) is text.charAt(n).toLowerCase(), return true
+                   if (text.charAt(n) === text.charAt(n).toLowerCase()) {return true};
+               };// end for n
+               
+           };
+
+           return false;
+       };
+
+// String.findMatchingPair(text,start,closer).
+// Note: text[start] MUST be the opener char
+
+       // method findMatchingPair(text:string, start, closer)
+       String.findMatchingPair = function(text, start, closer){
+           var opener = text.charAt(start);
+           var opencount = 1;
+           // for n=start+1 while n<text.length
+           for( var n=start + 1; n < text.length; n++) {
+               // if text.charAt(n) is closer and --opencount is 0
+               if (text.charAt(n) === closer && --opencount === 0) {
+                   return n;
+               }
+               
+               else if (text.charAt(n) === opener) {
+                   opencount++;
+               };
+           };// end for n
+
+           return -1;
+       };
+
+// String.replaceQuoted(text,rep)
+// replace every quoted string inside text, by rep
+
+       // method replaceQuoted(text:string, rep:string)
+       String.replaceQuoted = function(text, rep){
+
+           var p = 0;
+
+// look for first quote (single or double?),
+// loop until no quotes found
+
+           var anyQuote = '"' + "'";
+
+           // do while PMREX.findRanges(text,p,anyQuote) into p  < text.length
+           while((p=PMREX.findRanges(text, p, anyQuote)) < text.length){
+
+               // if text.slice(p,p+3) is '"""' //ignore triple quotes (valid token)
+               if (text.slice(p, p + 3) === '"""') { //ignore triple quotes (valid token)
+                   p += 3;
+               }
+               
+               else {
+                   var quoteNext = PMREX.whileUnescaped(text, p + 1, text.charAt(p));
+                   // if quoteNext<0, break //unmatched quote
+                   if (quoteNext < 0) {break};
+
+                   text = "" + (text.slice(0, p)) + rep + (text.slice(quoteNext));
+                   p += rep.length;
+               };
+           };// end loop
+
+           return text;
        };
 
 
@@ -121,108 +227,3 @@
         //        return .length-1
 
 
-   // namespace Strings
-   var Strings={};
-
-       // method spaces(howMany)
-       Strings.spaces = function(howMany){
-           return Strings.repeat(" ", howMany);
-       };
-
-// repeat(str, howMany)
-
-       // shim method repeat(str,howMany)
-       if (!Strings.repeat)
-       Strings.repeat = function(str, howMany){
-
-           // if howMany<=0, return ""
-           if (howMany <= 0) {return ""};
-
-           var a = '';
-           // while howMany--
-           while(howMany--){
-               a = "" + a + str;
-           };// end loop
-
-           return a;
-       };
-
-
-// Checks if a name is Capitalized, unicode aware.
-// capitalized is like: /^[A-Z]+[$_a-z0-9]+$/ ,but unicode aware.
-
-       // method isCapitalized(text:string) returns boolean
-       Strings.isCapitalized = function(text){
-           // if text and text.charAt(0) is text.charAt(0).toUpperCase()
-           if (text && text.charAt(0) === text.charAt(0).toUpperCase()) {
-               // if text.length is 1, return true;
-               if (text.length === 1) {return true};
-
-               // for n=1 while n<text.length
-               for( var n=1; n < text.length; n++) {
-                   // if text.charAt(n) is text.charAt(n).toLowerCase(), return true
-                   if (text.charAt(n) === text.charAt(n).toLowerCase()) {return true};
-               };// end for n
-               
-           };
-
-           return false;
-       };
-
-// String.findMatchingPair(text,start,closer).
-// Note: text[start] MUST be the opener char
-
-       // method findMatchingPair(text:string, start, closer)
-       Strings.findMatchingPair = function(text, start, closer){
-           var opener = text.charAt(start);
-           var opencount = 1;
-           // for n=start+1 while n<text.length
-           for( var n=start + 1; n < text.length; n++) {
-               // if text.charAt(n) is closer and --opencount is 0
-               if (text.charAt(n) === closer && --opencount === 0) {
-                   return n;
-               }
-               
-               else if (text.charAt(n) === opener) {
-                   opencount++;
-               };
-           };// end for n
-
-           return -1;
-       };
-
-// String.replaceQuoted(text,rep)
-// replace every quoted string inside text, by rep
-
-       // method replaceQuoted(text:string, rep:string)
-       Strings.replaceQuoted = function(text, rep){
-
-           var p = 0;
-
-// look for first quote (single or double?),
-// loop until no quotes found
-
-           var anyQuote = '"' + "'";
-
-           // do while PMREX.findRanges(text,p,anyQuote) into p  < text.length
-           while((p=PMREX.findRanges(text, p, anyQuote)) < text.length){
-
-               // if text.slice(p,p+3) is '"""' //ignore triple quotes (valid token)
-               if (text.slice(p, p + 3) === '"""') { //ignore triple quotes (valid token)
-                   p += 3;
-               }
-               
-               else {
-                   var quoteNext = PMREX.whileUnescaped(text, p + 1, text.charAt(p));
-                   // if quoteNext<0, break //unmatched quote
-                   if (quoteNext < 0) {break};
-
-                   text = "" + (text.slice(0, p)) + rep + (text.slice(quoteNext));
-                   p += rep.length;
-               };
-           };// end loop
-
-           return text;
-       };
-
-module.exports=Strings;

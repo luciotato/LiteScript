@@ -411,6 +411,7 @@ b.3) "any" default type for vars
         addBuiltInObject 'Date' 
         addBuiltInObject 'RegExp'
         addBuiltInObject 'JSON'
+        addBuiltInObject 'Buffer'
         var ErrProto = addBuiltInObject('Error')
         ErrProto.addMember 'stack'
         ErrProto.addMember 'code'

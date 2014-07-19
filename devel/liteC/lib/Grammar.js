@@ -2807,8 +2807,8 @@
 
 // Control: class names should be Capitalized, except: jQuery
 
-       // if not .lexer.interfaceMode and not Strings.isCapitalized(.name)
-       if (!(this.lexer.interfaceMode) && !(Strings.isCapitalized(this.name))) {
+       // if not .lexer.interfaceMode and not String.isCapitalized(.name)
+       if (!(this.lexer.interfaceMode) && !(String.isCapitalized(this.name))) {
            this.lexer.sayErr("class names should be Capitalized: class " + this.name);
        };
 

@@ -237,10 +237,6 @@ example (`arguments` pseudo-array): `'lite' not in arguments` -> `Array.prototyp
         if .name is 'in'
             .out .right,".indexOf(",.left,")", .negated? "===-1" : ">=0"
 
-fix when used on JS built-in array-like `arguments`
-
-            .lexer.out.currLine = .lexer.out.currLine.replace(/\barguments.indexOf\(/,'Array.prototype.slice.call(arguments).indexOf(')
-
 2) *'has property'* operator, requires swapping left and right operands and to use js: `in`
 
         else if .name is 'has property'

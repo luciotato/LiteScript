@@ -236,7 +236,7 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <developmentMode>6</developmentMode>
+          <developmentMode>5</developmentMode>
           <standard>3</standard>
           <preprocessorList>
             <Elem>NDEBUG</Elem>
