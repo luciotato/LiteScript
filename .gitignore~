@@ -2,11 +2,11 @@
 *.sublime-workspace
 .SyncID
 .SyncIgnore
-.directory
 
 # This project
 old/
 out/
+*/generated/*
 debug.log
 *.o
-
+.directory

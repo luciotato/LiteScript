@@ -1,1 +1,0 @@
--v 2 -D PROD_C -compile litec -o ../liteC/Ctest/generated
