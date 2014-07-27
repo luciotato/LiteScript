@@ -24,15 +24,15 @@
       </nativedebugger>
       <runprofile version="9">
         <runcommandpicklist>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"  -debug ../../../source-v0.8/litec -o lite-out -v 2 -D PROD_C -D FROM_C 2>error.log</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"  test -o lite-out -v 2 -D PROD_C -D FROM_C 2>error.log</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source-v0.8/litec -o lite-out -v 2 -D PROD_C -D FROM_C 2>error.log</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source-v0.8/litec -o lite-out -v 1 -D PROD_C -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source-v0.8/litec -o lite-out -v 2 -D PROD_C -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../../source/v0.8/c_lite -o lite-out -v 2 -D PROD_C -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../../../source/v0.8/c_lite -o lite-out -v 2 -D PROD_C -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../../../source/v0.8/c_lite -o ../../../../out/generated/byv8c/c/lite-to-c -v 2 -D PROD_C -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../../../source/v0.8/c_lite -o ../../../../out/generated/byv08c/c/lite-to-c -v 2 -D PROD_C -D FROM_C</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../../../source/v0.8/c_lite -o ../../../../out/byv08c/c/lite-to-c/generated -v 2 -D PROD_C -D FROM_C -debug</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../../../source/v0.8/c_lite -o ../../../../out/byv08c/c/lite-to-c/generated -v 2 -D PROD_C -D FROM_C -debug 2>error.log</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../../../source/v0.8/c_lite -o ../../../../out/byv08c/c/lite-to-c/generated -v 2 -D PROD_C -D FROM_C </runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../../../source/v0.8/c_lite -o ../../../../out/byv08c/c/lite-to-c/generated -v 2 -D PROD_C -D FROM_C</runcommandpicklistitem>
         </runcommandpicklist>
         <runcommand>"${OUTPUT_PATH}"   ../../../../../source/v0.8/c_lite -o ../../../../out/byv08c/c/lite-to-c/generated -v 2 -D PROD_C -D FROM_C</runcommand>

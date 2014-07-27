@@ -205,32 +205,57 @@
             //var anyQuote = '"' & "'"
             var anyQuote = '"' + "'";
 
-            //do while PMREX.findRanges(text,p,anyQuote) into p  < text.length
-            while((p=PMREX.findRanges(text, p, anyQuote)) < text.length){
+            //var resultText=""
+            var resultText = "";
 
-                //if text.slice(p,p+3) is '"""' //ignore triple quotes (valid token)
-                if (text.slice(p, p + 3) === '"""') { //ignore triple quotes (valid token)
-                    //p+=3
-                    p += 3;
+            //do 
+            do{
+                //var preQuotes=PMREX.untilRanges(text,anyQuote) 
+                var preQuotes = PMREX.untilRanges(text, anyQuote);
+                
+                //resultText &= preQuotes
+                resultText += preQuotes;
+                //text = text.slice(preQuotes.length)
+                text = text.slice(preQuotes.length);
+                //if no text, break // all text processed|no quotes found
+                if (!text) {break};
+
+                //if text.slice(0,3) is '"""' //ignore triple quotes (valid token)
+                if (text.slice(0, 3) === '"""') { //ignore triple quotes (valid token)
+                    //resultText &= text.slice(0,3)
+                    resultText += text.slice(0, 3);
+                    //text = text.slice(3)
+                    text = text.slice(3);
                 }
                 else {
                 //else
-                    //var quoteNext = PMREX.whileUnescaped(text,p+1,text.charAt(p))
-                    var quoteNext = PMREX.whileUnescaped(text, p + 1, text.charAt(p));
-                    //if quoteNext<0, break //unmatched quote 
-                    if (quoteNext < 0) {break};
 
-                    //text = "#{text.slice(0,p)}#{rep}#{text.slice(quoteNext)}"
-                    text = '' + (text.slice(0, p)) + rep + (text.slice(quoteNext));
-                    //p+=rep.length
-                    p += rep.length;
+                    //var quotedContent
+                    var quotedContent = undefined;
+                    
+                    //try // accept malformed quoted chunks (do not replace)
+                    try{
+
+                         //quotedContent = PMREX.quotedContent(text)
+                         quotedContent = PMREX.quotedContent(text);
+                         //text = text.slice(1+quotedContent.length+1)
+                         text = text.slice(1 + quotedContent.length + 1);
+                    
+                    }catch(err){
+
+                    //catch err // if malformed - closing quote not found
+                        //resultText &= text.slice(0,1) //keep quote
+                        resultText += text.slice(0, 1); //keep quote
+                        //text = text.slice(1) //only remove quote
+                        text = text.slice(1); //only remove quote
+                    };
                 };
-            };// end loop
+            } while (!!text);// end loop
 
-            //loop
+            //loop until no text
             
-            //return text
-            return text;
+            //return resultText
+            return resultText;
         };
 
 

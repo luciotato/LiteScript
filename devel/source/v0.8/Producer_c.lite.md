@@ -204,7 +204,7 @@ _dispatcher.c contains main function
         .out 
             "\n\n\n//-------------------------------",NL
             "int main(int argc, char** argv) {",NL
-            '    LiteC_init(argc,argv);',NL
+            '    LiteC_init( #{allClasses.length}, argc,argv);',NL
             '    LiteC_addMethodSymbols( #{allMethodNames.size}, _ADD_VERBS);',NL
             '    LiteC_addPropSymbols( #{allPropertyNames.size}, _ADD_THINGS);',NL
             
@@ -677,7 +677,7 @@ static definition info for each class: list of _METHODS and _PROPS
         .out 
             NL,"{0,0}}; //method jmp table initializer end mark",NL
             NL
-            "static _posTableItem_t ",c,"_PROPS[] = {",NL
+            "static propIndex_t ",c,"_PROPS[] = {",NL
             {CSL:propList, post:'\n    '}
             "};",NL,NL
 
@@ -691,7 +691,7 @@ static definition info for each class: list of _METHODS and _PROPS
         var superName = .nameDecl.superDecl? .nameDecl.superDecl.getComposedName() else 'Object' 
 
         .out 
-            '    #{c} =_newClass("#{c}", #{c}__init, sizeof(struct #{c}_s), #{superName}.value.classINFOptr);',NL
+            '    #{c} =_newClass("#{c}", #{c}__init, sizeof(struct #{c}_s), #{superName});',NL
             '    _declareMethods(#{c}, #{c}_METHODS);',NL
             '    _declareProps(#{c}, #{c}_PROPS, sizeof #{c}_PROPS);',NL,NL
 
@@ -1028,7 +1028,7 @@ or the only Operand of a unary oper.
             else if .produceType is 'Number' and (strValue.length is 3 or strValue.charAt(1) is '/' and strValue.length is 4) //a single char (maybe escaped)
                 .out "'", strValue.slice(1,-1), "'" // out as C 'char' (C char = byte, a numeric value)
             else
-                .out "any_str(",strValue,")"
+                .out "any_LTR(",strValue,")"
 
             .out .accessors
 

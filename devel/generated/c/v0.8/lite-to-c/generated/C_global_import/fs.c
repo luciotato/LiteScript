@@ -16,7 +16,7 @@
         
         {0,0}}; //method jmp table initializer end mark
         
-        static _posTableItem_t fs_Stat_PROPS[] = {
+        static propIndex_t fs_Stat_PROPS[] = {
         size_
     , mtime_
     , mode_
@@ -66,7 +66,7 @@
     
     //------------------
     void fs__namespaceInit(void){
-            fs_Stat =_newClass("fs_Stat", fs_Stat__init, sizeof(struct fs_Stat_s), Object.value.classINFOptr);
+            fs_Stat =_newClass("fs_Stat", fs_Stat__init, sizeof(struct fs_Stat_s), Object);
             _declareMethods(fs_Stat, fs_Stat_METHODS);
             _declareProps(fs_Stat, fs_Stat_PROPS, sizeof fs_Stat_PROPS);
         
@@ -75,7 +75,7 @@
 
 //-------------------------
 void fs__moduleInit(void){
-            fs_Stat =_newClass("fs_Stat", fs_Stat__init, sizeof(struct fs_Stat_s), Object.value.classINFOptr);
+            fs_Stat =_newClass("fs_Stat", fs_Stat__init, sizeof(struct fs_Stat_s), Object);
             _declareMethods(fs_Stat, fs_Stat_METHODS);
             _declareProps(fs_Stat, fs_Stat_PROPS, sizeof fs_Stat_PROPS);
         

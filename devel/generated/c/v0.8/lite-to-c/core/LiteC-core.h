@@ -10,54 +10,73 @@
 #include "any.h"
 #include "exceptions.h"
 #include "PMREX-native.h"
-
-
 #include <unistd.h> // process.cwd
 
-    extern any* watchedPropAddr;
-
-    extern any any_EMPTY_STR;
-
     //type for symbols. Symbols are negative (methods) and positive(properties). Must be intX.
-    typedef int32_t symbol_t;
+    typedef int16_t symbol_t; // max 32768 methods & 32768 props. Elevate to int32_t if needed
+    typedef uint16_t propIndex_t;
+    #define INVALID_PROP_POS (propIndex_t)0xFFFF // 0xFFFF means "this instance have no such property"
+    // relative pos of property from instance base is uint16_t.
+    // A instance can have 2^16-1 properties (65,535)
+    // note: keep both the same byte size. assert(sizeof(symbol_t)==sizeof(_propIndex_t));
 
-    extern void fail_with(str msg); // throw(_newErr(_str_clone(msg)))
+    // typedef for class's jmp table, and prop instance relative position table
+    typedef function_ptr* jmpTable_t; // _jmpTable: array of function pointers (method code)
+    typedef propIndex_t* posTable_t; // _posTable: array of uint16 (relative pos from instance base)
+    #define TABLE_LENGTH(t) *((propIndex_t*)t) //first (propIndex_t) in jmpTable and posTable stores table length
 
-    // LiteC_init
-    extern void LiteC_init(int argc, char** CharPtrPtrargv);
-    extern void LiteC_finish();
-    extern void LiteC_addMethodSymbols(int addedMethods, str* _verb_table);
-    extern void LiteC_addPropSymbols(int addedProps, str* _things_table);
+//static common vars
 
-    extern function_ptr LiteC_registerShim(any anyClass, symbol_t symbol, function_ptr fn);
+    extern any
+        any_EMPTY_STR
+        ,any_COMMA, any_QUOTE, any_SINGLE_QUOTE, any_QUOTE_COLON
+        ,any_OPEN_BRACKET, any_CLOSE_BRACKET
+        ,any_OPEN_CURLY, any_CLOSE_CURLY
+    ;
+
+// core instances -------------------
+    extern any null, undefined, true, false;
+
+    #define any_LTR(S) (any){.class=String_inx, .res=0, .len=sizeof(S)-1, .value.str=S}
+    #define any_slice(PTR,BYTELEN) (any){.class=String_inx, .res=0, .len=BYTELEN, .value.str=PTR}
+    #define any_CStr(CSTR) any_slice(CSTR,strlen(CSTR))
+    #define any_number(S) (any){.class=Number_inx, .res=0, .len=0, .value.number=S}
+    #define any_func(S) (any){.class=Function_inx, .res=0, .len=0, .value.ptr=(function_ptr)S}
+    #define any_class(CLASS_INX) (any){.class=Class_inx, .res=0, .len=0, .value.ptr=&CLASSES[CLASS_INX]}
+
+    //by ditching null-terminated strings, .slice becomes vert unexpensive, just a #define
+    #define _slicedTo(ANY,TO) (any){.class=String_inx, .res=0, .len=TO, .value.str=ANY.value.str}
+    #define _slicedFrom(ANY,FROM) (any){.class=String_inx, .res=0, .len=ANY.len-FROM, .value.str=ANY.value.str+FROM}
 
     // _symbol names
     extern symbol_t _allMethodsLength, _allPropsLength, _symbolTableLength;
-    extern str* _symbolTable;
-    extern str* _symbol; // table "center", symbol:0, prop "constructor"
+    extern any * _symbolTable;
+    extern any * _symbol; // table "center", symbol:0, String:"constructor"
 
-    // symbol core functions (also specific on Object_)
-    extern int _getSymbol(str name);
+    // LiteC_init
+    extern void LiteC_init(int classesCount, int argc, char** CharPtrPtrargv);
+    extern void LiteC_finish();
+    extern void LiteC_addMethodSymbols(int addedMethods, str* _verb_table);
+    extern void LiteC_addPropSymbols(int addedProps, str* _things_table);
+    extern function_ptr LiteC_registerShim(any anyClass, symbol_t symbol, function_ptr fn);
+
+    // symbol core functions
+    extern symbol_t _tryGetSymbol(any name);
     extern int _hasProperty(any this, any name);
     extern any _getProperty(any this, symbol_t symbol );
-    extern any _getPropertyNameAtIndex(any this, int index);
+    extern any _getPropertyNameAtIndex(any this, propIndex_t index);
 
-    //function LiteCore_getSymbol(symbolName:string) returns number
     // get symbol (number) from Symbol name (string)
+    // function LiteCore_getSymbol(symbolName:string) returns number
     extern any LiteCore_getSymbol(DEFAULT_ARGUMENTS);
 
-    //function LiteCore_getSymbolName(symbol:number) returns string
     // get symbol name from Symbol (number)
+    // function LiteCore_getSymbolName(symbol:number) returns string
     extern any LiteCore_getSymbolName(DEFAULT_ARGUMENTS);
-
-    // typedef for class's Jjmp table, and prop instance relative position table
-    typedef function_ptr* _jmpTable; // _jmpTable: array of function pointers (method code)
-    typedef _posTableItem_t* _posTable; // _posTable: array of uint16 (relative pos from instance base)
-    #define TABLE_LENGTH(t) *((uint16_t*)&(t[0])) //first item in jmpTable and posTable is table length
 
     // helper struct to declare class methods
     typedef struct _methodInfoItem {
-        int method;
+        symbol_t method;
         function_ptr function;
     } * _methodInfoItemPtr ;
     typedef struct _methodInfoItem _methodInfoArr[];
@@ -65,7 +84,7 @@
     // helper struct to declare class properties
     struct _propertyInfoItem {
         symbol_t symbol;
-        _posTableItem_t pos;
+        propIndex_t pos;
     };
     typedef struct _propertyInfoItem _propertyInfoArr[];
 
@@ -144,11 +163,9 @@
 
 //-- access props, call methods
 
-    extern function_ptr __classMethodNat(symbol_t symbol, Class_ptr class);
+    extern function_ptr __classInxMethod(symbol_t symbol, class_t class);
     extern function_ptr __classMethod(symbol_t symbol, any anyClass);
     extern any __classMethodFunc(symbol_t symbol, any anyClass);
-
-    extern any Array_tryGet(DEFAULT_ARGUMENTS);
 
     #define NO_ARGS 0,NULL
     #define ARG1(A1) 1,(any_arr){A1}
@@ -159,90 +176,84 @@
     void _default(any* variable,any value);
 
 //-------
-// Object
-
-    // serves as root for the class hierarchy
-    extern any Object;
-
-//-------
-// ClassInfo
+// ClassInfo struct
 
     typedef struct Class_s * Class_ptr;
     typedef struct Class_s {
         any     name;         // class name
         any     initInstance; // :Function, __init function
         //private-native
-        size_t       instanceSize; // sizeof struct holding instance props
-        Class_ptr    super;        // super class
-        _jmpTable    method;       // jmp table for the class
-        _posTable    pos;        // relative property pos table for the class's instances
+        size_t      instanceSize; // sizeof struct holding instance props
+        len_t       declaredPropsCount; //set at declareProps
+        class_t     classInx;     // index of this class in CLASSES[]
+        class_t     super;        // index of super class in CLASSES[]
+        jmpTable_t  method;       // jmp table for the class. method[-symbol] is function_ptr
+        posTable_t  pos;          // relative property pos table for the class's instances
+                                  //  .value.prop[pos[symbol]] is value for property named symbol
     } Class_s;
-    extern any Class;
 
-// core Classes with _CLASSINFO -------------------
-    extern struct Class_s Object_CLASSINFO;
-    extern struct Class_s Class_CLASSINFO;
-    extern struct Class_s Null_CLASSINFO;
-    extern struct Class_s Undefined_CLASSINFO;
-    extern struct Class_s String_CLASSINFO;
-    extern struct Class_s Number_CLASSINFO;
-    extern struct Class_s Function_CLASSINFO;
+/** known core classes (indexes into CLASSES[])
+ *
+ * ORDER IS IMPORTANT:
+ * ------------------
+ * Undefined_inx should be 0, so memset(0) means fill with "undefined" values.
+ * AnyBoxedValue_inx = 1, first to be manually initialized - root for all other non-object values.
+ * Object_inx = 2, second to be manually initialized - root for all object values (classes with instances)
+ * Class_inx = 3, third to be manually initialized - type for vars holding a Class reference.
+ *
+ * In JS Classess & Functions are the same object.
+ * All Classes are Functionn & all Functions are Classes.
+ *
+ * In LiteCore-C, Classes & Functions are different objects:
+ *
+ *      - var fn:Function. fn is a reference to executable code.
+ *
+ *      - var cl:Class. cl is a reference to a Class_s (an index into CLASSES[]).
+ *
+ */
 
-    extern struct Class_s Error_CLASSINFO;
-    extern struct Class_s Array_CLASSINFO;
-    extern struct Class_s Map_CLASSINFO;
-    extern struct Class_s NameValuePair_CLASSINFO;
+    enum _KNOWN_CLASSES {
+        Undefined_inx=0,
+        AnyBoxedValue_inx=1,
+        Object_inx=2,
+        Class_inx=3,
+        Null_inx, NaN_inx, Infinity_inx,
+        Number_inx, Boolean_inx, Date_inx,
+        String_inx, Function_inx,
+        Array_inx, Map_inx, NameValuePair_inx,
+        Error_inx, Buffer_inx, FileDescriptor_inx,
 
-    extern struct Class_s Buffer_CLASSINFO;
-    extern struct Class_s FileDescriptor_CLASSINFO;
+    _LAST_CORE_CLASS //end mark
+    };
 
-// core Class objects -------------------
-    //extern any Global;
-    extern any Null, Undefined, String, Number, Date, NaN, Infinity;
-    extern any Object, Class, Function, Error, Array, Map, NameValuePair;
-    extern any Buffer, FileDescriptor;
+// core classes array: CLASSES-------------------
 
-// core instances -------------------
-    //extern any global;
-    extern any null, undefined, true, false;
+    extern len_t CLASSES_allocd;
+    extern Class_s* CLASSES; //array of registered classes
+    extern len_t CLASSES_len;
 
-    #define any_str(S) (any){&String_CLASSINFO,.value.str=S} // Note: "" is NOT FALSEY. (add: .value.str=(S[0]=='\0'?NULL:S))
-    //extern any any_number(double S);
-    #define any_number(S) (any){&Number_CLASSINFO,.value.number=S}
-    #define any_func(S) (any){&Function_CLASSINFO,.value.ptr=(function_ptr)S}
-    #define any_class(S) (any){&Class_CLASSINFO,.value.classINFOptr=S}
-
+// core classes.  Foo = (any){class=Class_inx, .res=0, .value.class = Foo_inx}
+    extern any
+        Undefined, Null, NaN, Infinity,
+        Object, Class, Function,
+        String, Number, Date,
+        Array, Map, NameValuePair,
+        Error, Buffer, FileDescriptor;
 
 //-------
-// generic instance (defined to help debugging)
-    typedef struct __instance_s {
-        any     prop0;
-        any     prop1;
-        any     prop2;
-        any     prop3;
-        any     prop4;
-        any     prop5;
-        any     prop6;
-        any     prop7;
-        any     prop8;
-        any     prop9;
-        any     propA;
-        any     propB;
-        any     propC;
-        any     propD;
-        any     propE;
-        any     propF;
-    } __instance_s;
+    // -- ConcatdSlices --
+    // ConcatdSlices is an internal possible state of a String,
+    // which is composed by an array of slices. By using Concatd
+    // no memory is moved to concat strings.
+    // A continuous string with NULL terminator can be requested by _toCString()
+    // ConcatdSlices are also "commited" to a continuous string before string operations
+    // like indexOf()
+    typedef struct ConcatdItem_s * ConcatdItem_ptr;
+    typedef struct ConcatdItem_s {
+        str str;
+        len_t byteLen ;
+    } ConcatdItem_s;
 
-    // Error
-    typedef struct Error_s * Error_ptr;
-    typedef struct Error_s {
-        any name;
-        any message;
-        any stack;
-        any code;
-    } Error_s;
-    extern any Error;
 
     //Array
     typedef struct Array_s * Array_ptr;
@@ -263,13 +274,23 @@
 
     //Map
     typedef struct Map_s * Map_ptr;
-    typedef struct Map_s { // extends Array
+    typedef struct Map_s {
         any size;
         //private-native
-        Array_s array; // Array of NameValuePair
+        Array_s array; // Array of NameValuePairs
         int64_t current; //last-found | current nvp index | -1
     } Map_s;
     extern any Map; //class object
+
+    // Error
+    typedef struct Error_s * Error_ptr;
+    typedef struct Error_s {
+        any name;
+        any message;
+        any stack;
+        any code;
+    } Error_s;
+    extern any Error;
 
     //Buffer
     typedef struct Buffer_s * Buffer_ptr;
@@ -282,24 +303,59 @@
     extern any Buffer; //class object
 
 //------------------------
-// Register Methods & Props for a class
+// Access methods and properties
+// direct, fast access if NDEBUG
+// bound-checked access for debug mode
 
-    extern void _declareMethods(any anyClass, _methodInfoArr infoArr);
-    extern void _declareProps(any anyClass, _posTable posTable, size_t posTable_byteSize);
+    #ifdef NDEBUG
+        #define METHOD(symbol,this) (CLASSES[this.class].method[-symbol])
+        #define PROP(symbol,this) this.value.prop[CLASSES[this.class].pos[symbol]]
+        #define ITEM(index,anyArr) anyArr.value.arr->item[(len_t)index]
+        //#define ITEM_PROP(index,symbol,this) this.value.prop[this.class.pos[symbol]].value.arr[index]
+        #define MAPITEM(index,this) ((NameValuePair_ptr)((Map_ptr)this.value.ptr)->array.item[index].value.ptr)
+    #else
+        // access a method on the instance
+        #define METHOD(symbol,this) __method(symbol,this)
+        extern function_ptr __method(symbol_t symbol, any this);
+        // access a property of the instance
+        #define PROP(prop,this) (*(__prop(prop,this,__FILE__, __LINE__)))
+        extern any* __prop(symbol_t prop, any this, str file, int line);
+        // access arr[index]. Access item[index]
+        #define ITEM(index,this) (*(__item(index,this,__FILE__, __LINE__)))
+        extern any* __item(int64_t index, any this, str file, int line);
+        // access this.arr[index]. Access item[index] of a given property (type Array)
+        //#define ITEM_PROP(index,prop,this) (*(__item(index,prop,this)))
+        //extern any* __item2(int index, int prop, any this, str file, int line);
+        // access map.array[index]. get a NVP by index, used to implement for each in map, w/o iterators
+        #define MAPITEM(index,this) _map_getNVP(index,this,__FILE__, __LINE__)
+        extern NameValuePair_ptr _map_getNVP(int64_t index, any this, str file, int line);
+        #include <signal.h>
+        extern void debug_abort(str file, int line, any message);
+    #endif
+
+    #define MAPSIZE(ANYMAP) PROP(size_,ANYMAP).value.number
+
+    extern any __call(symbol_t symbol, DEFAULT_ARGUMENTS);
+    extern any __apply(any anyFunc, DEFAULT_ARGUMENTS);
+    extern any __applyArr(any anyFunc, any this, any anyArr);
+
+    #define CALL(symbol,this) __call(symbol,this,0,NULL)
+    #define CALL0(symbol,this) __call(symbol,this,0,NULL)
+    #define CALL1(symbol,this,A1) __call(symbol,this,1,(any_arr){A1})
 
 //------------------------
 // export helper functions
-// new - mem_alloc mem space
-// and init Object properties (first part of memory space)
+// new() - mem_alloc mem space
+//         and init Object properties (first part of memory space)
 
     extern any new(any class, len_t argc, any* arguments);
 
-    extern any _newClass ( str className, __initFn_ptr initFn, uint64_t instanceSize, Class_ptr superClass);
+    extern any _newClass ( str className, __initFn_ptr initFn, len_t instanceSize, any super);
 
     extern any _newFromObject ( any anyClass, len_t argc, any* arguments);
 
-    extern any _newStringSize(size_t memSize);
-    extern any _newErr(str message);
+    extern any _newStringSize(len_t memSize);
+    extern any _newErr(any msg);
 
     extern any _newArray(len_t initialLen, any* optionalValues);
     extern any _newArrayFromCharPtrPtr(len_t argc, char** argv);
@@ -310,10 +366,8 @@
     extern bool _instanceof(any this, any class);
     extern bool __is(any a,any b);  //js triple-equal, "==="
     extern bool __in(any needle, len_t haystackLength, any* haystackItem);
+    extern int __compareStrings(any strA, any strB);  //js triple-equal, "==="
 
-    extern any _newDate(time_t value);
-
-    extern str _anyToStr(any this);
     extern int _anyToBool(any a);
     extern int64_t _anyToInt64(any a);
     extern double _anyToNumber(any a);
@@ -323,59 +377,21 @@
 
     extern any _concatAny(len_t argc,any arg,...);
 
-    extern any _arrayJoin(str initial, len_t argc, any* arguments, str separ);
+    extern any _arrayJoin(any initial, len_t argc, any* item, any separ);
+
+    extern any _newDate(time_t value);
 
     #ifndef NDEBUG
-        #define assert_args(...) _assert_args(this,argc,arguments,__FILE__,__LINE__,__VA_ARGS__)
-        void _assert_args(DEFAULT_ARGUMENTS, str file, int line, int required, int total, any anyClass, ...);
+        //single fixed arg
+        #define assert_arg(CLASS) assert(argc==1 && arguments[0].class==CLASS.value.classPtr->classInx)
+        //multiple args
+        typedef struct _assert_args_options { int req; int max; int control;} _assert_args_options;
+        #define assert_args(...) _assert_args(this,argc,arguments,__FILE__,__LINE__, (_assert_args_options) __VA_ARGS__)
+        void _assert_args(DEFAULT_ARGUMENTS, str file,int line, _assert_args_options options, any anyClass, ...);
     #else
+        #define assert_arg(CLASS) (__ASSERT_VOID_CAST (0))
         #define assert_args(...) (__ASSERT_VOID_CAST (0))
     #endif
-
-    #define MAPSIZE(this) ((Map_ptr)this.value.ptr)->array.length
-    #ifndef NDEBUG
-        #include <signal.h>
-        extern void debug_fail(str file, int line, str message);
-        // access a method on the instance
-        #define METHOD(symbol,this) __method(symbol,this)
-        extern function_ptr __method(symbol_t symbol, any this);
-        // access a property of the instance
-        #define PROP(prop,this) (*(__prop(prop,this,__FILE__, __LINE__)))
-        extern any* __prop(int prop, any this, str file, int line);
-        // access arr[index]. Access item[index]
-        #define ITEM(index,this) (*(__item(index,this,__FILE__, __LINE__)))
-        extern any* __item(int64_t index, any this, str file, int line);
-        // access this.arr[index]. Access item[index] of a given property (type Array)
-        #define ITEM_PROP(index,prop,this) (*(__item(index,prop,this)))
-        extern any* __item2(int index, int prop, any this, str file, int line);
-        // access map.array[index]. get a NVP by index, used to implement for each in map, w/o iterators
-        #define MAPITEM(index,this) _map_getNVP(index,this,__FILE__, __LINE__)
-        extern NameValuePair_ptr _map_getNVP(int64_t index, any this, str file, int line);
-    #else
-        #define METHOD(symbol,this) (this.class->method[-symbol])
-        #define PROP(symbol,this) this.value.prop[this.class->pos[symbol]]
-        #define ITEM(index,anyArr) anyArr.value.arr->item[(len_t)index]
-        #define ITEM_PROP(index,symbol,this) this.value.prop[this.class.pos[symbol]].value.arr[index]
-        #define MAPITEM(index,this) ((NameValuePair_ptr)((Map_ptr)this.value.ptr)->array.item[index].value.ptr)
-    #endif
-
-    //#ifndef NDEBUG
-    extern any __call(symbol_t symbol, DEFAULT_ARGUMENTS);
-    extern any __apply(any anyFunc, DEFAULT_ARGUMENTS);
-    extern any __applyArr(any anyFunc, any this, any anyArr);
-
-    #define CALL(symbol,this) __call(symbol,this,0,NULL)
-    #define CALL0(symbol,this) __call(symbol,this,0,NULL)
-    #define CALL1(symbol,this,A1) __call(symbol,this,1,(any_arr){A1})
-    /*#define CALL(symbol,this) __call(symbol,this,0,NULL)
-    #define CALL0(symbol,this) __call(symbol,this,0,NULL)
-    #define CALL1(symbol,this,A1) __call(symbol,this,1,(any_arr){A1})
-    #define CALL2(symbol,this,A1,A2) __call(symbol,this,2,(any_arr){A1,A2})
-    #define CALL3(symbol,this,A1,A2,A3) __call(symbol,this,3,(any_arr){A1,A2,A3})
-    #define CALL4(symbol,this,A1,A2,A3,A4) __call(symbol,this,4,(any_arr){A1,A2,A3,A4})
-     * */
-
-    extern str __concatToNULL(str first,...);
 
     extern Buffer_s _newBuffer();
     extern any Buffer_write(DEFAULT_ARGUMENTS);
@@ -390,7 +406,24 @@
     void _Buffer_add(Buffer_s * dbuf, any a);
     extern any _Buffer_toString (Buffer_s *dbuf);
 
-    extern str _concatToNULL(str first,...); // to compose critical failure messages. Cannot fail.
+    #define ERRAT(TEXT) _errMsg( #TEXT ": ", sizeof(#TEXT ": "),__FILE__, __LINE__)
+    extern void _errMsg(str message, len_t len, str file, int line);
+    #define ERRCSTR(PRE,STR,POST) _errMsgAddQuoted(STR,strlen(STR))
+    extern void _errMsgAdd(len_t len, str message);
+    #define ERRANY(ANY) _errMsgAddAny(ANY)
+    extern void _errMsgAddAny(any message);
+    #define THROW _errThrow();
+    extern void _errThrow();
+
+    //-- concatdSlices helpers
+    extern void _concatdSlicePush(any* c, str str, len_t len);
+    extern len_t _pushToConcatd(any* c, any toPush);
+    extern len_t _getConcatdCombinedSize(any s);
+    extern len_t _copyConcatd(any s, char* buf, len_t bufLen);
+    #define _FLATTEN(s) if(s.class==String_inx && s.res) s=_newCCompatString(s)
+    extern any _newCCompatString(any source);
+    void _toCStringCompatBuf(any s, str buf, len_t bufSize);
+    str _tempCString(any s);
 
 //------------------------
 // export core class methods
@@ -426,6 +459,9 @@
     extern any String_concat(DEFAULT_ARGUMENTS);
     extern any String_substr(DEFAULT_ARGUMENTS);
     extern any String_countSpaces(DEFAULT_ARGUMENTS);
+    extern any String_toLowerCase(DEFAULT_ARGUMENTS);
+    extern any String_toUpperCase(DEFAULT_ARGUMENTS);
+
     //String as namespace methods
     extern any String_spaces(DEFAULT_ARGUMENTS);
 
@@ -447,6 +483,10 @@
     extern any Array_slice(DEFAULT_ARGUMENTS);
     extern any Array_concat(DEFAULT_ARGUMENTS);
     extern any Array_join(DEFAULT_ARGUMENTS);
+    extern any Array_tryGet(DEFAULT_ARGUMENTS);
+
+    extern void _clearArrayItems(any* start, len_t count);
+    extern void _array_pushSlice(any this, any slice);
 
     extern void Map__init(DEFAULT_ARGUMENTS);
     extern any Map_newFromObject(DEFAULT_ARGUMENTS); //when called x = new Map.{a:1,b:2}
@@ -479,5 +519,56 @@
     extern any process_argv; // namespace process - node.js compat with core object process
     extern any process_cwd(DEFAULT_ARGUMENTS);
     extern any process_exit(DEFAULT_ARGUMENTS);
+
+    //out to stdout
+    extern void _out(any s);
+    extern void _outNewLine();
+    //out to stderr
+    extern void _outErr(any s);
+    extern void _outErrNewLine();
+    //out to a file
+    extern void _outFile(any s, FILE* file);
+    extern void _outNewLineFile(FILE* file);
+
+    //debug: out JSON_stringify(s) to stderr
+    #ifdef NDEBUG
+    #define _outDebug(s) (__ASSERT_VOID_CAST (0))
+    #else
+    void _outDebug(any s);
+    #endif
+
+    // fail with message
+    #define fail_with(LITERAL) throw(_newErr( any_LTR(LITERAL) ))
+
+    // concat in internal buffer - compose crtitical msgs
+    //extern str _concatToNULL(str first,...);
+
+    //debug helper
+    extern any* watchedPropAddr;
+    // generic instance (defined to help debugging)
+    typedef struct __instance_s {
+        any     prop0;
+        any     prop1;
+        any     prop2;
+        any     prop3;
+        any     prop4;
+        any     prop5;
+        any     prop6;
+        any     prop7;
+        any     prop8;
+        any     prop9;
+        any     propA;
+        any     propB;
+        any     propC;
+        any     propD;
+        any     propE;
+        any     propF;
+    } __instance_s;
+
+//------------------------
+// Register Methods & Props for a class
+
+    extern void _declareMethods(any anyClass, _methodInfoArr infoArr);
+    extern void _declareProps(any anyClass, posTable_t posTable, size_t posTable_byteSize);
 
 # endif

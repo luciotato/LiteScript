@@ -40,7 +40,7 @@ int e4c_newFrame(str file, int line){
 	if(e4c.activeFrame >= E4C_MAX_FRAMES) fatal("Too many nested `try` blocks.");
 	e4c.activeFrame++;
 
-    if (!file) file=EMPTY_STR;
+    if (!file) file="(no file)";
 	e4c.frame[e4c.activeFrame].file = file;
 	e4c.frame[e4c.activeFrame].line= line;
 	e4c.frame[e4c.activeFrame].stage = e4c_beginning;
@@ -102,7 +102,14 @@ void e4c_throw( str file, int line, any error){
     e4c.exception.pending = TRUE; //exception is pending
 
     if (!_instanceof(error,Error)) {
-        fatal(_concatToNULL(file,":",_int64ToStr(line)," thrown object should be Error",NULL));
+        fprintf(stderr, "\n%s:%d:1 thrown object should be instanceof Error\n",file,line);
+        fprintf(stderr, "object thrown is class: [%s]\n",CLASSES[error.class].name.value.str);
+        if(error.class==String_inx){
+            _outErr(error);
+            _outErrNewLine();
+        }
+        fflush(stderr);
+        abort();
     }
 
     while(TRUE){ //search for a frame available to catch the exception
@@ -145,12 +152,12 @@ void e4c_throw( str file, int line, any error){
 
 
 void e4c_printLastErr(void){
-	if(fprintf(stderr
-                , "\n\n%s:%d:1 exception thrown\n%s\n"
-                , e4c.exception.file
-                , e4c.exception.line
-                , ((Error_ptr)e4c.exception.error.value.ptr)->message.value.str
-               ) > 0)
-                        (void)fflush(stderr);
+	fprintf(stderr
+        , "\n\n%s:%d:1 exception thrown\n"
+        , e4c.exception.file
+        , e4c.exception.line);
+    _outErr(e4c.exception.error);
+    _outErrNewLine();
+    fflush(stderr);
 }
 

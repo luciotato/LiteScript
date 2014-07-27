@@ -11,7 +11,7 @@
     
     {0,0}}; //method jmp table initializer end mark
     
-    static _posTableItem_t ControlledError_PROPS[] = {
+    static propIndex_t ControlledError_PROPS[] = {
     soft_
     };
     
@@ -40,7 +40,7 @@
 
 //-------------------------
 void ControlledError__moduleInit(void){
-        ControlledError =_newClass("ControlledError", ControlledError__init, sizeof(struct ControlledError_s), Error.value.classINFOptr);
+        ControlledError =_newClass("ControlledError", ControlledError__init, sizeof(struct ControlledError_s), Error);
         _declareMethods(ControlledError, ControlledError_METHODS);
         _declareProps(ControlledError, ControlledError_PROPS, sizeof ControlledError_PROPS);
     

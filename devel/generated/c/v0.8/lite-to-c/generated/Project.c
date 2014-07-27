@@ -23,7 +23,7 @@
     
     {0,0}}; //method jmp table initializer end mark
     
-    static _posTableItem_t Project_PROPS[] = {
+    static propIndex_t Project_PROPS[] = {
     options_
     , name_
     , moduleCache_
@@ -123,10 +123,10 @@
 //when imported|required is only compiled once and then cached.
     
         //console.time 'Init Project'
-        console_time(undefined,1,(any_arr){any_str("Init Project")});
+        console_time(undefined,1,(any_arr){any_LTR("Init Project")});
 
         //.name = 'Project'
-        PROP(name_,this) = any_str("Project");
+        PROP(name_,this) = any_LTR("Project");
 
         //options.now = new Date()
         PROP(now_,options) = new(Date,0,NULL);
@@ -146,7 +146,7 @@
         //options.projectDir = tempFileInfo.dir
         PROP(projectDir_,options) = PROP(dir_,tempFileInfo);
         //options.mainModuleName = './#{tempFileInfo.base}'
-        PROP(mainModuleName_,options) = _concatAny(2,any_str("./"), PROP(base_,tempFileInfo));
+        PROP(mainModuleName_,options) = _concatAny(2,any_LTR("./"), PROP(base_,tempFileInfo));
         //options.outDir = Environment.resolvePath(options.outDir)
         PROP(outDir_,options) = Environment_resolvePath(undefined,1,(any_arr){PROP(outDir_,options)});
 
@@ -154,11 +154,11 @@
         Environment_setBaseInfo(undefined,3,(any_arr){PROP(projectDir_,options), PROP(outDir_,options), PROP(target_,options)});
 
         //logger.info 'Project Dir:',.options.projectDir
-        logger_info(undefined,2,(any_arr){any_str("Project Dir:"), PROP(projectDir_,PROP(options_,this))});
+        logger_info(undefined,2,(any_arr){any_LTR("Project Dir:"), PROP(projectDir_,PROP(options_,this))});
         //logger.info 'Main Module:',.options.mainModuleName
-        logger_info(undefined,2,(any_arr){any_str("Main Module:"), PROP(mainModuleName_,PROP(options_,this))});
+        logger_info(undefined,2,(any_arr){any_LTR("Main Module:"), PROP(mainModuleName_,PROP(options_,this))});
         //logger.info 'Out Dir:',.options.outDir
-        logger_info(undefined,2,(any_arr){any_str("Out Dir:"), PROP(outDir_,PROP(options_,this))});
+        logger_info(undefined,2,(any_arr){any_LTR("Out Dir:"), PROP(outDir_,PROP(options_,this))});
 
 //compiler vars, to use at conditional compilation
         
@@ -189,16 +189,16 @@
 
         ////ifdef TARGET_C
         //.compilerVars.set 'ENV_C', new Names.Declaration("ENV_C")
-        __call(set_,PROP(compilerVars_,this),2,(any_arr){any_str("ENV_C"), new(Names_Declaration,1,(any_arr){any_str("ENV_C")})});
+        __call(set_,PROP(compilerVars_,this),2,(any_arr){any_LTR("ENV_C"), new(Names_Declaration,1,(any_arr){any_LTR("ENV_C")})});
         ////endif
 
         //var targetDef = 'TARGET_#{options.target.toUpperCase()}'
-        var targetDef = _concatAny(2,any_str("TARGET_"), __call(toUpperCase_,PROP(target_,options),0,NULL));
+        var targetDef = _concatAny(2,any_LTR("TARGET_"), __call(toUpperCase_,PROP(target_,options),0,NULL));
         //.compilerVars.set targetDef,new Names.Declaration(targetDef)
         __call(set_,PROP(compilerVars_,this),2,(any_arr){targetDef, new(Names_Declaration,1,(any_arr){targetDef})});
 
         //logger.msg 'preprocessor #defined', .compilerVars.keys()
-        logger_msg(undefined,2,(any_arr){any_str("preprocessor #defined"), __call(keys_,PROP(compilerVars_,this),0,NULL)});
+        logger_msg(undefined,2,(any_arr){any_LTR("preprocessor #defined"), __call(keys_,PROP(compilerVars_,this),0,NULL)});
 
         ////logger.message .compilerVars
         ////logger.info ""
@@ -208,16 +208,16 @@
         //.rootModule = new Grammar.Module() //parent is Project
         PROP(rootModule_,this) = new(Grammar_Module,0,NULL); //parent is Project
         //.rootModule.name = '*Global Scope*' 
-        PROP(name_,PROP(rootModule_,this)) = any_str("*Global Scope*");
+        PROP(name_,PROP(rootModule_,this)) = any_LTR("*Global Scope*");
 
         //.rootModule.fileInfo = new Environment.FileInfo('Project') 
-        PROP(fileInfo_,PROP(rootModule_,this)) = new(Environment_FileInfo,1,(any_arr){any_str("Project")});
+        PROP(fileInfo_,PROP(rootModule_,this)) = new(Environment_FileInfo,1,(any_arr){any_LTR("Project")});
         //.rootModule.fileInfo.relFilename='Project'
-        PROP(relFilename_,PROP(fileInfo_,PROP(rootModule_,this))) = any_str("Project");
+        PROP(relFilename_,PROP(fileInfo_,PROP(rootModule_,this))) = any_LTR("Project");
         //.rootModule.fileInfo.dir = options.projectDir
         PROP(dir_,PROP(fileInfo_,PROP(rootModule_,this))) = PROP(projectDir_,options);
         //.rootModule.fileInfo.outFilename = "#{options.outDir}/_project_"
-        PROP(outFilename_,PROP(fileInfo_,PROP(rootModule_,this))) = _concatAny(2,PROP(outDir_,options), any_str("/_project_"));
+        PROP(outFilename_,PROP(fileInfo_,PROP(rootModule_,this))) = _concatAny(2,PROP(outDir_,options), any_LTR("/_project_"));
         
 
 //Validate.initialize will prepare the global scope 
@@ -227,7 +227,7 @@
         Validate_initialize(undefined,1,(any_arr){this});
 
         //console.timeEnd 'Init Project'
-        console_timeEnd(undefined,1,(any_arr){any_str("Init Project")});
+        console_timeEnd(undefined,1,(any_arr){any_LTR("Init Project")});
      }
 
 //#### Method compile()
@@ -239,7 +239,7 @@
 //-if not cached-, all dependent modules. 
 
         //console.time 'Parse'
-        console_time(undefined,1,(any_arr){any_str("Parse")});
+        console_time(undefined,1,(any_arr){any_LTR("Parse")});
 
         //var importInfo = new Environment.ImportParameterInfo
         var importInfo = new(Environment_ImportParameterInfo,0,NULL);
@@ -251,12 +251,12 @@
         PROP(isMain_,PROP(main_,this)) = true;
 
         //console.timeEnd 'Parse'
-        console_timeEnd(undefined,1,(any_arr){any_str("Parse")});
+        console_timeEnd(undefined,1,(any_arr){any_LTR("Parse")});
 
         //if logger.errorCount is 0
         if (__is(logger_errorCount,any_number(0)))  {
             //logger.info "\nParsed OK"
-            logger_info(undefined,1,(any_arr){any_str("\nParsed OK")});
+            logger_info(undefined,1,(any_arr){any_LTR("\nParsed OK")});
         };
 
 //Validate
@@ -264,23 +264,23 @@
         //if no .options.skip 
         if (!_anyToBool(PROP(skip_,PROP(options_,this))))  {
             //logger.info "Validating"
-            logger_info(undefined,1,(any_arr){any_str("Validating")});
+            logger_info(undefined,1,(any_arr){any_LTR("Validating")});
             //console.time 'Validate'
-            console_time(undefined,1,(any_arr){any_str("Validate")});
+            console_time(undefined,1,(any_arr){any_LTR("Validate")});
             //Validate.validate this
             Validate_validate(undefined,1,(any_arr){this});
             //console.timeEnd 'Validate'
-            console_timeEnd(undefined,1,(any_arr){any_str("Validate")});
+            console_timeEnd(undefined,1,(any_arr){any_LTR("Validate")});
             //if logger.errorCount, logger.throwControlled '#{logger.errorCount} errors'
-            if (_anyToBool(logger_errorCount)) {logger_throwControlled(undefined,1,(any_arr){_concatAny(2,logger_errorCount, any_str(" errors"))});};
+            if (_anyToBool(logger_errorCount)) {logger_throwControlled(undefined,1,(any_arr){_concatAny(2,logger_errorCount, any_LTR(" errors"))});};
         };
 
 //Produce, for each module
 
         //console.time 'Produce'
-        console_time(undefined,1,(any_arr){any_str("Produce")});
+        console_time(undefined,1,(any_arr){any_LTR("Produce")});
         //logger.info "\nProducing #{.options.target} at #{.options.outDir}\n"
-        logger_info(undefined,1,(any_arr){_concatAny(5,any_str("\nProducing "), PROP(target_,PROP(options_,this)), any_str(" at "), PROP(outDir_,PROP(options_,this)), any_str("\n"))});
+        logger_info(undefined,1,(any_arr){_concatAny(5,any_LTR("\nProducing "), PROP(target_,PROP(options_,this)), any_LTR(" at "), PROP(outDir_,PROP(options_,this)), any_LTR("\n"))});
         //mkPath.create .options.outDir
         mkPath_create(undefined,1,(any_arr){PROP(outDir_,PROP(options_,this))});
 
@@ -298,14 +298,14 @@
           if (!(_anyToBool(PROP(isCore_,PROP(fileInfo_,moduleNode)))) && _anyToBool(PROP(referenceCount_,moduleNode)))  {
 
             //logger.extra "source:", moduleNode.fileInfo.importInfo.name
-            logger_extra(undefined,2,(any_arr){any_str("source:"), PROP(name_,PROP(importInfo_,PROP(fileInfo_,moduleNode)))});
+            logger_extra(undefined,2,(any_arr){any_LTR("source:"), PROP(name_,PROP(importInfo_,PROP(fileInfo_,moduleNode)))});
             //var result:string
             var result = undefined;
 
             //if not moduleNode.fileInfo.isLite 
             if (!(_anyToBool(PROP(isLite_,PROP(fileInfo_,moduleNode)))))  {
                 //logger.extra 'non-Lite module, copy to out dir.'
-                logger_extra(undefined,1,(any_arr){any_str("non-Lite module, copy to out dir.")});
+                logger_extra(undefined,1,(any_arr){any_LTR("non-Lite module, copy to out dir.")});
                 //#copy the file to output dir
                 //var contents = Environment.loadFile(moduleNode.fileInfo.filename)
                 var contents = Environment_loadFile(undefined,1,(any_arr){PROP(filename_,PROP(fileInfo_,moduleNode))});
@@ -314,7 +314,7 @@
                 //declare valid contents.length
                 
                 //result = "#{contents.length>>10 or 1} kb"
-                result = _concatAny(2,(_anyToBool(__or1=any_number(_length(contents) >> 10))? __or1 : any_number(1)), any_str(" kb"));
+                result = _concatAny(2,(_anyToBool(__or1=any_number(_length(contents) >> 10))? __or1 : any_number(1)), any_LTR(" kb"));
                 //contents=undefined
                 contents = undefined;
             }
@@ -328,7 +328,7 @@
                 //moduleNode.lexer.outCode.filenames[0]=moduleNode.fileInfo.outFilename
                 ITEM(0,PROP(filenames_,PROP(outCode_,PROP(lexer_,moduleNode)))) = PROP(outFilename_,PROP(fileInfo_,moduleNode));
                 //moduleNode.lexer.outCode.filenames[1]='#{moduleNode.fileInfo.outFilename.slice(0,-1)}h'
-                ITEM(1,PROP(filenames_,PROP(outCode_,PROP(lexer_,moduleNode)))) = _concatAny(2,__call(slice_,PROP(outFilename_,PROP(fileInfo_,moduleNode)),2,(any_arr){any_number(0), any_number(-1)}), any_str("h"));
+                ITEM(1,PROP(filenames_,PROP(outCode_,PROP(lexer_,moduleNode)))) = _concatAny(2,__call(slice_,PROP(outFilename_,PROP(fileInfo_,moduleNode)),2,(any_arr){any_number(0), any_number(-1)}), any_LTR("h"));
                 //moduleNode.lexer.outCode.fileMode=true //direct out to file 
                 PROP(fileMode_,PROP(outCode_,PROP(lexer_,moduleNode))) = true; //direct out to file
 
@@ -338,7 +338,7 @@
                 //moduleNode.lexer.outCode.close
                 __call(close_,PROP(outCode_,PROP(lexer_,moduleNode)),0,NULL);
                 //result = "#{moduleNode.lexer.outCode.lineNum} lines"
-                result = _concatAny(2,PROP(lineNum_,PROP(outCode_,PROP(lexer_,moduleNode))), any_str(" lines"));
+                result = _concatAny(2,PROP(lineNum_,PROP(outCode_,PROP(lexer_,moduleNode))), any_LTR(" lines"));
 
                 //if not moduleNode.lexer.outCode.fileMode                
                 if (!(_anyToBool(PROP(fileMode_,PROP(outCode_,PROP(lexer_,moduleNode))))))  {
@@ -351,7 +351,7 @@
                     //Environment.externalCacheSave moduleNode.fileInfo.outFilename,resultLines
                     Environment_externalCacheSave(undefined,2,(any_arr){PROP(outFilename_,PROP(fileInfo_,moduleNode)), resultLines});
                     //result = "#{resultLines.length} lines"
-                    result = _concatAny(2,any_number(_length(resultLines)), any_str(" lines"));
+                    result = _concatAny(2,any_number(_length(resultLines)), any_LTR(" lines"));
 
                     ////ifdef PROD_C
                     //resultLines =  moduleNode.lexer.outCode.getResult(1) //get .h file contents
@@ -359,7 +359,7 @@
                     //if resultLines.length
                     if (_length(resultLines))  {
                         //Environment.externalCacheSave '#{moduleNode.fileInfo.outFilename.slice(0,-1)}h',resultLines
-                        Environment_externalCacheSave(undefined,2,(any_arr){_concatAny(2,__call(slice_,PROP(outFilename_,PROP(fileInfo_,moduleNode)),2,(any_arr){any_number(0), any_number(-1)}), any_str("h")), resultLines});
+                        Environment_externalCacheSave(undefined,2,(any_arr){_concatAny(2,__call(slice_,PROP(outFilename_,PROP(fileInfo_,moduleNode)),2,(any_arr){any_number(0), any_number(-1)}), any_LTR("h")), resultLines});
                     };
                     //end if
                     
@@ -384,7 +384,7 @@
             
 
             //logger.info color.green,"[OK]",result, " -> ",moduleNode.fileInfo.outRelFilename,color.normal
-            logger_info(undefined,6,(any_arr){color_green, any_str("[OK]"), result, any_str(" -> "), PROP(outRelFilename_,PROP(fileInfo_,moduleNode)), color_normal});
+            logger_info(undefined,6,(any_arr){color_green, any_LTR("[OK]"), result, any_LTR(" -> "), PROP(outRelFilename_,PROP(fileInfo_,moduleNode)), color_normal});
             //logger.extra #blank line
             logger_extra(undefined,0,NULL);// #blank line
           };
@@ -394,7 +394,7 @@
         
 
         //logger.msg "#{logger.errorCount} errors, #{logger.warningCount} warnings."
-        logger_msg(undefined,1,(any_arr){_concatAny(4,logger_errorCount, any_str(" errors, "), logger_warningCount, any_str(" warnings."))});
+        logger_msg(undefined,1,(any_arr){_concatAny(4,logger_errorCount, any_LTR(" errors, "), logger_warningCount, any_LTR(" warnings."))});
 
         ////ifdef PROD_C
         //if no logger.errorCount, Producer_c.postProduction this
@@ -402,7 +402,7 @@
         ////endif
 
         //console.timeEnd 'Produce'
-        console_timeEnd(undefined,1,(any_arr){any_str("Produce")});
+        console_timeEnd(undefined,1,(any_arr){any_LTR("Produce")});
      return undefined;
      }
 
@@ -451,7 +451,7 @@
 //Load source -> Lexer/Tokenize -> Parse/create AST 
 
         //logger.info String.spaces(this.recurseLevel*2),"compile: '#{Environment.relativeFrom(.options.projectDir,filename)}'"
-        logger_info(undefined,2,(any_arr){String_spaces(undefined,1,(any_arr){any_number(_anyToNumber(PROP(recurseLevel_,this)) * 2)}), _concatAny(3,any_str("compile: '"), Environment_relativeFrom(undefined,2,(any_arr){PROP(projectDir_,PROP(options_,this)), filename}), any_str("'"))});
+        logger_info(undefined,2,(any_arr){String_spaces(undefined,1,(any_arr){any_number(_anyToNumber(PROP(recurseLevel_,this)) * 2)}), _concatAny(3,any_LTR("compile: '"), Environment_relativeFrom(undefined,2,(any_arr){PROP(projectDir_,PROP(options_,this)), filename}), any_LTR("'"))});
 
 //Load source code, parse
 
@@ -492,7 +492,7 @@
         logger_errorCount = any_number(0);
 
         //var stage = "lexer"
-        var stage = any_str("lexer");
+        var stage = any_LTR("lexer");
         //moduleNode.lexer.initSource( filename, sourceLines )
         __call(initSource_,PROP(lexer_,moduleNode),2,(any_arr){filename, sourceLines});
         //moduleNode.lexer.process()
@@ -501,14 +501,14 @@
 //Parse source
         
         //stage = "parsing"
-        stage = any_str("parsing");
+        stage = any_LTR("parsing");
         //moduleNode.parse()
         METHOD(parse_,moduleNode)(moduleNode,0,NULL);
 
 //Check if errors were emitted
 
         //if logger.errorCount, logger.throwControlled "#{logger.errorCount} errors emitted"
-        if (_anyToBool(logger_errorCount)) {logger_throwControlled(undefined,1,(any_arr){_concatAny(2,logger_errorCount, any_str(" errors emitted"))});};
+        if (_anyToBool(logger_errorCount)) {logger_throwControlled(undefined,1,(any_arr){_concatAny(2,logger_errorCount, any_LTR(" errors emitted"))});};
 
 //Handle errors, add stage info, and stack
 
@@ -527,7 +527,7 @@
                 //// uncontrolled
                 //// add position & stack
                 //err.message = "#{moduleNode.lexer.posToString()}\n#{err.stack or err.message}" 
-                PROP(message_,err) = _concatAny(3,__call(posToString_,PROP(lexer_,moduleNode),0,NULL), any_str("\n"), (_anyToBool(__or3=PROP(stack_,err))? __or3 : PROP(message_,err)));
+                PROP(message_,err) = _concatAny(3,__call(posToString_,PROP(lexer_,moduleNode),0,NULL), any_LTR("\n"), (_anyToBool(__or3=PROP(stack_,err))? __or3 : PROP(message_,err)));
             };
 
             //logger.error err.message
@@ -535,7 +535,7 @@
 
             //#show last soft error. Can be useful to pinpoint the problem
             //if moduleNode.lexer.softError, logger.msg "previous soft-error: #{moduleNode.lexer.softError.message}"
-            if (_anyToBool(PROP(softError_,PROP(lexer_,moduleNode)))) {logger_msg(undefined,1,(any_arr){_concatAny(2,any_str("previous soft-error: "), PROP(message_,PROP(softError_,PROP(lexer_,moduleNode))))});};
+            if (_anyToBool(PROP(softError_,PROP(lexer_,moduleNode)))) {logger_msg(undefined,1,(any_arr){_concatAny(2,any_LTR("previous soft-error: "), PROP(message_,PROP(softError_,PROP(lexer_,moduleNode))))});};
 
             ////if process #we're in node.js
             ////    process.exit(1) 
@@ -594,7 +594,7 @@
         PROP(exportsReplaced_,moduleNode) = false;
         
         //var moduleVar = moduleNode.addToScope('module')
-        var moduleVar = METHOD(addToScope_,moduleNode)(moduleNode,1,(any_arr){any_str("module")});
+        var moduleVar = METHOD(addToScope_,moduleNode)(moduleNode,1,(any_arr){any_LTR("module")});
         ////moduleNode.exports = moduleVar.addMember('exports') #add as member of 'module'
         ////var opt = new Names.NameDeclOptions
         ////opt.pointsTo = moduleNode.exports
@@ -607,7 +607,7 @@
         //fnameOpt.value = fileInfo.filename
         PROP(value_,fnameOpt) = PROP(filename_,fileInfo);
         //moduleVar.addMember moduleNode.declareName('filename',fnameOpt)
-        METHOD(addMember_,moduleVar)(moduleVar,1,(any_arr){METHOD(declareName_,moduleNode)(moduleNode,2,(any_arr){any_str("filename"), fnameOpt})});
+        METHOD(addMember_,moduleVar)(moduleVar,1,(any_arr){METHOD(declareName_,moduleNode)(moduleNode,2,(any_arr){any_LTR("filename"), fnameOpt})});
 
 //Also, register every `import|require` in this module body, to track modules dependencies.
 //We create a empty a empty `.requireCallNodes[]`, to hold:
@@ -637,7 +637,7 @@
         //if .options.comments>=2
         if (_anyToNumber(PROP(comments_,PROP(options_,this))) >= 2)  {
             //moduleNode.lexer.outCode.put "//Compiled by LiteScript compiler v#{.options.version}, source: #{moduleNode.fileInfo.filename}"
-            __call(put_,PROP(outCode_,PROP(lexer_,moduleNode)),1,(any_arr){_concatAny(4,any_str("//Compiled by LiteScript compiler v"), PROP(version_,PROP(options_,this)), any_str(", source: "), PROP(filename_,PROP(fileInfo_,moduleNode)))});
+            __call(put_,PROP(outCode_,PROP(lexer_,moduleNode)),1,(any_arr){_concatAny(4,any_LTR("//Compiled by LiteScript compiler v"), PROP(version_,PROP(options_,this)), any_LTR(", source: "), PROP(filename_,PROP(fileInfo_,moduleNode)))});
             //moduleNode.lexer.outCode.startNewLine
             __call(startNewLine_,PROP(outCode_,PROP(lexer_,moduleNode)),0,NULL);
         };
@@ -647,11 +647,11 @@
 
         //#referenceSourceMap
         //if no .options.nomap and moduleNode.fileInfo.outExtension is 'js'
-        if (!_anyToBool(PROP(nomap_,PROP(options_,this))) && __is(PROP(outExtension_,PROP(fileInfo_,moduleNode)),any_str("js")))  {
+        if (!_anyToBool(PROP(nomap_,PROP(options_,this))) && __is(PROP(outExtension_,PROP(fileInfo_,moduleNode)),any_LTR("js")))  {
             //moduleNode.lexer.outCode.startNewLine
             __call(startNewLine_,PROP(outCode_,PROP(lexer_,moduleNode)),0,NULL);
             //moduleNode.lexer.outCode.put "//# sourceMappingURL=#{moduleNode.fileInfo.base}#{moduleNode.fileInfo.outExtension}.map"
-            __call(put_,PROP(outCode_,PROP(lexer_,moduleNode)),1,(any_arr){_concatAny(4,any_str("//# sourceMappingURL="), PROP(base_,PROP(fileInfo_,moduleNode)), PROP(outExtension_,PROP(fileInfo_,moduleNode)), any_str(".map"))});
+            __call(put_,PROP(outCode_,PROP(lexer_,moduleNode)),1,(any_arr){_concatAny(4,any_LTR("//# sourceMappingURL="), PROP(base_,PROP(fileInfo_,moduleNode)), PROP(outExtension_,PROP(fileInfo_,moduleNode)), any_LTR(".map"))});
         };
      return undefined;
      }
@@ -704,7 +704,7 @@
                 };
 
                 //if node.hasAdjective('shim') and node.findInScope(importInfo.name) 
-                if (_anyToBool(METHOD(hasAdjective_,node)(node,1,(any_arr){any_str("shim")})) && _anyToBool(METHOD(findInScope_,node)(node,1,(any_arr){PROP(name_,importInfo)})))  {
+                if (_anyToBool(METHOD(hasAdjective_,node)(node,1,(any_arr){any_LTR("shim")})) && _anyToBool(METHOD(findInScope_,node)(node,1,(any_arr){PROP(name_,importInfo)})))  {
                     //continue // do not import if "shim import" and already declared
                     continue; // do not import if "shim import" and already declared
                 };
@@ -722,7 +722,7 @@
                 
                 else if (_instanceof(PROP(parent_,node),Grammar_ImportStatement))  {
                     //importInfo.globalImport = node.hasAdjective("global")
-                    PROP(globalImport_,importInfo) = METHOD(hasAdjective_,node)(node,1,(any_arr){any_str("global")});
+                    PROP(globalImport_,importInfo) = METHOD(hasAdjective_,node)(node,1,(any_arr){any_LTR("global")});
                 };
             };
 
@@ -781,7 +781,7 @@
         //logger.info ""
         logger_info(undefined,1,(any_arr){any_EMPTY_STR});
         //logger.info indent,"'#{importingModule.fileInfo.relFilename}' imports '#{importInfo.name}'"
-        logger_info(undefined,2,(any_arr){indent, _concatAny(5,any_str("'"), PROP(relFilename_,PROP(fileInfo_,importingModule)), any_str("' imports '"), PROP(name_,importInfo), any_str("'"))});
+        logger_info(undefined,2,(any_arr){indent, _concatAny(5,any_LTR("'"), PROP(relFilename_,PROP(fileInfo_,importingModule)), any_LTR("' imports '"), PROP(name_,importInfo), any_LTR("'"))});
 
 //Determine the full module filename. Search for the module in the environment.
 
@@ -798,7 +798,7 @@
         //if .moduleCache.has(fileInfo.filename) #registered
         if (_anyToBool(__call(has_,PROP(moduleCache_,this),1,(any_arr){PROP(filename_,fileInfo)})))  {// #registered
             //logger.info indent,'cached: ',fileInfo.filename
-            logger_info(undefined,3,(any_arr){indent, any_str("cached: "), PROP(filename_,fileInfo)});
+            logger_info(undefined,3,(any_arr){indent, any_LTR("cached: "), PROP(filename_,fileInfo)});
             //.recurseLevel--
             PROP(recurseLevel_,this).value.number--;
             //return .moduleCache.get(fileInfo.filename)
@@ -977,7 +977,7 @@
         };
 
         //nameDecl.setMember "**value**",value
-        METHOD(setMember_,nameDecl)(nameDecl,2,(any_arr){any_str("**value**"), value});
+        METHOD(setMember_,nameDecl)(nameDecl,2,(any_arr){any_LTR("**value**"), value});
      return undefined;
      }
 
@@ -1037,7 +1037,7 @@
         assert(_instanceof(this,Grammar_Module));
         //---------
         //return .lexer.outCode.getResult().join('\n')
-        return __call(join_,__call(getResult_,PROP(outCode_,PROP(lexer_,this)),0,NULL),1,(any_arr){any_str("\n")});
+        return __call(join_,__call(getResult_,PROP(outCode_,PROP(lexer_,this)),0,NULL),1,(any_arr){any_LTR("\n")});
      return undefined;
      }
 
@@ -1056,7 +1056,7 @@
 
 //-------------------------
 void Project__moduleInit(void){
-        Project =_newClass("Project", Project__init, sizeof(struct Project_s), Object.value.classINFOptr);
+        Project =_newClass("Project", Project__init, sizeof(struct Project_s), Object);
         _declareMethods(Project, Project_METHODS);
         _declareProps(Project, Project_PROPS, sizeof Project_PROPS);
     

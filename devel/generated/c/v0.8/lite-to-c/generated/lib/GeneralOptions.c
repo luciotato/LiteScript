@@ -12,7 +12,7 @@
     
     {0,0}}; //method jmp table initializer end mark
     
-    static _posTableItem_t GeneralOptions_PROPS[] = {
+    static propIndex_t GeneralOptions_PROPS[] = {
     verboseLevel_
     , warningLevel_
     , comments_
@@ -44,7 +44,7 @@
       PROP(verboseLevel_,this)=any_number(1);
       PROP(warningLevel_,this)=any_number(1);
       PROP(comments_,this)=any_number(1);
-      PROP(target_,this)=any_str("c");
+      PROP(target_,this)=any_LTR("c");
       PROP(debugEnabled_,this)=undefined;
       PROP(skip_,this)=undefined;
       PROP(nomap_,this)=undefined;
@@ -52,8 +52,8 @@
       PROP(compileIfNewer_,this)=undefined;
       PROP(browser_,this)=undefined;
       PROP(defines_,this)=new(Array,0,NULL);
-      PROP(mainModuleName_,this)=any_str("unnamed");
-      PROP(outDir_,this)=any_str("./out");
+      PROP(mainModuleName_,this)=any_LTR("unnamed");
+      PROP(outDir_,this)=any_LTR("./out");
       PROP(storeMessages_,this)=false;
       PROP(now_,this)=new(Date,0,NULL);
     };
@@ -101,14 +101,14 @@
             assert(_instanceof(this,GeneralOptions));
             //---------
             //return """
-            return _concatAny(6,any_str("outDir:"), PROP(outDir_,this), any_str("\nverbose:"), PROP(verboseLevel_,this), any_str("\ndefines:"), __call(join_,PROP(defines_,this),0,NULL));
+            return _concatAny(6,any_LTR("outDir:"), PROP(outDir_,this), any_LTR("\nverbose:"), PROP(verboseLevel_,this), any_LTR("\ndefines:"), __call(join_,PROP(defines_,this),0,NULL));
       return undefined;
       }
 
 
 //-------------------------
 void GeneralOptions__moduleInit(void){
-        GeneralOptions =_newClass("GeneralOptions", GeneralOptions__init, sizeof(struct GeneralOptions_s), Object.value.classINFOptr);
+        GeneralOptions =_newClass("GeneralOptions", GeneralOptions__init, sizeof(struct GeneralOptions_s), Object);
         _declareMethods(GeneralOptions, GeneralOptions_METHODS);
         _declareProps(GeneralOptions, GeneralOptions_PROPS, sizeof GeneralOptions_PROPS);
     

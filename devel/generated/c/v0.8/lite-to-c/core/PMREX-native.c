@@ -1,107 +1,106 @@
-#include "./PMREX-native.h"
+/** PMREX, poor's man RegEx
+ *
+ * --------------------------------
+ * LiteScript lang - gtihub.com/luciotato/LiteScript
+ * Copyright (c) 2014 Lucio M. Tato
+ * --------------------------------
+ * This file is part of LiteScript.
+ * LiteScript is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation version 3.
+ * LiteScript is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details. You should have received a copy of the
+ * GNU Affero General Public License along with LiteScript.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-// #PMREX, poor's man RegEx
+#include "./PMREX-native.h"
+#include "./utf8strings.h"
+
 //-------------------------
 //Module PMREX
 //-------------------------
 
-any PMREX_whileRanges(DEFAULT_ARGUMENTS); //forward declare
-any PMREX_findRanges(DEFAULT_ARGUMENTS); //forward declare
-any PMREX_whileUnescaped(DEFAULT_ARGUMENTS); //forward declare
-any PMREX_findMatchingQuote(DEFAULT_ARGUMENTS); //forward declare
+    static char PMREX_ranges[40];
+    static int PMREX_ranges_length=0;
 
-void PMREX_parseRanges(str ranegParam); //forward declare
-char PMREX_ranges[40];
-int PMREX_ranges_length=0;
+    //forward
+    void PMREX_parseRanges(any ranges);
 
-//### public function whileRanges(chunk:string, start, rangesStr:string)
+    /** public function whileRanges(chunk:string, ranges:string).
+     * whileRanges, advance from start, while the char is in the ranges specified.
+     *
+     * will return slice with all chars in range
+     *
+     * e.g.: whileRanges("123ABC",0,"0-9J-Z") will return "123", string[3] is "A"
+     *
+     * e.g.: whileRanges("123ABC",0,"0-9A-Z") will return "123ABC" because all chars are in range
+     *
+     */
     any PMREX_whileRanges(DEFAULT_ARGUMENTS){
-        assert_args(3, 3, String, Number, String);
+        assert_args({.req=2,.max=2,.control=2},String, String);
         // define named params
-        str chunk = arguments[0].value.str;
-        int start = arguments[1].value.number;
-        str rangesStr = arguments[2].value.str;
-
-// whileRanges, advance from start, while the char is in the ranges specified.
-// will return index of first char not in range, or searched string length all chars in range
-// e.g.: whileRanges("123ABC",0,"0-9J-Z") will return 3, string[3] is "A"
-// e.g.: whileRanges("123ABC",0,"0-9A-Z") will return 6, string length because all chars are in range
+        var chunk=arguments[0];
+        _FLATTEN(chunk);
 
         //var len = chunk.length
-        int len = strlen(chunk);
-        //if start>=len, return len
-        if (start >= len) {return any_number(len);};
+        int len = chunk.len;
 
         //parse ranges into an array [[from,to],[from,to]...]
         //var ranges = parseRanges(rangesStr)
-        PMREX_parseRanges(rangesStr);
+        PMREX_parseRanges(arguments[1]);
 
         //advance while in any of the ranges
-        //var inx=start
-        int inx = start;
+        int inx = 0;
         //do while inx<len
         while(inx < len){
-            //var ch = chunk.charAt(inx)
-            char ch = chunk[inx];
-            //var isIn=false
+            char ch = chunk.value.str[inx];
             int isIn = FALSE;
             //check all ranges
-            //for r=0 to ranges.length-1, r+=2
             for(int r=0; r<PMREX_ranges_length; r+=2) {
-                //if ch>=ranges.charAt(r) and ch<=ranges.charAt(r+1)
                 if (ch >= PMREX_ranges[r] && ch<=PMREX_ranges[r + 1])  {
                     isIn = TRUE;
                     break;
                 };
-            };// end for r
-            //end for
-            //if not isIn, return inx
-            if (!isIn) {return any_number(inx);};
+            };
+            //if not isIn, return upto here
+            if (!isIn) break;
             inx++;
         };// end loop
 
         //return inx
-        return any_number(inx);
+        return _slicedTo(chunk,inx);
     }
 
 
-//### public function findRanges(chunk:string, start, rangesStr:string)
-    any PMREX_findRanges(DEFAULT_ARGUMENTS){
-        assert_args(3, 3, String, Number, String);
+    /** public function untilRanges(chunk:string, ranges:string).
+     * untilRanges: advance from start, *until* a char in one of the specified ranges is found.
+     *
+     * will return slice with chars upto first char *in range* or full chunk if no match
+     *
+     * e.g.: findRanges("123ABC",0,"A-Z") will return "123", string[3] is "A"
+     *
+     * e.g.: findRanges("123ABC",0,"D-Z") will return "123ABC" => not found
+     */
+    any PMREX_untilRanges(DEFAULT_ARGUMENTS){
+        assert_args({.req=2,.max=2,.control=2}, String, String);
+
         // define named params
-        str chunk = arguments[0].value.str;
-        int start = arguments[1].value.number;
-        str rangesStr = arguments[2].value.str;
-
-// findRanges: advance from start, *until* a char in one of the specified ranges is found.
-// will return index of first char *in range* or searched string length if no match
-// e.g.: findRanges("123ABC",0,"A-Z") will return 3, string[3] is "A"
-// e.g.: findRanges("123ABC",0,"D-Z") will return 6 => length of "123ABC" => not found
-
-        //var len = chunk.length
-        int len = strlen(chunk);
-        //if start>=len, return len
-        if (start >= len) {return any_number(len);};
+        any chunk = arguments[0];
+        _FLATTEN(chunk);
+        len_t len = chunk.len;
 
         //parse ranges into an array [[from,to],[from,to]...]
-        //var ranges = parseRanges(rangesStr)
-        PMREX_parseRanges(rangesStr);
+        PMREX_parseRanges(arguments[1]);
 
         //advance while in any of the ranges
-        //var inx=start
-        int inx = start;
-        //do while inx<len
+        len_t inx = 0;
         while(inx < len){
-            //var ch = chunk.charAt(inx)
-            char ch = chunk[inx];
-            //var isIn=false
+            char ch = chunk.value.str[inx];
             int isIn = FALSE;
             //check all ranges
-            //for r=0 to ranges.length-1, r+=2
             for(int r=0; r<PMREX_ranges_length; r+=2) {
-                //if ch>=ranges.charAt(r) and ch<=ranges.charAt(r+1)
                 if (ch >= PMREX_ranges[r] && ch<=PMREX_ranges[r + 1])  {
-                    return any_number(inx);
+                    return any_slice(chunk.value.str,inx);
                 };
             };// end for r
             //end for
@@ -109,79 +108,91 @@ int PMREX_ranges_length=0;
         };// end loop
 
         //return inx
-        return any_number(inx);
+        return any_slice(chunk.value.str,inx);
     }
 
-//### helper function parseRanges(rangesStr:string) returns string
-    void PMREX_parseRanges(str rangesStr){
+    /** helper function parseRanges(rangesStr:string) returns string.
+     * ranges should be only ASCII
+     *
+     */
+    void PMREX_parseRanges(any ranges){
 
+        _FLATTEN(ranges);
         PMREX_ranges_length=0;
 
         char ch;
         int inx = 0;
-        int len = strlen(rangesStr);
-        while(ch = rangesStr[inx]){
-            if (PMREX_ranges_length>=sizeof(PMREX_ranges)) return;
+        while(inx<ranges.len){
+            ch = ranges.value.str[inx];
+            if (PMREX_ranges_length>=sizeof(PMREX_ranges)-3) fatal("too many ranges");
             PMREX_ranges[PMREX_ranges_length++]=ch;
-            if (rangesStr[++inx]=='-') ch=rangesStr[++inx], inx++;
+            if (inx<ranges.len-2){
+                if (ranges.value.str[inx+1]=='-') {
+                    ch=ranges.value.str[inx=inx+2];
+                }
+            }
             PMREX_ranges[PMREX_ranges_length++]=ch;
+            inx++;
         };// end loop
     }
 
 
-//### public function whileUnescaped(chunk:string,start,endChar)
-    any PMREX_nat_whileUnescaped(str chunk, int start, char endChar){
+    /** public function whileUnescaped(chunk:string,endChar:string).
+     * used to search a closing quote. will return a slice with all chars
+     * until unsecaped endChar.
+     */
+    any PMREX_nat_whileUnescaped(any chunk, any endChar){
         //advance until unescaped endChar
-        //var pos = start
-        str pos = chunk+start;
-        //do
+        _FLATTEN(chunk);
+        str pos = chunk.value.str, quotPtr;
         while(TRUE){
-            //var inx = chunk.indexOf(endChar,pos)
-            str quotPtr = strchr(pos, endChar);
-            //int inx = strstr METHOD(indexOf_,chunk)(chunk,2,(any_arr){endChar, pos});
-            //if inx is -1, return -1
-            if (!quotPtr) {return any_number(-1);};
+            quotPtr = utf8Find(chunk, endChar, pos);
+            if (!quotPtr) { throw(_newErr(any_LTR("missing closing quote or /")));}
+
             //if inx>0 and chunk.charAt(inx-1) is '\\' #escaped
-            if (quotPtr>chunk && *(quotPtr-1)=='\\')  {// #escaped
-                //var countEscape=1
+            if (quotPtr>chunk.value.str && *(quotPtr-1)=='\\')  {// #escaped
                 int countEscape = 1;
                 //while inx>countEscape and chunk.charAt(inx-1-countEscape) is '\\' #escaped-escape
-                while(quotPtr-1-countEscape >= chunk && *(quotPtr-1-countEscape)=='\\') countEscape++;
-                //if countEscape % 2 is 0 //even, means escaped-escape, i.e: not escaped
-                if (countEscape % 2 == 0)  { //even, means escaped-escape, i.e: not escaped
-                    return any_number(quotPtr-chunk+1); // so found is final
+                while(quotPtr-1-countEscape >= chunk.value.str && *(quotPtr-1-countEscape)=='\\') countEscape++;
+                if (countEscape % 2 == 0)  { //even, means escaped-escape, means: not escaped
+                    break; // not-escaped, so found is final
                 }
                 else {
-                    pos = quotPtr+1; //odd means escaped quote, so it's not final
+                    pos = quotPtr+1; //odd means escaped quote, so it's not closing quote
                 };
             }
             else {
-                //return inx+1
-                return any_number(quotPtr-chunk+ 1);
+                //found unescaped
+                break;
             };
-        };// end loop
+        };//loop
+
+        // return up-to not including closing quote
+        return any_slice(chunk.value.str, quotPtr-chunk.value.str);
     }
 
+    /** public function whileUnescaped(chunk:string,endChar:string).
+     * used to search a closing quote. will return a slice with all chars
+     * until unsecaped endChar.
+     */
     any PMREX_whileUnescaped(DEFAULT_ARGUMENTS){
-        assert_args(3, 3, String, Number, String);
-        // define named params
-        str chunk = arguments[0].value.str;
-        int start = arguments[1].value.number;
-        char endChar= arguments[2].value.str[0];
-        //---------
-        return PMREX_nat_whileUnescaped(chunk,start,endChar);
+        assert_args({.req=2,.max=2,.control=2},String, String);
+        return PMREX_nat_whileUnescaped(arguments[0],arguments[1]);
     }
 
-//### public function findMatchingQuote(chunk:string, start)
-    any PMREX_findMatchingQuote(DEFAULT_ARGUMENTS){
-        assert_args(2, 2, String, Number);
-        str chunk = arguments[0].value.str;
-        int start = arguments[1].value.number;
-
-// Note: chunk[start] MUST be the openinig quote
-
-        //return whileUnescaped(chunk,start+1,chunk.charAt(start))
-        return PMREX_nat_whileUnescaped(chunk,start+1,chunk[start]);
+/** public function findMatchingQuote(chunk:string, start)
+ * Note: chunk MUST start with the openinig quote
+ *
+ * return *contents* of quoted string, including escaped internal quotes.
+ * throws if malformed/unclosed.
+ */
+    any PMREX_quotedContent(DEFAULT_ARGUMENTS){
+        assert_arg(String);
+        any chunk = arguments[0];
+        _FLATTEN(chunk);
+        assert(*chunk.value.str=='"' || *chunk.value.str=='\'' || *chunk.value.str=='/');
+        //return *contents* of quoted string, considering escaped quotes
+        return PMREX_nat_whileUnescaped(_slicedFrom(chunk,1), _slicedTo(chunk,1));
     }
 
 //-------------------------

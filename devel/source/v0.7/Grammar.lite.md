@@ -697,6 +697,8 @@ This handles the `break` and `continue` keywords.
       
 `ForStatement: (ForEachProperty|ForEachInArray|ForIndexNumeric)`
 
+Note: This v0.7 deprecates ForEachProperty in favor of "for each foo in Object Bar"
+
 There are 3 variants of `ForStatement` in LiteScript
 
       properties 

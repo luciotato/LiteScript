@@ -847,9 +847,9 @@ split expressions
            
             item = s.slice(start+1, closerPos);
 
-            // add parens if expression
-            var p = PMREX.whileRanges(item,0,"A-Za-z0-9_$.")
-            if p<item.length then item = '(#{item})';
+            // add parens if expression (no a single number or varname or prop)
+            var singleUnit = PMREX.whileRanges(item,"A-Za-z0-9_$.")
+            if item isnt singleUnit, item = '(#{item})';
 
             lastDelimiterPos = closerPos + 1
 
@@ -1102,6 +1102,8 @@ with the known tokens, returning a new Token or undefined
 
       method recognizeToken(chunk:string) returns Token // or undefined
 
+            var remainder
+
 Comment lines, start with # or //
 
             if chunk.startsWith('#') or chunk.startsWith('//')
@@ -1132,18 +1134,18 @@ We recognize ' [' (space+bracket) to be able to diferntiate: 'myFunc [x]' and 'm
                 return new Token('SPACE_DOT',chunk.slice(0,2))
             if chunk.startsWith(" [")
                 return new Token('SPACE_BRACKET',chunk.slice(0,2))
-            if PMREX.whileRanges(chunk,0," \t\r") into var whiteSpaceLength
-                if chunk.charAt(whiteSpaceLength) in '.[', whiteSpaceLength-- //allow recognition of SPACE_DOT and SPACE_BRACKET
-                return new Token('WHITESPACE',chunk.slice(0,whiteSpaceLength))
+            if PMREX.whileRanges(chunk," \t\r") into var whiteSpace
+                if chunk.charAt(whiteSpace.length) in '.[', whiteSpace=whiteSpace.slice(0,-1) //allow recognition of SPACE_DOT and SPACE_BRACKET
+                return new Token('WHITESPACE',whiteSpace)
 
 Strings can be either single or double quoted.
 
   ['STRING', /^'(?:[^'\\]|\\.)*'/],
   ['STRING', /^"(?:[^"\\]|\\.)*"/],
 
-            if chunk.startsWith("'") or chunk.startsWith('"') 
-                if PMREX.findMatchingQuote(chunk,0) into var quotedCount is -1, fail with "unclosed quoted string"
-                return new Token('STRING',chunk.slice(0,quotedCount))
+            if chunk.startsWith("'") or chunk.startsWith('"')
+                var quotedContent = PMREX.quotedContent(chunk)
+                return new Token('STRING',chunk.slice(0,1+quotedContent.length+1)) //include quotes
 
 ASSIGN are symbols triggering the assignment statements.
 In LiteScript, assignment is a *statement* not a *expression*
@@ -1161,8 +1163,8 @@ Regex tokens are regular expressions. The javascript producer, just passes the r
   ['REGEX', /^(\/(?![\s=])[^[\/\n\\]*(?:(?:\\[\s\S]|\[[^\]\n\\]*(?:\\[\s\S][^\]\n\\]*)*])[^[\/\n\\]*)*\/)([imgy]{0,4})(?!\w)/],
 
             if chunk.startsWith('/') 
-                if PMREX.whileUnescaped(chunk,1,"/") into var endRegexp is -1, fail with "unclosed literal RegExp expression"
-                return new Token('REGEX',chunk.slice(0,endRegexp))
+                var regexpContents = PMREX.quotedContent(chunk) 
+                return new Token('REGEX',chunk.slice(0,regexpContents.length+2)) //include quote-chars: / & /
 
 A "Unary Operator" is a symbol that precedes and transform *one* operand.
 A "Binary Operator" is a  symbol or a word (like `>=` or `+` or `and`), 
@@ -1189,12 +1191,30 @@ As in js, all numbers are floating point.
   ['NUMBER',/^[0-9]+(\.[0-9]+)?(e[+-]?[0-9]+)?/i],
 
             if chunk.startsWith('0x')
-                return new Token('NUMBER',chunk.slice(0, PMREX.whileRanges(chunk,2,"a-fA-F0-9")))
+                var hexContent=PMREX.whileRanges(chunk.slice(2),"a-fA-F0-9")
+                return new Token('NUMBER',chunk.slice(0, hexContent.length+2)) //include 0x
     
-            if PMREX.whileRanges(chunk,0,"0-9") into var numberDigits
-                if chunk.charAt(numberDigits) is '.', numberDigits = PMREX.whileRanges(chunk,numberDigits+1,"0-9")
-                if chunk.charAt(numberDigits) is 'e', numberDigits = PMREX.whileRanges(chunk,numberDigits+1,"0-9")
-                return new Token('NUMBER',chunk.slice(0, numberDigits))
+            var numberDigits,decPoint="",decimalPart="",expE="",exponent=""
+
+            if PMREX.whileRanges(chunk,"0-9") into numberDigits
+                chunk=chunk.slice(numberDigits.length)
+
+                if chunk.charAt(0) is '.'
+                    decPoint = '.'
+                    chunk=chunk.slice(1)
+
+                    decimalPart = PMREX.whileRanges(chunk,"0-9")
+                    if no decimalPart, fail with 'missing decimal part after "."'
+                    chunk=chunk.slice(decimalPart.length)
+
+                if chunk.charAt(0) is 'e'
+                    expE = 'e'
+                    chunk=chunk.slice(1)
+
+                    exponent=PMREX.whileRanges(chunk,"0-9")
+                    if no exponent, fail with 'missing exponent after "e"'
+
+                return new Token('NUMBER',"#{numberDigits}#{decPoint}#{decimalPart}#{expE}#{exponent}")
 
 Identifiers (generally variable names), must start with a letter, `$`, or underscore.
 Subsequent characters can also be numbers. Unicode characters are supported in variable names.
@@ -1205,14 +1225,14 @@ Identifier-like OPERs, as: 'and', 'not', 'is','or' are checked before concluding
   ['OPER', /^(is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor)\b/],
 
 a IDENTIFIER starts with A-Z a-z (a unicode codepoint), $ or _
+(Note: we recognized numbers above)
 
-            if PMREX.whileRanges(chunk,0,"A-Za-z\x7F-\xFF$_") into var wordLetters
-                wordLetters = PMREX.whileRanges(chunk,wordLetters,"0-9A-Za-z_\x7F-\xFF") //Subsequent characters can also be numbers
+            if PMREX.whileRanges(chunk,"A-Za-z0-9\x7F-\xFF$_") into var identifier
 
-                if "|#{chunk.slice(0,wordLetters)}|" in "|is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|"
-                    return new Token('OPER',chunk.slice(0,wordLetters))
+                if "|#{identifier}|" in "|is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|"
+                    return new Token('OPER',identifier)
 
-                return new Token('IDENTIFIER',chunk.slice(0,wordLetters))
+                return new Token('IDENTIFIER',identifier)
 
 
 

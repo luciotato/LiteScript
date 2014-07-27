@@ -1310,13 +1310,16 @@
 
         //while node
         while(node){
-          //declare valid node.scope:Names.Declaration
-          
-          //if node.scope and node.scope.findOwnMember(name) into var found
-          var found=undefined;
-          if (node.scope && (found=node.scope.findOwnMember(name))) {
-              //return found
-              return found;
+
+          //if node.scope
+          if (node.scope) {
+
+              //if node.scope.findOwnMember(name) into var found
+              var found=undefined;
+              if ((found=node.scope.findOwnMember(name))) {
+                  //return found
+                  return found;
+              };
           };
 
 //move up in scopes
@@ -1682,8 +1685,8 @@
       //for each property name,value in this
       var value=undefined;
       for ( var name in this)if (this.hasOwnProperty(name)){value=this[name];
-      if(this.hasOwnProperty(name) && ['constructor', 'parent', 'importedModule', 'requireCallNodes', 'exportDefault'].indexOf(name)===-1){
-        //where this.hasOwnProperty(name) and name not in ['constructor','parent','importedModule','requireCallNodes','exportDefault']
+      if(['constructor', 'parent', 'importedModule', 'requireCallNodes', 'exportDefault'].indexOf(name)===-1){
+        //where name not in ['constructor','parent','importedModule','requireCallNodes','exportDefault']
 
             //if value instance of ASTBase 
             if (value instanceof ASTBase) {

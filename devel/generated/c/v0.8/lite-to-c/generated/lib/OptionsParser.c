@@ -15,7 +15,7 @@
     
     {0,0}}; //method jmp table initializer end mark
     
-    static _posTableItem_t OptionsParser_PROPS[] = {
+    static propIndex_t OptionsParser_PROPS[] = {
     lastIndex_
     , items_
     };
@@ -47,7 +47,7 @@
         //---------
 
         //if argv.length and argv[0] is 'node' 
-        if (_length(argv) && __is(ITEM(0,argv),any_str("node")))  {
+        if (_length(argv) && __is(ITEM(0,argv),any_LTR("node")))  {
             //argv=argv.slice(1) //remove 'node' if calling as a script
             argv = METHOD(slice_,argv)(argv,1,(any_arr){any_number(1)}); //remove 'node' if calling as a script
         };
@@ -128,9 +128,9 @@
 //search several possible forms of the option, e.g. -o --o -outdir --outdir
 
         //var forms=['-#{shortOption}','--#{shortOption}']
-        var forms = new(Array,2,(any_arr){_concatAny(2,any_str("-"), shortOption), _concatAny(2,any_str("--"), shortOption)});
+        var forms = new(Array,2,(any_arr){_concatAny(2,any_LTR("-"), shortOption), _concatAny(2,any_LTR("--"), shortOption)});
         //if argName, forms.push('--#{argName}','-#{argName}')
-        if (_anyToBool(argName)) {METHOD(push_,forms)(forms,2,(any_arr){_concatAny(2,any_str("--"), argName), _concatAny(2,any_str("-"), argName)});};
+        if (_anyToBool(argName)) {METHOD(push_,forms)(forms,2,(any_arr){_concatAny(2,any_LTR("--"), argName), _concatAny(2,any_LTR("-"), argName)});};
 
         //return .search(forms) into .lastIndex
         return (PROP(lastIndex_,this)=METHOD(search_,this)(this,1,(any_arr){forms}));
@@ -162,7 +162,7 @@
 
 //-------------------------
 void OptionsParser__moduleInit(void){
-        OptionsParser =_newClass("OptionsParser", OptionsParser__init, sizeof(struct OptionsParser_s), Object.value.classINFOptr);
+        OptionsParser =_newClass("OptionsParser", OptionsParser__init, sizeof(struct OptionsParser_s), Object);
         _declareMethods(OptionsParser, OptionsParser_METHODS);
         _declareProps(OptionsParser, OptionsParser_PROPS, sizeof OptionsParser_PROPS);
     

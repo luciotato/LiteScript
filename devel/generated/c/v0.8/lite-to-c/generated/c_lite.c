@@ -158,11 +158,11 @@ any c_lite_startCompilation(DEFAULT_ARGUMENTS); //forward declare
             
             //else if err.code is 'EISDIR'
             
-            else if (__is(PROP(code_,err),any_str("EISDIR")))  {
+            else if (__is(PROP(code_,err),any_LTR("EISDIR")))  {
                 //console.error '#{color.red}ERROR: "#{mainModuleName}" is a directory#{color.normal}'
-                console_error(undefined,1,(any_arr){_concatAny(5,color_red, any_str("ERROR: \""), c_lite_mainModuleName, any_str("\" is a directory"), color_normal)});
+                console_error(undefined,1,(any_arr){_concatAny(5,color_red, any_LTR("ERROR: \""), c_lite_mainModuleName, any_LTR("\" is a directory"), color_normal)});
                 //console.error 'Please specify a *file* as the main module to compile'
-                console_error(undefined,1,(any_arr){any_str("Please specify a *file* as the main module to compile")});
+                console_error(undefined,1,(any_arr){any_LTR("Please specify a *file* as the main module to compile")});
                 //process.exit 2
                 process_exit(undefined,1,(any_arr){any_number(2)});
             }
@@ -171,7 +171,7 @@ any c_lite_startCompilation(DEFAULT_ARGUMENTS); //forward declare
             
             else {
                 //console.error 'UNCONTROLLED ERROR:'
-                console_error(undefined,1,(any_arr){any_str("UNCONTROLLED ERROR:")});
+                console_error(undefined,1,(any_arr){any_LTR("UNCONTROLLED ERROR:")});
                 //console.error err
                 console_error(undefined,1,(any_arr){err});
                 //console.error err.stack
@@ -185,50 +185,50 @@ any c_lite_startCompilation(DEFAULT_ARGUMENTS); //forward declare
 
 //-------------------------
 void c_lite__moduleInit(void){
-    c_lite_VERSION = any_str("0.8.1");
-    c_lite_BUILD_DATE = any_str("2014-07-23T22:10:20.252Z");
-    c_lite_usage = _concatAny(5,any_str("\n    LiteScript-C v"), c_lite_VERSION, any_str(" "), c_lite_BUILD_DATE, any_str("\n\n    Usage: litec main.lite.md [options]\n\n    options are:\n    -o dir           output dir. Default is './out'\n    -v, -verbose     verbose level, default is 0 (0-3)\n    -w, -warning     warning level, default is 1 (0-1)\n    -comments        comment level on generated files, default is 1 (0-2)\n    -version         print LiteScript version & exit\n\n    Advanced options:\n    -D FOO -D BAR    Defines preprocessor names (#ifdef FOO/#ifndef BAR)\n    -d, -debug       enable full compiler debug log file at 'out/debug.logger'\n"));
+    c_lite_VERSION = any_LTR("0.8.1");
+    c_lite_BUILD_DATE = any_LTR("2014-07-27T09:36:13.173Z");
+    c_lite_usage = _concatAny(5,any_LTR("\n    LiteScript-C v"), c_lite_VERSION, any_LTR(" "), c_lite_BUILD_DATE, any_LTR("\n\n    Usage: litec main.lite.md [options]\n\n    options are:\n    -o dir           output dir. Default is './out'\n    -v, -verbose     verbose level, default is 0 (0-3)\n    -w, -warning     warning level, default is 1 (0-1)\n    -comments        comment level on generated files, default is 1 (0-2)\n    -version         print LiteScript version & exit\n\n    Advanced options:\n    -D FOO -D BAR    Defines preprocessor names (#ifdef FOO/#ifndef BAR)\n    -d, -debug       enable full compiler debug log file at 'out/debug.logger'\n"));
     c_lite_args = new(OptionsParser,1,(any_arr){process_argv});
     c_lite_options = new(GeneralOptions,0,NULL);
     print(1,(any_arr){JSON_stringify(undefined,1,(any_arr){process_argv})});
-    if (_anyToBool(METHOD(option_,c_lite_args)(c_lite_args,2,(any_arr){any_str("h"), any_str("help")})))  {
+    if (_anyToBool(METHOD(option_,c_lite_args)(c_lite_args,2,(any_arr){any_LTR("h"), any_LTR("help")})))  {
         print(1,(any_arr){c_lite_usage});
         process_exit(undefined,1,(any_arr){any_number(0)});
     };
-    if (_anyToBool(METHOD(option_,c_lite_args)(c_lite_args,2,(any_arr){any_str("vers"), any_str("version")})))  {
+    if (_anyToBool(METHOD(option_,c_lite_args)(c_lite_args,2,(any_arr){any_LTR("vers"), any_LTR("version")})))  {
         print(1,(any_arr){c_lite_VERSION});
         process_exit(undefined,1,(any_arr){any_number(0)});
     };
-    if (_anyToBool((c_lite_mainModuleName=METHOD(valueFor_,c_lite_args)(c_lite_args,2,(any_arr){any_str("r"), any_str("run")}))))  {
+    if (_anyToBool((c_lite_mainModuleName=METHOD(valueFor_,c_lite_args)(c_lite_args,2,(any_arr){any_LTR("r"), any_LTR("run")}))))  {
         c_lite_compileAndRunOption = true;
         c_lite_compileAndRunParams = __call(splice_,PROP(items_,c_lite_args),1,(any_arr){PROP(lastIndex_,c_lite_args)});// #remove params after --run
     };
     var c_lite__with1=c_lite_options;
-        PROP(outDir_,c_lite__with1) = path_resolve(undefined,1,(any_arr){(_anyToBool(__or1=METHOD(valueFor_,c_lite_args)(c_lite_args,1,(any_arr){any_str("o")}))? __or1 : any_str("./out"))}); //output dir
-        PROP(verboseLevel_,c_lite__with1) = parseInt(undefined,1,(any_arr){(_anyToBool(__or2=METHOD(valueFor_,c_lite_args)(c_lite_args,2,(any_arr){any_str("v"), any_str("verbose")}))? __or2 : any_number(0))});
-        PROP(warningLevel_,c_lite__with1) = parseInt(undefined,1,(any_arr){(_anyToBool(__or3=METHOD(valueFor_,c_lite_args)(c_lite_args,2,(any_arr){any_str("w"), any_str("warning")}))? __or3 : any_number(1))});
-        PROP(comments_,c_lite__with1) = parseInt(undefined,1,(any_arr){(_anyToBool(__or4=METHOD(valueFor_,c_lite_args)(c_lite_args,2,(any_arr){any_str("comment"), any_str("comments")}))? __or4 : any_number(1))});
-        PROP(debugEnabled_,c_lite__with1) = METHOD(option_,c_lite_args)(c_lite_args,2,(any_arr){any_str("d"), any_str("debug")});
+        PROP(outDir_,c_lite__with1) = path_resolve(undefined,1,(any_arr){(_anyToBool(__or1=METHOD(valueFor_,c_lite_args)(c_lite_args,1,(any_arr){any_LTR("o")}))? __or1 : any_LTR("./out"))}); //output dir
+        PROP(verboseLevel_,c_lite__with1) = parseInt(undefined,1,(any_arr){(_anyToBool(__or2=METHOD(valueFor_,c_lite_args)(c_lite_args,2,(any_arr){any_LTR("v"), any_LTR("verbose")}))? __or2 : any_number(0))});
+        PROP(warningLevel_,c_lite__with1) = parseInt(undefined,1,(any_arr){(_anyToBool(__or3=METHOD(valueFor_,c_lite_args)(c_lite_args,2,(any_arr){any_LTR("w"), any_LTR("warning")}))? __or3 : any_number(1))});
+        PROP(comments_,c_lite__with1) = parseInt(undefined,1,(any_arr){(_anyToBool(__or4=METHOD(valueFor_,c_lite_args)(c_lite_args,2,(any_arr){any_LTR("comment"), any_LTR("comments")}))? __or4 : any_number(1))});
+        PROP(debugEnabled_,c_lite__with1) = METHOD(option_,c_lite_args)(c_lite_args,2,(any_arr){any_LTR("d"), any_LTR("debug")});
         PROP(defines_,c_lite__with1) = new(Array,0,NULL);
     ;
     var c_lite_newDef=undefined;
-    while(_anyToBool((c_lite_newDef=METHOD(valueFor_,c_lite_args)(c_lite_args,1,(any_arr){any_str("D")})))){
+    while(_anyToBool((c_lite_newDef=METHOD(valueFor_,c_lite_args)(c_lite_args,1,(any_arr){any_LTR("D")})))){
         __call(push_,PROP(defines_,c_lite_options),1,(any_arr){c_lite_newDef});
     };// end loop
     if (!_length(PROP(items_,c_lite_args)))  {
-        console_error(undefined,1,(any_arr){any_str("Missing file.lite.md to compile\nlite -h for help")});
+        console_error(undefined,1,(any_arr){any_LTR("Missing file.lite.md to compile\nlite -h for help")});
         process_exit(undefined,0,NULL);
     };
     if (_length(PROP(items_,c_lite_args)) > 1)  {
-        print(2,(any_arr){any_str("Invalid arguments:"), __call(join_,PROP(items_,c_lite_args),1,(any_arr){any_str(" ")})});
-        print(1,(any_arr){any_str("lite -h for help")});
+        print(2,(any_arr){any_LTR("Invalid arguments:"), __call(join_,PROP(items_,c_lite_args),1,(any_arr){any_LTR(" ")})});
+        print(1,(any_arr){any_LTR("lite -h for help")});
         process_exit(undefined,1,(any_arr){any_number(2)});
     };
     c_lite_mainModuleName = ITEM(0,PROP(items_,c_lite_args));
     if (_anyToNumber(PROP(verboseLevel_,c_lite_options)) > 1)  {
-        print(1,(any_arr){_concatAny(10,any_str("compiler version: "), Compiler_version, any_str(" "), Compiler_buildDate, any_str("\ncompiler options: \n"), c_lite_options, any_str("\ncwd: "), process_cwd(undefined,0,NULL), any_str("\ncompile: "), c_lite_mainModuleName)});
+        print(1,(any_arr){_concatAny(10,any_LTR("compiler version: "), Compiler_version, any_LTR(" "), Compiler_buildDate, any_LTR("\ncompiler options: \n"), c_lite_options, any_LTR("\ncwd: "), process_cwd(undefined,0,NULL), any_LTR("\ncompile: "), c_lite_mainModuleName)});
         if (_anyToBool(PROP(debugEnabled_,c_lite_options)))  {
-            print(3,(any_arr){color_yellow, any_str("GENERATING COMPILER DEBUG AT out/debug.logger"), color_normal});
+            print(3,(any_arr){color_yellow, any_LTR("GENERATING COMPILER DEBUG AT out/debug.logger"), color_normal});
         };
     };
     c_lite_startCompilation(undefined,0,NULL);

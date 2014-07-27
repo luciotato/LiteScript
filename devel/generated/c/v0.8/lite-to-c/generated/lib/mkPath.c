@@ -81,7 +81,7 @@ any mkPath_dirExists(DEFAULT_ARGUMENTS); //forward declare
         
         else {
             //throw new Error('#{dirPath} exists but IT IS NOT a directory')
-            throw(new(Error,1,(any_arr){_concatAny(2,dirPath, any_str(" exists but IT IS NOT a directory"))}));
+            throw(new(Error,1,(any_arr){_concatAny(2,dirPath, any_LTR(" exists but IT IS NOT a directory"))}));
         };
     
         //exception err
@@ -90,7 +90,7 @@ any mkPath_dirExists(DEFAULT_ARGUMENTS); //forward declare
 
             ////if dir does not exists, return false
             //if err.code is 'ENOENT', return false
-            if (__is(PROP(code_,err),any_str("ENOENT"))) {{e4c_exitTry(1);return false;};};
+            if (__is(PROP(code_,err),any_LTR("ENOENT"))) {{e4c_exitTry(1);return false;};};
             //throw err //another error
             throw(err); //another error
         };

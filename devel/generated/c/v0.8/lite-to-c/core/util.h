@@ -21,7 +21,7 @@ extern "C" {
     #include <inttypes.h>
     #include <ctype.h>
     #include <time.h>
-    #include <math.h>
+    //#include <math.h>
 
     typedef int bool;
     #define TRUE 1

@@ -18,15 +18,19 @@
 
     #define THIS ((fs_Stat_s*)this.value.ptr)
 
+    static char fnameTempBuffer[1024];
+
+    /** fs.Stat(filename)
+     */
     void fs_Stat__init(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,fs_Stat));
-        assert(this.class->instanceSize==sizeof(fs_Stat_s));
-        assert_args( 1,1, String);
+        assert(CLASSES[this.class].instanceSize==sizeof(fs_Stat_s));
+        assert_arg(String);
 
         struct stat st;
         int result;
-        if (result=stat(arguments[0].value.str, &st) == -1){
-            var err=new(Error,1,(any_arr){any_str(strerror(errno))});
+        if (result=stat(_tempCString(arguments[0]), &st) == -1){
+            var err=new(Error,1,(any_arr){any_CStr(strerror(errno))});
             str errCode;
             switch(errno){
                 case EPERM: errCode="EPERM";break;
@@ -37,7 +41,7 @@
                 case EISDIR: errCode="EISDIR";break;
                 deafult:errCode="UNK";
             }
-            PROP(code_,err)=any_str(errCode);
+            PROP(code_,err)=any_CStr(errCode);
             throw(err);
         }
         THIS->size = any_number(st.st_size);
@@ -57,23 +61,26 @@
     //namespace fs
 
     any fs_statSync(DEFAULT_ARGUMENTS){
-        assert_args( 1,1, String);
+        assert_arg(String);
         return new(fs_Stat,1,(any_arr){arguments[0]});
     }
 
     any fs_unlinkSync( DEFAULT_ARGUMENTS ) {
-        assert_args( 1,1, String);
-        if (unlink(arguments[0].value.str) == -1){
+        assert_arg(String);
+        if (unlink(_tempCString(arguments[0])) == -1){
             fail_with(strerror(errno));
         }
     };
 
+    /**
+     * fs_mkdirSync ( dirname:string, optional mode:number )
+     */
     any fs_mkdirSync( DEFAULT_ARGUMENTS ) {
-        assert_args( 1,2, String,Number);
+        assert_args({.req=2,.max=2,.control=2},String,Number);
         mode_t mode = 0;
         if (argc>1) mode=arguments[1].value.number;
         if (!mode) mode=0777;
-        if (mkdir(arguments[0].value.str,mode) == -1){
+        if (mkdir(_tempCString(arguments[0]),mode) == -1){
             fail_with(strerror(errno));
         }
     }
@@ -91,36 +98,49 @@
 
     any fs_readFileSync( any this, len_t argc, any *arguments ) {
         any stat=fs_statSync(this,argc,arguments);
-        str filename = arguments[0].value.str;
-        if (STAT->size.value.number > UINT32_MAX) fail_with(_concatToNULL("at fs_readFileSync('",filename,"'). File too large, max size is MAX_UINT32",NULL));
+        if (STAT->size.value.number > UINT32_MAX) {
+            throw(_newErr(_concatAny(3
+                    ,any_LTR("at fs_readFileSync('")
+                    ,arguments[0]
+                    ,any_LTR("'). File too large, max size is UINT32_MAX"))));
+        }
 
         len_t bytes = STAT->size.value.number;
         //alloc mem
         str buffer=mem_alloc(bytes+1);
         //open file
         FILE* file;
-        if (!(file=fopen(filename,"rb"))) fail_with(_concatToNULL("at fs_readFileSync('",filename,"'). ", strerror(errno),NULL));
+        if (!(file=fopen(_tempCString(arguments[0]),"rb"))){
+                throw(_newErr(_concatAny(3
+                    ,any_LTR("at fs_readFileSync('")
+                    ,arguments[0]
+                    ,any_CStr(strerror(errno)))));
+        }
         //read contents
-        fread(buffer, 1, STAT->size.value.number, file);
+        fread(buffer, 1, bytes, file);
         //close
         fclose(file);
 
         //return buffer as string
         buffer[bytes]=0; //ending 0
-        return any_str(buffer);
+        return any_slice(buffer,bytes);
     }
 
     any fs_writeFileSync(DEFAULT_ARGUMENTS) {
-        assert_args( 2,2,String,String);
-        str filename = arguments[0].value.str;
-        str contents = arguments[1].value.str;
+        assert_args( {.req=2,.max=2,.control=2},String,String);
 
-        size_t bytes = strlen(contents);
         //open file
         FILE *file;
-        if (!(file=fopen(filename,"w"))) fail_with(_concatToNULL("at fs_writeFileSync('",filename,"'). ", strerror(errno),NULL));
+        if (!(file=fopen(_tempCString(arguments[0]),"w"))) {
+            throw(_newErr(_concatAny(4
+                    ,any_LTR("at fs_writeFileSync('")
+                    ,arguments[0]
+                    ,any_LTR("'). ")
+                    ,any_CStr(strerror(errno)))));
+        }
         //write contents
-        fwrite(contents, 1, bytes, file);
+        any contents=arguments[1];
+        fwrite(contents.value.str, 1, contents.len, file);
         //close
         fclose(file);
 
@@ -128,45 +148,58 @@
 
     //method openSync(filename:string, mode:string)
     any fs_openSync(DEFAULT_ARGUMENTS) {
-        assert_args( 2,2,String,String);
-        str filename = arguments[0].value.str;
-        str mode = arguments[1].value.str;
+        assert_args({.req=2,.max=2,.control=2},String,String);
+        any filename = arguments[0];
+
+        char mode[20];
+        _toCStringCompatBuf(arguments[1],mode,sizeof(mode));
+
 
         //open file
         FILE* file;
-        if (!(file=fopen(filename,mode))) fail_with(_concatToNULL("at fs_openSync('" ,filename, "','" ,mode, "'). " ,strerror(errno), NULL));
+        if (!(file=fopen(_tempCString(filename),mode))) {
+            throw(_newErr(_concatAny(6
+                    ,any_LTR("at fs_openSync('")
+                    ,arguments[0]
+                    ,any_LTR("','")
+                    ,arguments[1]
+                    ,any_LTR("' ")
+                    ,any_CStr(strerror(errno)))));
+        }
 
-        return (any){&FileDescriptor_CLASSINFO,file};
+        return (any){FileDescriptor_inx,.res=0,.value.ptr=file};
     }
 
     any fs_closeSync(DEFAULT_ARGUMENTS) {
-        assert_args( 1,1,FileDescriptor);
+        assert_arg(FileDescriptor);
         FILE* fd = (FILE*) arguments[0].value.ptr;
-        if (fclose(fd)!=0) fail_with(_concatToNULL("at fs_close ", strerror(errno),NULL));
+        if (fclose(fd)!=0) {
+            throw(_newErr(_concatAny(2
+                    ,any_LTR("at fs_close ")
+                    ,any_CStr(strerror(errno)))));
+        }
     }
 
     //method writeSync(fd, buf, start, count)
     any fs_writeSync(DEFAULT_ARGUMENTS) {
-        assert_args( 2,4,FileDescriptor,Undefined,Number,Number);
+        assert_args({.req=2,.max=4,.control=4},FileDescriptor,Undefined,Number,Number);
         FILE* fd = (FILE*) arguments[0].value.ptr;
 
         len_t start = arguments[2].value.number;
         len_t size = arguments[3].value.number;
 
         str contents;
-        if (arguments[1].class==&Buffer_CLASSINFO){
+        if (arguments[1].class==Buffer_inx){
             Buffer_s* buf = arguments[1].value.ptr;
             contents = buf->ptr;
             size = buf->used;
         }
-        else if (arguments[1].class==&String_CLASSINFO){
+        else if (arguments[1].class==String_inx){
             contents = arguments[1].value.str;
-            size = strlen(contents);
+            size = arguments[1].len;
         }
         else {
-            fail_with(_concatToNULL(
-                "fs_writeSync: expected argument #2 to be Buffer or String"
-                ,NULL));
+            throw(_newErr(any_LTR("fs_writeSync: expected argument #2 to be Buffer or String")));
         }
 
         //write contents

@@ -49,7 +49,7 @@
             do{
                 //inx-- 
                 inx.value.number--;
-            } while (_anyToNumber(inx) >= 0 && __is(METHOD(charAt_,this)(this,1,(any_arr){inx}),any_str(" ")));// end loop
+            } while (_anyToNumber(inx) >= 0 && __is(METHOD(charAt_,this)(this,1,(any_arr){inx}),any_LTR(" ")));// end loop
             //loop while inx>=0 and this.charAt(inx) is ' '
             //return this.slice(0,inx+1) 
             return METHOD(slice_,this)(this,2,(any_arr){any_number(0), any_number(_anyToNumber(inx) + 1)});
@@ -66,7 +66,7 @@
             //var inx=0
             var inx = any_number(0);
             //while inx<len and this.charAt(inx) is ' '
-            while(_anyToNumber(inx) < _anyToNumber(len) && __is(METHOD(charAt_,this)(this,1,(any_arr){inx}),any_str(" "))){
+            while(_anyToNumber(inx) < _anyToNumber(len) && __is(METHOD(charAt_,this)(this,1,(any_arr){inx}),any_LTR(" "))){
                 //inx++
                 inx.value.number++;
             };// end loop
@@ -257,35 +257,60 @@
 //loop until no quotes found 
 
             //var anyQuote = '"' & "'"
-            var anyQuote = _concatAny(2,any_str("\""),any_str("'"));
+            var anyQuote = _concatAny(2,any_LTR("\""),any_LTR("'"));
 
-            //do while PMREX.findRanges(text,p,anyQuote) into p  < text.length
-            while(_anyToNumber((p=PMREX_findRanges(undefined,3,(any_arr){text, p, anyQuote}))) < _length(text)){
+            //var resultText=""
+            var resultText = any_EMPTY_STR;
 
-                //if text.slice(p,p+3) is '"""' //ignore triple quotes (valid token)
-                if (__is(METHOD(slice_,text)(text,2,(any_arr){p, any_number(_anyToNumber(p) + 3)}),any_str("\"\"\"")))  { //ignore triple quotes (valid token)
-                    //p+=3
-                    p.value.number += 3;
+            //do 
+            do{
+                //var preQuotes=PMREX.untilRanges(text,anyQuote) 
+                var preQuotes = PMREX_untilRanges(undefined,2,(any_arr){text, anyQuote});
+                
+                //resultText &= preQuotes
+                resultText=_concatAny(2,resultText,preQuotes);
+                //text = text.slice(preQuotes.length)
+                text = METHOD(slice_,text)(text,1,(any_arr){any_number(_length(preQuotes))});
+                //if no text, break // all text processed|no quotes found
+                if (!_anyToBool(text)) {break;};
+
+                //if text.slice(0,3) is '"""' //ignore triple quotes (valid token)
+                if (__is(METHOD(slice_,text)(text,2,(any_arr){any_number(0), any_number(3)}),any_LTR("\"\"\"")))  { //ignore triple quotes (valid token)
+                    //resultText &= text.slice(0,3)
+                    resultText=_concatAny(2,resultText,METHOD(slice_,text)(text,2,(any_arr){any_number(0), any_number(3)}));
+                    //text = text.slice(3)
+                    text = METHOD(slice_,text)(text,1,(any_arr){any_number(3)});
                 }
                 //else
                 
                 else {
-                    //var quoteNext = PMREX.whileUnescaped(text,p+1,text.charAt(p))
-                    var quoteNext = PMREX_whileUnescaped(undefined,3,(any_arr){text, any_number(_anyToNumber(p) + 1), METHOD(charAt_,text)(text,1,(any_arr){p})});
-                    //if quoteNext<0, break //unmatched quote 
-                    if (_anyToNumber(quoteNext) < 0) {break;};
 
-                    //text = "#{text.slice(0,p)}#{rep}#{text.slice(quoteNext)}"
-                    text = _concatAny(3,METHOD(slice_,text)(text,2,(any_arr){any_number(0), p}), rep, METHOD(slice_,text)(text,1,(any_arr){quoteNext}));
-                    //p+=rep.length
-                    p.value.number += _length(rep);
+                    //var quotedContent
+                    var quotedContent = undefined;
+                    
+                    //try // accept malformed quoted chunks (do not replace)
+                    try{
+
+                         //quotedContent = PMREX.quotedContent(text)
+                         quotedContent = PMREX_quotedContent(undefined,1,(any_arr){text});
+                         //text = text.slice(1+quotedContent.length+1)
+                         text = METHOD(slice_,text)(text,1,(any_arr){any_number(1 + _length(quotedContent) + 1)});
+                    
+                    }catch(err){
+
+                    //catch err // if malformed - closing quote not found
+                        //resultText &= text.slice(0,1) //keep quote
+                        resultText=_concatAny(2,resultText,METHOD(slice_,text)(text,2,(any_arr){any_number(0), any_number(1)})); //keep quote
+                        //text = text.slice(1) //only remove quote
+                        text = METHOD(slice_,text)(text,1,(any_arr){any_number(1)}); //only remove quote
+                    };
                 };
-            };// end loop
+            } while (!!_anyToBool(text));// end loop
 
-            //loop
+            //loop until no text
             
-            //return text
-            return text;
+            //return resultText
+            return resultText;
         return undefined;
         }
 

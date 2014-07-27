@@ -106,9 +106,9 @@ any Compiler_getMessages(DEFAULT_ARGUMENTS); //forward declare
 
         ////ifdef PROD_C
         //default options.outDir = 'out'
-        _default(&PROP(outDir_,options),any_str("out"));
+        _default(&PROP(outDir_,options),any_LTR("out"));
         //default options.target = 'c'
-        _default(&PROP(target_,options),any_str("c"));
+        _default(&PROP(target_,options),any_LTR("c"));
         ////else
         ////default options.outDir = 'out'
         ////default options.target = 'js'
@@ -118,7 +118,7 @@ any Compiler_getMessages(DEFAULT_ARGUMENTS); //forward declare
         PROP(version_,options) = Compiler_version;
 
         //console.time 'Total Compile Project'
-        console_time(undefined,1,(any_arr){any_str("Total Compile Project")});
+        console_time(undefined,1,(any_arr){any_LTR("Total Compile Project")});
 
         //var project = new Project(mainModule, options)
         var project = new(Project,2,(any_arr){mainModule, options});
@@ -127,7 +127,7 @@ any Compiler_getMessages(DEFAULT_ARGUMENTS); //forward declare
         METHOD(compile_,project)(project,0,NULL);
 
         //console.timeEnd 'Total Compile Project'
-        console_timeEnd(undefined,1,(any_arr){any_str("Total Compile Project")});
+        console_timeEnd(undefined,1,(any_arr){any_LTR("Total Compile Project")});
 
         //return project
         return project;
@@ -159,7 +159,7 @@ any Compiler_getMessages(DEFAULT_ARGUMENTS); //forward declare
 //* moduleNode: Grammar.Module: module's code AST root node 
 
 //		default filename = 'unnamed'
-        _default(&filename,any_str("unnamed"));
+        _default(&filename,any_LTR("unnamed"));
 
         //options.version = version
         PROP(version_,options) = Compiler_version;
@@ -196,20 +196,20 @@ any Compiler_getMessages(DEFAULT_ARGUMENTS); //forward declare
             //Validate.validate project
             Validate_validate(undefined,1,(any_arr){project});
             //if logger.errorCount is 0, logger.info "Validation OK"
-            if (__is(logger_errorCount,any_number(0))) {logger_info(undefined,1,(any_arr){any_str("Validation OK")});};
+            if (__is(logger_errorCount,any_number(0))) {logger_info(undefined,1,(any_arr){any_LTR("Validation OK")});};
         };
 
 //initialize out buffer & produce target code 
     
         //logger.info "Generating #{project.options.target}"
-        logger_info(undefined,1,(any_arr){_concatAny(2,any_str("Generating "), PROP(target_,PROP(options_,project)))});
+        logger_info(undefined,1,(any_arr){_concatAny(2,any_LTR("Generating "), PROP(target_,PROP(options_,project)))});
 
         //project.produceModule moduleNode
         METHOD(produceModule_,project)(project,1,(any_arr){moduleNode});
         //# the produced code will be at: moduleNode.lexer.out.getResult() :string array
 
         //if logger.errorCount isnt 0, logger.throwControlled "#logger.errorCount errors during compilation"
-        if (!__is(logger_errorCount,any_number(0))) {logger_throwControlled(undefined,1,(any_arr){any_str("#logger.errorCount errors during compilation")});};
+        if (!__is(logger_errorCount,any_number(0))) {logger_throwControlled(undefined,1,(any_arr){any_LTR("#logger.errorCount errors during compilation")});};
 
 //text compiled result can be obtained with: moduleNode.lexer.out.getResult() :string array
 
@@ -268,6 +268,6 @@ any Compiler_getMessages(DEFAULT_ARGUMENTS); //forward declare
 
 //-------------------------
 void Compiler__moduleInit(void){
-    Compiler_version = any_str("0.8.4");
-    Compiler_buildDate = any_str("20140722");
+    Compiler_version = any_LTR("0.8.4");
+    Compiler_buildDate = any_LTR("20140722");
 };

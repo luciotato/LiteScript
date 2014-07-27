@@ -48,12 +48,12 @@ LiteScript:
     #define _NV(n,v) {&NameValuePair_CLASSINFO, &(NameValuePair_s){n,v}
 
     var foo = new(Map,3,(any_arr){
-                    _NV(any_str("a"),any_number(1)),
-                    _NV(any_str("b"),any_str("text"))
-                    _NV(any_str("c"),new(MyClass,0,NULL))
+                    _NV(any_LTR("a"),any_number(1)),
+                    _NV(any_LTR("b"),any_LTR("text"))
+                    _NV(any_LTR("c"),new(MyClass,0,NULL))
         });
 
-    var baz = CALL1(get_,foo,any_str("b"))
+    var baz = CALL1(get_,foo,any_LTR("b"))
 
 */
 

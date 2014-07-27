@@ -39,10 +39,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
     
 
 //To be able to compile-to-c this source, we instruct the
-//compiler to create a `new Map.fromObject({})` when it encounters
-//an untyped object literal like: `{foo:1, bar:"baz"}`
+//compiler to create a *new Map* when it encounters an *untyped* object literal.
+//e.g: `var x = {foo:1, bar:"baz"}` => `var x = Map.newFromObject({foo:1, bar:"baz"})`
 
     //lexer options object literal is Map
+
+//Map & Object implement common methods:
+//.hasProperty, .tryGetProperty, .setProperty, .getObjectKeys
+//so the same code can handle "objects" (when compiled-to-js) 
+//and "Maps" (when compiled-to-c)
+
 
 
 //"C" Producer Functions
@@ -101,14 +107,14 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         METHOD(redirectOutput_,project)(project,1,(any_arr){PROP(outCode_,PROP(lexer_,Producer_c_dispatcherModule))}); // all Lexers now out here
 
         //dispatcherModule.fileInfo = Environment.fileInfoNewFile("_dispatcher", project.options.target)
-        PROP(fileInfo_,Producer_c_dispatcherModule) = Environment_fileInfoNewFile(undefined,2,(any_arr){any_str("_dispatcher"), PROP(target_,PROP(options_,project))});
+        PROP(fileInfo_,Producer_c_dispatcherModule) = Environment_fileInfoNewFile(undefined,2,(any_arr){any_LTR("_dispatcher"), PROP(target_,PROP(options_,project))});
 
         //dispatcherModule.lexer.outCode.fileMode=true
         PROP(fileMode_,PROP(outCode_,PROP(lexer_,Producer_c_dispatcherModule))) = true;
         //dispatcherModule.lexer.outCode.filenames[0] = dispatcherModule.fileInfo.outFilename
         ITEM(0,PROP(filenames_,PROP(outCode_,PROP(lexer_,Producer_c_dispatcherModule)))) = PROP(outFilename_,PROP(fileInfo_,Producer_c_dispatcherModule));
         //dispatcherModule.lexer.outCode.filenames[1] = '#{dispatcherModule.fileInfo.outFilename.slice(0,-1)}h'
-        ITEM(1,PROP(filenames_,PROP(outCode_,PROP(lexer_,Producer_c_dispatcherModule)))) = _concatAny(2,__call(slice_,PROP(outFilename_,PROP(fileInfo_,Producer_c_dispatcherModule)),2,(any_arr){any_number(0), any_number(-1)}), any_str("h"));
+        ITEM(1,PROP(filenames_,PROP(outCode_,PROP(lexer_,Producer_c_dispatcherModule)))) = _concatAny(2,__call(slice_,PROP(outFilename_,PROP(fileInfo_,Producer_c_dispatcherModule)),2,(any_arr){any_number(0), any_number(-1)}), any_LTR("h"));
 
         //dispatcherModule.produceDispatcher project
         METHOD(produceDispatcher_,Producer_c_dispatcherModule)(Producer_c_dispatcherModule,1,(any_arr){project});
@@ -127,7 +133,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //*/
 
         //logger.info "#{color.green}[OK] -> #{dispatcherModule.fileInfo.outRelFilename} #{color.normal}"
-        logger_info(undefined,1,(any_arr){_concatAny(5,color_green, any_str("[OK] -> "), PROP(outRelFilename_,PROP(fileInfo_,Producer_c_dispatcherModule)), any_str(" "), color_normal)});
+        logger_info(undefined,1,(any_arr){_concatAny(5,color_green, any_LTR("[OK] -> "), PROP(outRelFilename_,PROP(fileInfo_,Producer_c_dispatcherModule)), any_LTR(" "), color_normal)});
         //logger.extra #blank line
         logger_extra(undefined,0,NULL);// #blank line
     return undefined;
@@ -148,7 +154,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //chr=name.charAt(n).toUpperCase()
             chr = __call(toUpperCase_,METHOD(charAt_,name)(name,1,(any_arr){any_number(n)}),0,NULL);
             //if chr<'A' or chr>'Z', chr="_"
-            if (_anyToBool((_anyToBool(__or1=any_number(_anyToNumber(chr) < 'A'))? __or1 : any_number(_anyToNumber(chr) > 'Z')))) {chr = any_str("_");};
+            if (_anyToBool((_anyToBool(__or1=any_number(_anyToNumber(chr) < 'A'))? __or1 : any_number(_anyToNumber(chr) > 'Z')))) {chr = any_LTR("_");};
             //result="#{result}#{chr}"
             result = _concatAny(2,result, chr);
         };// end for n
@@ -183,7 +189,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         METHOD(out_,this)(this,11,(any_arr){new(Map,1,(any_arr){
             _newPair("h",any_number(1))
             })
-, Producer_c_NL, _concatAny(3,any_str("#ifndef "), Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))}), any_str("_H")), Producer_c_NL, _concatAny(3,any_str("#define "), Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))}), any_str("_H")), Producer_c_NL, Producer_c_NL, any_str("#include \"../core/LiteC-core.h\""), Producer_c_NL, Producer_c_NL, Producer_c_NL});
+, Producer_c_NL, _concatAny(3,any_LTR("#ifndef "), Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))}), any_LTR("_H")), Producer_c_NL, _concatAny(3,any_LTR("#define "), Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))}), any_LTR("_H")), Producer_c_NL, Producer_c_NL, any_LTR("#include \"../core/LiteC-core.h\""), Producer_c_NL, Producer_c_NL, Producer_c_NL});
 
 //LiteC__init extern declaration
 
@@ -191,9 +197,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //NL,{COMMENT: 'core support and defined classes init'},NL
             //'extern void __declareClasses();',NL,NL
         METHOD(out_,this)(this,6,(any_arr){Producer_c_NL, new(Map,1,(any_arr){
-            _newPair("COMMENT",any_str("core support and defined classes init"))
+            _newPair("COMMENT",any_LTR("core support and defined classes init"))
             })
-, Producer_c_NL, any_str("extern void __declareClasses();"), Producer_c_NL, Producer_c_NL});
+, Producer_c_NL, any_LTR("extern void __declareClasses();"), Producer_c_NL, Producer_c_NL});
 
 //verbs & things
 
@@ -203,12 +209,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //{COMMENT: 'methods'},NL,NL
             //"enum _VERBS { //a symbol for each distinct method name",NL
         METHOD(out_,this)(this,5,(any_arr){new(Map,1,(any_arr){
-            _newPair("COMMENT",any_str("methods"))
+            _newPair("COMMENT",any_LTR("methods"))
             })
-, Producer_c_NL, Producer_c_NL, any_str("enum _VERBS { //a symbol for each distinct method name"), Producer_c_NL});
+, Producer_c_NL, Producer_c_NL, any_LTR("enum _VERBS { //a symbol for each distinct method name"), Producer_c_NL});
 
         //var initialValue = " = -_CORE_METHODS_MAX-#{allMethodNames.size}"
-        var initialValue = _concatAny(2,any_str(" = -_CORE_METHODS_MAX-"), PROP(size_,Producer_c_allMethodNames));
+        var initialValue = _concatAny(2,any_LTR(" = -_CORE_METHODS_MAX-"), PROP(size_,Producer_c_allMethodNames));
         //for each methodDeclaration in map allMethodNames
         any _list62=Producer_c_allMethodNames;
         {NameValuePair_ptr __nvp=NULL; //name:value pair
@@ -219,12 +225,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             methodDeclaration= __nvp->value;
         
             //.out '    ',makeSymbolName(methodDeclaration.name),initialValue,",",NL
-            METHOD(out_,this)(this,5,(any_arr){any_str("    "), Producer_c_makeSymbolName(undefined,1,(any_arr){PROP(name_,methodDeclaration)}), initialValue, any_str(","), Producer_c_NL});
+            METHOD(out_,this)(this,5,(any_arr){any_LTR("    "), Producer_c_makeSymbolName(undefined,1,(any_arr){PROP(name_,methodDeclaration)}), initialValue, any_LTR(","), Producer_c_NL});
             //initialValue=undefined
             initialValue = undefined;
         }};// end for each in map Producer_c_allMethodNames
         //.out NL,"_LAST_VERB};",NL
-        METHOD(out_,this)(this,3,(any_arr){Producer_c_NL, any_str("_LAST_VERB};"), Producer_c_NL});
+        METHOD(out_,this)(this,3,(any_arr){Producer_c_NL, any_LTR("_LAST_VERB};"), Producer_c_NL});
 
 //all  distinct property names
 
@@ -232,12 +238,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //{COMMENT: 'propery names'},NL,NL
             //"enum _THINGS { //a symbol for each distinct property name",NL
         METHOD(out_,this)(this,5,(any_arr){new(Map,1,(any_arr){
-            _newPair("COMMENT",any_str("propery names"))
+            _newPair("COMMENT",any_LTR("propery names"))
             })
-, Producer_c_NL, Producer_c_NL, any_str("enum _THINGS { //a symbol for each distinct property name"), Producer_c_NL});
+, Producer_c_NL, Producer_c_NL, any_LTR("enum _THINGS { //a symbol for each distinct property name"), Producer_c_NL});
 
         //initialValue = "= _CORE_PROPS_LENGTH"
-        initialValue = any_str("= _CORE_PROPS_LENGTH");
+        initialValue = any_LTR("= _CORE_PROPS_LENGTH");
         //for each name,value in map allPropertyNames
         any _list63=Producer_c_allPropertyNames;
         {NameValuePair_ptr __nvp=NULL; //name:value pair
@@ -250,12 +256,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             value= __nvp->value;
         
             //.out '    ',makeSymbolName(name), initialValue, ",",NL
-            METHOD(out_,this)(this,5,(any_arr){any_str("    "), Producer_c_makeSymbolName(undefined,1,(any_arr){name}), initialValue, any_str(","), Producer_c_NL});
+            METHOD(out_,this)(this,5,(any_arr){any_LTR("    "), Producer_c_makeSymbolName(undefined,1,(any_arr){name}), initialValue, any_LTR(","), Producer_c_NL});
             //initialValue=undefined
             initialValue = undefined;
         }};// end for each in map Producer_c_allPropertyNames
         //.out NL,"_LAST_THING};",NL,NL,NL
-        METHOD(out_,this)(this,5,(any_arr){Producer_c_NL, any_str("_LAST_THING};"), Producer_c_NL, Producer_c_NL, Producer_c_NL});
+        METHOD(out_,this)(this,5,(any_arr){Producer_c_NL, any_LTR("_LAST_THING};"), Producer_c_NL, Producer_c_NL, Producer_c_NL});
 
 //Now include headers for all the imported modules.
 //To put this last is important, because if there's a error in the included.h 
@@ -272,15 +278,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             moduleNode= __nvp->value;
         
             //var hFile = moduleNode.fileInfo.outWithExtension(".h")
-            var hFile = __call(outWithExtension_,PROP(fileInfo_,moduleNode),1,(any_arr){any_str(".h")});
+            var hFile = __call(outWithExtension_,PROP(fileInfo_,moduleNode),1,(any_arr){any_LTR(".h")});
             //hFile = Environment.relativeFrom(.fileInfo.outDir, hFile)
             hFile = Environment_relativeFrom(undefined,2,(any_arr){PROP(outDir_,PROP(fileInfo_,this)), hFile});
             //.out '#include "#{hFile}"',NL
-            METHOD(out_,this)(this,2,(any_arr){_concatAny(3,any_str("#include \""), hFile, any_str("\"")), Producer_c_NL});
+            METHOD(out_,this)(this,2,(any_arr){_concatAny(3,any_LTR("#include \""), hFile, any_LTR("\"")), Producer_c_NL});
         }};// end for each in map PROP(moduleCache_,project)
 
         //.out NL,NL,"#endif",NL,NL
-        METHOD(out_,this)(this,5,(any_arr){Producer_c_NL, Producer_c_NL, any_str("#endif"), Producer_c_NL, Producer_c_NL});
+        METHOD(out_,this)(this,5,(any_arr){Producer_c_NL, Producer_c_NL, any_LTR("#endif"), Producer_c_NL, Producer_c_NL});
 
 //_dispatcher.c
 
@@ -290,7 +296,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         METHOD(out_,this)(this,7,(any_arr){new(Map,1,(any_arr){
             _newPair("h",any_number(0))
             })
-, Producer_c_NL, any_str("#include \"_dispatcher.h\""), Producer_c_NL, Producer_c_NL, Producer_c_NL, Producer_c_NL});
+, Producer_c_NL, any_LTR("#include \"_dispatcher.h\""), Producer_c_NL, Producer_c_NL, Producer_c_NL, Producer_c_NL});
 
 //static definition added verbs (methods) and things (properties)
 
@@ -300,14 +306,14 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //{pre:'    "', CSL:allMethodNames.keys(), post:'"\n'}
             //'};',NL,NL
         METHOD(out_,this)(this,9,(any_arr){new(Map,1,(any_arr){
-            _newPair("COMMENT",any_str("methods"))
+            _newPair("COMMENT",any_LTR("methods"))
             })
-, Producer_c_NL, Producer_c_NL, any_str("static str _ADD_VERBS[] = { //string name for each distinct method name"), Producer_c_NL, new(Map,3,(any_arr){
-            _newPair("pre",any_str("    \"")), 
+, Producer_c_NL, Producer_c_NL, any_LTR("static str _ADD_VERBS[] = { //string name for each distinct method name"), Producer_c_NL, new(Map,3,(any_arr){
+            _newPair("pre",any_LTR("    \"")), 
             _newPair("CSL",METHOD(keys_,Producer_c_allMethodNames)(Producer_c_allMethodNames,0,NULL)), 
-            _newPair("post",any_str("\"\n"))
+            _newPair("post",any_LTR("\"\n"))
             })
-, any_str("};"), Producer_c_NL, Producer_c_NL});
+, any_LTR("};"), Producer_c_NL, Producer_c_NL});
 
 //all  distinct property names
 
@@ -317,14 +323,14 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //{pre:'    "', CSL:allPropertyNames.keys(), post:'"\n'}
             //'};',NL,NL
         METHOD(out_,this)(this,9,(any_arr){new(Map,1,(any_arr){
-            _newPair("COMMENT",any_str("propery names"))
+            _newPair("COMMENT",any_LTR("propery names"))
             })
-, Producer_c_NL, Producer_c_NL, any_str("static str _ADD_THINGS[] = { //string name for each distinct property name"), Producer_c_NL, new(Map,3,(any_arr){
-            _newPair("pre",any_str("    \"")), 
+, Producer_c_NL, Producer_c_NL, any_LTR("static str _ADD_THINGS[] = { //string name for each distinct property name"), Producer_c_NL, new(Map,3,(any_arr){
+            _newPair("pre",any_LTR("    \"")), 
             _newPair("CSL",METHOD(keys_,Producer_c_allPropertyNames)(Producer_c_allPropertyNames,0,NULL)), 
-            _newPair("post",any_str("\"\n"))
+            _newPair("post",any_LTR("\"\n"))
             })
-, any_str("};"), Producer_c_NL, Producer_c_NL});
+, any_LTR("};"), Producer_c_NL, Producer_c_NL});
 
 //All literal Maps & arrays
 
@@ -338,16 +344,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //.out 
             //"\n\n\n//-------------------------------",NL
             //"int main(int argc, char** argv) {",NL
-            //'    LiteC_init(argc,argv);',NL
+            //'    LiteC_init( #{allClasses.length}, argc,argv);',NL
             //'    LiteC_addMethodSymbols( #{allMethodNames.size}, _ADD_VERBS);',NL
             //'    LiteC_addPropSymbols( #{allPropertyNames.size}, _ADD_THINGS);',NL
-        METHOD(out_,this)(this,10,(any_arr){any_str("\n\n\n//-------------------------------"), Producer_c_NL, any_str("int main(int argc, char** argv) {"), Producer_c_NL, any_str("    LiteC_init(argc,argv);"), Producer_c_NL, _concatAny(3,any_str("    LiteC_addMethodSymbols( "), PROP(size_,Producer_c_allMethodNames), any_str(", _ADD_VERBS);")), Producer_c_NL, _concatAny(3,any_str("    LiteC_addPropSymbols( "), PROP(size_,Producer_c_allPropertyNames), any_str(", _ADD_THINGS);")), Producer_c_NL});
+        METHOD(out_,this)(this,10,(any_arr){any_LTR("\n\n\n//-------------------------------"), Producer_c_NL, any_LTR("int main(int argc, char** argv) {"), Producer_c_NL, _concatAny(3,any_LTR("    LiteC_init( "), any_number(_length(Producer_c_allClasses)), any_LTR(", argc,argv);")), Producer_c_NL, _concatAny(3,any_LTR("    LiteC_addMethodSymbols( "), PROP(size_,Producer_c_allMethodNames), any_LTR(", _ADD_VERBS);")), Producer_c_NL, _concatAny(3,any_LTR("    LiteC_addPropSymbols( "), PROP(size_,Producer_c_allPropertyNames), any_LTR(", _ADD_THINGS);")), Producer_c_NL});
             
 
 //process methods appended to core classes, by calling LiteC_registerShim
 
         //.out '\n'
-        METHOD(out_,this)(this,1,(any_arr){any_str("\n")});
+        METHOD(out_,this)(this,1,(any_arr){any_LTR("\n")});
         //for each methodDeclaration in appendToCoreClassMethods
         any _list65=Producer_c_appendToCoreClassMethods;
         { var methodDeclaration=undefined;
@@ -356,7 +362,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 //var appendToDeclaration = methodDeclaration.getParent(Grammar.ClassDeclaration)
                 var appendToDeclaration = METHOD(getParent_,methodDeclaration)(methodDeclaration,1,(any_arr){Grammar_ClassDeclaration});
                 //.out '    LiteC_registerShim(',appendToDeclaration.varRef,
-                METHOD(out_,this)(this,8,(any_arr){any_str("    LiteC_registerShim("), PROP(varRef_,appendToDeclaration), _concatAny(3,any_str(","), PROP(name_,methodDeclaration), any_str("_,")), PROP(varRef_,appendToDeclaration), any_str("_"), PROP(name_,methodDeclaration), any_str(");"), Producer_c_NL});
+                METHOD(out_,this)(this,8,(any_arr){any_LTR("    LiteC_registerShim("), PROP(varRef_,appendToDeclaration), _concatAny(3,any_LTR(","), PROP(name_,methodDeclaration), any_LTR("_,")), PROP(varRef_,appendToDeclaration), any_LTR("_"), PROP(name_,methodDeclaration), any_LTR(");"), Producer_c_NL});
         }};// end for each in Producer_c_appendToCoreClassMethods
                      //',#{methodDeclaration.name}_,',
                      //appendToDeclaration.varRef,'_',methodDeclaration.name,');',NL
@@ -382,14 +388,14 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         }}};// end for each in map PROP(moduleCache_,project)
         
         //.out '\n'
-        METHOD(out_,this)(this,1,(any_arr){any_str("\n")});
+        METHOD(out_,this)(this,1,(any_arr){any_LTR("\n")});
         //for each nodeModule in moduleList
         any _list67=moduleList;
         { var nodeModule=undefined;
         for(int nodeModule__inx=0 ; nodeModule__inx<_list67.value.arr->length ; nodeModule__inx++){nodeModule=ITEM(nodeModule__inx,_list67);
         
             //.out '    ',nodeModule.fileInfo.base,'__moduleInit();',NL 
-            METHOD(out_,this)(this,4,(any_arr){any_str("    "), PROP(base_,PROP(fileInfo_,nodeModule)), any_str("__moduleInit();"), Producer_c_NL});
+            METHOD(out_,this)(this,4,(any_arr){any_LTR("    "), PROP(base_,PROP(fileInfo_,nodeModule)), any_LTR("__moduleInit();"), Producer_c_NL});
         }};// end for each in moduleList
 
 //call main module __init (main program execution),
@@ -402,7 +408,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //NL 
             //'} //end main'
             //NL
-        METHOD(out_,this)(this,8,(any_arr){any_str("\n\n    "), PROP(base_,PROP(fileInfo_,PROP(main_,project))), any_str("__moduleInit();"), Producer_c_NL, any_str("\n\n    LiteC_finish();"), Producer_c_NL, any_str("} //end main"), Producer_c_NL});
+        METHOD(out_,this)(this,8,(any_arr){any_LTR("\n\n    "), PROP(base_,PROP(fileInfo_,PROP(main_,project))), any_LTR("__moduleInit();"), Producer_c_NL, any_LTR("\n\n    LiteC_finish();"), Producer_c_NL, any_LTR("} //end main"), Producer_c_NL});
      return undefined;
      }
 
@@ -422,7 +428,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         METHOD(out_,this)(this,7,(any_arr){new(Map,1,(any_arr){
             _newPair("h",any_number(1))
             })
-, Producer_c_NL, _concatAny(3,any_str("#ifndef "), Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))}), any_str("_H")), Producer_c_NL, _concatAny(3,any_str("#define "), Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))}), any_str("_H")), Producer_c_NL, Producer_c_NL});
+, Producer_c_NL, _concatAny(3,any_LTR("#ifndef "), Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))}), any_LTR("_H")), Producer_c_NL, _concatAny(3,any_LTR("#define "), Producer_c_normalizeDefine(undefined,1,(any_arr){PROP(outRelFilename_,PROP(fileInfo_,this))}), any_LTR("_H")), Producer_c_NL, Producer_c_NL});
 
         //var thisBase = Environment.getDir(.fileInfo.outFilename)
         var thisBase = Environment_getDir(undefined,1,(any_arr){PROP(outFilename_,PROP(fileInfo_,this))});
@@ -430,11 +436,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //declare valid .parent.fileInfo.outFilename
         
         //var dispatcherFull = "#{Environment.getDir(.parent.fileInfo.outFilename)}/_dispatcher.h"
-        var dispatcherFull = _concatAny(2,Environment_getDir(undefined,1,(any_arr){PROP(outFilename_,PROP(fileInfo_,PROP(parent_,this)))}), any_str("/_dispatcher.h"));
+        var dispatcherFull = _concatAny(2,Environment_getDir(undefined,1,(any_arr){PROP(outFilename_,PROP(fileInfo_,PROP(parent_,this)))}), any_LTR("/_dispatcher.h"));
         //var dispatcherRel = Environment.relativeFrom(thisBase,dispatcherFull)
         var dispatcherRel = Environment_relativeFrom(undefined,2,(any_arr){thisBase, dispatcherFull});
         //.out '#include "', dispatcherRel, '"',NL
-        METHOD(out_,this)(this,4,(any_arr){any_str("#include \""), dispatcherRel, any_str("\""), Producer_c_NL});
+        METHOD(out_,this)(this,4,(any_arr){any_LTR("#include \""), dispatcherRel, any_LTR("\""), Producer_c_NL});
 
         //var prefix=.fileInfo.base
         var prefix = PROP(base_,PROP(fileInfo_,this));
@@ -443,12 +449,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //"//-------------------------",NL
             //"//Module ",prefix, NL
             //"//-------------------------",NL
-        METHOD(out_,this)(this,7,(any_arr){any_str("//-------------------------"), Producer_c_NL, any_str("//Module "), prefix, Producer_c_NL, any_str("//-------------------------"), Producer_c_NL});
+        METHOD(out_,this)(this,7,(any_arr){any_LTR("//-------------------------"), Producer_c_NL, any_LTR("//Module "), prefix, Producer_c_NL, any_LTR("//-------------------------"), Producer_c_NL});
 
 //Modules have a __moduleInit function holding module items initialization and any loose statements
 
         //.out "extern void ",prefix,"__moduleInit(void);",NL
-        METHOD(out_,this)(this,4,(any_arr){any_str("extern void "), prefix, any_str("__moduleInit(void);"), Producer_c_NL});
+        METHOD(out_,this)(this,4,(any_arr){any_LTR("extern void "), prefix, any_LTR("__moduleInit(void);"), Producer_c_NL});
 
 //Interfaces have a __nativeInit function to provide a initialization opportunity 
 //to module native support
@@ -456,7 +462,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //if .fileInfo.isInterface // add call to native hand-coded C support for this module 
         if (_anyToBool(PROP(isInterface_,PROP(fileInfo_,this))))  { // add call to native hand-coded C support for this module
             //.out "extern void ",prefix,"__nativeInit(void);",NL
-            METHOD(out_,this)(this,4,(any_arr){any_str("extern void "), prefix, any_str("__nativeInit(void);"), Producer_c_NL});
+            METHOD(out_,this)(this,4,(any_arr){any_LTR("extern void "), prefix, any_LTR("__nativeInit(void);"), Producer_c_NL});
         };
 
 //Since we cannot initialize a module var at declaration in C (err:initializer element is not constant),
@@ -481,13 +487,13 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         METHOD(out_,this)(this,12,(any_arr){new(Map,1,(any_arr){
             _newPair("h",any_number(0))
             })
-, _concatAny(3,any_str("#include \""), prefix, any_str(".h\"")), Producer_c_NL, Producer_c_NL, any_str("//-------------------------"), Producer_c_NL, any_str("//Module "), prefix, _anyToBool(PROP(isInterface_,PROP(fileInfo_,this))) ? any_str(" - INTERFACE") : any_EMPTY_STR, Producer_c_NL, any_str("//-------------------------"), Producer_c_NL});
+, _concatAny(3,any_LTR("#include \""), prefix, any_LTR(".h\"")), Producer_c_NL, Producer_c_NL, any_LTR("//-------------------------"), Producer_c_NL, any_LTR("//Module "), prefix, _anyToBool(PROP(isInterface_,PROP(fileInfo_,this))) ? any_LTR(" - INTERFACE") : any_EMPTY_STR, Producer_c_NL, any_LTR("//-------------------------"), Producer_c_NL});
 
         ////space to insert __or temp vars
         //.out '#include "#{.fileInfo.base}.c.extra"',NL
-        METHOD(out_,this)(this,2,(any_arr){_concatAny(3,any_str("#include \""), PROP(base_,PROP(fileInfo_,this)), any_str(".c.extra\"")), Producer_c_NL});
+        METHOD(out_,this)(this,2,(any_arr){_concatAny(3,any_LTR("#include \""), PROP(base_,PROP(fileInfo_,this)), any_LTR(".c.extra\"")), Producer_c_NL});
         //.lexer.outCode.filenames[2] = "#{.fileInfo.outFilename}.extra"
-        ITEM(2,PROP(filenames_,PROP(outCode_,PROP(lexer_,this)))) = _concatAny(2,PROP(outFilename_,PROP(fileInfo_,this)), any_str(".extra"));
+        ITEM(2,PROP(filenames_,PROP(outCode_,PROP(lexer_,this)))) = _concatAny(2,PROP(outFilename_,PROP(fileInfo_,this)), any_LTR(".extra"));
 
         //// add sustance for the module
         //.produceSustance prefix
@@ -498,7 +504,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //.out 
             //"\n\n//-------------------------",NL
             //"void ",prefix,"__moduleInit(void){",NL
-        METHOD(out_,this)(this,6,(any_arr){any_str("\n\n//-------------------------"), Producer_c_NL, any_str("void "), prefix, any_str("__moduleInit(void){"), Producer_c_NL});
+        METHOD(out_,this)(this,6,(any_arr){any_LTR("\n\n//-------------------------"), Producer_c_NL, any_LTR("void "), prefix, any_LTR("__moduleInit(void){"), Producer_c_NL});
 
         ///*
         //for each nameDecl in map .scope.members
@@ -541,11 +547,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //if .fileInfo.isInterface // add call to native hand-coded C support for this module 
         if (_anyToBool(PROP(isInterface_,PROP(fileInfo_,this))))  { // add call to native hand-coded C support for this module
             //.out NL,'    ',prefix,"__nativeInit();"
-            METHOD(out_,this)(this,4,(any_arr){Producer_c_NL, any_str("    "), prefix, any_str("__nativeInit();")});
+            METHOD(out_,this)(this,4,(any_arr){Producer_c_NL, any_LTR("    "), prefix, any_LTR("__nativeInit();")});
         };
 
         //.out NL,"};",NL
-        METHOD(out_,this)(this,3,(any_arr){Producer_c_NL, any_str("};"), Producer_c_NL});
+        METHOD(out_,this)(this,3,(any_arr){Producer_c_NL, any_LTR("};"), Producer_c_NL});
 
 //insert at .c file start, helper tempvars for 'or' expressions short-circuit evaluation
 
@@ -556,17 +562,17 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         METHOD(out_,this)(this,4,(any_arr){new(Map,1,(any_arr){
             _newPair("h",any_number(2))
             })
-, any_str("//helper tempvars for 'or' expressions short-circuit evaluation"), Producer_c_NL, any_str("any __or1")});
+, any_LTR("//helper tempvars for 'or' expressions short-circuit evaluation"), Producer_c_NL, any_LTR("any __or1")});
 
         //for n=2 to .lexer.outCode.orTempVarCount
         int64_t _end7=_anyToNumber(PROP(orTempVarCount_,PROP(outCode_,PROP(lexer_,this))));
         for(int64_t n=2; n<=_end7; n++){
             //.out ",__or#{n}"
-            METHOD(out_,this)(this,1,(any_arr){_concatAny(2,any_str(",__or"), any_number(n))});
+            METHOD(out_,this)(this,1,(any_arr){_concatAny(2,any_LTR(",__or"), any_number(n))});
         };// end for n
 
         //.out ";", {h:1}
-        METHOD(out_,this)(this,2,(any_arr){any_str(";"), new(Map,1,(any_arr){
+        METHOD(out_,this)(this,2,(any_arr){any_LTR(";"), new(Map,1,(any_arr){
         _newPair("h",any_number(1))
         })
         });
@@ -585,7 +591,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         METHOD(out_,this)(this,5,(any_arr){new(Map,1,(any_arr){
             _newPair("h",any_number(1))
             })
-, Producer_c_NL, any_str("#endif"), Producer_c_NL, new(Map,1,(any_arr){
+, Producer_c_NL, any_LTR("#endif"), Producer_c_NL, new(Map,1,(any_arr){
             _newPair("h",any_number(0))
             })
             });
@@ -611,7 +617,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //var nameDeclClass = .varRef.tryGetReference() // get class being append to
         var nameDeclClass = __call(tryGetReference_,PROP(varRef_,this),0,NULL); // get class being append to
         //if no nameDeclClass, return .sayErr("append to: no reference found")
-        if (!_anyToBool(nameDeclClass)) {return METHOD(sayErr_,this)(this,1,(any_arr){any_str("append to: no reference found")});};
+        if (!_anyToBool(nameDeclClass)) {return METHOD(sayErr_,this)(this,1,(any_arr){any_LTR("append to: no reference found")});};
 
         //if .toNamespace
         if (_anyToBool(PROP(toNamespace_,this)))  {
@@ -624,7 +630,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //handle methods added to core classes
 
         //if nameDeclClass.nodeDeclared and nameDeclClass.nodeDeclared.name is "*Global Scope*"
-        if (_anyToBool(PROP(nodeDeclared_,nameDeclClass)) && __is(PROP(name_,PROP(nodeDeclared_,nameDeclClass)),any_str("*Global Scope*")))  {
+        if (_anyToBool(PROP(nodeDeclared_,nameDeclClass)) && __is(PROP(name_,PROP(nodeDeclared_,nameDeclClass)),any_LTR("*Global Scope*")))  {
 
 //for each method declaration in .body
 
@@ -655,7 +661,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //out header
 
                     //.out 'extern any ',item.specific.nameDecl.getComposedName(),"(DEFAULT_ARGUMENTS);",NL                            
-                    METHOD(out_,this)(this,4,(any_arr){any_str("extern any "), __call(getComposedName_,PROP(nameDecl_,PROP(specific_,item)),0,NULL), any_str("(DEFAULT_ARGUMENTS);"), Producer_c_NL});
+                    METHOD(out_,this)(this,4,(any_arr){any_LTR("extern any "), __call(getComposedName_,PROP(nameDecl_,PROP(specific_,item)),0,NULL), any_LTR("(DEFAULT_ARGUMENTS);"), Producer_c_NL});
             }}};// end for each in PROP(statements_,PROP(body_,this))
             
         };
@@ -687,7 +693,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Grammar_NamespaceDeclaration));
         //---------
         //.out '    ',.nameDecl.getComposedName(),'__namespaceInit();',NL
-        METHOD(out_,this)(this,4,(any_arr){any_str("    "), __call(getComposedName_,PROP(nameDecl_,this),0,NULL), any_str("__namespaceInit();"), Producer_c_NL});
+        METHOD(out_,this)(this,4,(any_arr){any_LTR("    "), __call(getComposedName_,PROP(nameDecl_,this),0,NULL), any_LTR("__namespaceInit();"), Producer_c_NL});
      return undefined;
      }
 
@@ -726,7 +732,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //"//-------------------------",NL
             //"// namespace ",prefix,NL
             //"//-------------------------",NL
-        METHOD(out_,this)(this,7,(any_arr){any_str("//-------------------------"), Producer_c_NL, any_str("// namespace "), prefix, Producer_c_NL, any_str("//-------------------------"), Producer_c_NL});
+        METHOD(out_,this)(this,7,(any_arr){any_LTR("//-------------------------"), Producer_c_NL, any_LTR("// namespace "), prefix, Producer_c_NL, any_LTR("//-------------------------"), Producer_c_NL});
 
 //all namespace methods & props are public 
 
@@ -745,19 +751,19 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 member= __nvp->value;
           
             //where member.name not in ['constructor','length','prototype']
-            if(!(__in(PROP(name_,member),3,(any_arr){any_str("constructor"), any_str("length"), any_str("prototype")}))){
+            if(!(__in(PROP(name_,member),3,(any_arr){any_LTR("constructor"), any_LTR("length"), any_LTR("prototype")}))){
                 //case member.nodeClass
                 
                     //when Grammar.VariableDecl
                 if (__is(PROP(nodeClass_,member),Grammar_VariableDecl)){
                         //.out '    extern var ',prefix,'_',member.name,';',NL
-                        METHOD(out_,this)(this,6,(any_arr){any_str("    extern var "), prefix, any_str("_"), PROP(name_,member), any_str(";"), Producer_c_NL});
+                        METHOD(out_,this)(this,6,(any_arr){any_LTR("    extern var "), prefix, any_LTR("_"), PROP(name_,member), any_LTR(";"), Producer_c_NL});
                 
                 }
                     //when Grammar.MethodDeclaration
                 else if (__is(PROP(nodeClass_,member),Grammar_MethodDeclaration)){
                         //.out '    extern any ',prefix,'_',member.name,'(DEFAULT_ARGUMENTS);',NL
-                        METHOD(out_,this)(this,6,(any_arr){any_str("    extern any "), prefix, any_str("_"), PROP(name_,member), any_str("(DEFAULT_ARGUMENTS);"), Producer_c_NL});
+                        METHOD(out_,this)(this,6,(any_arr){any_LTR("    extern any "), prefix, any_LTR("_"), PROP(name_,member), any_LTR("(DEFAULT_ARGUMENTS);"), Producer_c_NL});
                 
                 };
         }}};// end for each in map PROP(members_,PROP(nameDecl_,this))
@@ -777,7 +783,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //var prefix= .nameDecl.getComposedName()
         var prefix = __call(getComposedName_,PROP(nameDecl_,this),0,NULL);
         //var isPublic = .hasAdjective('export')
-        var isPublic = METHOD(hasAdjective_,this)(this,1,(any_arr){any_str("export")});
+        var isPublic = METHOD(hasAdjective_,this)(this,1,(any_arr){any_LTR("export")});
 
         ////logger.debug "produce Namespace",c
 
@@ -787,7 +793,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //"//-------------------------",NL
             //"//NAMESPACE ",prefix,NL
             //"//-------------------------",NL
-        METHOD(out_,this)(this,7,(any_arr){any_str("//-------------------------"), Producer_c_NL, any_str("//NAMESPACE "), prefix, Producer_c_NL, any_str("//-------------------------"), Producer_c_NL});
+        METHOD(out_,this)(this,7,(any_arr){any_LTR("//-------------------------"), Producer_c_NL, any_LTR("//NAMESPACE "), prefix, Producer_c_NL, any_LTR("//-------------------------"), Producer_c_NL});
 
         //.body.produceSustance prefix
         __call(produceSustance_,PROP(body_,this),1,(any_arr){prefix});
@@ -797,12 +803,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //.out 
             //NL,NL,"//------------------",NL
             //"void ",prefix,"__namespaceInit(void){",NL
-        METHOD(out_,this)(this,8,(any_arr){Producer_c_NL, Producer_c_NL, any_str("//------------------"), Producer_c_NL, any_str("void "), prefix, any_str("__namespaceInit(void){"), Producer_c_NL});
+        METHOD(out_,this)(this,8,(any_arr){Producer_c_NL, Producer_c_NL, any_LTR("//------------------"), Producer_c_NL, any_LTR("void "), prefix, any_LTR("__namespaceInit(void){"), Producer_c_NL});
 
         //.body.produceMainFunctionBody prefix
         __call(produceMainFunctionBody_,PROP(body_,this),1,(any_arr){prefix});
         //.out "};",NL
-        METHOD(out_,this)(this,2,(any_arr){any_str("};"), Producer_c_NL});
+        METHOD(out_,this)(this,2,(any_arr){any_LTR("};"), Producer_c_NL});
 
         //.skipSemiColon = true
         PROP(skipSemiColon_,this) = true;
@@ -840,7 +846,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //.out 
             //"typedef struct ",c,"_s * ",c,"_ptr;",NL
             //"typedef struct ",c,"_s {",NL
-        METHOD(out_,this)(this,10,(any_arr){any_str("typedef struct "), c, any_str("_s * "), c, any_str("_ptr;"), Producer_c_NL, any_str("typedef struct "), c, any_str("_s {"), Producer_c_NL});
+        METHOD(out_,this)(this,10,(any_arr){any_LTR("typedef struct "), c, any_LTR("_s * "), c, any_LTR("_ptr;"), Producer_c_NL, any_LTR("typedef struct "), c, any_LTR("_s {"), Producer_c_NL});
 
 //out all properties, from the start of the "super-extends" chain
 
@@ -850,15 +856,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //close instance struct
 
         //.out NL,"} ",c,"_s;",NL,NL
-        METHOD(out_,this)(this,6,(any_arr){Producer_c_NL, any_str("} "), c, any_str("_s;"), Producer_c_NL, Producer_c_NL});
+        METHOD(out_,this)(this,6,(any_arr){Producer_c_NL, any_LTR("} "), c, any_LTR("_s;"), Producer_c_NL, Producer_c_NL});
 
 //and declare extern for class __init
 
         ////declare extern for this class methods
         //.out "extern void ",c,"__init(DEFAULT_ARGUMENTS);",NL
-        METHOD(out_,this)(this,4,(any_arr){any_str("extern void "), c, any_str("__init(DEFAULT_ARGUMENTS);"), Producer_c_NL});
+        METHOD(out_,this)(this,4,(any_arr){any_LTR("extern void "), c, any_LTR("__init(DEFAULT_ARGUMENTS);"), Producer_c_NL});
         //.out "extern any ",c,"_newFromObject(DEFAULT_ARGUMENTS);",NL
-        METHOD(out_,this)(this,4,(any_arr){any_str("extern any "), c, any_str("_newFromObject(DEFAULT_ARGUMENTS);"), Producer_c_NL});
+        METHOD(out_,this)(this,4,(any_arr){any_LTR("extern any "), c, any_LTR("_newFromObject(DEFAULT_ARGUMENTS);"), Producer_c_NL});
 
 
 //add each prop to "all properties list", each method to "all methods list"
@@ -868,7 +874,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         var classMethods = new(Array,0,NULL);
 
         //var prt = .nameDecl.findOwnMember('prototype')
-        var prt = __call(findOwnMember_,PROP(nameDecl_,this),1,(any_arr){any_str("prototype")});
+        var prt = __call(findOwnMember_,PROP(nameDecl_,this),1,(any_arr){any_LTR("prototype")});
         //for each prtNameDecl in map prt.members
         any _list70=PROP(members_,prt);
         {NameValuePair_ptr __nvp=NULL; //name:value pair
@@ -879,7 +885,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 prtNameDecl= __nvp->value;
           
             //where prtNameDecl.name not in ['constructor','length','prototype']
-            if(!(__in(PROP(name_,prtNameDecl),3,(any_arr){any_str("constructor"), any_str("length"), any_str("prototype")}))){
+            if(!(__in(PROP(name_,prtNameDecl),3,(any_arr){any_LTR("constructor"), any_LTR("length"), any_LTR("prototype")}))){
                 //if prtNameDecl.nodeClass is Grammar.VariableDecl
                 if (__is(PROP(nodeClass_,prtNameDecl),Grammar_VariableDecl))  {
                     //// keep a list of all classes props
@@ -895,7 +901,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
                     ////declare extern for this class methods
                     //.out "extern any ",c,"_",prtNameDecl.name,"(DEFAULT_ARGUMENTS);",NL
-                    METHOD(out_,this)(this,6,(any_arr){any_str("extern any "), c, any_str("_"), PROP(name_,prtNameDecl), any_str("(DEFAULT_ARGUMENTS);"), Producer_c_NL});
+                    METHOD(out_,this)(this,6,(any_arr){any_LTR("extern any "), c, any_LTR("_"), PROP(name_,prtNameDecl), any_LTR("(DEFAULT_ARGUMENTS);"), Producer_c_NL});
                 };
         }}};// end for each in map PROP(members_,prt)
 
@@ -911,12 +917,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 nameDecl= __nvp->value;
           
             //where nameDecl.name isnt 'prototype' and nameDecl.name.charAt(0) isnt '*'
-            if(!__is(PROP(name_,nameDecl),any_str("prototype")) && !__is(__call(charAt_,PROP(name_,nameDecl),1,(any_arr){any_number(0)}),any_str("*"))){
+            if(!__is(PROP(name_,nameDecl),any_LTR("prototype")) && !__is(__call(charAt_,PROP(name_,nameDecl),1,(any_arr){any_number(0)}),any_LTR("*"))){
                 //if nameDecl.nodeClass is Grammar.MethodDeclaration
                 if (__is(PROP(nodeClass_,nameDecl),Grammar_MethodDeclaration))  {
                     ////declare extern for this class as namespace method
                     //.out "extern any ",c,"_",nameDecl.name,"(DEFAULT_ARGUMENTS); //class as namespace",NL
-                    METHOD(out_,this)(this,6,(any_arr){any_str("extern any "), c, any_str("_"), PROP(name_,nameDecl), any_str("(DEFAULT_ARGUMENTS); //class as namespace"), Producer_c_NL});
+                    METHOD(out_,this)(this,6,(any_arr){any_LTR("extern any "), c, any_LTR("_"), PROP(name_,nameDecl), any_LTR("(DEFAULT_ARGUMENTS); //class as namespace"), Producer_c_NL});
                 };
         }}};// end for each in map PROP(members_,PROP(nameDecl_,this))
         
@@ -957,7 +963,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 //if hasConstructor # what? more than one?
                 if (_anyToBool(hasConstructor))  {// # what? more than one?
                     //.throwError('Two constructors declared for class #{c}')
-                    METHOD(throwError_,this)(this,1,(any_arr){_concatAny(2,any_str("Two constructors declared for class "), c)});
+                    METHOD(throwError_,this)(this,1,(any_arr){_concatAny(2,any_LTR("Two constructors declared for class "), c)});
                 };
                 //hasConstructor = true
                 hasConstructor = true;
@@ -967,7 +973,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             
             else if (_instanceof(PROP(specific_,item),Grammar_MethodDeclaration))  {
                 //if .name is 'newFromObject'
-                if (__is(PROP(name_,this),any_str("newFromObject")))  {
+                if (__is(PROP(name_,this),any_LTR("newFromObject")))  {
                     //hasNewFromObject = true
                     hasNewFromObject = true;
                 };
@@ -986,25 +992,25 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 //.out 
                     //"//auto ",c,"__init",NL
                     //"void ",c,"__init",DEFAULT_ARGUMENTS,"{",NL
-                METHOD(out_,this)(this,10,(any_arr){any_str("//auto "), c, any_str("__init"), Producer_c_NL, any_str("void "), c, any_str("__init"), Producer_c_DEFAULT_ARGUMENTS, any_str("{"), Producer_c_NL});
+                METHOD(out_,this)(this,10,(any_arr){any_LTR("//auto "), c, any_LTR("__init"), Producer_c_NL, any_LTR("void "), c, any_LTR("__init"), Producer_c_DEFAULT_ARGUMENTS, any_LTR("{"), Producer_c_NL});
 
                 //if .varRefSuper
                 if (_anyToBool(PROP(varRefSuper_,this)))  {
                     //.out 
                         //"    ",{COMMENT:"//auto call super class __init"},NL
                         //"    ",.varRefSuper,"__init(this,argc,arguments);",NL
-                    METHOD(out_,this)(this,7,(any_arr){any_str("    "), new(Map,1,(any_arr){
-                        _newPair("COMMENT",any_str("//auto call super class __init"))
+                    METHOD(out_,this)(this,7,(any_arr){any_LTR("    "), new(Map,1,(any_arr){
+                        _newPair("COMMENT",any_LTR("//auto call super class __init"))
                         })
-, Producer_c_NL, any_str("    "), PROP(varRefSuper_,this), any_str("__init(this,argc,arguments);"), Producer_c_NL});
+, Producer_c_NL, any_LTR("    "), PROP(varRefSuper_,this), any_LTR("__init(this,argc,arguments);"), Producer_c_NL});
                 };
 
                 //.body.producePropertiesInitialValueAssignments '((#{c}_ptr)this.value.ptr)->'
-                __call(producePropertiesInitialValueAssignments_,PROP(body_,this),1,(any_arr){_concatAny(3,any_str("(("), c, any_str("_ptr)this.value.ptr)->"))});
+                __call(producePropertiesInitialValueAssignments_,PROP(body_,this),1,(any_arr){_concatAny(3,any_LTR("(("), c, any_LTR("_ptr)this.value.ptr)->"))});
 
                 //// end default constructor
                 //.out "};",NL
-                METHOD(out_,this)(this,2,(any_arr){any_str("};"), Producer_c_NL});
+                METHOD(out_,this)(this,2,(any_arr){any_LTR("};"), Producer_c_NL});
             };
 
 //produce newFromObject
@@ -1019,7 +1025,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     //"inline any ",c,"_newFromObject(DEFAULT_ARGUMENTS){",NL
                     //"    return _newFromObject(",c,",argc,arguments);",NL
                     //"}",NL
-                METHOD(out_,this)(this,15,(any_arr){Producer_c_NL, any_str("//auto "), c, any_str("_newFromObject"), Producer_c_NL, any_str("inline any "), c, any_str("_newFromObject(DEFAULT_ARGUMENTS){"), Producer_c_NL, any_str("    return _newFromObject("), c, any_str(",argc,arguments);"), Producer_c_NL, any_str("}"), Producer_c_NL});
+                METHOD(out_,this)(this,15,(any_arr){Producer_c_NL, any_LTR("//auto "), c, any_LTR("_newFromObject"), Producer_c_NL, any_LTR("inline any "), c, any_LTR("_newFromObject(DEFAULT_ARGUMENTS){"), Producer_c_NL, any_LTR("    return _newFromObject("), c, any_LTR(",argc,arguments);"), Producer_c_NL, any_LTR("}"), Producer_c_NL});
             };
         };
 
@@ -1047,10 +1053,10 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //{COMMENT:c},NL
             //'any #{c}; //Class ',c
             //.varRefSuper? [' extends ',.varRefSuper,NL] else '', NL
-        METHOD(out_,this)(this,8,(any_arr){any_str("\n\n//--------------"), Producer_c_NL, new(Map,1,(any_arr){
+        METHOD(out_,this)(this,8,(any_arr){any_LTR("\n\n//--------------"), Producer_c_NL, new(Map,1,(any_arr){
             _newPair("COMMENT",c)
             })
-, Producer_c_NL, _concatAny(3,any_str("any "), c, any_str("; //Class ")), c, _anyToBool(PROP(varRefSuper_,this)) ? new(Array,3,(any_arr){any_str(" extends "), PROP(varRefSuper_,this), Producer_c_NL}) : any_EMPTY_STR, Producer_c_NL});
+, Producer_c_NL, _concatAny(3,any_LTR("any "), c, any_LTR("; //Class ")), c, _anyToBool(PROP(varRefSuper_,this)) ? new(Array,3,(any_arr){any_LTR(" extends "), PROP(varRefSuper_,this), Producer_c_NL}) : any_EMPTY_STR, Producer_c_NL});
      return undefined;
      }
 
@@ -1076,12 +1082,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //'//-----------------------',NL
             //NL 
             //"static _methodInfoArr ",c,"_METHODS = {",NL
-        METHOD(out_,this)(this,13,(any_arr){any_str("//-----------------------"), Producer_c_NL, any_str("// Class "), c, any_str(": static list of METHODS(verbs) and PROPS(things)"), Producer_c_NL, any_str("//-----------------------"), Producer_c_NL, Producer_c_NL, any_str("static _methodInfoArr "), c, any_str("_METHODS = {"), Producer_c_NL});
+        METHOD(out_,this)(this,13,(any_arr){any_LTR("//-----------------------"), Producer_c_NL, any_LTR("// Class "), c, any_LTR(": static list of METHODS(verbs) and PROPS(things)"), Producer_c_NL, any_LTR("//-----------------------"), Producer_c_NL, Producer_c_NL, any_LTR("static _methodInfoArr "), c, any_LTR("_METHODS = {"), Producer_c_NL});
 
         //var propList=[]
         var propList = new(Array,0,NULL);
         //var prt = .nameDecl.findOwnMember('prototype')
-        var prt = __call(findOwnMember_,PROP(nameDecl_,this),1,(any_arr){any_str("prototype")});
+        var prt = __call(findOwnMember_,PROP(nameDecl_,this),1,(any_arr){any_LTR("prototype")});
         //for each nameDecl in map prt.members
         any _list73=PROP(members_,prt);
         {NameValuePair_ptr __nvp=NULL; //name:value pair
@@ -1092,11 +1098,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 nameDecl= __nvp->value;
           
             //where nameDecl.name not in ['constructor','length','prototype']
-            if(!(__in(PROP(name_,nameDecl),3,(any_arr){any_str("constructor"), any_str("length"), any_str("prototype")}))){
+            if(!(__in(PROP(name_,nameDecl),3,(any_arr){any_LTR("constructor"), any_LTR("length"), any_LTR("prototype")}))){
                 //if nameDecl.nodeClass is Grammar.MethodDeclaration
                 if (__is(PROP(nodeClass_,nameDecl),Grammar_MethodDeclaration))  {
                     //.out '  { #{makeSymbolName(nameDecl.name)}, #{c}_#{nameDecl.name} },',NL
-                    METHOD(out_,this)(this,2,(any_arr){_concatAny(7,any_str("  { "), Producer_c_makeSymbolName(undefined,1,(any_arr){PROP(name_,nameDecl)}), any_str(", "), c, any_str("_"), PROP(name_,nameDecl), any_str(" },")), Producer_c_NL});
+                    METHOD(out_,this)(this,2,(any_arr){_concatAny(7,any_LTR("  { "), Producer_c_makeSymbolName(undefined,1,(any_arr){PROP(name_,nameDecl)}), any_LTR(", "), c, any_LTR("_"), PROP(name_,nameDecl), any_LTR(" },")), Producer_c_NL});
                 }
                 //else
                 
@@ -1109,14 +1115,14 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //.out 
             //NL,"{0,0}}; //method jmp table initializer end mark",NL
             //NL
-            //"static _posTableItem_t ",c,"_PROPS[] = {",NL
+            //"static propIndex_t ",c,"_PROPS[] = {",NL
             //{CSL:propList, post:'\n    '}
             //"};",NL,NL
-        METHOD(out_,this)(this,12,(any_arr){Producer_c_NL, any_str("{0,0}}; //method jmp table initializer end mark"), Producer_c_NL, Producer_c_NL, any_str("static _posTableItem_t "), c, any_str("_PROPS[] = {"), Producer_c_NL, new(Map,2,(any_arr){
+        METHOD(out_,this)(this,12,(any_arr){Producer_c_NL, any_LTR("{0,0}}; //method jmp table initializer end mark"), Producer_c_NL, Producer_c_NL, any_LTR("static propIndex_t "), c, any_LTR("_PROPS[] = {"), Producer_c_NL, new(Map,2,(any_arr){
             _newPair("CSL",propList), 
-            _newPair("post",any_str("\n    "))
+            _newPair("post",any_LTR("\n    "))
             })
-, any_str("};"), Producer_c_NL, Producer_c_NL});
+, any_LTR("};"), Producer_c_NL, Producer_c_NL});
      return undefined;
      }
 
@@ -1133,13 +1139,13 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         var c = __call(getComposedName_,PROP(nameDecl_,this),0,NULL);
 
         //var superName = .nameDecl.superDecl? .nameDecl.superDecl.getComposedName() else 'Object' 
-        var superName = _anyToBool(PROP(superDecl_,PROP(nameDecl_,this))) ? __call(getComposedName_,PROP(superDecl_,PROP(nameDecl_,this)),0,NULL) : any_str("Object");
+        var superName = _anyToBool(PROP(superDecl_,PROP(nameDecl_,this))) ? __call(getComposedName_,PROP(superDecl_,PROP(nameDecl_,this)),0,NULL) : any_LTR("Object");
 
         //.out 
-            //'    #{c} =_newClass("#{c}", #{c}__init, sizeof(struct #{c}_s), #{superName}.value.classINFOptr);',NL
+            //'    #{c} =_newClass("#{c}", #{c}__init, sizeof(struct #{c}_s), #{superName});',NL
             //'    _declareMethods(#{c}, #{c}_METHODS);',NL
             //'    _declareProps(#{c}, #{c}_PROPS, sizeof #{c}_PROPS);',NL,NL
-        METHOD(out_,this)(this,7,(any_arr){_concatAny(11,any_str("    "), c, any_str(" =_newClass(\""), c, any_str("\", "), c, any_str("__init, sizeof(struct "), c, any_str("_s), "), superName, any_str(".value.classINFOptr);")), Producer_c_NL, _concatAny(5,any_str("    _declareMethods("), c, any_str(", "), c, any_str("_METHODS);")), Producer_c_NL, _concatAny(7,any_str("    _declareProps("), c, any_str(", "), c, any_str("_PROPS, sizeof "), c, any_str("_PROPS);")), Producer_c_NL, Producer_c_NL});
+        METHOD(out_,this)(this,7,(any_arr){_concatAny(11,any_LTR("    "), c, any_LTR(" =_newClass(\""), c, any_LTR("\", "), c, any_LTR("__init, sizeof(struct "), c, any_LTR("_s), "), superName, any_LTR(");")), Producer_c_NL, _concatAny(5,any_LTR("    _declareMethods("), c, any_LTR(", "), c, any_LTR("_METHODS);")), Producer_c_NL, _concatAny(7,any_LTR("    _declareProps("), c, any_LTR(", "), c, any_LTR("_PROPS, sizeof "), c, any_LTR("_PROPS);")), Producer_c_NL, Producer_c_NL});
      return undefined;
      }
 
@@ -1160,11 +1166,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         if (_anyToBool(PROP(superDecl_,this))) {__call(outSuperChainProps_,PROP(superDecl_,this),1,(any_arr){node});};
 
         //node.out '    //',.name,NL
-        METHOD(out_,node)(node,3,(any_arr){any_str("    //"), PROP(name_,this), Producer_c_NL});
+        METHOD(out_,node)(node,3,(any_arr){any_LTR("    //"), PROP(name_,this), Producer_c_NL});
         //var prt = .ownMember('prototype')
-        var prt = METHOD(ownMember_,this)(this,1,(any_arr){any_str("prototype")});
+        var prt = METHOD(ownMember_,this)(this,1,(any_arr){any_LTR("prototype")});
         //if no prt, .sayErr "class #{.name} has no prototype"
-        if (!_anyToBool(prt)) {METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_str("class "), PROP(name_,this), any_str(" has no prototype"))});};
+        if (!_anyToBool(prt)) {METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_LTR("class "), PROP(name_,this), any_LTR(" has no prototype"))});};
 
         //for each prtNameDecl in map prt.members
         any _list74=PROP(members_,prt);
@@ -1176,11 +1182,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 prtNameDecl= __nvp->value;
           
             //where prtNameDecl.name not in ['constructor','length','prototype']
-            if(!(__in(PROP(name_,prtNameDecl),3,(any_arr){any_str("constructor"), any_str("length"), any_str("prototype")}))){
+            if(!(__in(PROP(name_,prtNameDecl),3,(any_arr){any_LTR("constructor"), any_LTR("length"), any_LTR("prototype")}))){
                 //if prtNameDecl.nodeClass is Grammar.VariableDecl
                 if (__is(PROP(nodeClass_,prtNameDecl),Grammar_VariableDecl))  {
                     //node.out '    any ',prtNameDecl.name,";",NL
-                    METHOD(out_,node)(node,4,(any_arr){any_str("    any "), PROP(name_,prtNameDecl), any_str(";"), Producer_c_NL});
+                    METHOD(out_,node)(node,4,(any_arr){any_LTR("    any "), PROP(name_,prtNameDecl), any_LTR(";"), Producer_c_NL});
                 };
         }}};// end for each in map PROP(members_,prt)
         
@@ -1231,7 +1237,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //---------
 
         //var prefix = parentName? "#{parentName}_" else ""
-        var prefix = _anyToBool(parentName) ? _concatAny(2,parentName, any_str("_")) : any_EMPTY_STR;
+        var prefix = _anyToBool(parentName) ? _concatAny(2,parentName, any_LTR("_")) : any_EMPTY_STR;
 
         //// add each declared prop as a extern prefixed var
         //for each item in .statements
@@ -1241,7 +1247,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         
 
             //var isPublic = forcePublic or item.hasAdjective('export')
-            var isPublic = (_anyToBool(__or2=forcePublic)? __or2 : METHOD(hasAdjective_,item)(item,1,(any_arr){any_str("export")}));
+            var isPublic = (_anyToBool(__or2=forcePublic)? __or2 : METHOD(hasAdjective_,item)(item,1,(any_arr){any_LTR("export")}));
 
             //case item.specific.constructor
             
@@ -1250,11 +1256,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     //declare item.specific:Grammar.VarStatement
                     
                     //if isPublic, .out 'extern var ',{pre:prefix, CSL:item.specific.getNames()},";",NL
-                    if (_anyToBool(isPublic)) {METHOD(out_,this)(this,4,(any_arr){any_str("extern var "), new(Map,2,(any_arr){
+                    if (_anyToBool(isPublic)) {METHOD(out_,this)(this,4,(any_arr){any_LTR("extern var "), new(Map,2,(any_arr){
                     _newPair("pre",prefix), 
                     _newPair("CSL",__call(getNames_,PROP(specific_,item),0,NULL))
                     })
-, any_str(";"), Producer_c_NL});};
+, any_LTR(";"), Producer_c_NL});};
             
             }
                 //when Grammar.FunctionDeclaration, Grammar.MethodDeclaration //method: append to class xx - when is a core class
@@ -1263,7 +1269,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     
                     ////export module function
                     //if isPublic, .out 'extern any ',prefix,item.specific.name,"(DEFAULT_ARGUMENTS);",NL
-                    if (_anyToBool(isPublic)) {METHOD(out_,this)(this,5,(any_arr){any_str("extern any "), prefix, PROP(name_,PROP(specific_,item)), any_str("(DEFAULT_ARGUMENTS);"), Producer_c_NL});};
+                    if (_anyToBool(isPublic)) {METHOD(out_,this)(this,5,(any_arr){any_LTR("extern any "), prefix, PROP(name_,PROP(specific_,item)), any_LTR("(DEFAULT_ARGUMENTS);"), Producer_c_NL});};
             
             }
                 //when Grammar.ClassDeclaration, Grammar.AppendToDeclaration
@@ -1318,11 +1324,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 
                 ////just declare existence, do not assign. (C compiler: error: initializer element is not constant)
                 //.out 'var ',{pre:"#{prefix}_", CSL:item.specific.getNames()},";",NL
-                METHOD(out_,this)(this,4,(any_arr){any_str("var "), new(Map,2,(any_arr){
-                _newPair("pre",_concatAny(2,prefix, any_str("_"))), 
+                METHOD(out_,this)(this,4,(any_arr){any_LTR("var "), new(Map,2,(any_arr){
+                _newPair("pre",_concatAny(2,prefix, any_LTR("_"))), 
                 _newPair("CSL",__call(getNames_,PROP(specific_,item),0,NULL))
                 })
-, any_str(";"), Producer_c_NL});
+, any_LTR(";"), Producer_c_NL});
             }
 
             ////since C require to define a fn before usage. we make forward declarations
@@ -1334,7 +1340,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 
                 ////just declare existence, do not assign. (C compiler: error: initializer element is not constant)
                 //.out 'any ',prefix,'_',item.specific.name,"(DEFAULT_ARGUMENTS); //forward declare",NL
-                METHOD(out_,this)(this,6,(any_arr){any_str("any "), prefix, any_str("_"), PROP(name_,PROP(specific_,item)), any_str("(DEFAULT_ARGUMENTS); //forward declare"), Producer_c_NL});
+                METHOD(out_,this)(this,6,(any_arr){any_LTR("any "), prefix, any_LTR("_"), PROP(name_,PROP(specific_,item)), any_LTR("(DEFAULT_ARGUMENTS); //forward declare"), Producer_c_NL});
                 //produceThird.push item
                 METHOD(push_,produceThird)(produceThird,1,(any_arr){item});
             }
@@ -1363,7 +1369,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             
             else if (__is(any_class(PROP(specific_,item).class),Grammar_AppendToDeclaration))  {
                 //item.specific.callOnSubTree LiteCore.getSymbol('produceStaticListMethodsAndProps') //if there are internal classes
-                __call(callOnSubTree_,PROP(specific_,item),1,(any_arr){LiteCore_getSymbol(undefined,1,(any_arr){any_str("produceStaticListMethodsAndProps")})}); //if there are internal classes
+                __call(callOnSubTree_,PROP(specific_,item),1,(any_arr){LiteCore_getSymbol(undefined,1,(any_arr){any_LTR("produceStaticListMethodsAndProps")})}); //if there are internal classes
                 //produceThird.push item
                 METHOD(push_,produceThird)(produceThird,1,(any_arr){item});
             }
@@ -1412,12 +1418,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //First: register user classes
 
         //.callOnSubTree LiteCore.getSymbol('produceClassRegistration')
-        METHOD(callOnSubTree_,this)(this,1,(any_arr){LiteCore_getSymbol(undefined,1,(any_arr){any_str("produceClassRegistration")})});
+        METHOD(callOnSubTree_,this)(this,1,(any_arr){LiteCore_getSymbol(undefined,1,(any_arr){any_LTR("produceClassRegistration")})});
 
 //Second: recurse for namespaces 
 
         //.callOnSubTree LiteCore.getSymbol('produceCallNamespaceInit')
-        METHOD(callOnSubTree_,this)(this,1,(any_arr){LiteCore_getSymbol(undefined,1,(any_arr){any_str("produceCallNamespaceInit")})});
+        METHOD(callOnSubTree_,this)(this,1,(any_arr){LiteCore_getSymbol(undefined,1,(any_arr){any_LTR("produceCallNamespaceInit")})});
 
 //Third: assign values for module vars.
 //if there is var or properties with assigned values, produce those assignment.
@@ -1440,7 +1446,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     //where variableDecl.assignedValue
                     if(_anyToBool(PROP(assignedValue_,variableDecl))){
                         //.out '    ',prefix,'_',variableDecl.name,' = ', variableDecl.assignedValue,";",NL
-                        METHOD(out_,this)(this,8,(any_arr){any_str("    "), prefix, any_str("_"), PROP(name_,variableDecl), any_str(" = "), PROP(assignedValue_,variableDecl), any_str(";"), Producer_c_NL});
+                        METHOD(out_,this)(this,8,(any_arr){any_LTR("    "), prefix, any_LTR("_"), PROP(name_,variableDecl), any_LTR(" = "), PROP(assignedValue_,variableDecl), any_LTR(";"), Producer_c_NL});
                 }}};// end for each in PROP(list_,PROP(specific_,item))
                 
         }}};// end for each in PROP(statements_,this)
@@ -1480,7 +1486,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     //where variableDecl.assignedValue
                     if(_anyToBool(PROP(assignedValue_,variableDecl))){
                         //.out 'PROP(',variableDecl.name,'_,this)=',variableDecl.assignedValue,";",NL
-                        METHOD(out_,this)(this,6,(any_arr){any_str("PROP("), PROP(name_,variableDecl), any_str("_,this)="), PROP(assignedValue_,variableDecl), any_str(";"), Producer_c_NL});
+                        METHOD(out_,this)(this,6,(any_arr){any_LTR("PROP("), PROP(name_,variableDecl), any_LTR("_,this)="), PROP(assignedValue_,variableDecl), any_LTR(";"), Producer_c_NL});
                 }}};// end for each in PROP(list_,PROP(specific_,item))
                 
         }}};// end for each in PROP(statements_,this)
@@ -1534,7 +1540,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //var commentTo =  .lastSourceLineNum
             var commentTo = PROP(lastSourceLineNum_,this);
             //if .specific has property "body"
-            if (_anyToBool((_anyToBool(__or3=(_anyToBool(__or4=(_anyToBool(__or5=(_anyToBool(__or6=any_number(_hasProperty(PROP(specific_,this),any_str("body"))))? __or6 : any_number(_instanceof(PROP(specific_,this),Grammar_IfStatement))))? __or5 : any_number(_instanceof(PROP(specific_,this),Grammar_WithStatement))))? __or4 : any_number(_instanceof(PROP(specific_,this),Grammar_ForStatement))))? __or3 : any_number(_instanceof(PROP(specific_,this),Grammar_CaseStatement)))))  {
+            if (_anyToBool((_anyToBool(__or3=(_anyToBool(__or4=(_anyToBool(__or5=(_anyToBool(__or6=any_number(_hasProperty(PROP(specific_,this),any_LTR("body"))))? __or6 : any_number(_instanceof(PROP(specific_,this),Grammar_IfStatement))))? __or5 : any_number(_instanceof(PROP(specific_,this),Grammar_WithStatement))))? __or4 : any_number(_instanceof(PROP(specific_,this),Grammar_ForStatement))))? __or3 : any_number(_instanceof(PROP(specific_,this),Grammar_CaseStatement)))))  {
                 //or .specific is instance of Grammar.IfStatement
                 //or .specific is instance of Grammar.WithStatement
                 //or .specific is instance of Grammar.ForStatement
@@ -1562,7 +1568,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //declare vars before the statement (exclude body of FunctionDeclaration)
 
         //this.callOnSubTree LiteCore.getSymbol('declareIntoVar'), excludeClass=Grammar.Body
-        METHOD(callOnSubTree_,this)(this,2,(any_arr){LiteCore_getSymbol(undefined,1,(any_arr){any_str("declareIntoVar")}), Grammar_Body});
+        METHOD(callOnSubTree_,this)(this,2,(any_arr){LiteCore_getSymbol(undefined,1,(any_arr){any_LTR("declareIntoVar")}), Grammar_Body});
 
 //call the specific statement (if,for,print,if,function,class,etc) .produce()
 
@@ -1580,9 +1586,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
           //.addSourceMap mark
           METHOD(addSourceMap_,this)(this,1,(any_arr){mark});
           //.out ";"
-          METHOD(out_,this)(this,1,(any_arr){any_str(";")});
+          METHOD(out_,this)(this,1,(any_arr){any_LTR(";")});
           //if not .specific has property "body"
-          if (!(_hasProperty(PROP(specific_,this),any_str("body"))))  {
+          if (!(_hasProperty(PROP(specific_,this),any_LTR("body"))))  {
             //.out .getEOLComment()
             METHOD(out_,this)(this,1,(any_arr){METHOD(getEOLComment_,this)(this,0,NULL)});
           };
@@ -1631,7 +1637,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
           //if .intoVar
           if (_anyToBool(PROP(intoVar_,this)))  {
               //.out "var ",.right,"=undefined;",NL
-              METHOD(out_,this)(this,4,(any_arr){any_str("var "), PROP(right_,this), any_str("=undefined;"), Producer_c_NL});
+              METHOD(out_,this)(this,4,(any_arr){any_LTR("var "), PROP(right_,this), any_LTR("=undefined;"), Producer_c_NL});
           };
       return undefined;
       }
@@ -1646,15 +1652,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
           assert(_instanceof(this,Grammar_ThrowStatement));
           //---------
           //if .specifier is 'fail'
-          if (__is(PROP(specifier_,this),any_str("fail")))  {
+          if (__is(PROP(specifier_,this),any_LTR("fail")))  {
             //.out "throw(new(Error,1,(any_arr){",.expr,"}));"
-            METHOD(out_,this)(this,3,(any_arr){any_str("throw(new(Error,1,(any_arr){"), PROP(expr_,this), any_str("}));")});
+            METHOD(out_,this)(this,3,(any_arr){any_LTR("throw(new(Error,1,(any_arr){"), PROP(expr_,this), any_LTR("}));")});
           }
           //else
           
           else {
             //.out "throw(",.expr,")"
-            METHOD(out_,this)(this,3,(any_arr){any_str("throw("), PROP(expr_,this), any_str(")")});
+            METHOD(out_,this)(this,3,(any_arr){any_LTR("throw("), PROP(expr_,this), any_LTR(")")});
           };
       return undefined;
       }
@@ -1668,7 +1674,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Grammar_ReturnStatement));
         //---------
         //var defaultReturn = .getParent(Grammar.ConstructorDeclaration)? '' else 'undefined'
-        var defaultReturn = _anyToBool(METHOD(getParent_,this)(this,1,(any_arr){Grammar_ConstructorDeclaration})) ? any_EMPTY_STR : any_str("undefined");
+        var defaultReturn = _anyToBool(METHOD(getParent_,this)(this,1,(any_arr){Grammar_ConstructorDeclaration})) ? any_EMPTY_STR : any_LTR("undefined");
         
 
 //we need to unwind try-catch blocks, to calculate to which active exception frame
@@ -1705,16 +1711,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //if countTryBlocks
         if (_anyToBool(countTryBlocks))  {
             //.out "{e4c_exitTry(",countTryBlocks,");"
-            METHOD(out_,this)(this,3,(any_arr){any_str("{e4c_exitTry("), countTryBlocks, any_str(");")});
+            METHOD(out_,this)(this,3,(any_arr){any_LTR("{e4c_exitTry("), countTryBlocks, any_LTR(");")});
         };
 
         //.out 'return ',.expr or defaultReturn
-        METHOD(out_,this)(this,2,(any_arr){any_str("return "), (_anyToBool(__or10=PROP(expr_,this))? __or10 : defaultReturn)});
+        METHOD(out_,this)(this,2,(any_arr){any_LTR("return "), (_anyToBool(__or10=PROP(expr_,this))? __or10 : defaultReturn)});
 
         //if countTryBlocks
         if (_anyToBool(countTryBlocks))  {
             //.out ";}"
-            METHOD(out_,this)(this,1,(any_arr){any_str(";}")});
+            METHOD(out_,this)(this,1,(any_arr){any_LTR(";}")});
         };
       return undefined;
       }
@@ -1778,31 +1784,31 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //var strValue:string = .name.name
             var strValue = PROP(name_,PROP(name_,this));
             //if strValue.charAt(0) is "'"
-            if (__is(METHOD(charAt_,strValue)(strValue,1,(any_arr){any_number(0)}),any_str("'")))  {
+            if (__is(METHOD(charAt_,strValue)(strValue,1,(any_arr){any_number(0)}),any_LTR("'")))  {
                 //strValue = .name.getValue() // w/o quotes
                 strValue = __call(getValue_,PROP(name_,this),0,NULL); // w/o quotes
                 //strValue = strValue.replaceAll("\"",'\\"') // escape internal " => \"
-                strValue = METHOD(replaceAll_,strValue)(strValue,2,(any_arr){any_str("\""), any_str("\\\"")}); // escape internal " => \"
+                strValue = METHOD(replaceAll_,strValue)(strValue,2,(any_arr){any_LTR("\""), any_LTR("\\\"")}); // escape internal " => \"
                 //strValue = '"#{strValue}"' // enclose in ""
-                strValue = _concatAny(3,any_str("\""), strValue, any_str("\"")); // enclose in ""
+                strValue = _concatAny(3,any_LTR("\""), strValue, any_LTR("\"")); // enclose in ""
             };
 
             //if strValue is '""' 
-            if (__is(strValue,any_str("\"\"")))  {
+            if (__is(strValue,any_LTR("\"\"")))  {
                 //.out "any_EMPTY_STR"
-                METHOD(out_,this)(this,1,(any_arr){any_str("any_EMPTY_STR")});
+                METHOD(out_,this)(this,1,(any_arr){any_LTR("any_EMPTY_STR")});
             }
             //else if .produceType is 'Number' and (strValue.length is 3 or strValue.charAt(1) is '/' and strValue.length is 4) //a single char (maybe escaped)
             
-            else if (__is(PROP(produceType_,this),any_str("Number")) && _anyToBool((_anyToBool(__or11=any_number(__is(any_number(_length(strValue)),any_number(3))))? __or11 : any_number(__is(METHOD(charAt_,strValue)(strValue,1,(any_arr){any_number(1)}),any_str("/")) && __is(any_number(_length(strValue)),any_number(4))))))  { //a single char (maybe escaped)
+            else if (__is(PROP(produceType_,this),any_LTR("Number")) && _anyToBool((_anyToBool(__or11=any_number(__is(any_number(_length(strValue)),any_number(3))))? __or11 : any_number(__is(METHOD(charAt_,strValue)(strValue,1,(any_arr){any_number(1)}),any_LTR("/")) && __is(any_number(_length(strValue)),any_number(4))))))  { //a single char (maybe escaped)
                 //.out "'", strValue.slice(1,-1), "'" // out as C 'char' (C char = byte, a numeric value)
-                METHOD(out_,this)(this,3,(any_arr){any_str("'"), METHOD(slice_,strValue)(strValue,2,(any_arr){any_number(1), any_number(-1)}), any_str("'")}); // out as C 'char' (C char = byte, a numeric value)
+                METHOD(out_,this)(this,3,(any_arr){any_LTR("'"), METHOD(slice_,strValue)(strValue,2,(any_arr){any_number(1), any_number(-1)}), any_LTR("'")}); // out as C 'char' (C char = byte, a numeric value)
             }
             //else
             
             else {
-                //.out "any_str(",strValue,")"
-                METHOD(out_,this)(this,3,(any_arr){any_str("any_str("), strValue, any_str(")")});
+                //.out "any_LTR(",strValue,")"
+                METHOD(out_,this)(this,3,(any_arr){any_LTR("any_LTR("), strValue, any_LTR(")")});
             };
 
             //.out .accessors
@@ -1814,11 +1820,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         else if (_instanceof(PROP(name_,this),Grammar_NumberLiteral))  {
 
             //if .produceType is 'any'
-            if (__is(PROP(produceType_,this),any_str("any")))  {
+            if (__is(PROP(produceType_,this),any_LTR("any")))  {
                 //pre="any_number("
-                pre = any_str("any_number(");
+                pre = any_LTR("any_number(");
                 //post=")"
-                post = any_str(")");
+                post = any_LTR(")");
             };
 
             //.out pre,.name,.accessors,post
@@ -1893,13 +1899,13 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //-(prettier generated code) do not add () for simple "falsey" variable check: "if no x"
 
         //if translated is "!" 
-        if (__is(translated,any_str("!")))  {
+        if (__is(translated,any_LTR("!")))  {
             //if not (.name is "no" and .right.name instanceof Grammar.VariableRef)
-            if (!(__is(PROP(name_,this),any_str("no")) && _instanceof(PROP(name_,PROP(right_,this)),Grammar_VariableRef)))  {
+            if (!(__is(PROP(name_,this),any_LTR("no")) && _instanceof(PROP(name_,PROP(right_,this)),Grammar_VariableRef)))  {
                 //prepend ="("
-                prepend = any_str("(");
+                prepend = any_LTR("(");
                 //append=")"
-                append = any_str(")");
+                append = any_LTR(")");
             };
         };
 
@@ -1909,38 +1915,38 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         var pre = undefined, post = undefined;
 
         //if translated is "new" and .right.name instance of Grammar.VariableRef
-        if (__is(translated,any_str("new")) && _instanceof(PROP(name_,PROP(right_,this)),Grammar_VariableRef))  {
+        if (__is(translated,any_LTR("new")) && _instanceof(PROP(name_,PROP(right_,this)),Grammar_VariableRef))  {
             //declare .right.name:Grammar.VariableRef
             
             //.out "new(", .right.name.calcReference(callNew=true)
-            METHOD(out_,this)(this,2,(any_arr){any_str("new("), __call(calcReference_,PROP(name_,PROP(right_,this)),1,(any_arr){true})});
+            METHOD(out_,this)(this,2,(any_arr){any_LTR("new("), __call(calcReference_,PROP(name_,PROP(right_,this)),1,(any_arr){true})});
             //return
             return undefined;
         };
 
         //if translated is "typeof" 
-        if (__is(translated,any_str("typeof")))  {
+        if (__is(translated,any_LTR("typeof")))  {
             //pre="_typeof("
-            pre = any_str("_typeof(");
+            pre = any_LTR("_typeof(");
             //translated=""
             translated = any_EMPTY_STR;
             //post=")"
-            post = any_str(")");
+            post = any_LTR(")");
         }
 
         //else
         
         else {
             //if .produceType is 'any'
-            if (__is(PROP(produceType_,this),any_str("any")))  {
+            if (__is(PROP(produceType_,this),any_LTR("any")))  {
                 //pre="any_number("
-                pre = any_str("any_number(");
+                pre = any_LTR("any_number(");
                 //post=")"
-                post = any_str(")");
+                post = any_LTR(")");
             };
 
             //.right.produceType = translated is "!"? 'Bool' else 'Number' //Except "!", unary opers require numbers
-            PROP(produceType_,PROP(right_,this)) = __is(translated,any_str("!")) ? any_str("Bool") : any_str("Number"); //Except "!", unary opers require numbers
+            PROP(produceType_,PROP(right_,this)) = __is(translated,any_LTR("!")) ? any_LTR("Bool") : any_LTR("Number"); //Except "!", unary opers require numbers
         };
 
         //end if
@@ -1976,16 +1982,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //e.g.: DO NOT: `stra+": "+strb`   DO: `"#{stra}: #{strb}"`
 
         //if oper is '+'
-        if (__is(oper,any_str("+")))  {
+        if (__is(oper,any_LTR("+")))  {
             //var lresultNameDecl = .left.getResultType() 
             var lresultNameDecl = __call(getResultType_,PROP(left_,this),0,NULL);
             //var rresultNameDecl = .right.getResultType() 
             var rresultNameDecl = __call(getResultType_,PROP(right_,this),0,NULL);
             //if (lresultNameDecl and lresultNameDecl.hasProto('String'))
-            if (_anyToBool((_anyToBool(__or12=any_number(_anyToBool(lresultNameDecl) && _anyToBool(METHOD(hasProto_,lresultNameDecl)(lresultNameDecl,1,(any_arr){any_str("String")}))))? __or12 : any_number(_anyToBool(rresultNameDecl) && _anyToBool(METHOD(hasProto_,rresultNameDecl)(rresultNameDecl,1,(any_arr){any_str("String")}))))))  {
+            if (_anyToBool((_anyToBool(__or12=any_number(_anyToBool(lresultNameDecl) && _anyToBool(METHOD(hasProto_,lresultNameDecl)(lresultNameDecl,1,(any_arr){any_LTR("String")}))))? __or12 : any_number(_anyToBool(rresultNameDecl) && _anyToBool(METHOD(hasProto_,rresultNameDecl)(rresultNameDecl,1,(any_arr){any_LTR("String")}))))))  {
                 //or (rresultNameDecl and rresultNameDecl.hasProto('String'))
                     //.sayErr """
-                    METHOD(sayErr_,this)(this,1,(any_arr){any_str("You should not use + to concat strings. use string interpolation instead.\ne.g.: DO: \"#\{stra}: #\{strb}\"  vs.  DO NOT: stra + \": \" + strb")});
+                    METHOD(sayErr_,this)(this,1,(any_arr){any_LTR("You should not use + to concat strings. use string interpolation instead.\ne.g.: DO: \"#\{stra}: #\{strb}\"  vs.  DO NOT: stra + \": \" + strb")});
             };
         };
                             //You should not use + to concat strings. use string interpolation instead.
@@ -1997,11 +2003,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //var toAnyPre, toAnyPost
         var toAnyPre = undefined, toAnyPost = undefined;
         //if .produceType is 'any' 
-        if (__is(PROP(produceType_,this),any_str("any")))  {
+        if (__is(PROP(produceType_,this),any_LTR("any")))  {
             //toAnyPre = 'any_number('
-            toAnyPre = any_str("any_number(");
+            toAnyPre = any_LTR("any_number(");
             //toAnyPost = ")"
-            toAnyPost = any_str(")");
+            toAnyPost = any_LTR(")");
         };
 
         //var prepend,append
@@ -2012,9 +2018,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //else -if NEGATED- we add `!( )` to the expression
 
                 //prepend ="!("
-                prepend = any_str("!(");
+                prepend = any_LTR("!(");
                 //append=")"
-                append = any_str(")");
+                append = any_LTR(")");
         };
 
 //Check for special cases: 
@@ -2027,114 +2033,114 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //case .name 
         
           //when 'in'
-        if (__is(PROP(name_,this),any_str("in"))){
+        if (__is(PROP(name_,this),any_LTR("in"))){
             //if .right.name instanceof Grammar.ArrayLiteral
             if (_instanceof(PROP(name_,PROP(right_,this)),Grammar_ArrayLiteral))  {
                 //var haystack:Grammar.ArrayLiteral = .right.name
                 var haystack = PROP(name_,PROP(right_,this));
                 //.out toAnyPre,prepend,"__in(",.left,",",haystack.items.length,",(any_arr){",{CSL:haystack.items},"})",append,toAnyPost
-                METHOD(out_,this)(this,11,(any_arr){toAnyPre, prepend, any_str("__in("), PROP(left_,this), any_str(","), any_number(_length(PROP(items_,haystack))), any_str(",(any_arr){"), new(Map,1,(any_arr){
+                METHOD(out_,this)(this,11,(any_arr){toAnyPre, prepend, any_LTR("__in("), PROP(left_,this), any_LTR(","), any_number(_length(PROP(items_,haystack))), any_LTR(",(any_arr){"), new(Map,1,(any_arr){
                 _newPair("CSL",PROP(items_,haystack))
                 })
-, any_str("})"), append, toAnyPost});
+, any_LTR("})"), append, toAnyPost});
             }
             //else
             
             else {
                 //.out toAnyPre,"CALL1(indexOf_,",.right,",",.left,").value.number", .negated? "==-1" : ">=0",toAnyPost
-                METHOD(out_,this)(this,8,(any_arr){toAnyPre, any_str("CALL1(indexOf_,"), PROP(right_,this), any_str(","), PROP(left_,this), any_str(").value.number"), _anyToBool(PROP(negated_,this)) ? any_str("==-1") : any_str(">=0"), toAnyPost});
+                METHOD(out_,this)(this,8,(any_arr){toAnyPre, any_LTR("CALL1(indexOf_,"), PROP(right_,this), any_LTR(","), PROP(left_,this), any_LTR(").value.number"), _anyToBool(PROP(negated_,this)) ? any_LTR("==-1") : any_LTR(">=0"), toAnyPost});
             };
         
         }
           //when 'has property'
-        else if (__is(PROP(name_,this),any_str("has property"))){
+        else if (__is(PROP(name_,this),any_LTR("has property"))){
             //.out toAnyPre,prepend,"_hasProperty(",.left,",",.right,")",append,toAnyPost
-            METHOD(out_,this)(this,9,(any_arr){toAnyPre, prepend, any_str("_hasProperty("), PROP(left_,this), any_str(","), PROP(right_,this), any_str(")"), append, toAnyPost});
+            METHOD(out_,this)(this,9,(any_arr){toAnyPre, prepend, any_LTR("_hasProperty("), PROP(left_,this), any_LTR(","), PROP(right_,this), any_LTR(")"), append, toAnyPost});
         
         }
           //when 'into'
-        else if (__is(PROP(name_,this),any_str("into"))){
+        else if (__is(PROP(name_,this),any_LTR("into"))){
             //if .produceType and .produceType isnt 'any', .out '_anyTo',.produceType,'('
-            if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_str("any"))) {METHOD(out_,this)(this,3,(any_arr){any_str("_anyTo"), PROP(produceType_,this), any_str("(")});};
+            if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_LTR("any"))) {METHOD(out_,this)(this,3,(any_arr){any_LTR("_anyTo"), PROP(produceType_,this), any_LTR("(")});};
             //.left.produceType='any'
-            PROP(produceType_,PROP(left_,this)) = any_str("any");
+            PROP(produceType_,PROP(left_,this)) = any_LTR("any");
             //.out "(",.right,"=",.left,")"
-            METHOD(out_,this)(this,5,(any_arr){any_str("("), PROP(right_,this), any_str("="), PROP(left_,this), any_str(")")});
+            METHOD(out_,this)(this,5,(any_arr){any_LTR("("), PROP(right_,this), any_LTR("="), PROP(left_,this), any_LTR(")")});
             //if .produceType and .produceType isnt 'any', .out ')'
-            if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_str("any"))) {METHOD(out_,this)(this,1,(any_arr){any_str(")")});};
+            if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_LTR("any"))) {METHOD(out_,this)(this,1,(any_arr){any_LTR(")")});};
         
         }
           //when 'instance of'
-        else if (__is(PROP(name_,this),any_str("instance of"))){
+        else if (__is(PROP(name_,this),any_LTR("instance of"))){
             //.left.produceType = 'any'
-            PROP(produceType_,PROP(left_,this)) = any_str("any");
+            PROP(produceType_,PROP(left_,this)) = any_LTR("any");
             //.right.produceType = 'any'
-            PROP(produceType_,PROP(right_,this)) = any_str("any");
+            PROP(produceType_,PROP(right_,this)) = any_LTR("any");
             //.out toAnyPre,prepend,'_instanceof(',.left,',',.right,')',append,toAnyPost
-            METHOD(out_,this)(this,9,(any_arr){toAnyPre, prepend, any_str("_instanceof("), PROP(left_,this), any_str(","), PROP(right_,this), any_str(")"), append, toAnyPost});
+            METHOD(out_,this)(this,9,(any_arr){toAnyPre, prepend, any_LTR("_instanceof("), PROP(left_,this), any_LTR(","), PROP(right_,this), any_LTR(")"), append, toAnyPost});
         
         }
           //when 'like'
-        else if (__is(PROP(name_,this),any_str("like"))){
+        else if (__is(PROP(name_,this),any_LTR("like"))){
             //.throwError "like not supported yet for C-production"
-            METHOD(throwError_,this)(this,1,(any_arr){any_str("like not supported yet for C-production")});
+            METHOD(throwError_,this)(this,1,(any_arr){any_LTR("like not supported yet for C-production")});
         
         }
           //when 'is'
-        else if (__is(PROP(name_,this),any_str("is"))){
+        else if (__is(PROP(name_,this),any_LTR("is"))){
             //.left.produceType = 'any'
-            PROP(produceType_,PROP(left_,this)) = any_str("any");
+            PROP(produceType_,PROP(left_,this)) = any_LTR("any");
             //.right.produceType = 'any'
-            PROP(produceType_,PROP(right_,this)) = any_str("any");
+            PROP(produceType_,PROP(right_,this)) = any_LTR("any");
             //.out toAnyPre,.negated?'!':'', '__is(',.left,',',.right,')',toAnyPost
-            METHOD(out_,this)(this,8,(any_arr){toAnyPre, _anyToBool(PROP(negated_,this)) ? any_str("!") : any_EMPTY_STR, any_str("__is("), PROP(left_,this), any_str(","), PROP(right_,this), any_str(")"), toAnyPost});
+            METHOD(out_,this)(this,8,(any_arr){toAnyPre, _anyToBool(PROP(negated_,this)) ? any_LTR("!") : any_EMPTY_STR, any_LTR("__is("), PROP(left_,this), any_LTR(","), PROP(right_,this), any_LTR(")"), toAnyPost});
         
         }
           //when 'or'
-        else if (__is(PROP(name_,this),any_str("or"))){
+        else if (__is(PROP(name_,this),any_LTR("or"))){
             //.lexer.outCode.orTempVarCount++
             PROP(orTempVarCount_,PROP(outCode_,PROP(lexer_,this))).value.number++;
             //var orTmp = '__or#{.lexer.outCode.orTempVarCount}'
-            var orTmp = _concatAny(2,any_str("__or"), PROP(orTempVarCount_,PROP(outCode_,PROP(lexer_,this))));
+            var orTmp = _concatAny(2,any_LTR("__or"), PROP(orTempVarCount_,PROP(outCode_,PROP(lexer_,this))));
 
             //.left.produceType = 'any'
-            PROP(produceType_,PROP(left_,this)) = any_str("any");
+            PROP(produceType_,PROP(left_,this)) = any_LTR("any");
             //.right.produceType = 'any'
-            PROP(produceType_,PROP(right_,this)) = any_str("any");
+            PROP(produceType_,PROP(right_,this)) = any_LTR("any");
             //if .produceType and .produceType isnt 'any', .out '_anyTo',.produceType,'('
-            if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_str("any"))) {METHOD(out_,this)(this,3,(any_arr){any_str("_anyTo"), PROP(produceType_,this), any_str("(")});};
+            if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_LTR("any"))) {METHOD(out_,this)(this,3,(any_arr){any_LTR("_anyTo"), PROP(produceType_,this), any_LTR("(")});};
             
             //.out '(_anyToBool(#{orTmp}=',.left,')? #{orTmp} : ',.right,')'
-            METHOD(out_,this)(this,5,(any_arr){_concatAny(3,any_str("(_anyToBool("), orTmp, any_str("=")), PROP(left_,this), _concatAny(3,any_str(")? "), orTmp, any_str(" : ")), PROP(right_,this), any_str(")")});
+            METHOD(out_,this)(this,5,(any_arr){_concatAny(3,any_LTR("(_anyToBool("), orTmp, any_LTR("=")), PROP(left_,this), _concatAny(3,any_LTR(")? "), orTmp, any_LTR(" : ")), PROP(right_,this), any_LTR(")")});
 
             //if .produceType and .produceType isnt 'any', .out ')'
-            if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_str("any"))) {METHOD(out_,this)(this,1,(any_arr){any_str(")")});};
+            if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_LTR("any"))) {METHOD(out_,this)(this,1,(any_arr){any_LTR(")")});};
         
         }
           //when '%'
-        else if (__is(PROP(name_,this),any_str("%"))){
+        else if (__is(PROP(name_,this),any_LTR("%"))){
             //if .produceType and .produceType isnt 'Number', .out 'any_number('
-            if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_str("Number"))) {METHOD(out_,this)(this,1,(any_arr){any_str("any_number(")});};
+            if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_LTR("Number"))) {METHOD(out_,this)(this,1,(any_arr){any_LTR("any_number(")});};
             //.left.produceType = 'Number'
-            PROP(produceType_,PROP(left_,this)) = any_str("Number");
+            PROP(produceType_,PROP(left_,this)) = any_LTR("Number");
             //.right.produceType = 'Number'
-            PROP(produceType_,PROP(right_,this)) = any_str("Number");
+            PROP(produceType_,PROP(right_,this)) = any_LTR("Number");
             //.out '(int64_t)',.left,' % (int64_t)',.right
-            METHOD(out_,this)(this,4,(any_arr){any_str("(int64_t)"), PROP(left_,this), any_str(" % (int64_t)"), PROP(right_,this)});
+            METHOD(out_,this)(this,4,(any_arr){any_LTR("(int64_t)"), PROP(left_,this), any_LTR(" % (int64_t)"), PROP(right_,this)});
             //if .produceType and .produceType isnt 'Number', .out ')'
-            if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_str("Number"))) {METHOD(out_,this)(this,1,(any_arr){any_str(")")});};
+            if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_LTR("Number"))) {METHOD(out_,this)(this,1,(any_arr){any_LTR(")")});};
         
         }
           //when '&'
-        else if (__is(PROP(name_,this),any_str("&"))){
+        else if (__is(PROP(name_,this),any_LTR("&"))){
             //if .produceType is 'Number', .throwError 'cannot use & to concat and produce a number'
-            if (__is(PROP(produceType_,this),any_str("Number"))) {METHOD(throwError_,this)(this,1,(any_arr){any_str("cannot use & to concat and produce a number")});};
+            if (__is(PROP(produceType_,this),any_LTR("Number"))) {METHOD(throwError_,this)(this,1,(any_arr){any_LTR("cannot use & to concat and produce a number")});};
             //.left.produceType = 'any'
-            PROP(produceType_,PROP(left_,this)) = any_str("any");
+            PROP(produceType_,PROP(left_,this)) = any_LTR("any");
             //.right.produceType = 'any'
-            PROP(produceType_,PROP(right_,this)) = any_str("any");
+            PROP(produceType_,PROP(right_,this)) = any_LTR("any");
             //.out "_concatAny(2,",.left,',',.right,')'
-            METHOD(out_,this)(this,5,(any_arr){any_str("_concatAny(2,"), PROP(left_,this), any_str(","), PROP(right_,this), any_str(")")});
+            METHOD(out_,this)(this,5,(any_arr){any_LTR("_concatAny(2,"), PROP(left_,this), any_LTR(","), PROP(right_,this), any_LTR(")")});
         
         }
         else {
@@ -2149,15 +2155,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //case operC
             
                 //when '?' // left is condition, right is: if_true
-            if (__is(operC,any_str("?"))){
+            if (__is(operC,any_LTR("?"))){
                     //.left.produceType = 'Bool'
-                    PROP(produceType_,PROP(left_,this)) = any_str("Bool");
+                    PROP(produceType_,PROP(left_,this)) = any_LTR("Bool");
                     //.right.produceType = .produceType
                     PROP(produceType_,PROP(right_,this)) = PROP(produceType_,this);
             
             }
                 //when ':' // left is a?b, right is: if_false
-            else if (__is(operC,any_str(":"))){
+            else if (__is(operC,any_LTR(":"))){
                     //.left.produceType = .produceType
                     PROP(produceType_,PROP(left_,this)) = PROP(produceType_,this);
                     //.right.produceType = .produceType
@@ -2165,31 +2171,31 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             
             }
                 //when '&&' // boolean and
-            else if (__is(operC,any_str("&&"))){
+            else if (__is(operC,any_LTR("&&"))){
                     //.left.produceType = 'Bool'
-                    PROP(produceType_,PROP(left_,this)) = any_str("Bool");
+                    PROP(produceType_,PROP(left_,this)) = any_LTR("Bool");
                     //.right.produceType = 'Bool'
-                    PROP(produceType_,PROP(right_,this)) = any_str("Bool");
+                    PROP(produceType_,PROP(right_,this)) = any_LTR("Bool");
             
             }
             else {
 
                 //else //default for binary opers: numbers
                     //.left.produceType = 'Number'
-                    PROP(produceType_,PROP(left_,this)) = any_str("Number");
+                    PROP(produceType_,PROP(left_,this)) = any_LTR("Number");
                     //.right.produceType = 'Number'
-                    PROP(produceType_,PROP(right_,this)) = any_str("Number");
+                    PROP(produceType_,PROP(right_,this)) = any_LTR("Number");
             };
 
             //var extra, preExtra
             var extra = undefined, preExtra = undefined;
 
             //if operC isnt '?' // cant put xx( a ? b )
-            if (!__is(operC,any_str("?")))  { // cant put xx( a ? b )
+            if (!__is(operC,any_LTR("?")))  { // cant put xx( a ? b )
                 //if .produceType is 'any' 
-                if (__is(PROP(produceType_,this),any_str("any")))  {
+                if (__is(PROP(produceType_,this),any_LTR("any")))  {
                     //if .left.produceType is 'any' and .right.produceType is 'any'
-                    if (__is(PROP(produceType_,PROP(left_,this)),any_str("any")) && __is(PROP(produceType_,PROP(right_,this)),any_str("any")))  {
+                    if (__is(PROP(produceType_,PROP(left_,this)),any_LTR("any")) && __is(PROP(produceType_,PROP(right_,this)),any_LTR("any")))  {
                         //do nothing
                         //do nothing
                         ;
@@ -2198,9 +2204,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     
                     else {
                         //preExtra = 'any_number('
-                        preExtra = any_str("any_number(");
+                        preExtra = any_LTR("any_number(");
                         //extra = ")"
-                        extra = any_str(")");
+                        extra = any_LTR(")");
                     };
                 }
                 
@@ -2208,7 +2214,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 
                 else if (_anyToBool(PROP(produceType_,this)))  {
                     //if ( .left.produceType is .produceType and .right.produceType is .produceType )
-                    if (_anyToBool((_anyToBool(__or13=any_number(__is(PROP(produceType_,PROP(left_,this)),PROP(produceType_,this)) && __is(PROP(produceType_,PROP(right_,this)),PROP(produceType_,this))))? __or13 : any_number(__is(PROP(produceType_,this),any_str("Bool")) && __is(PROP(produceType_,PROP(left_,this)),any_str("Number")) && __is(PROP(produceType_,PROP(right_,this)),any_str("Number"))))))  {
+                    if (_anyToBool((_anyToBool(__or13=any_number(__is(PROP(produceType_,PROP(left_,this)),PROP(produceType_,this)) && __is(PROP(produceType_,PROP(right_,this)),PROP(produceType_,this))))? __or13 : any_number(__is(PROP(produceType_,this),any_LTR("Bool")) && __is(PROP(produceType_,PROP(left_,this)),any_LTR("Number")) && __is(PROP(produceType_,PROP(right_,this)),any_LTR("Number"))))))  {
                         //or ( .produceType is 'Bool' and .left.produceType is 'Number' and .right.produceType is 'Number' ) // numbers are valid bools
                         //do nothing
                         //do nothing
@@ -2218,15 +2224,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     
                     else {
                       //preExtra = '_anyTo#{.produceType}('
-                      preExtra = _concatAny(3,any_str("_anyTo"), PROP(produceType_,this), any_str("("));
+                      preExtra = _concatAny(3,any_LTR("_anyTo"), PROP(produceType_,this), any_LTR("("));
                       //extra = ")"
-                      extra = any_str(")");
+                      extra = any_LTR(")");
                     };
                 };
             };
 
             //.out preExtra, prepend, .left,' ', operC, ' ',.right, append, extra
-            METHOD(out_,this)(this,9,(any_arr){preExtra, prepend, PROP(left_,this), any_str(" "), operC, any_str(" "), PROP(right_,this), append, extra});
+            METHOD(out_,this)(this,9,(any_arr){preExtra, prepend, PROP(left_,this), any_LTR(" "), operC, any_LTR(" "), PROP(right_,this), append, extra});
         };
 
         //end case oper
@@ -2253,7 +2259,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //Produce the expression body, optionally negated
 
         //default .produceType='any'
-        _default(&PROP(produceType_,this),any_str("any"));
+        _default(&PROP(produceType_,this),any_LTR("any"));
 
         //var prepend=""
         var prepend = any_EMPTY_STR;
@@ -2271,15 +2277,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
           if (__is(PROP(operandCount_,this),any_number(1)))  {
               //#no parens needed
               //prepend = "!"
-              prepend = any_str("!");
+              prepend = any_LTR("!");
           }
           //else
           
           else {
               //prepend = "!("
-              prepend = any_str("!(");
+              prepend = any_LTR("!(");
               //append = ")"
-              append = any_str(")");
+              append = any_LTR(")");
           };
         };
           //#end if
@@ -2319,7 +2325,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //// hack: make "symbols" avoid interference with C's reserved words
         //// and also common variable names
         //return "#{symbol}_"
-        return _concatAny(2,symbol, any_str("_"));
+        return _concatAny(2,symbol, any_LTR("_"));
     return undefined;
     }
 
@@ -2347,9 +2353,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //Prefix ++/--, varName, Accessors and postfix ++/--
 
         //if .name is 'arguments'
-        if (__is(PROP(name_,this),any_str("arguments")))  {
+        if (__is(PROP(name_,this),any_LTR("arguments")))  {
             //.out '_newArray(argc,arguments)'
-            METHOD(out_,this)(this,1,(any_arr){any_str("_newArray(argc,arguments)")});
+            METHOD(out_,this)(this,1,(any_arr){any_LTR("_newArray(argc,arguments)")});
             //return
             return undefined;
         };
@@ -2361,20 +2367,20 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         var pre = undefined, post = undefined;
 
         //if .produceType is 'any' and not .calcType is 'any'
-        if (__is(PROP(produceType_,this),any_str("any")) && !(__is(PROP(calcType_,this),any_str("any"))))  {
+        if (__is(PROP(produceType_,this),any_LTR("any")) && !(__is(PROP(calcType_,this),any_LTR("any"))))  {
             //pre = 'any_number('
-            pre = any_str("any_number(");
+            pre = any_LTR("any_number(");
             //post = ')'
-            post = any_str(")");
+            post = any_LTR(")");
         }
         
         //else if .produceType and .produceType isnt 'any' and .calcType is 'any'
         
-        else if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_str("any")) && __is(PROP(calcType_,this),any_str("any")))  {
+        else if (_anyToBool(PROP(produceType_,this)) && !__is(PROP(produceType_,this),any_LTR("any")) && __is(PROP(calcType_,this),any_LTR("any")))  {
             //pre = '_anyTo#{.produceType}('
-            pre = _concatAny(3,any_str("_anyTo"), PROP(produceType_,this), any_str("("));
+            pre = _concatAny(3,any_LTR("_anyTo"), PROP(produceType_,this), any_LTR("("));
             //post = ')'
-            post = any_str(")");
+            post = any_LTR(")");
         };
 
         //.out pre, result, post
@@ -2404,15 +2410,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //if no .calcType
             if (!_anyToBool(PROP(calcType_,this)))  {
                 //.throwError "pre or post inc/dec (++/--) can only be used on simple variables"
-                METHOD(throwError_,this)(this,1,(any_arr){any_str("pre or post inc/dec (++/--) can only be used on simple variables")});
+                METHOD(throwError_,this)(this,1,(any_arr){any_LTR("pre or post inc/dec (++/--) can only be used on simple variables")});
             };
 
             //if .calcType is 'any'
-            if (__is(PROP(calcType_,this),any_str("any")))  {
+            if (__is(PROP(calcType_,this),any_LTR("any")))  {
                 //result.push ['.value.number']
-                METHOD(push_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_str(".value.number")})});
+                METHOD(push_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_LTR(".value.number")})});
                 //.calcType = 'Number'
-                PROP(calcType_,this) = any_str("Number");
+                PROP(calcType_,this) = any_LTR("Number");
             }
 
             //else //assume number
@@ -2454,7 +2460,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //var actualVar = .tryGetFromScope(.name)
         var actualVar = METHOD(tryGetFromScope_,this)(this,1,(any_arr){PROP(name_,this)});
         //if no actualVar, .throwError("var '#{.name}' not found in scope")
-        if (!_anyToBool(actualVar)) {METHOD(throwError_,this)(this,1,(any_arr){_concatAny(3,any_str("var '"), PROP(name_,this), any_str("' not found in scope"))});};
+        if (!_anyToBool(actualVar)) {METHOD(throwError_,this)(this,1,(any_arr){_concatAny(3,any_LTR("var '"), PROP(name_,this), any_LTR("' not found in scope"))});};
 
         //var result: array = [] //array of arrays
         var result = new(Array,0,NULL); //array of arrays
@@ -2466,9 +2472,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         METHOD(push_,result)(result,1,(any_arr){new(Array,1,(any_arr){partial})});
 
         //.calcType = 'any' //default
-        PROP(calcType_,this) = any_str("any"); //default
+        PROP(calcType_,this) = any_LTR("any"); //default
         //if actualVar.findOwnMember("**proto**") is '**native number**', .calcType = '**native number**'
-        if (__is(METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){any_str("**proto**")}),any_str("**native number**"))) {PROP(calcType_,this) = any_str("**native number**");};
+        if (__is(METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){any_LTR("**proto**")}),any_LTR("**native number**"))) {PROP(calcType_,this) = any_LTR("**native number**");};
 
         //if no .accessors, return result
         if (!_anyToBool(PROP(accessors_,this))) {return result;};
@@ -2504,31 +2510,31 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 var classNameArr = undefined;
 
                 //if ac.name is 'constructor' //hack, all vars have a "constructor". 
-                if (__is(PROP(name_,ac),any_str("constructor")))  { //hack, all vars have a "constructor".
+                if (__is(PROP(name_,ac),any_LTR("constructor")))  { //hack, all vars have a "constructor".
                     ////convert "bar.constructor" to: "any_class(bar.class)"
                     ////var classNameArr:array = result.pop()
                     //result.unshift ['any_class(']
-                    METHOD(unshift_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_str("any_class(")})});
+                    METHOD(unshift_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_LTR("any_class(")})});
                     //// here goes any class
                     //result.push [".class)"]
-                    METHOD(push_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_str(".class)")})});
+                    METHOD(push_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_LTR(".class)")})});
                     ////result.push classNameArr
                     //.calcType = 'any'
-                    PROP(calcType_,this) = any_str("any");
+                    PROP(calcType_,this) = any_LTR("any");
                     //hasInstanceReference=true
                     hasInstanceReference = true;
                     //if actualVar, actualVar = actualVar.findOwnMember('**proto**')
-                    if (_anyToBool(actualVar)) {actualVar = METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){any_str("**proto**")});};
+                    if (_anyToBool(actualVar)) {actualVar = METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){any_LTR("**proto**")});};
                 }
 
                 //else if ac.name is 'prototype' //hack, all classes have a "prototype" to access methods
                 
-                else if (__is(PROP(name_,ac),any_str("prototype")))  { //hack, all classes have a "prototype" to access methods
+                else if (__is(PROP(name_,ac),any_LTR("prototype")))  { //hack, all classes have a "prototype" to access methods
                     ////convert "Foo.prototype.toString" to: "__classMethodAny(toString,Foo)"
                     //if inx+1 >= .accessors.length or .accessors[inx+1].constructor isnt Grammar.PropertyAccess
                     if (_anyToBool((_anyToBool(__or15=any_number(inx + 1 >= _length(PROP(accessors_,this))))? __or15 : any_number(!__is(any_class(ITEM(inx + 1,PROP(accessors_,this)).class),Grammar_PropertyAccess)))))  {
                         //.sayErr "expected: Class.prototype.method, e.g.: 'Foo.prototype.toString'"
-                        METHOD(sayErr_,this)(this,1,(any_arr){any_str("expected: Class.prototype.method, e.g.: 'Foo.prototype.toString'")});
+                        METHOD(sayErr_,this)(this,1,(any_arr){any_LTR("expected: Class.prototype.method, e.g.: 'Foo.prototype.toString'")});
                     }
                     //else
                     
@@ -2536,50 +2542,50 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                         //classNameArr = result.pop()
                         classNameArr = METHOD(pop_,result)(result,0,NULL);
                         //classNameArr.unshift '__classMethodFunc(',.accessors[inx+1].name,"_ ," //__classMethodFunc(methodName,
-                        METHOD(unshift_,classNameArr)(classNameArr,3,(any_arr){any_str("__classMethodFunc("), PROP(name_,ITEM(inx + 1,PROP(accessors_,this))), any_str("_ ,")}); //__classMethodFunc(methodName,
+                        METHOD(unshift_,classNameArr)(classNameArr,3,(any_arr){any_LTR("__classMethodFunc("), PROP(name_,ITEM(inx + 1,PROP(accessors_,this))), any_LTR("_ ,")}); //__classMethodFunc(methodName,
                         //// here goes any class
                         //classNameArr.push ")"
-                        METHOD(push_,classNameArr)(classNameArr,1,(any_arr){any_str(")")});
+                        METHOD(push_,classNameArr)(classNameArr,1,(any_arr){any_LTR(")")});
                         //result.push classNameArr //now converted to any Function
                         METHOD(push_,result)(result,1,(any_arr){classNameArr}); //now converted to any Function
                         //inx+=1 //skip method name
                         inx += 1; //skip method name
                         //.calcType = 'any' // __classMethodFunc returns any_func
-                        PROP(calcType_,this) = any_str("any"); // __classMethodFunc returns any_func
+                        PROP(calcType_,this) = any_LTR("any"); // __classMethodFunc returns any_func
                         //hasInstanceReference = true
                         hasInstanceReference = true;
                         
                         //actualVar = .tryGetFromScope('Function')
-                        actualVar = METHOD(tryGetFromScope_,this)(this,1,(any_arr){any_str("Function")});
+                        actualVar = METHOD(tryGetFromScope_,this)(this,1,(any_arr){any_LTR("Function")});
                         //if actualVar, actualVar=actualVar.findOwnMember('prototype') //actual var is now function prototype
-                        if (_anyToBool(actualVar)) {actualVar = METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){any_str("prototype")});};
+                        if (_anyToBool(actualVar)) {actualVar = METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){any_LTR("prototype")});};
                     };
                 }
 
                 //else if ac.name is 'length' //hack, convert x.length in a funcion call, _length(x)
                 
-                else if (__is(PROP(name_,ac),any_str("length")))  { //hack, convert x.length in a funcion call, _length(x)
+                else if (__is(PROP(name_,ac),any_LTR("length")))  { //hack, convert x.length in a funcion call, _length(x)
                     //result.unshift ['_length','('] // put "length(" first - call to dispatcher
-                    METHOD(unshift_,result)(result,1,(any_arr){new(Array,2,(any_arr){any_str("_length"), any_str("(")})}); // put "length(" first - call to dispatcher
+                    METHOD(unshift_,result)(result,1,(any_arr){new(Array,2,(any_arr){any_LTR("_length"), any_LTR("(")})}); // put "length(" first - call to dispatcher
                     //result.push [")"]
-                    METHOD(push_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_str(")")})});
+                    METHOD(push_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_LTR(")")})});
                     //.calcType = '**native number**'
-                    PROP(calcType_,this) = any_str("**native number**");
+                    PROP(calcType_,this) = any_LTR("**native number**");
                     //actualVar = undefined
                     actualVar = undefined;
                 }
 
                 //else if ac.name is 'call' 
                 
-                else if (__is(PROP(name_,ac),any_str("call")))  {
+                else if (__is(PROP(name_,ac),any_LTR("call")))  {
                     ////hack: .call
                     //// this is .call use __apply(Function,instance,argc,arguments)
 
                     ////should be here after Class.prototype.xxx.call
                     //if no actualVar or no actualVar.findMember('call')
-                    if (_anyToBool((_anyToBool(__or16=any_number(!_anyToBool(actualVar)))? __or16 : any_number(!_anyToBool(METHOD(findMember_,actualVar)(actualVar,1,(any_arr){any_str("call")}))))))  {
+                    if (_anyToBool((_anyToBool(__or16=any_number(!_anyToBool(actualVar)))? __or16 : any_number(!_anyToBool(METHOD(findMember_,actualVar)(actualVar,1,(any_arr){any_LTR("call")}))))))  {
                         //.throwError 'cannot use .call on a non-Function. Use: Class.prototype.method.call(this,arg1,...)'
-                        METHOD(throwError_,this)(this,1,(any_arr){any_str("cannot use .call on a non-Function. Use: Class.prototype.method.call(this,arg1,...)")});
+                        METHOD(throwError_,this)(this,1,(any_arr){any_LTR("cannot use .call on a non-Function. Use: Class.prototype.method.call(this,arg1,...)")});
                     };
 
                     ////let's make sure next accessor is FunctionAccess with at least one arg
@@ -2601,20 +2607,20 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     };
 
                     //if no isOk, .throwError 'expected instance and optional arguments after ".call": foo.call(this,arg1,arg2)'
-                    if (!_anyToBool(isOk)) {METHOD(throwError_,this)(this,1,(any_arr){any_str("expected instance and optional arguments after \".call\": foo.call(this,arg1,arg2)")});};
+                    if (!_anyToBool(isOk)) {METHOD(throwError_,this)(this,1,(any_arr){any_LTR("expected instance and optional arguments after \".call\": foo.call(this,arg1,arg2)")});};
                     
                     //args = functionAccess.args
                     args = PROP(args_,functionAccess);
 
                     //result.unshift ['__apply(']
-                    METHOD(unshift_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_str("__apply(")})});
+                    METHOD(unshift_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_LTR("__apply(")})});
                     ////here goes Function ref
                     //var FnArr = [",",args[0],","] // instance
-                    var FnArr = new(Array,3,(any_arr){any_str(","), ITEM(0,args), any_str(",")}); // instance
+                    var FnArr = new(Array,3,(any_arr){any_LTR(","), ITEM(0,args), any_LTR(",")}); // instance
                     //.addArguments args.slice(1), FnArr //other arguments
                     METHOD(addArguments_,this)(this,2,(any_arr){METHOD(slice_,args)(args,1,(any_arr){any_number(1)}), FnArr}); //other arguments
                     //FnArr.push ')'
-                    METHOD(push_,FnArr)(FnArr,1,(any_arr){any_str(")")});
+                    METHOD(push_,FnArr)(FnArr,1,(any_arr){any_LTR(")")});
 
                     //result.push FnArr
                     METHOD(push_,result)(result,1,(any_arr){FnArr});
@@ -2627,15 +2633,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
                 //else if ac.name is 'apply' 
                 
-                else if (__is(PROP(name_,ac),any_str("apply")))  {
+                else if (__is(PROP(name_,ac),any_LTR("apply")))  {
                     ////hack: .apply
                     //// this is .apply(this,args:anyArr) use __applyArr(Function,instance,anyArgsArray)
 
                     ////should be here after Class.prototype.xxx.apply
                     //if no actualVar or no actualVar.findMember('apply')
-                    if (_anyToBool((_anyToBool(__or17=any_number(!_anyToBool(actualVar)))? __or17 : any_number(!_anyToBool(METHOD(findMember_,actualVar)(actualVar,1,(any_arr){any_str("apply")}))))))  {
+                    if (_anyToBool((_anyToBool(__or17=any_number(!_anyToBool(actualVar)))? __or17 : any_number(!_anyToBool(METHOD(findMember_,actualVar)(actualVar,1,(any_arr){any_LTR("apply")}))))))  {
                         //.throwError 'cannot use .apply on a non-Function. Use: Class.prototype.method.apply(this,args:Array)'
-                        METHOD(throwError_,this)(this,1,(any_arr){any_str("cannot use .apply on a non-Function. Use: Class.prototype.method.apply(this,args:Array)")});
+                        METHOD(throwError_,this)(this,1,(any_arr){any_LTR("cannot use .apply on a non-Function. Use: Class.prototype.method.apply(this,args:Array)")});
                     };
 
                     ////let's make sure next accessor is FunctionAccess with at least one arg
@@ -2656,16 +2662,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     };
 
                     //if no isOk, .throwError 'expected two arguments after ".apply". e.g.: foo.apply(this,argArray)'
-                    if (!_anyToBool(isOk)) {METHOD(throwError_,this)(this,1,(any_arr){any_str("expected two arguments after \".apply\". e.g.: foo.apply(this,argArray)")});};
+                    if (!_anyToBool(isOk)) {METHOD(throwError_,this)(this,1,(any_arr){any_LTR("expected two arguments after \".apply\". e.g.: foo.apply(this,argArray)")});};
                     
                     //args = functionAccess.args
                     args = PROP(args_,functionAccess);
 
                     //result.unshift ['__applyArr(', hasInstanceReference? '': 'any_func(']
-                    METHOD(unshift_,result)(result,1,(any_arr){new(Array,2,(any_arr){any_str("__applyArr("), _anyToBool(hasInstanceReference) ? any_EMPTY_STR : any_str("any_func(")})});
+                    METHOD(unshift_,result)(result,1,(any_arr){new(Array,2,(any_arr){any_LTR("__applyArr("), _anyToBool(hasInstanceReference) ? any_EMPTY_STR : any_LTR("any_func(")})});
                     ////here goes Function ref
                     //result.push [hasInstanceReference? '': ')',',',args[0],',',args[1],')']
-                    METHOD(push_,result)(result,1,(any_arr){new(Array,6,(any_arr){_anyToBool(hasInstanceReference) ? any_EMPTY_STR : any_str(")"), any_str(","), ITEM(0,args), any_str(","), ITEM(1,args), any_str(")")})});
+                    METHOD(push_,result)(result,1,(any_arr){new(Array,6,(any_arr){_anyToBool(hasInstanceReference) ? any_EMPTY_STR : any_LTR(")"), any_LTR(","), ITEM(0,args), any_LTR(","), ITEM(1,args), any_LTR(")")})});
 
                     //inx+=1 //skip fn.call and args
                     inx += 1; //skip fn.call and args
@@ -2675,12 +2681,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
                 //else if actualVar and (actualVar.nodeClass is Grammar.NamespaceDeclaration or actualVar.findOwnMember('prototype'))
                 
-                else if (_anyToBool(actualVar) && _anyToBool((_anyToBool(__or18=any_number(__is(PROP(nodeClass_,actualVar),Grammar_NamespaceDeclaration)))? __or18 : METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){any_str("prototype")}))))  {
+                else if (_anyToBool(actualVar) && _anyToBool((_anyToBool(__or18=any_number(__is(PROP(nodeClass_,actualVar),Grammar_NamespaceDeclaration)))? __or18 : METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){any_LTR("prototype")}))))  {
                     ////just namespace access or accessing a "property" of a class "as namespace"
                     //var prevArr:array = result.pop() 
                     var prevArr = METHOD(pop_,result)(result,0,NULL);
                     //prevArr.push "_",ac.name
-                    METHOD(push_,prevArr)(prevArr,2,(any_arr){any_str("_"), PROP(name_,ac)});
+                    METHOD(push_,prevArr)(prevArr,2,(any_arr){any_LTR("_"), PROP(name_,ac)});
                     //result.push prevArr
                     METHOD(push_,result)(result,1,(any_arr){prevArr});
 
@@ -2695,7 +2701,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     //result.push [makeSymbolName(ac.name)]
                     METHOD(push_,result)(result,1,(any_arr){new(Array,1,(any_arr){Producer_c_makeSymbolName(undefined,1,(any_arr){PROP(name_,ac)})})});
                     //.calcType = 'any'
-                    PROP(calcType_,this) = any_str("any");
+                    PROP(calcType_,this) = any_LTR("any");
                     //hasInstanceReference=true
                     hasInstanceReference = true;
                     //if actualVar, actualVar = actualVar.findOwnMember(ac.name)
@@ -2708,14 +2714,14 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     //// normal property access
                     ////out PROP(propName,instance)
                     //.calcType = 'any'
-                    PROP(calcType_,this) = any_str("any");
+                    PROP(calcType_,this) = any_LTR("any");
                     //hasInstanceReference=true
                     hasInstanceReference = true;
                     //result.unshift ["PROP","(", makeSymbolName(ac.name), ","] // PROP macro enclose all 
-                    METHOD(unshift_,result)(result,1,(any_arr){new(Array,4,(any_arr){any_str("PROP"), any_str("("), Producer_c_makeSymbolName(undefined,1,(any_arr){PROP(name_,ac)}), any_str(",")})}); // PROP macro enclose all
+                    METHOD(unshift_,result)(result,1,(any_arr){new(Array,4,(any_arr){any_LTR("PROP"), any_LTR("("), Producer_c_makeSymbolName(undefined,1,(any_arr){PROP(name_,ac)}), any_LTR(",")})}); // PROP macro enclose all
                     //// here goes thisValue (instance)
                     //result.push [")"]
-                    METHOD(push_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_str(")")})});
+                    METHOD(push_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_LTR(")")})});
 
                     //if actualVar, actualVar = actualVar.findOwnMember(ac.name)
                     if (_anyToBool(actualVar)) {actualVar = METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){PROP(name_,ac)});};
@@ -2725,7 +2731,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 
 
                 //partial ="#{partial}.#{ac.name}"
-                partial = _concatAny(3,partial, any_str("."), PROP(name_,ac));
+                partial = _concatAny(3,partial, any_LTR("."), PROP(name_,ac));
             }
 
 //else, for FunctionAccess
@@ -2735,9 +2741,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             else if (__is(any_class(ac.class),Grammar_FunctionAccess))  {
 
                 //partial ="#{partial}(...)"
-                partial = _concatAny(2,partial, any_str("(...)"));
+                partial = _concatAny(2,partial, any_LTR("(...)"));
                 //.calcType = 'any'
-                PROP(calcType_,this) = any_str("any");
+                PROP(calcType_,this) = any_LTR("any");
 
                 //functionAccess = ac
                 functionAccess = ac;
@@ -2746,7 +2752,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 //if inx>1 and .accessors[inx-1].constructor isnt Grammar.PropertyAccess
                 if (inx > 1 && !__is(any_class(ITEM(inx - 1,PROP(accessors_,this)).class),Grammar_PropertyAccess))  {
                     //.throwError("'#{partial}.call' or '.apply' must be used to call a function pointer stored in a variable")
-                    METHOD(throwError_,this)(this,1,(any_arr){_concatAny(3,any_str("'"), partial, any_str(".call' or '.apply' must be used to call a function pointer stored in a variable"))});
+                    METHOD(throwError_,this)(this,1,(any_arr){_concatAny(3,any_LTR("'"), partial, any_LTR(".call' or '.apply' must be used to call a function pointer stored in a variable"))});
                 };
 
                 //var callParams:array
@@ -2755,12 +2761,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 //if callNew
                 if (_anyToBool(callNew))  {
                     //callParams = [","] // new(Class,argc,arguments*)
-                    callParams = new(Array,1,(any_arr){any_str(",")}); // new(Class,argc,arguments*)
+                    callParams = new(Array,1,(any_arr){any_LTR(",")}); // new(Class,argc,arguments*)
                     ////add arguments: count,(any_arr){...}
                     //.addArguments functionAccess.args, callParams
                     METHOD(addArguments_,this)(this,2,(any_arr){PROP(args_,functionAccess), callParams});
                     //callParams.push ")" //close 
-                    METHOD(push_,callParams)(callParams,1,(any_arr){any_str(")")}); //close
+                    METHOD(push_,callParams)(callParams,1,(any_arr){any_LTR(")")}); //close
                 }
 
                 //else
@@ -2772,13 +2778,13 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                     if (!_anyToBool(hasInstanceReference))  { //first accessor is function access, this is a call to a global function
 
                         //fnNameArray.push "(" //add "(" 
-                        METHOD(push_,fnNameArray)(fnNameArray,1,(any_arr){any_str("(")}); //add "("
+                        METHOD(push_,fnNameArray)(fnNameArray,1,(any_arr){any_LTR("(")}); //add "("
                         ////if fnNameArray[0] is 'Number', fnNameArray[0]='_toNumber'; //convert "Number" (class name) to fn "_toNumber"
                         //result.unshift fnNameArray // put "functioname" first - call to global function
                         METHOD(unshift_,result)(result,1,(any_arr){fnNameArray}); // put "functioname" first - call to global function
 
                         //if fnNameArray[0] is '_concatAny'
-                        if (__is(ITEM(0,fnNameArray),any_str("_concatAny")))  {
+                        if (__is(ITEM(0,fnNameArray),any_LTR("_concatAny")))  {
                             //callParams =[] // no "thisValue" for internal _concatAny, just params to concat
                             callParams = new(Array,0,NULL); // no "thisValue" for internal _concatAny, just params to concat
                             ////add arguments: count,...
@@ -2789,14 +2795,14 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                         
                         else {
                             //callParams = ["undefined", ","] //this==undefined as in js "use strict" mode
-                            callParams = new(Array,2,(any_arr){any_str("undefined"), any_str(",")}); //this==undefined as in js "use strict" mode
+                            callParams = new(Array,2,(any_arr){any_LTR("undefined"), any_LTR(",")}); //this==undefined as in js "use strict" mode
                             ////add arguments: count,(any_arr){...}
                             //.addArguments functionAccess.args, callParams
                             METHOD(addArguments_,this)(this,2,(any_arr){PROP(args_,functionAccess), callParams});
                         };
 
                         //callParams.push ")" //close function(undefined,arg,any* arguments)
-                        METHOD(push_,callParams)(callParams,1,(any_arr){any_str(")")}); //close function(undefined,arg,any* arguments)
+                        METHOD(push_,callParams)(callParams,1,(any_arr){any_LTR(")")}); //close function(undefined,arg,any* arguments)
                     }
 
                     //else
@@ -2810,15 +2816,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
                             //// __call enclose all
                             //fnNameArray.unshift "CALL#{functionAccess.args.length}(" 
-                            METHOD(unshift_,fnNameArray)(fnNameArray,1,(any_arr){_concatAny(3,any_str("CALL"), any_number(_length(PROP(args_,functionAccess))), any_str("("))});
+                            METHOD(unshift_,fnNameArray)(fnNameArray,1,(any_arr){_concatAny(3,any_LTR("CALL"), any_number(_length(PROP(args_,functionAccess))), any_LTR("("))});
                             //// here goes methodName
                             //fnNameArray.push "," // CALLn(symbol_ *,*
-                            METHOD(push_,fnNameArray)(fnNameArray,1,(any_arr){any_str(",")}); // CALLn(symbol_ *,*
+                            METHOD(push_,fnNameArray)(fnNameArray,1,(any_arr){any_LTR(",")}); // CALLn(symbol_ *,*
                             //// here: instance reference as 2nd param (this value)
                             //result.unshift fnNameArray //prepend CALLn(method_,instanceof,...
                             METHOD(unshift_,result)(result,1,(any_arr){fnNameArray}); //prepend CALLn(method_,instanceof,...
                             //callParams = functionAccess.args.length? [","] else []
-                            callParams = _length(PROP(args_,functionAccess)) ? new(Array,1,(any_arr){any_str(",")}) : new(Array,0,NULL);
+                            callParams = _length(PROP(args_,functionAccess)) ? new(Array,1,(any_arr){any_LTR(",")}) : new(Array,0,NULL);
                             //callParams.push {CSL:functionAccess.args}
                             METHOD(push_,callParams)(callParams,1,(any_arr){new(Map,1,(any_arr){
                             _newPair("CSL",PROP(args_,functionAccess))
@@ -2848,18 +2854,18 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                                 var simpleVarName = ITEM(0,ITEM(0,result));
                                 //// METHOD()(... ) enclose all
                                 //fnNameArray.unshift ["METHOD("]
-                                METHOD(unshift_,fnNameArray)(fnNameArray,1,(any_arr){new(Array,1,(any_arr){any_str("METHOD(")})});
+                                METHOD(unshift_,fnNameArray)(fnNameArray,1,(any_arr){new(Array,1,(any_arr){any_LTR("METHOD(")})});
                                 //// here goes methodName
                                 //fnNameArray.push ","
-                                METHOD(push_,fnNameArray)(fnNameArray,1,(any_arr){any_str(",")});
+                                METHOD(push_,fnNameArray)(fnNameArray,1,(any_arr){any_LTR(",")});
                                 //result.unshift fnNameArray
                                 METHOD(unshift_,result)(result,1,(any_arr){fnNameArray});
                                 //// here: 1st instance reference 
                                 //result.push [")(",simpleVarName] // METHOD(symbol_,this)(this
-                                METHOD(push_,result)(result,1,(any_arr){new(Array,2,(any_arr){any_str(")("), simpleVarName})}); // METHOD(symbol_,this)(this
+                                METHOD(push_,result)(result,1,(any_arr){new(Array,2,(any_arr){any_LTR(")("), simpleVarName})}); // METHOD(symbol_,this)(this
                                 ////options.validations.push ["assert("].concat(callParams,".type>TYPE_NULL);")
                                 //callParams = [","]
-                                callParams = new(Array,1,(any_arr){any_str(",")});
+                                callParams = new(Array,1,(any_arr){any_LTR(",")});
                             }
         
                             //else
@@ -2867,16 +2873,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                             else {
                                 //// METHOD()(... ) enclose all
                                 //fnNameArray.unshift "__call(" 
-                                METHOD(unshift_,fnNameArray)(fnNameArray,1,(any_arr){any_str("__call(")});
+                                METHOD(unshift_,fnNameArray)(fnNameArray,1,(any_arr){any_LTR("__call(")});
                                 //// here goes methodName
                                 //fnNameArray.push "," // __call(symbol_ *,*
-                                METHOD(push_,fnNameArray)(fnNameArray,1,(any_arr){any_str(",")}); // __call(symbol_ *,*
+                                METHOD(push_,fnNameArray)(fnNameArray,1,(any_arr){any_LTR(",")}); // __call(symbol_ *,*
                                 //// here: instance reference as 2nd param (this value)
                                 //result.unshift fnNameArray //prepend __call(methodName, ...instanceof
                                 METHOD(unshift_,result)(result,1,(any_arr){fnNameArray}); //prepend __call(methodName, ...instanceof
                                 ////options.validations.push ["assert("].concat(callParams,".type>TYPE_NULL);")
                                 //callParams = [","]
-                                callParams = new(Array,1,(any_arr){any_str(",")});
+                                callParams = new(Array,1,(any_arr){any_LTR(",")});
                             };
                             //end if
                             
@@ -2885,7 +2891,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                             //.addArguments functionAccess.args, callParams
                             METHOD(addArguments_,this)(this,2,(any_arr){PROP(args_,functionAccess), callParams});
                             //callParams.push ")" //close 
-                            METHOD(push_,callParams)(callParams,1,(any_arr){any_str(")")}); //close
+                            METHOD(push_,callParams)(callParams,1,(any_arr){any_LTR(")")}); //close
                         };
 
                         //end if
@@ -2903,7 +2909,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 METHOD(push_,result)(result,1,(any_arr){callParams});
 
                 //if actualVar, actualVar = actualVar.findMember('**return type**')
-                if (_anyToBool(actualVar)) {actualVar = METHOD(findMember_,actualVar)(actualVar,1,(any_arr){any_str("**return type**")});};
+                if (_anyToBool(actualVar)) {actualVar = METHOD(findMember_,actualVar)(actualVar,1,(any_arr){any_LTR("**return type**")});};
             }
                 //#the actualVar is now function's return type'
                 //#and next property access should be on defined members of the return type
@@ -2917,28 +2923,28 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             else if (__is(any_class(ac.class),Grammar_IndexAccess))  {
                 
                 //partial ="#{partial}[...]"
-                partial = _concatAny(2,partial, any_str("[...]"));
+                partial = _concatAny(2,partial, any_LTR("[...]"));
 
                 //.calcType = 'any'
-                PROP(calcType_,this) = any_str("any");
+                PROP(calcType_,this) = any_LTR("any");
 
                 //declare ac:Grammar.IndexAccess
                 
 
                 ////ac.name is a Expression
                 //ac.name.produceType = 'Number'
-                PROP(produceType_,PROP(name_,ac)) = any_str("Number");
+                PROP(produceType_,PROP(name_,ac)) = any_LTR("Number");
 
                 ////add macro ITEM(index, array )
                 ////macro ITEM() encloses all 
                 //result.unshift ["ITEM(",ac.name,"," ]
-                METHOD(unshift_,result)(result,1,(any_arr){new(Array,3,(any_arr){any_str("ITEM("), PROP(name_,ac), any_str(",")})});
+                METHOD(unshift_,result)(result,1,(any_arr){new(Array,3,(any_arr){any_LTR("ITEM("), PROP(name_,ac), any_LTR(",")})});
                 //// here goes instance
                 //result.push [")"]
-                METHOD(push_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_str(")")})});
+                METHOD(push_,result)(result,1,(any_arr){new(Array,1,(any_arr){any_LTR(")")})});
 
                 //if actualVar, actualVar = actualVar.findOwnMember('**item type**')
-                if (_anyToBool(actualVar)) {actualVar = METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){any_str("**item type**")});};
+                if (_anyToBool(actualVar)) {actualVar = METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){any_LTR("**item type**")});};
             };
 
             //end if //type of accessor
@@ -2974,7 +2980,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //var typeStr = avType.name
         var typeStr = PROP(name_,avType);
         //if typeStr is 'prototype'
-        if (__is(typeStr,any_str("prototype")))  {
+        if (__is(typeStr,any_LTR("prototype")))  {
             //typeStr = avType.parent.name
             typeStr = PROP(name_,PROP(parent_,avType));
         };
@@ -3002,15 +3008,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //---------
 
         //var pre=skipAnyArr?'' else '(any_arr){'
-        var pre = _anyToBool(skipAnyArr) ? any_EMPTY_STR : any_str("(any_arr){");
+        var pre = _anyToBool(skipAnyArr) ? any_EMPTY_STR : any_LTR("(any_arr){");
         //var post=skipAnyArr?'' else '}'
-        var post = _anyToBool(skipAnyArr) ? any_EMPTY_STR : any_str("}");
+        var post = _anyToBool(skipAnyArr) ? any_EMPTY_STR : any_LTR("}");
 
         ////add arguments[] 
         //if args and args.length
         if (_anyToBool(args) && _length(args))  {
             //callParams.push "#{args.length},",pre,{CSL:args},post
-            METHOD(push_,callParams)(callParams,4,(any_arr){_concatAny(2,any_number(_length(args)), any_str(",")), pre, new(Map,1,(any_arr){
+            METHOD(push_,callParams)(callParams,4,(any_arr){_concatAny(2,any_number(_length(args)), any_LTR(",")), pre, new(Map,1,(any_arr){
             _newPair("CSL",args)
             })
 , post});
@@ -3020,7 +3026,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         
         else {
             //callParams.push "0,NULL"
-            METHOD(push_,callParams)(callParams,1,(any_arr){any_str("0,NULL")});
+            METHOD(push_,callParams)(callParams,1,(any_arr){any_LTR("0,NULL")});
         };
       return undefined;
       }
@@ -3036,10 +3042,10 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //---------
 
         //var extraLvalue='.value.number'
-        var extraLvalue = any_str(".value.number");
+        var extraLvalue = any_LTR(".value.number");
         //if .lvalue.tryGetReference() into var nameDecl
         var nameDecl=undefined;
-        if (_anyToBool((nameDecl=__call(tryGetReference_,PROP(lvalue_,this),0,NULL))) && __is(METHOD(findOwnMember_,nameDecl)(nameDecl,1,(any_arr){any_str("**proto**")}),any_str("**native number**")))  {
+        if (_anyToBool((nameDecl=__call(tryGetReference_,PROP(lvalue_,this),0,NULL))) && __is(METHOD(findOwnMember_,nameDecl)(nameDecl,1,(any_arr){any_LTR("**proto**")}),any_LTR("**native number**")))  {
             //and nameDecl.findOwnMember('**proto**') is '**native number**'
                 //extraLvalue=undefined
                 extraLvalue = undefined;
@@ -3050,16 +3056,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //case oper
         
             //when "+=","-=","*=","/="
-        if (__is(oper,any_str("+="))||__is(oper,any_str("-="))||__is(oper,any_str("*="))||__is(oper,any_str("/="))){
+        if (__is(oper,any_LTR("+="))||__is(oper,any_LTR("-="))||__is(oper,any_LTR("*="))||__is(oper,any_LTR("/="))){
 
                 //if oper is '+='
-                if (__is(oper,any_str("+=")))  {
+                if (__is(oper,any_LTR("+=")))  {
                     //var rresultNameDecl = .rvalue.getResultType() 
                     var rresultNameDecl = __call(getResultType_,PROP(rvalue_,this),0,NULL);
                     //if rresultNameDecl and rresultNameDecl.hasProto('String')
-                    if (_anyToBool(rresultNameDecl) && _anyToBool(METHOD(hasProto_,rresultNameDecl)(rresultNameDecl,1,(any_arr){any_str("String")})))  {
+                    if (_anyToBool(rresultNameDecl) && _anyToBool(METHOD(hasProto_,rresultNameDecl)(rresultNameDecl,1,(any_arr){any_LTR("String")})))  {
                         //.sayErr """
-                        METHOD(sayErr_,this)(this,1,(any_arr){any_str("You should not use += to concat strings. use string concat oper: & or interpolation instead.\ne.g.: DO: \"a &= b\"  vs.  DO NOT: a += b")});
+                        METHOD(sayErr_,this)(this,1,(any_arr){any_LTR("You should not use += to concat strings. use string concat oper: & or interpolation instead.\ne.g.: DO: \"a &= b\"  vs.  DO NOT: a += b")});
                     };
                 };
                                 //You should not use += to concat strings. use string concat oper: & or interpolation instead.
@@ -3067,26 +3073,26 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                                 //"""
 
                 //.rvalue.produceType = 'Number'
-                PROP(produceType_,PROP(rvalue_,this)) = any_str("Number");
+                PROP(produceType_,PROP(rvalue_,this)) = any_LTR("Number");
                 //.out .lvalue,extraLvalue,' ', oper,' ',.rvalue
-                METHOD(out_,this)(this,6,(any_arr){PROP(lvalue_,this), extraLvalue, any_str(" "), oper, any_str(" "), PROP(rvalue_,this)});
+                METHOD(out_,this)(this,6,(any_arr){PROP(lvalue_,this), extraLvalue, any_LTR(" "), oper, any_LTR(" "), PROP(rvalue_,this)});
         
         }
             //when "&=" //string concat
-        else if (__is(oper,any_str("&="))){
+        else if (__is(oper,any_LTR("&="))){
                 //.rvalue.produceType = 'any'
-                PROP(produceType_,PROP(rvalue_,this)) = any_str("any");
+                PROP(produceType_,PROP(rvalue_,this)) = any_LTR("any");
                 //.out .lvalue, '=', "_concatAny(2,",.lvalue,',',.rvalue,')'
-                METHOD(out_,this)(this,7,(any_arr){PROP(lvalue_,this), any_str("="), any_str("_concatAny(2,"), PROP(lvalue_,this), any_str(","), PROP(rvalue_,this), any_str(")")});
+                METHOD(out_,this)(this,7,(any_arr){PROP(lvalue_,this), any_LTR("="), any_LTR("_concatAny(2,"), PROP(lvalue_,this), any_LTR(","), PROP(rvalue_,this), any_LTR(")")});
         
         }
         else {
 
             //else
                 //.rvalue.produceType = 'any'
-                PROP(produceType_,PROP(rvalue_,this)) = any_str("any");
+                PROP(produceType_,PROP(rvalue_,this)) = any_LTR("any");
                 //.out .lvalue, ' ', operTranslate(.name), ' ' , .rvalue
-                METHOD(out_,this)(this,5,(any_arr){PROP(lvalue_,this), any_str(" "), Producer_c_operTranslate(undefined,1,(any_arr){PROP(name_,this)}), any_str(" "), PROP(rvalue_,this)});
+                METHOD(out_,this)(this,5,(any_arr){PROP(lvalue_,this), any_LTR(" "), Producer_c_operTranslate(undefined,1,(any_arr){PROP(name_,this)}), any_LTR(" "), PROP(rvalue_,this)});
         };
       return undefined;
       }
@@ -3161,7 +3167,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
           //---------
 
           //.throwError "default for objects not supported on C-generation"
-          METHOD(throwError_,this)(this,1,(any_arr){any_str("default for objects not supported on C-generation")});
+          METHOD(throwError_,this)(this,1,(any_arr){any_LTR("default for objects not supported on C-generation")});
       return undefined;
       }
           ///*
@@ -3207,7 +3213,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //---------
 
         //.out "var ",.nameDecl.getComposedName(),'=',.varRef,";"
-        METHOD(out_,this)(this,5,(any_arr){any_str("var "), __call(getComposedName_,PROP(nameDecl_,this),0,NULL), any_str("="), PROP(varRef_,this), any_str(";")});
+        METHOD(out_,this)(this,5,(any_arr){any_LTR("var "), __call(getComposedName_,PROP(nameDecl_,this),0,NULL), any_LTR("="), PROP(varRef_,this), any_LTR(";")});
         //.out .body
         METHOD(out_,this)(this,1,(any_arr){PROP(body_,this)});
       return undefined;
@@ -3232,15 +3238,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //if allMethodNames.has(name)
             if (_anyToBool(METHOD(has_,Producer_c_allMethodNames)(Producer_c_allMethodNames,1,(any_arr){name})))  {
                 //.sayErr "Ambiguity: A method named '#{name}' is already defined. Cannot reuse the symbol for a property"
-                METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_str("Ambiguity: A method named '"), name, any_str("' is already defined. Cannot reuse the symbol for a property"))});
+                METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_LTR("Ambiguity: A method named '"), name, any_LTR("' is already defined. Cannot reuse the symbol for a property"))});
                 //allMethodNames.get(name).sayErr "declaration of method '#{name}'"
-                __call(sayErr_,METHOD(get_,Producer_c_allMethodNames)(Producer_c_allMethodNames,1,(any_arr){name}),1,(any_arr){_concatAny(3,any_str("declaration of method '"), name, any_str("'"))});
+                __call(sayErr_,METHOD(get_,Producer_c_allMethodNames)(Producer_c_allMethodNames,1,(any_arr){name}),1,(any_arr){_concatAny(3,any_LTR("declaration of method '"), name, any_LTR("'"))});
             }
             //else if name in coreSupportedMethods
             
             else if (CALL1(indexOf_,Producer_c_coreSupportedMethods,name).value.number>=0)  {
                 //.sayErr "'#{name}' is declared in as a core method. Cannot use the symbol for a property"
-                METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_str("'"), name, any_str("' is declared in as a core method. Cannot use the symbol for a property"))});
+                METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_LTR("'"), name, any_LTR("' is declared in as a core method. Cannot use the symbol for a property"))});
             }
             //else
             
@@ -3301,7 +3307,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Grammar_VarStatement));
         //---------
         //.out 'var ',{CSL:.list}
-        METHOD(out_,this)(this,2,(any_arr){any_str("var "), new(Map,1,(any_arr){
+        METHOD(out_,this)(this,2,(any_arr){any_LTR("var "), new(Map,1,(any_arr){
         _newPair("CSL",PROP(list_,this))
         })
         });
@@ -3318,7 +3324,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Grammar_VariableDecl));
         //---------
         //.out .name,' = ', .assignedValue or 'undefined'
-        METHOD(out_,this)(this,3,(any_arr){PROP(name_,this), any_str(" = "), (_anyToBool(__or19=PROP(assignedValue_,this))? __or19 : any_str("undefined"))});
+        METHOD(out_,this)(this,3,(any_arr){PROP(name_,this), any_LTR(" = "), (_anyToBool(__or19=PROP(assignedValue_,this))? __or19 : any_LTR("undefined"))});
       return undefined;
       }
 
@@ -3363,7 +3369,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //.out {CSL:bare, separator:","}
         METHOD(out_,this)(this,1,(any_arr){new(Map,2,(any_arr){
         _newPair("CSL",bare), 
-        _newPair("separator",any_str(","))
+        _newPair("separator",any_LTR(","))
         })
         });
       return undefined;
@@ -3381,22 +3387,22 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //declare valid .elseStatement.produce
         
         //.conditional.produceType = 'Bool'
-        PROP(produceType_,PROP(conditional_,this)) = any_str("Bool");
+        PROP(produceType_,PROP(conditional_,this)) = any_LTR("Bool");
         //.out "if (", .conditional,") "
-        METHOD(out_,this)(this,3,(any_arr){any_str("if ("), PROP(conditional_,this), any_str(") ")});
+        METHOD(out_,this)(this,3,(any_arr){any_LTR("if ("), PROP(conditional_,this), any_LTR(") ")});
 
         //if .body instanceof Grammar.SingleLineBody
         if (_instanceof(PROP(body_,this),Grammar_SingleLineBody))  {
             //.out '{',.body,';}'
-            METHOD(out_,this)(this,3,(any_arr){any_str("{"), PROP(body_,this), any_str(";}")});
+            METHOD(out_,this)(this,3,(any_arr){any_LTR("{"), PROP(body_,this), any_LTR(";}")});
         }
         //else
         
         else {
             //.out " {", .getEOLComment()
-            METHOD(out_,this)(this,2,(any_arr){any_str(" {"), METHOD(getEOLComment_,this)(this,0,NULL)});
+            METHOD(out_,this)(this,2,(any_arr){any_LTR(" {"), METHOD(getEOLComment_,this)(this,0,NULL)});
             //.out .body, "}"
-            METHOD(out_,this)(this,2,(any_arr){PROP(body_,this), any_str("}")});
+            METHOD(out_,this)(this,2,(any_arr){PROP(body_,this), any_LTR("}")});
         };
 
         //if .elseStatement
@@ -3422,7 +3428,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         METHOD(outSourceLineAsComment_,this)(this,1,(any_arr){PROP(sourceLineNum_,this)});
 
         //.out NL,"else ", .nextIf
-        METHOD(out_,this)(this,3,(any_arr){Producer_c_NL, any_str("else "), PROP(nextIf_,this)});
+        METHOD(out_,this)(this,3,(any_arr){Producer_c_NL, any_LTR("else "), PROP(nextIf_,this)});
       return undefined;
       }
 
@@ -3438,7 +3444,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         METHOD(outSourceLineAsComment_,this)(this,1,(any_arr){PROP(sourceLineNum_,this)});
 
         //.out NL,"else {", .body, "}"
-        METHOD(out_,this)(this,4,(any_arr){Producer_c_NL, any_str("else {"), PROP(body_,this), any_str("}")});
+        METHOD(out_,this)(this,4,(any_arr){Producer_c_NL, any_LTR("else {"), PROP(body_,this), any_LTR("}")});
       return undefined;
       }
 
@@ -3483,10 +3489,10 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //Create a default index var name if none was provided
 
         //.out "{",NL //enclose defined temp vars in their own scope
-        METHOD(out_,this)(this,2,(any_arr){any_str("{"), Producer_c_NL}); //enclose defined temp vars in their own scope
+        METHOD(out_,this)(this,2,(any_arr){any_LTR("{"), Producer_c_NL}); //enclose defined temp vars in their own scope
 
         //var listName, uniqueName = UniqueID.getVarName('list')  #unique temp listName var name
-        var listName = undefined, uniqueName = UniqueID_getVarName(undefined,1,(any_arr){any_str("list")});// #unique temp listName var name
+        var listName = undefined, uniqueName = UniqueID_getVarName(undefined,1,(any_arr){any_LTR("list")});// #unique temp listName var name
         //declare valid .iterable.root.name.hasSideEffects
         
         //if .iterable.operandCount>1 or .iterable.root.name.hasSideEffects or .iterable.root.name instanceof Grammar.Literal
@@ -3494,7 +3500,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //listName = uniqueName
             listName = uniqueName;
             //.out "any ",listName,"=",.iterable,";",NL
-            METHOD(out_,this)(this,6,(any_arr){any_str("any "), listName, any_str("="), PROP(iterable_,this), any_str(";"), Producer_c_NL});
+            METHOD(out_,this)(this,6,(any_arr){any_LTR("any "), listName, any_LTR("="), PROP(iterable_,this), any_LTR(";"), Producer_c_NL});
         }
         //else
         
@@ -3506,41 +3512,41 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //create a var holding object property count
 
         //.out "len_t __propCount=_length(",listName,');' ,NL
-        METHOD(out_,this)(this,4,(any_arr){any_str("len_t __propCount=_length("), listName, any_str(");"), Producer_c_NL});
+        METHOD(out_,this)(this,4,(any_arr){any_LTR("len_t __propCount=_length("), listName, any_LTR(");"), Producer_c_NL});
 
         //var startValue = "0"
-        var startValue = any_str("0");
+        var startValue = any_LTR("0");
         //var intIndexVarName = '#{.mainVar.name}__inx';
-        var intIndexVarName = _concatAny(2,PROP(name_,PROP(mainVar_,this)), any_str("__inx"));
+        var intIndexVarName = _concatAny(2,PROP(name_,PROP(mainVar_,this)), any_LTR("__inx"));
 
         //if .indexVar 
         if (_anyToBool(PROP(indexVar_,this)))  {
             //.out "any ",.indexVar.name,"=undefined;",NL
-            METHOD(out_,this)(this,4,(any_arr){any_str("any "), PROP(name_,PROP(indexVar_,this)), any_str("=undefined;"), Producer_c_NL});
+            METHOD(out_,this)(this,4,(any_arr){any_LTR("any "), PROP(name_,PROP(indexVar_,this)), any_LTR("=undefined;"), Producer_c_NL});
         };
 
         //.out "any ",.mainVar.name,"=undefined;",NL
-        METHOD(out_,this)(this,4,(any_arr){any_str("any "), PROP(name_,PROP(mainVar_,this)), any_str("=undefined;"), Producer_c_NL});
+        METHOD(out_,this)(this,4,(any_arr){any_LTR("any "), PROP(name_,PROP(mainVar_,this)), any_LTR("=undefined;"), Producer_c_NL});
 
         //.out 
             //"for(int __propIndex=", startValue
             //" ; __propIndex < __propCount"
             //" ; __propIndex++ ){"
-        METHOD(out_,this)(this,4,(any_arr){any_str("for(int __propIndex="), startValue, any_str(" ; __propIndex < __propCount"), any_str(" ; __propIndex++ ){")});
+        METHOD(out_,this)(this,4,(any_arr){any_LTR("for(int __propIndex="), startValue, any_LTR(" ; __propIndex < __propCount"), any_LTR(" ; __propIndex++ ){")});
 
         //.body.out .mainVar.name,"=",listName,".value.prop[__propIndex];",NL
-        __call(out_,PROP(body_,this),5,(any_arr){PROP(name_,PROP(mainVar_,this)), any_str("="), listName, any_str(".value.prop[__propIndex];"), Producer_c_NL});
+        __call(out_,PROP(body_,this),5,(any_arr){PROP(name_,PROP(mainVar_,this)), any_LTR("="), listName, any_LTR(".value.prop[__propIndex];"), Producer_c_NL});
         
         //if .indexVar 
         if (_anyToBool(PROP(indexVar_,this)))  {
             //.body.out .indexVar.name,"= _getPropertyNameAtIndex(",listName,",__propIndex);",NL
-            __call(out_,PROP(body_,this),5,(any_arr){PROP(name_,PROP(indexVar_,this)), any_str("= _getPropertyNameAtIndex("), listName, any_str(",__propIndex);"), Producer_c_NL});
+            __call(out_,PROP(body_,this),5,(any_arr){PROP(name_,PROP(indexVar_,this)), any_LTR("= _getPropertyNameAtIndex("), listName, any_LTR(",__propIndex);"), Producer_c_NL});
         };
 
         //if .where 
         if (_anyToBool(PROP(where_,this)))  {
           //.out '  ',.where,"{",.body,"}"
-          METHOD(out_,this)(this,5,(any_arr){any_str("  "), PROP(where_,this), any_str("{"), PROP(body_,this), any_str("}")});
+          METHOD(out_,this)(this,5,(any_arr){any_LTR("  "), PROP(where_,this), any_LTR("{"), PROP(body_,this), any_LTR("}")});
         }
         //else 
         
@@ -3550,8 +3556,8 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         };
 
         //.out "}};",{COMMENT:["end for each property in ",.iterable]},NL
-        METHOD(out_,this)(this,3,(any_arr){any_str("}};"), new(Map,1,(any_arr){
-        _newPair("COMMENT",new(Array,2,(any_arr){any_str("end for each property in "), PROP(iterable_,this)}))
+        METHOD(out_,this)(this,3,(any_arr){any_LTR("}};"), new(Map,1,(any_arr){
+        _newPair("COMMENT",new(Array,2,(any_arr){any_LTR("end for each property in "), PROP(iterable_,this)}))
         })
 , Producer_c_NL});
       return undefined;
@@ -3573,9 +3579,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //var listName
         var listName = undefined;
         //listName = UniqueID.getVarName('list')  #unique temp listName var name
-        listName = UniqueID_getVarName(undefined,1,(any_arr){any_str("list")});// #unique temp listName var name
+        listName = UniqueID_getVarName(undefined,1,(any_arr){any_LTR("list")});// #unique temp listName var name
         //.out "any ",listName,"=",.iterable,";",NL
-        METHOD(out_,this)(this,6,(any_arr){any_str("any "), listName, any_str("="), PROP(iterable_,this), any_str(";"), Producer_c_NL});
+        METHOD(out_,this)(this,6,(any_arr){any_LTR("any "), listName, any_LTR("="), PROP(iterable_,this), any_LTR(";"), Producer_c_NL});
 
         //if .isMap
         if (_anyToBool(PROP(isMap_,this)))  {
@@ -3586,41 +3592,41 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //var intIndexVarName
         var intIndexVarName = undefined;
         //var startValue = "0"
-        var startValue = any_str("0");
+        var startValue = any_LTR("0");
         //if .indexVar 
         if (_anyToBool(PROP(indexVar_,this)))  {
             //.indexVar.nameDecl.members.set '**proto**','**native number**'
-            __call(set_,PROP(members_,PROP(nameDecl_,PROP(indexVar_,this))),2,(any_arr){any_str("**proto**"), any_str("**native number**")});
+            __call(set_,PROP(members_,PROP(nameDecl_,PROP(indexVar_,this))),2,(any_arr){any_LTR("**proto**"), any_LTR("**native number**")});
             //intIndexVarName = .indexVar.name
             intIndexVarName = PROP(name_,PROP(indexVar_,this));
             //startValue = .indexVar.assignedValue or "0"
-            startValue = (_anyToBool(__or22=PROP(assignedValue_,PROP(indexVar_,this)))? __or22 : any_str("0"));
+            startValue = (_anyToBool(__or22=PROP(assignedValue_,PROP(indexVar_,this)))? __or22 : any_LTR("0"));
         }
         //else
         
         else {
             //intIndexVarName = '#{.mainVar.name}__inx';
-            intIndexVarName = _concatAny(2,PROP(name_,PROP(mainVar_,this)), any_str("__inx"));
+            intIndexVarName = _concatAny(2,PROP(name_,PROP(mainVar_,this)), any_LTR("__inx"));
         };
 
 //include mainVar.name in a bracket block to contain scope
 
         //.out "{ var ",.mainVar.name,"=undefined;",NL
-        METHOD(out_,this)(this,4,(any_arr){any_str("{ var "), PROP(name_,PROP(mainVar_,this)), any_str("=undefined;"), Producer_c_NL});
+        METHOD(out_,this)(this,4,(any_arr){any_LTR("{ var "), PROP(name_,PROP(mainVar_,this)), any_LTR("=undefined;"), Producer_c_NL});
 
         //.out 
             //"for(int ", intIndexVarName,"=", startValue
             //" ; ",intIndexVarName,"<",listName,".value.arr->length"
             //" ; ",intIndexVarName,"++){"
-        METHOD(out_,this)(this,12,(any_arr){any_str("for(int "), intIndexVarName, any_str("="), startValue, any_str(" ; "), intIndexVarName, any_str("<"), listName, any_str(".value.arr->length"), any_str(" ; "), intIndexVarName, any_str("++){")});
+        METHOD(out_,this)(this,12,(any_arr){any_LTR("for(int "), intIndexVarName, any_LTR("="), startValue, any_LTR(" ; "), intIndexVarName, any_LTR("<"), listName, any_LTR(".value.arr->length"), any_LTR(" ; "), intIndexVarName, any_LTR("++){")});
 
         //.body.out .mainVar.name,"=ITEM(",intIndexVarName,",",listName,");",NL
-        __call(out_,PROP(body_,this),7,(any_arr){PROP(name_,PROP(mainVar_,this)), any_str("=ITEM("), intIndexVarName, any_str(","), listName, any_str(");"), Producer_c_NL});
+        __call(out_,PROP(body_,this),7,(any_arr){PROP(name_,PROP(mainVar_,this)), any_LTR("=ITEM("), intIndexVarName, any_LTR(","), listName, any_LTR(");"), Producer_c_NL});
 
         //if .where 
         if (_anyToBool(PROP(where_,this)))  {
             //.out '  ',.where,"{",.body,"}" //filter condition
-            METHOD(out_,this)(this,5,(any_arr){any_str("  "), PROP(where_,this), any_str("{"), PROP(body_,this), any_str("}")}); //filter condition
+            METHOD(out_,this)(this,5,(any_arr){any_LTR("  "), PROP(where_,this), any_LTR("{"), PROP(body_,this), any_LTR("}")}); //filter condition
         }
         //else 
         
@@ -3630,8 +3636,8 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         };
 
         //.out "}};",{COMMENT:["end for each in ",.iterable]},NL
-        METHOD(out_,this)(this,3,(any_arr){any_str("}};"), new(Map,1,(any_arr){
-        _newPair("COMMENT",new(Array,2,(any_arr){any_str("end for each in "), PROP(iterable_,this)}))
+        METHOD(out_,this)(this,3,(any_arr){any_LTR("}};"), new(Map,1,(any_arr){
+        _newPair("COMMENT",new(Array,2,(any_arr){any_LTR("end for each in "), PROP(iterable_,this)}))
         })
 , Producer_c_NL});
       return undefined;
@@ -3650,30 +3656,30 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //"{" //enclose in a block to limit scope of loop vars
             //"NameValuePair_ptr __nvp=NULL; //name:value pair",NL
             //"int64_t __len=MAPSIZE(",listName,"); //how many pairs",NL
-        METHOD(out_,this)(this,7,(any_arr){any_str("{"), any_str("NameValuePair_ptr __nvp=NULL; //name:value pair"), Producer_c_NL, any_str("int64_t __len=MAPSIZE("), listName, any_str("); //how many pairs"), Producer_c_NL});
+        METHOD(out_,this)(this,7,(any_arr){any_LTR("{"), any_LTR("NameValuePair_ptr __nvp=NULL; //name:value pair"), Producer_c_NL, any_LTR("int64_t __len=MAPSIZE("), listName, any_LTR("); //how many pairs"), Producer_c_NL});
             
         //if .indexVar, .out "var ",.indexVar.name,"=undefined; //key",NL 
-        if (_anyToBool(PROP(indexVar_,this))) {METHOD(out_,this)(this,4,(any_arr){any_str("var "), PROP(name_,PROP(indexVar_,this)), any_str("=undefined; //key"), Producer_c_NL});};
+        if (_anyToBool(PROP(indexVar_,this))) {METHOD(out_,this)(this,4,(any_arr){any_LTR("var "), PROP(name_,PROP(indexVar_,this)), any_LTR("=undefined; //key"), Producer_c_NL});};
         //.out "var ",.mainVar.name,"=undefined; //value",NL
-        METHOD(out_,this)(this,4,(any_arr){any_str("var "), PROP(name_,PROP(mainVar_,this)), any_str("=undefined; //value"), Producer_c_NL});
+        METHOD(out_,this)(this,4,(any_arr){any_LTR("var "), PROP(name_,PROP(mainVar_,this)), any_LTR("=undefined; //value"), Producer_c_NL});
 
         //.out 
             //"for(int64_t __inx=0"
             //" ; __inx < __len"
             //" ; __inx++ ){",NL
-        METHOD(out_,this)(this,4,(any_arr){any_str("for(int64_t __inx=0"), any_str(" ; __inx < __len"), any_str(" ; __inx++ ){"), Producer_c_NL});
+        METHOD(out_,this)(this,4,(any_arr){any_LTR("for(int64_t __inx=0"), any_LTR(" ; __inx < __len"), any_LTR(" ; __inx++ ){"), Producer_c_NL});
 
         //.body.out "__nvp = MAPITEM( __inx,",listName,");",NL //get nv pair ptr
-        __call(out_,PROP(body_,this),4,(any_arr){any_str("__nvp = MAPITEM( __inx,"), listName, any_str(");"), Producer_c_NL}); //get nv pair ptr
+        __call(out_,PROP(body_,this),4,(any_arr){any_LTR("__nvp = MAPITEM( __inx,"), listName, any_LTR(");"), Producer_c_NL}); //get nv pair ptr
         //if .indexVar, .body.out .indexVar.name,"= __nvp->name;",NL //get key
-        if (_anyToBool(PROP(indexVar_,this))) {__call(out_,PROP(body_,this),3,(any_arr){PROP(name_,PROP(indexVar_,this)), any_str("= __nvp->name;"), Producer_c_NL});};
+        if (_anyToBool(PROP(indexVar_,this))) {__call(out_,PROP(body_,this),3,(any_arr){PROP(name_,PROP(indexVar_,this)), any_LTR("= __nvp->name;"), Producer_c_NL});};
         //.body.out .mainVar.name,"= __nvp->value;",NL //get value
-        __call(out_,PROP(body_,this),3,(any_arr){PROP(name_,PROP(mainVar_,this)), any_str("= __nvp->value;"), Producer_c_NL}); //get value
+        __call(out_,PROP(body_,this),3,(any_arr){PROP(name_,PROP(mainVar_,this)), any_LTR("= __nvp->value;"), Producer_c_NL}); //get value
 
         //if .where 
         if (_anyToBool(PROP(where_,this)))  {
           //.out '  ',.where,"{",.body,"}" //filter condition
-          METHOD(out_,this)(this,5,(any_arr){any_str("  "), PROP(where_,this), any_str("{"), PROP(body_,this), any_str("}")}); //filter condition
+          METHOD(out_,this)(this,5,(any_arr){any_LTR("  "), PROP(where_,this), any_LTR("{"), PROP(body_,this), any_LTR("}")}); //filter condition
         }
         //else 
         
@@ -3683,8 +3689,8 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         };
 
         //.out "}};",{COMMENT:["end for each in map ",.iterable]},NL
-        METHOD(out_,this)(this,3,(any_arr){any_str("}};"), new(Map,1,(any_arr){
-        _newPair("COMMENT",new(Array,2,(any_arr){any_str("end for each in map "), PROP(iterable_,this)}))
+        METHOD(out_,this)(this,3,(any_arr){any_LTR("}};"), new(Map,1,(any_arr){
+        _newPair("COMMENT",new(Array,2,(any_arr){any_LTR("end for each in map "), PROP(iterable_,this)}))
         })
 , Producer_c_NL});
       return undefined;
@@ -3713,17 +3719,17 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         var endTempVarName = undefined;
 
         //.endExpression.produceType='Number'
-        PROP(produceType_,PROP(endExpression_,this)) = any_str("Number");
+        PROP(produceType_,PROP(endExpression_,this)) = any_LTR("Number");
 
         //// indicate .indexVar is a native number, so no ".value.number" required to produce a number
         //.indexVar.nameDecl.members.set '**proto**','**native number**'
-        __call(set_,PROP(members_,PROP(nameDecl_,PROP(indexVar_,this))),2,(any_arr){any_str("**proto**"), any_str("**native number**")});
+        __call(set_,PROP(members_,PROP(nameDecl_,PROP(indexVar_,this))),2,(any_arr){any_LTR("**proto**"), any_LTR("**native number**")});
 
         //if .indexVar.assignedValue, .indexVar.assignedValue.produceType='Number'
-        if (_anyToBool(PROP(assignedValue_,PROP(indexVar_,this)))) {PROP(produceType_,PROP(assignedValue_,PROP(indexVar_,this))) = any_str("Number");};
+        if (_anyToBool(PROP(assignedValue_,PROP(indexVar_,this)))) {PROP(produceType_,PROP(assignedValue_,PROP(indexVar_,this))) = any_LTR("Number");};
 
         //if .conditionPrefix in['to','down']
-        if (__in(PROP(conditionPrefix_,this),2,(any_arr){any_str("to"), any_str("down")}))  {
+        if (__in(PROP(conditionPrefix_,this),2,(any_arr){any_LTR("to"), any_LTR("down")}))  {
 
             //isToDownTo= true
             isToDownTo = true;
@@ -3732,16 +3738,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //For loops "to/down to" evaluate end expresion only once
 
             //endTempVarName = UniqueID.getVarName('end')
-            endTempVarName = UniqueID_getVarName(undefined,1,(any_arr){any_str("end")});
+            endTempVarName = UniqueID_getVarName(undefined,1,(any_arr){any_LTR("end")});
             //.out "int64_t ",endTempVarName,"=",.endExpression,";",NL
-            METHOD(out_,this)(this,6,(any_arr){any_str("int64_t "), endTempVarName, any_str("="), PROP(endExpression_,this), any_str(";"), Producer_c_NL});
+            METHOD(out_,this)(this,6,(any_arr){any_LTR("int64_t "), endTempVarName, any_LTR("="), PROP(endExpression_,this), any_LTR(";"), Producer_c_NL});
         };
 
         //end if
         
 
         //.out "for(int64_t ", .indexVar.name,"=", .indexVar.assignedValue or "0","; "
-        METHOD(out_,this)(this,5,(any_arr){any_str("for(int64_t "), PROP(name_,PROP(indexVar_,this)), any_str("="), (_anyToBool(__or23=PROP(assignedValue_,PROP(indexVar_,this)))? __or23 : any_str("0")), any_str("; ")});
+        METHOD(out_,this)(this,5,(any_arr){any_LTR("for(int64_t "), PROP(name_,PROP(indexVar_,this)), any_LTR("="), (_anyToBool(__or23=PROP(assignedValue_,PROP(indexVar_,this)))? __or23 : any_LTR("0")), any_LTR("; ")});
 
         //if isToDownTo
         if (_anyToBool(isToDownTo))  {
@@ -3749,7 +3755,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //#'for n=0 to 10' -> for(n=0;n<=10;n++)
             //#'for n=10 down to 0' -> for(n=10;n>=0;n--)
             //.out .indexVar.name, .conditionPrefix is 'to'? "<=" else ">=", endTempVarName
-            METHOD(out_,this)(this,3,(any_arr){PROP(name_,PROP(indexVar_,this)), __is(PROP(conditionPrefix_,this),any_str("to")) ? any_str("<=") : any_str(">="), endTempVarName});
+            METHOD(out_,this)(this,3,(any_arr){PROP(name_,PROP(indexVar_,this)), __is(PROP(conditionPrefix_,this),any_LTR("to")) ? any_LTR("<=") : any_LTR(">="), endTempVarName});
         }
 
         //else # is while|until
@@ -3761,16 +3767,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //#for n=0, while n<arr.length  -> for(n=0;n<arr.length;...
             //#for n=0, until n >= arr.length  -> for(n=0;!(n>=arr.length);...
             //.endExpression.produceType='Bool'
-            PROP(produceType_,PROP(endExpression_,this)) = any_str("Bool");
+            PROP(produceType_,PROP(endExpression_,this)) = any_LTR("Bool");
             //.endExpression.produce( negated = .conditionPrefix is 'until' )
-            __call(produce_,PROP(endExpression_,this),1,(any_arr){any_number(__is(PROP(conditionPrefix_,this),any_str("until")))});
+            __call(produce_,PROP(endExpression_,this),1,(any_arr){any_number(__is(PROP(conditionPrefix_,this),any_LTR("until")))});
         };
 
         //end if
         
 
         //.out "; "
-        METHOD(out_,this)(this,1,(any_arr){any_str("; ")});
+        METHOD(out_,this)(this,1,(any_arr){any_LTR("; ")});
 
 //if no increment specified, the default is indexVar++/--
 
@@ -3784,14 +3790,14 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         else {
             ////default index++ (to) or index-- (down to)
             //.out .indexVar.name, .conditionPrefix is 'down'? '--' else '++'
-            METHOD(out_,this)(this,2,(any_arr){PROP(name_,PROP(indexVar_,this)), __is(PROP(conditionPrefix_,this),any_str("down")) ? any_str("--") : any_str("++")});
+            METHOD(out_,this)(this,2,(any_arr){PROP(name_,PROP(indexVar_,this)), __is(PROP(conditionPrefix_,this),any_LTR("down")) ? any_LTR("--") : any_LTR("++")});
         };
 
         //.out 
             //"){", .body, "};" 
             //{COMMENT:"end for #{.indexVar.name}"}, NL
-        METHOD(out_,this)(this,5,(any_arr){any_str("){"), PROP(body_,this), any_str("};"), new(Map,1,(any_arr){
-            _newPair("COMMENT",_concatAny(2,any_str("end for "), PROP(name_,PROP(indexVar_,this))))
+        METHOD(out_,this)(this,5,(any_arr){any_LTR("){"), PROP(body_,this), any_LTR("};"), new(Map,1,(any_arr){
+            _newPair("COMMENT",_concatAny(2,any_LTR("end for "), PROP(name_,PROP(indexVar_,this))))
             })
 , Producer_c_NL});
       return undefined;
@@ -3814,9 +3820,9 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         METHOD(outSourceLineAsComment_,this)(this,1,(any_arr){PROP(sourceLineNum_,this)});
 
         //.filterExpression.produceType='Bool'
-        PROP(produceType_,PROP(filterExpression_,this)) = any_str("Bool");
+        PROP(produceType_,PROP(filterExpression_,this)) = any_LTR("Bool");
         //.out 'if(',.filterExpression,')'
-        METHOD(out_,this)(this,3,(any_arr){any_str("if("), PROP(filterExpression_,this), any_str(")")});
+        METHOD(out_,this)(this,3,(any_arr){any_LTR("if("), PROP(filterExpression_,this), any_LTR(")")});
       return undefined;
       }
 
@@ -3829,7 +3835,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Grammar_DeleteStatement));
         //---------
         //.out 'delete ',.varRef
-        METHOD(out_,this)(this,2,(any_arr){any_str("delete "), PROP(varRef_,this)});
+        METHOD(out_,this)(this,2,(any_arr){any_LTR("delete "), PROP(varRef_,this)});
       return undefined;
       }
 
@@ -3866,7 +3872,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //to produce a `while` condition. (`while NOT x` is equivalent to `until x`)
 
         //.expr.produceType = 'Bool'
-        PROP(produceType_,PROP(expr_,this)) = any_str("Bool");
+        PROP(produceType_,PROP(expr_,this)) = any_LTR("Bool");
         //.expr.produce negated
         __call(produce_,PROP(expr_,this),1,(any_arr){negated});
       return undefined;
@@ -3892,13 +3898,13 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 //"do{", .getEOLComment()
                 //.body
                 //"} while ("
-            METHOD(out_,this)(this,4,(any_arr){any_str("do{"), METHOD(getEOLComment_,this)(this,0,NULL), PROP(body_,this), any_str("} while (")});
+            METHOD(out_,this)(this,4,(any_arr){any_LTR("do{"), METHOD(getEOLComment_,this)(this,0,NULL), PROP(body_,this), any_LTR("} while (")});
             
             //.postWhileUntilExpression.produce(askFor='while')
-            __call(produce_,PROP(postWhileUntilExpression_,this),1,(any_arr){any_str("while")});
+            __call(produce_,PROP(postWhileUntilExpression_,this),1,(any_arr){any_LTR("while")});
             
             //.out ")"
-            METHOD(out_,this)(this,1,(any_arr){any_str(")")});
+            METHOD(out_,this)(this,1,(any_arr){any_LTR(")")});
         }
 
 //else, optional pre-condition:
@@ -3908,29 +3914,29 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         else {
 
             //.out 'while('
-            METHOD(out_,this)(this,1,(any_arr){any_str("while(")});
+            METHOD(out_,this)(this,1,(any_arr){any_LTR("while(")});
             //if .preWhileUntilExpression
             if (_anyToBool(PROP(preWhileUntilExpression_,this)))  {
               //.preWhileUntilExpression.produce(askFor='while')
-              __call(produce_,PROP(preWhileUntilExpression_,this),1,(any_arr){any_str("while")});
+              __call(produce_,PROP(preWhileUntilExpression_,this),1,(any_arr){any_LTR("while")});
             }
             //else 
             
             else {
               //.out 'TRUE'
-              METHOD(out_,this)(this,1,(any_arr){any_str("TRUE")});
+              METHOD(out_,this)(this,1,(any_arr){any_LTR("TRUE")});
             };
 
             //.out '){', .body , "}"
-            METHOD(out_,this)(this,3,(any_arr){any_str("){"), PROP(body_,this), any_str("}")});
+            METHOD(out_,this)(this,3,(any_arr){any_LTR("){"), PROP(body_,this), any_LTR("}")});
         };
 
         //end if
         
 
         //.out ";",{COMMENT:"end loop"},NL
-        METHOD(out_,this)(this,3,(any_arr){any_str(";"), new(Map,1,(any_arr){
-        _newPair("COMMENT",any_str("end loop"))
+        METHOD(out_,this)(this,3,(any_arr){any_LTR(";"), new(Map,1,(any_arr){
+        _newPair("COMMENT",any_LTR("end loop"))
         })
 , Producer_c_NL});
         //.skipSemiColon = true
@@ -3958,7 +3964,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             if (_instanceof(nodeASTBase,Grammar_FunctionDeclaration))  {
                 ////if we reach function header
                 //.sayErr '"{.control}" outside a for|while|do loop'
-                METHOD(sayErr_,this)(this,1,(any_arr){any_str("\"{.control}\" outside a for|while|do loop")});
+                METHOD(sayErr_,this)(this,1,(any_arr){any_LTR("\"{.control}\" outside a for|while|do loop")});
                 //break loop
                 break;
             }
@@ -3994,7 +4000,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Grammar_DoNothingStatement));
         //---------
         //.out "//do nothing",NL
-        METHOD(out_,this)(this,2,(any_arr){any_str("//do nothing"), Producer_c_NL});
+        METHOD(out_,this)(this,2,(any_arr){any_LTR("//do nothing"), Producer_c_NL});
       return undefined;
       }
 
@@ -4013,7 +4019,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //.expr.produceType = .produceType
         PROP(produceType_,PROP(expr_,this)) = PROP(produceType_,this);
         //.out "(",.expr,")"
-        METHOD(out_,this)(this,3,(any_arr){any_str("("), PROP(expr_,this), any_str(")")});
+        METHOD(out_,this)(this,3,(any_arr){any_LTR("("), PROP(expr_,this), any_LTR(")")});
       return undefined;
       }
 
@@ -4029,25 +4035,25 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //---------
       
         //.out "new(Array,"
-        METHOD(out_,this)(this,1,(any_arr){any_str("new(Array,")});
+        METHOD(out_,this)(this,1,(any_arr){any_LTR("new(Array,")});
 
         //if no .items or .items.length is 0
         if (_anyToBool((_anyToBool(__or25=any_number(!_anyToBool(PROP(items_,this))))? __or25 : any_number(__is(any_number(_length(PROP(items_,this))),any_number(0))))))  {
             //.out "0,NULL"
-            METHOD(out_,this)(this,1,(any_arr){any_str("0,NULL")});
+            METHOD(out_,this)(this,1,(any_arr){any_LTR("0,NULL")});
         }
         //else
         
         else {
             //.out .items.length, ',(any_arr){', {CSL:.items}, '}'
-            METHOD(out_,this)(this,4,(any_arr){any_number(_length(PROP(items_,this))), any_str(",(any_arr){"), new(Map,1,(any_arr){
+            METHOD(out_,this)(this,4,(any_arr){any_number(_length(PROP(items_,this))), any_LTR(",(any_arr){"), new(Map,1,(any_arr){
             _newPair("CSL",PROP(items_,this))
             })
-, any_str("}")});
+, any_LTR("}")});
         };
         
         //.out ")"
-        METHOD(out_,this)(this,1,(any_arr){any_str(")")});
+        METHOD(out_,this)(this,1,(any_arr){any_LTR(")")});
       return undefined;
       }
 
@@ -4074,7 +4080,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         };
 
         //.out NL,'_newPair("',strName, '",', .value,')'
-        METHOD(out_,this)(this,6,(any_arr){Producer_c_NL, any_str("_newPair(\""), strName, any_str("\","), PROP(value_,this), any_str(")")});
+        METHOD(out_,this)(this,6,(any_arr){Producer_c_NL, any_LTR("_newPair(\""), strName, any_LTR("\","), PROP(value_,this), any_LTR(")")});
       return undefined;
       }
 
@@ -4091,12 +4097,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //---------
 
         //.out "new(Map,"
-        METHOD(out_,this)(this,1,(any_arr){any_str("new(Map,")});
+        METHOD(out_,this)(this,1,(any_arr){any_LTR("new(Map,")});
 
         //if no .items or .items.length is 0
         if (_anyToBool((_anyToBool(__or26=any_number(!_anyToBool(PROP(items_,this))))? __or26 : any_number(__is(any_number(_length(PROP(items_,this))),any_number(0))))))  {
             //.out "0,NULL"
-            METHOD(out_,this)(this,1,(any_arr){any_str("0,NULL")});
+            METHOD(out_,this)(this,1,(any_arr){any_LTR("0,NULL")});
         }
         //else
         
@@ -4105,14 +4111,14 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 //.items.length,',(any_arr){'
                 //{CSL:.items}
                 //NL,"}"
-            METHOD(out_,this)(this,5,(any_arr){any_number(_length(PROP(items_,this))), any_str(",(any_arr){"), new(Map,1,(any_arr){
+            METHOD(out_,this)(this,5,(any_arr){any_number(_length(PROP(items_,this))), any_LTR(",(any_arr){"), new(Map,1,(any_arr){
                 _newPair("CSL",PROP(items_,this))
                 })
-, Producer_c_NL, any_str("}")});
+, Producer_c_NL, any_LTR("}")});
         };
         
         //.out ")",NL
-        METHOD(out_,this)(this,2,(any_arr){any_str(")"), Producer_c_NL});
+        METHOD(out_,this)(this,2,(any_arr){any_LTR(")"), Producer_c_NL});
       return undefined;
       }
 
@@ -4144,7 +4150,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         var c = __call(getComposedName_,PROP(nameDecl_,ownerClassDeclaration),0,NULL);
 
         //.out "void ",c,"__init(DEFAULT_ARGUMENTS){",NL
-        METHOD(out_,this)(this,4,(any_arr){any_str("void "), c, any_str("__init(DEFAULT_ARGUMENTS){"), Producer_c_NL});
+        METHOD(out_,this)(this,4,(any_arr){any_LTR("void "), c, any_LTR("__init(DEFAULT_ARGUMENTS){"), Producer_c_NL});
 
 //auto call supper init
 
@@ -4153,17 +4159,17 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //.out 
                 //"  ",{COMMENT:"auto call super class __init"},NL
                 //"  ",ownerClassDeclaration.varRefSuper,"__init(this,argc,arguments);",NL
-            METHOD(out_,this)(this,7,(any_arr){any_str("  "), new(Map,1,(any_arr){
-                _newPair("COMMENT",any_str("auto call super class __init"))
+            METHOD(out_,this)(this,7,(any_arr){any_LTR("  "), new(Map,1,(any_arr){
+                _newPair("COMMENT",any_LTR("auto call super class __init"))
                 })
-, Producer_c_NL, any_str("  "), PROP(varRefSuper_,ownerClassDeclaration), any_str("__init(this,argc,arguments);"), Producer_c_NL});
+, Producer_c_NL, any_LTR("  "), PROP(varRefSuper_,ownerClassDeclaration), any_LTR("__init(this,argc,arguments);"), Producer_c_NL});
         };
 
 //On the constructor, assign initial values for properties.
 //Initialize (non-undefined) properties with assigned values.
 
         //.getParent(Grammar.ClassDeclaration).body.producePropertiesInitialValueAssignments "#{c}_"
-        __call(producePropertiesInitialValueAssignments_,PROP(body_,METHOD(getParent_,this)(this,1,(any_arr){Grammar_ClassDeclaration})),1,(any_arr){_concatAny(2,c, any_str("_"))});
+        __call(producePropertiesInitialValueAssignments_,PROP(body_,METHOD(getParent_,this)(this,1,(any_arr){Grammar_ClassDeclaration})),1,(any_arr){_concatAny(2,c, any_LTR("_"))});
 
 //// now the rest of the constructor body 
 
@@ -4202,13 +4208,13 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         if (!_anyToBool(ownerNameDecl)) {return undefined;};
 
         //var isClass = ownerNameDecl.name is 'prototype'
-        var isClass = any_number(__is(PROP(name_,ownerNameDecl),any_str("prototype")));
+        var isClass = any_number(__is(PROP(name_,ownerNameDecl),any_LTR("prototype")));
 
         //var c = ownerNameDecl.getComposedName()
         var c = METHOD(getComposedName_,ownerNameDecl)(ownerNameDecl,0,NULL);
 
         //.out "any ",name,"(DEFAULT_ARGUMENTS){",NL
-        METHOD(out_,this)(this,4,(any_arr){any_str("any "), name, any_str("(DEFAULT_ARGUMENTS){"), Producer_c_NL});
+        METHOD(out_,this)(this,4,(any_arr){any_LTR("any "), name, any_LTR("(DEFAULT_ARGUMENTS){"), Producer_c_NL});
 
         ////assert 'this' parameter class
         //if isClass 
@@ -4216,7 +4222,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //.body.out 
                 //"assert(_instanceof(this,",c,"));",NL
                 //"//---------"
-            __call(out_,PROP(body_,this),5,(any_arr){any_str("assert(_instanceof(this,"), c, any_str("));"), Producer_c_NL, any_str("//---------")});
+            __call(out_,PROP(body_,this),5,(any_arr){any_LTR("assert(_instanceof(this,"), c, any_LTR("));"), Producer_c_NL, any_LTR("//---------")});
         };
 
         //.produceFunctionBody c
@@ -4250,7 +4256,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //var prefix = parentModule.fileInfo.base
         var prefix = PROP(base_,PROP(fileInfo_,parentModule));
         //var name = "#{prefix}_#{.name}"
-        var name = _concatAny(3,prefix, any_str("_"), PROP(name_,this));
+        var name = _concatAny(3,prefix, any_LTR("_"), PROP(name_,this));
 
         //var isInterface = no .body.statements
         var isInterface = any_number(!_anyToBool(PROP(statements_,PROP(body_,this))));
@@ -4258,7 +4264,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         if (_anyToBool(isInterface)) {return undefined;};
         
         //.out "any ",name,"(DEFAULT_ARGUMENTS){"
-        METHOD(out_,this)(this,3,(any_arr){any_str("any "), name, any_str("(DEFAULT_ARGUMENTS){")});
+        METHOD(out_,this)(this,3,(any_arr){any_LTR("any "), name, any_LTR("(DEFAULT_ARGUMENTS){")});
 
         //.produceFunctionBody prefix
         METHOD(produceFunctionBody_,this)(this,1,(any_arr){prefix});
@@ -4282,12 +4288,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         if (_anyToBool(PROP(paramsDeclarations_,this)) && _length(PROP(paramsDeclarations_,this)))  {
 
                 //.body.out NL,"// define named params",NL
-                __call(out_,PROP(body_,this),3,(any_arr){Producer_c_NL, any_str("// define named params"), Producer_c_NL});
+                __call(out_,PROP(body_,this),3,(any_arr){Producer_c_NL, any_LTR("// define named params"), Producer_c_NL});
 
                 //if .paramsDeclarations.length is 1
                 if (__is(any_number(_length(PROP(paramsDeclarations_,this))),any_number(1)))  {
                     //.body.out "var ",.paramsDeclarations[0].name,"= argc? arguments[0] : undefined;",NL
-                    __call(out_,PROP(body_,this),4,(any_arr){any_str("var "), PROP(name_,ITEM(0,PROP(paramsDeclarations_,this))), any_str("= argc? arguments[0] : undefined;"), Producer_c_NL});
+                    __call(out_,PROP(body_,this),4,(any_arr){any_LTR("var "), PROP(name_,ITEM(0,PROP(paramsDeclarations_,this))), any_LTR("= argc? arguments[0] : undefined;"), Producer_c_NL});
                 }
 
                 //else
@@ -4309,25 +4315,25 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                         //"var ",{CSL:namedParams},";",NL
                         //namedParams.join("="),"=undefined;",NL
                         //"switch(argc){",NL 
-                    __call(out_,PROP(body_,this),9,(any_arr){any_str("var "), new(Map,1,(any_arr){
+                    __call(out_,PROP(body_,this),9,(any_arr){any_LTR("var "), new(Map,1,(any_arr){
                         _newPair("CSL",namedParams)
                         })
-, any_str(";"), Producer_c_NL, METHOD(join_,namedParams)(namedParams,1,(any_arr){any_str("=")}), any_str("=undefined;"), Producer_c_NL, any_str("switch(argc){"), Producer_c_NL});
+, any_LTR(";"), Producer_c_NL, METHOD(join_,namedParams)(namedParams,1,(any_arr){any_LTR("=")}), any_LTR("=undefined;"), Producer_c_NL, any_LTR("switch(argc){"), Producer_c_NL});
 
                     //for inx=namedParams.length-1, while inx>=0, inx--
                     for(int64_t inx=_length(namedParams) - 1; inx >= 0; inx--){
                         //.body.out "  case #{inx+1}:#{namedParams[inx]}=arguments[#{inx}];",NL
-                        __call(out_,PROP(body_,this),2,(any_arr){_concatAny(7,any_str("  case "), any_number(inx + 1), any_str(":"), ITEM(inx,namedParams), any_str("=arguments["), any_number(inx), any_str("];")), Producer_c_NL});
+                        __call(out_,PROP(body_,this),2,(any_arr){_concatAny(7,any_LTR("  case "), any_number(inx + 1), any_LTR(":"), ITEM(inx,namedParams), any_LTR("=arguments["), any_number(inx), any_LTR("];")), Producer_c_NL});
                     };// end for inx
                     
                     //.body.out "}",NL
-                    __call(out_,PROP(body_,this),2,(any_arr){any_str("}"), Producer_c_NL});
+                    __call(out_,PROP(body_,this),2,(any_arr){any_LTR("}"), Producer_c_NL});
                 };
 
                 //end if
                 
                 //.body.out "//---------",NL
-                __call(out_,PROP(body_,this),2,(any_arr){any_str("//---------"), Producer_c_NL});
+                __call(out_,PROP(body_,this),2,(any_arr){any_LTR("//---------"), Producer_c_NL});
         };
         
         //end if //named params
@@ -4338,7 +4344,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //if .body instance of Grammar.Expression
         if (_instanceof(PROP(body_,this),Grammar_Expression))  {
             //.out "return ", .body
-            METHOD(out_,this)(this,2,(any_arr){any_str("return "), PROP(body_,this)});
+            METHOD(out_,this)(this,2,(any_arr){any_LTR("return "), PROP(body_,this)});
         }
 
         //else
@@ -4348,7 +4354,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 //if it has a exception block, insert 'try{'
 
             //if .hasExceptionBlock, .body.out " try{",NL
-            if (_anyToBool(PROP(hasExceptionBlock_,this))) {__call(out_,PROP(body_,this),2,(any_arr){any_str(" try{"), Producer_c_NL});};
+            if (_anyToBool(PROP(hasExceptionBlock_,this))) {__call(out_,PROP(body_,this),2,(any_arr){any_LTR(" try{"), Producer_c_NL});};
 
 //now produce function body
 
@@ -4362,14 +4368,14 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //if not .constructor is Grammar.ConstructorDeclaration // declared as void Class__init(...)
             if (!(__is(any_class(this.class),Grammar_ConstructorDeclaration)))  { // declared as void Class__init(...)
                 //.out "return undefined;",NL
-                METHOD(out_,this)(this,2,(any_arr){any_str("return undefined;"), Producer_c_NL});
+                METHOD(out_,this)(this,2,(any_arr){any_LTR("return undefined;"), Producer_c_NL});
             };
         };
 
 //close function
 
         //.out "}"
-        METHOD(out_,this)(this,1,(any_arr){any_str("}")});
+        METHOD(out_,this)(this,1,(any_arr){any_LTR("}")});
 
         //.skipSemiColon = true
         PROP(skipSemiColon_,this) = true;
@@ -4394,16 +4400,16 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //if .args.length 
         if (_length(PROP(args_,this)))  {
             //.out 'print(#{.args.length},(any_arr){',{CSL:.args},'})'
-            METHOD(out_,this)(this,3,(any_arr){_concatAny(3,any_str("print("), any_number(_length(PROP(args_,this))), any_str(",(any_arr){")), new(Map,1,(any_arr){
+            METHOD(out_,this)(this,3,(any_arr){_concatAny(3,any_LTR("print("), any_number(_length(PROP(args_,this))), any_LTR(",(any_arr){")), new(Map,1,(any_arr){
             _newPair("CSL",PROP(args_,this))
             })
-, any_str("})")});
+, any_LTR("})")});
         }
         //else
         
         else {
             //.out 'print(0,NULL)'
-            METHOD(out_,this)(this,1,(any_arr){any_str("print(0,NULL)")});
+            METHOD(out_,this)(this,1,(any_arr){any_LTR("print(0,NULL)")});
         };
       return undefined;
       }
@@ -4475,7 +4481,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             var thisModule = METHOD(getParent_,this)(this,1,(any_arr){Grammar_Module});
 
             //return Environment.relativeFrom(thisModule.fileInfo.outDir,
-            return Environment_relativeFrom(undefined,2,(any_arr){PROP(outDir_,PROP(fileInfo_,thisModule)), __call(outWithExtension_,PROP(fileInfo_,PROP(importedModule_,this)),1,(any_arr){any_str(".h")})});
+            return Environment_relativeFrom(undefined,2,(any_arr){PROP(outDir_,PROP(fileInfo_,thisModule)), __call(outWithExtension_,PROP(fileInfo_,PROP(importedModule_,this)),1,(any_arr){any_LTR(".h")})});
         return undefined;
         }
                      //.importedModule.fileInfo.outWithExtension(".h"))
@@ -4515,13 +4521,13 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             //while node and not node.isScope
             while(_anyToBool(node) && !(_anyToBool(PROP(isScope_,node)))){
                 //if node.name isnt 'prototype', result.unshift node.name
-                if (!__is(PROP(name_,node),any_str("prototype"))) {METHOD(unshift_,result)(result,1,(any_arr){PROP(name_,node)});};
+                if (!__is(PROP(name_,node),any_LTR("prototype"))) {METHOD(unshift_,result)(result,1,(any_arr){PROP(name_,node)});};
                 //if node.nodeDeclared instanceof Grammar.ImportStatementItem
                 if (_instanceof(PROP(nodeDeclared_,node),Grammar_ImportStatementItem))  {
                     ////stop here, imported modules create a local var, but act as global var
                     ////since all others import of the same name, return the same content 
                     //return result.join('_')
-                    return METHOD(join_,result)(result,1,(any_arr){any_str("_")});
+                    return METHOD(join_,result)(result,1,(any_arr){any_LTR("_")});
                 };
 
                 //node = node.parent
@@ -4539,7 +4545,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 //var scopeModule = node.nodeDeclared
                 var scopeModule = PROP(nodeDeclared_,node);
                 //if scopeModule.name isnt '*Global Scope*' //except for global scope
-                if (!__is(PROP(name_,scopeModule),any_str("*Global Scope*")))  { //except for global scope
+                if (!__is(PROP(name_,scopeModule),any_LTR("*Global Scope*")))  { //except for global scope
                     //if result[0] isnt scopeModule.fileInfo.base
                     if (!__is(ITEM(0,result),PROP(base_,PROP(fileInfo_,scopeModule))))  {
                         //result.unshift scopeModule.fileInfo.base
@@ -4549,7 +4555,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             };
 
             //return result.join('_')
-            return METHOD(join_,result)(result,1,(any_arr){any_str("_")});
+            return METHOD(join_,result)(result,1,(any_arr){any_LTR("_")});
      return undefined;
      }
 
@@ -4569,15 +4575,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 //if allPropertyNames.has(methodName)
                 if (_anyToBool(METHOD(has_,Producer_c_allPropertyNames)(Producer_c_allPropertyNames,1,(any_arr){methodName})))  {
                     //.sayErr "Ambiguity: A property '#{methodName}' is already defined. Cannot reuse the symbol for a method."
-                    METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_str("Ambiguity: A property '"), methodName, any_str("' is already defined. Cannot reuse the symbol for a method."))});
+                    METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_LTR("Ambiguity: A property '"), methodName, any_LTR("' is already defined. Cannot reuse the symbol for a method."))});
                     //allPropertyNames.get(methodName).sayErr "Definition of property '#{methodName}'."
-                    __call(sayErr_,METHOD(get_,Producer_c_allPropertyNames)(Producer_c_allPropertyNames,1,(any_arr){methodName}),1,(any_arr){_concatAny(3,any_str("Definition of property '"), methodName, any_str("'."))});
+                    __call(sayErr_,METHOD(get_,Producer_c_allPropertyNames)(Producer_c_allPropertyNames,1,(any_arr){methodName}),1,(any_arr){_concatAny(3,any_LTR("Definition of property '"), methodName, any_LTR("'."))});
                 }
                 //else if methodName in coreSupportedProps
                 
                 else if (CALL1(indexOf_,Producer_c_coreSupportedProps,methodName).value.number>=0)  {
                     //.sayErr "Ambiguity: A property '#{methodName}' is defined in core. Cannot reuse the symbol for a method."
-                    METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_str("Ambiguity: A property '"), methodName, any_str("' is defined in core. Cannot reuse the symbol for a method."))});
+                    METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_LTR("Ambiguity: A property '"), methodName, any_LTR("' is defined in core. Cannot reuse the symbol for a method."))});
                 }
 
                 //else
@@ -4601,7 +4607,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //---------
 
         //.out 'try{', .body, .exceptionBlock
-        METHOD(out_,this)(this,3,(any_arr){any_str("try{"), PROP(body_,this), PROP(exceptionBlock_,this)});
+        METHOD(out_,this)(this,3,(any_arr){any_LTR("try{"), PROP(body_,this), PROP(exceptionBlock_,this)});
       return undefined;
       }
 
@@ -4614,12 +4620,12 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //---------
 
         //.out NL,'}catch(',.catchVar,'){', .body, '}'
-        METHOD(out_,this)(this,6,(any_arr){Producer_c_NL, any_str("}catch("), PROP(catchVar_,this), any_str("){"), PROP(body_,this), any_str("}")});
+        METHOD(out_,this)(this,6,(any_arr){Producer_c_NL, any_LTR("}catch("), PROP(catchVar_,this), any_LTR("){"), PROP(body_,this), any_LTR("}")});
 
         //if .finallyBody
         if (_anyToBool(PROP(finallyBody_,this)))  {
             //.out NL,'finally{', .finallyBody, '}'
-            METHOD(out_,this)(this,4,(any_arr){Producer_c_NL, any_str("finally{"), PROP(finallyBody_,this), any_str("}")});
+            METHOD(out_,this)(this,4,(any_arr){Producer_c_NL, any_LTR("finally{"), PROP(finallyBody_,this), any_LTR("}")});
         };
       return undefined;
       }
@@ -4652,17 +4658,17 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             METHOD(outSourceLineAsComment_,this)(this,1,(any_arr){PROP(sourceLineNum_,whenSection)});
 
             //.out index>0? 'else ' : '' 
-            METHOD(out_,this)(this,1,(any_arr){index > 0 ? any_str("else ") : any_EMPTY_STR});
+            METHOD(out_,this)(this,1,(any_arr){index > 0 ? any_LTR("else ") : any_EMPTY_STR});
 
             //if .varRef
             if (_anyToBool(PROP(varRef_,this)))  {
                 ////case foo...
                 //.out 'if (', {pre:['__is(',.varRef,','], CSL:whenSection.expressions, post:')', separator:'||'}
-                METHOD(out_,this)(this,2,(any_arr){any_str("if ("), new(Map,4,(any_arr){
-                _newPair("pre",new(Array,3,(any_arr){any_str("__is("), PROP(varRef_,this), any_str(",")})), 
+                METHOD(out_,this)(this,2,(any_arr){any_LTR("if ("), new(Map,4,(any_arr){
+                _newPair("pre",new(Array,3,(any_arr){any_LTR("__is("), PROP(varRef_,this), any_LTR(",")})), 
                 _newPair("CSL",PROP(expressions_,whenSection)), 
-                _newPair("post",any_str(")")), 
-                _newPair("separator",any_str("||"))
+                _newPair("post",any_LTR(")")), 
+                _newPair("separator",any_LTR("||"))
                 })
                 });
             }
@@ -4671,11 +4677,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
             else {
                 ////case when TRUE
                 //.out 'if (', {pre:['('], CSL:whenSection.expressions, post:')', separator:'||'}
-                METHOD(out_,this)(this,2,(any_arr){any_str("if ("), new(Map,4,(any_arr){
-                _newPair("pre",new(Array,1,(any_arr){any_str("(")})), 
+                METHOD(out_,this)(this,2,(any_arr){any_LTR("if ("), new(Map,4,(any_arr){
+                _newPair("pre",new(Array,1,(any_arr){any_LTR("(")})), 
                 _newPair("CSL",PROP(expressions_,whenSection)), 
-                _newPair("post",any_str(")")), 
-                _newPair("separator",any_str("||"))
+                _newPair("post",any_LTR(")")), 
+                _newPair("separator",any_LTR("||"))
                 })
                 });
             };
@@ -4684,13 +4690,13 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 //'){'
                 //whenSection.body, NL
                 //'}'
-            METHOD(out_,this)(this,4,(any_arr){any_str("){"), PROP(body_,whenSection), Producer_c_NL, any_str("}")});
+            METHOD(out_,this)(this,4,(any_arr){any_LTR("){"), PROP(body_,whenSection), Producer_c_NL, any_LTR("}")});
         }};// end for each in PROP(cases_,this)
 
 //else body
 
         //if .elseBody, .out NL,'else {',.elseBody,'}'
-        if (_anyToBool(PROP(elseBody_,this))) {METHOD(out_,this)(this,4,(any_arr){Producer_c_NL, any_str("else {"), PROP(elseBody_,this), any_str("}")});};
+        if (_anyToBool(PROP(elseBody_,this))) {METHOD(out_,this)(this,4,(any_arr){Producer_c_NL, any_LTR("else {"), PROP(elseBody_,this), any_LTR("}")});};
       return undefined;
       }
 
@@ -4701,11 +4707,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         //---------
 
         //var tmpVar=UniqueID.getVarName('class')
-        var tmpVar = UniqueID_getVarName(undefined,1,(any_arr){any_str("class")});
+        var tmpVar = UniqueID_getVarName(undefined,1,(any_arr){any_LTR("class")});
         //.out 
             //"Class_ptr ",tmpVar," = ",.varRef,".class;",NL
             //"while(",tmpVar,"){",NL
-        METHOD(out_,this)(this,10,(any_arr){any_str("Class_ptr "), tmpVar, any_str(" = "), PROP(varRef_,this), any_str(".class;"), Producer_c_NL, any_str("while("), tmpVar, any_str("){"), Producer_c_NL});
+        METHOD(out_,this)(this,10,(any_arr){any_LTR("Class_ptr "), tmpVar, any_LTR(" = "), PROP(varRef_,this), any_LTR(".class;"), Producer_c_NL, any_LTR("while("), tmpVar, any_LTR("){"), Producer_c_NL});
 
         //for each index,whenSection in .cases
         any _list91=PROP(cases_,this);
@@ -4724,27 +4730,27 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 //whenSection.body, NL
                 //'break;',NL //exit while super loop
                 //'}'
-            METHOD(out_,whenSection)(whenSection,9,(any_arr){index > 0 ? any_str("else ") : any_EMPTY_STR, any_str("if ("), new(Map,4,(any_arr){
-                _newPair("pre",new(Array,3,(any_arr){any_str("("), PROP(varRef_,this), any_str(".class==")})), 
+            METHOD(out_,whenSection)(whenSection,9,(any_arr){index > 0 ? any_LTR("else ") : any_EMPTY_STR, any_LTR("if ("), new(Map,4,(any_arr){
+                _newPair("pre",new(Array,3,(any_arr){any_LTR("("), PROP(varRef_,this), any_LTR(".class==")})), 
                 _newPair("CSL",PROP(expressions_,whenSection)), 
-                _newPair("post",any_str(")")), 
-                _newPair("separator",any_str("||"))
+                _newPair("post",any_LTR(")")), 
+                _newPair("separator",any_LTR("||"))
                 })
-, any_str("){"), PROP(body_,whenSection), Producer_c_NL, any_str("break;"), Producer_c_NL, any_str("}")});
+, any_LTR("){"), PROP(body_,whenSection), Producer_c_NL, any_LTR("break;"), Producer_c_NL, any_LTR("}")});
         }};// end for each in PROP(cases_,this)
 
         //end for
         
 
         //.out tmpVar,'=',tmpVar,'.super;',NL //move to super
-        METHOD(out_,this)(this,5,(any_arr){tmpVar, any_str("="), tmpVar, any_str(".super;"), Producer_c_NL}); //move to super
+        METHOD(out_,this)(this,5,(any_arr){tmpVar, any_LTR("="), tmpVar, any_LTR(".super;"), Producer_c_NL}); //move to super
         //.out '}',NL //close while loooking for super
-        METHOD(out_,this)(this,2,(any_arr){any_str("}"), Producer_c_NL}); //close while loooking for super
+        METHOD(out_,this)(this,2,(any_arr){any_LTR("}"), Producer_c_NL}); //close while loooking for super
 
 //else body
 
         //if .elseBody, .out NL,'if(!tmpVar) {',.elseBody,'}'
-        if (_anyToBool(PROP(elseBody_,this))) {METHOD(out_,this)(this,4,(any_arr){Producer_c_NL, any_str("if(!tmpVar) {"), PROP(elseBody_,this), any_str("}")});};
+        if (_anyToBool(PROP(elseBody_,this))) {METHOD(out_,this)(this,4,(any_arr){Producer_c_NL, any_LTR("if(!tmpVar) {"), PROP(elseBody_,this), any_LTR("}")});};
       return undefined;
       }
 
@@ -4780,7 +4786,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Grammar_DebuggerStatement));
         //---------
         //.out "assert(0)"
-        METHOD(out_,this)(this,1,(any_arr){any_str("assert(0)")});
+        METHOD(out_,this)(this,1,(any_arr){any_LTR("assert(0)")});
       return undefined;
       }
 
@@ -4796,10 +4802,10 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
       
         //if no .getParent(Grammar.FunctionDeclaration) into var functionDeclaration 
         var functionDeclaration=undefined;
-        if (_anyToBool((_anyToBool(__or27=any_number(!(_anyToBool((functionDeclaration=METHOD(getParent_,this)(this,1,(any_arr){Grammar_FunctionDeclaration}))))))? __or27 : any_number(!_anyToBool(METHOD(hasAdjective_,functionDeclaration)(functionDeclaration,1,(any_arr){any_str("nice")}))))))  {
+        if (_anyToBool((_anyToBool(__or27=any_number(!(_anyToBool((functionDeclaration=METHOD(getParent_,this)(this,1,(any_arr){Grammar_FunctionDeclaration}))))))? __or27 : any_number(!_anyToBool(METHOD(hasAdjective_,functionDeclaration)(functionDeclaration,1,(any_arr){any_LTR("nice")}))))))  {
             //or no functionDeclaration.hasAdjective('nice')
                 //.throwError '"yield" can only be used inside a "nice function/method"'
-                METHOD(throwError_,this)(this,1,(any_arr){any_str("\"yield\" can only be used inside a \"nice function/method\"")});
+                METHOD(throwError_,this)(this,1,(any_arr){any_LTR("\"yield\" can only be used inside a \"nice function/method\"")});
         };
 
         //var yieldArr=[]
@@ -4810,7 +4816,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         ////from .varRef calculate object owner and method name 
 
         //var thisValue='null'
-        var thisValue = any_str("null");
+        var thisValue = any_LTR("null");
         //var fnName = varRef.name #default if no accessors 
         var fnName = PROP(name_,varRef);// #default if no accessors
 
@@ -4834,11 +4840,11 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
                 //if varRef.accessors[inx] isnt instance of Grammar.PropertyAccess
                 if (!(_instanceof(ITEM(_anyToNumber(inx),PROP(accessors_,varRef)),Grammar_PropertyAccess)))  {
                     //.throwError 'yield needs a clear method name. Example: "yield until obj.method(10)". redefine yield parameter.'
-                    METHOD(throwError_,this)(this,1,(any_arr){any_str("yield needs a clear method name. Example: \"yield until obj.method(10)\". redefine yield parameter.")});
+                    METHOD(throwError_,this)(this,1,(any_arr){any_LTR("yield needs a clear method name. Example: \"yield until obj.method(10)\". redefine yield parameter.")});
                 };
 
                 //fnName = "'#{varRef.accessors[inx].name}'"
-                fnName = _concatAny(3,any_str("'"), PROP(name_,ITEM(_anyToNumber(inx),PROP(accessors_,varRef))), any_str("'"));
+                fnName = _concatAny(3,any_LTR("'"), PROP(name_,ITEM(_anyToNumber(inx),PROP(accessors_,varRef))), any_LTR("'"));
                 //thisValue = [varRef.name]
                 thisValue = new(Array,1,(any_arr){PROP(name_,varRef)});
                 //thisValue = thisValue.concat(varRef.accessors.slice(0,inx))
@@ -4848,7 +4854,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
 
 
         //if .specifier is 'until'
-        if (__is(PROP(specifier_,this),any_str("until")))  {
+        if (__is(PROP(specifier_,this),any_LTR("until")))  {
 
             //yieldArr.unshift fnName
             METHOD(unshift_,yieldArr)(yieldArr,1,(any_arr){fnName});
@@ -4861,15 +4867,15 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
         else {
 
             //yieldArr.push "'map'",.arrExpression, thisValue, fnName
-            METHOD(push_,yieldArr)(yieldArr,4,(any_arr){any_str("'map'"), PROP(arrExpression_,this), thisValue, fnName});
+            METHOD(push_,yieldArr)(yieldArr,4,(any_arr){any_LTR("'map'"), PROP(arrExpression_,this), thisValue, fnName});
         };
 
 
         //.out "yield [ ",{CSL:yieldArr}," ]"
-        METHOD(out_,this)(this,3,(any_arr){any_str("yield [ "), new(Map,1,(any_arr){
+        METHOD(out_,this)(this,3,(any_arr){any_LTR("yield [ "), new(Map,1,(any_arr){
         _newPair("CSL",yieldArr)
         })
-, any_str(" ]")});
+, any_LTR(" ]")});
       return undefined;
       }
 
@@ -4945,7 +4951,7 @@ any Producer_c_operTranslate(DEFAULT_ARGUMENTS); //forward declare
           
           ////.out "if(",name,'.class==&Undefined_CLASSINFO) ',name,"=",expression,";",NL
           //.out "_default(&",name,",",expression,");",NL
-          METHOD(out_,this)(this,6,(any_arr){any_str("_default(&"), name, any_str(","), expression, any_str(");"), Producer_c_NL});
+          METHOD(out_,this)(this,6,(any_arr){any_LTR("_default(&"), name, any_LTR(","), expression, any_LTR(");"), Producer_c_NL});
      return undefined;
      }
 
@@ -4957,29 +4963,29 @@ void Producer_c__moduleInit(void){
 ;
     Producer_c_allPropertyNames = new(Map,0,NULL)
 ;
-    Producer_c_coreSupportedMethods = new(Array,36,(any_arr){any_str("toString"), any_str("tryGetMethod"), any_str("tryGetProperty"), any_str("getProperty"), any_str("getPropertyName"), any_str("hasProperty"), any_str("has"), any_str("get"), any_str("set"), any_str("clear"), any_str("delete"), any_str("keys"), any_str("slice"), any_str("split"), any_str("indexOf"), any_str("lastIndexOf"), any_str("concat"), any_str("toUpperCase"), any_str("toLowerCase"), any_str("charAt"), any_str("replaceAll"), any_str("trim"), any_str("substr"), any_str("countSpaces"), any_str("toDateString"), any_str("toTimeString"), any_str("toUTCString"), any_str("toISOString"), any_str("copy"), any_str("write"), any_str("shift"), any_str("push"), any_str("unshift"), any_str("pop"), any_str("join"), any_str("splice")});
-    Producer_c_coreSupportedProps = new(Array,6,(any_arr){any_str("name"), any_str("size"), any_str("value"), any_str("message"), any_str("stack"), any_str("code")});
+    Producer_c_coreSupportedMethods = new(Array,36,(any_arr){any_LTR("toString"), any_LTR("tryGetMethod"), any_LTR("tryGetProperty"), any_LTR("getProperty"), any_LTR("getPropertyName"), any_LTR("hasProperty"), any_LTR("has"), any_LTR("get"), any_LTR("set"), any_LTR("clear"), any_LTR("delete"), any_LTR("keys"), any_LTR("slice"), any_LTR("split"), any_LTR("indexOf"), any_LTR("lastIndexOf"), any_LTR("concat"), any_LTR("toUpperCase"), any_LTR("toLowerCase"), any_LTR("charAt"), any_LTR("replaceAll"), any_LTR("trim"), any_LTR("substr"), any_LTR("countSpaces"), any_LTR("toDateString"), any_LTR("toTimeString"), any_LTR("toUTCString"), any_LTR("toISOString"), any_LTR("copy"), any_LTR("write"), any_LTR("shift"), any_LTR("push"), any_LTR("unshift"), any_LTR("pop"), any_LTR("join"), any_LTR("splice")});
+    Producer_c_coreSupportedProps = new(Array,6,(any_arr){any_LTR("name"), any_LTR("size"), any_LTR("value"), any_LTR("message"), any_LTR("stack"), any_LTR("code")});
     Producer_c_appendToCoreClassMethods = new(Array,0,NULL);
-    Producer_c_DEFAULT_ARGUMENTS = any_str("(any this, len_t argc, any* arguments)");
-    Producer_c_NL = any_str("\n");
+    Producer_c_DEFAULT_ARGUMENTS = any_LTR("(any this, len_t argc, any* arguments)");
+    Producer_c_NL = any_LTR("\n");
     Producer_c_OPER_TRANSLATION = new(Map,17,(any_arr){
-      _newPair("no",any_str("!")), 
-      _newPair("not",any_str("!")), 
-      _newPair("unary -",any_str("-")), 
-      _newPair("unary +",any_str("+")), 
-      _newPair("type of",any_str("typeof")), 
-      _newPair("instance of",any_str("instanceof")), 
-      _newPair("bitand",any_str("&")), 
-      _newPair("bitor",any_str("|")), 
-      _newPair("bitxor",any_str("^")), 
-      _newPair("bitnot",any_str("~")), 
-      _newPair("is",any_str("==")), 
-      _newPair("isnt",any_str("!=")), 
-      _newPair("<>",any_str("!=")), 
-      _newPair("and",any_str("&&")), 
-      _newPair("but",any_str("&&")), 
-      _newPair("or",any_str("||")), 
-      _newPair("has property",any_str("in"))
+      _newPair("no",any_LTR("!")), 
+      _newPair("not",any_LTR("!")), 
+      _newPair("unary -",any_LTR("-")), 
+      _newPair("unary +",any_LTR("+")), 
+      _newPair("type of",any_LTR("typeof")), 
+      _newPair("instance of",any_LTR("instanceof")), 
+      _newPair("bitand",any_LTR("&")), 
+      _newPair("bitor",any_LTR("|")), 
+      _newPair("bitxor",any_LTR("^")), 
+      _newPair("bitnot",any_LTR("~")), 
+      _newPair("is",any_LTR("==")), 
+      _newPair("isnt",any_LTR("!=")), 
+      _newPair("<>",any_LTR("!=")), 
+      _newPair("and",any_LTR("&&")), 
+      _newPair("but",any_LTR("&&")), 
+      _newPair("or",any_LTR("||")), 
+      _newPair("has property",any_LTR("in"))
       })
 ;
     

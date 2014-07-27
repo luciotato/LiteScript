@@ -387,7 +387,7 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 
 //-------------------------------
 int main(int argc, char** argv) {
-    LiteC_init(argc,argv);
+    LiteC_init( 85, argc,argv);
     LiteC_addMethodSymbols( 177, _ADD_VERBS);
     LiteC_addPropSymbols( 200, _ADD_THINGS);
     LiteC_registerShim(String,startsWith_,String_startsWith);

@@ -113,20 +113,34 @@ loop until no quotes found
 
             var anyQuote = '"' & "'"
 
-            do while PMREX.findRanges(text,p,anyQuote) into p  < text.length
+            var resultText=""
 
-                if text.slice(p,p+3) is '"""' //ignore triple quotes (valid token)
-                    p+=3
+            do 
+                var preQuotes=PMREX.untilRanges(text,anyQuote) 
+                
+                resultText &= preQuotes
+                text = text.slice(preQuotes.length)
+                if no text, break // all text processed|no quotes found
+
+                if text.slice(0,3) is '"""' //ignore triple quotes (valid token)
+                    resultText &= text.slice(0,3)
+                    text = text.slice(3)
                 else
-                    var quoteNext = PMREX.whileUnescaped(text,p+1,text.charAt(p))
-                    if quoteNext<0, break //unmatched quote 
 
-                    text = "#{text.slice(0,p)}#{rep}#{text.slice(quoteNext)}"
-                    p+=rep.length
+                    var quotedContent
+                    
+                    try // accept malformed quoted chunks (do not replace)
 
-            loop
+                         quotedContent = PMREX.quotedContent(text)
+                         text = text.slice(1+quotedContent.length+1)
+
+                    catch err // if malformed - closing quote not found
+                        resultText &= text.slice(0,1) //keep quote
+                        text = text.slice(1) //only remove quote
+
+            loop until no text
             
-            return text
+            return resultText
 
 
 ### Append to class Array

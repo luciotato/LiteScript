@@ -50,7 +50,7 @@ js=> queda igual- se valida el objeto que coincida con los miembros de Names.Dec
 
 C=>
 
-    var a = new(Declaration, name, _newOpt(Declaration_default_options,2 ,type_,any_str("Function") ,informError_,false ), node)
+    var a = new(Declaration, name, _newOpt(Declaration_default_options,2 ,type_,any_LTR("Function") ,informError_,false ), node)
 
 se crea siempre la auto-clase (eso lo hace "defatul options")
 _newOpt recibe una clase y una lista de symbol:value para inicializar solo ciertos miembros
@@ -87,7 +87,7 @@ C=>
 
     var a = new Declaration(name,undefined,undefined,undefined,'Function',undefined,undefined, /*informError*/false, node)
 
-    var a = new(Declaration, 12,(any_arr){name,undefined,undefined,undefined,any_str("Function"),undefined,/*informError:*/false,node})
+    var a = new(Declaration, 12,(any_arr){name,undefined,undefined,undefined,any_LTR("Function"),undefined,/*informError:*/false,node})
 
 ### Problems:
 - generated code has a long string of undefined,undefined,undefined

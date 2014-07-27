@@ -858,9 +858,11 @@ Start at this node
 Look for the declaration in this scope
 
         while node
-          declare valid node.scope:Names.Declaration
-          if node.scope and node.scope.findOwnMember(name) into var found
-              return found
+
+          if node.scope
+
+              if node.scope.findOwnMember(name) into var found
+                  return found
 
 move up in scopes
 
@@ -1604,7 +1606,7 @@ get referenced class/namespace
 
       if not .toNamespace
           //if is "append to class"
-          if no ownerDecl.findOwnMember('prototype') into var prt, .throwError "class '#{ownerDecl}' has no prototype"
+          if no ownerDecl.findOwnMember('prototype') into var prt, .throwError "Append to: class '#{ownerDecl}' has no prototype"
           ownerDecl=prt // append to class, adds to prototype
 
       //if project.options.target is 'c'

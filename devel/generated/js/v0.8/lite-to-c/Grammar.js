@@ -3399,18 +3399,22 @@
         this.lock();
 
 //require method name. Note: jQuery uses 'not' and 'has' as method names, so here we 
-//take any token, and check if it's a valid identifier
+//take any token, and then check if it's a valid identifier
 
         ////.name = .req('IDENTIFIER') 
         //var name = .lexer.token.value 
         var name = this.lexer.token.value;
 
-        //var p = PMREX.whileRanges(name,0,"a-zA-Z$_") //start with one or more letters
-        var p = PMREX.whileRanges(name, 0, "a-zA-Z$_"); //start with one or more letters
-        //if p>=0, p = PMREX.whileRanges(name,p,"0-9a-zA-Z$_") //can have numbers
-        if (p >= 0) {p = PMREX.whileRanges(name, p, "0-9a-zA-Z$_")};
-        //if p < name.length, .throwError 'invalid method name: "#{name}"'
-        if (p < name.length) {this.throwError('invalid method name: "' + name + '"')};
+        //if no PMREX.whileRanges(name,"0-9") and name is PMREX.whileRanges(name,"a-zA-Z0-9$_") 
+        if (!PMREX.whileRanges(name, "0-9") && name === PMREX.whileRanges(name, "a-zA-Z0-9$_")) {
+            //do nothing //if do no start with a number and it's composed by "a-zA-Z0-9$_", is valid
+            null; //if do no start with a number and it's composed by "a-zA-Z0-9$_", is valid
+        }
+        else {
+        //else 
+            //.throwError 'invalid method name: "#{name}"'
+            this.throwError('invalid method name: "' + name + '"');
+        };
 
         //.name = name
         this.name = name;

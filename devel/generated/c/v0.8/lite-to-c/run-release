@@ -1,1 +1,1 @@
-dist/Release/GNU-Linux-x86/ctest ../../../source-v0.8/litec -v 1 -o lite-out -D PROD_C
+dist/Release/GNU-Linux-x86/lite-to-c ../../../source-v0.8/litec -o lite-out -v 1 -D PROD_C -D FROM_C

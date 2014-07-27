@@ -23,6 +23,7 @@ remove those explicit classes
 
 
 # validate required and optional parameters
+#+1 AGAIN
 
   caso: estaba llamando a 
     lexer.out.put x, "bar", "important"
@@ -30,6 +31,17 @@ remove those explicit classes
   pero lexer.out.put SOLO ACEPTA UN PARAM STRING
 
   por lo que no decia nada pero "bar" e "important" nunca se imprimian
+
+
+# el SCOPE es diferente en C - eso crea diferencias importantes
+para js, una var definida dentro del body de un IF es global de la function
+para C no. 
+LS esta tomando global y luego el C no encuentra las vars.
+
+¿tomar scope como lo hace C?
+que pasa con js?
+parece que js se lo banca, y sumado al x=undefined al momento de "var x"
+puede ser que funcione ok tomando scope como C.
 
 
 # make "for each property in" to work also for "maps symbol to any" when compile-to-c

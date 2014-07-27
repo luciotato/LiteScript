@@ -17,7 +17,7 @@ if node ../../util/liteVersion -use v0.7/lite-to-$targetLang $targetLang$_lite -
     echo "at $OUT"
     echo .
     OTHER="../../generated/byV07/$targetLang/lite-to-$targetTarget"
-    mkdir $OTHER
+    mkdir -p $OTHER
     echo "ALSO COPY TO $OTHER"
     echo "for comparision"
     echo "cp -r $OUT/* $OTHER/*"

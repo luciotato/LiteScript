@@ -2,6 +2,7 @@
 <configurationDescriptor version="90">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="core" displayName="core" projectFiles="true">
+      <itemPath>core/ImmutArray.c</itemPath>
       <itemPath>core/LiteC-core.c</itemPath>
       <itemPath>core/LiteC-core.h</itemPath>
       <itemPath>core/PMREX-native.c</itemPath>
@@ -11,6 +12,8 @@
       <itemPath>core/exceptions.c</itemPath>
       <itemPath>core/exceptions.h</itemPath>
       <itemPath>core/fs-native.c</itemPath>
+      <itemPath>core/utf8strings.c</itemPath>
+      <itemPath>core/utf8strings.h</itemPath>
       <itemPath>core/util.c</itemPath>
       <itemPath>core/util.h</itemPath>
     </logicalFolder>
@@ -124,8 +127,8 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <developmentMode>2</developmentMode>
           <standard>3</standard>
+          <commandLine>-fmax-errors=10</commandLine>
         </cTool>
         <linkerTool>
           <linkerLibItems>
@@ -133,6 +136,8 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="core/ImmutArray.c" ex="false" tool="0" flavor2="0">
+      </item>
       <item path="core/LiteC-core.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="core/LiteC-core.h" ex="false" tool="3" flavor2="0">
@@ -150,6 +155,10 @@
       <item path="core/exceptions.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="core/fs-native.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="core/utf8strings.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="core/utf8strings.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="core/util.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -333,6 +342,8 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="core/ImmutArray.c" ex="false" tool="0" flavor2="0">
+      </item>
       <item path="core/LiteC-core.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="core/LiteC-core.h" ex="false" tool="3" flavor2="0">
@@ -350,6 +361,10 @@
       <item path="core/exceptions.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="core/fs-native.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="core/utf8strings.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="core/utf8strings.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="core/util.c" ex="false" tool="0" flavor2="0">
       </item>

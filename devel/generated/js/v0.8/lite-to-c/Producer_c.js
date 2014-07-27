@@ -29,10 +29,16 @@
     var Map = require('./lib/Map.js');
 
 //To be able to compile-to-c this source, we instruct the
-//compiler to create a `new Map.fromObject({})` when it encounters
-//an untyped object literal like: `{foo:1, bar:"baz"}`
+//compiler to create a *new Map* when it encounters an *untyped* object literal.
+//e.g: `var x = {foo:1, bar:"baz"}` => `var x = Map.newFromObject({foo:1, bar:"baz"})`
 
     //lexer options object literal is Map
+
+//Map & Object implement common methods:
+//.hasProperty, .tryGetProperty, .setProperty, .getObjectKeys
+//so the same code can handle "objects" (when compiled-to-js) 
+//and "Maps" (when compiled-to-c)
+
 
 
 //"C" Producer Functions
@@ -289,10 +295,10 @@
         //.out 
             //"\n\n\n//-------------------------------",NL
             //"int main(int argc, char** argv) {",NL
-            //'    LiteC_init(argc,argv);',NL
+            //'    LiteC_init( #{allClasses.length}, argc,argv);',NL
             //'    LiteC_addMethodSymbols( #{allMethodNames.size}, _ADD_VERBS);',NL
             //'    LiteC_addPropSymbols( #{allPropertyNames.size}, _ADD_THINGS);',NL
-        this.out("\n\n\n//-------------------------------", NL, "int main(int argc, char** argv) {", NL, '    LiteC_init(argc,argv);', NL, '    LiteC_addMethodSymbols( ' + allMethodNames.size + ', _ADD_VERBS);', NL, '    LiteC_addPropSymbols( ' + allPropertyNames.size + ', _ADD_THINGS);', NL);
+        this.out("\n\n\n//-------------------------------", NL, "int main(int argc, char** argv) {", NL, '    LiteC_init( ' + allClasses.length + ', argc,argv);', NL, '    LiteC_addMethodSymbols( ' + allMethodNames.size + ', _ADD_VERBS);', NL, '    LiteC_addPropSymbols( ' + allPropertyNames.size + ', _ADD_THINGS);', NL);
             
 
 //process methods appended to core classes, by calling LiteC_registerShim
@@ -976,10 +982,10 @@
         //.out 
             //NL,"{0,0}}; //method jmp table initializer end mark",NL
             //NL
-            //"static _posTableItem_t ",c,"_PROPS[] = {",NL
+            //"static propIndex_t ",c,"_PROPS[] = {",NL
             //{CSL:propList, post:'\n    '}
             //"};",NL,NL
-        this.out(NL, "{0,0}}; //method jmp table initializer end mark", NL, NL, "static _posTableItem_t ", c, "_PROPS[] = {", NL, {CSL: propList, post: '\n    '}, "};", NL, NL);
+        this.out(NL, "{0,0}}; //method jmp table initializer end mark", NL, NL, "static propIndex_t ", c, "_PROPS[] = {", NL, {CSL: propList, post: '\n    '}, "};", NL, NL);
      };
 
 //#### method produceClassRegistration
@@ -996,10 +1002,10 @@
         var superName = this.nameDecl.superDecl ? this.nameDecl.superDecl.getComposedName() : 'Object';
 
         //.out 
-            //'    #{c} =_newClass("#{c}", #{c}__init, sizeof(struct #{c}_s), #{superName}.value.classINFOptr);',NL
+            //'    #{c} =_newClass("#{c}", #{c}__init, sizeof(struct #{c}_s), #{superName});',NL
             //'    _declareMethods(#{c}, #{c}_METHODS);',NL
             //'    _declareProps(#{c}, #{c}_PROPS, sizeof #{c}_PROPS);',NL,NL
-        this.out('    ' + c + ' =_newClass("' + c + '", ' + c + '__init, sizeof(struct ' + c + '_s), ' + superName + '.value.classINFOptr);', NL, '    _declareMethods(' + c + ', ' + c + '_METHODS);', NL, '    _declareProps(' + c + ', ' + c + '_PROPS, sizeof ' + c + '_PROPS);', NL, NL);
+        this.out('    ' + c + ' =_newClass("' + c + '", ' + c + '__init, sizeof(struct ' + c + '_s), ' + superName + ');', NL, '    _declareMethods(' + c + ', ' + c + '_METHODS);', NL, '    _declareProps(' + c + ', ' + c + '_PROPS, sizeof ' + c + '_PROPS);', NL, NL);
      };
 
 //-------------------------------------
@@ -1552,8 +1558,8 @@
             }
             else {
             //else
-                //.out "any_str(",strValue,")"
-                this.out("any_str(", strValue, ")");
+                //.out "any_LTR(",strValue,")"
+                this.out("any_LTR(", strValue, ")");
             };
 
             //.out .accessors

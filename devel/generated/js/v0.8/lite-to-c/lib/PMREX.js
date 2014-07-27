@@ -1,8 +1,8 @@
 //#PMREX, poor's man RegEx
 
 
-//### public function whileRanges(chunk:string, start, rangesStr:string)
-    function whileRanges(chunk, start, rangesStr){
+//### public function whileRanges(chunk:string, rangesStr:string) returns string
+    function whileRanges(chunk, rangesStr){
 
 //whileRanges, advance from start, while the char is in the ranges specified. 
 //will return index of first char not in range, or searched string length all chars in range
@@ -11,16 +11,14 @@
 
         //var len = chunk.length
         var len = chunk.length;
-        //if start>=len, return len
-        if (start >= len) {return len};
 
         ////parse ranges into an array [[from,to],[from,to]...]
         //var ranges = parseRanges(rangesStr)
         var ranges = parseRanges(rangesStr);
 
         ////advance while in any of the ranges
-        //var inx=start
-        var inx = start;
+        //var inx=0
+        var inx = 0;
         //do while inx<len
         while(inx < len){
             //var ch = chunk.charAt(inx)
@@ -41,22 +39,22 @@
             };// end for r
             //end for
             
-            //if not isIn, return inx
-            if (!(isIn)) {return inx};
+            //if not isIn, break 
+            if (!(isIn)) {break};
             //inx++
             inx++;
         };// end loop
         //loop
 
-        //return inx
-        return inx;
+        //return chunk.slice(0,inx)
+        return chunk.slice(0, inx);
     }
     // export
     module.exports.whileRanges = whileRanges;
 
 
-//### public function findRanges(chunk:string, start, rangesStr:string)
-    function findRanges(chunk, start, rangesStr){
+//### public function untilRanges(chunk:string, rangesStr:string) returns string
+    function untilRanges(chunk, rangesStr){
 
 //findRanges: advance from start, *until* a char in one of the specified ranges is found.
 //will return index of first char *in range* or searched string length if no match
@@ -65,16 +63,14 @@
 
         //var len = chunk.length
         var len = chunk.length;
-        //if start>=len, return len
-        if (start >= len) {return len};
 
         ////parse ranges into an array [[from,to],[from,to]...]
         //var ranges = parseRanges(rangesStr)
         var ranges = parseRanges(rangesStr);
 
         ////advance until match
-        //var inx=start
-        var inx = start;
+        //var inx=0
+        var inx = 0;
         //do while inx<len
         while(inx < len){
             //var ch = chunk.charAt(inx)
@@ -85,8 +81,8 @@
             for( var r=0; r<=_end5; r += 2) {
                 //if ch>=ranges.charAt(r) and ch<=ranges.charAt(r+1)
                 if (ch >= ranges.charAt(r) && ch <= ranges.charAt(r + 1)) {
-                    //return inx
-                    return inx;
+                    //return chunk.slice(0,inx)
+                    return chunk.slice(0, inx);
                 };
             };// end for r
             //end for
@@ -96,11 +92,11 @@
         };// end loop
         //loop
 
-        //return inx
-        return inx;
+        //return chunk.slice(0,inx)
+        return chunk.slice(0, inx);
     }
     // export
-    module.exports.findRanges = findRanges;
+    module.exports.untilRanges = untilRanges;
 
 //### helper function parseRanges(rangesStr:string) returns string
     function parseRanges(rangesStr){
@@ -140,59 +136,67 @@
     };
 
 
-//### public function whileUnescaped(chunk:string,start,endChar)
-    function whileUnescaped(chunk, start, endChar){
+//### public function whileUnescaped(chunk:string,endChar:string) returns string
+    function whileUnescaped(chunk, endChar){
 
         ////advance until unescaped endChar
-        //var pos = start
-        var pos = start;
+        //var pos = 0
+        var pos = 0;
         //do
         while(true){
             //var inx = chunk.indexOf(endChar,pos)
             var inx = chunk.indexOf(endChar, pos);
-            //if inx is -1, return -1
-            if (inx === -1) {return -1};
+            
+            //if inx is -1, fail with 'missing closing quote-char: #{endChar} ' // closer not found
+            if (inx === -1) {throw new Error('missing closing quote-char: ' + endChar + ' ')};
+            
             //if inx>0 and chunk.charAt(inx-1) is '\\' #escaped
             if (inx > 0 && chunk.charAt(inx - 1) === '\\') {// #escaped
+                
                 //var countEscape=1
                 var countEscape = 1;
                 //while inx>countEscape and chunk.charAt(inx-1-countEscape) is '\\' #escaped-escape
                 while(inx > countEscape && chunk.charAt(inx - 1 - countEscape) === '\\'){
-                    //countEscape++
-                    countEscape++;
+                        //countEscape++
+                        countEscape++;
                 };// end loop
-                //if countEscape % 2 is 0 //even, means escaped-escape, i.e: not escaped
-                if (countEscape % 2 === 0) { //even, means escaped-escape, i.e: not escaped
-                    //return inx+1    // so found is final
-                    return inx + 1; // so found is final
+
+                //if countEscape % 2 is 0 //even, means escaped-escape, means: not escaped
+                if (countEscape % 2 === 0) { //even, means escaped-escape, means: not escaped
+                    //break    //we found an unescaped quote
+                    break; //we found an unescaped quote
                 }
                 else {
                 //else
-                    //pos=inx+1 //odd means escaped quote, so it's not final
-                    pos = inx + 1; //odd means escaped quote, so it's not final
+                    //pos=inx+1 //odd means escaped quote, so it's not closing quote
+                    pos = inx + 1; //odd means escaped quote, so it's not closing quote
                 };
             }
             else {
             //else
-                //return inx+1
-                return inx + 1;
+                ////found unescaped
+                //break
+                break;
             };
         };// end loop
-        
+        //loop
+        //return chunk.slice(0,inx)
+        return chunk.slice(0, inx);
     }
     // export
     module.exports.whileUnescaped = whileUnescaped;
-        //loop
 
-//### public function findMatchingQuote(chunk:string, start)
-    function findMatchingQuote(chunk, start){
+//### public function quotedContent(chunk:string) returns string
+    function quotedContent(chunk){
 
-//Note: chunk[start] MUST be the openinig quote
-
-        //return whileUnescaped(chunk,start+1,chunk.charAt(start))
-        return whileUnescaped(chunk, start + 1, chunk.charAt(start));
+//Note: chunk[0] MUST be the openinig quote
+        
+        //if no chunk.charAt(0) in '/"\'', throw "chunk.charAt(0) MUST be the openinig quote-char"
+        if (!('/"\''.indexOf(chunk.charAt(0))>=0)) {throw "chunk.charAt(0) MUST be the openinig quote-char"};
+        //return whileUnescaped(chunk.slice(1),chunk.charAt(0))
+        return whileUnescaped(chunk.slice(1), chunk.charAt(0));
     }
     // export
-    module.exports.findMatchingQuote = findMatchingQuote;
+    module.exports.quotedContent = quotedContent;
 
 

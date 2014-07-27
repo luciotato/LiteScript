@@ -115,7 +115,7 @@
 //add "ERROR:", send to debug logger
 
         //args.unshift('ERROR:')
-        METHOD(unshift_,args)(args,1,(any_arr){any_str("ERROR:")});
+        METHOD(unshift_,args)(args,1,(any_arr){any_LTR("ERROR:")});
         //logger.debug.apply undefined,args
         __applyArr(any_func(logger_debug),undefined,args);
 
@@ -124,7 +124,7 @@
         //if logger.storeMessages
         if (_anyToBool(logger_storeMessages))  {
             //logger.messages.push args.join(" ")
-            __call(push_,logger_messages,1,(any_arr){METHOD(join_,args)(args,1,(any_arr){any_str(" ")})});
+            __call(push_,logger_messages,1,(any_arr){METHOD(join_,args)(args,1,(any_arr){any_LTR(" ")})});
         }
 
 //else, add red color, send to stderr
@@ -152,7 +152,7 @@
         var args = _newArray(argc,arguments);
 
         //args.unshift('WARNING:')
-        METHOD(unshift_,args)(args,1,(any_arr){any_str("WARNING:")});
+        METHOD(unshift_,args)(args,1,(any_arr){any_LTR("WARNING:")});
         //logger.debug.apply(undefined,args)
         __applyArr(any_func(logger_debug),undefined,args);
         
@@ -164,7 +164,7 @@
             //if logger.storeMessages
             if (_anyToBool(logger_storeMessages))  {
                 //logger.messages.push args.join(" ")
-                __call(push_,logger_messages,1,(any_arr){METHOD(join_,args)(args,1,(any_arr){any_str(" ")})});
+                __call(push_,logger_messages,1,(any_arr){METHOD(join_,args)(args,1,(any_arr){any_LTR(" ")})});
             }
 
 //else, add yellow color, send to stderr
@@ -199,7 +199,7 @@
             //if logger.storeMessages
             if (_anyToBool(logger_storeMessages))  {
                 //logger.messages.push args.join(" ")
-                __call(push_,logger_messages,1,(any_arr){METHOD(join_,args)(args,1,(any_arr){any_str(" ")})});
+                __call(push_,logger_messages,1,(any_arr){METHOD(join_,args)(args,1,(any_arr){any_LTR(" ")})});
             }
 
 //else, send to console
@@ -266,7 +266,7 @@
 //to differentiate from unexpected compiler errors
 
         //logger.debug "Controlled ERROR:", msg
-        logger_debug(undefined,2,(any_arr){any_str("Controlled ERROR:"), msg});
+        logger_debug(undefined,2,(any_arr){any_LTR("Controlled ERROR:"), msg});
         //throw new ControlledError(msg)
         throw(new(ControlledError,1,(any_arr){msg}));
      return undefined;

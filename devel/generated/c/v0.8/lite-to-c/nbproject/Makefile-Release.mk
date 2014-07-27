@@ -35,11 +35,13 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/core/ImmutArray.o \
 	${OBJECTDIR}/core/LiteC-core.o \
 	${OBJECTDIR}/core/PMREX-native.o \
 	${OBJECTDIR}/core/any.o \
 	${OBJECTDIR}/core/exceptions.o \
 	${OBJECTDIR}/core/fs-native.o \
+	${OBJECTDIR}/core/utf8strings.o \
 	${OBJECTDIR}/core/util.o \
 	${OBJECTDIR}/generated/ASTBase.o \
 	${OBJECTDIR}/generated/C_global_import/fs.o \
@@ -90,6 +92,11 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lite-to-c: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lite-to-c ${OBJECTFILES} ${LDLIBSOPTIONS}
 
+${OBJECTDIR}/core/ImmutArray.o: core/ImmutArray.c 
+	${MKDIR} -p ${OBJECTDIR}/core
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/ImmutArray.o core/ImmutArray.c
+
 ${OBJECTDIR}/core/LiteC-core.o: core/LiteC-core.c 
 	${MKDIR} -p ${OBJECTDIR}/core
 	${RM} "$@.d"
@@ -114,6 +121,11 @@ ${OBJECTDIR}/core/fs-native.o: core/fs-native.c
 	${MKDIR} -p ${OBJECTDIR}/core
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/fs-native.o core/fs-native.c
+
+${OBJECTDIR}/core/utf8strings.o: core/utf8strings.c 
+	${MKDIR} -p ${OBJECTDIR}/core
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -DNDEBUG -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/core/utf8strings.o core/utf8strings.c
 
 ${OBJECTDIR}/core/util.o: core/util.c 
 	${MKDIR} -p ${OBJECTDIR}/core

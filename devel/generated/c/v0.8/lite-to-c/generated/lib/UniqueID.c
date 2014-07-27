@@ -64,7 +64,7 @@ any UniqueID_getVarName(DEFAULT_ARGUMENTS); //forward declare
 //Generate unique variable names
 
         //return '_#{prefix}#{get(prefix)}'
-        return _concatAny(3,any_str("_"), prefix, UniqueID_get(undefined,1,(any_arr){prefix}));
+        return _concatAny(3,any_LTR("_"), prefix, UniqueID_get(undefined,1,(any_arr){prefix}));
     return undefined;
     }
 

@@ -58,7 +58,7 @@ add "Iterable" interface, make map, array, string, Object "iterable"
         }
 
         int _iteratorNext(inxNV_t* i){
-            case i->original
+            case i->original.class
                 when String
                     if (i->index++==0){ //first
                         if(*(i->bookmark.value.str)==0) return NULL; //empty str
@@ -66,10 +66,13 @@ add "Iterable" interface, make map, array, string, Object "iterable"
                         i->value=undefined;
                         return;
                     }
-                    if (i->index>0){
-                        
-                        key++;
+                    // "key" stores byte index into string
+                    if (i->key.value.number >= i->original.byteLen){ //reached end of slice
+                        return NULL;
                     }
+                    while(iscodepointPart(++(i->bookmark.value.str)); //advance while part of the codepoint
+                    i->key.value.number = i->bookmark.value.str - i->original.value.str; //calc new byteindex
+                    return TRUE; //
 
                 else
                     result.bookmark==iterable.newIterator();

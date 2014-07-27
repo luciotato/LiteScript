@@ -1328,11 +1328,11 @@
             //item = s.slice(start+1, closerPos);
             item = s.slice(start + 1, closerPos);
 
-            //// add parens if expression
-            //var p = PMREX.whileRanges(item,0,"A-Za-z0-9_$.")
-            var p = PMREX.whileRanges(item, 0, "A-Za-z0-9_$.");
-            //if p<item.length then item = '(#{item})';
-            if (p < item.length) {item = '(' + item + ')'};
+            //// add parens if expression (no a single number or varname or prop)
+            //var singleUnit = PMREX.whileRanges(item,"A-Za-z0-9_$.")
+            var singleUnit = PMREX.whileRanges(item, "A-Za-z0-9_$.");
+            //if item isnt singleUnit, item = '(#{item})';
+            if (item !== singleUnit) {item = '(' + item + ')'};
 
             //lastDelimiterPos = closerPos + 1
             lastDelimiterPos = closerPos + 1;
@@ -1705,6 +1705,9 @@
       //method recognizeToken(chunk:string) returns Token // or undefined
       InfoLine.prototype.recognizeToken = function(chunk){ // or undefined
 
+            //var remainder
+            var remainder = undefined;
+
 //Comment lines, start with # or //
 
             //if chunk.startsWith('#') or chunk.startsWith('//')
@@ -1750,13 +1753,13 @@
                 //return new Token('SPACE_BRACKET',chunk.slice(0,2))
                 return new Token('SPACE_BRACKET', chunk.slice(0, 2));
             };
-            //if PMREX.whileRanges(chunk,0," \t\r") into var whiteSpaceLength
-            var whiteSpaceLength=undefined;
-            if ((whiteSpaceLength=PMREX.whileRanges(chunk, 0, " \t\r"))) {
-                //if chunk.charAt(whiteSpaceLength) in '.[', whiteSpaceLength-- //allow recognition of SPACE_DOT and SPACE_BRACKET
-                if ('.['.indexOf(chunk.charAt(whiteSpaceLength))>=0) {whiteSpaceLength--};
-                //return new Token('WHITESPACE',chunk.slice(0,whiteSpaceLength))
-                return new Token('WHITESPACE', chunk.slice(0, whiteSpaceLength));
+            //if PMREX.whileRanges(chunk," \t\r") into var whiteSpace
+            var whiteSpace=undefined;
+            if ((whiteSpace=PMREX.whileRanges(chunk, " \t\r"))) {
+                //if chunk.charAt(whiteSpace.length) in '.[', whiteSpace=whiteSpace.slice(0,-1) //allow recognition of SPACE_DOT and SPACE_BRACKET
+                if ('.['.indexOf(chunk.charAt(whiteSpace.length))>=0) {whiteSpace = whiteSpace.slice(0, -1)};
+                //return new Token('WHITESPACE',whiteSpace)
+                return new Token('WHITESPACE', whiteSpace);
             };
 
 //Strings can be either single or double quoted.
@@ -1764,13 +1767,12 @@
   //['STRING', /^'(?:[^'\\]|\\.)*'/],
   //['STRING', /^"(?:[^"\\]|\\.)*"/],
 
-            //if chunk.startsWith("'") or chunk.startsWith('"') 
+            //if chunk.startsWith("'") or chunk.startsWith('"')
             if (chunk.startsWith("'") || chunk.startsWith('"')) {
-                //if PMREX.findMatchingQuote(chunk,0) into var quotedCount is -1, fail with "unclosed quoted string"
-                var quotedCount=undefined;
-                if ((quotedCount=PMREX.findMatchingQuote(chunk, 0)) === -1) {throw new Error("unclosed quoted string")};
-                //return new Token('STRING',chunk.slice(0,quotedCount))
-                return new Token('STRING', chunk.slice(0, quotedCount));
+                //var quotedContent = PMREX.quotedContent(chunk)
+                var quotedContent = PMREX.quotedContent(chunk);
+                //return new Token('STRING',chunk.slice(0,1+quotedContent.length+1)) //include quotes
+                return new Token('STRING', chunk.slice(0, 1 + quotedContent.length + 1)); //include quotes
             };
 
 //ASSIGN are symbols triggering the assignment statements.
@@ -1796,11 +1798,10 @@
 
             //if chunk.startsWith('/') 
             if (chunk.startsWith('/')) {
-                //if PMREX.whileUnescaped(chunk,1,"/") into var endRegexp is -1, fail with "unclosed literal RegExp expression"
-                var endRegexp=undefined;
-                if ((endRegexp=PMREX.whileUnescaped(chunk, 1, "/")) === -1) {throw new Error("unclosed literal RegExp expression")};
-                //return new Token('REGEX',chunk.slice(0,endRegexp))
-                return new Token('REGEX', chunk.slice(0, endRegexp));
+                //var regexpContents = PMREX.quotedContent(chunk) 
+                var regexpContents = PMREX.quotedContent(chunk);
+                //return new Token('REGEX',chunk.slice(0,regexpContents.length+2)) //include quote-chars: / & /
+                return new Token('REGEX', chunk.slice(0, regexpContents.length + 2)); //include quote-chars: / & /
             };
 
 //A "Unary Operator" is a symbol that precedes and transform *one* operand.
@@ -1838,19 +1839,56 @@
 
             //if chunk.startsWith('0x')
             if (chunk.startsWith('0x')) {
-                //return new Token('NUMBER',chunk.slice(0, PMREX.whileRanges(chunk,2,"a-fA-F0-9")))
-                return new Token('NUMBER', chunk.slice(0, PMREX.whileRanges(chunk, 2, "a-fA-F0-9")));
+                //var hexContent=PMREX.whileRanges(chunk.slice(2),"a-fA-F0-9")
+                var hexContent = PMREX.whileRanges(chunk.slice(2), "a-fA-F0-9");
+                //return new Token('NUMBER',chunk.slice(0, hexContent.length+2)) //include 0x
+                return new Token('NUMBER', chunk.slice(0, hexContent.length + 2)); //include 0x
             };
     
-            //if PMREX.whileRanges(chunk,0,"0-9") into var numberDigits
-            var numberDigits=undefined;
-            if ((numberDigits=PMREX.whileRanges(chunk, 0, "0-9"))) {
-                //if chunk.charAt(numberDigits) is '.', numberDigits = PMREX.whileRanges(chunk,numberDigits+1,"0-9")
-                if (chunk.charAt(numberDigits) === '.') {numberDigits = PMREX.whileRanges(chunk, numberDigits + 1, "0-9")};
-                //if chunk.charAt(numberDigits) is 'e', numberDigits = PMREX.whileRanges(chunk,numberDigits+1,"0-9")
-                if (chunk.charAt(numberDigits) === 'e') {numberDigits = PMREX.whileRanges(chunk, numberDigits + 1, "0-9")};
-                //return new Token('NUMBER',chunk.slice(0, numberDigits))
-                return new Token('NUMBER', chunk.slice(0, numberDigits));
+            //var numberDigits,decPoint="",decimalPart="",expE="",exponent=""
+            var 
+        numberDigits = undefined, 
+        decPoint = "", 
+        decimalPart = "", 
+        expE = "", 
+        exponent = ""
+;
+
+            //if PMREX.whileRanges(chunk,"0-9") into numberDigits
+            if ((numberDigits=PMREX.whileRanges(chunk, "0-9"))) {
+                //chunk=chunk.slice(numberDigits.length)
+                chunk = chunk.slice(numberDigits.length);
+
+                //if chunk.charAt(0) is '.'
+                if (chunk.charAt(0) === '.') {
+                    //decPoint = '.'
+                    decPoint = '.';
+                    //chunk=chunk.slice(1)
+                    chunk = chunk.slice(1);
+
+                    //decimalPart = PMREX.whileRanges(chunk,"0-9")
+                    decimalPart = PMREX.whileRanges(chunk, "0-9");
+                    //if no decimalPart, fail with 'missing decimal part after "."'
+                    if (!decimalPart) {throw new Error('missing decimal part after "."')};
+                    //chunk=chunk.slice(decimalPart.length)
+                    chunk = chunk.slice(decimalPart.length);
+                };
+
+                //if chunk.charAt(0) is 'e'
+                if (chunk.charAt(0) === 'e') {
+                    //expE = 'e'
+                    expE = 'e';
+                    //chunk=chunk.slice(1)
+                    chunk = chunk.slice(1);
+
+                    //exponent=PMREX.whileRanges(chunk,"0-9")
+                    exponent = PMREX.whileRanges(chunk, "0-9");
+                    //if no exponent, fail with 'missing exponent after "e"'
+                    if (!exponent) {throw new Error('missing exponent after "e"')};
+                };
+
+                //return new Token('NUMBER',"#{numberDigits}#{decPoint}#{decimalPart}#{expE}#{exponent}")
+                return new Token('NUMBER', '' + numberDigits + decPoint + decimalPart + expE + exponent);
             };
 
 //Identifiers (generally variable names), must start with a letter, `$`, or underscore.
@@ -1862,21 +1900,20 @@
   //['OPER', /^(is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor)\b/],
 
 //a IDENTIFIER starts with A-Z a-z (a unicode codepoint), $ or _
+//(Note: we recognized numbers above)
 
-            //if PMREX.whileRanges(chunk,0,"A-Za-z\x7F-\xFF$_") into var wordLetters
-            var wordLetters=undefined;
-            if ((wordLetters=PMREX.whileRanges(chunk, 0, "A-Za-z\x7F-\xFF$_"))) {
-                //wordLetters = PMREX.whileRanges(chunk,wordLetters,"0-9A-Za-z_\x7F-\xFF") //Subsequent characters can also be numbers
-                wordLetters = PMREX.whileRanges(chunk, wordLetters, "0-9A-Za-z_\x7F-\xFF"); //Subsequent characters can also be numbers
+            //if PMREX.whileRanges(chunk,"A-Za-z0-9\x7F-\xFF$_") into var identifier
+            var identifier=undefined;
+            if ((identifier=PMREX.whileRanges(chunk, "A-Za-z0-9\x7F-\xFF$_"))) {
 
-                //if "|#{chunk.slice(0,wordLetters)}|" in "|is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|"
-                if ("|is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|".indexOf("|" + (chunk.slice(0, wordLetters)) + "|")>=0) {
-                    //return new Token('OPER',chunk.slice(0,wordLetters))
-                    return new Token('OPER', chunk.slice(0, wordLetters));
+                //if "|#{identifier}|" in "|is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|"
+                if ("|is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|".indexOf("|" + identifier + "|")>=0) {
+                    //return new Token('OPER',identifier)
+                    return new Token('OPER', identifier);
                 };
 
-                //return new Token('IDENTIFIER',chunk.slice(0,wordLetters))
-                return new Token('IDENTIFIER', chunk.slice(0, wordLetters));
+                //return new Token('IDENTIFIER',identifier)
+                return new Token('IDENTIFIER', identifier);
             };
       };
     // end class InfoLine
