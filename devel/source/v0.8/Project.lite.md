@@ -11,7 +11,7 @@ compile LiteScript code.
         ASTBase, Grammar, Parser
         Names, Validate
         ControlledError, GeneralOptions
-        logger, color, Strings, mkPath
+        logger, color, shims, mkPath
 
     shim import Map
 
@@ -136,7 +136,7 @@ by parsing the file: "lib/GlobalScopeJS.interface.md"
 
         Validate.initialize this 
 
-        console.timeEnd 'Init Project'
+        if options.perf>1, console.timeEnd 'Init Project'
 
 #### Method compile()
 
@@ -150,7 +150,7 @@ Import & compile the main module. The main module will, in turn, 'import' and 'c
         .main = .importModule(.rootModule, importInfo)
         .main.isMain = true
 
-        console.timeEnd 'Parse'
+        if .options.perf>1, console.timeEnd 'Parse'
 
         if logger.errorCount is 0
             logger.info "\nParsed OK"
@@ -161,76 +161,67 @@ Validate
             logger.info "Validating"
             console.time 'Validate'
             Validate.validate this
-            console.timeEnd 'Validate'
+            if .options.perf>1, console.timeEnd 'Validate'
             if logger.errorCount, logger.throwControlled '#{logger.errorCount} errors'
 
 Produce, for each module
 
         console.time 'Produce'
-        logger.info "\nProducing #{.options.target} at #{.options.outDir}\n"
+        logger.msg "\nProducing #{.options.target} at #{.options.outDir}"
         mkPath.create .options.outDir
 
         for each moduleNode:Grammar.Module in map .moduleCache
 
-          if not moduleNode.fileInfo.isCore and moduleNode.referenceCount 
-
-            logger.extra "source:", moduleNode.fileInfo.importInfo.name
             var result:string
+            logger.extra "source:", moduleNode.fileInfo.importInfo.name
 
-            if not moduleNode.fileInfo.isLite 
-                logger.extra 'non-Lite module, copy to out dir.'
-                #copy the file to output dir
-                var contents = Environment.loadFile(moduleNode.fileInfo.filename)
-                Environment.externalCacheSave(moduleNode.fileInfo.outFilename, contents)
-                declare valid contents.length
-                result = "#{contents.length>>10 or 1} kb"
-                contents=undefined
+            var shouldProduce = true
+            if moduleNode.fileInfo.isCore or no moduleNode.referenceCount 
+                shouldProduce = false
+            
+            if moduleNode.lexer.interfaceMode and .options.target is 'js'            
+                // no interface files in js.
+                shouldProduce = false
 
-            else
+            if shouldProduce 
+
+                if not moduleNode.fileInfo.isLite 
+                    logger.extra 'non-Lite module, copy to out dir.'
+                    #copy the file to output dir
+                    var contents = Environment.loadFile(moduleNode.fileInfo.filename)
+                    Environment.externalCacheSave(moduleNode.fileInfo.outFilename, contents)
+                    declare valid contents.length
+                    result = "#{contents.length>>10 or 1} kb"
+                    contents=undefined
+
+                else
 
 produce & get result target code
 
-                moduleNode.lexer.outCode.filenames[0]=moduleNode.fileInfo.outFilename
-                moduleNode.lexer.outCode.filenames[1]='#{moduleNode.fileInfo.outFilename.slice(0,-1)}h'
-                moduleNode.lexer.outCode.fileMode=true //direct out to file 
+                    moduleNode.lexer.outCode.filenames[0]=moduleNode.fileInfo.outFilename
+                    moduleNode.lexer.outCode.filenames[1]='#{moduleNode.fileInfo.outFilename.slice(0,-1)}h'
+                    moduleNode.lexer.outCode.fileMode=true //direct out to file 
 
-                .produceModule moduleNode
+                    .produceModule moduleNode
 
-                moduleNode.lexer.outCode.close
-                result = "#{moduleNode.lexer.outCode.lineNum} lines"
+                    moduleNode.lexer.outCode.close
+                    result = "#{moduleNode.lexer.outCode.lineNum} lines"
 
-                if not moduleNode.lexer.outCode.fileMode                
-                
-                    var resultLines:string array =  moduleNode.lexer.outCode.getResult()
-
-                    // save to disk
-
-                    Environment.externalCacheSave moduleNode.fileInfo.outFilename,resultLines
-                    result = "#{resultLines.length} lines"
-
-                    #ifdef PROD_C
-                    resultLines =  moduleNode.lexer.outCode.getResult(1) //get .h file contents
-                    if resultLines.length
-                        Environment.externalCacheSave '#{moduleNode.fileInfo.outFilename.slice(0,-1)}h',resultLines
-                    end if
-
-                    #else
+                    #ifdef PROD_JS
                     if .options.nomap is false
-
                         Environment.externalCacheSave '#{moduleNode.fileInfo.outFilename}.map',
                                 moduleNode.lexer.outCode.sourceMap.generate(
                                               moduleNode.fileInfo.base & moduleNode.fileInfo.outExtension
                                               ,[moduleNode.fileInfo.sourcename]
                                               )
-                    end if
                     #endif
 
-                end if //direct out to file
+                end if
 
-            end if
+                logger.msg color.green,"[OK]",result, " -> ",moduleNode.fileInfo.outRelFilename,color.normal
+                logger.extra #blank line
 
-            logger.info color.green,"[OK]",result, " -> ",moduleNode.fileInfo.outRelFilename,color.normal
-            logger.extra #blank line
+            end if //shouldProduce
 
         end for each module cached
 
@@ -240,7 +231,7 @@ produce & get result target code
         if no logger.errorCount, Producer_c.postProduction this
         #endif
 
-        console.timeEnd 'Produce'
+        if .options.perf>1, console.timeEnd 'Produce'
 
 #### Method compileFile(filename) returns Grammar.Module
 
@@ -262,7 +253,7 @@ produce & get result target code
 Compilation:
 Load source -> Lexer/Tokenize -> Parse/create AST 
 
-        logger.info String.spaces(this.recurseLevel*2),"compile: '#{Environment.relativeFrom(.options.projectDir,filename)}'"
+        logger.msg String.spaces(this.recurseLevel*2),"compile: '#{Environment.relativeFrom(.options.projectDir,filename)}'"
 
 Load source code, parse
 
@@ -512,8 +503,16 @@ return true if interface (exports) obtained
             this.compileFileOnModule fileInfo.interfaceFile, moduleNode
             return true //got Interface
 
-        
-        #ifndef PROD_C //except we're generating the compile-to-C compiler
+if we're generating c-code, a interface or file must exist
+
+        if .options.target is 'c', return 
+
+else, if we're running on node.js 
+we can try a "hack". 
+We call "require(x.js)" here and generate the interface 
+from the loaded module exported object
+
+        #ifdef TARGET_JS //if this compiler generates js code
 
 Check if we're compiling for the browser
 

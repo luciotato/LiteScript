@@ -2,11 +2,11 @@ The LiteScript Compiler Module
 ==============================
 LiteScript is a highly readable language that compiles to JavaScript.
 
-    export var version = '0.7.0'
+    export var version = '0.7.9'
 
     //compiler generate(lines:string array)
     //    lines.push "export var buildDate = '#{new Date.toISOString()}'"
-    export var buildDate = '20140609'
+    export var buildDate = '20140722'
 
 This v0.6 compiler is written in v0.5 syntax. 
 That is, you use the v0.5 compiler to compile this code 
@@ -35,7 +35,7 @@ The `Environment` abstraction allows us to support compile on server(node) or th
    
 ## Main API functions: LiteScript.compile & LiteScript.compileProject
 
-### export Function compile (filename, sourceLines, options) returns string
+### export Function compile (filename:string, sourceLines, options:Object) returns string
 
 Used to compile source code loaded in memory (instead of loading a file)
 input: 
@@ -64,17 +64,15 @@ The compilation of the main module will trigger import and compilation of all it
 The main module is the root of the module dependency tree, and can reference
 another modules via import|require.
 
+        default options =
+            outDir : './out' 
         #ifdef PROD_C
-        default options = 
-            outDir: 'out'
             target: 'c'
         #else
-        default options = 
-            outDir: '.'
             target: 'js'
         #endif
 
-        log.extra "Out Dir: #{options.outDir}"
+        log.message "Out Dir: #{options.outDir}"
 
 Create a 'Project' to hold the main module and dependant modules
 
@@ -100,8 +98,10 @@ output:
 
 		default filename = 'unnamed'
 
-        declare on options version
+        declare on options version,debugEnabled
         options.version = version #add version to options
+
+        if options.debugEnabled, log.options.debug.enabled = true
 
         var project = new Project(filename, options )
 

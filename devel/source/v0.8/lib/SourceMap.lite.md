@@ -43,10 +43,12 @@ for the specified `line` and `column`, this will have no effect.
 
           logger.debug "gen #{line},#{column} -> src #{sourceLine},#{sourceCol}"
 
-          var lineMap = .lines[line] or (new LineMap(line) into .lines[line])
+          var lineMap = .lines.tryGet(line)
+          if no lineMap //create
+              lineMap = new LineMap(line) // create
+              .lines.set line, lineMap //store at index (extend array if needed)
 
           lineMap.add column, new Location(sourceLine, sourceCol), noReplace
-
 
       method sourceLocation(line, column)
 
@@ -100,13 +102,13 @@ advance to LineMap.line
                 lastGenColumn = 0
                 needComma = false
                 while writingline < lineMap.line
-                    buffer += ";"
+                    buffer &= ";"
                     writingline++
 
 Write a comma if we've already written a segment on this line.
 
             if needComma
-              buffer += ","
+              buffer &= ","
               needComma = false
 
 Write the next segment. Segments can be 1, 4, or 5 values.  If just one, then it
@@ -178,16 +180,17 @@ positions for a single line of output JavaScript code.
 
       method add(column, source:Location, noReplace)
 
-        if noReplace and .columns[column], return 
+        var colInfo= .columns.tryGet(column)
+        if colInfo and noReplace, return 
         
-        .columns[column] = source
+        .columns.set column,source
 
       method sourceLocation(column)
 
 returns closest source location, for a js column in this line
 
         for col=column, while col>=0, col--
-            if .columns[col] into var foundLocation, return foundLocation
+            if .columns.tryGet(col) into var foundLocation, return foundLocation
 
 
 #Helper module functions
@@ -214,7 +217,7 @@ bits of the original value encoded into the first byte of the VLQ encoded value.
         var signBit = value < 0 ? 1 else 0
 
         # The next bits are the actual value.
-        var valueToEncode = (Math.abs(value) << 1) + signBit
+        var valueToEncode = ( (value<0? -value:value) << 1) + signBit
 
         # Make sure we encode at least one character, even if valueToEncode is 0.
         while valueToEncode or no answer

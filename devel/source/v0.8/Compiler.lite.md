@@ -4,7 +4,7 @@ LiteScript is a highly readable language that compiles to JavaScript.
 
     public var version = '0.8.4'
 
-    public var buildDate = '20140722'
+    public var buildDate = "__TIMESTAMP__"
 
 This v0.8 compiler is written in v0.7 syntax. 
 That is, you use the v0.7 compiler to compile this code 
@@ -17,9 +17,9 @@ Today 2014-07-22, V0.8 can compile itself to .js and to .c
 The Compiler module is the main interface to LiteScript Project module.
     
     import 
-        Project, Validate
+        Project, Validate, GeneralOptions
         Grammar 
-        logger, GeneralOptions
+        logger, shims
     
 Get the 'Environment' object for the compiler to use.
 The 'Environment' object, must provide functions to load files, search modules, 
@@ -79,7 +79,8 @@ Create a 'Project' to hold the main module and dependant modules
 
         project.compile
 
-        console.timeEnd 'Total Compile Project'
+        if options.perf
+            console.timeEnd 'Total Compile Project'
 
         return project
 
@@ -126,7 +127,7 @@ validate var & property names
 
 initialize out buffer & produce target code 
     
-        logger.info "Generating #{project.options.target}"
+        logger.msg "Generating #{project.options.target}"
 
         project.produceModule moduleNode
         # the produced code will be at: moduleNode.lexer.out.getResult() :string array
@@ -138,7 +139,8 @@ text compiled result can be obtained with: moduleNode.lexer.out.getResult() :str
         return moduleNode
 
 
-    #ifndef PROD_C
+    // if this compiler will generate js code
+    #ifdef TARGET_JS
 
 Require Extensions
 ------------------

@@ -11,6 +11,7 @@
             target ="js"
             #end if
             debugEnabled = undefined
+            perf=0 // performace counters 0..2
             skip = undefined
             nomap = undefined
             single = undefined

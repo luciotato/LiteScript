@@ -4,6 +4,7 @@ when the LiteScript compiler is generated as js-code
 to run on node.js or the browser
 
     global import path,fs
+    
     import GeneralOptions, OptionsParser, ControlledError, color
 
     import Compiler

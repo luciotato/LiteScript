@@ -22,12 +22,16 @@ then each CODE line is *Tokenized*, getting a `tokens[]` array
 
     import 
         ControlledError, GeneralOptions
-        logger, Strings
-
+        logger
 
     global import fs
 
     shim import Map, PMREX, mkPath
+
+    #ifdef PROD_JS
+    //if we're creating a compile-to-js compiler
+    import SourceMap
+    #endif
 
 module vars
 
@@ -366,7 +370,7 @@ Pre-Processor
 #### method preprocessor(line:string)
 
 This is a ver crude preprocessor.
-Here we search for simple macros as __DATE__, __TIME__ , __TMESTAMP__
+Here we search for simple macros as __DATE__, __TIME__ , __TTMESTAMP__
 
         for each macro,value in map preprocessor_replaces
             line=line.replaceAll("__#{macro}__",value)
@@ -1027,14 +1031,14 @@ with a call to core function "concat"
                     var composed = new InfoLine(lexer, LineTypes.CODE, token.column, 
                         "_concatAny(#{parsed.join(',')})", .sourceLineNum  )
 
-                #else //-> JavaScript
+                #else //generating JavaScript
                     //if the first expression isnt a quoted string constant
                     // we add `"" + ` so we get string concatenation from javascript.
                     // Also: if the first expression starts with `(`, LiteScript can 
                     // mis-parse the expression as a "function call"
-                    if parsed.length and parsed[0][0] not in "\"\'" // if it do not start with quotes
-                        parsed.unshift "''" // prepend ''
-                    //join expressions using +, so we have a valid js composed expression, evaluating to a string.
+                    if parsed.length and parsed.tryGet(0).charAt(0) not in "\"\'" // if it do not start with a quote
+                        parsed.unshift "''" // prepend '' to concat'd expressions
+                    //join expressions using +, so we have a valid js concat'd expression, evaluating to a string.
                     var composed = new InfoLine(lexer, LineTypes.CODE, token.column, parsed.join(' + '), .sourceLineNum  )
                 #end if
 
@@ -1170,10 +1174,10 @@ A "Unary Operator" is a symbol that precedes and transform *one* operand.
 A "Binary Operator" is a  symbol or a word (like `>=` or `+` or `and`), 
 that sits between *two* operands in a `Expressions`. 
 
-  ['OPER', /^(\*|\/|\%|\+|-|<>|>=|<=|>>|<<|>|<|!==|\~|\^|\bitor)/],
+  ['OPER', /^(\*|\/|\%|\+|-|<>|>=|<=|>>|<<|>|<|!==|\~|\^)/],
   ['OPER', /^[\?\:]/], //ternary if
   //identifier-like operators are handled in the identifier section below
-  ['OPER', /^(is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor)\b/],
+  ['OPER', /^(is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|bitnot)\b/],
 
             if chunk.slice(0,3) is '!=='
                 return new Token('OPER',chunk.slice(0,3))
@@ -1229,7 +1233,7 @@ a IDENTIFIER starts with A-Z a-z (a unicode codepoint), $ or _
 
             if PMREX.whileRanges(chunk,"A-Za-z0-9\x7F-\xFF$_") into var identifier
 
-                if "|#{identifier}|" in "|is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|"
+                if "|#{identifier}|" in "|is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|bitxor|bitnot|"
                     return new Token('OPER',identifier)
 
                 return new Token('IDENTIFIER',identifier)
@@ -1342,7 +1346,7 @@ It also handles SourceMap generation for Chrome Developer Tools debugger and Fir
 #### Properties
 
       lineNum, column
-      currLine: DynBuffer
+      currLine: array of string
 
       header:number = 0 //out to different files, 0:.c/.js 1:.h 2:.extra
       fileMode:boolean // if output directly to file
@@ -1355,35 +1359,33 @@ It also handles SourceMap generation for Chrome Developer Tools debugger and Fir
 
       lastOriginalCodeComment
       lastOutCommentLine
-      sourceMap
       browser:boolean
 
       exportNamespace
 
       orTempVarCount=0 //helper temp vars to code js "or" in C, using ternary ?:
 
+      #ifdef PROD_JS //only if it is a compiler-to-js
+      sourceMap
+      #endif
 
-#### Method start(options)
+#### Method start(options:GeneralOptions)
 Initialize output array
-
-        declare on options
-            nomap # do not generate sourcemap
 
         .lineNum=1
         .column=1
+        .currLine = []
         .lines=[[],[],[]]
         
         .lastOriginalCodeComment = 0
         .lastOutCommentLine = 0
 
-if sourceMap option is set, and we're in node generating .js
+if sourceMap option is set, and we're generating .js
 
-        #ifdef PROD_C
-        do nothing
+        #ifdef PROD_JS
+        if not options.nomap, .sourceMap = new SourceMap
         #else
-        if not options.nomap and type of process isnt 'undefined' # in node
-              import SourceMap
-              .sourceMap = new SourceMap
+        do nothing
         #end if
 
 #### Method setHeader(num)
@@ -1394,53 +1396,53 @@ if sourceMap option is set, and we're in node generating .js
 #### Method put(text:string)
 put a string into produced code
 
-if no current line
-create a empty one
-
-        if .currLine is undefined
-            .currLine=new DynBuffer(128)
-            .column=1
-
-append text to line 
-
-        if text, .column += .currLine.append(text)
-
+        if text 
+            .currLine.push text
+            .column += text.length
 
 #### Method startNewLine()
 Start New Line into produced code
 
 send the current line
 
-          if .currLine
+          if .currLine.length
 
               if .fileMode
+
                   if no .fileIsOpen[.header]
                       // make sure output dir exists
                       var filename = .filenames[.header] 
                       mkPath.toFile(filename);
+                      //optn output file 
                       .fHandles[.header]=fs.openSync(filename,'w')
                       .fileIsOpen[.header] = true
+                  end if 
 
-                  .currLine.saveLine .fHandles[.header]
+                  //save each string to file
+                  for each part in .currLine
+                      fs.writeSync .fHandles[.header], part
+
+                  fs.writeSync .fHandles[.header], "\n"
 
               else
+                  //store in array 
                   .lines[.header].push .currLine.toString()
               
               if .header is 0
                   .lineNum++
                   #ifndef NDEBUG
-                  logger.debug  .lineNum, .currLine.toString()
+                  //logger.debug  .lineNum, .currLine.toString()
                   #endif
 
 clear current line
 
-          .currLine = undefined
+          .currLine.clear
           .column = 1
 
 #### Method ensureNewLine()
 if there's something on the line, start a new one
 
-          if .currLine, .startNewLine
+          if .currLine.length, .startNewLine
 
 #### Method blankLine()
 
@@ -1454,9 +1456,8 @@ get result and clear memory
 
         .header = header
         .startNewLine() #close last line
-        var result
-        result = .lines[header]
-        .lines[header] = []
+        var result = .lines[header]
+        .lines[header].clear
 
         return result
 
@@ -1475,7 +1476,7 @@ get result and clear memory
 #### helper method markSourceMap(indent) returns SourceMapMark
 
         var col = .column 
-        if not .currLine, col += indent-1
+        if not .currLine.length, col += indent-1
         return SourceMapMark.{
                       col:col        
                       lin:.lineNum-1
@@ -1483,16 +1484,22 @@ get result and clear memory
 
 #### helper method addSourceMap(mark, sourceLin, sourceCol, indent)
 
-        #ifdef PROD_C
-        do nothing
-        #else
+        #ifdef PROD_JS
         if .sourceMap
             declare on mark 
                 lin,col
             .sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
+        #else
+        do nothing
         #endif
 
 
+### helper class SourceMapMark
+      properties 
+        col, lin
+
+
+/*
 ### Class DynBuffer
 
 Like node.js Buffer, but auto-extends if required
@@ -1526,8 +1533,4 @@ Like node.js Buffer, but auto-extends if required
           fs.writeSync fd, .buf,0,.used
           fs.writeSync fd, "\n"
 
-
-### helper class SourceMapMark
-      properties 
-        col, lin
-
+*/

@@ -10,3 +10,5 @@ out/
 debug.log
 *.o
 
+/devel/litec-to-c/build/
+/devel/litec-to-c/dist/

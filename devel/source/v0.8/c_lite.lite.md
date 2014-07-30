@@ -2,9 +2,7 @@
 This is the command line interface to LiteScript Compiler,
 when it is generated as C-code standalone executable 
 
-    //lexer options literal map 
-    //call new Map() to create literal objects 
-    // `{name:value}` => `new Map().fromObject({name:value})` 
+    #define C_LITE
 
     global import fs, path
 
@@ -13,17 +11,15 @@ when it is generated as C-code standalone executable
 
     import GeneralOptions, Compiler, ASTBase
 
-    //lexer options literal map
-
     var 
-        VERSION = '0.8.1'
+        VERSION = '0.8.5'
         BUILD_DATE = '__TIMESTAMP__'
 
 ## module vars
 
     var usage = """
     
-    LiteScript-C v#{VERSION} #{BUILD_DATE}
+    LiteScript compiler v#{VERSION} #{BUILD_DATE} (standalone executable)
     
     Usage: litec main.lite.md [options]
     
@@ -37,12 +33,11 @@ when it is generated as C-code standalone executable
     Advanced options:
     -D FOO -D BAR    Defines preprocessor names (#ifdef FOO/#ifndef BAR)
     -d, -debug       enable full compiler debug log file at 'out/debug.logger'
+    -perf            0..2: show performance timers
     
     """
 
 Get & parse command line arguments
-
-    print JSON.stringify(process.argv)
 
     var args = new OptionsParser(process.argv)
 
@@ -79,12 +74,14 @@ Check for other options
         .outDir  = path.resolve(args.valueFor('o') or './out') //output dir
         .verboseLevel = parseInt(args.valueFor('v',"verbose") or 0) 
         .warningLevel = parseInt(args.valueFor('w',"warning") or 1)
+        .perf = parseInt(args.valueFor('perf',"performance") or 0)
         .comments= parseInt(args.valueFor('comment',"comments") or 1) 
         .debugEnabled = args.option('d',"debug") 
         .defines = []
 
 
-    //var compilerPath = use and use.charAt(0) is 'v'? '../../liteCompiler-#{use}' : '.'
+    if options.verboseLevel>1
+        print JSON.stringify(process.argv)
 
     while args.valueFor('D') into var newDef
         options.defines.push newDef
@@ -141,6 +138,6 @@ Compile Exception handler
             else 
                 console.error 'UNCONTROLLED ERROR:'
                 console.error err
-                console.error err.stack
+                console.error 'stack:',err.stack
                 process.exit 3
         

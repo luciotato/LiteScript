@@ -15,8 +15,8 @@ Dependencies
         importInfo:ImportParameterInfo #: .name, .globalImport .interface - info passed to new
         dirname:string #: path.dirname(importParameter)
         extension:string #: path.extname(importParameter)
-        basename:string #: path.basname(importParameter, ext) #with out extensions
-        sourcename:string #: path.basname(importParameter, ext) #with  extensions
+        basename:string #: path.basname(importParameter, ext) #without extensions
+        sourcename:string #: path.basname(importParameter, ext) #with extensions
         hasPath # true if starts with '.' or '/'
         isCore # true if it's a core node module as 'fs' or 'path'
         isLite #: true is extension is '.lite'|'.lite.md' 
@@ -24,7 +24,7 @@ Dependencies
         relPath:string # path.relative(basePath, this.dirname); //relative to basePath
         relFilename: string
         outFilename: string # output file for code production
-        outRelFilename: string # path.relative(options.outBasePath, this.outFilename); //relative to basePath
+        outRelFilename: string # path.relative(options.outBasePath, this.outFilename); //relative to options.outBasePath
         outExtension: string
         outFileIsNewer: boolean # true if generated file is newer than source
         interfaceFile: string #: interface file (.[auto-]interface.md) declaring exports cache
@@ -38,13 +38,13 @@ Dependencies
         this.importInfo = info;
         this.filename = name
         this.dirname = path.resolve(path.dirname(name))
-        this.hasPath = name[0] in [path.delimiter,'.']
+        this.hasPath = name[0] in [path.sep,'.']
         this.sourcename = path.basename(name) 
         this.extension = path.extname(name)
         this.basename = path.basename(name,this.extension) 
 
         #remove .lite from double extension .lite.md
-        this.basename = this.basename.replace(/.lite$/,"")
+        this.basename = this.basename.replace(/\.lite$/,"")
 
 
 #### method searchModule(importingModuleFileInfo, options )
@@ -57,7 +57,11 @@ Dependencies
         #log.debug "searchModule #{JSON.stringify(this)}"
 
         default options = 
+            #ifdef PROD_C
+            target: 'c'
+            #else
             target: 'js'
+            #endif
         
         declare on options
             basePath,outBasePath,browser
@@ -100,9 +104,11 @@ we search the module
             //log.debug full
 
             if not found
-                log.throwControled '#{importingModuleFileInfo.relFilename}: Module not found: #{this.importInfo.name}\n'
-                                    +'\tSearched as: #{this.importInfo.name} (options.browser=#{options.browser})\n'
-                                    +'\t#{search}(.lite.md|.md|.interface.md|.js)]'
+                log.throwControled """
+                    #{importingModuleFileInfo.relFilename}: Module not found: #{this.importInfo.name}
+                    \tSearched as: #{this.importInfo.name}(.lite.md|.md|.interface.md|.js) (options.browser=#{options.browser})
+                    \t#{search.join("\n\t")}
+                    """
 
         end if
 
@@ -199,6 +205,10 @@ Check if interface cache is updated
 ### export helper function relName(filename,basePath)
         //relative to basePath
         return path.relative(basePath, filename)
+
+### export helper function dirName(filename)
+        //relative to basePath
+        return path.dirname(filename)
     
 ----------
 

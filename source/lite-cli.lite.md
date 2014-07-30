@@ -3,7 +3,7 @@
     global import path,fs
     import Args
 
-    var VERSION = '0.7.0'
+    var VERSION = '0.7.9'
 
 ## usage, module vars
 
@@ -12,15 +12,14 @@
     LiteScript v#{VERSION}
     
     Usage: 
-            lite -compile mainModule.lite.md [options]
+            lite mainModule.lite.md [options]
             lite -run mainModule.lite.md [options]
 
-    This command will launch the LiteScript Compiler on mainModule.lite.md
+    Default action is to compile main module and its dependent/imported modules.
     
     options are:
     -r, -run         compile & run .lite.md file
-    -c, -compile     compile project, mainModule & all dependent files
-    -o dir           output dir. Default is '.'
+    -o dir           output dir. Default is './out'
     -b, -browser     compile for a browser environment (window instead of global, no process, etc)
     -v, -verbose     verbose level, default is 0 (0-3)
     -w, -warning     warning level, default is 1 (0-1)
@@ -35,7 +34,6 @@
     -nm, -nomap      do not generate sourcemap
     -noval           skip property name validation
     -D NAME -D NAME  Defines names for preprocessing with #ifdef
-    -u, -use vX.Y.Z  select LiteScript Compiler Version to use (devel)
     -d, -debug       enable full compiler debug log file at 'out/debug.log'
     -run -debug      when -run used with -debug, launch compiled file with: node --debug-brk 
     
@@ -77,14 +75,10 @@ Check for -run
             compileAndRunOption = true
             compileAndRunParams = args.splice(args.lastIndex) #remove params after --run
 
-get compiler version to --use
-
-        var use = args.value('u','use')
-
 Check for other options
 
         var options = 
-            outDir  : path.resolve(args.value('o') or '.') //output dir
+            outDir  : path.resolve(args.value('o') or './out') //output dir
             verbose : Number(args.value('v',"verbose") or 0) 
             warning : Number(args.value('w',"warning") or 1)
             comments: Number(args.value('comment',"comments") or 1) 
@@ -98,21 +92,12 @@ Check for other options
             es6     : args.option('es6',"harmony") 
             defines : []
 
-        var compilerPath = case 
-            when use like /^v.*/ then '../../liteCompiler-#{use}' 
-            when no use then '.'
-            else use
-        end 
-
         while args.value('D') into var newDef
             options.defines.push newDef
 
 load required version of LiteScript compiler
 
-        #declare global __dirname
-        #print "at: #{__dirname}, require '#{compilerPath}/Compiler.js'"
-
-        var Compiler = require('#{compilerPath}/Compiler.js');
+        var Compiler = require('./Compiler.js');
 
         declare valid Compiler.version
         declare valid Compiler.buildDate
@@ -142,8 +127,7 @@ show args
 
         //console.log(process.cwd());
         if options.verbose>1
-            print '\n\ncompiler path: #{compilerPath}'
-            print 'compiler options: #{JSON.stringify(options)}'
+            print '\n\ncompiler options: #{JSON.stringify(options)}'
             print 'cwd: #{process.cwd()}'
             print 'compile#{compileAndRunOption?" and run":""}: #{mainModuleName}'
             if options.debug, print color.yellow,"GENERATING COMPILER DEBUG AT out/debug.log",color.normal

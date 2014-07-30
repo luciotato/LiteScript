@@ -1,8 +1,19 @@
 #!/bin/bash
-#this bash script compiles code using v0.8 compiler
+# use v08-js compiler to
+#
+# generate: js code for v08-lite-to-js compiler 
+#
+# (v0.8-js self-compilation to itself)
 
-echo "using v0.8-to-js to generate (js code) v0.8 lite-to-js compiler"
-OUT="../../generated/js/v0.8/lite-to-js"
+OUT="../../generated-js/v0.8/lite-to-js"
+
+#create js code
+targetLang="js"
+
+#for the lite-to-js compiler
+targetTarget="js"
+
+echo "using v0.8-to-js to generate (js code) v0.8 lite-to-js compiler (v08 self compilation)"
 
 #DBRK="--debug-brk"
 

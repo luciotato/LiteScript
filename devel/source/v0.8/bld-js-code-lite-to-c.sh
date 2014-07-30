@@ -1,9 +1,24 @@
 #!/bin/bash
-#this bash script compiles code using v0.8 compiler
+# use v08-js compiler to
+#
+# generate: js code for v08-lite-to-c compiler 
+#
+# (v0.8-js self-compilation to v08-js lite-to-c compiler)
 
-echo "using v0.8-to-js to generate (js code) v0.8 lite-to-c compiler"
-OUT="../../generated/js/v0.8/lite-to-c"
-if node ../../util/liteVersion -use v0.8/lite-to-js js_lite -D PROD_C -v 1 -o $OUT; then 
-    echo "generated OK (js code) lite-to-c v0.8"
+OUT="../../generated-js/v0.8/lite-to-c"
+
+#create js code
+targetLang="js"
+
+#for the lite-to-c compiler
+targetTarget="c"
+
+_lite="_lite"
+up3=$(echo $targetTarget | tr '[:lower:]' '[:upper:]')
+echo "----------------------"
+echo "using v0.8-to-$targetLang to generate ($targetLang code) v0.8 lite-to-$targetTarget compiler"
+echo "----------------------"
+if node ../../util/liteVersion -use v0.8/lite-to-$targetLang $targetLang$_lite -v 1 -D PROD_$up3 -o $OUT; then 
+    echo "generated OK ($targetLang code) lite-to-$targetTarget v0.8"
     echo "at $OUT"
 fi

@@ -34,20 +34,34 @@ echo dest dir: ${out}
 mkdir -p ${out}
 
 #compile lite-cli (command line interface) v${VERSION} using ${PREV} version, w/o comments or mapsource
-node lite-js -use v${PREV} -noval -nomap -comments 0 -compile ../source-v${VERSION}/lite-cli -o ${out}/lib
+node liteVersion -use v${PREV}/lite-to-js -noval -nomap -comments 0  ../source/v${VERSION}/lite-cli -o ${out}/lib
 
 #compile main Compiler ${VERSION} using ${PREV} version, w/o comments or mapsource
-node lite-js -use v${PREV} -noval -nomap -comments 0 -compile ../source-v${VERSION}/Compiler -o ${out}/lib
+node liteVersion -use v${PREV}/lite-to-js -nomap  ../source/v${VERSION}/Compiler -o ${out}/lib
 
 #copy if newer: lite (#!/usr/bin/env node), calls lite-cli.js
 cp -u lite ${out}/lib/lite
 chmod 777 ${out}/lib/lite
 
-#test-extra - run all files named extra-check*.lite.md
-${out}/lib/lite -es6 -run test-extras
+#copy v0.x/package.json to Litescript root
+cp ../source/v${VERSION}/package.json ../..
+
+#extra tests
+
+#check version consistency
+
+node liteVersion -use v${PREV}/lite-to-js -nomap tests/extra-check-version -o out
+node --harmony out/extra-check-version
+rm out/extra-check-version.js
+
+#test nice functions
+
+node liteVersion -use v${PREV}/lite-to-js -nomap tests/extra-nice-function -o out
+node --harmony out/extra-nice-function
+rm out/extra-nice-function.js
 
 #test compiler at ${out}/lib
-node test -compiler-path ./${out}/lib
+node test -use $VERSION
 
 echo files created at: ${out}/
 

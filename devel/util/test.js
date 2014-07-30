@@ -1,5 +1,3 @@
-var DEFAULT_VERSION='0.6'
-
 var fs = require('fs');
 var path = require('path');
 var fsUtil = require('./fsUtil');
@@ -240,6 +238,28 @@ function testFile(filename)	{
 	}	
 }
 
+function separ(){console.error(normal+'---------------------------------');}
+
+function runTestsFromDir(testPath){
+
+    separ();
+    console.error('Starting tests from dir '+testPath+'/*');
+    separ();
+
+    var files=fs.readdirSync(testPath);
+    for(var i=0;i<files.length;i++){
+        filename=path.join(testPath,files[i]);
+        //console.error(filename,path.extname(filename));
+        if (path.extname(filename)==='.lite'
+            && (filter===undefined || filename.indexOf(filter)>=0))      
+                testFile(filename);
+    };
+
+    separ();
+    testOptions.verbose>=1 && console.error('End tests from dir ',testPath);
+    testOptions.verbose>=1 && console.error('---------------------------------');
+}
+
 //--------------
 // MAIN
 //--------------
@@ -247,17 +267,30 @@ function testFile(filename)	{
 Process all .lite files in test/*
 */
 
+console.log("------------");
+console.log("start test.js");
+console.log("------------");
+
 // get command line options
 var args = new Args(process.argv);
 
-var use = args.value('u','use')||DEFAULT_VERSION 
+var use = args.value('u','use') 
+if (!use) {
+    console.log('INVALID ARGUMENTS\nusage: node test -use 0.x\n');
+    process.exit(1);
+};
 if (use[0]==='v') use=use.slice(1);
 
-var compilerPath = args.value('comppath','compiler-path')||('../liteCompiler-v'+use)
+var compilerPath = args.value('comppath','compiler-path')||'./out/lib';
+if (!compilerPath) {
+    console.log('INVALID ARGUMENTS\nusage: node test -version 0.x -compiler-path ../out/lib\n');
+    process.exit(1);
+};
 
 var outDir = args.value('o','outdir');
 
-compilerOptions.debug = args.option('d','debug')
+compilerOptions.debugEnabled = args.option('d','debug');
+compilerOptions.debug = compilerOptions.debugEnabled;
 testOptions.verbose = args.value('v','verbose')||0;
 
 if (args[0]){
@@ -269,8 +302,6 @@ if (args.length){
 	console.error('invalid argument:', args.join(' '));	
 	process.exit(2);
 }
-
-function separ(){console.error(normal+'---------------------------------');}
 
 separ();
 console.error('TEST using compiler at',compilerPath);
@@ -287,24 +318,12 @@ console.error('compiler v',compiler.version);
 console.error('---------------------------------');
 console.error("cwd:",process.cwd())
 
-var testPath = 'test-v'+use;
-if (!fsUtil.dirExists(testPath)) testPath=testPath.slice(0,testPath.lastIndexOf('.')); //remove PATCH, keep major.minor
+runTestsFromDir('tests/allVersions');
+runTestsFromDir('tests/v'+use);
 
-console.error('Starting tests from dir '+testPath+'/*');
-
-var files=fs.readdirSync(testPath);
-for(var i=0;i<files.length;i++){
-	filename=path.join(testPath,files[i]);
-	//console.error(filename,path.extname(filename));
-	if (path.extname(filename)==='.lite'
-		&& (filter===undefined || filename.indexOf(filter)>=0))		 
-			testFile(filename);
-};
-
-separ();
-testOptions.verbose>=1 && console.error('End tests from dir test-'+use);
-testOptions.verbose>=1 && console.error('---------------------------------');
 //console.timeEnd("tests")
+
+
 console.error(count.OK+count.FAILED + ' tests performed');
 count.OK && console.error(green,count.OK,'tests OK');
 count.FAILED && console.error(red,count.FAILED,' TEST(S) FAILED!');

@@ -98,8 +98,10 @@ output:
 
 		default filename = 'unnamed'
 
-        declare on options version
+        declare on options version,debugEnabled
         options.version = version #add version to options
+
+        if options.debugEnabled, log.options.debug.enabled = true
 
         var project = new Project(filename, options )
 

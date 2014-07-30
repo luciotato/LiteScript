@@ -74,7 +74,7 @@ utility methods to **req**uire tokens and allow **opt**ional ones.
 
 ### Dependencies 
 
-    import ASTBase, logger, UniqueID, Strings
+    import ASTBase, logger, UniqueID
 
     shim import Map, PMREX
 
@@ -133,17 +133,16 @@ for each syntax construction the compiler accepts.
 This handles `print` followed by an optional comma separated list of expressions
 
       properties
-        args: Expression array
+        args: array of Expression 
 
       method parse()
-        this.req 'print'
+        .req 'print'
 
 At this point we lock because it is definitely a `print` statement. Failure to parse the expression 
 from this point is a syntax error.
 
-        this.lock()
-        this.args = this.optSeparatedList(Expression,",")
-
+        .lock()
+        .args = this.optSeparatedList(Expression,",")
 
 ### export helper class VarDeclList extends ASTBase
 
@@ -1499,7 +1498,7 @@ so remember **not to** mentally translate `not` to js `!`
 UnaryOper
 ---------
 
-`UnaryOper: ('-'|'+'|new|type of|typeof|not|no|'~')`
+`UnaryOper: ('-'|'+'|new|type of|typeof|not|no|bitnot)`
 
 A Unary Oper is an operator acting on a single operand.
 Unary Oper extends Oper, so both are `instance of Oper`
@@ -1514,7 +1513,7 @@ Examples:
 5. `no`      *'falsey' check*       `if no options then options={}` 
 6. `~`       *bit-unary-negation*   `a = ~xC0 + 5`
 
-    var unaryOperators = ['new','-','no','not','type','typeof','~','+']
+    var unaryOperators = ['new','-','no','not','type','typeof','bitnot','+']
 
     public class UnaryOper extends Oper
 

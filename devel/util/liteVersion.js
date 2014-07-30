@@ -53,7 +53,7 @@
 //Check for other options
 
        var options = {
-           outDir: path.resolve(args.value('o') || '.'), 
+           outDir: path.resolve(args.value('o') || 'out'), 
            verboseLevel: Number(args.value('v', "verbose")||defaultVerbose), 
            warningLevel: Number(args.value('w', "warning")||1), 
            debugEnabled: args.option('d', "debug"), 
@@ -77,7 +77,7 @@
            process.exit(2);
        };
 
-       var compilerPath = '../generated/js/'+useVersion;
+       var compilerPath = '../generated-js/'+useVersion;
 
         //no args should be left
        //if args.length

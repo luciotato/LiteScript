@@ -9,7 +9,7 @@ and comma or semicolon **Separated Lists** of symbols.
 Dependencies
 
     import Parser, ControlledError
-    import logger, Strings 
+    import logger
     
     shim import LiteCore, Map
 
@@ -21,6 +21,7 @@ It contains basic functions to parse a token stream.
 #### properties
 
         parent: ASTBase 
+        childs: array of ASTBase
 
         name:string, keyword:string
 
@@ -533,7 +534,7 @@ skip empty items
 
 if it is the first thing in the line, out indentation
 
-          if not rawOut.currLine and .indent > 0
+          if rawOut.currLine.length is 0  and .indent > 0
               rawOut.put String.spaces(.indent)
 
 if it is an AST node, call .produce()
@@ -656,86 +657,6 @@ Note: check if we can remove "outLineAsComment" and use this instead
         for i=fromLineNum to upTo
             .outSourceLineAsComment i
 
-/*      
-#### helper method outLineAsComment(preComment,lineInx)
-out a full source line as comment into produced code
-
-        if no .lexer.options.comments, return 
-
-manage optional parameters
-
-        if no lineInx
-          lineInx = preComment
-          preComment = ""
-        else
-          preComment="#{preComment}: "
-
-validate index
-
-        if no .lexer, return logger.error("ASTBase.outLineAsComment #{lineInx}: NO LEXER")
-
-        var line = .lexer.infoLines[lineInx]
-        if no line, return logger.error("ASTBase.outLineAsComment #{lineInx}: NO LINE")
-
-        if line.type is Parser.LineTypes.BLANK
-            .lexer.outCode.blankLine
-            return
-
-out as comment
-
-        var prepend=""
-        if preComment or not line.text.startsWith("//"), prepend="// "
-        if no .lexer.outCode.currLine, prepend="#{String.spaces(line.indent)}#{prepend}"
-        if preComment or line.text, .lexer.outCode.put "#{prepend}#{preComment}#{line.text}"
-
-        .lexer.outCode.startNewLine
-
-        .lexer.outCode.lastOutCommentLine = lineInx
-
-*/
-
-/*
-#### helper method outLinesAsComment(fromLine,toLine)
-
-        if no .lexer.options.comments, return 
-
-        # if line has something and is not spaces
-        if .lexer.outCode.currLine and .lexer.outCode.currLine.trim()
-            .lexer.outCode.startNewLine()
-
-        .lexer.outCode.currLine = undefined #clear indents
-
-        for i=fromLine to toLine
-            .outLineAsComment i
-
-
-#### helper method outPrevLinesComments(startFrom) 
-
-outPrevLinesComments helper method: output comments from previous lines
-before the statement
-
-      if no .lexer.options.comments, return 
-
-      var inx = startFrom or .lineInx or 0
-      if inx<1, return
-
-      default .lexer.outCode.lastOutCommentLine = -1
-
-find comment lines in the previous lines of code. 
-
-      var preInx = inx
-      while preInx and preInx>.lexer.outCode.lastOutCommentLine 
-          preInx--
-          if .lexer.infoLines[preInx].type is Parser.LineTypes.CODE 
-              preInx++
-              break
-
-Output prev comments lines (also blank lines)
-
-      .outLinesAsComment preInx, inx-1
-
-    #end method
-*/
 
 #### helper method getEOLComment() 
 getEOLComment: get the comment at the end of the line
@@ -769,25 +690,6 @@ show indented messaged for debugging
         return String.spaces(indent)
 
     
-/*
-#### helper method getRootNode()
-
-**getRootNode** method moves up in the AST up to the node holding the global scope ("root").
-"root" node has parent = Project 
-
-        var node = this
-        while node.parent instanceof ASTBase
-            node = node.parent # move up
-        return node
-
-#### helper method compilerVar(name) 
-
-helper function compilerVar(name)
-return root.compilerVars.members.get(name)
-
-        return .lexer.project.compilerVar(name) 
-*/
-
     end class ASTBase
 
 

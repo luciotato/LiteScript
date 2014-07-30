@@ -1,1 +1,0 @@
-dist/Debug/GNU-Linux-x86/ctest ../../../source-v0.8/litec -v 1 -o lite-out -D PROD_C

@@ -16,7 +16,7 @@ MAIN=$(pwd)
 cd -
 
 #get devel source folder /devel/source-v${VERSION} 
-cd ../source-v${VERSION} 
+cd ../source/v${VERSION} 
 SRCVRS=$(pwd)
 cd -
 

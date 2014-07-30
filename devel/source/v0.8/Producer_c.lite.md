@@ -97,7 +97,7 @@ create _dispatcher.c & .h
             Environment.externalCacheSave '#{dispatcherModule.fileInfo.outFilename.slice(0,-1)}h',resultLines
         */
 
-        logger.info "#{color.green}[OK] -> #{dispatcherModule.fileInfo.outRelFilename} #{color.normal}"
+        logger.msg "#{color.green}[OK] -> #{dispatcherModule.fileInfo.outRelFilename} #{color.normal}"
         logger.extra #blank line
 
     end function
@@ -124,7 +124,7 @@ _dispatcher.h
             {h:1},NL
             '#ifndef #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL
             '#define #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL,NL
-            '#include "../core/LiteC-core.h"',NL,NL,NL
+            '#include "LiteC-core.h"',NL,NL,NL
 
 LiteC__init extern declaration
 
@@ -731,6 +731,8 @@ A "Body" is an ordered list of statements.
 
 #### method produceDeclaredExternProps(parentName,forcePublic)
 
+        if no .statements, return //interface only
+
         var prefix = parentName? "#{parentName}_" else ""
 
         // add each declared prop as a extern prefixed var
@@ -765,6 +767,8 @@ A "Body" is an ordered list of statements.
 
 before main function,
 produce body sustance: vars & other functions declarations
+        
+        if no .statements, return //just interface
 
         var produceSecond: array of Grammar.Statement = []
         var produceThird: array of Grammar.Statement = []
@@ -810,6 +814,8 @@ produce body sustance: vars & other functions declarations
 
 
 #### method produceMainFunctionBody(prefix)
+
+        if no .statements, return //just interface
 
 First: register user classes
 
@@ -1048,7 +1054,7 @@ or the only Operand of a unary oper.
         else if .name instance of Grammar.ParenExpression
             declare .name:Grammar.ParenExpression
             .name.expr.produceType = .produceType
-            .out .name.expr, .accessors
+            .out '(', .name.expr, ')', .accessors
 
         else //other
             .out .name, .accessors
@@ -1152,8 +1158,8 @@ default mechanism to handle 'negated' operand
 
 else -if NEGATED- we add `!( )` to the expression
 
-                prepend ="!("
-                append=")"
+            prepend ="!("
+            append=")"
 
 Check for special cases: 
 
@@ -1234,11 +1240,11 @@ C: `any __or1;`
 modulus is only for integers. for doubles, you need fmod (and link the math.lib)
 we convert to int, as js seems to do.
 
-          when '%'
+          when '%',"<<",">>","bitand","bitor","bitxor"
             if .produceType and .produceType isnt 'Number', .out 'any_number('
             .left.produceType = 'Number'
             .right.produceType = 'Number'
-            .out '(int64_t)',.left,' % (int64_t)',.right
+            .out '(int64_t)',.left,' ',operTranslate(oper),' (int64_t)',.right
             if .produceType and .produceType isnt 'Number', .out ')'
 
 string concat: & 
@@ -1730,7 +1736,7 @@ and next property access should be on defined members of the type
 
         //add arguments[] 
         if args and args.length
-            callParams.push "#{args.length},",pre,{CSL:args},post
+            callParams.push "#{args.length},",pre,{CSL:args, post:'\n'},post
             //,freeForm:true,indent:String.spaces(8)
         else
             callParams.push "0,NULL"
@@ -2051,7 +2057,7 @@ include mainVar.name in a bracket block to contain scope
         else 
             .out .body
 
-        .out "}};",{COMMENT:["end for each in ",.iterable]},NL
+        .out "}};",{COMMENT:"end for each in"},NL
 
 
 ####  method produceForMap(listName)
@@ -2078,7 +2084,7 @@ include mainVar.name in a bracket block to contain scope
         else 
           .out .body
 
-        .out "}};",{COMMENT:["end for each in map ",.iterable]},NL
+        .out "}};",{COMMENT:"end for each in map"},NL
 
 ### Append to class Grammar.ForIndexNumeric
 ### Variant 3) 'for index=...' to create *numeric loops* 
@@ -2315,6 +2321,15 @@ C99 does only support "static" initializers for structs.
                 NL,"}"
         
         .out ")",NL
+
+
+### Append to class Grammar.RegExpLiteral ###
+
+
+      method produce()
+
+        .throwError "generating C-code for RegExp Literals not supported yet. Use PMREX paliatives"
+
 
 ### Append to class Grammar.ConstructorDeclaration ###
 

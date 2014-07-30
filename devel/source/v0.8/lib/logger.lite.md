@@ -1,19 +1,14 @@
 Logger Utility
 ==============
 
-    import color, ControlledError, GeneralOptions
 
 Dependencies:
 -------------
 
-    #ifndef PROD_C
+    import color, ControlledError, GeneralOptions
 
-    if type of process isnt 'undefined' #only import if we're on node
-        global import fs
-        import mkPath 
-
-    #endif
-
+    global import fs
+    import mkPath 
 
 ## Main namespace
 

@@ -1546,7 +1546,7 @@ Examples:
 5. `no`      *'falsey' check*       `if no options then options={}` 
 6. `~`       *bit-unary-negation*   `a = ~xC0 + 5`
 
-    var unaryOperators = ['new','-','no','not','type','typeof','~','+']
+    var unaryOperators = ['new','-','no','not','type','typeof','bitnot','+']
 
     public class UnaryOper extends Oper
 

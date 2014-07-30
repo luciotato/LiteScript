@@ -77,11 +77,13 @@ Module vars
 check if it's a node global module (if require() parameter do not start with '.' or './') 
 if compiling for node, and "global import" and no extension, asume global lib or core module
 
+        #ifndef TARGET_C //no "require hack" possible in .c
         if this.importInfo.globalImport and targetExt is "js"
-            # if compiling to node.js and global import ASSSUME core node module / installed node_modules
+            // if running on node.js and global import ASSSUME core node module / installed node_modules
             this.isCore = isBuiltInModule(this.base) #core module like 'fs' or 'path'
             this.isLite = false
             return 
+        #endif
 
 if parameter has no extension or extension is [.lite].md
 we search the module 
@@ -97,16 +99,27 @@ we search the module
             if this.hasPath #specific path indicated
                 search = [ path.resolve(importingModuleDir,this.importInfo.name)]
             else
-                #normal: search local ./ & .[projectDir]/lib
+                #normal: search local ./ & .[projectDir]/lib & .[projectDir]/interfaces
                 search = [ 
                     path.join(importingModuleDir, this.importInfo.name)
                     path.join(projectDir,'/lib',this.importInfo.name)
+                    path.join(projectDir,'/interfaces',this.importInfo.name)
+                    path.join(projectDir,'../lib',this.importInfo.name)
+                    path.join(projectDir,'../interfaces',this.importInfo.name)
                     ]
 
-                if targetExt is "c"
-                    // add Project/C_global_import if target is 'c'
-                    search.push path.join(projectDir,'/C_global_import',this.importInfo.name)
+if we're generating c-code a "global import" of core modules like "path" and "fs", 
+gets redirected to dir `ENV_C_global_import` or `../ENV_C_global_import`
 
+                if targetExt is 'c'
+                    // prepend Project/ENV_C_global_import to found "path" "fs" and other  
+                    // core node-js modules (migrated to Litescript and or native-c)
+                    search.unshift 
+                        path.join(projectDir,'/ENV_C_global_import',this.importInfo.name)
+                        path.join(projectDir,'../ENV_C_global_import',this.importInfo.name)
+                end if
+
+Now search the fille in all the locations/with all the extensions
 
             for each item in search 
                 for each ext in ['.lite.md','.md','.interface.md','.js'] 
@@ -276,7 +289,7 @@ Check if interface cache is updated
 Check for built in and global names
 return true if 'name' is a built-in node module
 
-        #ifdef PROD_C
+        #ifdef TARGET_C
         do nothing // if generating the compile-to-C compiler
         
         #else
@@ -312,7 +325,7 @@ return true if 'name' is a built-in node module
         if targetExt is 'c'
             return
         else
-            #ifdef PROD_C
+            #ifdef TARGET_C
             do nothing
             
             #else
@@ -321,8 +334,7 @@ return true if 'name' is a built-in node module
             
             catch e
                 logger.error "Environment.getGlobalObject '#{name}'"
-                declare valid e.stack
-                logger.error e.stack
+                logger.error 'stack:',e.stack
                 debugger
             
             #endif

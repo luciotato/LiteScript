@@ -18,6 +18,8 @@ Dependencies
       isForward
       isDummy
 
+      isPublic: boolean
+
      declare name affinity nameDecl
 
 #### constructor(name, options, node)
@@ -27,7 +29,7 @@ Dependencies
       .nodeDeclared = node
 
       declare on options
-        pointsTo:NameDeclaration, type, itemType, value, isForward, isDummy
+        pointsTo:NameDeclaration, type, itemType, returnType, value, isForward, isDummy
 
       if options 
 
@@ -39,6 +41,7 @@ effectively working as a pointer
         else 
           if options.type, .setMember('**proto**',options.type)
           if options.itemType, .setMember('**item type**',options.itemType)
+          if options.returnType, .setMember('**return type**',options.returnType)
           if options.hasOwnProperty('value'), .setMember('**value**',options.value)
             
         if options.isForward, .isForward = true
@@ -227,7 +230,7 @@ else, if it wasnt a forward declaration, then is a duplicated error
   
 #### helper method composedName() 
         var name = .name
-        if .parent and .parent.name not in ['prototype','Project Root Scope']
+        if .parent and .parent.name isnt 'prototype' and not .parent.name.endsWith(' Scope')
           name = .parent.name+'.'+name
         return name
 

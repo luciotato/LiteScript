@@ -197,8 +197,8 @@ if it is "boolean not", add parentheses, because js has a different precedence f
 
 add a space if the unary operator is a word. Example `typeof`
 
-        else if /\w/.test(translated) 
-            translated+=" "
+        else if translated.charAt(0)>='a' and translated.charAt(0)<='z'
+            translated &= " "
 
         .out translated, prepend, .right, append
 
@@ -675,26 +675,29 @@ There are 3 variants of `ForStatement` in LiteScript
 
       method produce() 
 
-        declare valid .variant.iterable
-        declare valid .variant.produce
-
-Pre-For code. If required, store the iterable in a temp var.
-(prettier generated code) Only if the iterable is a complex expression, 
-(if it can have side-effects) we store it in a temp 
-var in order to avoid calling it twice. Else, we use it as is.
-
-        var iterable:Grammar.Expression = .variant.iterable
-        if iterable 
-            declare valid iterable.root.name.hasSideEffects
-            if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
-                iterable = UniqueID.getVarName('list')  #unique temp iterable var name
-                .out "var ",iterable,"=",.variant.iterable,";",NL
-
-        .variant.produce(iterable)
+        .variant.produce()
 
 Since al 3 cases are closed with '}; //comment', we skip statement semicolon
 
         .skipSemiColon = true
+
+Pre-For code. If required, store the iterable in a temp var.
+(prettier generated code) 
+Only do it if the iterable is a complex expression, if it can have side-effects or it's a literal.
+We create a temp var to assign the iterable expression to
+
+    Append to class Grammar.Expression
+
+      method prepareTempVar() returns string
+
+        declare .root.name: Grammar.VariableRef
+
+        if .operandCount>1 or .root.name.hasSideEffects or .root.name instanceof Grammar.Literal
+            var tempVarIterable = UniqueID.getVarName('list')  #unique temp iterable var name
+            .out "var ",tempVarIterable,"=",this,";",NL
+            return tempVarIterable
+
+        return this
 
 
 ### Append to class Grammar.ForEachProperty
@@ -702,7 +705,9 @@ Since al 3 cases are closed with '}; //comment', we skip statement semicolon
 
 `ForEachProperty: for each [own] property name-VariableDecl in object-VariableRef`
 
-      method produce(iterable) 
+      method produce() 
+
+          var iterable = .iterable.prepareTempVar()
 
           if .mainVar
             .out "var ", .mainVar.name,"=undefined;",NL
@@ -728,23 +733,30 @@ Since al 3 cases are closed with '}; //comment', we skip statement semicolon
 
 `ForEachInArray: for each [index-VariableDecl,]item-VariableDecl in array-VariableRef`
 
-      method produce(iterable)
+      method produce()
 
-Create a default index var name if none was provided
+        var iterable = .iterable.prepareTempVar()
 
         if .isMap //new syntax "for each in map xx"
             return .produceInMap(iterable)
 
-        var indexVar = .indexVar
-        if no indexVar
-          indexVar = {name:.mainVar.name+'__inx', assignedValue:0} #default index var name
+Create a default index var name if none was provided
+
+        var indexVarName, startValue
+
+        if no .indexVar
+            indexVarName = .mainVar.name & '__inx'  #default index var name
+            startValue = "0"
+        else
+            indexVarName = .indexVar.name
+            startValue = .indexVar.assignedValue or "0"
 
         .out "for( var "
-                , indexVar.name,"=",indexVar.assignedValue or "0",",",.mainVar.name
-                ," ; ",indexVar.name,"<",iterable,".length"
-                ," ; ",indexVar.name,"++){"
+                , indexVarName,"=",startValue,",",.mainVar.name
+                ," ; ",indexVarName,"<",iterable,".length"
+                ," ; ",indexVarName,"++){"
 
-        .body.out .mainVar.name,"=",iterable,"[",indexVar.name,"];",NL
+        .body.out .mainVar.name,"=",iterable,"[",indexVarName,"];",NL
 
         if .where 
           .out '  ',.where,"{",.body,"}"
@@ -761,7 +773,7 @@ When Map is implemented using js "Object"
 
           var indexVarName:string
           if no .indexVar
-            indexVarName = .mainVar.name+'__propName'
+            indexVarName = .mainVar.name & '__propName'
           else
             indexVarName = .indexVar.name
 
@@ -790,9 +802,10 @@ When Map is implemented using js "Object"
 Examples: `for n=0 while n<10`, `for n=0 to 9`
 Handle by using a js/C standard for(;;){} loop
 
-      method produce(iterable)
+      method produce()
 
         var isToDownTo: boolean
+        var endTempVarName
 
         if .conditionPrefix in['to','down']
             
@@ -801,7 +814,7 @@ Handle by using a js/C standard for(;;){} loop
 store endExpression in a temp var. 
 For loops "to/down to" evaluate end expresion only once
 
-            var endTempVarName = UniqueID.getVarName('end')
+            endTempVarName = UniqueID.getVarName('end')
             .out "var ",endTempVarName,"=",.endExpression,";",NL
 
         end if
@@ -1004,7 +1017,7 @@ A `FreeObjectLiteral` is an object definition using key/value pairs, but in free
           if .hasAdjective("shim"), .out "if (!",prefix,.name,")",NL
 
           if .definePropItems #we should code Object.defineProperty
-              prefix[1] = prefix[1].replace(/\.$/,"") #remove extra dot
+              if prefix[1].slice(-1) is '.', prefix[1] = prefix[1].slice(0,-1) #remove extra dot
               .out "Object.defineProperty(",NL,
                     prefix, ",'",.name,"',{value:function",generatorMark
           else
@@ -1019,7 +1032,8 @@ if 'nice', produce default nice body, and then the generator header for real bod
 
       var isNice = .hasAdjective("nice") and not (isConstructor or .hasAdjective("shim") or .definePropItems or .hasAdjective("generator"))
       if isNice
-          var argsArray = (.paramsDeclarations or []).concat["__callback"]
+          var argsArray:array = .paramsDeclarations or []
+          argsArray.push "__callback"
           .out "(", {CSL:argsArray},"){", .getEOLComment(),NL
           .out '  nicegen(this, ',prefix,.name,"_generator, arguments);",NL
           .out "};",NL
@@ -1085,8 +1099,10 @@ if params defaults where included, we assign default values to arguments
 close the function, add source map for function default "return undefined" execution point
 
       .out "}"
+      #ifdef PROD_JS // if compile-to-js
       if .lexer.outCode.sourceMap
           .lexer.outCode.sourceMap.add ( .EndFnLineNum, 0, .lexer.outCode.lineNum-1, 0)
+      #endif
 
 --------------------
 ### Append to class Grammar.PrintStatement ###
@@ -1331,7 +1347,7 @@ Check location
         var varRef = .fnCall.varRef
         //from .varRef calculate object owner and method name 
 
-        var thisValue='null'
+        var thisValue=['null']
         var fnName = varRef.name #default if no accessors 
 
         if varRef.accessors
@@ -1347,7 +1363,8 @@ Check location
                     .throwError 'yield needs a clear method name. Example: "yield until obj.method(10)". redefine yield parameter.'
 
                 fnName = "'#{varRef.accessors[inx].name}'"
-                thisValue = [varRef.name].concat(varRef.accessors.slice(0,inx))
+                thisValue = [varRef.name]
+                thisValue.push varRef.accessors.slice(0,inx)
 
 
         if .specifier is 'until'
@@ -1414,13 +1431,17 @@ Helper methods and properties, valid for all nodes
 
 #### properties skipSemiColon 
 
-#### helper method assignIfUndefined(name,value) 
+#### helper method assignIfUndefined(name, value: Grammar.Expression) 
           
           declare valid value.root.name.name
           #do nothing if value is 'undefined'
-          if value.root.name.name is 'undefined' #Expression->Operand->VariableRef->name
-            .out {COMMENT:[name,": undefined",NL]}
-            return
+    
+          #Expression->Operand->VariableRef->name
+          var varRef:Grammar.VariableRef = value.root.name
+          if varRef.constructor is Grammar.VariableRef
+              if varRef.name is 'undefined' 
+                  .out {COMMENT:name},": undefined",NL
+                  return
 
           .out "if(",name,'===undefined) ',name,"=",value,";",NL
 

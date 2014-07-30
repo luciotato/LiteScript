@@ -1,0 +1,5 @@
+for i in {1..30}
+do
+   dist/Release/GNU-Linux-x86/lite-to-c ../../../../../source/v0.8/c_lite -o lite-out -v 0 -perf 1 -D PROD_C -D FROM_C
+done
+

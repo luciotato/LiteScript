@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <data xmlns="http://www.netbeans.org/ns/make-project-private/1">
+        <activeConfTypeElem>1</activeConfTypeElem>
+        <activeConfIndexElem>1</activeConfIndexElem>
+    </data>
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="21">
+        <file>
+            <url>core/LiteC-core.h</url>
+            <bookmark id="1">
+                <name/>
+                <line>202</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>core/fs.c</url>
+            <bookmark id="2">
+                <name/>
+                <line>21</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>core/any.h</url>
+            <bookmark id="8">
+                <name/>
+                <line>55</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>generated/Parser.c</url>
+            <bookmark id="15">
+                <name/>
+                <line>2270</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>generated/Grammar.c</url>
+            <bookmark id="17">
+                <name/>
+                <line>6447</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>core/LiteC-core.c</url>
+            <bookmark id="21">
+                <name/>
+                <line>1054</line>
+                <key/>
+            </bookmark>
+            <bookmark id="20">
+                <name/>
+                <line>1176</line>
+                <key/>
+            </bookmark>
+            <bookmark id="13">
+                <name/>
+                <line>1227</line>
+                <key/>
+            </bookmark>
+        </file>
+    </editor-bookmarks>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/Grammar.c</file>
+            <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/ASTBase.c</file>
+        </group>
+    </open-files>
+</project-private>

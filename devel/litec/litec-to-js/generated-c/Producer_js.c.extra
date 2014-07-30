@@ -1,0 +1,2 @@
+//helper tempvars for 'or' expressions short-circuit evaluation
+any __or1,__or2,__or3,__or4,__or5,__or6,__or7,__or8,__or9,__or10,__or11,__or12,__or13,__or14,__or15,__or16,__or17,__or18,__or19,__or20;

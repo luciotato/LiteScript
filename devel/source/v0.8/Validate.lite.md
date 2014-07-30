@@ -21,7 +21,7 @@ methods to validate var & property names.
         ASTBase, Grammar
         Names, Environment
 
-    import logger, UniqueID, Strings
+    import logger, UniqueID
 
     shim import LiteCore, Map
 
@@ -352,8 +352,7 @@ Inform forward declarations not fulfilled, as errors
 
 ### export function walkAllNodesCalling(methodName:string)
 
-        var methodSymbol
-        methodSymbol = LiteCore.getSymbol(methodName)
+        var methodSymbol = LiteCore.getSymbol(methodName)
 
 For all modules, for each node, if the specific AST node has methodName, call it
 
@@ -443,12 +442,12 @@ b.3) "any" default type for vars
 
 Process the global scope declarations interface file: GlobalScopeJS|C.interface.md
 
-        processInterfaceFile '#{process.cwd()}/lib/GlobalScope#{project.options.target.toUpperCase()}'
+        processInterfaceFile 'GlobalScope#{project.options.target.toUpperCase()}'
 
 if we're compiling for node.js, add extra node global core objects, e.g: process, Buffer
 
         if project.options.target is 'js' and not project.options.browser
-            processInterfaceFile '#{process.cwd()}/lib/GlobalScopeNODE'
+            processInterfaceFile 'GlobalScopeNODE'
 
 Initial NameAffinity, err|xxxErr => type:Error
 
@@ -612,7 +611,7 @@ it's used when a pure.js module is imported by 'require'
 to convert required 'exports' to LiteScript compiler usable NameDeclarations
 Also to load the global scope with built-in objects
 
-        #ifdef PROD_C
+        #ifdef TARGET_C
         return
         #else
         var newMember:Names.Declaration
@@ -1037,64 +1036,6 @@ check if owner is class (namespace) or class.prototype (class)
         end if
 
 
-/*
-#### helper method tryGetOwnerDecl(options:Names.NameDeclOptions) returns Names.Declaration
-Used by properties & methods in the body of ClassDeclaration|AppendToDeclaration
-to get their 'owner', i.e., a Names.Declaration where they'll be added as members
-
-        var toNamespace, classRef
-        var ownerDecl 
-
-        declare valid .specifier
-
-        # get parent class/append to
-        var parent:Grammar.ClassDeclaration = .getParent(Grammar.ClassDeclaration)
-        if no parent
-          .throwError "'#{.specifier}' declaration outside 'class/append to' declaration. Check indent"
-
-Append to class|namespace
-
-        if parent instance of Grammar.AppendToDeclaration
-
-            #get varRefOwner from AppendToDeclaration
-            declare parent:Grammar.AppendToDeclaration
-
-            toNamespace = parent.toNamespace #if it was 'append to namespace'
-
-            classRef = parent.varRef
-            
-            #get referenced class/namespace
-            declare valid classRef.tryGetReference
-            if no classRef.tryGetReference() into ownerDecl
-                if options and options.informError, .sayErr "Append to: '#{classRef}'. Reference is not fully declared"
-              return
-
-        else # simpler direct ClassDeclaration / NamespaceDeclaration
-
-            if no parent.nameDecl into ownerDecl
-                 .sayErr "Unexpected. Class has no nameDecl"
-
-            classRef = ownerDecl
-
-            toNamespace = parent.constructor is Grammar.NamespaceDeclaration
-
-        end if
-
-
-check if owner is class (namespace) or class.prototype (class)
-
-        if toNamespace 
-            do nothing #'append to namespace'/'namespace x'. Members are added directly to owner
-        else
-          # Class: members are added to the prototype
-          # move to class prototype
-          if no ownerDecl.findOwnMember("prototype") into ownerDecl
-              if options and options.informError, .sayErr "Class '#{classRef}' has no .prototype"
-              return
-
-        return ownerDecl
-*/
-
 #### helper method callOnSubTree(methodSymbol,excludeClass) # recursive
 
 This is instance has the method, call the method on the instance
@@ -1385,8 +1326,10 @@ When producing C-code, an ArrayLiteral creates a "new(Array" at module level
      method getResultType
           return tryGetGlobalPrototype('Array')
 
+
 ### Append to class Grammar.ObjectLiteral ###
 
+/*
      properties nameDecl
 
      method declare
@@ -1399,17 +1342,23 @@ but it does not declare a valid type/class.
             .getParent(Grammar.Module).addToScope .nameDecl
         
         else
-            declare valid .parent.nameDecl
-            .nameDecl = .parent.nameDecl or .declareName(UniqueID.getVarName('*ObjectLiteral*'))
+            if .parent.hasProperty("nameDecl")
+                  .nameDecl = .parent.nameDecl 
+            else
+                  .nameDecl = .declareName(UniqueID.getVarName('*ObjectLiteral*'))
+*/
 
 When producing the LiteScript-to-C compiler, a ObjectLiteral's return type is 'Map string to any'
 
      method getResultType
 
-        if project.options.target is 'c' 
+          return tryGetGlobalPrototype( project.options.target is 'c'? 'Map' else 'Object')
+
+/*        if project.options.target is 'c' 
             return tryGetGlobalPrototype('Map')
         else
-            return .nameDecl
+            return  .nameDecl
+*/
 
 
 /*

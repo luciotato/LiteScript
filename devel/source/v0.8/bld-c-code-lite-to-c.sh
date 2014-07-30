@@ -1,14 +1,27 @@
 #!/bin/bash
-#this bash script compiles code using v0.8 compiler
+# use v08 compiler to
+#
+# generate: c code for v08-lite-to-c compiler -
+#
+# (v0.8 self-compilation, generate (c-code) litec-to-c compiler
 
-echo "using (js)v0.8-to-c to generate (c code) v0.8 lite-to-c compiler"
+OUT="../../litec/litec-to-c/generated-c"
 
-OUT="../../generated/c/v0.8/lite-to-c/generated"
+#create c code
+targetLang="c"
 
+#for the lite-to-c compiler
+targetTarget="c"
+
+#uncomment to debug compiler
 #DBRK="--debug-brk"
 
-if node $DBRK ../../util/liteVersion -use v0.8/lite-to-c c_lite -v 2 -D PROD_C -o $OUT; then 
-    echo "generated OK (c code) lite-to-c v0.8"
+_lite="_lite"
+up3=$(echo $targetTarget | tr '[:lower:]' '[:upper:]')
+echo "----------------------"
+echo "using v0.8-to-$targetLang to generate ($targetLang code) v0.8 lite-to-$targetTarget compiler"
+echo "----------------------"
+if node $DBRK ../../util/liteVersion -use v0.8/lite-to-$targetLang $targetLang$_lite -v 1 -D PROD_$up3 -o $OUT; then 
+    echo "generated OK ($targetLang code) lite-to-$targetTarget v0.8"
     echo "at $OUT"
-    cp -uv lib/GlobalScopeC.interface.md $OUT/../lib
 fi
