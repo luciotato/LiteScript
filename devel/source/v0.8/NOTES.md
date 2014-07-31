@@ -202,10 +202,10 @@ C:
 
     case
 
-        when foo>1 or foo<100
+        when foo>1 or foo<100:
           print "between 2 ad 99"
 
-        when a is 'bar'
+        when a is 'bar':
           print "a is: bar"
 
 
@@ -213,16 +213,16 @@ C:
 
     case foo
 
-        when > 2 and < 100
+        when > 2 and < 100:
             ...
 
-        when -2, -3, -7
+        when -2, -3, -7:
             ...
 
-        when => 100 and <=200 
+        when => 100 and <=200 :
             ...
 
-        when instance of Grammar.VarStatement
+        when instance of Grammar.VarStatement:
             ...
 
         [else fail with "Unexpected condition. match foo. No 'when clause' is true"]
@@ -1116,11 +1116,11 @@ how about?:
 CASE ?
 
             case actual.findOwnMember(name)
-                when instance of XX
+                when instance of XX:
                     list.push it
                     print it
                     wrap it
-                when is empty
+                when is empty:
                     print "not found"
 
             var result = actual.findOwnMember(name)

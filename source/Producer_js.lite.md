@@ -1340,10 +1340,10 @@ if we have a varRef, is a case over a value
 
             if .varRef
                 //case foo...
-                .out 'if (', {pre:['(',.varRef,'=='], CSL:whenSection.expressions, post:')', separator:'||'}
+                .out 'if (', {pre:['(',.varRef,'=='], CSL:whenSection.expressions, post:')', separator:'||', freeForm:1}
             else
                 //case when TRUE
-                .out 'if (', {pre:['('], CSL:whenSection.expressions, post:')', separator:'||'}
+                .out 'if (', {pre:['('], CSL:whenSection.expressions, post:')', separator:'||', freeForm:1}
                 
             .out '){',
                 whenSection.body, NL,

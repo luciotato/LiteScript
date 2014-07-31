@@ -3,6 +3,9 @@
 //Module Validate
 //-------------------------
 #include "Validate.c.extra"
+//-------------------------
+//NAMESPACE Validate
+//-------------------------
 var Validate_project;
 var Validate_globalScope;
 var Validate_nameAffinity;
@@ -151,11 +154,13 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //'declare' will create scopes, and vars in the scope. 
 //May inform 'DUPLICATES' and 'CASE MISMATCH' errors.
         //logger.info "- Process Declarations"
-        logger_info(undefined,1,(any_arr){any_LTR("- Process Declarations")
-        });
+        logger_info(undefined,1,(any_arr){
+        any_LTR("- Process Declarations")
+});
         //walkAllNodesCalling 'declare'
-        Validate_walkAllNodesCalling(undefined,1,(any_arr){any_LTR("declare")
-        });
+        Validate_walkAllNodesCalling(undefined,1,(any_arr){
+        any_LTR("declare")
+});
 ///*
 //#### Pass 1.1 Declare By Assignment
 //Walk the tree, and check assignments looking for: 'module.exports.x=x' and 'x.prototype.y = '.
@@ -165,8 +170,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //*/
 //#### Pass 1.2 connectImportRequire
         //logger.info "- Connect Imported"
-        logger_info(undefined,1,(any_arr){any_LTR("- Connect Imported")
-        });
+        logger_info(undefined,1,(any_arr){
+        any_LTR("- Connect Imported")
+});
 //validate public exports.
 //set module.exports with default export object if set
         //for each moduleNode:Grammar.Module in map project.moduleCache
@@ -200,9 +206,13 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             //if node.importedModule
             if (_anyToBool(PROP(importedModule_,node)))  {
               //var parent: ASTBase
-              var parent = undefined;
+              var 
+        parent = undefined
+;
               //var referenceNameDecl: Names.Declaration //var where to import exported module members
-              var referenceNameDecl = undefined; //var where to import exported module members
+              var 
+        referenceNameDecl = undefined
+; //var where to import exported module members
               //declare valid parent.nameDecl
               
 //1st, more common: if node is Grammar.ImportStatementItem
@@ -218,22 +228,27 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //'importedModule.exports' points to the class 'prototype'. 
             
                   //if node.getParent(Grammar.DeclareStatement) isnt undefined //is a "global declare"
-                  if (!__is(METHOD(getParent_,node)(node,1,(any_arr){Grammar_DeclareStatement
-                  }),undefined))  { //is a "global declare"
+                  if (!__is(METHOD(getParent_,node)(node,1,(any_arr){
+        Grammar_DeclareStatement
+}),undefined))  { //is a "global declare"
                         //var moveWhat = node.importedModule.exports
-                        var moveWhat = PROP(exports_,PROP(importedModule_,node));
+                        var 
+        moveWhat = PROP(exports_,PROP(importedModule_,node))
+;
                         //#if the module exports a "class-function", move to global with class name
                         //if moveWhat.findOwnMember('prototype') into var protoExportNameDecl 
                         var protoExportNameDecl=undefined;
-                        if (_anyToBool((protoExportNameDecl=METHOD(findOwnMember_,moveWhat)(moveWhat,1,(any_arr){any_LTR("prototype")
-                        }))))  {
+                        if (_anyToBool((protoExportNameDecl=METHOD(findOwnMember_,moveWhat)(moveWhat,1,(any_arr){
+        any_LTR("prototype")
+}))))  {
                             ////if it has a 'prototype'
                             ////replace 'prototype' (on module.exports) with the class name, and add as the class
                             //protoExportNameDecl.name = protoExportNameDecl.parent.name
                             PROP(name_,protoExportNameDecl) = PROP(name_,PROP(parent_,protoExportNameDecl));
                             //project.rootModule.addToScope protoExportNameDecl
-                            __call(addToScope_,PROP(rootModule_,Validate_project),1,(any_arr){protoExportNameDecl
-                            });
+                            __call(addToScope_,PROP(rootModule_,Validate_project),1,(any_arr){
+        protoExportNameDecl
+});
                         }
                       
                         //else
@@ -251,8 +266,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                                 nameDecl= __nvp->value;
                             
                                 //project.rootModule.addToScope nameDecl
-                                __call(addToScope_,PROP(rootModule_,Validate_project),1,(any_arr){nameDecl
-                                });
+                                __call(addToScope_,PROP(rootModule_,Validate_project),1,(any_arr){
+        nameDecl
+});
                             }};// end for each in map
                             
                         };
@@ -284,8 +300,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
               //if referenceNameDecl
               if (_anyToBool(referenceNameDecl))  {
                   //referenceNameDecl.makePointTo node.importedModule.exports
-                  METHOD(makePointTo_,referenceNameDecl)(referenceNameDecl,1,(any_arr){PROP(exports_,PROP(importedModule_,node))
-                  });
+                  METHOD(makePointTo_,referenceNameDecl)(referenceNameDecl,1,(any_arr){
+        PROP(exports_,PROP(importedModule_,node))
+});
               };
             };
           }};// end for each in
@@ -299,15 +316,18 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //"Append To" declaration to this point, where 'x.y.z' can be analyzed and a reference obtained.
 //Walk the tree, and check "Append To" Methods & Properties Declarations
         //logger.info "- Processing Append-To, extends"
-        logger_info(undefined,1,(any_arr){any_LTR("- Processing Append-To, extends")
-        });
+        logger_info(undefined,1,(any_arr){
+        any_LTR("- Processing Append-To, extends")
+});
         //walkAllNodesCalling 'processAppendToExtends'
-        Validate_walkAllNodesCalling(undefined,1,(any_arr){any_LTR("processAppendToExtends")
-        });
+        Validate_walkAllNodesCalling(undefined,1,(any_arr){
+        any_LTR("processAppendToExtends")
+});
 //#### Pass 2.0 Apply Name Affinity
         //logger.info "- Apply Name Affinity"
-        logger_info(undefined,1,(any_arr){any_LTR("- Apply Name Affinity")
-        });
+        logger_info(undefined,1,(any_arr){
+        any_LTR("- Apply Name Affinity")
+});
         //#first, try to assign type by "name affinity" 
         //#(only applies when type is not specified)
         //for each nameDecl in Names.allNameDeclarations 
@@ -322,11 +342,17 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //for each Names.Declaration try to find the declared 'type' (string) in the scope. 
 //Repeat until no conversions can be made.
         //logger.info "- Converting Types"
-        logger_info(undefined,1,(any_arr){any_LTR("- Converting Types")
-        });
+        logger_info(undefined,1,(any_arr){
+        any_LTR("- Converting Types")
+});
         //#now try de-referencing types
         //var pass=0, sumConverted=0, sumFailures=0, lastSumFailures=0
-        var pass = any_number(0), sumConverted = any_number(0), sumFailures = any_number(0), lastSumFailures = any_number(0);
+        var 
+        pass = any_number(0), 
+        sumConverted = any_number(0), 
+        sumFailures = any_number(0), 
+        lastSumFailures = any_number(0)
+;
         //#repeat until all converted
         //do
         do{
@@ -344,7 +370,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             for(int nameDecl__inx=0 ; nameDecl__inx<_list40.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list40);
             
                 //var result = nameDecl.processConvertTypes()
-                var result = METHOD(processConvertTypes_,nameDecl)(nameDecl,0,NULL);
+                var 
+        result = METHOD(processConvertTypes_,nameDecl)(nameDecl,0,NULL)
+;
                 //sumFailures += result.failures
                 sumFailures.value.number += _anyToNumber(PROP(failures_,result));
                 //sumConverted += result.converted
@@ -362,7 +390,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //if sumFailures #there was failures, inform al errors
         if (_anyToBool(sumFailures))  {// #there was failures, inform al errors
             //var opt = new Names.NameDeclOptions
-            var opt = new(Names_NameDeclOptions,0,NULL);
+            var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
             //opt.informError = true
             PROP(informError_,opt) = true;
             //for each nameDecl in Names.allNameDeclarations
@@ -371,8 +401,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             for(int nameDecl__inx=0 ; nameDecl__inx<_list41.value.arr->length ; nameDecl__inx++){nameDecl=ITEM(nameDecl__inx,_list41);
             
                 //nameDecl.processConvertTypes(opt)
-                METHOD(processConvertTypes_,nameDecl)(nameDecl,1,(any_arr){opt
-        });
+                METHOD(processConvertTypes_,nameDecl)(nameDecl,1,(any_arr){
+        opt
+});
             }};// end for each in
             
         };
@@ -380,21 +411,25 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //Walk the scope tree, and for each assignment, 
 //IF L-value has no type, try to guess from R-value's result type
         //logger.info "- Evaluating Assignments"
-        logger_info(undefined,1,(any_arr){any_LTR("- Evaluating Assignments")
-        });
+        logger_info(undefined,1,(any_arr){
+        any_LTR("- Evaluating Assignments")
+});
         //walkAllNodesCalling 'evaluateAssignments'
-        Validate_walkAllNodesCalling(undefined,1,(any_arr){any_LTR("evaluateAssignments")
-        });
+        Validate_walkAllNodesCalling(undefined,1,(any_arr){
+        any_LTR("evaluateAssignments")
+});
 //#### Pass 4 -Final- Validate Property Access
 //Once we have all vars declared and typed, walk the AST, 
 //and for each VariableRef validate property access.
 //May inform 'UNDECLARED PROPERTY'.
         //logger.info "- Validating Property Access"
-        logger_info(undefined,1,(any_arr){any_LTR("- Validating Property Access")
-        });
+        logger_info(undefined,1,(any_arr){
+        any_LTR("- Validating Property Access")
+});
         //walkAllNodesCalling 'validatePropertyAccess'
-        Validate_walkAllNodesCalling(undefined,1,(any_arr){any_LTR("validatePropertyAccess")
-        });
+        Validate_walkAllNodesCalling(undefined,1,(any_arr){
+        any_LTR("validatePropertyAccess")
+});
 //Inform forward declarations not fulfilled, as errors
         //for each nameDecl in Names.allNameDeclarations
         any _list42=Names_allNameDeclarations;
@@ -404,11 +439,15 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             //if nameDecl.isForward and not nameDecl.isDummy
             if (_anyToBool(PROP(isForward_,nameDecl)) && !(_anyToBool(PROP(isDummy_,nameDecl))))  {
                 //nameDecl.warn "forward declared, but never found"
-                METHOD(warn_,nameDecl)(nameDecl,1,(any_arr){any_LTR("forward declared, but never found")
-                });
+                METHOD(warn_,nameDecl)(nameDecl,1,(any_arr){
+        any_LTR("forward declared, but never found")
+});
                 //var container = nameDecl.nodeDeclared.getParent(Grammar.ClassDeclaration)
-                var container = __call(getParent_,PROP(nodeDeclared_,nameDecl),1,(any_arr){Grammar_ClassDeclaration
-                });
+                var 
+        container = __call(getParent_,PROP(nodeDeclared_,nameDecl),1,(any_arr){
+        Grammar_ClassDeclaration
+})
+;
                 //if container
                 if (_anyToBool(container))  {
                   //declare container:Grammar.ClassDeclaration
@@ -416,14 +455,16 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                   //declare valid container.varRef.toString
                   
                   //if container.varRef, logger.warning "#{container.positionText()} more info: '#{nameDecl.name}' of '#{container.varRef.toString()}'"
-                  if (_anyToBool(PROP(varRef_,container))) {logger_warning(undefined,1,(any_arr){_concatAny(6,(METHOD(positionText_,container)(container,0,NULL))
-, any_LTR(" more info: '")
-, PROP(name_,nameDecl)
-, any_LTR("' of '")
-, (__call(toString_,PROP(varRef_,container),0,NULL))
-, any_LTR("'")
-                  )
-                  });};
+                  if (_anyToBool(PROP(varRef_,container))) {logger_warning(undefined,1,(any_arr){
+        _concatAny(6,
+        (METHOD(positionText_,container)(container,0,NULL)), 
+        any_LTR(" more info: '"), 
+        PROP(name_,nameDecl), 
+        any_LTR("' of '"), 
+        (__call(toString_,PROP(varRef_,container),0,NULL)), 
+        any_LTR("'")
+)
+});};
                 };
             };
         }};// end for each in
@@ -437,8 +478,11 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         var methodName= argc? arguments[0] : undefined;
         //---------
         //var methodSymbol = LiteCore.getSymbol(methodName)
-        var methodSymbol = LiteCore_getSymbol(undefined,1,(any_arr){methodName
-        });
+        var 
+        methodSymbol = LiteCore_getSymbol(undefined,1,(any_arr){
+        methodName
+})
+;
 //For all modules, for each node, if the specific AST node has methodName, call it
         //for each moduleNode:Grammar.Module in map project.moduleCache
         any _list43=PROP(moduleCache_,Validate_project);
@@ -450,8 +494,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             moduleNode= __nvp->value;
         
             //moduleNode.callOnSubTree methodSymbol
-            METHOD(callOnSubTree_,moduleNode)(moduleNode,1,(any_arr){methodSymbol
-            });
+            METHOD(callOnSubTree_,moduleNode)(moduleNode,1,(any_arr){
+        methodSymbol
+});
         }};// end for each in map
         
     return undefined;
@@ -470,13 +515,16 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         Names_allNameDeclarations = new(Array,0,NULL);
 //initialize NameAffinity
         //var options = new Names.NameDeclOptions
-        var options = new(Names_NameDeclOptions,0,NULL);
+        var 
+        options = new(Names_NameDeclOptions,0,NULL)
+;
         //options.normalizeModeKeepFirstCase = true #nameAffinity members are stored: [0].Toupper()+slice(1).toLower()
         PROP(normalizeModeKeepFirstCase_,options) = true;// #nameAffinity members are stored: [0].Toupper()+slice(1).toLower()
         //nameAffinity= new Names.Declaration('Name Affinity',options) # project-wide name affinity for classes
-        Validate_nameAffinity = new(Names_Declaration,2,(any_arr){any_LTR("Name Affinity")
-, options
-        });// # project-wide name affinity for classes
+        Validate_nameAffinity = new(Names_Declaration,2,(any_arr){
+        any_LTR("Name Affinity"), 
+        options
+});// # project-wide name affinity for classes
         ////populateGlobalScope(aProject)
 //The "scope" of rootNode is the global scope. 
         //globalScope = project.rootModule.createScope()
@@ -484,51 +532,60 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //Initialize global scope
 //a)non-instance values
         //globalScope.addMember 'undefined'
-        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){any_LTR("undefined")
-        });
+        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){
+        any_LTR("undefined")
+});
         //var opt = new Names.NameDeclOptions
-        var opt = new(Names_NameDeclOptions,0,NULL);
+        var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
         //opt.value = null
         PROP(value_,opt) = null;
         //globalScope.addMember 'null',opt
-        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){any_LTR("null")
-, opt
-        });
+        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){
+        any_LTR("null"), 
+        opt
+});
         //opt.value = true
         PROP(value_,opt) = true;
         //globalScope.addMember 'true',opt
-        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){any_LTR("true")
-, opt
-        });
+        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){
+        any_LTR("true"), 
+        opt
+});
         //opt.value = false
         PROP(value_,opt) = false;
         //globalScope.addMember 'false',opt
-        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){any_LTR("false")
-, opt
-        });
+        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){
+        any_LTR("false"), 
+        opt
+});
         //opt.value = NaN
         PROP(value_,opt) = NaN;
         //globalScope.addMember 'NaN',opt
-        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){any_LTR("NaN")
-, opt
-        });
+        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){
+        any_LTR("NaN"), 
+        opt
+});
         //opt.value = Infinity
         PROP(value_,opt) = Infinity;
         //globalScope.addMember 'Infinity',opt
-        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){any_LTR("Infinity")
-, opt
-        });
+        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){
+        any_LTR("Infinity"), 
+        opt
+});
 //b) pre-create core classes, to allow the interface.md file to declare property types and return values
         //AddGlobalClasses 
             //'Object', 'Function', 'Array' 
             //'String', 'Number', 'Boolean'
-        Validate_AddGlobalClasses(undefined,6,(any_arr){any_LTR("Object")
-, any_LTR("Function")
-, any_LTR("Array")
-, any_LTR("String")
-, any_LTR("Number")
-, any_LTR("Boolean")
-            });
+        Validate_AddGlobalClasses(undefined,6,(any_arr){
+        any_LTR("Object"), 
+        any_LTR("Function"), 
+        any_LTR("Array"), 
+        any_LTR("String"), 
+        any_LTR("Number"), 
+        any_LTR("Boolean")
+});
             
 //note: 'Map' and 'NameValuePair' are declared at GlobalScopeX.interface.md
 //b) create special types
@@ -538,69 +595,85 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //'arguments' has only one method: `arguments.toArray()`
 //we declare here the type:"pointer to any" - "any*"
         //var argumentsType = globalScope.addMember('any*') //  any pointer, type for "arguments"
-        var argumentsType = METHOD(addMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){any_LTR("any*")
-        }); //  any pointer, type for "arguments"
+        var 
+        argumentsType = METHOD(addMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){
+        any_LTR("any*")
+})
+; //  any pointer, type for "arguments"
         //opt.value = undefined
         PROP(value_,opt) = undefined;
         //opt.type = globalPrototype('Function')
-        PROP(type_,opt) = Validate_globalPrototype(undefined,1,(any_arr){any_LTR("Function")
-        });
+        PROP(type_,opt) = Validate_globalPrototype(undefined,1,(any_arr){
+        any_LTR("Function")
+});
         //opt.returnType=globalPrototype('Array')
-        PROP(returnType_,opt) = Validate_globalPrototype(undefined,1,(any_arr){any_LTR("Array")
-        });
+        PROP(returnType_,opt) = Validate_globalPrototype(undefined,1,(any_arr){
+        any_LTR("Array")
+});
         //argumentsType.addMember('toArray',opt) 
-        METHOD(addMember_,argumentsType)(argumentsType,2,(any_arr){any_LTR("toArray")
-, opt
-        });
+        METHOD(addMember_,argumentsType)(argumentsType,2,(any_arr){
+        any_LTR("toArray"), 
+        opt
+});
 //b.2) Lite-C: the Lexer replaces string interpolation with calls to `_concatAny`
         //opt.returnType=globalPrototype('String')
-        PROP(returnType_,opt) = Validate_globalPrototype(undefined,1,(any_arr){any_LTR("String")
-        });
+        PROP(returnType_,opt) = Validate_globalPrototype(undefined,1,(any_arr){
+        any_LTR("String")
+});
         //globalScope.addMember '_concatAny',opt //used for string interpolation
-        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){any_LTR("_concatAny")
-, opt
-        }); //used for string interpolation
+        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){
+        any_LTR("_concatAny"), 
+        opt
+}); //used for string interpolation
         
         //opt.returnType=undefined
         PROP(returnType_,opt) = undefined;
         //globalScope.addMember 'parseFloat',opt //used for string interpolation
-        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){any_LTR("parseFloat")
-, opt
-        }); //used for string interpolation
+        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){
+        any_LTR("parseFloat"), 
+        opt
+}); //used for string interpolation
         //globalScope.addMember 'parseInt',opt //used for string interpolation
-        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){any_LTR("parseInt")
-, opt
-        }); //used for string interpolation
+        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){
+        any_LTR("parseInt"), 
+        opt
+}); //used for string interpolation
         ////var core = globalScope.addMember('LiteCore') //core supports
         ////core.isNamespace = true
         ////opt.returnType='Number'
         ////core.addMember 'getSymbol',opt //to get a symbol (int) from a symbol name (string)
 //b.3) "any" default type for vars
         //globalScope.addMember 'any' // used for "map string to any" - Dictionaries
-        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){any_LTR("any")
-        }); // used for "map string to any" - Dictionaries
+        METHOD(addMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){
+        any_LTR("any")
+}); // used for "map string to any" - Dictionaries
 //Process the global scope declarations interface file: GlobalScopeJS|C.interface.md
         //processInterfaceFile 'GlobalScope#{project.options.target.toUpperCase()}'
-        Validate_processInterfaceFile(undefined,1,(any_arr){_concatAny(2,any_LTR("GlobalScope")
-, (__call(toUpperCase_,PROP(target_,PROP(options_,Validate_project)),0,NULL))
-        )
-        });
+        Validate_processInterfaceFile(undefined,1,(any_arr){
+        _concatAny(2,
+        any_LTR("GlobalScope"), 
+        (__call(toUpperCase_,PROP(target_,PROP(options_,Validate_project)),0,NULL))
+)
+});
 //if we're compiling for node.js, add extra node global core objects, e.g: process, Buffer
         //if project.options.target is 'js' and not project.options.browser
         if (__is(PROP(target_,PROP(options_,Validate_project)),any_LTR("js")) && !(_anyToBool(PROP(browser_,PROP(options_,Validate_project)))))  {
             //processInterfaceFile 'GlobalScopeNODE'
-            Validate_processInterfaceFile(undefined,1,(any_arr){any_LTR("GlobalScopeNODE")
-            });
+            Validate_processInterfaceFile(undefined,1,(any_arr){
+        any_LTR("GlobalScopeNODE")
+});
         };
 //Initial NameAffinity, err|xxxErr => type:Error
         //if tryGetGlobalPrototype('Error') into var errProto:Names.Declaration 
         var errProto=undefined;
-        if (_anyToBool((errProto=Validate_tryGetGlobalPrototype(undefined,1,(any_arr){any_LTR("Error")
-        }))))  {
+        if (_anyToBool((errProto=Validate_tryGetGlobalPrototype(undefined,1,(any_arr){
+        any_LTR("Error")
+}))))  {
             //nameAffinity.members.set 'Err',errProto.parent // err|xxxErr => type:Error
-            __call(set_,PROP(members_,Validate_nameAffinity),2,(any_arr){any_LTR("Err")
-, PROP(parent_,errProto)
-            }); // err|xxxErr => type:Error
+            __call(set_,PROP(members_,Validate_nameAffinity),2,(any_arr){
+        any_LTR("Err"), 
+        PROP(parent_,errProto)
+}); // err|xxxErr => type:Error
         };
     return undefined;
     }
@@ -610,18 +683,27 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         var globalInterfaceFile= argc? arguments[0] : undefined;
         //---------
 //Process the global scope declarations interface file: GlobalScope(JS|C|NODE).interface.md
-        //logger.msg "Declare on global scope using ", globalInterfaceFile
-        logger_msg(undefined,2,(any_arr){any_LTR("Declare on global scope using ")
-, globalInterfaceFile
-        });
+        //logger.msg "Declare global scope using #{globalInterfaceFile}.interface.md"
+        logger_msg(undefined,1,(any_arr){
+        _concatAny(3,
+        any_LTR("Declare global scope using "), 
+        globalInterfaceFile, 
+        any_LTR(".interface.md")
+)
+});
         //var globalInterfaceModule = project.compileFile(globalInterfaceFile)
-        var globalInterfaceModule = METHOD(compileFile_,Validate_project)(Validate_project,1,(any_arr){globalInterfaceFile
-        });
+        var 
+        globalInterfaceModule = METHOD(compileFile_,Validate_project)(Validate_project,1,(any_arr){
+        globalInterfaceFile
+})
+;
 //call "declare" on each item of the GlobalScope interface file, to create the NameDeclarations
         //globalInterfaceModule.callOnSubTree LiteCore.getSymbol('declare')
-        METHOD(callOnSubTree_,globalInterfaceModule)(globalInterfaceModule,1,(any_arr){LiteCore_getSymbol(undefined,1,(any_arr){any_LTR("declare")
-        })
-        });
+        METHOD(callOnSubTree_,globalInterfaceModule)(globalInterfaceModule,1,(any_arr){
+        LiteCore_getSymbol(undefined,1,(any_arr){
+        any_LTR("declare")
+})
+});
 //move all exported from the interface file, to project.rootModule global scope
         //for each nameDecl in map globalInterfaceModule.exports.members
         any _list44=PROP(members_,PROP(exports_,globalInterfaceModule));
@@ -633,9 +715,10 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             nameDecl= __nvp->value;
         
             //project.rootModule.addToSpecificScope globalScope, nameDecl
-            __call(addToSpecificScope_,PROP(rootModule_,Validate_project),2,(any_arr){Validate_globalScope
-, nameDecl
-            });
+            __call(addToSpecificScope_,PROP(rootModule_,Validate_project),2,(any_arr){
+        Validate_globalScope, 
+        nameDecl
+});
         }};// end for each in map
         
     return undefined;
@@ -651,15 +734,17 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       
       //if globalScope.findOwnMember(name) into var nameDecl
       var nameDecl=undefined;
-      if (_anyToBool((nameDecl=METHOD(findOwnMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){name
-      }))))  {
+      if (_anyToBool((nameDecl=METHOD(findOwnMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){
+        name
+}))))  {
           //return nameDecl.members.get("prototype")
-          return __call(get_,PROP(members_,nameDecl),1,(any_arr){any_LTR("prototype")
-          });
+          return __call(get_,PROP(members_,nameDecl),1,(any_arr){
+        any_LTR("prototype")
+});
       };
     return undefined;
     }
-//### Helper function globalPrototype(name) 
+//### public Helper function globalPrototype(name) 
     any Validate_globalPrototype(DEFAULT_ARGUMENTS){
       // define named params
       var name= argc? arguments[0] : undefined;
@@ -669,23 +754,27 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       if (_instanceof(name,Names_Declaration)) {return name;};
       //if not globalScope.findOwnMember(name) into var nameDecl
       var nameDecl=undefined;
-      if (!(_anyToBool((nameDecl=METHOD(findOwnMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){name
-      })))))  {
+      if (!(_anyToBool((nameDecl=METHOD(findOwnMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){
+        name
+})))))  {
         //fail with "no '#{name}' in global scope"
-        throw(new(Error,1,(any_arr){_concatAny(3,any_LTR("no '")
-, name
-, any_LTR("' in global scope")
-        )}));;
+        throw(new(Error,1,(any_arr){_concatAny(3,
+        any_LTR("no '"), 
+        name, 
+        any_LTR("' in global scope")
+)}));;
       };
       //if no nameDecl.findOwnMember("prototype") into var protoNameDecl
       var protoNameDecl=undefined;
-      if (!(_anyToBool((protoNameDecl=METHOD(findOwnMember_,nameDecl)(nameDecl,1,(any_arr){any_LTR("prototype")
-      })))))  {
+      if (!(_anyToBool((protoNameDecl=METHOD(findOwnMember_,nameDecl)(nameDecl,1,(any_arr){
+        any_LTR("prototype")
+})))))  {
         //fail with "global scope type '#{name}' must have a 'prototype' property"
-        throw(new(Error,1,(any_arr){_concatAny(3,any_LTR("global scope type '")
-, name
-, any_LTR("' must have a 'prototype' property")
-        )}));;
+        throw(new(Error,1,(any_arr){_concatAny(3,
+        any_LTR("global scope type '"), 
+        name, 
+        any_LTR("' must have a 'prototype' property")
+)}));;
       };
       //return protoNameDecl
       return protoNameDecl;
@@ -703,35 +792,47 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       //---------
 //Add a built-in class to global scope, return class prototype
       //var opt = new Names.NameDeclOptions
-      var opt = new(Names_NameDeclOptions,0,NULL);
+      var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
       ////opt.isBuiltIn = true
       //var nameDecl = new Names.Declaration( name,opt,node )
-      var nameDecl = new(Names_Declaration,3,(any_arr){name
-, opt
-, node
-      });
+      var 
+        nameDecl = new(Names_Declaration,3,(any_arr){
+        name, 
+        opt, 
+        node
+})
+;
       //globalScope.addMember nameDecl
-      METHOD(addMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){nameDecl
-      });
+      METHOD(addMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){
+        nameDecl
+});
       //nameDecl.getMembersFromObjProperties Environment.getGlobalObject(name)
-      METHOD(getMembersFromObjProperties_,nameDecl)(nameDecl,1,(any_arr){Environment_getGlobalObject(undefined,1,(any_arr){name
-      })
-      });
+      METHOD(getMembersFromObjProperties_,nameDecl)(nameDecl,1,(any_arr){
+        Environment_getGlobalObject(undefined,1,(any_arr){
+        name
+})
+});
       //if no nameDecl.findOwnMember("prototype") into var classProto:Names.Declaration
       var classProto=undefined;
-      if (!(_anyToBool((classProto=METHOD(findOwnMember_,nameDecl)(nameDecl,1,(any_arr){any_LTR("prototype")
-      })))))  {
+      if (!(_anyToBool((classProto=METHOD(findOwnMember_,nameDecl)(nameDecl,1,(any_arr){
+        any_LTR("prototype")
+})))))  {
           //throw("addBuiltInClass '#{name}, expected to have a prototype")
-          throw((_concatAny(3,any_LTR("addBuiltInClass '")
-, name
-, any_LTR(", expected to have a prototype")
-          )));
+          throw((_concatAny(3,
+        any_LTR("addBuiltInClass '"), 
+        name, 
+        any_LTR(", expected to have a prototype")
+)));
       };
       //nameDecl.setMember '**proto**', globalPrototype('Function')
-      METHOD(setMember_,nameDecl)(nameDecl,2,(any_arr){any_LTR("**proto**")
-, Validate_globalPrototype(undefined,1,(any_arr){any_LTR("Function")
-      })
-      });
+      METHOD(setMember_,nameDecl)(nameDecl,2,(any_arr){
+        any_LTR("**proto**"), 
+        Validate_globalPrototype(undefined,1,(any_arr){
+        any_LTR("Function")
+})
+});
       //// commented v0.8: classes can not be used as functions. 
       //// nameDecl.setMember '**return type**', classProto
       //return classProto
@@ -750,28 +851,38 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       //---------
 //Add a built-in object to global scope, return object
       //var opt = new Names.NameDeclOptions
-      var opt = new(Names_NameDeclOptions,0,NULL);
+      var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
       ////opt.isBuiltIn = true
       //var nameDecl = new Names.Declaration(name, opt ,node)
-      var nameDecl = new(Names_Declaration,3,(any_arr){name
-, opt
-, node
-      });
+      var 
+        nameDecl = new(Names_Declaration,3,(any_arr){
+        name, 
+        opt, 
+        node
+})
+;
       //globalScope.addMember nameDecl
-      METHOD(addMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){nameDecl
-      });
+      METHOD(addMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){
+        nameDecl
+});
       //nameDecl.getMembersFromObjProperties Environment.getGlobalObject(name)
-      METHOD(getMembersFromObjProperties_,nameDecl)(nameDecl,1,(any_arr){Environment_getGlobalObject(undefined,1,(any_arr){name
-      })
-      });
+      METHOD(getMembersFromObjProperties_,nameDecl)(nameDecl,1,(any_arr){
+        Environment_getGlobalObject(undefined,1,(any_arr){
+        name
+})
+});
       //if nameDecl.findOwnMember("prototype") 
-      if (_anyToBool(METHOD(findOwnMember_,nameDecl)(nameDecl,1,(any_arr){any_LTR("prototype")
-      })))  {
+      if (_anyToBool(METHOD(findOwnMember_,nameDecl)(nameDecl,1,(any_arr){
+        any_LTR("prototype")
+})))  {
           //throw("addBuiltObject '#{name}, expected *Object* to have not a prototype")
-          throw((_concatAny(3,any_LTR("addBuiltObject '")
-, name
-, any_LTR(", expected *Object* to have not a prototype")
-          )));
+          throw((_concatAny(3,
+        any_LTR("addBuiltObject '"), 
+        name, 
+        any_LTR(", expected *Object* to have not a prototype")
+)));
       };
       //return nameDecl
       return nameDecl;
@@ -816,38 +927,49 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //this method looks for a name in Names.Declaration members,
 //it also follows the **proto** chain (same mechanism as js __proto__ chain)
         //var actual = this
-        var actual = this;
+        var 
+        actual = this
+;
         //var count=0
-        var count = any_number(0);
+        var 
+        count = any_number(0)
+;
         //do while actual instance of Names.Declaration 
         while(_instanceof(actual,Names_Declaration)){
             //if actual.findOwnMember(name) into var result
             var result=undefined;
-            if (_anyToBool((result=METHOD(findOwnMember_,actual)(actual,1,(any_arr){name
-            }))))  {
+            if (_anyToBool((result=METHOD(findOwnMember_,actual)(actual,1,(any_arr){
+        name
+}))))  {
                //return result
                return result;
             };
 //We use a member named '**proto**' on NameDeclarations, mapping run-time proto chain.
 //We follow the chain to validate property names.
             //var nextInChain = actual.findOwnMember('**proto**')
-            var nextInChain = METHOD(findOwnMember_,actual)(actual,1,(any_arr){any_LTR("**proto**")
-            });
+            var 
+        nextInChain = METHOD(findOwnMember_,actual)(actual,1,(any_arr){
+        any_LTR("**proto**")
+})
+;
 //As last option in the chain, we always use 'Object.prototype'
             //if no nextInChain and actual isnt globalPrototype('Object')
-            if (!_anyToBool(nextInChain) && !__is(actual,Validate_globalPrototype(undefined,1,(any_arr){any_LTR("Object")
-            })))  {
+            if (!_anyToBool(nextInChain) && !__is(actual,Validate_globalPrototype(undefined,1,(any_arr){
+        any_LTR("Object")
+})))  {
               //nextInChain = globalPrototype('Object')
-              nextInChain = Validate_globalPrototype(undefined,1,(any_arr){any_LTR("Object")
-              });
+              nextInChain = Validate_globalPrototype(undefined,1,(any_arr){
+        any_LTR("Object")
+});
             };
             //actual = nextInChain
             actual = nextInChain;
             //if count++ > 50 #assume circular
             if (count.value.number++ > 50)  {// #assume circular
                 //.warn "circular type reference"
-                METHOD(warn_,this)(this,1,(any_arr){any_LTR("circular type reference")
-                });
+                METHOD(warn_,this)(this,1,(any_arr){
+        any_LTR("circular type reference")
+});
                 //return
                 return undefined;
             };
@@ -867,9 +989,13 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //this method looks for a name in Names.Declaration members **proto**->prototpye->parent
 //it also follows the **proto** chain (same mechanism as js __proto__ chain)
         //var actual = this
-        var actual = this;
+        var 
+        actual = this
+;
         //var count=0
-        var count = any_number(0);
+        var 
+        count = any_number(0)
+;
         //do while actual instance of Names.Declaration 
         while(_instanceof(actual,Names_Declaration)){
             //if actual.name is 'prototype' and actual.parent.name is name
@@ -880,23 +1006,29 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //We use a member named '**proto**' on NameDeclarations, mapping run-time proto chain.
 //We follow the chain to validate property names.
             //var nextInChain = actual.findOwnMember('**proto**')
-            var nextInChain = METHOD(findOwnMember_,actual)(actual,1,(any_arr){any_LTR("**proto**")
-            });
+            var 
+        nextInChain = METHOD(findOwnMember_,actual)(actual,1,(any_arr){
+        any_LTR("**proto**")
+})
+;
 //As last option in the chain, we always use 'Object.prototype'
             //if no nextInChain and actual isnt globalPrototype('Object')
-            if (!_anyToBool(nextInChain) && !__is(actual,Validate_globalPrototype(undefined,1,(any_arr){any_LTR("Object")
-            })))  {
+            if (!_anyToBool(nextInChain) && !__is(actual,Validate_globalPrototype(undefined,1,(any_arr){
+        any_LTR("Object")
+})))  {
                 //nextInChain = globalPrototype('Object')
-                nextInChain = Validate_globalPrototype(undefined,1,(any_arr){any_LTR("Object")
-                });
+                nextInChain = Validate_globalPrototype(undefined,1,(any_arr){
+        any_LTR("Object")
+});
             };
             //actual = nextInChain
             actual = nextInChain;
             //if count++ > 50 #assume circular
             if (count.value.number++ > 50)  {// #assume circular
                 //.warn "circular type reference"
-                METHOD(warn_,this)(this,1,(any_arr){any_LTR("circular type reference")
-                });
+                METHOD(warn_,this)(this,1,(any_arr){
+        any_LTR("circular type reference")
+});
                 //return
                 return undefined;
             };
@@ -962,12 +1094,15 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //Used to avoid recursing circular properties
         
         //var nameDecl = this.parent
-        var nameDecl = PROP(parent_,this);
+        var 
+        nameDecl = PROP(parent_,this)
+;
         //while nameDecl
         while(_anyToBool(nameDecl)){
           //if nameDecl.findOwnMember(name), return true
-          if (_anyToBool(METHOD(findOwnMember_,nameDecl)(nameDecl,1,(any_arr){name
-          }))) {return true;};
+          if (_anyToBool(METHOD(findOwnMember_,nameDecl)(nameDecl,1,(any_arr){
+        name
+}))) {return true;};
           //nameDecl = nameDecl.parent
           nameDecl = PROP(parent_,nameDecl);
         };// end loop
@@ -984,22 +1119,27 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //convert possible types stored in Names.Declaration, 
 //from string/varRef to other NameDeclarations in the scope
         //var result = new Names.ConvertResult
-        var result = new(Names_ConvertResult,0,NULL);
+        var 
+        result = new(Names_ConvertResult,0,NULL)
+;
         //.convertType '**proto**',result,options  #try convert main type
-        METHOD(convertType_,this)(this,3,(any_arr){any_LTR("**proto**")
-, result
-, options
-        });// #try convert main type
+        METHOD(convertType_,this)(this,3,(any_arr){
+        any_LTR("**proto**"), 
+        result, 
+        options
+});// #try convert main type
         //.convertType '**return type**',result,options  #a Function can have **return type**
-        METHOD(convertType_,this)(this,3,(any_arr){any_LTR("**return type**")
-, result
-, options
-        });// #a Function can have **return type**
+        METHOD(convertType_,this)(this,3,(any_arr){
+        any_LTR("**return type**"), 
+        result, 
+        options
+});// #a Function can have **return type**
         //.convertType '**item type**',result,options  #an Array can have **item type** e.g.: 'var list: string array'
-        METHOD(convertType_,this)(this,3,(any_arr){any_LTR("**item type**")
-, result
-, options
-        });// #an Array can have **item type** e.g.: 'var list: string array'
+        METHOD(convertType_,this)(this,3,(any_arr){
+        any_LTR("**item type**"), 
+        result, 
+        options
+});// #an Array can have **item type** e.g.: 'var list: string array'
         //return result
         return result;
      return undefined;
@@ -1021,8 +1161,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //returns 'true' if converted, 'false' if it has to be tried later
         //if no .findOwnMember(internalName) into var typeRef
         var typeRef=undefined;
-        if (!(_anyToBool((typeRef=METHOD(findOwnMember_,this)(this,1,(any_arr){internalName
-        })))))  {
+        if (!(_anyToBool((typeRef=METHOD(findOwnMember_,this)(this,1,(any_arr){
+        internalName
+})))))  {
             //#nothing to process
             //return  
             return undefined;
@@ -1034,7 +1175,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             return undefined;
         };
         //var converted:Names.Declaration
-        var converted = undefined;
+        var 
+        converted = undefined
+;
         //# if the typeRef is a varRef, get reference 
         //if typeRef instanceof Grammar.VariableRef
         if (_instanceof(typeRef,Grammar_VariableRef))  {
@@ -1049,15 +1192,17 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             //if no .nodeDeclared #converting typeRef for a var not declared in code
             if (!_anyToBool(PROP(nodeDeclared_,this)))  {// #converting typeRef for a var not declared in code
               //converted = globalPrototype(typeRef)
-              converted = Validate_globalPrototype(undefined,1,(any_arr){typeRef
-              });
+              converted = Validate_globalPrototype(undefined,1,(any_arr){
+        typeRef
+});
             }
             //else
             
             else {
               //converted = .nodeDeclared.findInScope(typeRef)
-              converted = __call(findInScope_,PROP(nodeDeclared_,this),1,(any_arr){typeRef
-              });
+              converted = __call(findInScope_,PROP(nodeDeclared_,this),1,(any_arr){
+        typeRef
+});
             };
             //end if
             
@@ -1068,17 +1213,19 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             //declare valid typeRef.constructor.name
             
             //.sayErr "INTERNAL ERROR: convertType UNRECOGNIZED type of:'#{typeof typeRef}' on #{internalName}: '#{typeRef}' [#{typeRef.constructor.name}]"
-            METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(9,any_LTR("INTERNAL ERROR: convertType UNRECOGNIZED type of:'")
-, (_typeof(typeRef))
-, any_LTR("' on ")
-, internalName
-, any_LTR(": '")
-, typeRef
-, any_LTR("' [")
-, PROP(name_,any_class(typeRef.class))
-, any_LTR("]")
-            )
-            });
+            METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(9,
+        any_LTR("INTERNAL ERROR: convertType UNRECOGNIZED type of:'"), 
+        (_typeof(typeRef)), 
+        any_LTR("' on "), 
+        internalName, 
+        any_LTR(": '"), 
+        typeRef, 
+        any_LTR("' ["), 
+        PROP(name_,any_class(typeRef.class)), 
+        any_LTR("]")
+)
+});
             //return
             return undefined;
         };
@@ -1089,16 +1236,18 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             //#move to prototype if referenced is a class
             //if converted.findOwnMember("prototype") into var prototypeNameDecl
             var prototypeNameDecl=undefined;
-            if (_anyToBool((prototypeNameDecl=METHOD(findOwnMember_,converted)(converted,1,(any_arr){any_LTR("prototype")
-            }))))  {
+            if (_anyToBool((prototypeNameDecl=METHOD(findOwnMember_,converted)(converted,1,(any_arr){
+        any_LTR("prototype")
+}))))  {
                 //converted = prototypeNameDecl
                 converted = prototypeNameDecl;
             };
             //#store converted
             //.setMember(internalName,converted)
-            METHOD(setMember_,this)(this,2,(any_arr){internalName
-, converted
-            });
+            METHOD(setMember_,this)(this,2,(any_arr){
+        internalName, 
+        converted
+});
             //result.converted++
             PROP(converted_,result).value.number++;
         }
@@ -1108,11 +1257,13 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             //result.failures++
             PROP(failures_,result).value.number++;
             //if options and options.informError, .sayErr "Undeclared type: '#{typeRef.toString()}'"
-            if (_anyToBool(options) && _anyToBool(PROP(informError_,options))) {METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_LTR("Undeclared type: '")
-, (METHOD(toString_,typeRef)(typeRef,0,NULL))
-, any_LTR("'")
-            )
-            });};
+            if (_anyToBool(options) && _anyToBool(PROP(informError_,options))) {METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(3,
+        any_LTR("Undeclared type: '"), 
+        (METHOD(toString_,typeRef)(typeRef,0,NULL)), 
+        any_LTR("'")
+)
+});};
         };
         //end if
         
@@ -1131,13 +1282,17 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       //declare valid value.getResultType
       
       //var valueNameDecl = value.getResultType()
-      var valueNameDecl = METHOD(getResultType_,value)(value,0,NULL);
+      var 
+        valueNameDecl = METHOD(getResultType_,value)(value,0,NULL)
+;
 //now set var type (unless is "null" or "undefined", because they destroy type info)
       //if valueNameDecl instance of Names.Declaration 
       if (_instanceof(valueNameDecl,Names_Declaration) && !(__in(PROP(name_,valueNameDecl),2,(any_arr){any_LTR("undefined"), any_LTR("null")})))  {
         //and valueNameDecl.name not in ["undefined","null"]
             //var theType
-            var theType = undefined;
+            var 
+        theType = undefined
+;
             //if valueNameDecl.name is 'prototype' # getResultType returns a class prototype
             if (__is(PROP(name_,valueNameDecl),any_LTR("prototype")))  {// # getResultType returns a class prototype
                 //// use the class as type
@@ -1149,16 +1304,18 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             else {
                 ////we assume valueNameDecl is a simple var, then we try to get **proto**
                 //theType = valueNameDecl.findOwnMember('**proto**') or valueNameDecl
-                theType = (_anyToBool(__or1=METHOD(findOwnMember_,valueNameDecl)(valueNameDecl,1,(any_arr){any_LTR("**proto**")
-                }))? __or1 : valueNameDecl);
+                theType = (_anyToBool(__or1=METHOD(findOwnMember_,valueNameDecl)(valueNameDecl,1,(any_arr){
+        any_LTR("**proto**")
+}))? __or1 : valueNameDecl);
             };
             //end if
             
             //// assign type: now both nameDecls points to same type
             //.setMember '**proto**', theType 
-            METHOD(setMember_,this)(this,2,(any_arr){any_LTR("**proto**")
-, theType
-            });
+            METHOD(setMember_,this)(this,2,(any_arr){
+        any_LTR("**proto**"), 
+        theType
+});
       };
      return undefined;
      }
@@ -1170,27 +1327,35 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //If no type specified, check project.nameAffinity
         
         //if .nodeDeclared and not String.isCapitalized(.name) and .name isnt 'prototype'
-        if (_anyToBool(PROP(nodeDeclared_,this)) && !(_anyToBool(String_isCapitalized(undefined,1,(any_arr){PROP(name_,this)
-        }))) && !__is(PROP(name_,this),any_LTR("prototype")))  {
+        if (_anyToBool(PROP(nodeDeclared_,this)) && !(_anyToBool(String_isCapitalized(undefined,1,(any_arr){
+        PROP(name_,this)
+}))) && !__is(PROP(name_,this),any_LTR("prototype")))  {
             //if not .findOwnMember('**proto**')
-            if (!(_anyToBool(METHOD(findOwnMember_,this)(this,1,(any_arr){any_LTR("**proto**")
-            }))))  {
+            if (!(_anyToBool(METHOD(findOwnMember_,this)(this,1,(any_arr){
+        any_LTR("**proto**")
+}))))  {
                 //var possibleClassRef:Names.Declaration
-                var possibleClassRef = undefined;
+                var 
+        possibleClassRef = undefined
+;
                 //# possibleClassRef is a Names.Declaration whose .nodeDeclared is a ClassDeclaration
                 //#should look as className. Also when searching with "endsWith", 
                 //# nameAffinity declarations are stored capitalized
                 //var asClassName = .name.capitalized()
-                var asClassName = __call(capitalized_,PROP(name_,this),0,NULL);
+                var 
+        asClassName = __call(capitalized_,PROP(name_,this),0,NULL)
+;
                 //# look in name affinity map
                 //if no nameAffinity.members.get(.name) into possibleClassRef
-                if (!(_anyToBool((possibleClassRef=__call(get_,PROP(members_,Validate_nameAffinity),1,(any_arr){PROP(name_,this)
-                })))))  {
+                if (!(_anyToBool((possibleClassRef=__call(get_,PROP(members_,Validate_nameAffinity),1,(any_arr){
+        PROP(name_,this)
+})))))  {
                     //# make first letter uppercase, e.g.: convert 'lexer' to 'Lexer'
                     //# try with name, 1st letter capitalized
                     //possibleClassRef = nameAffinity.members.get(asClassName) 
-                    possibleClassRef = __call(get_,PROP(members_,Validate_nameAffinity),1,(any_arr){asClassName
-                    });
+                    possibleClassRef = __call(get_,PROP(members_,Validate_nameAffinity),1,(any_arr){
+        asClassName
+});
                 };
                 //end if
                 
@@ -1210,8 +1375,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                         classRef= __nvp->value;
                     
                         //if asClassName.endsWith(affinityName)
-                        if (_anyToBool(METHOD(endsWith_,asClassName)(asClassName,1,(any_arr){affinityName
-                        })))  {
+                        if (_anyToBool(METHOD(endsWith_,asClassName)(asClassName,1,(any_arr){
+        affinityName
+})))  {
                             //possibleClassRef = classRef
                             possibleClassRef = classRef;
                             //break
@@ -1223,12 +1389,14 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                 //#if there is a candidate class, check of it has a defined prototype
                 //if possibleClassRef and possibleClassRef.findOwnMember("prototype") into var prototypeNameDecl
                 var prototypeNameDecl=undefined;
-                if (_anyToBool(possibleClassRef) && _anyToBool((prototypeNameDecl=METHOD(findOwnMember_,possibleClassRef)(possibleClassRef,1,(any_arr){any_LTR("prototype")
-                }))))  {
+                if (_anyToBool(possibleClassRef) && _anyToBool((prototypeNameDecl=METHOD(findOwnMember_,possibleClassRef)(possibleClassRef,1,(any_arr){
+        any_LTR("prototype")
+}))))  {
                       //.setMember '**proto**', prototypeNameDecl
-                      METHOD(setMember_,this)(this,2,(any_arr){any_LTR("**proto**")
-, prototypeNameDecl
-                      });
+                      METHOD(setMember_,this)(this,2,(any_arr){
+        any_LTR("**proto**"), 
+        prototypeNameDecl
+});
                       //return true
                       return true;
                 };
@@ -1257,10 +1425,11 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //---------
 //declareName creates a new Names.Declaration, *referecing source as nodeDeclared (AST node)*
         //return new Names.Declaration(name, options, this)
-        return new(Names_Declaration,3,(any_arr){name
-, options
-, this
-        });
+        return new(Names_Declaration,3,(any_arr){
+        name, 
+        options, 
+        this
+});
      return undefined;
      }
 //#### method addMemberTo(nameDecl, memberName, options)  returns Names.Declaration
@@ -1280,10 +1449,11 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //Adds a member to a NameDecl, referencing this node as nodeDeclared
         
         //return nameDecl.addMember(memberName, options, this)
-        return METHOD(addMember_,nameDecl)(nameDecl,3,(any_arr){memberName
-, options
-, this
-        });
+        return METHOD(addMember_,nameDecl)(nameDecl,3,(any_arr){
+        memberName, 
+        options, 
+        this
+});
      return undefined;
      }
 //#### Helper method tryGetMember(nameDecl, name:string, options:Names.NameDeclOptions)
@@ -1306,17 +1476,22 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         _default(&options,new(Names_NameDeclOptions,0,NULL));
   
         //var found = nameDecl.findMember(name)
-        var found = METHOD(findMember_,nameDecl)(nameDecl,1,(any_arr){name
-        });
+        var 
+        found = METHOD(findMember_,nameDecl)(nameDecl,1,(any_arr){
+        name
+})
+;
         
         //if found and name.slice(0,2) isnt '**'
-        if (_anyToBool(found) && !__is(METHOD(slice_,name)(name,2,(any_arr){any_number(0)
-, any_number(2)
-        }),any_LTR("**")))  {
+        if (_anyToBool(found) && !__is(METHOD(slice_,name)(name,2,(any_arr){
+        any_number(0), 
+        any_number(2)
+}),any_LTR("**")))  {
           //found.caseMismatch name,this
-          METHOD(caseMismatch_,found)(found,2,(any_arr){name
-, this
-          });
+          METHOD(caseMismatch_,found)(found,2,(any_arr){
+        name, 
+        this
+});
         }
         
         //else #not found
@@ -1325,20 +1500,23 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
           //if options.informError 
           if (_anyToBool(PROP(informError_,options)))  {
                 //logger.warning "#{.positionText()}. No member named '#{name}' on #{nameDecl.info()}"
-                logger_warning(undefined,1,(any_arr){_concatAny(5,(METHOD(positionText_,this)(this,0,NULL))
-, any_LTR(". No member named '")
-, name
-, any_LTR("' on ")
-, (METHOD(info_,nameDecl)(nameDecl,0,NULL))
-                )
-                });
+                logger_warning(undefined,1,(any_arr){
+        _concatAny(5,
+        (METHOD(positionText_,this)(this,0,NULL)), 
+        any_LTR(". No member named '"), 
+        name, 
+        any_LTR("' on "), 
+        (METHOD(info_,nameDecl)(nameDecl,0,NULL))
+)
+});
           };
           
           //if options.isForward, found = .addMemberTo(nameDecl,name,options)
-          if (_anyToBool(PROP(isForward_,options))) {found = METHOD(addMemberTo_,this)(this,3,(any_arr){nameDecl
-, name
-, options
-          });};
+          if (_anyToBool(PROP(isForward_,options))) {found = METHOD(addMemberTo_,this)(this,3,(any_arr){
+        nameDecl, 
+        name, 
+        options
+});};
         };
         //return found
         return found;
@@ -1353,7 +1531,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         
 //Start at this node
         //var node = this
-        var node = this;
+        var 
+        node = this
+;
         //while node
         while(_anyToBool(node)){
           //if node.scope
@@ -1382,7 +1562,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //It's used to validate variable references to be previously declared names
 //Start at this node
         //var node = this
-        var node = this;
+        var 
+        node = this
+;
 //Look for the declaration in this scope
         //while node
         while(_anyToBool(node)){
@@ -1390,8 +1572,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
           if (_anyToBool(PROP(scope_,node)))  {
               //if node.scope.findOwnMember(name) into var found
               var found=undefined;
-              if (_anyToBool((found=__call(findOwnMember_,PROP(scope_,node),1,(any_arr){name
-              }))))  {
+              if (_anyToBool((found=__call(findOwnMember_,PROP(scope_,node),1,(any_arr){
+        name
+}))))  {
                   //return found
                   return found;
               };
@@ -1426,14 +1609,16 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //Search the scope
         //if .findInScope(name) into var found 
         var found=undefined;
-        if (_anyToBool((found=METHOD(findInScope_,this)(this,1,(any_arr){name
-        }))))  {
+        if (_anyToBool((found=METHOD(findInScope_,this)(this,1,(any_arr){
+        name
+}))))  {
 //Declaration found, we check the upper/lower case to be consistent
 //If the found item has a different case than the name we're looking for, emit error 
             //if found.caseMismatch(name, this)
-            if (_anyToBool(METHOD(caseMismatch_,found)(found,2,(any_arr){name
-, this
-            })))  {
+            if (_anyToBool(METHOD(caseMismatch_,found)(found,2,(any_arr){
+        name, 
+        this
+})))  {
                 //return found
                 return found;
             };
@@ -1447,26 +1632,31 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             //if options and options.informError
             if (_anyToBool(options) && _anyToBool(PROP(informError_,options)))  {
                 //.sayErr "UNDECLARED NAME: '#{name}'"
-                METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_LTR("UNDECLARED NAME: '")
-, name
-, any_LTR("'")
-                )
-                });
+                METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(3,
+        any_LTR("UNDECLARED NAME: '"), 
+        name, 
+        any_LTR("'")
+)
+});
             };
             //if options and options.isForward
             if (_anyToBool(options) && _anyToBool(PROP(isForward_,options)))  {
                 //found = .addToScope(name,options)  
-                found = METHOD(addToScope_,this)(this,2,(any_arr){name
-, options
-                });
+                found = METHOD(addToScope_,this)(this,2,(any_arr){
+        name, 
+        options
+});
                 //if options.isDummy and String.isCapitalized(name) #let's assume is a class
-                if (_anyToBool(PROP(isDummy_,options)) && _anyToBool(String_isCapitalized(undefined,1,(any_arr){name
-                })))  {// #let's assume is a class
+                if (_anyToBool(PROP(isDummy_,options)) && _anyToBool(String_isCapitalized(undefined,1,(any_arr){
+        name
+})))  {// #let's assume is a class
                     //.addMemberTo(found,'prototype',options)
-                    METHOD(addMemberTo_,this)(this,3,(any_arr){found
-, any_LTR("prototype")
-, options
-        });
+                    METHOD(addMemberTo_,this)(this,3,(any_arr){
+        found, 
+        any_LTR("prototype"), 
+        options
+});
                 };
             };
         };
@@ -1494,12 +1684,15 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //if no item, return # do nothing on undefined params
         if (!_anyToBool(item)) {return undefined;};
         //var scope:Names.Declaration = .getScopeNode().scope
-        var scope = PROP(scope_,METHOD(getScopeNode_,this)(this,0,NULL));
+        var 
+        scope = PROP(scope_,METHOD(getScopeNode_,this)(this,0,NULL))
+;
         //return .addToSpecificScope(scope, item, options)
-        return METHOD(addToSpecificScope_,this)(this,3,(any_arr){scope
-, item
-, options
-        });
+        return METHOD(addToSpecificScope_,this)(this,3,(any_arr){
+        scope, 
+        item, 
+        options
+});
      return undefined;
      }
 //First search it to report duplicates, if found in the scope.
@@ -1520,23 +1713,29 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //declare valid item.name
         
         //var name = type of item is 'string'? item : item.name
-        var name = __is(_typeof(item),any_LTR("string")) ? item : PROP(name_,item);
+        var 
+        name = __is(_typeof(item),any_LTR("string")) ? item : PROP(name_,item)
+;
         //logger.debug "addToScope: '#{name}' to '#{scope.name}'" #[#{.constructor.name}] name:
-        logger_debug(undefined,1,(any_arr){_concatAny(5,any_LTR("addToScope: '")
-, name
-, any_LTR("' to '")
-, PROP(name_,scope)
-, any_LTR("'")
-        )
-        });// #[#{.constructor.name}] name:
+        logger_debug(undefined,1,(any_arr){
+        _concatAny(5,
+        any_LTR("addToScope: '"), 
+        name, 
+        any_LTR("' to '"), 
+        PROP(name_,scope), 
+        any_LTR("'")
+)
+});// #[#{.constructor.name}] name:
         //if .findInScope(name) into var found 
         var found=undefined;
-        if (_anyToBool((found=METHOD(findInScope_,this)(this,1,(any_arr){name
-        }))))  {
+        if (_anyToBool((found=METHOD(findInScope_,this)(this,1,(any_arr){
+        name
+}))))  {
             //if found.caseMismatch(name, this)
-            if (_anyToBool(METHOD(caseMismatch_,found)(found,2,(any_arr){name
-, this
-            })))  {
+            if (_anyToBool(METHOD(caseMismatch_,found)(found,2,(any_arr){
+        name, 
+        this
+})))  {
               //#case mismatch informed
               //do nothing
               //do nothing
@@ -1552,22 +1751,26 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
               //if item instanceof Names.Declaration
               if (_instanceof(item,Names_Declaration))  {
                 //found.replaceForward item
-                METHOD(replaceForward_,found)(found,1,(any_arr){item
-                });
+                METHOD(replaceForward_,found)(found,1,(any_arr){
+        item
+});
               };
             }
             //else 
             
             else {
               //.sayErr "DUPLICATED name in scope: '#{name}'"
-              METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_LTR("DUPLICATED name in scope: '")
-, name
-, any_LTR("'")
-              )
-              });
+              METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(3,
+        any_LTR("DUPLICATED name in scope: '"), 
+        name, 
+        any_LTR("'")
+)
+});
               //logger.error found.originalDeclarationPosition() #add extra information line
-              logger_error(undefined,1,(any_arr){METHOD(originalDeclarationPosition_,found)(found,0,NULL)
-              });// #add extra information line
+              logger_error(undefined,1,(any_arr){
+        METHOD(originalDeclarationPosition_,found)(found,0,NULL)
+});// #add extra information line
             };
             //return found
             return found;
@@ -1575,7 +1778,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //#end if
 //else, not found, add it to the scope
         //var nameDecl
-        var nameDecl = undefined;
+        var 
+        nameDecl = undefined
+;
         //if item instanceof Names.Declaration
         if (_instanceof(item,Names_Declaration))  {
           //nameDecl = item
@@ -1585,13 +1790,15 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         
         else {
           //nameDecl = .declareName(name,options)
-          nameDecl = METHOD(declareName_,this)(this,2,(any_arr){name
-, options
-          });
+          nameDecl = METHOD(declareName_,this)(this,2,(any_arr){
+        name, 
+        options
+});
         };
         //scope.addMember nameDecl
-        METHOD(addMember_,scope)(scope,1,(any_arr){nameDecl
-        });
+        METHOD(addMember_,scope)(scope,1,(any_arr){
+        nameDecl
+});
         //return nameDecl
         return nameDecl;
      return undefined;
@@ -1604,16 +1811,20 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //if no .scope 
         if (!_anyToBool(PROP(scope_,this)))  {
           //var options=new Names.NameDeclOptions
-          var options = new(Names_NameDeclOptions,0,NULL);
+          var 
+        options = new(Names_NameDeclOptions,0,NULL)
+;
           //options.normalizeModeKeepFirstCase = true
           PROP(normalizeModeKeepFirstCase_,options) = true;
           //.scope = .declareName("[#{.constructor.name} Scope]", options)
-          PROP(scope_,this) = METHOD(declareName_,this)(this,2,(any_arr){_concatAny(3,any_LTR("[")
-, PROP(name_,any_class(this.class))
-, any_LTR(" Scope]")
-          )
-, options
-          });
+          PROP(scope_,this) = METHOD(declareName_,this)(this,2,(any_arr){
+        _concatAny(3,
+        any_LTR("["), 
+        PROP(name_,any_class(this.class)), 
+        any_LTR(" Scope]")
+), 
+        options
+});
           //.scope.isScope = true
           PROP(isScope_,PROP(scope_,this)) = true;
         };
@@ -1633,18 +1844,26 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //If the parent is Append-To, search for the referenced clas/namespace.
 //returns owner.nameDecl or nothing
         //var toNamespace
-        var toNamespace = undefined;
+        var 
+        toNamespace = undefined
+;
         //var ownerDecl 
-        var ownerDecl = undefined;
+        var 
+        ownerDecl = undefined
+;
         //# get parent ClassDeclaration/Append-to/Namespace
         //var parent:Grammar.ClassDeclaration = .getParent(Grammar.ClassDeclaration)
-        var parent = METHOD(getParent_,this)(this,1,(any_arr){Grammar_ClassDeclaration
-        });
+        var 
+        parent = METHOD(getParent_,this)(this,1,(any_arr){
+        Grammar_ClassDeclaration
+})
+;
         //if no parent
         if (!_anyToBool(parent))  {
            //if informError, .throwError "declaration is outside 'class/namespace/append to'. Check indent"
-           if (_anyToBool(informError)) {METHOD(throwError_,this)(this,1,(any_arr){any_LTR("declaration is outside 'class/namespace/append to'. Check indent")
-           });};
+           if (_anyToBool(informError)) {METHOD(throwError_,this)(this,1,(any_arr){
+        any_LTR("declaration is outside 'class/namespace/append to'. Check indent")
+});};
            //return          
            return undefined;
         };
@@ -1662,11 +1881,13 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                 //if informError 
                 if (_anyToBool(informError))  {
                     //.sayErr "Append to: '#{parent.varRef}'. Reference is not fully declared"
-                    METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_LTR("Append to: '")
-, PROP(varRef_,parent)
-, any_LTR("'. Reference is not fully declared")
-                    )
-                    });
+                    METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(3,
+        any_LTR("Append to: '"), 
+        PROP(varRef_,parent), 
+        any_LTR("'. Reference is not fully declared")
+)
+});
                 };
                 //return //if no ownerDecl found
                 return undefined; //if no ownerDecl found
@@ -1696,14 +1917,17 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             //# move to class prototype
             //if no ownerDecl.findOwnMember("prototype") into var ownerDeclProto
             var ownerDeclProto=undefined;
-            if (!(_anyToBool((ownerDeclProto=METHOD(findOwnMember_,ownerDecl)(ownerDecl,1,(any_arr){any_LTR("prototype")
-            })))))  {
+            if (!(_anyToBool((ownerDeclProto=METHOD(findOwnMember_,ownerDecl)(ownerDecl,1,(any_arr){
+        any_LTR("prototype")
+})))))  {
                 //if informError, .sayErr "Class '#{ownerDecl}' has no .prototype"
-                if (_anyToBool(informError)) {METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_LTR("Class '")
-, ownerDecl
-, any_LTR("' has no .prototype")
-                )
-                });};
+                if (_anyToBool(informError)) {METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(3,
+        any_LTR("Class '"), 
+        ownerDecl, 
+        any_LTR("' has no .prototype")
+)
+});};
                 //return
                 return undefined;
             };
@@ -1732,19 +1956,23 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
   
       //if this.tryGetMethod(methodSymbol) into var theFunction:Function 
       var theFunction=undefined;
-      if (_anyToBool((theFunction=METHOD(tryGetMethod_,this)(this,1,(any_arr){methodSymbol
-      }))))  {
+      if (_anyToBool((theFunction=METHOD(tryGetMethod_,this)(this,1,(any_arr){
+        methodSymbol
+}))))  {
             //logger.debug "calling #{.constructor.name}.#{LiteCore.getSymbolName(methodSymbol)}() - '#{.name}'"
-            logger_debug(undefined,1,(any_arr){_concatAny(7,any_LTR("calling ")
-, PROP(name_,any_class(this.class))
-, any_LTR(".")
-, (LiteCore_getSymbolName(undefined,1,(any_arr){methodSymbol
-            }))
-, any_LTR("() - '")
-, PROP(name_,this)
-, any_LTR("'")
-            )
-            });
+            logger_debug(undefined,1,(any_arr){
+        _concatAny(7,
+        any_LTR("calling "), 
+        PROP(name_,any_class(this.class)), 
+        any_LTR("."), 
+        (LiteCore_getSymbolName(undefined,1,(any_arr){
+        methodSymbol
+})), 
+        any_LTR("() - '"), 
+        PROP(name_,this), 
+        any_LTR("'")
+)
+});
             //theFunction.call(this)
             __apply(theFunction,this,0,NULL);
       };
@@ -1766,9 +1994,10 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                 //declare value:ASTBase
                 
                 //value.callOnSubTree methodSymbol,excludeClass #recurse
-                METHOD(callOnSubTree_,value)(value,2,(any_arr){methodSymbol
-, excludeClass
-                });// #recurse
+                METHOD(callOnSubTree_,value)(value,2,(any_arr){
+        methodSymbol, 
+        excludeClass
+});// #recurse
             }
             //else if value instance of Array
             
@@ -1786,9 +2015,10 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                     //declare item:ASTBase
                     
                     //item.callOnSubTree methodSymbol,excludeClass
-                    METHOD(callOnSubTree_,item)(item,2,(any_arr){methodSymbol
-, excludeClass
-                    });
+                    METHOD(callOnSubTree_,item)(item,2,(any_arr){
+        methodSymbol, 
+        excludeClass
+});
                 }}};// end for each in
                 
             };
@@ -1811,10 +2041,13 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       
       //#just add to actual exports, but preserve parent
       //var saveParent = exportedNameDecl.parent
-      var saveParent = PROP(parent_,exportedNameDecl);
+      var 
+        saveParent = PROP(parent_,exportedNameDecl)
+;
       //.exports.addMember(exportedNameDecl)
-      __call(addMember_,PROP(exports_,this),1,(any_arr){exportedNameDecl
-      });
+      __call(addMember_,PROP(exports_,this),1,(any_arr){
+        exportedNameDecl
+});
       //exportedNameDecl.parent = saveParent
       PROP(parent_,exportedNameDecl) = saveParent;
      return undefined;
@@ -1829,7 +2062,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
   //- replace module.exports with the default export object
   
       //var exportDefaultNameDecl
-      var exportDefaultNameDecl = undefined;
+      var 
+        exportDefaultNameDecl = undefined
+;
 //search for a export default object (a class/namespace named as the module)
       //for each nameDecl in map .exports.members
       any _list48=PROP(members_,PROP(exports_,this));
@@ -1862,15 +2097,17 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                   nameDecl= __nvp->value;
               
                   //nameDecl.warn 'default export: cannot have "public functions/vars" and also a class/namespace named as the module (default export)'
-                  METHOD(warn_,nameDecl)(nameDecl,1,(any_arr){any_LTR("default export: cannot have \"public functions/vars\" and also a class/namespace named as the module (default export)")
-                  });
+                  METHOD(warn_,nameDecl)(nameDecl,1,(any_arr){
+        any_LTR("default export: cannot have \"public functions/vars\" and also a class/namespace named as the module (default export)")
+});
               }};// end for each in map
               
           };
           ////replace
           //.exports.makePointTo exportDefaultNameDecl
-          __call(makePointTo_,PROP(exports_,this),1,(any_arr){exportDefaultNameDecl
-          });
+          __call(makePointTo_,PROP(exports_,this),1,(any_arr){
+        exportDefaultNameDecl
+});
           //.exportsReplaced = true
           PROP(exportsReplaced_,this) = true;
       };
@@ -1896,15 +2133,18 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Grammar_VariableDecl));
         //---------
         //var options = new Names.NameDeclOptions
-        var options = new(Names_NameDeclOptions,0,NULL);
+        var 
+        options = new(Names_NameDeclOptions,0,NULL)
+;
         //options.type = .type
         PROP(type_,options) = PROP(type_,this);
         //options.itemType = .itemType
         PROP(itemType_,options) = PROP(itemType_,this);
         //return .declareName(.name,options)
-        return METHOD(declareName_,this)(this,2,(any_arr){PROP(name_,this)
-, options
-        });
+        return METHOD(declareName_,this)(this,2,(any_arr){
+        PROP(name_,this), 
+        options
+});
       return undefined;
       }
       //helper method declareInScope()  
@@ -1912,27 +2152,49 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
           assert(_instanceof(this,Grammar_VariableDecl));
           //---------
           //.nameDecl = .addToScope(.createNameDeclaration())
-          PROP(nameDecl_,this) = METHOD(addToScope_,this)(this,1,(any_arr){METHOD(createNameDeclaration_,this)(this,0,NULL)
-          });
+          PROP(nameDecl_,this) = METHOD(addToScope_,this)(this,1,(any_arr){
+        METHOD(createNameDeclaration_,this)(this,0,NULL)
+});
       return undefined;
       }
       //helper method getTypeFromAssignedValue() 
       any Grammar_VariableDecl_getTypeFromAssignedValue(DEFAULT_ARGUMENTS){
           assert(_instanceof(this,Grammar_VariableDecl));
           //---------
+          //// if it has an assigned value
           //if .nameDecl and .assignedValue and .nameDecl.name isnt 'prototype'
           if (_anyToBool(PROP(nameDecl_,this)) && _anyToBool(PROP(assignedValue_,this)) && !__is(PROP(name_,PROP(nameDecl_,this)),any_LTR("prototype")))  {
-              //if no .nameDecl.findOwnMember('**proto**') into var type #if has no type
+              
+              //if .assignedValue instanceof Grammar.Expression
               var type=undefined;
-              if (!(_anyToBool((type=__call(findOwnMember_,PROP(nameDecl_,this),1,(any_arr){any_LTR("**proto**")
-              })))))  {// #if has no type
+              if (_instanceof(PROP(assignedValue_,this),Grammar_Expression) && __in(any_class(PROP(name_,PROP(root_,PROP(assignedValue_,this))).class),2,(any_arr){Grammar_StringLiteral, Grammar_NumberLiteral}))  {
+                //and .assignedValue.root.name.constructor in [Grammar.StringLiteral,Grammar.NumberLiteral]
+                    //var theLiteral = .assignedValue.root.name
+                    var 
+        theLiteral = PROP(name_,PROP(root_,PROP(assignedValue_,this)))
+;
+                    //// if it is assigning a literal, force type to string|number|array
+                    //.nameDecl.setMember('**proto**', globalPrototype(theLiteral.type))
+                    __call(setMember_,PROP(nameDecl_,this),2,(any_arr){
+        any_LTR("**proto**"), 
+        Validate_globalPrototype(undefined,1,(any_arr){
+        PROP(type_,theLiteral)
+})
+});
+              }
+              //else if no .nameDecl.findOwnMember('**proto**') into var type #if has no type
+              
+              else if (!(_anyToBool((type=__call(findOwnMember_,PROP(nameDecl_,this),1,(any_arr){
+        any_LTR("**proto**")
+})))))  {// #if has no type
                   //if .assignedValue.getResultType() into var result #get assignedValue type
                   var result=undefined;
                   if (_anyToBool((result=__call(getResultType_,PROP(assignedValue_,this),0,NULL))))  {// #get assignedValue type
-                      //this.nameDecl.setMember('**proto**', result) #assign to this.nameDecl
-                      __call(setMember_,PROP(nameDecl_,this),2,(any_arr){any_LTR("**proto**")
-, result
-    });// #assign to this.nameDecl
+                      //.nameDecl.setMember('**proto**', result) #assign to this.nameDecl
+                      __call(setMember_,PROP(nameDecl_,this),2,(any_arr){
+        any_LTR("**proto**"), 
+        result
+});// #assign to this.nameDecl
                   };
               };
           };
@@ -1945,8 +2207,11 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Grammar_VarStatement));
         //---------
         //var moduleNode:Grammar.Module = .getParent(Grammar.Module)
-        var moduleNode = METHOD(getParent_,this)(this,1,(any_arr){Grammar_Module
-        });
+        var 
+        moduleNode = METHOD(getParent_,this)(this,1,(any_arr){
+        Grammar_Module
+})
+;
         //for each varDecl in .list
         any _list50=PROP(list_,this);
         { var varDecl=undefined;
@@ -1955,26 +2220,31 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             //varDecl.declareInScope
             METHOD(declareInScope_,varDecl)(varDecl,0,NULL);
             //if .hasAdjective("export")
-            if (_anyToBool(METHOD(hasAdjective_,this)(this,1,(any_arr){any_LTR("export")
-            })))  {
+            if (_anyToBool(METHOD(hasAdjective_,this)(this,1,(any_arr){
+        any_LTR("export")
+})))  {
                 ////mark as public
                 //varDecl.nameDecl.isPublicVar = true
                 PROP(isPublicVar_,PROP(nameDecl_,varDecl)) = true;
                 //moduleNode.addToExport varDecl.nameDecl
-                METHOD(addToExport_,moduleNode)(moduleNode,1,(any_arr){PROP(nameDecl_,varDecl)
-                });
+                METHOD(addToExport_,moduleNode)(moduleNode,1,(any_arr){
+        PROP(nameDecl_,varDecl)
+});
             };
             //if varDecl.aliasVarRef
             if (_anyToBool(PROP(aliasVarRef_,varDecl)))  {
                 ////Example: "public var $ = jQuery" => declare alias $ for jQuery
                 //var opt = new Names.NameDeclOptions
-                var opt = new(Names_NameDeclOptions,0,NULL);
+                var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
                 //opt.informError= true
                 PROP(informError_,opt) = true;
                 //if varDecl.aliasVarRef.tryGetReference(opt) into var ref
                 var ref=undefined;
-                if (_anyToBool((ref=__call(tryGetReference_,PROP(aliasVarRef_,varDecl),1,(any_arr){opt
-                }))))  {
+                if (_anyToBool((ref=__call(tryGetReference_,PROP(aliasVarRef_,varDecl),1,(any_arr){
+        opt
+}))))  {
                     //# aliases share .members
                     //varDecl.nameDecl.members = ref.members
                     PROP(members_,PROP(nameDecl_,varDecl)) = PROP(members_,ref);
@@ -2009,9 +2279,11 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
          assert(_instanceof(this,Grammar_WithStatement));
          //---------
          //.nameDecl = .addToScope(.declareName(.name))
-         PROP(nameDecl_,this) = METHOD(addToScope_,this)(this,1,(any_arr){METHOD(declareName_,this)(this,1,(any_arr){PROP(name_,this)
-         })
-         });
+         PROP(nameDecl_,this) = METHOD(addToScope_,this)(this,1,(any_arr){
+        METHOD(declareName_,this)(this,1,(any_arr){
+        PROP(name_,this)
+})
+});
       return undefined;
       }
       //method evaluateAssignments() # pass 4, determine type from assigned value
@@ -2019,8 +2291,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Grammar_WithStatement));
         //---------
         //.nameDecl.assignTypeFromValue .varRef
-        __call(assignTypeFromValue_,PROP(nameDecl_,this),1,(any_arr){PROP(varRef_,this)
-        });
+        __call(assignTypeFromValue_,PROP(nameDecl_,this),1,(any_arr){
+        PROP(varRef_,this)
+});
       return undefined;
       }
       
@@ -2033,15 +2306,19 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Grammar_ImportStatementItem));
         //---------
         //if no .getParent(Grammar.DeclareStatement) #except for 'global declare'
-        if (!_anyToBool(METHOD(getParent_,this)(this,1,(any_arr){Grammar_DeclareStatement
-        })))  {// #except for 'global declare'
+        if (!_anyToBool(METHOD(getParent_,this)(this,1,(any_arr){
+        Grammar_DeclareStatement
+})))  {// #except for 'global declare'
             //if .hasAdjective('shim') and .findInScope(.name), return // do not import if shim and already declared
-            if (_anyToBool(METHOD(hasAdjective_,this)(this,1,(any_arr){any_LTR("shim")
-            })) && _anyToBool(METHOD(findInScope_,this)(this,1,(any_arr){PROP(name_,this)
-            }))) {return undefined;};
+            if (_anyToBool(METHOD(hasAdjective_,this)(this,1,(any_arr){
+        any_LTR("shim")
+})) && _anyToBool(METHOD(findInScope_,this)(this,1,(any_arr){
+        PROP(name_,this)
+}))) {return undefined;};
             //.nameDecl = .addToScope(.name)
-            PROP(nameDecl_,this) = METHOD(addToScope_,this)(this,1,(any_arr){PROP(name_,this)
-            });
+            PROP(nameDecl_,this) = METHOD(addToScope_,this)(this,1,(any_arr){
+        PROP(name_,this)
+});
         };
       return undefined;
       }
@@ -2074,16 +2351,23 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         if (__is(any_class(this.class),Grammar_AppendToDeclaration)) {return undefined;};
 //Check if it is a class or a namespace
         //var isNamespace = this.constructor is Grammar.NamespaceDeclaration
-        var isNamespace = any_number(__is(any_class(this.class),Grammar_NamespaceDeclaration));
+        var 
+        isNamespace = any_number(__is(any_class(this.class),Grammar_NamespaceDeclaration))
+;
         //var isClass = this.constructor is Grammar.ClassDeclaration
-        var isClass = any_number(__is(any_class(this.class),Grammar_ClassDeclaration));
+        var 
+        isClass = any_number(__is(any_class(this.class),Grammar_ClassDeclaration))
+;
         //var opt = new Names.NameDeclOptions
-        var opt = new(Names_NameDeclOptions,0,NULL);
+        var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
         //if isNamespace 
         if (_anyToBool(isNamespace))  {
             //.nameDecl = .declareName(.name)
-            PROP(nameDecl_,this) = METHOD(declareName_,this)(this,1,(any_arr){PROP(name_,this)
-            });
+            PROP(nameDecl_,this) = METHOD(declareName_,this)(this,1,(any_arr){
+        PROP(name_,this)
+});
         }
         //else 
         
@@ -2091,57 +2375,71 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //if is a class adjectivated "shim", do not declare if already exists
     
             //if .hasAdjective('shim') 
-            if (_anyToBool(METHOD(hasAdjective_,this)(this,1,(any_arr){any_LTR("shim")
-            })))  {
+            if (_anyToBool(METHOD(hasAdjective_,this)(this,1,(any_arr){
+        any_LTR("shim")
+})))  {
                 //if .tryGetFromScope(.name) 
-                if (_anyToBool(METHOD(tryGetFromScope_,this)(this,1,(any_arr){PROP(name_,this)
-                })))  {
+                if (_anyToBool(METHOD(tryGetFromScope_,this)(this,1,(any_arr){
+        PROP(name_,this)
+})))  {
                     //return 
                     return undefined;
                 };
             };
 //declare the class
             //opt.type = globalPrototype('Function')
-            PROP(type_,opt) = Validate_globalPrototype(undefined,1,(any_arr){any_LTR("Function")
-            });
+            PROP(type_,opt) = Validate_globalPrototype(undefined,1,(any_arr){
+        any_LTR("Function")
+});
             //.nameDecl = .declareName(.name,opt) //class
-            PROP(nameDecl_,this) = METHOD(declareName_,this)(this,2,(any_arr){PROP(name_,this)
-, opt
-            }); //class
+            PROP(nameDecl_,this) = METHOD(declareName_,this)(this,2,(any_arr){
+        PROP(name_,this), 
+        opt
+}); //class
             //opt.type = undefined
             PROP(type_,opt) = undefined;
         };
 //get parent. We cover here class/namespaces directly declared inside namespaces (without AppendTo)
         //var container = .getParent(Grammar.NamespaceDeclaration)
-        var container = METHOD(getParent_,this)(this,1,(any_arr){Grammar_NamespaceDeclaration
-        });
+        var 
+        container = METHOD(getParent_,this)(this,1,(any_arr){
+        Grammar_NamespaceDeclaration
+})
+;
 //if it is declared inside a namespace, it becomes a item of the namespace
         //if container
         if (_anyToBool(container))  {
             //declare container: Grammar.NamespaceDeclaration
             
             //container.nameDecl.addMember .nameDecl
-            __call(addMember_,PROP(nameDecl_,container),1,(any_arr){PROP(nameDecl_,this)
-            });
+            __call(addMember_,PROP(nameDecl_,container),1,(any_arr){
+        PROP(nameDecl_,this)
+});
         }
 //else, is a module-level class|namespace. Add to scope
         //else
         
         else {
             //.addToScope .nameDecl 
-            METHOD(addToScope_,this)(this,1,(any_arr){PROP(nameDecl_,this)
-            });
+            METHOD(addToScope_,this)(this,1,(any_arr){
+        PROP(nameDecl_,this)
+});
 //if id the default export object, or interface file, or has adjective public/export, 
 //add also to module.exports
             //var moduleNode:Grammar.Module = .getParent(Grammar.Module)
-            var moduleNode = METHOD(getParent_,this)(this,1,(any_arr){Grammar_Module
-            });
+            var 
+        moduleNode = METHOD(getParent_,this)(this,1,(any_arr){
+        Grammar_Module
+})
+;
             //if moduleNode.fileInfo.base is .name or moduleNode.fileInfo.isInterface or .hasAdjective('export') 
-            if (_anyToBool((_anyToBool(__or2=(_anyToBool(__or3=any_number(__is(PROP(base_,PROP(fileInfo_,moduleNode)),PROP(name_,this))))? __or3 : PROP(isInterface_,PROP(fileInfo_,moduleNode))))? __or2 : METHOD(hasAdjective_,this)(this,1,(any_arr){any_LTR("export")
-            }))))  {
+            if (_anyToBool((_anyToBool(__or2=(_anyToBool(__or3=any_number(__is(PROP(base_,PROP(fileInfo_,moduleNode)),PROP(name_,this))))? __or3 : PROP(isInterface_,PROP(fileInfo_,moduleNode))))? __or2 : METHOD(hasAdjective_,this)(this,1,(any_arr){
+        any_LTR("export")
+}))))  {
                 //moduleNode.addToExport .nameDecl 
-                METHOD(addToExport_,moduleNode)(moduleNode,1,(any_arr){PROP(nameDecl_,this)
-                });
+                METHOD(addToExport_,moduleNode)(moduleNode,1,(any_arr){
+        PROP(nameDecl_,this)
+});
             };
         };
 //if it is a Class, we create 'Class.prototype' member
@@ -2150,33 +2448,42 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //if isClass
         if (_anyToBool(isClass))  {
             //var prtypeNameDecl = .nameDecl.findOwnMember('prototype') or .addMemberTo(.nameDecl,'prototype')
-            var prtypeNameDecl = (_anyToBool(__or4=__call(findOwnMember_,PROP(nameDecl_,this),1,(any_arr){any_LTR("prototype")
-            }))? __or4 : METHOD(addMemberTo_,this)(this,2,(any_arr){PROP(nameDecl_,this)
-, any_LTR("prototype")
-            }));
+            var 
+        prtypeNameDecl = (_anyToBool(__or4=__call(findOwnMember_,PROP(nameDecl_,this),1,(any_arr){
+        any_LTR("prototype")
+}))? __or4 : METHOD(addMemberTo_,this)(this,2,(any_arr){
+        PROP(nameDecl_,this), 
+        any_LTR("prototype")
+}))
+;
             //if .varRefSuper, prtypeNameDecl.setMember('**proto**',.varRefSuper)
-            if (_anyToBool(PROP(varRefSuper_,this))) {METHOD(setMember_,prtypeNameDecl)(prtypeNameDecl,2,(any_arr){any_LTR("**proto**")
-, PROP(varRefSuper_,this)
-            });};
+            if (_anyToBool(PROP(varRefSuper_,this))) {METHOD(setMember_,prtypeNameDecl)(prtypeNameDecl,2,(any_arr){
+        any_LTR("**proto**"), 
+        PROP(varRefSuper_,this)
+});};
             //opt.pointsTo = .nameDecl
             PROP(pointsTo_,opt) = PROP(nameDecl_,this);
             //prtypeNameDecl.addMember('constructor',opt) 
-            METHOD(addMember_,prtypeNameDecl)(prtypeNameDecl,2,(any_arr){any_LTR("constructor")
-, opt
-            });
+            METHOD(addMember_,prtypeNameDecl)(prtypeNameDecl,2,(any_arr){
+        any_LTR("constructor"), 
+        opt
+});
 //return type of the class-function, is the prototype
             //.nameDecl.setMember '**return type**',prtypeNameDecl
-            __call(setMember_,PROP(nameDecl_,this),2,(any_arr){any_LTR("**return type**")
-, prtypeNameDecl
-            });
+            __call(setMember_,PROP(nameDecl_,this),2,(any_arr){
+        any_LTR("**return type**"), 
+        prtypeNameDecl
+});
 //add to nameAffinity
             //if not nameAffinity.members.has(.name)
-            if (!(_anyToBool(__call(has_,PROP(members_,Validate_nameAffinity),1,(any_arr){PROP(name_,this)
-            }))))  {
+            if (!(_anyToBool(__call(has_,PROP(members_,Validate_nameAffinity),1,(any_arr){
+        PROP(name_,this)
+}))))  {
                 //nameAffinity.members.set .name, .nameDecl
-                __call(set_,PROP(members_,Validate_nameAffinity),2,(any_arr){PROP(name_,this)
-, PROP(nameDecl_,this)
-                });
+                __call(set_,PROP(members_,Validate_nameAffinity),2,(any_arr){
+        PROP(name_,this), 
+        PROP(nameDecl_,this)
+});
             };
         };
      return undefined;
@@ -2190,8 +2497,11 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //if .constructor isnt Grammar.ClassDeclaration, return // exclude derived classes
         if (!__is(any_class(this.class),Grammar_ClassDeclaration)) {return undefined;};
         //var prt:Names.Declaration = .nameDecl.ownMember('prototype')
-        var prt = __call(ownMember_,PROP(nameDecl_,this),1,(any_arr){any_LTR("prototype")
-        });
+        var 
+        prt = __call(ownMember_,PROP(nameDecl_,this),1,(any_arr){
+        any_LTR("prototype")
+})
+;
         //for each propNameDecl in map prt.members where propNameDecl.nodeClass is Grammar.VariableDecl
         any _list52=PROP(members_,prt);
         {NameValuePair_ptr __nvp=NULL; //name:value pair
@@ -2204,8 +2514,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //for each propNameDecl in map prt.members where propNameDecl.nodeClass is Grammar.VariableDecl
         if(__is(PROP(nodeClass_,propNameDecl),Grammar_VariableDecl)){
                 //propNameDecl.checkSuperChainProperties .nameDecl.superDecl
-                METHOD(checkSuperChainProperties_,propNameDecl)(propNameDecl,1,(any_arr){PROP(superDecl_,PROP(nameDecl_,this))
-                });
+                METHOD(checkSuperChainProperties_,propNameDecl)(propNameDecl,1,(any_arr){
+        PROP(superDecl_,PROP(nameDecl_,this))
+});
         }}};// end for each in map
         
      return undefined;
@@ -2222,13 +2533,17 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //if project.options.target is 'c'
         if (__is(PROP(target_,PROP(options_,Validate_project)),any_LTR("c")))  {
             //.nameDecl = .declareName(UniqueID.getVarName('_literalArray'))
-            PROP(nameDecl_,this) = METHOD(declareName_,this)(this,1,(any_arr){UniqueID_getVarName(undefined,1,(any_arr){any_LTR("_literalArray")
-            })
-            });
+            PROP(nameDecl_,this) = METHOD(declareName_,this)(this,1,(any_arr){
+        UniqueID_getVarName(undefined,1,(any_arr){
+        any_LTR("_literalArray")
+})
+});
             //.getParent(Grammar.Module).addToScope .nameDecl
-            __call(addToScope_,METHOD(getParent_,this)(this,1,(any_arr){Grammar_Module
-            }),1,(any_arr){PROP(nameDecl_,this)
-            });
+            __call(addToScope_,METHOD(getParent_,this)(this,1,(any_arr){
+        Grammar_Module
+}),1,(any_arr){
+        PROP(nameDecl_,this)
+});
         };
      return undefined;
      }
@@ -2238,8 +2553,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
           assert(_instanceof(this,Grammar_ArrayLiteral));
           //---------
           //return tryGetGlobalPrototype('Array')
-          return Validate_tryGetGlobalPrototype(undefined,1,(any_arr){any_LTR("Array")
-          });
+          return Validate_tryGetGlobalPrototype(undefined,1,(any_arr){
+        any_LTR("Array")
+});
      return undefined;
      }
 //### Append to class Grammar.ObjectLiteral ###
@@ -2265,8 +2581,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
           assert(_instanceof(this,Grammar_ObjectLiteral));
           //---------
           //return tryGetGlobalPrototype( project.options.target is 'c'? 'Map' else 'Object')
-          return Validate_tryGetGlobalPrototype(undefined,1,(any_arr){__is(PROP(target_,PROP(options_,Validate_project)),any_LTR("c")) ? any_LTR("Map") : any_LTR("Object")
-          });
+          return Validate_tryGetGlobalPrototype(undefined,1,(any_arr){
+        __is(PROP(target_,PROP(options_,Validate_project)),any_LTR("c")) ? any_LTR("Map") : any_LTR("Object")
+});
      return undefined;
      }
 ///*        if project.options.target is 'c' 
@@ -2302,34 +2619,49 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       assert(_instanceof(this,Grammar_FunctionDeclaration));
       //---------
       //var ownerNameDecl
-      var ownerNameDecl = undefined;
+      var 
+        ownerNameDecl = undefined
+;
       //var isMethod = .constructor is Grammar.MethodDeclaration
-      var isMethod = any_number(__is(any_class(this.class),Grammar_MethodDeclaration));
+      var 
+        isMethod = any_number(__is(any_class(this.class),Grammar_MethodDeclaration))
+;
       //var isFunction = .constructor is Grammar.FunctionDeclaration
-      var isFunction = any_number(__is(any_class(this.class),Grammar_FunctionDeclaration));
+      var 
+        isFunction = any_number(__is(any_class(this.class),Grammar_FunctionDeclaration))
+;
       //var opt = new Names.NameDeclOptions
-      var opt = new(Names_NameDeclOptions,0,NULL);
+      var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
 //1st: Grammar.FunctionDeclaration
 //if it is not anonymous, add function name to parent scope,
 //if its 'public/export' (or we're processing an "interface" file), add to exports
       //if isFunction
       if (_anyToBool(isFunction))  {
           //opt.type = globalPrototype('Function')
-          PROP(type_,opt) = Validate_globalPrototype(undefined,1,(any_arr){any_LTR("Function")
-          });
+          PROP(type_,opt) = Validate_globalPrototype(undefined,1,(any_arr){
+        any_LTR("Function")
+});
           //.nameDecl = .addToScope(.name,opt)
-          PROP(nameDecl_,this) = METHOD(addToScope_,this)(this,2,(any_arr){PROP(name_,this)
-, opt
-          });
+          PROP(nameDecl_,this) = METHOD(addToScope_,this)(this,2,(any_arr){
+        PROP(name_,this), 
+        opt
+});
           //var moduleNode:Grammar.Module=.getParent(Grammar.Module)
-          var moduleNode = METHOD(getParent_,this)(this,1,(any_arr){Grammar_Module
-          });
+          var 
+        moduleNode = METHOD(getParent_,this)(this,1,(any_arr){
+        Grammar_Module
+})
+;
           //if .hasAdjective('export') or moduleNode.fileInfo.isInterface
-          if (_anyToBool((_anyToBool(__or5=METHOD(hasAdjective_,this)(this,1,(any_arr){any_LTR("export")
-          }))? __or5 : PROP(isInterface_,PROP(fileInfo_,moduleNode)))))  {
+          if (_anyToBool((_anyToBool(__or5=METHOD(hasAdjective_,this)(this,1,(any_arr){
+        any_LTR("export")
+}))? __or5 : PROP(isInterface_,PROP(fileInfo_,moduleNode)))))  {
               //moduleNode.addToExport .nameDecl
-              METHOD(addToExport_,moduleNode)(moduleNode,1,(any_arr){PROP(nameDecl_,this)
-              });
+              METHOD(addToExport_,moduleNode)(moduleNode,1,(any_arr){
+        PROP(nameDecl_,this)
+});
           };
       }
 ///* commmented, for functions and namespace methods, this should'n be a parameter
@@ -2354,15 +2686,18 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
               ////the constructor is the Function-Class itself
               //// so it is not a member function
               //.addMethodToOwnerNameDecl ownerNameDecl
-              METHOD(addMethodToOwnerNameDecl_,this)(this,1,(any_arr){ownerNameDecl
-              });
+              METHOD(addMethodToOwnerNameDecl_,this)(this,1,(any_arr){
+        ownerNameDecl
+});
           };
       };
       //end if
       
 //Define function's return type from parsed text
       //var returnType = .createReturnType()
-      var returnType = METHOD(createReturnType_,this)(this,0,NULL);
+      var 
+        returnType = METHOD(createReturnType_,this)(this,0,NULL)
+;
 //Functions (methods and constructors also), have a 'scope'. 
 //It captures al vars declared in its body.
 //We now create function's scope and add the special var 'this'. 
@@ -2371,21 +2706,29 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //We also add 'arguments.length'
 //Scope starts populated by 'this' and 'arguments'.
       //var scope = .createScope()
-      var scope = METHOD(createScope_,this)(this,0,NULL);
+      var 
+        scope = METHOD(createScope_,this)(this,0,NULL)
+;
       //opt.type='any*'
       PROP(type_,opt) = any_LTR("any*");
       //.addMemberTo(scope,'arguments',opt)
-      METHOD(addMemberTo_,this)(this,3,(any_arr){scope
-, any_LTR("arguments")
-, opt
-      });
+      METHOD(addMemberTo_,this)(this,3,(any_arr){
+        scope, 
+        any_LTR("arguments"), 
+        opt
+});
       //if not isFunction
       if (!(_anyToBool(isFunction)))  {
           //var addThis = false
-          var addThis = false;
+          var 
+        addThis = false
+;
           //var containerClassDeclaration = .getParent(Grammar.ClassDeclaration) //also append-to & NamespaceDeclaration
-          var containerClassDeclaration = METHOD(getParent_,this)(this,1,(any_arr){Grammar_ClassDeclaration
-          }); //also append-to & NamespaceDeclaration
+          var 
+        containerClassDeclaration = METHOD(getParent_,this)(this,1,(any_arr){
+        Grammar_ClassDeclaration
+})
+; //also append-to & NamespaceDeclaration
           //if containerClassDeclaration.constructor is Grammar.ClassDeclaration
           if (__is(any_class(containerClassDeclaration.class),Grammar_ClassDeclaration))  {
               //addThis = true
@@ -2404,10 +2747,11 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
               //opt.type=ownerNameDecl
               PROP(type_,opt) = ownerNameDecl;
               //.addMemberTo(scope,'this',opt)
-              METHOD(addMemberTo_,this)(this,3,(any_arr){scope
-, any_LTR("this")
-, opt
-      });
+              METHOD(addMemberTo_,this)(this,3,(any_arr){
+        scope, 
+        any_LTR("this"), 
+        opt
+});
           };
       };
 //Note: only class methods have 'this' as parameter
@@ -2434,11 +2778,15 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       var owner= argc? arguments[0] : undefined;
       //---------
       //var actual = owner.findOwnMember(.name)
-      var actual = METHOD(findOwnMember_,owner)(owner,1,(any_arr){PROP(name_,this)
-      });
+      var 
+        actual = METHOD(findOwnMember_,owner)(owner,1,(any_arr){
+        PROP(name_,this)
+})
+;
       //if actual and .hasAdjective('shim') #shim for an exising method, do nothing
-      if (_anyToBool(actual) && _anyToBool(METHOD(hasAdjective_,this)(this,1,(any_arr){any_LTR("shim")
-      })))  {// #shim for an exising method, do nothing
+      if (_anyToBool(actual) && _anyToBool(METHOD(hasAdjective_,this)(this,1,(any_arr){
+        any_LTR("shim")
+})))  {// #shim for an exising method, do nothing
         //return
         return undefined;
       };
@@ -2446,22 +2794,27 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       //if no .nameDecl 
       if (!_anyToBool(PROP(nameDecl_,this)))  {
           //var opt = new Names.NameDeclOptions
-          var opt = new(Names_NameDeclOptions,0,NULL);
+          var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
           //opt.type=globalPrototype('Function')
-          PROP(type_,opt) = Validate_globalPrototype(undefined,1,(any_arr){any_LTR("Function")
-          });
+          PROP(type_,opt) = Validate_globalPrototype(undefined,1,(any_arr){
+        any_LTR("Function")
+});
           //.nameDecl = .declareName(.name,opt)
-          PROP(nameDecl_,this) = METHOD(declareName_,this)(this,2,(any_arr){PROP(name_,this)
-, opt
-          });
+          PROP(nameDecl_,this) = METHOD(declareName_,this)(this,2,(any_arr){
+        PROP(name_,this), 
+        opt
+});
       };
       
       //.declared = true
       PROP(declared_,this) = true;
       //.addMemberTo owner, .nameDecl
-      METHOD(addMemberTo_,this)(this,2,(any_arr){owner
-, PROP(nameDecl_,this)
-      });
+      METHOD(addMemberTo_,this)(this,2,(any_arr){
+        owner, 
+        PROP(nameDecl_,this)
+});
      return undefined;
      }
 //#### method createReturnType() returns string ## functions & methods
@@ -2477,34 +2830,44 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //We create a intermediate type for `TypeX Array` 
 //and set this new nameDecl as function's **return type**
           //var composedName = '#{.itemType.toString()} Array'
-          var composedName = _concatAny(2,(__call(toString_,PROP(itemType_,this),0,NULL))
-, any_LTR(" Array")
-          );
+          var 
+        composedName = _concatAny(2,
+        (__call(toString_,PROP(itemType_,this),0,NULL)), 
+        any_LTR(" Array")
+)
+;
 //check if it alerady exists, if not found, create one. Type is 'Array'
         
           //if not globalScope.findMember(composedName) into var intermediateNameDecl
           var intermediateNameDecl=undefined;
-          if (!(_anyToBool((intermediateNameDecl=METHOD(findMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){composedName
-          })))))  {
+          if (!(_anyToBool((intermediateNameDecl=METHOD(findMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){
+        composedName
+})))))  {
               //var opt = new Names.NameDeclOptions
-              var opt = new(Names_NameDeclOptions,0,NULL);
+              var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
               //opt.type = globalPrototype('Array')
-              PROP(type_,opt) = Validate_globalPrototype(undefined,1,(any_arr){any_LTR("Array")
-              });
+              PROP(type_,opt) = Validate_globalPrototype(undefined,1,(any_arr){
+        any_LTR("Array")
+});
               //intermediateNameDecl = globalScope.addMember(composedName,opt)
-              intermediateNameDecl = METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){composedName
-, opt
-              });
+              intermediateNameDecl = METHOD(addMember_,Validate_globalScope)(Validate_globalScope,2,(any_arr){
+        composedName, 
+        opt
+});
           };
 //item type, is each array member's type 
           //intermediateNameDecl.setMember "**item type**", .itemType
-          METHOD(setMember_,intermediateNameDecl)(intermediateNameDecl,2,(any_arr){any_LTR("**item type**")
-, PROP(itemType_,this)
-          });
+          METHOD(setMember_,intermediateNameDecl)(intermediateNameDecl,2,(any_arr){
+        any_LTR("**item type**"), 
+        PROP(itemType_,this)
+});
           //.nameDecl.setMember '**return type**', intermediateNameDecl
-          __call(setMember_,PROP(nameDecl_,this),2,(any_arr){any_LTR("**return type**")
-, intermediateNameDecl
-          });
+          __call(setMember_,PROP(nameDecl_,this),2,(any_arr){
+        any_LTR("**return type**"), 
+        intermediateNameDecl
+});
           //return intermediateNameDecl
           return intermediateNameDecl;
       }
@@ -2513,9 +2876,10 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       
       else {
           //if .type then .nameDecl.setMember('**return type**', .type)
-          if (_anyToBool(PROP(type_,this))) {__call(setMember_,PROP(nameDecl_,this),2,(any_arr){any_LTR("**return type**")
-, PROP(type_,this)
-          });};
+          if (_anyToBool(PROP(type_,this))) {__call(setMember_,PROP(nameDecl_,this),2,(any_arr){
+        any_LTR("**return type**"), 
+        PROP(type_,this)
+});};
           //return .type
           return PROP(type_,this);
       };
@@ -2535,11 +2899,13 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       var ownerDecl=undefined;
       if (!(_anyToBool((ownerDecl=__call(tryGetReference_,PROP(varRef_,this),0,NULL)))))  {
           //.sayErr "Append to: '#{.varRef}'. Reference is not fully declared"
-          METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_LTR("Append to: '")
-, PROP(varRef_,this)
-, any_LTR("'. Reference is not fully declared")
-          )
-          });
+          METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(3,
+        any_LTR("Append to: '"), 
+        PROP(varRef_,this), 
+        any_LTR("'. Reference is not fully declared")
+)
+});
           //return //if no ownerDecl found
           return undefined; //if no ownerDecl found
       };
@@ -2548,12 +2914,15 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
           ////if is "append to class"
           //if no ownerDecl.findOwnMember('prototype') into var prt, .throwError "Append to: class '#{ownerDecl}' has no prototype"
           var prt=undefined;
-          if (!(_anyToBool((prt=METHOD(findOwnMember_,ownerDecl)(ownerDecl,1,(any_arr){any_LTR("prototype")
-          }))))) {METHOD(throwError_,this)(this,1,(any_arr){_concatAny(3,any_LTR("Append to: class '")
-, ownerDecl
-, any_LTR("' has no prototype")
-          )
-          });};
+          if (!(_anyToBool((prt=METHOD(findOwnMember_,ownerDecl)(ownerDecl,1,(any_arr){
+        any_LTR("prototype")
+}))))) {METHOD(throwError_,this)(this,1,(any_arr){
+        _concatAny(3,
+        any_LTR("Append to: class '"), 
+        ownerDecl, 
+        any_LTR("' has no prototype")
+)
+});};
           //ownerDecl=prt // append to class, adds to prototype
           ownerDecl = prt; // append to class, adds to prototype
       };
@@ -2567,50 +2936,57 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       
           //case item.specific.constructor
           
-              //when Grammar.PropertiesDeclaration
+              //when Grammar.PropertiesDeclaration:
           if (__is(any_class(PROP(specific_,item).class),Grammar_PropertiesDeclaration)){
                   //declare item.specific:Grammar.PropertiesDeclaration
                   
                   //if not item.specific.declared, item.specific.declare(informError=true) 
-                  if (!(_anyToBool(PROP(declared_,PROP(specific_,item))))) {__call(declare_,PROP(specific_,item),1,(any_arr){true
-              });};
+                  if (!(_anyToBool(PROP(declared_,PROP(specific_,item))))) {__call(declare_,PROP(specific_,item),1,(any_arr){
+        true
+});};
           
           }
-              //when Grammar.MethodDeclaration
+              //when Grammar.MethodDeclaration:
           else if (__is(any_class(PROP(specific_,item).class),Grammar_MethodDeclaration)){
                   //var m:Grammar.MethodDeclaration = item.specific
-                  var m = PROP(specific_,item);
+                  var 
+        m = PROP(specific_,item)
+;
                   //if m.declared, continue
                   if (_anyToBool(PROP(declared_,m))) {continue;};
 //Now that we have 'owner' we can set **proto** for scope var 'this', 
 //so we can later validate `.x` in `this.x = 7`
                   //m.addMethodToOwnerNameDecl ownerDecl
-                  METHOD(addMethodToOwnerNameDecl_,m)(m,1,(any_arr){ownerDecl
-                  });
+                  METHOD(addMethodToOwnerNameDecl_,m)(m,1,(any_arr){
+        ownerDecl
+});
                   //if m.scope.findOwnMember("this") into var scopeThis 
                   var scopeThis=undefined;
-                  if (_anyToBool((scopeThis=__call(findOwnMember_,PROP(scope_,m),1,(any_arr){any_LTR("this")
-                  }))))  {
+                  if (_anyToBool((scopeThis=__call(findOwnMember_,PROP(scope_,m),1,(any_arr){
+        any_LTR("this")
+}))))  {
                       //scopeThis.setMember '**proto**',ownerDecl
-                      METHOD(setMember_,scopeThis)(scopeThis,2,(any_arr){any_LTR("**proto**")
-, ownerDecl
-                      });
+                      METHOD(setMember_,scopeThis)(scopeThis,2,(any_arr){
+        any_LTR("**proto**"), 
+        ownerDecl
+});
                       //#set also **return type**
                       //m.createReturnType
                       METHOD(createReturnType_,m)(m,0,NULL);
                   };
           
           }
-              //when Grammar.ClassDeclaration
+              //when Grammar.ClassDeclaration:
           else if (__is(any_class(PROP(specific_,item).class),Grammar_ClassDeclaration)){
                   //declare item.specific:Grammar.ClassDeclaration
                   
                   //ownerDecl.addMember item.specific.nameDecl                 
-                  METHOD(addMember_,ownerDecl)(ownerDecl,1,(any_arr){PROP(nameDecl_,PROP(specific_,item))
-                  });
+                  METHOD(addMember_,ownerDecl)(ownerDecl,1,(any_arr){
+        PROP(nameDecl_,PROP(specific_,item))
+});
           
           }
-              //when Grammar.EndStatement
+              //when Grammar.EndStatement:
           else if (__is(any_class(PROP(specific_,item).class),Grammar_EndStatement)){
                   //do nothing
                   //do nothing
@@ -2620,11 +2996,13 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
           else {
               //else
                   //.sayErr 'unexpected "#{item.specific.constructor.name}" inside Append-to Declaration'
-                  METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_LTR("unexpected \"")
-, PROP(name_,any_class(PROP(specific_,item).class))
-, any_LTR("\" inside Append-to Declaration")
-                  )
-                  });
+                  METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(3,
+        any_LTR("unexpected \""), 
+        PROP(name_,any_class(PROP(specific_,item).class)), 
+        any_LTR("\" inside Append-to Declaration")
+)
+});
           };
       }};// end for each in
       
@@ -2647,30 +3025,36 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //Check for duplicate class properties in the super class
         //if superClassNameDecl.findOwnMember('prototype') into var superPrt:Names.Declaration
         var superPrt=undefined;
-        if (_anyToBool((superPrt=METHOD(findOwnMember_,superClassNameDecl)(superClassNameDecl,1,(any_arr){any_LTR("prototype")
-        }))))  {
+        if (_anyToBool((superPrt=METHOD(findOwnMember_,superClassNameDecl)(superClassNameDecl,1,(any_arr){
+        any_LTR("prototype")
+}))))  {
             
             //if superPrt.findOwnMember(.name) into var originalNameDecl
             var originalNameDecl=undefined;
-            if (_anyToBool((originalNameDecl=METHOD(findOwnMember_,superPrt)(superPrt,1,(any_arr){PROP(name_,this)
-            }))))  {
+            if (_anyToBool((originalNameDecl=METHOD(findOwnMember_,superPrt)(superPrt,1,(any_arr){
+        PROP(name_,this)
+}))))  {
                 //.sayErr "Duplicated property. super class [#{superClassNameDecl}] already has a property '#{this}'"
-                METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(5,any_LTR("Duplicated property. super class [")
-, superClassNameDecl
-, any_LTR("] already has a property '")
-, this
-, any_LTR("'")
-                )
-                });
+                METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(5,
+        any_LTR("Duplicated property. super class ["), 
+        superClassNameDecl, 
+        any_LTR("] already has a property '"), 
+        this, 
+        any_LTR("'")
+)
+});
                 //originalNameDecl.sayErr "for reference, original declaration."
-                METHOD(sayErr_,originalNameDecl)(originalNameDecl,1,(any_arr){any_LTR("for reference, original declaration.")
-                });
+                METHOD(sayErr_,originalNameDecl)(originalNameDecl,1,(any_arr){
+        any_LTR("for reference, original declaration.")
+});
             };
 //recurse with super's super. Here we're using recursion as a loop device à la Haskell
 //(instead of a simpler "while .superDecl into node" loop. Just to be fancy)
             //.checkSuperChainProperties superClassNameDecl.superDecl
-            METHOD(checkSuperChainProperties_,this)(this,1,(any_arr){PROP(superDecl_,superClassNameDecl)
-            });
+            METHOD(checkSuperChainProperties_,this)(this,1,(any_arr){
+        PROP(superDecl_,superClassNameDecl)
+});
         };
      return undefined;
      }
@@ -2690,13 +3074,15 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
           var superClassNameDecl=undefined;
           if (!(_anyToBool((superClassNameDecl=__call(tryGetReference_,PROP(varRefSuper_,this),0,NULL)))))  {
               //.sayErr "class #{.name} extends '#{.varRefSuper}'. Reference is not fully declared"
-              METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(5,any_LTR("class ")
-, PROP(name_,this)
-, any_LTR(" extends '")
-, PROP(varRefSuper_,this)
-, any_LTR("'. Reference is not fully declared")
-              )
-              });
+              METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(5,
+        any_LTR("class "), 
+        PROP(name_,this), 
+        any_LTR(" extends '"), 
+        PROP(varRefSuper_,this), 
+        any_LTR("'. Reference is not fully declared")
+)
+});
               //return //if no superClassNameDecl found
               return undefined; //if no superClassNameDecl found
           };
@@ -2720,11 +3106,14 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //---------
 //Add all properties as members of its owner object (normally: class.prototype)
         //var opt= new Names.NameDeclOptions
-        var opt = new(Names_NameDeclOptions,0,NULL);
+        var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
         //if .tryGetOwnerNameDecl(informError) into var ownerNameDecl 
         var ownerNameDecl=undefined;
-        if (_anyToBool((ownerNameDecl=METHOD(tryGetOwnerNameDecl_,this)(this,1,(any_arr){informError
-        }))))  {
+        if (_anyToBool((ownerNameDecl=METHOD(tryGetOwnerNameDecl_,this)(this,1,(any_arr){
+        informError
+}))))  {
             //for each varDecl in .list
             any _list55=PROP(list_,this);
             { var varDecl=undefined;
@@ -2735,10 +3124,11 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                 //opt.itemType = varDecl.itemType
                 PROP(itemType_,opt) = PROP(itemType_,varDecl);
                 //varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl,varDecl.name,opt)
-                PROP(nameDecl_,varDecl) = METHOD(addMemberTo_,varDecl)(varDecl,3,(any_arr){ownerNameDecl
-, PROP(name_,varDecl)
-, opt
-                });
+                PROP(nameDecl_,varDecl) = METHOD(addMemberTo_,varDecl)(varDecl,3,(any_arr){
+        ownerNameDecl, 
+        PROP(name_,varDecl), 
+        opt
+});
             }};// end for each in
             //.declared = true
             PROP(declared_,this) = true;
@@ -2794,12 +3184,16 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         if (_anyToBool(PROP(indexVar_,this)))  {
         
             //var indexType = project.options.target is 'js'? 'String':'Number'
-            var indexType = __is(PROP(target_,PROP(options_,Validate_project)),any_LTR("js")) ? any_LTR("String") : any_LTR("Number");
+            var 
+        indexType = __is(PROP(target_,PROP(options_,Validate_project)),any_LTR("js")) ? any_LTR("String") : any_LTR("Number")
+;
             //.indexVar.nameDecl.setMember('**proto**',globalPrototype(indexType))
-            __call(setMember_,PROP(nameDecl_,PROP(indexVar_,this)),2,(any_arr){any_LTR("**proto**")
-, Validate_globalPrototype(undefined,1,(any_arr){indexType
-            })
-    });
+            __call(setMember_,PROP(nameDecl_,PROP(indexVar_,this)),2,(any_arr){
+        any_LTR("**proto**"), 
+        Validate_globalPrototype(undefined,1,(any_arr){
+        indexType
+})
+});
         };
      return undefined;
      }
@@ -2824,18 +3218,23 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //ForEachInArray:
 //If no mainVar.type, guess type from iterable's itemType
         //if no .mainVar.nameDecl.findOwnMember('**proto**')
-        if (!_anyToBool(__call(findOwnMember_,PROP(nameDecl_,PROP(mainVar_,this)),1,(any_arr){any_LTR("**proto**")
-        })))  {
+        if (!_anyToBool(__call(findOwnMember_,PROP(nameDecl_,PROP(mainVar_,this)),1,(any_arr){
+        any_LTR("**proto**")
+})))  {
             //var iterableType:Names.Declaration = .iterable.getResultType()          
-            var iterableType = __call(getResultType_,PROP(iterable_,this),0,NULL);
+            var 
+        iterableType = __call(getResultType_,PROP(iterable_,this),0,NULL)
+;
             //if iterableType and iterableType.findOwnMember('**item type**')  into var itemType
             var itemType=undefined;
-            if (_anyToBool(iterableType) && _anyToBool((itemType=METHOD(findOwnMember_,iterableType)(iterableType,1,(any_arr){any_LTR("**item type**")
-            }))))  {
+            if (_anyToBool(iterableType) && _anyToBool((itemType=METHOD(findOwnMember_,iterableType)(iterableType,1,(any_arr){
+        any_LTR("**item type**")
+}))))  {
                 //.mainVar.nameDecl.setMember('**proto**',itemType)
-                __call(setMember_,PROP(nameDecl_,PROP(mainVar_,this)),2,(any_arr){any_LTR("**proto**")
-, itemType
-     });
+                __call(setMember_,PROP(nameDecl_,PROP(mainVar_,this)),2,(any_arr){
+        any_LTR("**proto**"), 
+        itemType
+});
             };
         };
      return undefined;
@@ -2848,7 +3247,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //if .isMap, return
         if (_anyToBool(PROP(isMap_,this))) {return undefined;};
         //var iterableType:Names.Declaration = .iterable.getResultType()
-        var iterableType = __call(getResultType_,PROP(iterable_,this),0,NULL);
+        var 
+        iterableType = __call(getResultType_,PROP(iterable_,this),0,NULL)
+;
         //if no iterableType 
         if (!_anyToBool(iterableType))  {
             //#.sayErr "ForEachInArray: no type declared for: '#{.iterable}'"
@@ -2858,19 +3259,23 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         }
         //else if no iterableType.findMember('length')
         
-        else if (!_anyToBool(METHOD(findMember_,iterableType)(iterableType,1,(any_arr){any_LTR("length")
-        })))  {
+        else if (!_anyToBool(METHOD(findMember_,iterableType)(iterableType,1,(any_arr){
+        any_LTR("length")
+})))  {
             //.sayErr "ForEachInArray: no .length property declared in '#{.iterable}' type:'#{iterableType.toString()}'"
-            METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(5,any_LTR("ForEachInArray: no .length property declared in '")
-, PROP(iterable_,this)
-, any_LTR("' type:'")
-, (METHOD(toString_,iterableType)(iterableType,0,NULL))
-, any_LTR("'")
-            )
-            });
+            METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(5,
+        any_LTR("ForEachInArray: no .length property declared in '"), 
+        PROP(iterable_,this), 
+        any_LTR("' type:'"), 
+        (METHOD(toString_,iterableType)(iterableType,0,NULL)), 
+        any_LTR("'")
+)
+});
             //logger.error iterableType.originalDeclarationPosition()
-            logger_error(undefined,1,(any_arr){METHOD(originalDeclarationPosition_,iterableType)(iterableType,0,NULL)
-            });
+            logger_error(undefined,1,(any_arr){
+        METHOD(originalDeclarationPosition_,iterableType)(iterableType,0,NULL)
+});
         };
      return undefined;
      }
@@ -2895,14 +3300,18 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //.createScope
         METHOD(createScope_,this)(this,0,NULL);
         //var opt=new Names.NameDeclOptions
-        var opt = new(Names_NameDeclOptions,0,NULL);
+        var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
         //opt.type= globalPrototype('Error')
-        PROP(type_,opt) = Validate_globalPrototype(undefined,1,(any_arr){any_LTR("Error")
-        });
+        PROP(type_,opt) = Validate_globalPrototype(undefined,1,(any_arr){
+        any_LTR("Error")
+});
         //.addToScope .catchVar,opt
-        METHOD(addToScope_,this)(this,2,(any_arr){PROP(catchVar_,this)
-, opt
-        });
+        METHOD(addToScope_,this)(this,2,(any_arr){
+        PROP(catchVar_,this), 
+        opt
+});
       return undefined;
       }
 //### Append to class Grammar.VariableRef ### Helper methods
@@ -2925,7 +3334,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         };
 //Start with main variable name, to check property names
         //var opt = new Names.NameDeclOptions
-        var opt = new(Names_NameDeclOptions,0,NULL);
+        var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
         //opt.informError=true
         PROP(informError_,opt) = true;
         //opt.isForward=true
@@ -2933,9 +3344,12 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //opt.isDummy=true
         PROP(isDummy_,opt) = true;
         //var actualVar = .tryGetFromScope(.name, opt)
-        var actualVar = METHOD(tryGetFromScope_,this)(this,2,(any_arr){PROP(name_,this)
-, opt
-        });
+        var 
+        actualVar = METHOD(tryGetFromScope_,this)(this,2,(any_arr){
+        PROP(name_,this), 
+        opt
+})
+;
 //now follow each accessor
         //if no actualVar or no .accessors, return 
         if (_anyToBool((_anyToBool(__or6=any_number(!_anyToBool(actualVar)))? __or6 : any_number(!_anyToBool(PROP(accessors_,this)))))) {return undefined;};
@@ -2952,10 +3366,11 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                 //opt.isForward=false
                 PROP(isForward_,opt) = false;
                 //actualVar = .tryGetMember(actualVar, ac.name,opt)
-                actualVar = METHOD(tryGetMember_,this)(this,3,(any_arr){actualVar
-, PROP(name_,ac)
-, opt
-                });
+                actualVar = METHOD(tryGetMember_,this)(this,3,(any_arr){
+        actualVar, 
+        PROP(name_,ac), 
+        opt
+});
             }
 //else, for IndexAccess, the varRef type is now 'itemType'
 //and next property access should be on defined members of the type
@@ -2963,8 +3378,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             
             else if (_instanceof(ac,Grammar_IndexAccess))  {
                 //actualVar = actualVar.findMember('**item type**')
-                actualVar = METHOD(findMember_,actualVar)(actualVar,1,(any_arr){any_LTR("**item type**")
-                });
+                actualVar = METHOD(findMember_,actualVar)(actualVar,1,(any_arr){
+        any_LTR("**item type**")
+});
             }
 //else, for FunctionAccess, the varRef type is now function's return type'
 //and next property access should be on defined members of the return type
@@ -2973,25 +3389,29 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             else if (_instanceof(ac,Grammar_FunctionAccess))  {
                 //if actualVar.findOwnMember('**proto**') into var prt
                 var prt=undefined;
-                if (_anyToBool((prt=METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){any_LTR("**proto**")
-                }))))  {
+                if (_anyToBool((prt=METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){
+        any_LTR("**proto**")
+}))))  {
                     //if prt.name is 'prototype', prt=prt.parent
                     if (__is(PROP(name_,prt),any_LTR("prototype"))) {prt = PROP(parent_,prt);};
                     //if prt.name isnt 'Function'
                     if (!__is(PROP(name_,prt),any_LTR("Function")))  {
                         //.warn "function call. '#{actualVar}' is class '#{prt.name}', not 'Function'"
-                        METHOD(warn_,this)(this,1,(any_arr){_concatAny(5,any_LTR("function call. '")
-, actualVar
-, any_LTR("' is class '")
-, PROP(name_,prt)
-, any_LTR("', not 'Function'")
-                        )
-                        });
+                        METHOD(warn_,this)(this,1,(any_arr){
+        _concatAny(5,
+        any_LTR("function call. '"), 
+        actualVar, 
+        any_LTR("' is class '"), 
+        PROP(name_,prt), 
+        any_LTR("', not 'Function'")
+)
+});
                     };
                 };
                 //actualVar = actualVar.findMember('**return type**')
-                actualVar = METHOD(findMember_,actualVar)(actualVar,1,(any_arr){any_LTR("**return type**")
-                });
+                actualVar = METHOD(findMember_,actualVar)(actualVar,1,(any_arr){
+        any_LTR("**return type**")
+});
             };
             //if actualVar instanceof Grammar.VariableRef
             if (_instanceof(actualVar,Grammar_VariableRef))  {
@@ -3000,8 +3420,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                 //opt.isForward=true
                 PROP(isForward_,opt) = true;
                 //actualVar = actualVar.tryGetReference(opt)
-                actualVar = METHOD(tryGetReference_,actualVar)(actualVar,1,(any_arr){opt
-                });
+                actualVar = METHOD(tryGetReference_,actualVar)(actualVar,1,(any_arr){
+        opt
+});
             };
             //if no actualVar, break
             if (!_anyToBool(actualVar)) {break;};
@@ -3027,9 +3448,12 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         _default(&options,new(Names_NameDeclOptions,0,NULL));
 //Start with main variable name
         //var actualVar = .tryGetFromScope(.name, options)
-        var actualVar = METHOD(tryGetFromScope_,this)(this,2,(any_arr){PROP(name_,this)
-, options
-        });
+        var 
+        actualVar = METHOD(tryGetFromScope_,this)(this,2,(any_arr){
+        PROP(name_,this), 
+        options
+})
+;
         //if no actualVar, return
         if (!_anyToBool(actualVar)) {return undefined;};
 //now check each accessor
@@ -3037,7 +3461,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //if no .accessors, return actualVar
         if (!_anyToBool(PROP(accessors_,this))) {return actualVar;};
         //var partial = .name
-        var partial = PROP(name_,this);
+        var 
+        partial = PROP(name_,this)
+;
         //for each ac in .accessors
         any _list58=PROP(accessors_,this);
         { var ac=undefined;
@@ -3049,10 +3475,11 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             //if ac instanceof Grammar.PropertyAccess
             if (_instanceof(ac,Grammar_PropertyAccess))  {
                 //actualVar = .tryGetMember(actualVar, ac.name, options)
-                actualVar = METHOD(tryGetMember_,this)(this,3,(any_arr){actualVar
-, PROP(name_,ac)
-, options
-                });
+                actualVar = METHOD(tryGetMember_,this)(this,3,(any_arr){
+        actualVar, 
+        PROP(name_,ac), 
+        options
+});
             }
 //else, for IndexAccess, the varRef type is now 'itemType'
 //and next property access should be on defined members of the type
@@ -3060,9 +3487,10 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             
             else if (_instanceof(ac,Grammar_IndexAccess))  {
                 //actualVar = .tryGetMember(actualVar, '**item type**')
-                actualVar = METHOD(tryGetMember_,this)(this,2,(any_arr){actualVar
-, any_LTR("**item type**")
-                });
+                actualVar = METHOD(tryGetMember_,this)(this,2,(any_arr){
+        actualVar, 
+        any_LTR("**item type**")
+});
             }
 //else, for FunctionAccess, the varRef type is now function's return type'
 //and next property access should be on defined members of the return type
@@ -3070,9 +3498,10 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
             
             else if (_instanceof(ac,Grammar_FunctionAccess))  {
                 //actualVar = .tryGetMember(actualVar, '**return type**')
-                actualVar = METHOD(tryGetMember_,this)(this,2,(any_arr){actualVar
-, any_LTR("**return type**")
-                });
+                actualVar = METHOD(tryGetMember_,this)(this,2,(any_arr){
+        actualVar, 
+        any_LTR("**return type**")
+});
             };
 //check if we can continue on the chain
             //if actualVar isnt instance of Names.Declaration
@@ -3094,13 +3523,15 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //if no actualVar and options.informError
         if (!_anyToBool(actualVar) && _anyToBool(PROP(informError_,options)))  {
             //.sayErr "'#{this}'. Reference can not be analyzed further than '#{partial}'"
-            METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(5,any_LTR("'")
-, this
-, any_LTR("'. Reference can not be analyzed further than '")
-, partial
-, any_LTR("'")
-            )
-            });
+            METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(5,
+        any_LTR("'"), 
+        this, 
+        any_LTR("'. Reference can not be analyzed further than '"), 
+        partial, 
+        any_LTR("'")
+)
+});
         };
         //return actualVar
         return actualVar;
@@ -3125,17 +3556,42 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
     
 //check if we've got a a clear reference.
       //var reference = .lvalue.tryGetReference()
-      var reference = __call(tryGetReference_,PROP(lvalue_,this),0,NULL);
+      var 
+        reference = __call(tryGetReference_,PROP(lvalue_,this),0,NULL)
+;
       //if reference isnt instanceof Names.Declaration, return 
       if (!(_instanceof(reference,Names_Declaration))) {return undefined;};
+//if it is assigning string or number literal, force type 
+      //if .rvalue instanceof Grammar.Expression
+      if (_instanceof(PROP(rvalue_,this),Grammar_Expression))  {
+          //if .rvalue.root.name.constructor in [Grammar.StringLiteral,Grammar.NumberLiteral]
+          if (__in(any_class(PROP(name_,PROP(root_,PROP(rvalue_,this))).class),2,(any_arr){Grammar_StringLiteral, Grammar_NumberLiteral}))  {
+              //var theLiteral = .rvalue.root.name
+              var 
+        theLiteral = PROP(name_,PROP(root_,PROP(rvalue_,this)))
+;
+              //// if it is assigning a literal, force type to string|number|array
+              //reference.setMember('**proto**', globalPrototype(theLiteral.type))
+              METHOD(setMember_,reference)(reference,2,(any_arr){
+        any_LTR("**proto**"), 
+        Validate_globalPrototype(undefined,1,(any_arr){
+        PROP(type_,theLiteral)
+})
+});
+              //return
+              return undefined;
+          };
+      };
       //if reference.findOwnMember('**proto**'), return #has a type already
-      if (_anyToBool(METHOD(findOwnMember_,reference)(reference,1,(any_arr){any_LTR("**proto**")
-      }))) {return undefined;};
+      if (_anyToBool(METHOD(findOwnMember_,reference)(reference,1,(any_arr){
+        any_LTR("**proto**")
+}))) {return undefined;};
 //check if we've got a clear rvalue.
 //if we do, set type for lvalue (unless is "null" or "undefined", they destroy type info)
       //reference.assignTypeFromValue .rvalue
-      METHOD(assignTypeFromValue_,reference)(reference,1,(any_arr){PROP(rvalue_,this)
-      });
+      METHOD(assignTypeFromValue_,reference)(reference,1,(any_arr){
+        PROP(rvalue_,this)
+});
      return undefined;
      }
 ///*
@@ -3209,29 +3665,37 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         //if .intoVar # is a into-assignment operator with 'var' declaration
         if (_anyToBool(PROP(intoVar_,this)))  {// # is a into-assignment operator with 'var' declaration
             //var varRef = .right.name
-            var varRef = PROP(name_,PROP(right_,this));
+            var 
+        varRef = PROP(name_,PROP(right_,this))
+;
             //if varRef isnt instance of Grammar.VariableRef
             if (!(_instanceof(varRef,Grammar_VariableRef)))  {
                 //.throwError "Expected 'variable name' after 'into var'"
-                METHOD(throwError_,this)(this,1,(any_arr){any_LTR("Expected 'variable name' after 'into var'")
-                });
+                METHOD(throwError_,this)(this,1,(any_arr){
+        any_LTR("Expected 'variable name' after 'into var'")
+});
             };
             //if varRef.accessors 
             if (_anyToBool(PROP(accessors_,varRef)))  {
                 //.throwError "Expected 'simple variable name' after 'into var'"
-                METHOD(throwError_,this)(this,1,(any_arr){any_LTR("Expected 'simple variable name' after 'into var'")
-                });
+                METHOD(throwError_,this)(this,1,(any_arr){
+        any_LTR("Expected 'simple variable name' after 'into var'")
+});
             };
             
             //var opt = new Names.NameDeclOptions
-            var opt = new(Names_NameDeclOptions,0,NULL);
+            var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
             //opt.type = varRef.type
             PROP(type_,opt) = PROP(type_,varRef);
             //.addToScope .declareName(varRef.name,opt)
-            METHOD(addToScope_,this)(this,1,(any_arr){METHOD(declareName_,this)(this,2,(any_arr){PROP(name_,varRef)
-, opt
-            })
-            });
+            METHOD(addToScope_,this)(this,1,(any_arr){
+        METHOD(declareName_,this)(this,2,(any_arr){
+        PROP(name_,varRef), 
+        opt
+})
+});
         };
      return undefined;
      }
@@ -3249,17 +3713,21 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
               //declare valid .right.name.tryGetReference
               
               //var nameDecl = .right.name.tryGetReference()
-              var nameDecl = __call(tryGetReference_,PROP(name_,PROP(right_,this)),0,NULL);
+              var 
+        nameDecl = __call(tryGetReference_,PROP(name_,PROP(right_,this)),0,NULL)
+;
               //if nameDecl isnt instanceof Names.Declaration, return 
               if (!(_instanceof(nameDecl,Names_Declaration))) {return undefined;};
               //if nameDecl.findOwnMember('**proto**'), return #has a type already
-              if (_anyToBool(METHOD(findOwnMember_,nameDecl)(nameDecl,1,(any_arr){any_LTR("**proto**")
-              }))) {return undefined;};
+              if (_anyToBool(METHOD(findOwnMember_,nameDecl)(nameDecl,1,(any_arr){
+        any_LTR("**proto**")
+}))) {return undefined;};
 //check if we've got a clear .left (value to be assigned) type
 //if we do, set type for .rigth ('into var x') (unless is "null" or "undefined", they destroy type info)
               //nameDecl.assignTypeFromValue .left
-              METHOD(assignTypeFromValue_,nameDecl)(nameDecl,1,(any_arr){PROP(left_,this)
-              });
+              METHOD(assignTypeFromValue_,nameDecl)(nameDecl,1,(any_arr){
+        PROP(left_,this)
+});
           };
       };
      return undefined;
@@ -3300,8 +3768,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         
         else if (_instanceof(PROP(name_,this),Grammar_Literal))  {
             //return globalPrototype(.name.type)
-            return Validate_globalPrototype(undefined,1,(any_arr){PROP(type_,PROP(name_,this))
-            });
+            return Validate_globalPrototype(undefined,1,(any_arr){
+        PROP(type_,PROP(name_,this))
+});
         }
         //else if .name instance of Grammar.VariableRef
         
@@ -3325,23 +3794,32 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       //if .specifier is 'on'
       if (__is(PROP(specifier_,this),any_LTR("on")))  {
           //var opt=new Names.NameDeclOptions
-          var opt = new(Names_NameDeclOptions,0,NULL);
+          var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
           //opt.isForward = true
           PROP(isForward_,opt) = true;
           //var reference = .tryGetFromScope(.name,opt)
-          var reference = METHOD(tryGetFromScope_,this)(this,2,(any_arr){PROP(name_,this)
-, opt
-          });
+          var 
+        reference = METHOD(tryGetFromScope_,this)(this,2,(any_arr){
+        PROP(name_,this), 
+        opt
+})
+;
           //if String.isCapitalized(reference.name) //let's assume is a Class
-          if (_anyToBool(String_isCapitalized(undefined,1,(any_arr){PROP(name_,reference)
-          })))  { //let's assume is a Class
+          if (_anyToBool(String_isCapitalized(undefined,1,(any_arr){
+        PROP(name_,reference)
+})))  { //let's assume is a Class
               //if no reference.findOwnMember('prototype'), reference.addMember('prototype')
-              if (!_anyToBool(METHOD(findOwnMember_,reference)(reference,1,(any_arr){any_LTR("prototype")
-              }))) {METHOD(addMember_,reference)(reference,1,(any_arr){any_LTR("prototype")
-              });};
+              if (!_anyToBool(METHOD(findOwnMember_,reference)(reference,1,(any_arr){
+        any_LTR("prototype")
+}))) {METHOD(addMember_,reference)(reference,1,(any_arr){
+        any_LTR("prototype")
+});};
               //reference=reference.findOwnMember('prototype')
-              reference = METHOD(findOwnMember_,reference)(reference,1,(any_arr){any_LTR("prototype")
-              });
+              reference = METHOD(findOwnMember_,reference)(reference,1,(any_arr){
+        any_LTR("prototype")
+});
           };
           //for each varDecl in .names
           any _list59=PROP(names_,this);
@@ -3349,9 +3827,10 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
           for(int varDecl__inx=0 ; varDecl__inx<_list59.value.arr->length ; varDecl__inx++){varDecl=ITEM(varDecl__inx,_list59);
           
               //.addMemberTo reference, varDecl.createNameDeclaration()
-              METHOD(addMemberTo_,this)(this,2,(any_arr){reference
-, METHOD(createNameDeclaration_,varDecl)(varDecl,0,NULL)
-              });
+              METHOD(addMemberTo_,this)(this,2,(any_arr){
+        reference, 
+        METHOD(createNameDeclaration_,varDecl)(varDecl,0,NULL)
+});
           }};// end for each in
           
       }
@@ -3371,28 +3850,34 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                 //if .globVar
                 if (_anyToBool(PROP(globVar_,this)))  {
                     //project.rootModule.addToScope varDecl.nameDecl
-                    __call(addToScope_,PROP(rootModule_,Validate_project),1,(any_arr){PROP(nameDecl_,varDecl)
-                    });
+                    __call(addToScope_,PROP(rootModule_,Validate_project),1,(any_arr){
+        PROP(nameDecl_,varDecl)
+});
                 }
                 //else
                 
                 else {
                     //.addToScope varDecl.nameDecl
-                    METHOD(addToScope_,this)(this,1,(any_arr){PROP(nameDecl_,varDecl)
-                    });
+                    METHOD(addToScope_,this)(this,1,(any_arr){
+        PROP(nameDecl_,varDecl)
+});
                 };
             }
             //else if .specifier is 'affinity'
             
             else if (__is(PROP(specifier_,this),any_LTR("affinity")))  {
                 //var classDecl = .getParent(Grammar.ClassDeclaration)
-                var classDecl = METHOD(getParent_,this)(this,1,(any_arr){Grammar_ClassDeclaration
-                });
+                var 
+        classDecl = METHOD(getParent_,this)(this,1,(any_arr){
+        Grammar_ClassDeclaration
+})
+;
                 //if no classDecl
                 if (!_anyToBool(classDecl))  {
                     //.sayErr "'declare name affinity' must be included in a class declaration"
-                    METHOD(sayErr_,this)(this,1,(any_arr){any_LTR("'declare name affinity' must be included in a class declaration")
-                    });
+                    METHOD(sayErr_,this)(this,1,(any_arr){
+        any_LTR("'declare name affinity' must be included in a class declaration")
+});
                     //return
                     return undefined;
                 };
@@ -3402,9 +3887,10 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                 //declare varDecl.name:string
                 
                 //nameAffinity.members.set varDecl.name.capitalized(), classDecl.nameDecl
-                __call(set_,PROP(members_,Validate_nameAffinity),2,(any_arr){__call(capitalized_,PROP(name_,varDecl),0,NULL)
-, PROP(nameDecl_,classDecl)
-                });
+                __call(set_,PROP(members_,Validate_nameAffinity),2,(any_arr){
+        __call(capitalized_,PROP(name_,varDecl),0,NULL), 
+        PROP(nameDecl_,classDecl)
+});
             };
           }};// end for each in
           
@@ -3422,16 +3908,20 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       //if .specifier is 'type'
       if (__is(PROP(specifier_,this),any_LTR("type")))  {
           //var opt = new Names.NameDeclOptions
-          var opt = new(Names_NameDeclOptions,0,NULL);
+          var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
           //opt.informError=true
           PROP(informError_,opt) = true;
           //if .varRef.tryGetReference(opt) into var actualVar
           var actualVar=undefined;
-          if (_anyToBool((actualVar=__call(tryGetReference_,PROP(varRef_,this),1,(any_arr){opt
-          }))))  {
+          if (_anyToBool((actualVar=__call(tryGetReference_,PROP(varRef_,this),1,(any_arr){
+        opt
+}))))  {
               //.setTypes actualVar
-              METHOD(setTypes_,this)(this,1,(any_arr){actualVar
-              });
+              METHOD(setTypes_,this)(this,1,(any_arr){
+        actualVar
+});
           };
       };
      return undefined;
@@ -3446,15 +3936,17 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
 //Assign types if it was declared
       //#create type on the fly, overwrite existing type
       //.setSubType actualVar,.type,'**proto**'
-      METHOD(setSubType_,this)(this,3,(any_arr){actualVar
-, PROP(type_,this)
-, any_LTR("**proto**")
-      });
+      METHOD(setSubType_,this)(this,3,(any_arr){
+        actualVar, 
+        PROP(type_,this), 
+        any_LTR("**proto**")
+});
       //.setSubType actualVar,.itemType,'**item type**'
-      METHOD(setSubType_,this)(this,3,(any_arr){actualVar
-, PROP(itemType_,this)
-, any_LTR("**item type**")
-      });
+      METHOD(setSubType_,this)(this,3,(any_arr){
+        actualVar, 
+        PROP(itemType_,this), 
+        any_LTR("**item type**")
+});
      return undefined;
      }
 //#### helper method setSubType(actualVar:Names.Declaration, toSet, propName ) 
@@ -3476,17 +3968,22 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
           ////var act=actualVar.findMember(propName)
           ////print "set *type* was #{act} set to #{toSet}"
           //actualVar.setMember propName, toSet
-          METHOD(setMember_,actualVar)(actualVar,2,(any_arr){propName
-, toSet
-          });
+          METHOD(setMember_,actualVar)(actualVar,2,(any_arr){
+        propName, 
+        toSet
+});
           //var result = actualVar.processConvertTypes()
-          var result = METHOD(processConvertTypes_,actualVar)(actualVar,0,NULL);
+          var 
+        result = METHOD(processConvertTypes_,actualVar)(actualVar,0,NULL)
+;
           //if result.failures, .sayErr "can't find type '#{toSet}' in scope"
-          if (_anyToBool(PROP(failures_,result))) {METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(3,any_LTR("can't find type '")
-, toSet
-, any_LTR("' in scope")
-          )
-          });};
+          if (_anyToBool(PROP(failures_,result))) {METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(3,
+        any_LTR("can't find type '"), 
+        toSet, 
+        any_LTR("' in scope")
+)
+});};
       };
      return undefined;
      }
@@ -3496,19 +3993,24 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
       //---------
 //declare members on the fly, with optional type
       //var actualVar:Names.Declaration
-      var actualVar = undefined;
+      var 
+        actualVar = undefined
+;
       //var opt=new Names.NameDeclOptions
-      var opt = new(Names_NameDeclOptions,0,NULL);
+      var 
+        opt = new(Names_NameDeclOptions,0,NULL)
+;
       //opt.informError = true
       PROP(informError_,opt) = true;
       //case .specifier 
       
-        //when 'valid'
+        //when 'valid':
       if (__is(PROP(specifier_,this),any_LTR("valid"))){
             //actualVar = .tryGetFromScope(.varRef.name,opt)
-            actualVar = METHOD(tryGetFromScope_,this)(this,2,(any_arr){PROP(name_,PROP(varRef_,this))
-, opt
-            });
+            actualVar = METHOD(tryGetFromScope_,this)(this,2,(any_arr){
+        PROP(name_,PROP(varRef_,this)), 
+        opt
+});
             //if no actualVar, return
             if (!_anyToBool(actualVar)) {return undefined;};
             //for each ac in .varRef.accessors
@@ -3529,38 +4031,45 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
                 //if ac.name is 'prototype'
                 if (__is(PROP(name_,ac),any_LTR("prototype")))  {
                     //actualVar = actualVar.findOwnMember(ac.name) or .addMemberTo(actualVar, ac.name)  
-                    actualVar = (_anyToBool(__or7=METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){PROP(name_,ac)
-                    }))? __or7 : METHOD(addMemberTo_,this)(this,2,(any_arr){actualVar
-, PROP(name_,ac)
-                    }));
+                    actualVar = (_anyToBool(__or7=METHOD(findOwnMember_,actualVar)(actualVar,1,(any_arr){
+        PROP(name_,ac)
+}))? __or7 : METHOD(addMemberTo_,this)(this,2,(any_arr){
+        actualVar, 
+        PROP(name_,ac)
+}));
                 }
                 //else
                 
                 else {
                     //actualVar = actualVar.findMember(ac.name) or .addMemberTo(actualVar, ac.name)
-                    actualVar = (_anyToBool(__or8=METHOD(findMember_,actualVar)(actualVar,1,(any_arr){PROP(name_,ac)
-                    }))? __or8 : METHOD(addMemberTo_,this)(this,2,(any_arr){actualVar
-, PROP(name_,ac)
-                    }));
+                    actualVar = (_anyToBool(__or8=METHOD(findMember_,actualVar)(actualVar,1,(any_arr){
+        PROP(name_,ac)
+}))? __or8 : METHOD(addMemberTo_,this)(this,2,(any_arr){
+        actualVar, 
+        PROP(name_,ac)
+}));
                 };
             }};// end for each in
             //end for
             
             //if actualVar, .setTypes actualVar
-            if (_anyToBool(actualVar)) {METHOD(setTypes_,this)(this,1,(any_arr){actualVar
-            });};
+            if (_anyToBool(actualVar)) {METHOD(setTypes_,this)(this,1,(any_arr){
+        actualVar
+});};
       
       }
-        //when 'on-the-fly'
+        //when 'on-the-fly':
       else if (__is(PROP(specifier_,this),any_LTR("on-the-fly"))){
             //#set type on-the-fly, from here until next type-assignment
             //#we allow more than one "declare x:type" on the same block
             //if .varRef.tryGetReference(opt) into actualVar
-            if (_anyToBool((actualVar=__call(tryGetReference_,PROP(varRef_,this),1,(any_arr){opt
-            }))))  {
+            if (_anyToBool((actualVar=__call(tryGetReference_,PROP(varRef_,this),1,(any_arr){
+        opt
+}))))  {
                 //.setTypes actualVar
-                METHOD(setTypes_,this)(this,1,(any_arr){actualVar
-                });
+                METHOD(setTypes_,this)(this,1,(any_arr){
+        actualVar
+});
             };
       
       };
@@ -3570,7 +4079,9 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
     any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS){
   
         //var nameDecl
-        var nameDecl = undefined;
+        var 
+        nameDecl = undefined
+;
         
         //for each name in arguments.toArray()
         any _list62=_newArray(argc,arguments);
@@ -3578,30 +4089,39 @@ any Validate_AddGlobalClasses(DEFAULT_ARGUMENTS); //forward declare
         for(int name__inx=0 ; name__inx<_list62.value.arr->length ; name__inx++){name=ITEM(name__inx,_list62);
         
             //nameDecl = globalScope.addMember(name)
-            nameDecl = METHOD(addMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){name
-            });
+            nameDecl = METHOD(addMember_,Validate_globalScope)(Validate_globalScope,1,(any_arr){
+        name
+});
             //nameDecl.addMember 'prototype'
-            METHOD(addMember_,nameDecl)(nameDecl,1,(any_arr){any_LTR("prototype")
-            });
+            METHOD(addMember_,nameDecl)(nameDecl,1,(any_arr){
+        any_LTR("prototype")
+});
             //// add to name affinity
             //if not nameAffinity.members.has(name)
-            if (!(_anyToBool(__call(has_,PROP(members_,Validate_nameAffinity),1,(any_arr){name
-            }))))  {
+            if (!(_anyToBool(__call(has_,PROP(members_,Validate_nameAffinity),1,(any_arr){
+        name
+}))))  {
                 //nameAffinity.members.set name, nameDecl
-                __call(set_,PROP(members_,Validate_nameAffinity),2,(any_arr){name
-, nameDecl
-                });
+                __call(set_,PROP(members_,Validate_nameAffinity),2,(any_arr){
+        name, 
+        nameDecl
+});
             };
         }};// end for each in
         
     return undefined;
     }
-
-//-------------------------
-void Validate__moduleInit(void){
+//------------------
+void Validate__namespaceInit(void){
           Names_ConvertResult =_newClass("Names_ConvertResult", Names_ConvertResult__init, sizeof(struct Names_ConvertResult_s), Object);
           _declareMethods(Names_ConvertResult, Names_ConvertResult_METHODS);
           _declareProps(Names_ConvertResult, Names_ConvertResult_PROPS, sizeof Names_ConvertResult_PROPS);
       
+};
+
+
+//-------------------------
+void Validate__moduleInit(void){
+    Validate__namespaceInit();
     
 };

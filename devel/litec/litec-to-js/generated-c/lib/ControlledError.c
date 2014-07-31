@@ -3,6 +3,9 @@
 //Module ControlledError
 //-------------------------
 #include "ControlledError.c.extra"
+//-------------------------
+//NAMESPACE ControlledError
+//-------------------------
     //-----------------------
     // Class ControlledError: static list of METHODS(verbs) and PROPS(things)
     //-----------------------
@@ -35,12 +38,16 @@
         //properties 
             //soft: boolean
         ;
-
-
-//-------------------------
-void ControlledError__moduleInit(void){
+//------------------
+void ControlledError__namespaceInit(void){
         ControlledError =_newClass("ControlledError", ControlledError__init, sizeof(struct ControlledError_s), Error);
         _declareMethods(ControlledError, ControlledError_METHODS);
         _declareProps(ControlledError, ControlledError_PROPS, sizeof ControlledError_PROPS);
     
+};
+
+
+//-------------------------
+void ControlledError__moduleInit(void){
+    ControlledError__namespaceInit();
 };

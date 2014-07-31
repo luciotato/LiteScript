@@ -102,8 +102,8 @@
             _with1.debugEnabled = args.option('d', "debug");
             //.skip    = args.option('noval',"novalidation") // skip name validation
             _with1.skip = args.option('noval', "novalidation"); // skip name validation
-            //.nomap   = args.option('nm',"nomap") // do not generate sourcemap
-            _with1.nomap = args.option('nm', "nomap"); // do not generate sourcemap
+            //.generateSourceMap = args.option('nm',"nomap")? false:true // do not generate sourcemap
+            _with1.generateSourceMap = args.option('nm', "nomap") ? false : true; // do not generate sourcemap
             //.single  = args.option('s',"single") // single file- do not follow require() calls
             _with1.single = args.option('s', "single"); // single file- do not follow require() calls
             //.compileIfNewer= args.option('ifn',"ifnew") // single file, compile if source is newer
@@ -138,16 +138,20 @@
         ////only mainModuleName should be left
         //case args.items.length 
         
-            //when 0
-        if ((args.items.length==0)){
+            //when 0:
+        if (
+        (args.items.length==0)
+){
                 //console.error "Missing MainModule or -run filename.\nlite -h for help"
                 console.error("Missing MainModule or -run filename.\nlite -h for help");
                 //process.exit 2
                 process.exit(2);
         
         }
-            //when 1
-        else if ((args.items.length==1)){
+            //when 1:
+        else if (
+        (args.items.length==1)
+){
                 //mainModuleName = args.items[0]
                 mainModuleName = args.items[0];
         
@@ -222,7 +226,6 @@
     module.exports.main = main;
         
     //end main function
-    
 //### function launchCompilation(mainModuleName, options:GeneralOptions)
     function launchCompilation(mainModuleName, options){
         //Compiler.compileProject(mainModuleName, options);
@@ -397,4 +400,8 @@
             //console.log err.message
             console.log(err.message);
         };
-    };
+    };// --------------------
+// Module code
+// --------------------
+    
+// end of module

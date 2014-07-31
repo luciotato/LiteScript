@@ -108,11 +108,11 @@ we start with an empty Token
 
         .sourceLineNum = 0
         .lineInx=0
-        .lines=""
+        .lines=[]
         .setPos .last
 
 
-#### Method initSource(filename:string, source:String)
+#### Method initSource(filename:string, source)
 Load filename and source code in the lexer.
 First, remember filename (for error reporting) 
 
@@ -468,14 +468,30 @@ Now we should escape internal d-quotes, but only *outside* string interpolation 
           for each inx,item:string in parsed
               if item.charAt(0) is '"' //a string part
                   item = item.slice(1,-1) //remove quotes
-                  parsed[inx] = item.replaceAll('"','\\"') #store with *escaped* internal d-quotes
-              else
-                  #restore string interp. codes
-                  parsed[inx] = "#{.stringInterpolationChar}{#{item}}"
+                  item = item.replaceAll('"','\\"') #store with *escaped* internal d-quotes
+                  parsed[inx] = '"#{item}"' #restore enclosing quotes
 
-          #re-join & re.enclose in quotes
-          line = parsed.join("").quoted('"') 
-          line = "#{result.pre} #{line}#{result.post}" #add pre & post
+      #ifdef PROD_C  // compile-to-c
+          
+          // code a call to "concat" to handle string interpolation
+          line = "any_concat(#{parsed.join(',')})"
+
+      #else //  compile-to-js
+
+          //if the first expression isnt a quoted string constant
+          // we add `"" + ` so: we get string concatenation from javascript.
+          // Also: if the first expression starts with `(`, LiteScript can 
+          // mis-parse the expression as a "function call"
+          if parsed.length and parsed[0].charAt(0) isnt '"' 
+              parsed.unshift "''" // prepend ''
+
+          // code a call to js string concat (+) to handle string interpolation
+          line = parsed.join(' + ')
+          // add pre & post
+      #endif
+          
+          // add pre & post
+          line = "#{result.pre} #{line}#{result.post}" 
 
         return line
 
@@ -564,13 +580,13 @@ ifdef, #ifndef, #else and #endif should be the first thing on the line
                 if line.charAt(0) is '#' and line.charAt(1) isnt '#' //expected: "#else, #endif #end if"
                     words = line.split(' ')
                     case words.tryGet(0)
-                        when '#else'
+                        when '#else':
                             .replaceSourceLine .line.replaceAll("#else","//else")
                             defValue = not defValue
-                        when "#end"
+                        when "#end":
                             if words.tryGet(1) isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
                             endFound = true
-                        when "#endif"
+                        when "#endif":
                             endFound = true
                         else
                             .throwErr "expected '#else/#end if', read '#{line}' #{startRef}"
@@ -1383,7 +1399,7 @@ Initialize output array
 if sourceMap option is set, and we're generating .js
 
         #ifdef PROD_JS
-        if not options.nomap, .sourceMap = new SourceMap
+        if options.generateSourceMap, .sourceMap = new SourceMap
         #else
         do nothing
         #end if
@@ -1463,6 +1479,8 @@ get result and clear memory
 
 #### method close()
 
+        .startNewLine //save last pending line
+        
         if .fileMode
 
             for header=0 to 2

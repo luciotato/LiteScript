@@ -357,6 +357,7 @@ loop until closer found
 
         debug "optSeparatedList [#{.constructor.name}] indent:#{.indent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer-'
 
+        var blockIndent = .lexer.indent
         var startLine = .lexer.sourceLineNum
         do until .opt(closer)
 
@@ -390,7 +391,10 @@ Any token other than 'separator' means 'end of list'
 
 optional newline after comma 
 
-            .opt(optSepar)
+            consumedNewLine = .opt(optSepar)
+            if consumedNewLine and .lexer.indent <= blockIndent
+                .lexer.sayErr "SeparatedList, after '#{separator}' - next line is same or less indented (#{.lexer.indent}) than block indent (#{blockIndent})"
+                return result
 
         loop #try get next item
 
@@ -436,8 +440,8 @@ if a closer was specified, indent change before the closer means error (line mis
 
 check for excesive indent
 
-                  if .lexer.indent > blockIndent
-                    .lexer.throwErr "Misaligned indent: #{.lexer.indent}. Expected #{blockIndent} to continue block, or #{parentIndent} to close block started at line #{startLine}"
+                  //if .lexer.indent > blockIndent
+                  //  .lexer.throwErr "Misaligned indent: #{.lexer.indent}. Expected #{blockIndent} to continue block, or #{parentIndent} to close block started at line #{startLine}"
 
 else, if no closer specified, and indent decreased => end of list
 

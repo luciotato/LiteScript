@@ -115,6 +115,17 @@
         }
         ,enumerable:false
         });
+        //shim method set(index:Number, value) [not enumerable]
+        if (!Array.prototype.set)
+        Object.defineProperty(
+        Array.prototype,'set',{value:function(index, value){
+            //this[index]=value
+            this[index] = value;
+            //return value
+            return value;
+        }
+        ,enumerable:false
+        });
 //## set array item value
 //js also allows you to do: 
  //`var a = []`
@@ -124,8 +135,9 @@
 //LiteC arrays do not behave like that, if you do:
     //`var a = []`
     //`a[100]='foo'` => EXCEPTION: OUT OF BOUNDS
-//you'll get an "OUT OF BOUNDS" exception. You cannot set value for an
+//you'll get an "OUT OF BOUNDS" exception. You cannot use [] set value for an
 //array item out of current bounds.
+//In order to get such behavior, you'll have to use `Array.set(index,value)`
 //## get array item value
 //LiteC arrays will also give an "OUT OF BOUNDS" exception, when accessing an unexisting array item.
 //*Sometimes* is useful to get "undefined" when accessing a "out of bounds" array index.
@@ -160,4 +172,8 @@
                 console.indentLevel--;
             };
         };
+// --------------------
+// Module code
+// --------------------
+// end of module
 module.exports=LiteCore;

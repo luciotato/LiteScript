@@ -81,18 +81,20 @@ Check for other options
 
         var options = new GeneralOptions
         with options
-            .outDir  = path.resolve(args.valueFor('o') or './generated/js') //output dir
-            .verboseLevel = Number(args.valueFor('v',"verbose") or 0) 
-            .warningLevel = Number(args.valueFor('w',"warning") or 1)
-            .comments= Number(args.valueFor('comment',"comments") or 1) 
+            .outDir         = path.resolve(args.valueFor('o') or './generated/js') //output dir
+            .verboseLevel   = Number(args.valueFor('v',"verbose") or 0) 
+            .warningLevel   = Number(args.valueFor('w',"warning") or 1)
+            .comments       = Number(args.valueFor('comment',"comments") or 1) 
             .debugEnabled   = args.option('d',"debug") 
-            .skip    = args.option('noval',"novalidation") // skip name validation
-            .nomap   = args.option('nm',"nomap") // do not generate sourcemap
-            .single  = args.option('s',"single") // single file- do not follow require() calls
-            .compileIfNewer= args.option('ifn',"ifnew") // single file, compile if source is newer
-            .browser = args.option('b',"browser") 
-            .es6     = args.option('es6',"harmony") 
+            .skip           = args.option('noval',"novalidation") // skip name validation
+            .generateSourceMap = args.option('nm',"nomap")? false:true // do not generate sourcemap
+            .single         = args.option('s',"single") // single file- do not follow require() calls
+            .compileIfNewer = args.option('ifn',"ifnew") // single file, compile if source is newer
+            .browser        = args.option('b',"browser") 
+            .es6            = args.option('es6',"harmony") 
+            .perf           = parseInt(args.valueFor('perf',"performance") or 0)
             .defines = []
+
 
         while args.valueFor('D') into var newDef
             options.defines.push newDef
@@ -111,11 +113,11 @@ get mainModuleName
         //only mainModuleName should be left
         case args.items.length 
 
-            when 0
+            when 0:
                 console.error "Missing MainModule or -run filename.\nlite -h for help"
                 process.exit 2
 
-            when 1
+            when 1:
                 mainModuleName = args.items[0]
 
             else
@@ -126,11 +128,17 @@ get mainModuleName
 show args
 
         //console.log(process.cwd());
-        if options.verboseLevel>1
+        if options.verboseLevel
+            print """
+                compiler version: #{Compiler.version} #{Compiler.buildDate}
+                compiler options: #{options}
+                cwd: #{process.cwd()}
+                compile #{compileAndRunOption?"and run":""}: #{mainModuleName}
+                """
+        if options.verboseLevel >1
             print 'compiler options: #{JSON.stringify(options)}'
-            print 'cwd: #{process.cwd()}'
-            print 'compile#{compileAndRunOption?" and run":""}: #{mainModuleName}'
-            if options.debugEnabled, print color.yellow,"GENERATING COMPILER DEBUG AT out/debug.logger",color.normal
+
+        if options.debugEnabled, print color.yellow,"GENERATING COMPILER DEBUG AT out/debug.logger",color.normal
 
 
 launch project compilation

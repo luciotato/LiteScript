@@ -53,11 +53,10 @@
             //mainModuleName
             //compileAndRunOption:boolean
             //compileAndRunParams:array
-        var 
-        mainModuleName = undefined, 
-        compileAndRunOption = undefined, 
-        compileAndRunParams = undefined
-;
+        var mainModuleName = undefined
+        , compileAndRunOption = undefined
+        , compileAndRunParams = undefined
+        ;
 //Check for -help
         //if args.option('h','help') 
         if (args.option('h', 'help')) {
@@ -90,28 +89,30 @@
         var options = new GeneralOptions();
         //with options
         var _with1=options;
-            //.outDir  = path.resolve(args.valueFor('o') or './generated/js') //output dir
+            //.outDir         = path.resolve(args.valueFor('o') or './generated/js') //output dir
             _with1.outDir = path.resolve(args.valueFor('o') || './generated/js'); //output dir
-            //.verboseLevel = Number(args.valueFor('v',"verbose") or 0) 
+            //.verboseLevel   = Number(args.valueFor('v',"verbose") or 0) 
             _with1.verboseLevel = Number(args.valueFor('v', "verbose") || 0);
-            //.warningLevel = Number(args.valueFor('w',"warning") or 1)
+            //.warningLevel   = Number(args.valueFor('w',"warning") or 1)
             _with1.warningLevel = Number(args.valueFor('w', "warning") || 1);
-            //.comments= Number(args.valueFor('comment',"comments") or 1) 
+            //.comments       = Number(args.valueFor('comment',"comments") or 1) 
             _with1.comments = Number(args.valueFor('comment', "comments") || 1);
             //.debugEnabled   = args.option('d',"debug") 
             _with1.debugEnabled = args.option('d', "debug");
-            //.skip    = args.option('noval',"novalidation") // skip name validation
+            //.skip           = args.option('noval',"novalidation") // skip name validation
             _with1.skip = args.option('noval', "novalidation"); // skip name validation
-            //.nomap   = args.option('nm',"nomap") // do not generate sourcemap
-            _with1.nomap = args.option('nm', "nomap"); // do not generate sourcemap
-            //.single  = args.option('s',"single") // single file- do not follow require() calls
+            //.generateSourceMap = args.option('nm',"nomap")? false:true // do not generate sourcemap
+            _with1.generateSourceMap = args.option('nm', "nomap") ? false : true; // do not generate sourcemap
+            //.single         = args.option('s',"single") // single file- do not follow require() calls
             _with1.single = args.option('s', "single"); // single file- do not follow require() calls
-            //.compileIfNewer= args.option('ifn',"ifnew") // single file, compile if source is newer
+            //.compileIfNewer = args.option('ifn',"ifnew") // single file, compile if source is newer
             _with1.compileIfNewer = args.option('ifn', "ifnew"); // single file, compile if source is newer
-            //.browser = args.option('b',"browser") 
+            //.browser        = args.option('b',"browser") 
             _with1.browser = args.option('b', "browser");
-            //.es6     = args.option('es6',"harmony") 
+            //.es6            = args.option('es6',"harmony") 
             _with1.es6 = args.option('es6', "harmony");
+            //.perf           = parseInt(args.valueFor('perf',"performance") or 0)
+            _with1.perf = parseInt(args.valueFor('perf', "performance") || 0);
             //.defines = []
             _with1.defines = [];
         ;
@@ -138,16 +139,18 @@
         ////only mainModuleName should be left
         //case args.items.length 
         
-            //when 0
-        if ((args.items.length==0)){
+            //when 0:
+        if ((args.items.length==0)
+        ){
                 //console.error "Missing MainModule or -run filename.\nlite -h for help"
                 console.error("Missing MainModule or -run filename.\nlite -h for help");
                 //process.exit 2
                 process.exit(2);
         
         }
-            //when 1
-        else if ((args.items.length==1)){
+            //when 1:
+        else if ((args.items.length==1)
+        ){
                 //mainModuleName = args.items[0]
                 mainModuleName = args.items[0];
         
@@ -163,17 +166,23 @@
         };
 //show args
         ////console.log(process.cwd());
-        //if options.verboseLevel>1
+        //if options.verboseLevel
+        if (options.verboseLevel) {
+            //print """
+            console.log("compiler version: " + Compiler.version + " " + Compiler.buildDate + "\ncompiler options: " + options + "\ncwd: " + (process.cwd()) + "\ncompile " + (compileAndRunOption ? "and run" : "") + ": " + mainModuleName);
+        };
+                //compiler version: #{Compiler.version} #{Compiler.buildDate}
+                //compiler options: #{options}
+                //cwd: #{process.cwd()}
+                //compile #{compileAndRunOption?"and run":""}: #{mainModuleName}
+                //"""
+        //if options.verboseLevel >1
         if (options.verboseLevel > 1) {
             //print 'compiler options: #{JSON.stringify(options)}'
             console.log('compiler options: ' + (JSON.stringify(options)));
-            //print 'cwd: #{process.cwd()}'
-            console.log('cwd: ' + (process.cwd()));
-            //print 'compile#{compileAndRunOption?" and run":""}: #{mainModuleName}'
-            console.log('compile' + (compileAndRunOption ? " and run" : "") + ': ' + mainModuleName);
-            //if options.debugEnabled, print color.yellow,"GENERATING COMPILER DEBUG AT out/debug.logger",color.normal
-            if (options.debugEnabled) {console.log(color.yellow, "GENERATING COMPILER DEBUG AT out/debug.logger", color.normal)};
         };
+        //if options.debugEnabled, print color.yellow,"GENERATING COMPILER DEBUG AT out/debug.logger",color.normal
+        if (options.debugEnabled) {console.log(color.yellow, "GENERATING COMPILER DEBUG AT out/debug.logger", color.normal)};
 //launch project compilation
 //if "compile and run", load & compile single file and run it
         //if compileAndRunOption
@@ -222,7 +231,6 @@
     module.exports.main = main;
         
     //end main function
-    
 //### function launchCompilation(mainModuleName, options:GeneralOptions)
     function launchCompilation(mainModuleName, options){
         //Compiler.compileProject(mainModuleName, options);
@@ -397,4 +405,8 @@
             //console.log err.message
             console.log(err.message);
         };
-    };
+    };// --------------------
+// Module code
+// --------------------
+    
+// end of module

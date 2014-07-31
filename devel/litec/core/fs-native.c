@@ -139,8 +139,7 @@
                     ,any_CStr(strerror(errno)))));
         }
         //write contents
-        any contents=arguments[1];
-        fwrite(contents.value.str, 1, contents.len, file);
+        _outFile(arguments[1],file);
         //close
         fclose(file);
 

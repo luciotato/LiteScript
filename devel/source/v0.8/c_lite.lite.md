@@ -13,7 +13,7 @@ when it is generated as C-code standalone executable
 
     var 
         VERSION = '0.8.5'
-        BUILD_DATE = '__TIMESTAMP__'
+        BUILD_DATE = '__DATE__'
 
 ## module vars
 
@@ -32,6 +32,7 @@ when it is generated as C-code standalone executable
 
     Advanced options:
     -D FOO -D BAR    Defines preprocessor names (#ifdef FOO/#ifndef BAR)
+    -nm, -nomap      do not generate sourcemap
     -d, -debug       enable full compiler debug log file at 'out/debug.logger'
     -perf            0..2: show performance timers
     
@@ -71,12 +72,13 @@ Check for other options
 
     with options
 
-        .outDir  = path.resolve(args.valueFor('o') or './out') //output dir
-        .verboseLevel = parseInt(args.valueFor('v',"verbose") or 0) 
-        .warningLevel = parseInt(args.valueFor('w',"warning") or 1)
-        .perf = parseInt(args.valueFor('perf',"performance") or 0)
-        .comments= parseInt(args.valueFor('comment',"comments") or 1) 
-        .debugEnabled = args.option('d',"debug") 
+        .outDir         = path.resolve(args.valueFor('o') or './out') //output dir
+        .verboseLevel   = parseInt(args.valueFor('v',"verbose") or 0) 
+        .warningLevel   = parseInt(args.valueFor('w',"warning") or 1)
+        .perf           = parseInt(args.valueFor('perf',"performance") or 0)
+        .comments       = parseInt(args.valueFor('comment',"comments") or 1) 
+        .debugEnabled   = args.option('d',"debug") 
+        .generateSourceMap = args.option('nm',"nomap")? false:true // do not generate sourcemap
         .defines = []
 
 
@@ -103,16 +105,18 @@ get mainModuleName
 show args
 
     //console.log(process.cwd());
-    if options.verboseLevel > 1
+    if options.verboseLevel 
         print """
-            compiler version: #{Compiler.version} #{Compiler.buildDate}
-            compiler options: \n#{options}
+            LiteScript compiler version: #{Compiler.version} #{Compiler.buildDate}
+            compiler options: #{options}
             cwd: #{process.cwd()}
             compile: #{mainModuleName}
             """
 
-        if options.debugEnabled 
-            print color.yellow,"GENERATING COMPILER DEBUG AT out/debug.logger",color.normal
+        if options.verboseLevel >1
+            print 'compiler options: #{JSON.stringify(options)}'
+
+    if options.debugEnabled, print color.yellow,"GENERATING COMPILER DEBUG AT out/debug.logger",color.normal
 
 launch project compilation
 

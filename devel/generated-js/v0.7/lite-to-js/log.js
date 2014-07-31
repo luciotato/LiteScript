@@ -239,3 +239,5 @@
    // export
    module.exports.throwControled=throwControled;
 
+
+//# sourceMappingURL=log.js.map

@@ -14,11 +14,11 @@ targetLang="js"
 targetTarget="c"
 
 _lite="_lite"
-up3=$(echo $targetTarget | tr '[:lower:]' '[:upper:]')
+LITE_TO=$(echo $targetTarget | tr '[:lower:]' '[:upper:]')
 echo "----------------------"
 echo "using v0.8-to-$targetLang to generate ($targetLang code) v0.8 lite-to-$targetTarget compiler"
 echo "----------------------"
-if node ../../util/liteVersion -use v0.8/lite-to-$targetLang $targetLang$_lite -v 1 -D PROD_$up3 -o $OUT; then 
+if node ../../util/liteVersion -use v0.8/lite-to-$targetLang $targetLang$_lite -v 1 -D PROD_$LITE_TO -o $OUT; then 
     echo "generated OK ($targetLang code) lite-to-$targetTarget v0.8"
     echo "at $OUT"
 fi

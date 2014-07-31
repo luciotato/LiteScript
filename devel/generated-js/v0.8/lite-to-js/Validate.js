@@ -281,12 +281,11 @@
         logger.info("- Converting Types");
         //#now try de-referencing types
         //var pass=0, sumConverted=0, sumFailures=0, lastSumFailures=0
-        var 
-        pass = 0, 
-        sumConverted = 0, 
-        sumFailures = 0, 
-        lastSumFailures = 0
-;
+        var pass = 0
+        , sumConverted = 0
+        , sumFailures = 0
+        , lastSumFailures = 0
+        ;
         //#repeat until all converted
         //do
         do{
@@ -372,13 +371,10 @@
     // export
     module.exports.validate = validate;
     //end function validate
-    
 //### export function walkAllNodesCalling(methodName:string)
     function walkAllNodesCalling(methodName){
-        //var methodSymbol
-        var methodSymbol = undefined;
-        //methodSymbol = LiteCore.getSymbol(methodName)
-        methodSymbol = LiteCore.getSymbol(methodName);
+        //var methodSymbol = LiteCore.getSymbol(methodName)
+        var methodSymbol = LiteCore.getSymbol(methodName);
 //For all modules, for each node, if the specific AST node has methodName, call it
         //for each moduleNode:Grammar.Module in map project.moduleCache
         var moduleNode=undefined;
@@ -504,8 +500,8 @@
 //### helper function processInterfaceFile(globalInterfaceFile)
     function processInterfaceFile(globalInterfaceFile){
 //Process the global scope declarations interface file: GlobalScope(JS|C|NODE).interface.md
-        //logger.msg "Declare on global scope using ", globalInterfaceFile
-        logger.msg("Declare on global scope using ", globalInterfaceFile);
+        //logger.msg "Declare global scope using #{globalInterfaceFile}.interface.md"
+        logger.msg("Declare global scope using " + globalInterfaceFile + ".interface.md");
         //var globalInterfaceModule = project.compileFile(globalInterfaceFile)
         var globalInterfaceModule = project.compileFile(globalInterfaceFile);
 //call "declare" on each item of the GlobalScope interface file, to create the NameDeclarations
@@ -537,7 +533,7 @@
           return nameDecl.members.get("prototype");
       };
     };
-//### Helper function globalPrototype(name) 
+//### public Helper function globalPrototype(name) 
     function globalPrototype(name){
 //gets a var from global scope
       //if name instanceof Names.Declaration, return name #already converted type
@@ -556,7 +552,9 @@
       };
       //return protoNameDecl
       return protoNameDecl;
-    };
+    }
+    // export
+    module.exports.globalPrototype = globalPrototype;
 //### helper function addBuiltInClass(name,node) returns Names.Declaration
     function addBuiltInClass(name, node){
 //Add a built-in class to global scope, return class prototype
@@ -1426,15 +1424,26 @@
       };
       //helper method getTypeFromAssignedValue() 
       Grammar.VariableDecl.prototype.getTypeFromAssignedValue = function(){
+          //// if it has an assigned value
           //if .nameDecl and .assignedValue and .nameDecl.name isnt 'prototype'
           if (this.nameDecl && this.assignedValue && this.nameDecl.name !== 'prototype') {
-              //if no .nameDecl.findOwnMember('**proto**') into var type #if has no type
+              
+              //if .assignedValue instanceof Grammar.Expression
               var type=undefined;
-              if (!((type=this.nameDecl.findOwnMember('**proto**')))) {// #if has no type
+              if (this.assignedValue instanceof Grammar.Expression && [Grammar.StringLiteral, Grammar.NumberLiteral].indexOf(this.assignedValue.root.name.constructor)>=0) {
+                //and .assignedValue.root.name.constructor in [Grammar.StringLiteral,Grammar.NumberLiteral]
+                    //var theLiteral = .assignedValue.root.name
+                    var theLiteral = this.assignedValue.root.name;
+                    //// if it is assigning a literal, force type to string|number|array
+                    //.nameDecl.setMember('**proto**', globalPrototype(theLiteral.type))
+                    this.nameDecl.setMember('**proto**', globalPrototype(theLiteral.type));
+              }
+              else if (!((type=this.nameDecl.findOwnMember('**proto**')))) {// #if has no type
+              //else if no .nameDecl.findOwnMember('**proto**') into var type #if has no type
                   //if .assignedValue.getResultType() into var result #get assignedValue type
                   var result=undefined;
                   if ((result=this.assignedValue.getResultType())) {// #get assignedValue type
-                      //this.nameDecl.setMember('**proto**', result) #assign to this.nameDecl
+                      //.nameDecl.setMember('**proto**', result) #assign to this.nameDecl
                       this.nameDecl.setMember('**proto**', result);// #assign to this.nameDecl
                   };
               };
@@ -1923,16 +1932,18 @@
       
           //case item.specific.constructor
           
-              //when Grammar.PropertiesDeclaration
-          if ((item.specific.constructor==Grammar.PropertiesDeclaration)){
+              //when Grammar.PropertiesDeclaration:
+          if ((item.specific.constructor==Grammar.PropertiesDeclaration)
+          ){
                   //declare item.specific:Grammar.PropertiesDeclaration
                   
                   //if not item.specific.declared, item.specific.declare(informError=true) 
                   if (!(item.specific.declared)) {item.specific.declare(true)};
           
           }
-              //when Grammar.MethodDeclaration
-          else if ((item.specific.constructor==Grammar.MethodDeclaration)){
+              //when Grammar.MethodDeclaration:
+          else if ((item.specific.constructor==Grammar.MethodDeclaration)
+          ){
                   //var m:Grammar.MethodDeclaration = item.specific
                   var m = item.specific;
                   //if m.declared, continue
@@ -1952,16 +1963,18 @@
                   };
           
           }
-              //when Grammar.ClassDeclaration
-          else if ((item.specific.constructor==Grammar.ClassDeclaration)){
+              //when Grammar.ClassDeclaration:
+          else if ((item.specific.constructor==Grammar.ClassDeclaration)
+          ){
                   //declare item.specific:Grammar.ClassDeclaration
                   
                   //ownerDecl.addMember item.specific.nameDecl                 
                   ownerDecl.addMember(item.specific.nameDecl);
           
           }
-              //when Grammar.EndStatement
-          else if ((item.specific.constructor==Grammar.EndStatement)){
+              //when Grammar.EndStatement:
+          else if ((item.specific.constructor==Grammar.EndStatement)
+          ){
                   //do nothing
                   null;
           
@@ -2333,6 +2346,20 @@
       var reference = this.lvalue.tryGetReference();
       //if reference isnt instanceof Names.Declaration, return 
       if (!(reference instanceof Names.Declaration)) {return};
+//if it is assigning string or number literal, force type 
+      //if .rvalue instanceof Grammar.Expression
+      if (this.rvalue instanceof Grammar.Expression) {
+          //if .rvalue.root.name.constructor in [Grammar.StringLiteral,Grammar.NumberLiteral]
+          if ([Grammar.StringLiteral, Grammar.NumberLiteral].indexOf(this.rvalue.root.name.constructor)>=0) {
+              //var theLiteral = .rvalue.root.name
+              var theLiteral = this.rvalue.root.name;
+              //// if it is assigning a literal, force type to string|number|array
+              //reference.setMember('**proto**', globalPrototype(theLiteral.type))
+              reference.setMember('**proto**', globalPrototype(theLiteral.type));
+              //return
+              return;
+          };
+      };
       //if reference.findOwnMember('**proto**'), return #has a type already
       if (reference.findOwnMember('**proto**')) {return};
 //check if we've got a clear rvalue.
@@ -2619,8 +2646,9 @@
       opt.informError = true;
       //case .specifier 
       
-        //when 'valid'
-      if ((this.specifier=='valid')){
+        //when 'valid':
+      if ((this.specifier=='valid')
+      ){
             //actualVar = .tryGetFromScope(.varRef.name,opt)
             actualVar = this.tryGetFromScope(this.varRef.name, opt);
             //if no actualVar, return
@@ -2655,8 +2683,9 @@
             if (actualVar) {this.setTypes(actualVar)};
       
       }
-        //when 'on-the-fly'
-      else if ((this.specifier=='on-the-fly')){
+        //when 'on-the-fly':
+      else if ((this.specifier=='on-the-fly')
+      ){
             //#set type on-the-fly, from here until next type-assignment
             //#we allow more than one "declare x:type" on the same block
             //if .varRef.tryGetReference(opt) into actualVar
@@ -2689,4 +2718,8 @@
             };
         };// end for each in Array.prototype.slice.call(arguments)
         
-    };
+    };// --------------------
+// Module code
+// --------------------
+    
+// end of module

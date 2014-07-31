@@ -55,6 +55,7 @@ The Modules dependency tree is the *Project tree*.
         main: Grammar.Module
         Producer
         recurseLevel = 0
+        filesProducedCount
 
         //lexer=undefined //dummy, to allow Project to be main module's parent
 
@@ -84,9 +85,9 @@ set basePath from main module path
 
         Environment.setBaseInfo options.projectDir, options.outDir, options.target
 
-        logger.info 'Project Dir:',.options.projectDir
-        logger.info 'Main Module:',.options.mainModuleName
-        logger.info 'Out Dir:',.options.outDir
+        logger.msg 'Project Dir:',.options.projectDir
+        logger.msg 'Main Module:',.options.mainModuleName
+        logger.msg 'Out Dir:',.options.outDir
 
 compiler vars, to use at conditional compilation
         
@@ -143,10 +144,12 @@ by parsing the file: "lib/GlobalScopeJS.interface.md"
 Import & compile the main module. The main module will, in turn, 'import' and 'compile' 
 -if not cached-, all dependent modules. 
 
-        console.time 'Parse'
+        logger.msg "Compiling",.options.mainModuleName
 
         var importInfo = new Environment.ImportParameterInfo
         importInfo.name = .options.mainModuleName
+
+        console.time 'Parse'
         .main = .importModule(.rootModule, importInfo)
         .main.isMain = true
 
@@ -167,7 +170,8 @@ Validate
 Produce, for each module
 
         console.time 'Produce'
-        logger.msg "\nProducing #{.options.target} at #{.options.outDir}"
+        logger.msg "Producing #{.options.target}"
+        .filesProducedCount=0
         mkPath.create .options.outDir
 
         for each moduleNode:Grammar.Module in map .moduleCache
@@ -208,23 +212,27 @@ produce & get result target code
                     result = "#{moduleNode.lexer.outCode.lineNum} lines"
 
                     #ifdef PROD_JS
-                    if .options.nomap is false
+                    if .options.generateSourceMap
+                        //console.time('Generate SourceMap #{moduleNode.fileInfo.base}')
                         Environment.externalCacheSave '#{moduleNode.fileInfo.outFilename}.map',
                                 moduleNode.lexer.outCode.sourceMap.generate(
                                               moduleNode.fileInfo.base & moduleNode.fileInfo.outExtension
                                               ,[moduleNode.fileInfo.sourcename]
                                               )
+                        //if .options.perf, console.timeEnd('Generate SourceMap #{moduleNode.fileInfo.base}')
                     #endif
 
                 end if
 
-                logger.msg color.green,"[OK]",result, " -> ",moduleNode.fileInfo.outRelFilename,color.normal
+                logger.info color.green,"[OK]",result, " -> ",moduleNode.fileInfo.outRelFilename,color.normal
                 logger.extra #blank line
+                .filesProducedCount++
 
             end if //shouldProduce
 
         end for each module cached
 
+        logger.msg "Generated .#{.options.target} files (#{.filesProducedCount}) at #{.options.outDir}"
         logger.msg "#{logger.errorCount} errors, #{logger.warningCount} warnings."
 
         #ifdef PROD_C
@@ -253,7 +261,7 @@ produce & get result target code
 Compilation:
 Load source -> Lexer/Tokenize -> Parse/create AST 
 
-        logger.msg String.spaces(this.recurseLevel*2),"compile: '#{Environment.relativeFrom(.options.projectDir,filename)}'"
+        logger.info String.spaces(this.recurseLevel*2),"compile: '#{Environment.relativeFrom(.options.projectDir,filename)}'"
 
 Load source code, parse
 
@@ -367,7 +375,7 @@ We create a empty a empty `.requireCallNodes[]`, to hold:
         moduleNode.produce 
 
         #referenceSourceMap
-        if no .options.nomap and moduleNode.fileInfo.outExtension is 'js'
+        if .options.generateSourceMap and moduleNode.fileInfo.outExtension is 'js'
             moduleNode.lexer.outCode.startNewLine
             moduleNode.lexer.outCode.put "//# sourceMappingURL=#{moduleNode.fileInfo.base}#{moduleNode.fileInfo.outExtension}.map"
         

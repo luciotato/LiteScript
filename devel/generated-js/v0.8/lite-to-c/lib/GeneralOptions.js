@@ -13,7 +13,7 @@
             //debugEnabled = undefined
             //perf=0 // performace counters 0..2
             //skip = undefined
-            //nomap = undefined
+            //generateSourceMap = true //default is to generate sourcemaps
             //single = undefined
             //compileIfNewer = undefined //compile only if source is newer
             //browser =undefined //compile js for browser environment (instead of node.js env.)
@@ -34,7 +34,7 @@
           this.debugEnabled=undefined;
           this.perf=0;
           this.skip=undefined;
-          this.nomap=undefined;
+          this.generateSourceMap=true;
           this.single=undefined;
           this.compileIfNewer=undefined;
           this.browser=undefined;
@@ -50,6 +50,10 @@
             return "outDir:" + this.outDir + "\nverbose:" + this.verboseLevel + "\ndefines:" + ((this.defines.join()));
       };
     // end class GeneralOptions
+// --------------------
+// Module code
+// --------------------
+// end of module
                 //outDir:#{.outDir}
                 //verbose:#{.verboseLevel}
                 //defines:#{.defines.join()}

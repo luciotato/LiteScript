@@ -68,7 +68,7 @@ Builds up a V3 source map, returning the generated JSON as a string.
 map.  Also, `options.sourceFiles` and `options.generatedFile` may be passed to
 set "sources" and "file", respectively.
 
-      method generate(generatedFile, sourceFiles:array) 
+      method generate(generatedFile:string, sourceFiles:array) 
         
         //default options = 
         //  generatedFile: ''
@@ -85,7 +85,7 @@ set "sources" and "file", respectively.
           lastSourceLine    = 0
           lastSourceColumn  = 0
           needComma         = false
-          buffer            = ""
+          encoded:array     = []
 
 
         #for each line in the generated 
@@ -95,6 +95,7 @@ set "sources" and "file", respectively.
 
             logger.debug "line:#{lineMap.line} ->", SourceLoc.lin
             logger.debug "column:#{column}", SourceLoc.col
+            logger.debug "writingline #{writingline} lineMap.line #{lineMap.line}"
 
 advance to LineMap.line
 
@@ -102,13 +103,13 @@ advance to LineMap.line
                 lastGenColumn = 0
                 needComma = false
                 while writingline < lineMap.line
-                    buffer &= ";"
+                    encoded.push ";"
                     writingline++
 
 Write a comma if we've already written a segment on this line.
 
             if needComma
-              buffer &= ","
+              encoded.push ","
               needComma = false
 
 Write the next segment. Segments can be 1, 4, or 5 values.  If just one, then it
@@ -117,21 +118,21 @@ is a generated column which doesn't match anything in the source code.
 The starting column in the generated source, relative to any previous recorded
 column for the current line:
 
-            buffer += encodeVlq(column - lastGenColumn)
+            encoded.push encodeVlq(column - lastGenColumn)
             lastGenColumn = column
 
 The index into the list of sources:
 
-            buffer += encodeVlq(0)
+            encoded.push encodeVlq(0)
 
 The starting line in the original source, relative to the previous source line.
 
-            buffer += encodeVlq(SourceLoc.lin - lastSourceLine)
+            encoded.push encodeVlq(SourceLoc.lin - lastSourceLine)
             lastSourceLine = SourceLoc.lin
 
 The starting column in the original source, relative to the previous column.
 
-            buffer += encodeVlq(SourceLoc.col - lastSourceColumn)
+            encoded.push encodeVlq(SourceLoc.col - lastSourceColumn)
             lastSourceColumn = SourceLoc.col
             needComma = true
 
@@ -147,7 +148,7 @@ Produce the canonical JSON object format for a "v3" source map.
           sourceRoot: sourceRoot
           sources:    sourceFiles
           names:      []
-          mappings:   buffer
+          mappings:   encoded.join("")
 
         //declare valid v3.sourcesContent
         //if options.inline, v3.sourcesContent = [code] 

@@ -383,6 +383,8 @@
 //loop until closer found
         //logger.debug "optSeparatedList [#{.constructor.name}] indent:#{.indent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer-'
         logger.debug("optSeparatedList [" + this.constructor.name + "] indent:" + this.indent + ", get SeparatedList of [" + astClass.name + "] by '" + separator + "' closer:", closer || '-no closer-');
+        //var blockIndent = .lexer.indent
+        var blockIndent = this.lexer.indent;
         //var startLine = .lexer.sourceLineNum
         var startLine = this.lexer.sourceLineNum;
         //do until .opt(closer) or .lexer.token.type is 'EOF'
@@ -417,8 +419,15 @@
             //end if
             
 //optional newline after comma 
-            //.opt(optSepar)
-            this.opt(optSepar);
+            //consumedNewLine = .opt(optSepar)
+            consumedNewLine = this.opt(optSepar);
+            //if consumedNewLine and .lexer.indent <= blockIndent
+            if (consumedNewLine && this.lexer.indent <= blockIndent) {
+                //.lexer.sayErr "SeparatedList, after '#{separator}' - next line is same or less indented (#{.lexer.indent}) than block indent (#{blockIndent})"
+                this.lexer.sayErr("SeparatedList, after '" + separator + "' - next line is same or less indented (" + this.lexer.indent + ") than block indent (" + blockIndent + ")");
+                //return result
+                return result;
+            };
         };// end loop
         //loop #try get next item
         //return result
@@ -470,11 +479,8 @@
                     this.lexer.throwErr("Misaligned indent: " + this.lexer.indent + ". Expected " + blockIndent + ", or '" + closer + "' to end block started at line " + startLine);
                   };
 //check for excesive indent
-                  //if .lexer.indent > blockIndent
-                  if (this.lexer.indent > blockIndent) {
-                    //.lexer.throwErr "Misaligned indent: #{.lexer.indent}. Expected #{blockIndent} to continue block, or #{parentIndent} to close block started at line #{startLine}"
-                    this.lexer.throwErr("Misaligned indent: " + this.lexer.indent + ". Expected " + blockIndent + " to continue block, or " + parentIndent + " to close block started at line " + startLine);
-                  };
+                  ////if .lexer.indent > blockIndent
+                  ////  .lexer.throwErr "Misaligned indent: #{.lexer.indent}. Expected #{blockIndent} to continue block, or #{parentIndent} to close block started at line #{startLine}"
 //else, if no closer specified, and indent decreased => end of list
                   //break #end of list
                   break;// #end of list
@@ -641,26 +647,33 @@
                       //for each inx,listItem in CSL
                       for( var inx=0,listItem ; inx<CSL.length ; inx++){listItem=CSL[inx];
                       
-                        //declare valid listItem.out
-                        
-                        //if inx>0 
-                        if (inx > 0) {
-                          //rawOut.put separator
-                          rawOut.put(separator);
-                        };
-                        //if item.tryGetProperty('freeForm')
-                        if (item.tryGetProperty('freeForm')) {
-                            //rawOut.put '\n        '
-                            rawOut.put('\n        ');
-                        };
-                        //#recurse
-                        //.out item.tryGetProperty('pre'), listItem, item.tryGetProperty('post')
-                        this.out(item.tryGetProperty('pre'), listItem, item.tryGetProperty('post'));
+                            //declare valid listItem.out
+                            
+                            //if inx>0 
+                            if (inx > 0) {
+                                //if item.tryGetProperty('freeForm')
+                                if (item.tryGetProperty('freeForm')) {
+                                    //rawOut.put '\n'
+                                    rawOut.put('\n');
+                                    //rawOut.put String.spaces(.indent)
+                                    rawOut.put(String.spaces(this.indent));
+                                };
+                                //rawOut.put separator
+                                rawOut.put(separator);
+                            };
+                            //#recurse
+                            //.out item.tryGetProperty('pre'), listItem, item.tryGetProperty('post')
+                            this.out(item.tryGetProperty('pre'), listItem, item.tryGetProperty('post'));
                       };// end for each in CSL
                       //end for
                       
-                      //if item.tryGetProperty('freeForm'), rawOut.put '\n' # (prettier generated code)
-                      if (item.tryGetProperty('freeForm')) {rawOut.put('\n')};
+                      //if item.tryGetProperty('freeForm') # prettier generated code
+                      if (item.tryGetProperty('freeForm')) {// # prettier generated code
+                            //rawOut.put '\n'
+                            rawOut.put('\n');
+                            //rawOut.put String.spaces(.indent)
+                            rawOut.put(String.spaces(this.indent));
+                      };
                   };
               }
               else if ((comment=item.tryGetProperty('COMMENT'))) {
@@ -799,7 +812,11 @@
         return String.spaces(indent);
      };
     // end class ASTBase
+// --------------------
+// Module code
+// --------------------
     
     //end class ASTBase
     
+// end of module
 module.exports=ASTBase;

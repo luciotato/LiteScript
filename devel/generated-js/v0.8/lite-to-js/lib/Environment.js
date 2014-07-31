@@ -13,11 +13,10 @@
         //projectDir: string
         //outDir: string
         //targetExt: string
-    var 
-        projectDir = undefined, 
-        outDir = undefined, 
-        targetExt = undefined
-;
+    var projectDir = undefined
+    , outDir = undefined
+    , targetExt = undefined
+    ;
 //### export Class FileInfo
     // constructor
     function FileInfo(info){
@@ -174,7 +173,7 @@
             //if not found
             if (!(found)) {
                 //logger.throwControlled """
-                logger.throwControlled('' + this.importInfo.source + ":" + this.importInfo.line + ":1 Module not found: " + this.importInfo.name + "\nSearched as:\n" + ((search.join('\n'))) + "\n   with extensions (.lite.md|.md|.interface.md|.js)");
+                logger.throwControlled('' + this.importInfo.source + ":" + this.importInfo.line + ":1 Module not found: " + this.importInfo.name + "\nSearched as:\n" + (search.join('\n')) + "\n   with extensions (.lite.md|.md|.interface.md|.js)");
             };
         };
                         //#{this.importInfo.source}:#{this.importInfo.line}:1 Module not found: #{this.importInfo.name}
@@ -293,7 +292,6 @@
     // end class FileInfo
     
     //end class FileInfo
-    
 //### export helper function setBaseInfo(aProjectDir, aOutDir, aTargetExt)
     function setBaseInfo(aProjectDir, aOutDir, aTargetExt){
         ////set module vars
@@ -446,10 +444,8 @@
             //catch e
                 //logger.error "Environment.getGlobalObject '#{name}'"
                 logger.error("Environment.getGlobalObject '" + name + "'");
-                //declare valid e.stack
-                
-                //logger.error e.stack
-                logger.error(e.stack);
+                //logger.error 'stack:',e.stack
+                logger.error('stack:', e.stack);
                 //debugger
                 debugger;
             };
@@ -500,3 +496,8 @@
     module.exports.ImportParameterInfo = ImportParameterInfo;
     
     // end class ImportParameterInfo
+// --------------------
+// Module code
+// --------------------
+    
+// end of module

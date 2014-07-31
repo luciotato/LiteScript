@@ -5,7 +5,7 @@
 extern void __declareClasses();
 // methods
 enum _VERBS { //a symbol for each distinct method name
-    isDirectory_ = -_CORE_METHODS_MAX-160,
+    isDirectory_ = -_CORE_METHODS_MAX-161,
     isFile_,
     option_,
     valueFor_,
@@ -164,6 +164,7 @@ enum _VERBS { //a symbol for each distinct method name
     capitalized_,
     quoted_,
     rpad_,
+    repeat_,
     remove_,
 _LAST_VERB};
 // propery names
@@ -180,7 +181,7 @@ enum _THINGS { //a symbol for each distinct property name
     debugEnabled_,
     perf_,
     skip_,
-    nomap_,
+    generateSourceMap_,
     single_,
     compileIfNewer_,
     browser_,
@@ -200,6 +201,7 @@ enum _THINGS { //a symbol for each distinct property name
     main_,
     Producer_,
     recurseLevel_,
+    filesProducedCount_,
     parent_,
     childs_,
     keyword_,
@@ -370,7 +372,7 @@ enum _THINGS { //a symbol for each distinct property name
     createFile_,
 _LAST_THING};
 #include "c_lite.h"
-#include "interfaces/fs.h"
+#include "ENV_C_global_import/fs.h"
 #include "ENV_C_global_import/path.h"
 #include "lib/color.h"
 #include "lib/ControlledError.h"

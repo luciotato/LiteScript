@@ -1867,7 +1867,7 @@
 // 5. `no`      *'falsey' check*       `if no options then options={}`
 // 6. `~`       *bit-unary-negation*   `a = ~xC0 + 5`
 
-   var unaryOperators = ['new', '-', 'no', 'not', 'type', 'typeof', '~', '+'];
+   var unaryOperators = ['new', '-', 'no', 'not', 'type', 'typeof', 'bitnot', '+'];
 
    // public class UnaryOper extends Oper
    // constructor
@@ -3951,7 +3951,7 @@
 
            this.req('when');
            this.lock();
-           this.expressions = this.reqSeparatedList(Expression, ",");
+           this.expressions = this.reqSeparatedList(Expression, ",", ":");
            this.body = this.req(Body);
        };
    // export
@@ -4378,3 +4378,5 @@
      };
 
 
+
+//# sourceMappingURL=Grammar.js.map

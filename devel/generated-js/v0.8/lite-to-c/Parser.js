@@ -99,12 +99,12 @@
         this.sourceLineNum = 0;
         //.lineInx=0
         this.lineInx = 0;
-        //.lines=""
-        this.lines = "";
+        //.lines=[]
+        this.lines = [];
         //.setPos .last
         this.setPos(this.last);
      };
-//#### Method initSource(filename:string, source:String)
+//#### Method initSource(filename:string, source)
      Lexer.prototype.initSource = function(filename, source){
 //Load filename and source code in the lexer.
 //First, remember filename (for error reporting) 
@@ -687,24 +687,30 @@
                     words = line.split(' ');
                     //case words.tryGet(0)
                     
-                        //when '#else'
-                    if ((words.tryGet(0)=='#else')){
+                        //when '#else':
+                    if (
+        (words.tryGet(0)=='#else')
+){
                             //.replaceSourceLine .line.replaceAll("#else","//else")
                             this.replaceSourceLine(this.line.replaceAll("#else", "//else"));
                             //defValue = not defValue
                             defValue = !(defValue);
                     
                     }
-                        //when "#end"
-                    else if ((words.tryGet(0)=="#end")){
+                        //when "#end":
+                    else if (
+        (words.tryGet(0)=="#end")
+){
                             //if words.tryGet(1) isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
                             if (words.tryGet(1) !== 'if') {this.throwErr("expected '#end if', read '" + line + "' " + startRef)};
                             //endFound = true
                             endFound = true;
                     
                     }
-                        //when "#endif"
-                    else if ((words.tryGet(0)=="#endif")){
+                        //when "#endif":
+                    else if (
+        (words.tryGet(0)=="#endif")
+){
                             //endFound = true
                             endFound = true;
                     
@@ -1677,7 +1683,7 @@
         this.lastOutCommentLine = 0;
 //if sourceMap option is set, and we're generating .js
         ////ifdef PROD_JS
-        ////if not options.nomap, .sourceMap = new SourceMap
+        ////if options.generateSourceMap, .sourceMap = new SourceMap
         ////else
         //do nothing
         null;
@@ -1787,6 +1793,9 @@
      };
 //#### method close()
      OutCode.prototype.close = function(){
+        //.startNewLine //save last pending line
+        this.startNewLine(); //save last pending line
+        
         //if .fileMode
         if (this.fileMode) {
             //for header=0 to 2
@@ -1839,6 +1848,10 @@
     };
     
     // end class SourceMapMark
+// --------------------
+// Module code
+// --------------------
+// end of module
 ///*
 //### Class DynBuffer
 //Like node.js Buffer, but auto-extends if required

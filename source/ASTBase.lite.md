@@ -436,8 +436,8 @@ if a closer was specified, indent change before the closer means error (line mis
 
 check for excesive indent
 
-                  if .lexer.indent > blockIndent
-                    .lexer.throwErr "Misaligned indent: #{.lexer.indent}. Expected #{blockIndent} to continue block, or #{parentIndent} to close block started at line #{startLine}"
+                  //if .lexer.indent > blockIndent
+                  //  .lexer.throwErr "Misaligned indent: #{.lexer.indent}. Expected #{blockIndent} to continue block, or #{parentIndent} to close block started at line #{startLine}"
 
 else, if no closer specified, and indent decreased => end of list
 

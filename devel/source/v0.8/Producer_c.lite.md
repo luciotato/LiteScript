@@ -97,7 +97,7 @@ create _dispatcher.c & .h
             Environment.externalCacheSave '#{dispatcherModule.fileInfo.outFilename.slice(0,-1)}h',resultLines
         */
 
-        logger.msg "#{color.green}[OK] -> #{dispatcherModule.fileInfo.outRelFilename} #{color.normal}"
+        logger.info "#{color.green}[OK] -> #{dispatcherModule.fileInfo.outRelFilename} #{color.normal}"
         logger.extra #blank line
 
     end function
@@ -295,12 +295,27 @@ Now produce the .c file,
             "//Module ",prefix, .fileInfo.isInterface? ' - INTERFACE':'',NL
             "//-------------------------",NL
 
-        //space to insert __or temp vars
+include __or temp vars
+
         .out '#include "#{.fileInfo.base}.c.extra"',NL
         .lexer.outCode.filenames[2] = "#{.fileInfo.outFilename}.extra"
 
-        // add sustance for the module
-        .produceSustance prefix
+Check if there's a explicit namespace/class with the same name as the module (default export)
+
+        var explicitModuleNamespace 
+        for each statement in .statements    
+            if statement.specific.constructor is Grammar.NamespaceDeclaration
+                and statement.specific.name is .fileInfo.base
+                    explicitModuleNamespace=statement
+                    explicitModuleNamespace.produce //produce main namespace
+                    break
+
+
+if there's no explicit namespace declaration, 
+produce this module body as a namespace (using module name as namespace)
+
+        if no explicitModuleNamespace 
+            .produceAsNamespace prefix
 
 __moduleInit: module main function 
 
@@ -308,42 +323,11 @@ __moduleInit: module main function
             "\n\n//-------------------------",NL
             "void ",prefix,"__moduleInit(void){",NL
 
-        /*
-        for each nameDecl in map .scope.members
+        // all init is done in the module-as-namespace init, just call __namespaceInit
+        .out '    ',prefix,'__namespaceInit();',NL
 
-            if nameDecl.nodeDeclared instanceof Grammar.ObjectLiteral
-
-                .out nameDecl, "=new(Map,"
-
-                var objectLiteral = nameDecl.nodeDeclared
-                if no objectLiteral.items or objectLiteral.items.length is 0
-                    .out "0,NULL"
-                else
-                    .out 
-                        objectLiteral.items.length,',(any_arr){'
-                        {CSL:objectLiteral.items}
-                        NL,"}"
-                
-                .out ");",NL
-
-            else if nameDecl.nodeDeclared instanceof Grammar.ArrayLiteral
-
-                .out nameDecl,"=new(Array,"
-
-                var arrayLiteral = nameDecl.nodeDeclared
-                if no arrayLiteral.items or arrayLiteral.items.length is 0
-                    .out "0,NULL"
-                else
-                    // e.g.: LiteScript:   var list = [a,b,c]
-                    // e.g.: "C": any list = (any){Array_TYPEID,.value.arr=&(Array_s){3,.item=(any_arr){a,b,c}}};
-                    .out arrayLiteral.items.length,",(any_arr){",{CSL:arrayLiteral.items},"}"
-
-                .out ");",NL
-
-        end for
-        */
-
-        .produceMainFunctionBody prefix
+        // all other loose statements in module body
+        .produceLooseExecutableStatements()
 
         if .fileInfo.isInterface // add call to native hand-coded C support for this module 
             .out NL,'    ',prefix,"__nativeInit();"
@@ -429,31 +413,6 @@ out header
 ### Append to class Grammar.NamespaceDeclaration ###
 namespaces are like modules inside modules
 
-#### method produceCallNamespaceInit()
-        .out '    ',.nameDecl.getComposedName(),'__namespaceInit();',NL
-
-/*#### method makeName()
-
-        var prefix = .nameDecl.getComposedName()
-
-if this is a namespace declared at module scope, we check if it has 
-the same name as the module. If it does, is the "default export",
-if it is not, we prepend module name to namespace name. 
-(Modules act as namespaces, var=property, function=method)
-
-        if .nameDecl.parent.isScope //is a namespace declared at module scope
-            var moduleNode:Grammar.Module = .getParent(Grammar.Module)
-            if moduleNode.fileInfo.base is .nameDecl.name
-                //this namespace have the same name as the module
-                do nothing //prefix is OK
-            else
-                //append modulename to prefix
-                prefix = "#{moduleNode.fileInfo.base}_#{prefix}"
-            end if
-        end if
-
-        return prefix
-*/
 
 #### method produceHeader
                        
@@ -472,41 +431,22 @@ all namespace methods & props are public
         for each member in map .nameDecl.members
             where member.name not in ['constructor','length','prototype']
                 case member.nodeClass
-                    when Grammar.VariableDecl
+                    when Grammar.VariableDecl:
                         .out '    extern var ',prefix,'_',member.name,';',NL
-                    when Grammar.MethodDeclaration
+                    when Grammar.MethodDeclaration:
                         .out '    extern any ',prefix,'_',member.name,'(DEFAULT_ARGUMENTS);',NL
             
          // recurse, add internal classes and namespaces
         .body.produceDeclaredExternProps prefix, forcePublic=true
 
 
-#### method produce
+#### method produce # namespace
 
         var prefix= .nameDecl.getComposedName()
         var isPublic = .hasAdjective('export')
 
         //logger.debug "produce Namespace",c
-
-Now on the .c file,
-
-        .out 
-            "//-------------------------",NL
-            "//NAMESPACE ",prefix,NL
-            "//-------------------------",NL
-
-        .body.produceSustance prefix
-
-__namespaceInit function
-
-        .out 
-            NL,NL,"//------------------",NL
-            "void ",prefix,"__namespaceInit(void){",NL
-
-        .body.produceMainFunctionBody prefix
-        .out "};",NL
-
-        .skipSemiColon = true
+        .body.produceAsNamespace prefix
 
 
 ### Append to class Grammar.ClassDeclaration ###
@@ -729,6 +669,38 @@ A "Body" is an ordered list of statements.
 
         .out NL
 
+
+#### method produceAsNamespace(prefix) # namespace
+
+Now on the .c file,
+
+        .out 
+            "//-------------------------",NL
+            "//NAMESPACE ",prefix,NL
+            "//-------------------------",NL
+
+add declarations for vars & internal classes
+
+        .produceInternalDeclarations prefix
+
+__namespaceInit function
+
+        .out 
+            NL,NL,"//------------------",NL
+            "void ",prefix,"__namespaceInit(void){",NL
+
+register internal classes
+
+        .callOnSubTree LiteCore.getSymbol('produceClassRegistration')
+
+namespace vars initialization
+
+        .produceVarInitialization prefix
+
+        .out "};",NL
+        .skipSemiColon = true
+
+
 #### method produceDeclaredExternProps(parentName,forcePublic)
 
         if no .statements, return //interface only
@@ -742,28 +714,28 @@ A "Body" is an ordered list of statements.
 
             case item.specific.constructor
 
-                when Grammar.VarStatement
+                when Grammar.VarStatement:
                     declare item.specific:Grammar.VarStatement
                     if isPublic, .out 'extern var ',{pre:prefix, CSL:item.specific.getNames()},";",NL
 
-                when Grammar.FunctionDeclaration, Grammar.MethodDeclaration //method: append to class xx - when is a core class
+                when Grammar.FunctionDeclaration, Grammar.MethodDeclaration: //method: append to class xx - when is a core class
                     declare item.specific:Grammar.FunctionDeclaration
                     //export module function
                     if isPublic, .out 'extern any ',prefix,item.specific.name,"(DEFAULT_ARGUMENTS);",NL
 
-                when Grammar.ClassDeclaration, Grammar.AppendToDeclaration
+                when Grammar.ClassDeclaration, Grammar.AppendToDeclaration:
                     declare item.specific:Grammar.ClassDeclaration
                     //produce class header declarations
                     item.specific.produceHeader
                     // class headers are always produced. Props are declared in header production
 
-                when Grammar.NamespaceDeclaration
+                when Grammar.NamespaceDeclaration:
                     declare item.specific:Grammar.NamespaceDeclaration
                     item.specific.produceHeader #recurses
                     // as in JS, always public. Must produce, can have classes inside
 
 
-#### method produceSustance(prefix)
+#### method produceInternalDeclarations(prefix)
 
 before main function,
 produce body sustance: vars & other functions declarations
@@ -795,7 +767,7 @@ produce body sustance: vars & other functions declarations
 
             else if item.specific.constructor is Grammar.NamespaceDeclaration
                 declare item.specific:Grammar.NamespaceDeclaration
-                produceSecond.push item.specific #recurses
+                produceSecond.push item.specific #recurses thru namespace.produce()
 
             else if item.specific.constructor is Grammar.AppendToDeclaration
                 item.specific.callOnSubTree LiteCore.getSymbol('produceStaticListMethodsAndProps') //if there are internal classes
@@ -807,38 +779,29 @@ produce body sustance: vars & other functions declarations
         end for //produce vars functions & classes sustance
 
         for each item in produceSecond //class & namespace sustance
-            item.produce
+            .out item
 
         for each item in produceThird //other declare statements
-            item.produce
+            .out item
 
 
-#### method produceMainFunctionBody(prefix)
-
-        if no .statements, return //just interface
-
-First: register user classes
-
-        .callOnSubTree LiteCore.getSymbol('produceClassRegistration')
-
-Second: recurse for namespaces 
-
-        .callOnSubTree LiteCore.getSymbol('produceCallNamespaceInit')
+#### method produceVarInitialization(prefix)
 
 Third: assign values for module vars.
 if there is var or properties with assigned values, produce those assignment.
 User classes must be registered previously, in case the module vars use them as initial values.
 
         for each item in .statements 
-            where item.specific instanceof Grammar.VarDeclList //for modules:VarStatement, for Namespaces: PropertiesDeclaration
+            if item.specific instanceof Grammar.VarDeclList //for modules:VarStatement, for Namespaces: PropertiesDeclaration
                 declare item.specific:Grammar.VarDeclList
                 for each variableDecl in item.specific.list
                     where variableDecl.assignedValue
                         .out '    ',prefix,'_',variableDecl.name,' = ', variableDecl.assignedValue,";",NL
 
-
-        // all other loose statements in module body
-        .produceLooseExecutableStatements()
+            else if item.specific instanceof Grammar.NamespaceDeclaration
+                declare item.specific:Grammar.NamespaceDeclaration
+                // add call to __namespaceInit
+                .out '    ',item.specific.nameDecl.getComposedName(),'__namespaceInit();',NL
 
 
 #### method producePropertiesInitialValueAssignments(fullPrefix)
@@ -1017,6 +980,9 @@ or the only Operand of a unary oper.
 
       method produce()
 
+        if .accessors and .name isnt instance of Grammar.NumberLiteral 
+            .sayErr "accessors on Literals or ParenExpressions not supported for C generation"
+
         var pre,post
 
         if .name instance of Grammar.StringLiteral
@@ -1036,7 +1002,7 @@ or the only Operand of a unary oper.
             else
                 .out "any_LTR(",strValue,")"
 
-            .out .accessors
+            //out .accessors
 
         else if .name instance of Grammar.NumberLiteral
 
@@ -1044,7 +1010,7 @@ or the only Operand of a unary oper.
                 pre="any_number("
                 post=")"
 
-            .out pre,.name,.accessors,post
+            .out pre,.name, post //.accessors,post
 
         else if .name instance of Grammar.VariableRef
             declare .name:Grammar.VariableRef
@@ -1169,7 +1135,7 @@ example: `x not in [1,2,3]` -> `indexOf(x,_literalArray(1,2,3))==-1`
 example: `char not in myString` -> `indexOf(char,myString)==-1`
 
         case .name 
-          when 'in'
+          when 'in':
             if .right.name instanceof Grammar.ArrayLiteral
                 var haystack:Grammar.ArrayLiteral = .right.name
                 .out toAnyPre,prepend,"__in(",.left,",",haystack.items.length,",(any_arr){",{CSL:haystack.items},"})",append,toAnyPost
@@ -1180,14 +1146,14 @@ example: `char not in myString` -> `indexOf(char,myString)==-1`
 js => requires swapping left and right operands and to use js's: `in`
 Lite-C => use Object.hasProperty(left,1,(any_arr){right}) which mimics js's "in"
 
-          when 'has property'
+          when 'has property':
             .out toAnyPre,prepend,"_hasProperty(",.left,",",.right,")",append,toAnyPost
             //.throwError "NOT IMPLEMENTED YET for C"
             //.out toAnyPre,"indexOf(",.right,",1,(any_arr){",.left,"}).value.number", .negated? "==-1" : ">=0",toAnyPost
 
 3) *'into'* operator (assignment-expression), requires swapping left and right operands and to use: `=`
 
-          when 'into'
+          when 'into':
             if .produceType and .produceType isnt 'any', .out '_anyTo',.produceType,'('
             .left.produceType='any'
             .out "(",.right,"=",.left,")"
@@ -1195,20 +1161,20 @@ Lite-C => use Object.hasProperty(left,1,(any_arr){right}) which mimics js's "in"
 
 4) *instanceof* use core _instanceof(x,y)
 
-          when 'instance of'
+          when 'instance of':
             .left.produceType = 'any'
             .right.produceType = 'any'
             .out toAnyPre,prepend,'_instanceof(',.left,',',.right,')',append,toAnyPost
 
 4b) *'like'* operator (RegExp.test), requires swapping left and right operands and to use js: `.test()`
 
-          when 'like'
+          when 'like':
             .throwError "like not supported yet for C-production"
             //.out toAnyPre,prepend,'RegExp_test(',.left,',"',.right,'")',append,toAnyPost
 
 5) equal comparisions require both any
 
-          when 'is'
+          when 'is':
             .left.produceType = 'any'
             .right.produceType = 'any'
             .out toAnyPre,.negated?'!':'', '__is(',.left,',',.right,')',toAnyPost
@@ -1225,7 +1191,7 @@ js: `A || B`
 C: `any __or1;`
    `(_anyToBool(__or1=A)? __or1 : B)`
 
-          when 'or'
+          when 'or':
             .lexer.outCode.orTempVarCount++
             var orTmp = '__or#{.lexer.outCode.orTempVarCount}'
 
@@ -1240,7 +1206,7 @@ C: `any __or1;`
 modulus is only for integers. for doubles, you need fmod (and link the math.lib)
 we convert to int, as js seems to do.
 
-          when '%',"<<",">>","bitand","bitor","bitxor"
+          when '%',"<<",">>","bitand","bitor","bitxor":
             if .produceType and .produceType isnt 'Number', .out 'any_number('
             .left.produceType = 'Number'
             .right.produceType = 'Number'
@@ -1249,7 +1215,7 @@ we convert to int, as js seems to do.
 
 string concat: & 
 
-          when '&'
+          when '&':
             if .produceType is 'Number', .throwError 'cannot use & to concat and produce a number'
             .left.produceType = 'any'
             .right.produceType = 'any'
@@ -1263,15 +1229,15 @@ We out: left,operator,right
             var operC = operTranslate(oper) 
             case operC
 
-                when '?' // left is condition, right is: if_true
+                when '?': // left is condition, right is: if_true
                     .left.produceType = 'Bool'
                     .right.produceType = .produceType
 
-                when ':' // left is a?b, right is: if_false
+                when ':': // left is a?b, right is: if_false
                     .left.produceType = .produceType
                     .right.produceType = .produceType
 
-                when '&&' // boolean and
+                when '&&': // boolean and
                     .left.produceType = 'Bool'
                     .right.produceType = 'Bool'
 
@@ -1736,7 +1702,7 @@ and next property access should be on defined members of the type
 
         //add arguments[] 
         if args and args.length
-            callParams.push "#{args.length},",pre,{CSL:args, post:'\n'},post
+            callParams.push "#{args.length},",pre,{CSL:args, freeForm:1},post
             //,freeForm:true,indent:String.spaces(8)
         else
             callParams.push "0,NULL"
@@ -1754,12 +1720,13 @@ and next property access should be on defined members of the type
 
         var oper = operTranslate(.name)
         case oper
-            when "+=","-=","*=","/="
+            when "+=","-=","*=","/=":
 
                 if oper is '+='
                     var rresultNameDecl = .rvalue.getResultType() 
-                    if rresultNameDecl and rresultNameDecl.hasProto('String')
-                        .sayErr """
+                    if (nameDecl and nameDecl.hasProto('String'))
+                        or (rresultNameDecl and rresultNameDecl.hasProto('String'))
+                            .sayErr """
                                 You should not use += to concat strings. use string concat oper: & or interpolation instead.
                                 e.g.: DO: "a &= b"  vs.  DO NOT: a += b
                                 """
@@ -1767,7 +1734,7 @@ and next property access should be on defined members of the type
                 .rvalue.produceType = 'Number'
                 .out .lvalue,extraLvalue,' ', oper,' ',.rvalue
 
-            when "&=" //string concat
+            when "&=": //string concat
                 .rvalue.produceType = 'any'
                 .out .lvalue, '=', "_concatAny(2,",.lvalue,',',.rvalue,')'
 
@@ -1883,7 +1850,7 @@ var with__1=frontDoor;
 'var' followed by a list of comma separated: var names and optional assignment
 
       method produce() 
-        .out 'var ',{CSL:.list}
+        .out 'var ',{CSL:.list, freeForm:1}
 
 ### Append to class Grammar.VariableDecl ###
 

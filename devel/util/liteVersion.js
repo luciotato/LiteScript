@@ -58,10 +58,11 @@
            warningLevel: Number(args.value('w', "warning")||1), 
            debugEnabled: args.option('d', "debug"), 
            skip: args.option('noval', "novalidation"), 
-           nomap: args.option('nm', "nomap"), 
+           generateSourceMap: args.option('nm', "nomap")? false:true, 
            single: args.option('s', "single"), 
            browser: args.option('b', "browser"),
            comments: Number(args.value('comment', "comments")||1),
+           perf: Number(args.value('perf', "performance")||0),
            defines:[]
            };
 
@@ -121,7 +122,7 @@
         //declare valid Compiler.compile
        //if options.verbose, print 'LiteScript compiler version #{Compiler.version}'
        if (options.verboseLevel) {
-           console.log('LiteScript compiler version', Compiler.version,' - build date ',Compiler.buildDate)};
+           console.log('LiteScript compiler version', Compiler.version,' - Build Date: ',Compiler.buildDate)};
 
        //try
        try{

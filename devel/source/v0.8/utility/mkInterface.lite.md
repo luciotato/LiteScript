@@ -132,13 +132,14 @@ Dependencies
                 .getMembersFromObjProperties
 
                 out.indentSpace = '    '
+                out.push ""
+                out.push ""
                 out.push 'public '+.type+' '+.name
 
                 // constructor
                 if .params 
                     out.indent
                     out.push 'constructor new '+.name+' '+.params
-                    out.push ""
                     out.deindent
 
                 // out props from prototype

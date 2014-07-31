@@ -3,6 +3,9 @@
 //Module Names
 //-------------------------
 #include "Names.c.extra"
+//-------------------------
+//NAMESPACE Names
+//-------------------------
 var Names_allNameDeclarations;
     //-----------------------
     // Class Names_Declaration: static list of METHODS(verbs) and PROPS(things)
@@ -156,21 +159,25 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
           
           else {
             //if options.type, .setMember('**proto**',options.type)
-            if (_anyToBool(PROP(type_,options))) {METHOD(setMember_,this)(this,2,(any_arr){any_LTR("**proto**")
-, PROP(type_,options)
-            });};
+            if (_anyToBool(PROP(type_,options))) {METHOD(setMember_,this)(this,2,(any_arr){
+        any_LTR("**proto**"), 
+        PROP(type_,options)
+});};
             //if options.itemType, .setMember('**item type**',options.itemType)
-            if (_anyToBool(PROP(itemType_,options))) {METHOD(setMember_,this)(this,2,(any_arr){any_LTR("**item type**")
-, PROP(itemType_,options)
-            });};
+            if (_anyToBool(PROP(itemType_,options))) {METHOD(setMember_,this)(this,2,(any_arr){
+        any_LTR("**item type**"), 
+        PROP(itemType_,options)
+});};
             //if options.returnType, .setMember('**return type**',options.returnType)
-            if (_anyToBool(PROP(returnType_,options))) {METHOD(setMember_,this)(this,2,(any_arr){any_LTR("**return type**")
-, PROP(returnType_,options)
-            });};
+            if (_anyToBool(PROP(returnType_,options))) {METHOD(setMember_,this)(this,2,(any_arr){
+        any_LTR("**return type**"), 
+        PROP(returnType_,options)
+});};
             //if options.value, .setMember('**value**',options.value)
-            if (_anyToBool(PROP(value_,options))) {METHOD(setMember_,this)(this,2,(any_arr){any_LTR("**value**")
-, PROP(value_,options)
-          });};
+            if (_anyToBool(PROP(value_,options))) {METHOD(setMember_,this)(this,2,(any_arr){
+        any_LTR("**value**"), 
+        PROP(value_,options)
+});};
           };
               
           //if options.isForward, .isForward = true
@@ -180,8 +187,9 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
       };
 //keep a list of all NameDeclarations
       //allNameDeclarations.push this
-      METHOD(push_,Names_allNameDeclarations)(Names_allNameDeclarations,1,(any_arr){this
-      });
+      METHOD(push_,Names_allNameDeclarations)(Names_allNameDeclarations,1,(any_arr){
+        this
+});
      }
 //#### Helper method normalize(name)
      any Names_Declaration_normalize(DEFAULT_ARGUMENTS){
@@ -193,15 +201,17 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         //if .normalizeModeKeepFirstCase 
         if (_anyToBool(PROP(normalizeModeKeepFirstCase_,this)))  {
             //return normalizeKeepFirst(name)
-            return Names_normalizeKeepFirst(undefined,1,(any_arr){name
-            });
+            return Names_normalizeKeepFirst(undefined,1,(any_arr){
+        name
+});
         }
         //else
         
         else {
             //return normalizeToLower(name)
-            return Names_normalizeToLower(undefined,1,(any_arr){name
-            });
+            return Names_normalizeToLower(undefined,1,(any_arr){
+        name
+});
         };
      return undefined;
      }
@@ -222,15 +232,18 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         if (__is(name,any_LTR("**proto**")))  {
             //# walk all the **proto** chain to avoid circular references
             //var nameDecl = value
-            var nameDecl = value;
+            var 
+        nameDecl = value
+;
             //do 
             do{
                 //if nameDecl isnt instance of Declaration, break #a nameDecl with a string yet to be de-reference
                 if (!(_instanceof(nameDecl,Names_Declaration))) {break;};
                 //if nameDecl is this, return #circular ref, abort setting 
                 if (__is(nameDecl,this)) {return undefined;};
-            } while (_anyToBool((nameDecl=__call(get_,PROP(members_,nameDecl),1,(any_arr){name
-            }))));// end loop
+            } while (_anyToBool((nameDecl=__call(get_,PROP(members_,nameDecl),1,(any_arr){
+        name
+}))));// end loop
             
         };
             //loop while nameDecl.members.get(name) into nameDecl #next in chain
@@ -238,10 +251,12 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         
         //#set member
         //.members.set .normalize(name), value
-        __call(set_,PROP(members_,this),2,(any_arr){METHOD(normalize_,this)(this,1,(any_arr){name
-        })
-, value
-        });
+        __call(set_,PROP(members_,this),2,(any_arr){
+        METHOD(normalize_,this)(this,1,(any_arr){
+        name
+}), 
+        value
+});
      return undefined;
      }
 //#### Helper method findOwnMember(name) returns Declaration
@@ -253,9 +268,11 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         //---------
 //this method looks for 'name' in Declaration members
         //return .members.get(.normalize(name))
-        return __call(get_,PROP(members_,this),1,(any_arr){METHOD(normalize_,this)(this,1,(any_arr){name
-        })
-        });
+        return __call(get_,PROP(members_,this),1,(any_arr){
+        METHOD(normalize_,this)(this,1,(any_arr){
+        name
+})
+});
      return undefined;
      }
 //#### Helper method ownMember(name) returns Declaration
@@ -268,15 +285,18 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 //this method looks for a specific member, throws if not found
         //if no .findOwnMember(name) into var result
         var result=undefined;
-        if (!(_anyToBool((result=METHOD(findOwnMember_,this)(this,1,(any_arr){name
-        })))))  {
+        if (!(_anyToBool((result=METHOD(findOwnMember_,this)(this,1,(any_arr){
+        name
+})))))  {
           //.sayErr "No member named '#{name}' on #{.info()}"
-          METHOD(sayErr_,this)(this,1,(any_arr){_concatAny(4,any_LTR("No member named '")
-, name
-, any_LTR("' on ")
-, (METHOD(info_,this)(this,0,NULL))
-          )
-          });
+          METHOD(sayErr_,this)(this,1,(any_arr){
+        _concatAny(4,
+        any_LTR("No member named '"), 
+        name, 
+        any_LTR("' on "), 
+        (METHOD(info_,this)(this,0,NULL))
+)
+});
         };
         //return result
         return result;
@@ -321,9 +341,10 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
           //member.parent = this
           PROP(parent_,member) = this;
           //.members.set key,member
-          __call(set_,PROP(members_,this),2,(any_arr){key
-, member
-          });
+          __call(set_,PROP(members_,this),2,(any_arr){
+        key, 
+        member
+});
         }};// end for each in map
         //.isForward = realNameDecl.isForward
         PROP(isForward_,this) = PROP(isForward_,realNameDecl);
@@ -359,12 +380,15 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
           memberDecl= __nvp->value;
         
           //allNameDeclarations.remove memberDecl
-          METHOD(remove_,Names_allNameDeclarations)(Names_allNameDeclarations,1,(any_arr){memberDecl
-          });
+          METHOD(remove_,Names_allNameDeclarations)(Names_allNameDeclarations,1,(any_arr){
+        memberDecl
+});
         }};// end for each in map
         //#save a copy of this.members pointer
         //var thisMembers = this.members
-        var thisMembers = PROP(members_,this);
+        var 
+        thisMembers = PROP(members_,this)
+;
         //#"point to" means share "members" object 
         //this.members = nameDecl.members
         PROP(members_,this) = PROP(members_,nameDecl);
@@ -412,11 +436,12 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Names_Declaration));
         //---------
         //return "#{.positionText()} for reference: original declaration of '#{.name}'"
-        return _concatAny(4,(METHOD(positionText_,this)(this,0,NULL))
-, any_LTR(" for reference: original declaration of '")
-, PROP(name_,this)
-, any_LTR("'")
-        );
+        return _concatAny(4,
+        (METHOD(positionText_,this)(this,0,NULL)), 
+        any_LTR(" for reference: original declaration of '"), 
+        PROP(name_,this), 
+        any_LTR("'")
+);
      return undefined;
      }
 //#### helper method sayErr(msg) 
@@ -427,13 +452,15 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         var msg= argc? arguments[0] : undefined;
         //---------
         //logger.error "#{.positionText()} #{.info()} #{msg}"
-        logger_error(undefined,1,(any_arr){_concatAny(5,(METHOD(positionText_,this)(this,0,NULL))
-, any_LTR(" ")
-, (METHOD(info_,this)(this,0,NULL))
-, any_LTR(" ")
-, msg
-        )
-        });
+        logger_error(undefined,1,(any_arr){
+        _concatAny(5,
+        (METHOD(positionText_,this)(this,0,NULL)), 
+        any_LTR(" "), 
+        (METHOD(info_,this)(this,0,NULL)), 
+        any_LTR(" "), 
+        msg
+)
+});
      return undefined;
      }
 //#### helper method warn(msg) 
@@ -444,13 +471,15 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         var msg= argc? arguments[0] : undefined;
         //---------
         //logger.warning "#{.positionText()} #{.info()} #{msg}"
-        logger_warning(undefined,1,(any_arr){_concatAny(5,(METHOD(positionText_,this)(this,0,NULL))
-, any_LTR(" ")
-, (METHOD(info_,this)(this,0,NULL))
-, any_LTR(" ")
-, msg
-        )
-        });
+        logger_warning(undefined,1,(any_arr){
+        _concatAny(5,
+        (METHOD(positionText_,this)(this,0,NULL)), 
+        any_LTR(" "), 
+        (METHOD(info_,this)(this,0,NULL)), 
+        any_LTR(" "), 
+        msg
+)
+});
      return undefined;
      }
 //#### helper method caseMismatch(text, actualNode:ASTBase) 
@@ -469,17 +498,20 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         //if .name isnt text # if there is a case mismatch
         if (!__is(PROP(name_,this),text))  {// # if there is a case mismatch
             //logger.error "#{actualNode? actualNode.positionText():.positionText()} CASE MISMATCH: '#{text}'/'#{.name}'"
-            logger_error(undefined,1,(any_arr){_concatAny(6,(_anyToBool(actualNode) ? METHOD(positionText_,actualNode)(actualNode,0,NULL) : METHOD(positionText_,this)(this,0,NULL))
-, any_LTR(" CASE MISMATCH: '")
-, text
-, any_LTR("'/'")
-, PROP(name_,this)
-, any_LTR("'")
-            )
-            });
+            logger_error(undefined,1,(any_arr){
+        _concatAny(6,
+        (_anyToBool(actualNode) ? METHOD(positionText_,actualNode)(actualNode,0,NULL) : METHOD(positionText_,this)(this,0,NULL)), 
+        any_LTR(" CASE MISMATCH: '"), 
+        text, 
+        any_LTR("'/'"), 
+        PROP(name_,this), 
+        any_LTR("'")
+)
+});
             //logger.error .originalDeclarationPosition() #add original declaration line info
-            logger_error(undefined,1,(any_arr){METHOD(originalDeclarationPosition_,this)(this,0,NULL)
-            });// #add original declaration line info
+            logger_error(undefined,1,(any_arr){
+        METHOD(originalDeclarationPosition_,this)(this,0,NULL)
+});// #add original declaration line info
             //return true
             return true;
         };
@@ -507,38 +539,47 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         //if typeof nameDecl is 'string'
         if (__is(_typeof(nameDecl),any_LTR("string")))  {
             //nameDecl = new Declaration(nameDecl, options, nodeDeclared or .nodeDeclared)
-            nameDecl = new(Names_Declaration,3,(any_arr){nameDecl
-, options
-, (_anyToBool(__or1=nodeDeclared)? __or1 : PROP(nodeDeclared_,this))
-            });
+            nameDecl = new(Names_Declaration,3,(any_arr){
+        nameDecl, 
+        options, 
+        (_anyToBool(__or1=nodeDeclared)? __or1 : PROP(nodeDeclared_,this))
+});
         };
         //logger.debug "addMember: '#{nameDecl.name}' to '#{.name}'" #[#{.constructor.name}] name:
-        logger_debug(undefined,1,(any_arr){_concatAny(5,any_LTR("addMember: '")
-, PROP(name_,nameDecl)
-, any_LTR("' to '")
-, PROP(name_,this)
-, any_LTR("'")
-        )
-        });// #[#{.constructor.name}] name:
+        logger_debug(undefined,1,(any_arr){
+        _concatAny(5,
+        any_LTR("addMember: '"), 
+        PROP(name_,nameDecl), 
+        any_LTR("' to '"), 
+        PROP(name_,this), 
+        any_LTR("'")
+)
+});// #[#{.constructor.name}] name:
         //if no .members
         if (!_anyToBool(PROP(members_,this)))  {
           //fail with "no .members in [#{.constructor.name}]"
-          throw(new(Error,1,(any_arr){_concatAny(3,any_LTR("no .members in [")
-, PROP(name_,any_class(this.class))
-, any_LTR("]")
-          )}));;
+          throw(new(Error,1,(any_arr){_concatAny(3,
+        any_LTR("no .members in ["), 
+        PROP(name_,any_class(this.class)), 
+        any_LTR("]")
+)}));;
         };
         //var normalized = .normalize(nameDecl.name) 
-        var normalized = METHOD(normalize_,this)(this,1,(any_arr){PROP(name_,nameDecl)
-        });
+        var 
+        normalized = METHOD(normalize_,this)(this,1,(any_arr){
+        PROP(name_,nameDecl)
+})
+;
         //if not .members.get(normalized) into var found:Declaration
         var found=undefined;
-        if (!(_anyToBool((found=__call(get_,PROP(members_,this),1,(any_arr){normalized
-        })))))  {
+        if (!(_anyToBool((found=__call(get_,PROP(members_,this),1,(any_arr){
+        normalized
+})))))  {
             //.members.set normalized, nameDecl
-            __call(set_,PROP(members_,this),2,(any_arr){normalized
-, nameDecl
-            });
+            __call(set_,PROP(members_,this),2,(any_arr){
+        normalized, 
+        nameDecl
+});
             //nameDecl.parent = this
             PROP(parent_,nameDecl) = this;
             //return nameDecl
@@ -547,16 +588,18 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
 //else, found.
 //If the found item has a different case than the name we're adding, emit error & return
         //if found.caseMismatch(nameDecl.name, nodeDeclared or nameDecl.nodeDeclared)
-        if (_anyToBool(METHOD(caseMismatch_,found)(found,2,(any_arr){PROP(name_,nameDecl)
-, (_anyToBool(__or2=nodeDeclared)? __or2 : PROP(nodeDeclared_,nameDecl))
-        })))  {
+        if (_anyToBool(METHOD(caseMismatch_,found)(found,2,(any_arr){
+        PROP(name_,nameDecl), 
+        (_anyToBool(__or2=nodeDeclared)? __or2 : PROP(nodeDeclared_,nameDecl))
+})))  {
             //return nameDecl
             return nameDecl;
 //if replaceSameName option set, replace found item with new item
             //.members.set normalized, nameDecl
-            __call(set_,PROP(members_,this),2,(any_arr){normalized
-, nameDecl
-            });
+            __call(set_,PROP(members_,this),2,(any_arr){
+        normalized, 
+        nameDecl
+});
         }
 //else, if the previously defined found item was a "forward" declaration, we add the nameDecl 
 //"childs" to pre-existent found declaration and remove the forward flag
@@ -564,8 +607,9 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         
         else if (_anyToBool(PROP(isForward_,found)))  {
             //found.replaceForward nameDecl
-            METHOD(replaceForward_,found)(found,1,(any_arr){nameDecl
-            });
+            METHOD(replaceForward_,found)(found,1,(any_arr){
+        nameDecl
+});
             //return found
             return found;
         }
@@ -574,23 +618,28 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         
         else {
             //logger.error "#{nameDecl.positionText()}. DUPLICATED name: '#{nameDecl.name}'"
-            logger_error(undefined,1,(any_arr){_concatAny(4,(METHOD(positionText_,nameDecl)(nameDecl,0,NULL))
-, any_LTR(". DUPLICATED name: '")
-, PROP(name_,nameDecl)
-, any_LTR("'")
-            )
-            });
+            logger_error(undefined,1,(any_arr){
+        _concatAny(4,
+        (METHOD(positionText_,nameDecl)(nameDecl,0,NULL)), 
+        any_LTR(". DUPLICATED name: '"), 
+        PROP(name_,nameDecl), 
+        any_LTR("'")
+)
+});
             //logger.error "adding member '#{nameDecl.name}' to '#{.name}'"
-            logger_error(undefined,1,(any_arr){_concatAny(5,any_LTR("adding member '")
-, PROP(name_,nameDecl)
-, any_LTR("' to '")
-, PROP(name_,this)
-, any_LTR("'")
-            )
-            });
+            logger_error(undefined,1,(any_arr){
+        _concatAny(5,
+        any_LTR("adding member '"), 
+        PROP(name_,nameDecl), 
+        any_LTR("' to '"), 
+        PROP(name_,this), 
+        any_LTR("'")
+)
+});
             //logger.error found.originalDeclarationPosition() #add extra information line
-            logger_error(undefined,1,(any_arr){METHOD(originalDeclarationPosition_,found)(found,0,NULL)
-            });// #add extra information line
+            logger_error(undefined,1,(any_arr){
+        METHOD(originalDeclarationPosition_,found)(found,0,NULL)
+});// #add extra information line
         };
         //return nameDecl
         return nameDecl;
@@ -611,15 +660,19 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Names_Declaration));
         //---------
         //var name = .name
-        var name = PROP(name_,this);
+        var 
+        name = PROP(name_,this)
+;
         //if .parent and .parent.name isnt 'prototype' and not .parent.name.endsWith('Scope]')
-        if (_anyToBool(PROP(parent_,this)) && !__is(PROP(name_,PROP(parent_,this)),any_LTR("prototype")) && !(_anyToBool(__call(endsWith_,PROP(name_,PROP(parent_,this)),1,(any_arr){any_LTR("Scope]")
-        }))))  {
+        if (_anyToBool(PROP(parent_,this)) && !__is(PROP(name_,PROP(parent_,this)),any_LTR("prototype")) && !(_anyToBool(__call(endsWith_,PROP(name_,PROP(parent_,this)),1,(any_arr){
+        any_LTR("Scope]")
+}))))  {
           //name = "#{.parent.name}.#{name}"
-          name = _concatAny(3,PROP(name_,PROP(parent_,this))
-, any_LTR(".")
-, name
-          );
+          name = _concatAny(3,
+        PROP(name_,PROP(parent_,this)), 
+        any_LTR("."), 
+        name
+);
         };
         //return name
         return name;
@@ -630,7 +683,9 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Names_Declaration));
         //---------
         //var type = ""
-        var type = any_EMPTY_STR;
+        var 
+        type = any_EMPTY_STR
+;
         
         //if .nodeClass is Grammar.ClassDeclaration
         if (__is(PROP(nodeClass_,this),Grammar_ClassDeclaration))  {
@@ -641,8 +696,11 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         
         else {
             //var nameDecltype = .findOwnMember('**proto**')
-            var nameDecltype = METHOD(findOwnMember_,this)(this,1,(any_arr){any_LTR("**proto**")
-            });
+            var 
+        nameDecltype = METHOD(findOwnMember_,this)(this,1,(any_arr){
+        any_LTR("**proto**")
+})
+;
             //if nameDecltype instanceof Declaration
             if (_instanceof(nameDecltype,Names_Declaration))  {
                 //type = nameDecltype.name
@@ -658,10 +716,11 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
                     
                     else {
                         //type = "#{nameDecltype.parent.name}.#{type}"
-                        type = _concatAny(3,PROP(name_,PROP(parent_,nameDecltype))
-, any_LTR(".")
-, type
-                        );
+                        type = _concatAny(3,
+        PROP(name_,PROP(parent_,nameDecltype)), 
+        any_LTR("."), 
+        type
+);
                     };
                     //end if 
                     
@@ -680,15 +739,17 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
         //end if
         
         //if type, type=":#{type}" //prepend :
-        if (_anyToBool(type)) {type = _concatAny(2,any_LTR(":")
-, type
-        );};
+        if (_anyToBool(type)) {type = _concatAny(2,
+        any_LTR(":"), 
+        type
+);};
         //return "'#{.composedName()}#{type}'"
-        return _concatAny(4,any_LTR("'")
-, (METHOD(composedName_,this)(this,0,NULL))
-, type
-, any_LTR("'")
-        );
+        return _concatAny(4,
+        any_LTR("'"), 
+        (METHOD(composedName_,this)(this,0,NULL)), 
+        type, 
+        any_LTR("'")
+);
      return undefined;
      }
     
@@ -741,10 +802,11 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
       var text= argc? arguments[0] : undefined;
       //---------
       if (__in(text,8,(any_arr){any_LTR("__proto__"), any_LTR("NaN"), any_LTR("Infinity"), any_LTR("undefined"), any_LTR("null"), any_LTR("false"), any_LTR("true"), any_LTR("constructor")}))  {// # not good names
-        return _concatAny(3,any_LTR("|")
-, text
-, any_LTR("|")
-        );
+        return _concatAny(3,
+        any_LTR("|"), 
+        text, 
+        any_LTR("|")
+);
       }
       //else
       
@@ -757,45 +819,55 @@ any Names_isCapitalized(DEFAULT_ARGUMENTS); //forward declare
       // define named params
       var text= argc? arguments[0] : undefined;
       //---------
-      if (_anyToBool((_anyToBool(__or3=any_number(__is(METHOD(charAt_,text)(text,1,(any_arr){any_number(0)
-      }),any_LTR("'"))))? __or3 : any_number(__is(METHOD(charAt_,text)(text,1,(any_arr){any_number(0)
-      }),any_LTR("\""))))))  {// #Except for quoted names
+      if (_anyToBool((_anyToBool(__or3=any_number(__is(METHOD(charAt_,text)(text,1,(any_arr){
+        any_number(0)
+}),any_LTR("'"))))? __or3 : any_number(__is(METHOD(charAt_,text)(text,1,(any_arr){
+        any_number(0)
+}),any_LTR("\""))))))  {// #Except for quoted names
           return text;
       };
-      return Names_fixSpecialNames(undefined,1,(any_arr){METHOD(toLowerCase_,text)(text,0,NULL)
-      });
+      return Names_fixSpecialNames(undefined,1,(any_arr){
+        METHOD(toLowerCase_,text)(text,0,NULL)
+});
     return undefined;
     }
     any Names_normalizeKeepFirst(DEFAULT_ARGUMENTS){
       // define named params
       var text= argc? arguments[0] : undefined;
       //---------
-      return Names_fixSpecialNames(undefined,1,(any_arr){_concatAny(2,(METHOD(slice_,text)(text,2,(any_arr){any_number(0)
-, any_number(1)
-      }))
-, (__call(toLowerCase_,METHOD(slice_,text)(text,1,(any_arr){any_number(1)
-      }),0,NULL))
-      )
-      });
+      return Names_fixSpecialNames(undefined,1,(any_arr){
+        _concatAny(2,
+        (METHOD(slice_,text)(text,2,(any_arr){
+        any_number(0), 
+        any_number(1)
+})), 
+        (__call(toLowerCase_,METHOD(slice_,text)(text,1,(any_arr){
+        any_number(1)
+}),0,NULL))
+)
+});
     return undefined;
     }
     any Names_isCapitalized(DEFAULT_ARGUMENTS){
       // define named params
       var text= argc? arguments[0] : undefined;
       //---------
-      if (_anyToBool(text) && __is(METHOD(charAt_,text)(text,1,(any_arr){any_number(0)
-      }),__call(toUpperCase_,METHOD(charAt_,text)(text,1,(any_arr){any_number(0)
-      }),0,NULL)) && (_anyToBool((_anyToBool(__or4=any_number(__is(any_number(_length(text)),any_number(1))))? __or4 : any_number(__is(METHOD(charAt_,text)(text,1,(any_arr){any_number(1)
-          }),__call(toLowerCase_,METHOD(charAt_,text)(text,1,(any_arr){any_number(1)
-          }),0,NULL)))))))  {
+      if (_anyToBool(text) && __is(METHOD(charAt_,text)(text,1,(any_arr){
+        any_number(0)
+}),__call(toUpperCase_,METHOD(charAt_,text)(text,1,(any_arr){
+        any_number(0)
+}),0,NULL)) && (_anyToBool((_anyToBool(__or4=any_number(__is(any_number(_length(text)),any_number(1))))? __or4 : any_number(__is(METHOD(charAt_,text)(text,1,(any_arr){
+        any_number(1)
+}),__call(toLowerCase_,METHOD(charAt_,text)(text,1,(any_arr){
+        any_number(1)
+}),0,NULL)))))))  {
               return true;
       };
       return false;
     return undefined;
     }
-
-//-------------------------
-void Names__moduleInit(void){
+//------------------
+void Names__namespaceInit(void){
         Names_Declaration =_newClass("Names_Declaration", Names_Declaration__init, sizeof(struct Names_Declaration_s), Object);
         _declareMethods(Names_Declaration, Names_Declaration_METHODS);
         _declareProps(Names_Declaration, Names_Declaration_PROPS, sizeof Names_Declaration_PROPS);
@@ -805,4 +877,10 @@ void Names__moduleInit(void){
         _declareProps(Names_NameDeclOptions, Names_NameDeclOptions_PROPS, sizeof Names_NameDeclOptions_PROPS);
     
     Names_allNameDeclarations = new(Array,0,NULL);
+};
+
+
+//-------------------------
+void Names__moduleInit(void){
+    Names__namespaceInit();
 };

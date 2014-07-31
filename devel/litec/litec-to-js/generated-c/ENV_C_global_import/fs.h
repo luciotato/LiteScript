@@ -1,5 +1,5 @@
-#ifndef INTERFACES_FS_C__H
-#define INTERFACES_FS_C__H
+#ifndef ENV_C_GLOBAL_IMPORT_FS_C__H
+#define ENV_C_GLOBAL_IMPORT_FS_C__H
 #include "../_dispatcher.h"
 //-------------------------
 //Module fs

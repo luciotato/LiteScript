@@ -1,12 +1,12 @@
 //The LiteScript Compiler Module
 //==============================
 //LiteScript is a highly readable language that compiles to JavaScript.
-    //public var version = '0.8.4'
-    var version = '0.8.4';
+    //public var version = '0.8.5'
+    var version = '0.8.5';
     // export
     module.exports.version = version;
-    //public var buildDate = "__TIMESTAMP__"
-    var buildDate = "2014-07-29T21:05:32.783Z";
+    //public var buildDate = "__DATE__ __TIME__"
+    var buildDate = "Wed Jul 30 2014 06:56:49 GMT-0300 (ART)";
     // export
     module.exports.buildDate = buildDate;
 //This v0.8 compiler is written in v0.7 syntax. 
@@ -202,3 +202,7 @@
     }
     // export
     module.exports.getMessages = getMessages;
+// --------------------
+// Module code
+// --------------------
+// end of module

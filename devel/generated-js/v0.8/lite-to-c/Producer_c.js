@@ -97,15 +97,14 @@
         //if resultLines.length
             //Environment.externalCacheSave '#{dispatcherModule.fileInfo.outFilename.slice(0,-1)}h',resultLines
         //*/
-        //logger.msg "#{color.green}[OK] -> #{dispatcherModule.fileInfo.outRelFilename} #{color.normal}"
-        logger.msg('' + color.green + "[OK] -> " + module.exports.dispatcherModule.fileInfo.outRelFilename + " " + color.normal);
+        //logger.info "#{color.green}[OK] -> #{dispatcherModule.fileInfo.outRelFilename} #{color.normal}"
+        logger.info('' + color.green + "[OK] -> " + module.exports.dispatcherModule.fileInfo.outRelFilename + " " + color.normal);
         //logger.extra #blank line
         logger.extra();// #blank line
     }
     // export
     module.exports.postProduction = postProduction;
     //end function
-    
     //helper function normalizeDefine(name:string)
     function normalizeDefine(name){
         //var chr, result=""
@@ -336,47 +335,46 @@
             //"//Module ",prefix, .fileInfo.isInterface? ' - INTERFACE':'',NL
             //"//-------------------------",NL
         this.out({h: 0}, '#include "' + prefix + '.h"', NL, NL, "//-------------------------", NL, "//Module ", prefix, this.fileInfo.isInterface ? ' - INTERFACE' : '', NL, "//-------------------------", NL);
-        ////space to insert __or temp vars
+//include __or temp vars
         //.out '#include "#{.fileInfo.base}.c.extra"',NL
         this.out('#include "' + this.fileInfo.base + '.c.extra"', NL);
         //.lexer.outCode.filenames[2] = "#{.fileInfo.outFilename}.extra"
         this.lexer.outCode.filenames[2] = '' + this.fileInfo.outFilename + ".extra";
-        //// add sustance for the module
-        //.produceSustance prefix
-        this.produceSustance(prefix);
+//Check if there's a explicit namespace/class with the same name as the module (default export)
+        //var explicitModuleNamespace 
+        var explicitModuleNamespace = undefined;
+        //for each statement in .statements    
+        for( var statement__inx=0,statement ; statement__inx<this.statements.length ; statement__inx++){statement=this.statements[statement__inx];
+        
+            //if statement.specific.constructor is Grammar.NamespaceDeclaration
+            if (statement.specific.constructor === Grammar.NamespaceDeclaration && statement.specific.name === this.fileInfo.base) {
+                //and statement.specific.name is .fileInfo.base
+                    //explicitModuleNamespace=statement
+                    explicitModuleNamespace = statement;
+                    //explicitModuleNamespace.produce //produce main namespace
+                    explicitModuleNamespace.produce(); //produce main namespace
+                    //break
+                    break;
+            };
+        };// end for each in this.statements
+//if there's no explicit namespace declaration, 
+//produce this module body as a namespace (using module name as namespace)
+        //if no explicitModuleNamespace 
+        if (!explicitModuleNamespace) {
+            //.produceAsNamespace prefix
+            this.produceAsNamespace(prefix);
+        };
 //__moduleInit: module main function 
         //.out 
             //"\n\n//-------------------------",NL
             //"void ",prefix,"__moduleInit(void){",NL
         this.out("\n\n//-------------------------", NL, "void ", prefix, "__moduleInit(void){", NL);
-        ///*
-        //for each nameDecl in map .scope.members
-            //if nameDecl.nodeDeclared instanceof Grammar.ObjectLiteral
-                //.out nameDecl, "=new(Map,"
-                //var objectLiteral = nameDecl.nodeDeclared
-                //if no objectLiteral.items or objectLiteral.items.length is 0
-                    //.out "0,NULL"
-                //else
-                    //.out 
-                        //objectLiteral.items.length,',(any_arr){'
-                        //{CSL:objectLiteral.items}
-                        //NL,"}"
-                
-                //.out ");",NL
-            //else if nameDecl.nodeDeclared instanceof Grammar.ArrayLiteral
-                //.out nameDecl,"=new(Array,"
-                //var arrayLiteral = nameDecl.nodeDeclared
-                //if no arrayLiteral.items or arrayLiteral.items.length is 0
-                    //.out "0,NULL"
-                //else
-                    //// e.g.: LiteScript:   var list = [a,b,c]
-                    //// e.g.: "C": any list = (any){Array_TYPEID,.value.arr=&(Array_s){3,.item=(any_arr){a,b,c}}};
-                    //.out arrayLiteral.items.length,",(any_arr){",{CSL:arrayLiteral.items},"}"
-                //.out ");",NL
-        //end for
-        //*/
-        //.produceMainFunctionBody prefix
-        this.produceMainFunctionBody(prefix);
+        //// all init is done in the module-as-namespace init, just call __namespaceInit
+        //.out '    ',prefix,'__namespaceInit();',NL
+        this.out('    ', prefix, '__namespaceInit();', NL);
+        //// all other loose statements in module body
+        //.produceLooseExecutableStatements()
+        this.produceLooseExecutableStatements();
         //if .fileInfo.isInterface // add call to native hand-coded C support for this module 
         if (this.fileInfo.isInterface) { // add call to native hand-coded C support for this module
             //.out NL,'    ',prefix,"__nativeInit();"
@@ -463,29 +461,6 @@
 //### Append to class Grammar.NamespaceDeclaration ###
     
 //namespaces are like modules inside modules
-//#### method produceCallNamespaceInit()
-     Grammar.NamespaceDeclaration.prototype.produceCallNamespaceInit = function(){
-        //.out '    ',.nameDecl.getComposedName(),'__namespaceInit();',NL
-        this.out('    ', this.nameDecl.getComposedName(), '__namespaceInit();', NL);
-     };
-///*#### method makeName()
-        //var prefix = .nameDecl.getComposedName()
-//if this is a namespace declared at module scope, we check if it has 
-//the same name as the module. If it does, is the "default export",
-//if it is not, we prepend module name to namespace name. 
-//(Modules act as namespaces, var=property, function=method)
-        //if .nameDecl.parent.isScope //is a namespace declared at module scope
-            //var moduleNode:Grammar.Module = .getParent(Grammar.Module)
-            //if moduleNode.fileInfo.base is .nameDecl.name
-                ////this namespace have the same name as the module
-                //do nothing //prefix is OK
-            //else
-                ////append modulename to prefix
-                //prefix = "#{moduleNode.fileInfo.base}_#{prefix}"
-            //end if
-        //end if
-        //return prefix
-//*/
 //#### method produceHeader
      Grammar.NamespaceDeclaration.prototype.produceHeader = function(){
                        
@@ -510,14 +485,18 @@
             //where member.name not in ['constructor','length','prototype']
                 //case member.nodeClass
                 
-                    //when Grammar.VariableDecl
-                if ((member.nodeClass==Grammar.VariableDecl)){
+                    //when Grammar.VariableDecl:
+                if (
+        (member.nodeClass==Grammar.VariableDecl)
+){
                         //.out '    extern var ',prefix,'_',member.name,';',NL
                         this.out('    extern var ', prefix, '_', member.name, ';', NL);
                 
                 }
-                    //when Grammar.MethodDeclaration
-                else if ((member.nodeClass==Grammar.MethodDeclaration)){
+                    //when Grammar.MethodDeclaration:
+                else if (
+        (member.nodeClass==Grammar.MethodDeclaration)
+){
                         //.out '    extern any ',prefix,'_',member.name,'(DEFAULT_ARGUMENTS);',NL
                         this.out('    extern any ', prefix, '_', member.name, '(DEFAULT_ARGUMENTS);', NL);
                 
@@ -530,32 +509,15 @@
         //.body.produceDeclaredExternProps prefix, forcePublic=true
         this.body.produceDeclaredExternProps(prefix, true);
      };
-//#### method produce
-     Grammar.NamespaceDeclaration.prototype.produce = function(){
+//#### method produce # namespace
+     Grammar.NamespaceDeclaration.prototype.produce = function(){// # namespace
         //var prefix= .nameDecl.getComposedName()
         var prefix = this.nameDecl.getComposedName();
         //var isPublic = .hasAdjective('export')
         var isPublic = this.hasAdjective('export');
         ////logger.debug "produce Namespace",c
-//Now on the .c file,
-        //.out 
-            //"//-------------------------",NL
-            //"//NAMESPACE ",prefix,NL
-            //"//-------------------------",NL
-        this.out("//-------------------------", NL, "//NAMESPACE ", prefix, NL, "//-------------------------", NL);
-        //.body.produceSustance prefix
-        this.body.produceSustance(prefix);
-//__namespaceInit function
-        //.out 
-            //NL,NL,"//------------------",NL
-            //"void ",prefix,"__namespaceInit(void){",NL
-        this.out(NL, NL, "//------------------", NL, "void ", prefix, "__namespaceInit(void){", NL);
-        //.body.produceMainFunctionBody prefix
-        this.body.produceMainFunctionBody(prefix);
-        //.out "};",NL
-        this.out("};", NL);
-        //.skipSemiColon = true
-        this.skipSemiColon = true;
+        //.body.produceAsNamespace prefix
+        this.body.produceAsNamespace(prefix);
      };
 //### Append to class Grammar.ClassDeclaration ###
     
@@ -834,6 +796,33 @@
         //.out NL
         this.out(NL);
      };
+//#### method produceAsNamespace(prefix) # namespace
+     Grammar.Body.prototype.produceAsNamespace = function(prefix){// # namespace
+//Now on the .c file,
+        //.out 
+            //"//-------------------------",NL
+            //"//NAMESPACE ",prefix,NL
+            //"//-------------------------",NL
+        this.out("//-------------------------", NL, "//NAMESPACE ", prefix, NL, "//-------------------------", NL);
+//add declarations for vars & internal classes
+        //.produceInternalDeclarations prefix
+        this.produceInternalDeclarations(prefix);
+//__namespaceInit function
+        //.out 
+            //NL,NL,"//------------------",NL
+            //"void ",prefix,"__namespaceInit(void){",NL
+        this.out(NL, NL, "//------------------", NL, "void ", prefix, "__namespaceInit(void){", NL);
+//register internal classes
+        //.callOnSubTree LiteCore.getSymbol('produceClassRegistration')
+        this.callOnSubTree(LiteCore.getSymbol('produceClassRegistration'));
+//namespace vars initialization
+        //.produceVarInitialization prefix
+        this.produceVarInitialization(prefix);
+        //.out "};",NL
+        this.out("};", NL);
+        //.skipSemiColon = true
+        this.skipSemiColon = true;
+     };
 //#### method produceDeclaredExternProps(parentName,forcePublic)
      Grammar.Body.prototype.produceDeclaredExternProps = function(parentName, forcePublic){
         //if no .statements, return //interface only
@@ -848,16 +837,21 @@
             var isPublic = forcePublic || item.hasAdjective('export');
             //case item.specific.constructor
             
-                //when Grammar.VarStatement
-            if ((item.specific.constructor==Grammar.VarStatement)){
+                //when Grammar.VarStatement:
+            if (
+        (item.specific.constructor==Grammar.VarStatement)
+){
                     //declare item.specific:Grammar.VarStatement
                     
                     //if isPublic, .out 'extern var ',{pre:prefix, CSL:item.specific.getNames()},";",NL
                     if (isPublic) {this.out('extern var ', {pre: prefix, CSL: item.specific.getNames()}, ";", NL)};
             
             }
-                //when Grammar.FunctionDeclaration, Grammar.MethodDeclaration //method: append to class xx - when is a core class
-            else if ((item.specific.constructor==Grammar.FunctionDeclaration)||(item.specific.constructor==Grammar.MethodDeclaration)){
+                //when Grammar.FunctionDeclaration, Grammar.MethodDeclaration: //method: append to class xx - when is a core class
+            else if (
+        (item.specific.constructor==Grammar.FunctionDeclaration)||
+        (item.specific.constructor==Grammar.MethodDeclaration)
+){
                     //declare item.specific:Grammar.FunctionDeclaration
                     
                     ////export module function
@@ -865,8 +859,11 @@
                     if (isPublic) {this.out('extern any ', prefix, item.specific.name, "(DEFAULT_ARGUMENTS);", NL)};
             
             }
-                //when Grammar.ClassDeclaration, Grammar.AppendToDeclaration
-            else if ((item.specific.constructor==Grammar.ClassDeclaration)||(item.specific.constructor==Grammar.AppendToDeclaration)){
+                //when Grammar.ClassDeclaration, Grammar.AppendToDeclaration:
+            else if (
+        (item.specific.constructor==Grammar.ClassDeclaration)||
+        (item.specific.constructor==Grammar.AppendToDeclaration)
+){
                     //declare item.specific:Grammar.ClassDeclaration
                     
                     ////produce class header declarations
@@ -874,8 +871,10 @@
                     item.specific.produceHeader();
             
             }
-                //when Grammar.NamespaceDeclaration
-            else if ((item.specific.constructor==Grammar.NamespaceDeclaration)){
+                //when Grammar.NamespaceDeclaration:
+            else if (
+        (item.specific.constructor==Grammar.NamespaceDeclaration)
+){
                     //declare item.specific:Grammar.NamespaceDeclaration
                     
                     //item.specific.produceHeader #recurses
@@ -886,8 +885,8 @@
         
      };
                     //// as in JS, always public. Must produce, can have classes inside
-//#### method produceSustance(prefix)
-     Grammar.Body.prototype.produceSustance = function(prefix){
+//#### method produceInternalDeclarations(prefix)
+     Grammar.Body.prototype.produceInternalDeclarations = function(prefix){
 //before main function,
 //produce body sustance: vars & other functions declarations
         
@@ -933,8 +932,8 @@
             //else if item.specific.constructor is Grammar.NamespaceDeclaration
                 //declare item.specific:Grammar.NamespaceDeclaration
                 
-                //produceSecond.push item.specific #recurses
-                produceSecond.push(item.specific);// #recurses
+                //produceSecond.push item.specific #recurses thru namespace.produce()
+                produceSecond.push(item.specific);// #recurses thru namespace.produce()
             }
             else if (item.specific.constructor === Grammar.AppendToDeclaration) {
             //else if item.specific.constructor is Grammar.AppendToDeclaration
@@ -955,34 +954,27 @@
         //for each item in produceSecond //class & namespace sustance
         for( var item__inx=0,item ; item__inx<produceSecond.length ; item__inx++){item=produceSecond[item__inx];
         
-            //item.produce
-            item.produce();
+            //.out item
+            this.out(item);
         };// end for each in produceSecond
         //for each item in produceThird //other declare statements
         for( var item__inx=0,item ; item__inx<produceThird.length ; item__inx++){item=produceThird[item__inx];
         
-            //item.produce
-            item.produce();
+            //.out item
+            this.out(item);
         };// end for each in produceThird
         
      };
-//#### method produceMainFunctionBody(prefix)
-     Grammar.Body.prototype.produceMainFunctionBody = function(prefix){
-        //if no .statements, return //just interface
-        if (!this.statements) {return};
-//First: register user classes
-        //.callOnSubTree LiteCore.getSymbol('produceClassRegistration')
-        this.callOnSubTree(LiteCore.getSymbol('produceClassRegistration'));
-//Second: recurse for namespaces 
-        //.callOnSubTree LiteCore.getSymbol('produceCallNamespaceInit')
-        this.callOnSubTree(LiteCore.getSymbol('produceCallNamespaceInit'));
+//#### method produceVarInitialization(prefix)
+     Grammar.Body.prototype.produceVarInitialization = function(prefix){
 //Third: assign values for module vars.
 //if there is var or properties with assigned values, produce those assignment.
 //User classes must be registered previously, in case the module vars use them as initial values.
         //for each item in .statements 
         for( var item__inx=0,item ; item__inx<this.statements.length ; item__inx++){item=this.statements[item__inx];
-          if(item.specific instanceof Grammar.VarDeclList){
-            //where item.specific instanceof Grammar.VarDeclList //for modules:VarStatement, for Namespaces: PropertiesDeclaration
+        
+            //if item.specific instanceof Grammar.VarDeclList //for modules:VarStatement, for Namespaces: PropertiesDeclaration
+            if (item.specific instanceof Grammar.VarDeclList) { //for modules:VarStatement, for Namespaces: PropertiesDeclaration
                 //declare item.specific:Grammar.VarDeclList
                 
                 //for each variableDecl in item.specific.list
@@ -993,10 +985,17 @@
                         this.out('    ', prefix, '_', variableDecl.name, ' = ', variableDecl.assignedValue, ";", NL);
                 }};// end for each in item.specific.list
                 
-        }};// end for each in this.statements
-        //// all other loose statements in module body
-        //.produceLooseExecutableStatements()
-        this.produceLooseExecutableStatements();
+            }
+            else if (item.specific instanceof Grammar.NamespaceDeclaration) {
+            //else if item.specific instanceof Grammar.NamespaceDeclaration
+                //declare item.specific:Grammar.NamespaceDeclaration
+                
+                //// add call to __namespaceInit
+                //.out '    ',item.specific.nameDecl.getComposedName(),'__namespaceInit();',NL
+                this.out('    ', item.specific.nameDecl.getComposedName(), '__namespaceInit();', NL);
+            };
+        };// end for each in this.statements
+        
      };
 //#### method producePropertiesInitialValueAssignments(fullPrefix)
      Grammar.Body.prototype.producePropertiesInitialValueAssignments = function(fullPrefix){
@@ -1211,6 +1210,11 @@
       
       //method produce()
       Grammar.Operand.prototype.produce = function(){
+        //if .accessors and .name isnt instance of Grammar.NumberLiteral 
+        if (this.accessors && !(this.name instanceof Grammar.NumberLiteral)) {
+            //.sayErr "accessors on Literals or ParenExpressions not supported for C generation"
+            this.sayErr("accessors on Literals or ParenExpressions not supported for C generation");
+        };
         //var pre,post
         var pre = undefined, post = undefined;
         //if .name instance of Grammar.StringLiteral
@@ -1245,10 +1249,9 @@
                 //.out "any_LTR(",strValue,")"
                 this.out("any_LTR(", strValue, ")");
             };
-            //.out .accessors
-            this.out(this.accessors);
         }
         else if (this.name instanceof Grammar.NumberLiteral) {
+            ////out .accessors
         //else if .name instance of Grammar.NumberLiteral
             //if .produceType is 'any'
             if (this.produceType === 'any') {
@@ -1257,8 +1260,8 @@
                 //post=")"
                 post = ")";
             };
-            //.out pre,.name,.accessors,post
-            this.out(pre, this.name, this.accessors, post);
+            //.out pre,.name, post //.accessors,post
+            this.out(pre, this.name, post); //.accessors,post
         }
         else if (this.name instanceof Grammar.VariableRef) {
         //else if .name instance of Grammar.VariableRef
@@ -1414,8 +1417,10 @@
 //example: `char not in myString` -> `indexOf(char,myString)==-1`
         //case .name 
         
-          //when 'in'
-        if ((this.name=='in')){
+          //when 'in':
+        if (
+        (this.name=='in')
+){
             //if .right.name instanceof Grammar.ArrayLiteral
             if (this.right.name instanceof Grammar.ArrayLiteral) {
                 //var haystack:Grammar.ArrayLiteral = .right.name
@@ -1430,14 +1435,18 @@
             };
         
         }
-          //when 'has property'
-        else if ((this.name=='has property')){
+          //when 'has property':
+        else if (
+        (this.name=='has property')
+){
             //.out toAnyPre,prepend,"_hasProperty(",.left,",",.right,")",append,toAnyPost
             this.out(toAnyPre, prepend, "_hasProperty(", this.left, ",", this.right, ")", append, toAnyPost);
         
         }
-          //when 'into'
-        else if ((this.name=='into')){
+          //when 'into':
+        else if (
+        (this.name=='into')
+){
             //if .produceType and .produceType isnt 'any', .out '_anyTo',.produceType,'('
             if (this.produceType && this.produceType !== 'any') {this.out('_anyTo', this.produceType, '(')};
             //.left.produceType='any'
@@ -1448,8 +1457,10 @@
             if (this.produceType && this.produceType !== 'any') {this.out(')')};
         
         }
-          //when 'instance of'
-        else if ((this.name=='instance of')){
+          //when 'instance of':
+        else if (
+        (this.name=='instance of')
+){
             //.left.produceType = 'any'
             this.left.produceType = 'any';
             //.right.produceType = 'any'
@@ -1458,14 +1469,18 @@
             this.out(toAnyPre, prepend, '_instanceof(', this.left, ',', this.right, ')', append, toAnyPost);
         
         }
-          //when 'like'
-        else if ((this.name=='like')){
+          //when 'like':
+        else if (
+        (this.name=='like')
+){
             //.throwError "like not supported yet for C-production"
             this.throwError("like not supported yet for C-production");
         
         }
-          //when 'is'
-        else if ((this.name=='is')){
+          //when 'is':
+        else if (
+        (this.name=='is')
+){
             //.left.produceType = 'any'
             this.left.produceType = 'any';
             //.right.produceType = 'any'
@@ -1474,8 +1489,10 @@
             this.out(toAnyPre, this.negated ? '!' : '', '__is(', this.left, ',', this.right, ')', toAnyPost);
         
         }
-          //when 'or'
-        else if ((this.name=='or')){
+          //when 'or':
+        else if (
+        (this.name=='or')
+){
             //.lexer.outCode.orTempVarCount++
             this.lexer.outCode.orTempVarCount++;
             //var orTmp = '__or#{.lexer.outCode.orTempVarCount}'
@@ -1493,8 +1510,15 @@
             if (this.produceType && this.produceType !== 'any') {this.out(')')};
         
         }
-          //when '%',"<<",">>","bitand","bitor","bitxor"
-        else if ((this.name=='%')||(this.name=="<<")||(this.name==">>")||(this.name=="bitand")||(this.name=="bitor")||(this.name=="bitxor")){
+          //when '%',"<<",">>","bitand","bitor","bitxor":
+        else if (
+        (this.name=='%')||
+        (this.name=="<<")||
+        (this.name==">>")||
+        (this.name=="bitand")||
+        (this.name=="bitor")||
+        (this.name=="bitxor")
+){
             //if .produceType and .produceType isnt 'Number', .out 'any_number('
             if (this.produceType && this.produceType !== 'Number') {this.out('any_number(')};
             //.left.produceType = 'Number'
@@ -1507,8 +1531,10 @@
             if (this.produceType && this.produceType !== 'Number') {this.out(')')};
         
         }
-          //when '&'
-        else if ((this.name=='&')){
+          //when '&':
+        else if (
+        (this.name=='&')
+){
             //if .produceType is 'Number', .throwError 'cannot use & to concat and produce a number'
             if (this.produceType === 'Number') {this.throwError('cannot use & to concat and produce a number')};
             //.left.produceType = 'any'
@@ -1527,24 +1553,30 @@
             var operC = operTranslate(oper);
             //case operC
             
-                //when '?' // left is condition, right is: if_true
-            if ((operC=='?')){
+                //when '?': // left is condition, right is: if_true
+            if (
+        (operC=='?')
+){
                     //.left.produceType = 'Bool'
                     this.left.produceType = 'Bool';
                     //.right.produceType = .produceType
                     this.right.produceType = this.produceType;
             
             }
-                //when ':' // left is a?b, right is: if_false
-            else if ((operC==':')){
+                //when ':': // left is a?b, right is: if_false
+            else if (
+        (operC==':')
+){
                     //.left.produceType = .produceType
                     this.left.produceType = this.produceType;
                     //.right.produceType = .produceType
                     this.right.produceType = this.produceType;
             
             }
-                //when '&&' // boolean and
-            else if ((operC=='&&')){
+                //when '&&': // boolean and
+            else if (
+        (operC=='&&')
+){
                     //.left.produceType = 'Bool'
                     this.left.produceType = 'Bool';
                     //.right.produceType = 'Bool'
@@ -2198,8 +2230,8 @@
         ////add arguments[] 
         //if args and args.length
         if (args && args.length) {
-            //callParams.push "#{args.length},",pre,{CSL:args, post:'\n'},post
-            callParams.push('' + args.length + ",", pre, {CSL: args, post: '\n'}, post);
+            //callParams.push "#{args.length},",pre,{CSL:args, freeForm:1},post
+            callParams.push('' + args.length + ",", pre, {CSL: args, freeForm: 1}, post);
         }
         else {
             ////,freeForm:true,indent:String.spaces(8)
@@ -2225,16 +2257,22 @@
         var oper = operTranslate(this.name);
         //case oper
         
-            //when "+=","-=","*=","/="
-        if ((oper=="+=")||(oper=="-=")||(oper=="*=")||(oper=="/=")){
+            //when "+=","-=","*=","/=":
+        if (
+        (oper=="+=")||
+        (oper=="-=")||
+        (oper=="*=")||
+        (oper=="/=")
+){
                 //if oper is '+='
                 if (oper === '+=') {
                     //var rresultNameDecl = .rvalue.getResultType() 
                     var rresultNameDecl = this.rvalue.getResultType();
-                    //if rresultNameDecl and rresultNameDecl.hasProto('String')
-                    if (rresultNameDecl && rresultNameDecl.hasProto('String')) {
-                        //.sayErr """
-                        this.sayErr("You should not use += to concat strings. use string concat oper: & or interpolation instead.\ne.g.: DO: \"a &= b\"  vs.  DO NOT: a += b");
+                    //if (nameDecl and nameDecl.hasProto('String'))
+                    if ((nameDecl && nameDecl.hasProto('String')) || (rresultNameDecl && rresultNameDecl.hasProto('String'))) {
+                        //or (rresultNameDecl and rresultNameDecl.hasProto('String'))
+                            //.sayErr """
+                            this.sayErr("You should not use += to concat strings. use string concat oper: & or interpolation instead.\ne.g.: DO: \"a &= b\"  vs.  DO NOT: a += b");
                     };
                 };
                                 //You should not use += to concat strings. use string concat oper: & or interpolation instead.
@@ -2246,8 +2284,10 @@
                 this.out(this.lvalue, extraLvalue, ' ', oper, ' ', this.rvalue);
         
         }
-            //when "&=" //string concat
-        else if ((oper=="&=")){
+            //when "&=": //string concat
+        else if (
+        (oper=="&=")
+){
                 //.rvalue.produceType = 'any'
                 this.rvalue.produceType = 'any';
                 //.out .lvalue, '=', "_concatAny(2,",.lvalue,',',.rvalue,')'
@@ -2392,8 +2432,8 @@
 //'var' followed by a list of comma separated: var names and optional assignment
       //method produce() 
       Grammar.VarStatement.prototype.produce = function(){
-        //.out 'var ',{CSL:.list}
-        this.out('var ', {CSL: this.list});
+        //.out 'var ',{CSL:.list, freeForm:1}
+        this.out('var ', {CSL: this.list, freeForm: 1});
       };
 //### Append to class Grammar.VariableDecl ###
     
@@ -3512,3 +3552,8 @@
           //.out "_default(&",name,",",expression,");",NL
           this.out("_default(&", name, ",", expression, ");", NL);
      };
+// --------------------
+// Module code
+// --------------------
+    
+// end of module

@@ -3,9 +3,11 @@
 //Module fs - INTERFACE
 //-------------------------
 #include "fs.c.extra"
+//fs as supported in LiteC-core
+    //public namespace fs
     //-------------------------
-    //NAMESPACE fs
-    //-------------------------
+        //NAMESPACE fs
+        //-------------------------
         //-----------------------
         // Class fs_Stat: static list of METHODS(verbs) and PROPS(things)
         //-----------------------
@@ -27,7 +29,6 @@
 //--------------
         // fs_Stat
         any fs_Stat; //Class fs_Stat
-    //public namespace fs
         //method existsSync(filename:string)
         //method readFileSync(filename) returns string
         //method writeFileSync(filename) 
@@ -56,22 +57,19 @@
         
         
         
-    
-    //------------------
-    void fs__namespaceInit(void){
+        
+        
+        //------------------
+        void fs__namespaceInit(void){
             fs_Stat =_newClass("fs_Stat", fs_Stat__init, sizeof(struct fs_Stat_s), Object);
             _declareMethods(fs_Stat, fs_Stat_METHODS);
             _declareProps(fs_Stat, fs_Stat_PROPS, sizeof fs_Stat_PROPS);
         
-    };
-
+        };
+    ;
 
 //-------------------------
 void fs__moduleInit(void){
-            fs_Stat =_newClass("fs_Stat", fs_Stat__init, sizeof(struct fs_Stat_s), Object);
-            _declareMethods(fs_Stat, fs_Stat_METHODS);
-            _declareProps(fs_Stat, fs_Stat_PROPS, sizeof fs_Stat_PROPS);
-        
-        fs__namespaceInit();
+    fs__namespaceInit();
     fs__nativeInit();
 };

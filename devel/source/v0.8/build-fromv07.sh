@@ -11,12 +11,14 @@ targetLang="js"
 #for the lite-to-js compiler
 targetTarget="js"
 
+DBRK="$3"
+
 _lite="_lite"
-up3=$(echo $targetTarget | tr '[:lower:]' '[:upper:]')
+TO_LITE=$(echo $targetTarget | tr '[:lower:]' '[:upper:]')
 echo "----------------------"
 echo "using v0.7-to-$targetLang to generate ($targetLang code) v0.8 lite-to-$targetTarget compiler"
 echo "----------------------"
-if node ../../util/liteVersion -use v0.7/lite-to-$targetLang $targetLang$_lite -v 1 -D PROD_$up3 -o $OUT; then 
+if node $DBRK ../../util/liteVersion -use v0.7/lite-to-$targetLang $targetLang$_lite -v 1 -D PROD_$TO_LITE -o $OUT; then 
     echo "v07 generated OK ($targetLang code) lite-to-$targetTarget v0.8"
     echo "at $OUT"
     OTHER="../../out/byV07/$targetLang/lite-to-$targetTarget"

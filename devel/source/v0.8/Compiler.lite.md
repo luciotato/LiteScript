@@ -2,9 +2,9 @@ The LiteScript Compiler Module
 ==============================
 LiteScript is a highly readable language that compiles to JavaScript.
 
-    public var version = '0.8.4'
+    public var version = '0.8.5'
 
-    public var buildDate = "__TIMESTAMP__"
+    public var buildDate = "__DATE__ __TIME__"
 
 This v0.8 compiler is written in v0.7 syntax. 
 That is, you use the v0.7 compiler to compile this code 

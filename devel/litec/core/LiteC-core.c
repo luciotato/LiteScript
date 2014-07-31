@@ -668,11 +668,11 @@
         return a;
     }
 
-    #define MEMUNIT 64
+    #define CONCATD_ITEMS_PER_RES 4
     any _newConcatdSlices(){
-        return (any){String_inx, .res=1, .len=0, .value.ptr=mem_alloc(MEMUNIT)};
+        return (any){String_inx, .res=1, .len=0, .value.ptr=mem_alloc(CONCATD_ITEMS_PER_RES*sizeof(ConcatdItem_s))};
     }
-    #define CONCATD_ITEMS_PER_MEM_UNIT (MEMUNIT/sizeof(ConcatdItem_s))
+
 
 //----------------------
 // Core Classes Methods
@@ -1128,13 +1128,13 @@
         sl->str = str;
         sl->byteLen = len;
         c->len++; //one more item in ConcatdSlices
-        if (c->len > c->res*CONCATD_ITEMS_PER_MEM_UNIT) { // no more space, next-free is outside alloc'd area
+        if (c->len > c->res*CONCATD_ITEMS_PER_RES) { // no more space, next-free is outside alloc'd area
             if (c->res==UINT16_MAX) { // a very large concatd, we realloc per addition at this point
                 c->value.ptr = mem_realloc(c->value.ptr, c->len*sizeof(ConcatdItem_s));
             }
             else { //normal, allocate another unit
                 c->res++;
-                c->value.ptr = mem_realloc(c->value.ptr, c->res*MEMUNIT);
+                c->value.ptr = mem_realloc(c->value.ptr, c->res*CONCATD_ITEMS_PER_RES*sizeof(ConcatdItem_s));
             }
         }
     }
@@ -1802,72 +1802,79 @@
     // JSON
     //-------------
 
-    int _json_recurse_count=0;
+    int _json_indent_count=0;
 
-    void _json_indent(any* c){
+    void _json_newLine(any* c){
         _pushToConcatd(c, any_LTR("\n"));
-        if (_json_recurse_count) _pushToConcatd(c, _string_spaces(_json_recurse_count*2));
+        _pushToConcatd(c, _string_spaces(_json_indent_count*2));
+    }
+
+    void _json_open(any* c, any opener){
+        _pushToConcatd(c,opener);
+        _json_indent_count++;
+    }
+
+    void _json_close(any* c, any closer){
+        if (_json_indent_count) _json_indent_count--;
+        _pushToConcatd(c,closer);
     }
 
     void _json_comma(any* c){
         _pushToConcatd(c, any_COMMA);
-        _json_indent(c);
-    }
-
-    void _json_close_curly(any* c){
-        _pushToConcatd(c, any_LTR("\n"));
-        if (_json_recurse_count>=2) _pushToConcatd(c, _string_spaces(_json_recurse_count*2-2));
-        _pushToConcatd(c, any_CLOSE_CURLY);
     }
 
     void _json_stringify(any what, any* c) {
 
-        if (++_json_recurse_count>10){
+        if (_json_indent_count>40){
             _pushToConcatd(c,any_LTR("[circular|too deep]"));
         }
         else if (what.class==Array_inx){
             // Array
-            _pushToConcatd(c, any_OPEN_BRACKET);
+            _json_open(c,any_OPEN_BRACKET);
             any* item = what.value.arr->item;
             len_t count=what.value.arr->length;
             for(int n=0; count--; n++,item++){
-                if (n) _json_comma(c);
+                if (n==0) _json_newLine(c); else _json_comma(c);
                 _json_stringify(*item, c); //recurse
             }
-            _pushToConcatd(c, any_CLOSE_BRACKET);
+            if(what.value.arr->length)_json_newLine(c);
+            _json_close(c,any_CLOSE_BRACKET);
         }
         else if (_instanceof(what,Map)){
             // Map, (js Object)
-            _pushToConcatd(c, any_OPEN_CURLY);
-            _json_indent(c);
+            _json_open(c,any_OPEN_CURLY);
+            _json_newLine(c);
             any* item = what.value.map->array.value.arr->item;
             len_t count = what.value.map->array.value.arr->length;
             for(int n=0; count--; n++,item++){
                 NameValuePair_ptr nv = item->value.ptr;
                 if (n) _json_comma(c);
+                _json_newLine(c);
                 _pushToConcatd(c, any_QUOTE);
                 _pushToConcatd(c, nv->name);
                 _pushToConcatd(c, any_QUOTE);
                 _pushToConcatd(c, any_COLON);
                 _json_stringify(nv->value, c); //recurse
             }
-            _json_close_curly(c);
+            _json_newLine(c);
+            _json_close(c,any_CLOSE_CURLY);
         }
         else if (CLASSES[what.class].instanceSize){
             // Object
-            _pushToConcatd(c, any_OPEN_CURLY);
-            _json_indent(c);
+            _json_open(c,any_OPEN_CURLY);
             any* prop = what.value.prop;
             len_t count = CLASSES[what.class].propertyCount;
             for(int n=0; count--; n++, prop++){
                 if (n) _json_comma(c);
+                _json_newLine(c);
                 _pushToConcatd(c, any_QUOTE);
                 _pushToConcatd(c, _getPropertyNameAtIndex(what,n));
                 _pushToConcatd(c, any_QUOTE);
                 _pushToConcatd(c, any_COLON);
                 _json_stringify(*prop, c); //recurse
             }
-            _json_close_curly(c);
+            _json_newLine(c);
+            _json_close(c,any_CLOSE_CURLY);
         }
         else {
             if (what.class==String_inx) _pushToConcatd(c, any_QUOTE);
@@ -1875,12 +1882,11 @@
             if (what.class==String_inx) _pushToConcatd(c, any_QUOTE);
         }
 
-        --_json_recurse_count;
     }
 
     any JSON_stringify(any this, len_t argc, any* arguments) {
         assert(argc>=1);
-        _json_recurse_count=0;
+        _json_indent_count=0;
         var c=_newConcatdSlices();
         _json_stringify(arguments[0], &c);
         return c;

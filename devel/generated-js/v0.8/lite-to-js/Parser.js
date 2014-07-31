@@ -25,8 +25,9 @@
     var PMREX = require('./lib/PMREX.js');
     var mkPath = require('./lib/mkPath.js');
     ////ifdef PROD_JS
-    //////if we're creating a compile-to-js compiler
-    ////import SourceMap
+    ////if we're creating a compile-to-js compiler
+    //import SourceMap
+    var SourceMap = require('./lib/SourceMap.js');
     ////endif
 //module vars
     //var preprocessor_replaces: map string to string
@@ -70,11 +71,10 @@
               //DATE: .options.now.toDateString()
               //TIME: .options.now.toTimeString()
               //TIMESTAMP: .options.now.toISOString()
-          preprocessor_replaces = new Map().fromObject({
-        DATE: this.options.now.toDateString(), 
-        TIME: this.options.now.toTimeString(), 
-        TIMESTAMP: this.options.now.toISOString()
-});
+          preprocessor_replaces = new Map().fromObject({DATE: this.options.now.toDateString()
+              , TIME: this.options.now.toTimeString()
+              , TIMESTAMP: this.options.now.toISOString()
+              });
 //stringInterpolationChar starts for every file the same: "#"
 //can be changed in-file with `lexer options` directive
           //.stringInterpolationChar = "#" 
@@ -99,12 +99,12 @@
         this.sourceLineNum = 0;
         //.lineInx=0
         this.lineInx = 0;
-        //.lines=""
-        this.lines = "";
+        //.lines=[]
+        this.lines = [];
         //.setPos .last
         this.setPos(this.last);
      };
-//#### Method initSource(filename:string, source:String)
+//#### Method initSource(filename:string, source)
      Lexer.prototype.initSource = function(filename, source){
 //Load filename and source code in the lexer.
 //First, remember filename (for error reporting) 
@@ -287,12 +287,11 @@
         //var sustantives = ["class","namespace","function","method","constructor","properties"];
         var sustantives = ["class", "namespace", "function", "method", "constructor", "properties"];
         //var inx=1, countAdj=0, countSust=0, sustLeft=1
-        var 
-        inx = 1, 
-        countAdj = 0, 
-        countSust = 0, 
-        sustLeft = 1
-;
+        var inx = 1
+        , countAdj = 0
+        , countSust = 0
+        , sustLeft = 1
+        ;
         //while inx<words.length
         while(inx < words.length){
             //if words[inx] //skip empty items
@@ -540,21 +539,35 @@
               if (item.charAt(0) === '"') { //a string part
                   //item = item.slice(1,-1) //remove quotes
                   item = item.slice(1, -1); //remove quotes
-                  //parsed[inx] = item.replaceAll('"','\\"') #store with *escaped* internal d-quotes
-                  parsed[inx] = item.replaceAll('"', '\\"');// #store with *escaped* internal d-quotes
-              }
-              else {
-              //else
-                  //#restore string interp. codes
-                  //parsed[inx] = "#{.stringInterpolationChar}{#{item}}"
-                  parsed[inx] = '' + this.stringInterpolationChar + "{" + item + "}";
+                  //item = item.replaceAll('"','\\"') #store with *escaped* internal d-quotes
+                  item = item.replaceAll('"', '\\"');// #store with *escaped* internal d-quotes
+                  //parsed[inx] = '"#{item}"' #restore enclosing quotes
+                  parsed[inx] = '"' + item + '"';// #restore enclosing quotes
               };
           };// end for each in parsed
-          //#re-join & re.enclose in quotes
-          //line = parsed.join("").quoted('"') 
-          line = parsed.join("").quoted('"');
-          //line = "#{result.pre} #{line}#{result.post}" #add pre & post
-          line = '' + result.pre + " " + line + result.post;// #add pre & post
+      ////ifdef PROD_C  // compile-to-c
+          
+          ////// code a call to "concat" to handle string interpolation
+          ////line = "any_concat(#{parsed.join(',')})"
+      ////else //  compile-to-js
+          ////if the first expression isnt a quoted string constant
+          //// we add `"" + ` so: we get string concatenation from javascript.
+          //// Also: if the first expression starts with `(`, LiteScript can 
+          //// mis-parse the expression as a "function call"
+          //if parsed.length and parsed[0].charAt(0) isnt '"' 
+          if (parsed.length && parsed[0].charAt(0) !== '"') {
+              //parsed.unshift "''" // prepend ''
+              parsed.unshift("''"); // prepend ''
+          };
+          //// code a call to js string concat (+) to handle string interpolation
+          //line = parsed.join(' + ')
+          line = parsed.join(' + ');
+          //// add pre & post
+      ////endif
+          
+          //// add pre & post
+          //line = "#{result.pre} #{line}#{result.post}" 
+          line = '' + result.pre + " " + line + result.post;
         };
         //return line
         return line;
@@ -687,24 +700,27 @@
                     words = line.split(' ');
                     //case words.tryGet(0)
                     
-                        //when '#else'
-                    if ((words.tryGet(0)=='#else')){
+                        //when '#else':
+                    if ((words.tryGet(0)=='#else')
+                    ){
                             //.replaceSourceLine .line.replaceAll("#else","//else")
                             this.replaceSourceLine(this.line.replaceAll("#else", "//else"));
                             //defValue = not defValue
                             defValue = !(defValue);
                     
                     }
-                        //when "#end"
-                    else if ((words.tryGet(0)=="#end")){
+                        //when "#end":
+                    else if ((words.tryGet(0)=="#end")
+                    ){
                             //if words.tryGet(1) isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
                             if (words.tryGet(1) !== 'if') {this.throwErr("expected '#end if', read '" + line + "' " + startRef)};
                             //endFound = true
                             endFound = true;
                     
                     }
-                        //when "#endif"
-                    else if ((words.tryGet(0)=="#endif")){
+                        //when "#endif":
+                    else if ((words.tryGet(0)=="#endif")
+                    ){
                             //endFound = true
                             endFound = true;
                     
@@ -1005,12 +1021,11 @@
             this.throwErr('splitExpressions: expected text to be a quoted string, quotes included');
         };
         //var delimiterPos, closerPos, itemPos, item:string;
-        var 
-        delimiterPos = undefined, 
-        closerPos = undefined, 
-        itemPos = undefined, 
-        item = undefined
-;
+        var delimiterPos = undefined
+        , closerPos = undefined
+        , itemPos = undefined
+        , item = undefined
+        ;
         //var items=[];
         var items = [];
         ////clear start and end quotes
@@ -1458,13 +1473,12 @@
             };
     
             //var numberDigits,decPoint="",decimalPart="",expE="",exponent=""
-            var 
-        numberDigits = undefined, 
-        decPoint = "", 
-        decimalPart = "", 
-        expE = "", 
-        exponent = ""
-;
+            var numberDigits = undefined
+            , decPoint = ""
+            , decimalPart = ""
+            , expE = ""
+            , exponent = ""
+            ;
             //if PMREX.whileRanges(chunk,"0-9") into numberDigits
             if ((numberDigits=PMREX.whileRanges(chunk, "0-9"))) {
                 //chunk=chunk.slice(numberDigits.length)
@@ -1653,14 +1667,14 @@
       //browser:boolean
       //exportNamespace
       //orTempVarCount=0 //helper temp vars to code js "or" in C, using ternary ?:
+      ////ifdef PROD_JS //only if it is a compiler-to-js
+      //sourceMap
          this.header=0;
          this.filenames=['', '', ''];
          this.fileIsOpen=[false, false, false];
          this.fHandles=[null, null, null];
          this.orTempVarCount=0;
     };
-      ////ifdef PROD_JS //only if it is a compiler-to-js
-      ////sourceMap
       ////endif
 //#### Method start(options:GeneralOptions)
      OutCode.prototype.start = function(options){
@@ -1680,11 +1694,11 @@
         this.lastOutCommentLine = 0;
 //if sourceMap option is set, and we're generating .js
         ////ifdef PROD_JS
-        ////if not options.nomap, .sourceMap = new SourceMap
-        ////else
-        //do nothing
-        null;
+        //if options.generateSourceMap, .sourceMap = new SourceMap
+        if (options.generateSourceMap) {this.sourceMap = new SourceMap()};
      };
+        ////else
+        ////do nothing
         ////end if
 //#### Method setHeader(num)
      OutCode.prototype.setHeader = function(num){
@@ -1790,6 +1804,9 @@
      };
 //#### method close()
      OutCode.prototype.close = function(){
+        //.startNewLine //save last pending line
+        this.startNewLine(); //save last pending line
+        
         //if .fileMode
         if (this.fileMode) {
             //for header=0 to 2
@@ -1821,18 +1838,21 @@
 //#### helper method addSourceMap(mark, sourceLin, sourceCol, indent)
      OutCode.prototype.addSourceMap = function(mark, sourceLin, sourceCol, indent){
         ////ifdef PROD_JS
-        ////if .sourceMap
-            ////declare on mark
-                ////lin,col
-            ////.sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
-        ////else
-        //do nothing
-        null;
+        //if .sourceMap
+        if (this.sourceMap) {
+            //declare on mark 
+                //lin,col
+            
+            //.sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
+            this.sourceMap.add((sourceLin || 1) - 1, 0, mark.lin, 0);
+        };
      };
     // export
     module.exports.OutCode = OutCode;
     
     // end class OutCode
+        ////else
+        ////do nothing
         ////endif
 //### helper class SourceMapMark
     // constructor
@@ -1842,6 +1862,10 @@
     };
     
     // end class SourceMapMark
+// --------------------
+// Module code
+// --------------------
+// end of module
 ///*
 //### Class DynBuffer
 //Like node.js Buffer, but auto-extends if required

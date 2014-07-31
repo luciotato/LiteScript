@@ -412,3 +412,4 @@
 
 
 module.exports=NameDeclaration;
+//# sourceMappingURL=NameDeclaration.js.map

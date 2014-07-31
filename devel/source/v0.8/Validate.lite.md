@@ -458,7 +458,7 @@ Initial NameAffinity, err|xxxErr => type:Error
 
 Process the global scope declarations interface file: GlobalScope(JS|C|NODE).interface.md
 
-        logger.msg "Declare on global scope using ", globalInterfaceFile
+        logger.msg "Declare global scope using #{globalInterfaceFile}.interface.md"
         var globalInterfaceModule = project.compileFile(globalInterfaceFile)
 
 call "declare" on each item of the GlobalScope interface file, to create the NameDeclarations
@@ -481,7 +481,7 @@ gets a var from global scope
       if globalScope.findOwnMember(name) into var nameDecl
           return nameDecl.members.get("prototype")
 
-### Helper function globalPrototype(name) 
+### public Helper function globalPrototype(name) 
 gets a var from global scope
 
       if name instanceof Names.Declaration, return name #already converted type
@@ -1141,10 +1141,19 @@ Examples:
           .nameDecl = .addToScope(.createNameDeclaration())
 
       helper method getTypeFromAssignedValue() 
+
+          // if it has an assigned value
           if .nameDecl and .assignedValue and .nameDecl.name isnt 'prototype'
-              if no .nameDecl.findOwnMember('**proto**') into var type #if has no type
+              
+              if .assignedValue instanceof Grammar.Expression
+                and .assignedValue.root.name.constructor in [Grammar.StringLiteral,Grammar.NumberLiteral]
+                    var theLiteral = .assignedValue.root.name
+                    // if it is assigning a literal, force type to string|number|array
+                    .nameDecl.setMember('**proto**', globalPrototype(theLiteral.type))
+
+              else if no .nameDecl.findOwnMember('**proto**') into var type #if has no type
                   if .assignedValue.getResultType() into var result #get assignedValue type
-                      this.nameDecl.setMember('**proto**', result) #assign to this.nameDecl
+                      .nameDecl.setMember('**proto**', result) #assign to this.nameDecl
 
 
 ### Append to class Grammar.VarStatement ###
@@ -1569,13 +1578,13 @@ get referenced class/namespace
 Add all properties as members of its owner (append to).
 For undeclared properties only
 
-              when Grammar.PropertiesDeclaration
+              when Grammar.PropertiesDeclaration:
                   declare item.specific:Grammar.PropertiesDeclaration
                   if not item.specific.declared, item.specific.declare(informError=true) 
 
 For undeclared methods only
 
-              when Grammar.MethodDeclaration
+              when Grammar.MethodDeclaration:
                   var m:Grammar.MethodDeclaration = item.specific
                   if m.declared, continue
 
@@ -1591,11 +1600,11 @@ so we can later validate `.x` in `this.x = 7`
 
 a class appended to a namespace
 
-              when Grammar.ClassDeclaration
+              when Grammar.ClassDeclaration:
                   declare item.specific:Grammar.ClassDeclaration
                   ownerDecl.addMember item.specific.nameDecl                 
 
-              when Grammar.EndStatement
+              when Grammar.EndStatement:
                   do nothing
 
               else
@@ -1877,6 +1886,16 @@ check if we've got a a clear reference.
 
       var reference = .lvalue.tryGetReference()
       if reference isnt instanceof Names.Declaration, return 
+
+if it is assigning string or number literal, force type 
+
+      if .rvalue instanceof Grammar.Expression
+          if .rvalue.root.name.constructor in [Grammar.StringLiteral,Grammar.NumberLiteral]
+              var theLiteral = .rvalue.root.name
+              // if it is assigning a literal, force type to string|number|array
+              reference.setMember('**proto**', globalPrototype(theLiteral.type))
+              return
+
       if reference.findOwnMember('**proto**'), return #has a type already
 
 check if we've got a clear rvalue.
@@ -2124,7 +2143,7 @@ declare members on the fly, with optional type
 
       case .specifier 
 
-        when 'valid'
+        when 'valid':
 
             actualVar = .tryGetFromScope(.varRef.name,opt)
             if no actualVar, return
@@ -2145,7 +2164,7 @@ declare members on the fly, with optional type
 
             if actualVar, .setTypes actualVar
 
-        when 'on-the-fly'
+        when 'on-the-fly':
             #set type on-the-fly, from here until next type-assignment
             #we allow more than one "declare x:type" on the same block
             if .varRef.tryGetReference(opt) into actualVar

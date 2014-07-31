@@ -3,6 +3,9 @@
 //Module GeneralOptions
 //-------------------------
 #include "GeneralOptions.c.extra"
+//-------------------------
+//NAMESPACE GeneralOptions
+//-------------------------
     //-----------------------
     // Class GeneralOptions: static list of METHODS(verbs) and PROPS(things)
     //-----------------------
@@ -20,7 +23,7 @@
     , debugEnabled_
     , perf_
     , skip_
-    , nomap_
+    , generateSourceMap_
     , single_
     , compileIfNewer_
     , browser_
@@ -49,7 +52,7 @@
       PROP(debugEnabled_,this)=undefined;
       PROP(perf_,this)=any_number(0);
       PROP(skip_,this)=undefined;
-      PROP(nomap_,this)=undefined;
+      PROP(generateSourceMap_,this)=true;
       PROP(single_,this)=undefined;
       PROP(compileIfNewer_,this)=undefined;
       PROP(browser_,this)=undefined;
@@ -77,7 +80,7 @@
             //debugEnabled = undefined
             //perf=0 // performace counters 0..2
             //skip = undefined
-            //nomap = undefined
+            //generateSourceMap = true //default is to generate sourcemaps
             //single = undefined
             //compileIfNewer = undefined //compile only if source is newer
             //browser =undefined //compile js for browser environment (instead of node.js env.)
@@ -97,21 +100,26 @@
             assert(_instanceof(this,GeneralOptions));
             //---------
             //return """
-            return _concatAny(6,any_LTR("outDir:")
-, PROP(outDir_,this)
-, any_LTR("\nverbose:")
-, PROP(verboseLevel_,this)
-, any_LTR("\ndefines:")
-, ((__call(join_,PROP(defines_,this),0,NULL)))
-            );
+            return _concatAny(6,
+        any_LTR("outDir:"), 
+        PROP(outDir_,this), 
+        any_LTR("\nverbose:"), 
+        PROP(verboseLevel_,this), 
+        any_LTR("\ndefines:"), 
+        ((__call(join_,PROP(defines_,this),0,NULL)))
+);
       return undefined;
       }
-
-
-//-------------------------
-void GeneralOptions__moduleInit(void){
+//------------------
+void GeneralOptions__namespaceInit(void){
         GeneralOptions =_newClass("GeneralOptions", GeneralOptions__init, sizeof(struct GeneralOptions_s), Object);
         _declareMethods(GeneralOptions, GeneralOptions_METHODS);
         _declareProps(GeneralOptions, GeneralOptions_PROPS, sizeof GeneralOptions_PROPS);
     
+};
+
+
+//-------------------------
+void GeneralOptions__moduleInit(void){
+    GeneralOptions__namespaceInit();
 };

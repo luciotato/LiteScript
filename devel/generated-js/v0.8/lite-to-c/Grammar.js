@@ -1564,8 +1564,10 @@
           while(true){
               //case .lexer.token.value
               
-                //when '.' //property acceess
-              if ((this.lexer.token.value=='.')){
+                //when '.': //property acceess
+              if (
+        (this.lexer.token.value=='.')
+){
                     //ac = new PropertyAccess(this)
                     ac = new PropertyAccess(this);
                     //ac.parse
@@ -1585,16 +1587,20 @@
                     };
               
               }
-                //when "(" //function access
-              else if ((this.lexer.token.value=="(")){
+                //when "(": //function access
+              else if (
+        (this.lexer.token.value=="(")
+){
                     //ac = new FunctionAccess(this)
                     ac = new FunctionAccess(this);
                     //ac.parse
                     ac.parse();
               
               }
-                //when "[" //index access
-              else if ((this.lexer.token.value=="[")){
+                //when "[": //index access
+              else if (
+        (this.lexer.token.value=="[")
+){
                     //ac = new IndexAccess(this)
                     ac = new IndexAccess(this);
                     //ac.parse
@@ -1715,7 +1721,6 @@
     
     // end class Operand
     //end Operand
-    
 //## Oper
 //```
 //Oper: ('~'|'&'|'^'|'|'|'>>'|'<<'
@@ -3200,8 +3205,11 @@
         
         //case .specifier
         
-          //when  'on-the-fly','type'
-        if ((this.specifier=='on-the-fly')||(this.specifier=='type')){
+          //when  'on-the-fly','type':
+        if (
+        (this.specifier=='on-the-fly')||
+        (this.specifier=='type')
+){
             //#declare VarRef:Type
             //.varRef = .req(VariableRef)
             this.varRef = this.req(VariableRef);
@@ -3211,8 +3219,10 @@
             this.parseType();
         
         }
-          //when 'valid'
-        else if ((this.specifier=='valid')){
+          //when 'valid':
+        else if (
+        (this.specifier=='valid')
+){
             //.varRef = .req(VariableRef)
             this.varRef = this.req(VariableRef);
             //if no .varRef.accessors, .sayErr "declare valid: expected accesor chain. Example: 'declare valid name.member.member'"
@@ -3224,8 +3234,10 @@
             };
         
         }
-          //when 'name'
-        else if ((this.specifier=='name')){
+          //when 'name':
+        else if (
+        (this.specifier=='name')
+){
             //.specifier = .req('affinity')
             this.specifier = this.req('affinity');
             //.names = .reqSeparatedList(VariableDecl,',')
@@ -3242,8 +3254,10 @@
             
         
         }
-          //when 'var'
-        else if ((this.specifier=='var')){
+          //when 'var':
+        else if (
+        (this.specifier=='var')
+){
             //.names = .reqSeparatedList(VariableDecl,',')
             this.names = this.reqSeparatedList(VariableDecl, ',');
             //for each varDecl in .names
@@ -3258,8 +3272,10 @@
             
         
         }
-          //when 'on'
-        else if ((this.specifier=='on')){
+          //when 'on':
+        else if (
+        (this.specifier=='on')
+){
             //.name = .req('IDENTIFIER')
             this.name = this.req('IDENTIFIER');
             //.names = .reqSeparatedList(VariableDecl,',')
@@ -3548,22 +3564,22 @@
 //but it is a "statement" not a expression
 //Examples: /*
     //case b 
-      //when 2,4,6 
+      //when 2,4,6:
         //print 'even' 
-      //when 1,3,5 
+      //when 1,3,5:
         //print 'odd'
       //else 
         //print 'idk' 
     //end
     //// case instance of
     //case b instance of
-      //when VarStatement
+      //when VarStatement:
         //print 'variables #{b.list}' 
-      //when AppendToDeclaration
+      //when AppendToDeclaration:
         //print 'it is append to #{b.varRef}'
-      //when NamespaceDeclaration
+      //when NamespaceDeclaration:
         //print 'namespace #{b.name}'
-      //when ClassDeclaration
+      //when ClassDeclaration:
         //print 'a class, extends #{b.varRefSuper}'
       //else 
         //print 'unexpected class' 
@@ -3572,9 +3588,9 @@
     //// case when TRUE
     //var result
     //case 
-        //when a is 3 or b < 10 
+        //when a is 3 or b < 10:
             //result = 'option 1'
-        //when b >= 10 or a<0 or c is 5 
+        //when b >= 10 or a<0 or c is 5:
             //result= 'option 2'
         //else 
             //result = 'other' 
@@ -3648,8 +3664,8 @@
             this.req('when');
             //.lock
             this.lock();
-            //.expressions = .reqSeparatedList(Expression, ",")
-            this.expressions = this.reqSeparatedList(Expression, ",");
+            //.expressions = .reqSeparatedList(Expression, ",",":")
+            this.expressions = this.reqSeparatedList(Expression, ",", ":");
             //.body = .req(Body)
             this.body = this.req(Body);
         };
@@ -4100,3 +4116,8 @@
             };
         };
       };
+// --------------------
+// Module code
+// --------------------
+    
+// end of module

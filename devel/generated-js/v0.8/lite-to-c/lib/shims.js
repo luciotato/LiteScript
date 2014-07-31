@@ -90,32 +90,31 @@
             //return .concat(String.spaces(howMany-.length))
             return this.concat(String.spaces(howMany - this.length));
         };
-//### append to namespace String
-    
-        //shim method spaces(howMany)
-        if (!String.spaces)
-        String.spaces = function(howMany){
-            //return String.repeat(" ",howMany)
-            return String.repeat(" ", howMany);
-        };
-//repeat(str, howMany)
-        //shim method repeat(str,howMany)
-        if (!String.repeat)
-        String.repeat = function(str, howMany){
-            
-            //if howMany<=0, return ""
-            if (howMany <= 0) {return ""};
+//repeat(howMany)
+        //shim method repeat(howMany)
+        if (!String.prototype.repeat)
+        String.prototype.repeat = function(howMany){
+            //if howMany<=0, return ''
+            if (howMany <= 0) {return ''};
             
             //var a=''
             var a = '';
             //while howMany--
             while(howMany--){
-                //a="#{a}#{str}"
-                a = '' + a + str;
+                //a &= this
+                a += this;
             };// end loop
             
             //return a
             return a;
+        };
+//### append to namespace String
+    
+        //shim method spaces(howMany)
+        if (!String.spaces)
+        String.spaces = function(howMany){
+            //return " ".repeat(howMany)
+            return " ".repeat(howMany);
         };
 //Checks if a name is Capitalized, unicode aware.
 //capitalized is like: /^[A-Z]+[$_a-z0-9]+$/ ,but unicode aware.
@@ -235,8 +234,6 @@
         }
         ,enumerable:false
         });
-        //end method
-        
         //shim method clear       [not enumerable]
         if (!Array.prototype.clear)
         Object.defineProperty(
@@ -252,3 +249,7 @@
         }
         ,enumerable:false
         });
+// --------------------
+// Module code
+// --------------------
+// end of module

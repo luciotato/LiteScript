@@ -352,6 +352,7 @@ loop until closer found
 
         logger.debug "optSeparatedList [#{.constructor.name}] indent:#{.indent}, get SeparatedList of [#{astClass.name}] by '#{separator}' closer:", closer or '-no closer-'
 
+        var blockIndent = .lexer.indent
         var startLine = .lexer.sourceLineNum
         do until .opt(closer) or .lexer.token.type is 'EOF'
 
@@ -385,7 +386,10 @@ Any token other than 'separator' means 'end of list'
 
 optional newline after comma 
 
-            .opt(optSepar)
+            consumedNewLine = .opt(optSepar)
+            if consumedNewLine and .lexer.indent <= blockIndent
+                .lexer.sayErr "SeparatedList, after '#{separator}' - next line is same or less indented (#{.lexer.indent}) than block indent (#{blockIndent})"
+                return result
 
         loop #try get next item
 
@@ -432,8 +436,8 @@ if a closer was specified, indent change before the closer means error (line mis
 
 check for excesive indent
 
-                  if .lexer.indent > blockIndent
-                    .lexer.throwErr "Misaligned indent: #{.lexer.indent}. Expected #{blockIndent} to continue block, or #{parentIndent} to close block started at line #{startLine}"
+                  //if .lexer.indent > blockIndent
+                  //  .lexer.throwErr "Misaligned indent: #{.lexer.indent}. Expected #{blockIndent} to continue block, or #{parentIndent} to close block started at line #{startLine}"
 
 else, if no closer specified, and indent decreased => end of list
 
@@ -578,20 +582,24 @@ else, Object codes
                       
                       for each inx,listItem in CSL
 
-                        declare valid listItem.out
+                            declare valid listItem.out
 
-                        if inx>0 
-                          rawOut.put separator
+                            if inx>0 
 
-                        if item.tryGetProperty('freeForm')
-                            rawOut.put '\n        '
+                                if item.tryGetProperty('freeForm')
+                                    rawOut.put '\n'
+                                    rawOut.put String.spaces(.indent)
 
-                        #recurse
-                        .out item.tryGetProperty('pre'), listItem, item.tryGetProperty('post')
+                                rawOut.put separator
+
+                            #recurse
+                            .out item.tryGetProperty('pre'), listItem, item.tryGetProperty('post')
 
                       end for
 
-                      if item.tryGetProperty('freeForm'), rawOut.put '\n' # (prettier generated code)
+                      if item.tryGetProperty('freeForm') # prettier generated code
+                            rawOut.put '\n'
+                            rawOut.put String.spaces(.indent)
 
 {COMMENT:text} --> output text as a comment 
  

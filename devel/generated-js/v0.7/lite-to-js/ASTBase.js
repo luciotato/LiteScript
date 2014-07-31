@@ -432,6 +432,7 @@
 
        debug("optSeparatedList [" + this.constructor.name + "] indent:" + this.indent + ", get SeparatedList of [" + astClass.name + "] by '" + separator + "' closer:", closer || '-no closer-');
 
+       var blockIndent = this.lexer.indent;
        var startLine = this.lexer.sourceLineNum;
        // do until .opt(closer)
        while(!this.opt(closer)){
@@ -472,7 +473,12 @@
 
 // optional newline after comma
 
-           this.opt(optSepar);
+           consumedNewLine = this.opt(optSepar);
+           // if consumedNewLine and .lexer.indent <= blockIndent
+           if (consumedNewLine && this.lexer.indent <= blockIndent) {
+               this.lexer.sayErr("SeparatedList, after '" + separator + "' - next line is same or less indented (" + this.lexer.indent + ") than block indent (" + blockIndent + ")");
+               return result;
+           };
        };// end loop
 
        return result;
@@ -525,10 +531,8 @@
 
 // check for excesive indent
 
-                 // if .lexer.indent > blockIndent
-                 if (this.lexer.indent > blockIndent) {
-                   this.lexer.throwErr("Misaligned indent: " + this.lexer.indent + ". Expected " + blockIndent + " to continue block, or " + parentIndent + " to close block started at line " + startLine);
-                 };
+                  //if .lexer.indent > blockIndent
+                  //  .lexer.throwErr "Misaligned indent: #{.lexer.indent}. Expected #{blockIndent} to continue block, or #{parentIndent} to close block started at line #{startLine}"
 
 // else, if no closer specified, and indent decreased => end of list
 
@@ -1046,3 +1050,4 @@
 
 
 module.exports=ASTBase;
+//# sourceMappingURL=ASTBase.js.map

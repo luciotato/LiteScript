@@ -21,6 +21,7 @@ extern void Project__moduleInit(void);
         any main;
         any Producer;
         any recurseLevel;
+        any filesProducedCount;
     
     } Project_s;
     

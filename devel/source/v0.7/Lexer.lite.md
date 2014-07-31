@@ -437,18 +437,34 @@ Get section between """ and """
 
 Now we should escape internal d-quotes, but only *outside* string interpolation expressions
 
-          var parsed = String.splitExpressions(line, .stringInterpolationChar)
+          var parsed = String.splitExpressions(line,.stringInterpolationChar)
           for each inx,item:string in parsed
               if item.charAt(0) is '"' //a string part
                   item = item.slice(1,-1) //remove quotes
-                  parsed[inx] = item.replaceAll('"','\\"') #store with *escaped* internal d-quotes
-              else
-                  #restore string interp. codes
-                  parsed[inx] = "#{.stringInterpolationChar}{#{item}}"
+                  item = item.replaceAll('"','\\"') #store with *escaped* internal d-quotes
+                  parsed[inx] = '"#{item}"' #restore enclosing quotes
 
-          #re-join & re.enclose in quotes
-          line = parsed.join("").quoted('"') 
-          line = "#{result.pre} #{line}#{result.post}" #add pre & post
+      #ifdef PROD_C  // compile-to-c
+          
+          // code a call to "concat" to handle string interpolation
+          line = "any_concat(#{parsed.join(',')})"
+
+      #else //  compile-to-js
+
+          //if the first expression isnt a quoted string constant
+          // we add `"" + ` so: we get string concatenation from javascript.
+          // Also: if the first expression starts with `(`, LiteScript can 
+          // mis-parse the expression as a "function call"
+          if parsed.length and parsed[0].charAt(0) isnt '"' //match[0] is the quote: ' or "
+              parsed.unshift "''" // prepend ''
+
+          // code a call to js string concat (+) to handle string interpolation
+          line = parsed.join(' + ')
+          // add pre & post
+      #endif
+          
+          // add pre & post
+          line = "#{result.pre} #{line}#{result.post}" 
 
         return line
 

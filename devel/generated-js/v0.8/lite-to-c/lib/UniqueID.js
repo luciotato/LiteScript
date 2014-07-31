@@ -35,3 +35,7 @@
     }
     // export
     module.exports.getVarName = getVarName;
+// --------------------
+// Module code
+// --------------------
+// end of module

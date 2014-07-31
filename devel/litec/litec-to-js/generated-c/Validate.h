@@ -8,6 +8,7 @@ extern void Validate__moduleInit(void);
 extern any Validate_validate(DEFAULT_ARGUMENTS);
 extern any Validate_walkAllNodesCalling(DEFAULT_ARGUMENTS);
 extern any Validate_initialize(DEFAULT_ARGUMENTS);
+extern any Validate_globalPrototype(DEFAULT_ARGUMENTS);
       
 
 //--------------

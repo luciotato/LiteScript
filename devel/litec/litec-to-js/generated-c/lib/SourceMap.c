@@ -3,6 +3,9 @@
 //Module SourceMap
 //-------------------------
 #include "SourceMap.c.extra"
+//-------------------------
+//NAMESPACE SourceMap
+//-------------------------
     //-----------------------
     // Class SourceMap: static list of METHODS(verbs) and PROPS(things)
     //-----------------------
@@ -109,36 +112,45 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
           }
           //---------
           //logger.debug "gen #{line},#{column} -> src #{sourceLine},#{sourceCol}"
-          logger_debug(undefined,1,(any_arr){_concatAny(8,any_LTR("gen ")
-, line
-, any_LTR(",")
-, column
-, any_LTR(" -> src ")
-, sourceLine
-, any_LTR(",")
-, sourceCol
-          )
-          });
+          logger_debug(undefined,1,(any_arr){
+        _concatAny(8,
+        any_LTR("gen "), 
+        line, 
+        any_LTR(","), 
+        column, 
+        any_LTR(" -> src "), 
+        sourceLine, 
+        any_LTR(","), 
+        sourceCol
+)
+});
           //var lineMap = .lines.tryGet(line)
-          var lineMap = __call(tryGet_,PROP(lines_,this),1,(any_arr){line
-          });
+          var 
+        lineMap = __call(tryGet_,PROP(lines_,this),1,(any_arr){
+        line
+})
+;
           //if no lineMap //create
           if (!_anyToBool(lineMap))  { //create
               //lineMap = new LineMap(line) // create
-              lineMap = new(SourceMap_LineMap,1,(any_arr){line
-              }); // create
+              lineMap = new(SourceMap_LineMap,1,(any_arr){
+        line
+}); // create
               //.lines.set line, lineMap //store at index (extend array if needed)
-              __call(set_,PROP(lines_,this),2,(any_arr){line
-, lineMap
-              }); //store at index (extend array if needed)
+              __call(set_,PROP(lines_,this),2,(any_arr){
+        line, 
+        lineMap
+}); //store at index (extend array if needed)
           };
           //lineMap.add column, new Location(sourceLine, sourceCol), noReplace
-          METHOD(add_,lineMap)(lineMap,3,(any_arr){column
-, new(SourceMap_Location,2,(any_arr){sourceLine
-, sourceCol
-          })
-, noReplace
-          });
+          METHOD(add_,lineMap)(lineMap,3,(any_arr){
+        column, 
+        new(SourceMap_Location,2,(any_arr){
+        sourceLine, 
+        sourceCol
+}), 
+        noReplace
+});
       return undefined;
       }
       //method sourceLocation(line, column)
@@ -160,8 +172,9 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
           for(int64_t lin=_anyToNumber(line); lin >= 0; lin--){
               //if .lines[line] into var lineMap, return lineMap.sourceLocation(column)
               var lineMap=undefined;
-              if (_anyToBool((lineMap=ITEM(_anyToNumber(line),PROP(lines_,this))))) {return METHOD(sourceLocation_,lineMap)(lineMap,1,(any_arr){column
-              });};
+              if (_anyToBool((lineMap=ITEM(_anyToNumber(line),PROP(lines_,this))))) {return METHOD(sourceLocation_,lineMap)(lineMap,1,(any_arr){
+        column
+});};
           };// end for lin
           
       return undefined;
@@ -172,7 +185,7 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
 //`options.sourceRoot` may be used to specify the sourceRoot written to the source
 //map.  Also, `options.sourceFiles` and `options.generatedFile` may be passed to
 //set "sources" and "file", respectively.
-      //method generate(generatedFile, sourceFiles:array) 
+      //method generate(generatedFile:string, sourceFiles:array) 
       any SourceMap_generate(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,SourceMap));
         //---------
@@ -191,7 +204,9 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
         ////  sourceFiles  : ['']
         ////  inline: undefined
         //var sourceRoot = ''
-        var sourceRoot = any_EMPTY_STR;
+        var 
+        sourceRoot = any_EMPTY_STR
+;
         //if no sourceFiles, sourceFiles=['']
         if (!_anyToBool(sourceFiles)) {sourceFiles = new(Array,1,(any_arr){any_EMPTY_STR});};
         //var
@@ -200,8 +215,15 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
           //lastSourceLine    = 0
           //lastSourceColumn  = 0
           //needComma         = false
-          //buffer            = ""
-        var writingline = any_number(0), lastGenColumn = any_number(0), lastSourceLine = any_number(0), lastSourceColumn = any_number(0), needComma = false, buffer = any_EMPTY_STR;
+          //encoded:array     = []
+        var 
+        writingline = any_number(0), 
+        lastGenColumn = any_number(0), 
+        lastSourceLine = any_number(0), 
+        lastSourceColumn = any_number(0), 
+        needComma = false, 
+        encoded = new(Array,0,NULL)
+;
         //#for each line in the generated 
         //for each lineInx,lineMap in .lines where lineMap
         any _list20=PROP(lines_,this);
@@ -218,18 +240,31 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
           //for each column,SourceLoc in lineMap.columns where SourceLoc
           if(_anyToBool(SourceLoc)){
             //logger.debug "line:#{lineMap.line} ->", SourceLoc.lin
-            logger_debug(undefined,2,(any_arr){_concatAny(3,any_LTR("line:")
-, PROP(line_,lineMap)
-, any_LTR(" ->")
-            )
-, PROP(lin_,SourceLoc)
-            });
+            logger_debug(undefined,2,(any_arr){
+        _concatAny(3,
+        any_LTR("line:"), 
+        PROP(line_,lineMap), 
+        any_LTR(" ->")
+), 
+        PROP(lin_,SourceLoc)
+});
             //logger.debug "column:#{column}", SourceLoc.col
-            logger_debug(undefined,2,(any_arr){_concatAny(2,any_LTR("column:")
-, any_number(column)
-            )
-, PROP(col_,SourceLoc)
-            });
+            logger_debug(undefined,2,(any_arr){
+        _concatAny(2,
+        any_LTR("column:"), 
+        any_number(column)
+), 
+        PROP(col_,SourceLoc)
+});
+            //logger.debug "writingline #{writingline} lineMap.line #{lineMap.line}"
+            logger_debug(undefined,1,(any_arr){
+        _concatAny(4,
+        any_LTR("writingline "), 
+        writingline, 
+        any_LTR(" lineMap.line "), 
+        PROP(line_,lineMap)
+)
+});
 //advance to LineMap.line
             //if writingline < lineMap.line
             if (_anyToNumber(writingline) < _anyToNumber(PROP(line_,lineMap)))  {
@@ -239,8 +274,10 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
                 needComma = false;
                 //while writingline < lineMap.line
                 while(_anyToNumber(writingline) < _anyToNumber(PROP(line_,lineMap))){
-                    //buffer &= ";"
-                    buffer=_concatAny(2,buffer,any_LTR(";"));
+                    //encoded.push ";"
+                    METHOD(push_,encoded)(encoded,1,(any_arr){
+        any_LTR(";")
+});
                     //writingline++
                     writingline.value.number++;
                 };// end loop
@@ -249,8 +286,10 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
 //Write a comma if we've already written a segment on this line.
             //if needComma
             if (_anyToBool(needComma))  {
-              //buffer &= ","
-              buffer=_concatAny(2,buffer,any_LTR(","));
+              //encoded.push ","
+              METHOD(push_,encoded)(encoded,1,(any_arr){
+        any_LTR(",")
+});
               //needComma = false
               needComma = false;
             };
@@ -258,25 +297,37 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
 //is a generated column which doesn't match anything in the source code.
 //The starting column in the generated source, relative to any previous recorded
 //column for the current line:
-            //buffer += encodeVlq(column - lastGenColumn)
-            buffer.value.number += _anyToNumber(SourceMap_encodeVlq(undefined,1,(any_arr){any_number(column - _anyToNumber(lastGenColumn))
-            }));
+            //encoded.push encodeVlq(column - lastGenColumn)
+            METHOD(push_,encoded)(encoded,1,(any_arr){
+        SourceMap_encodeVlq(undefined,1,(any_arr){
+        any_number(column - _anyToNumber(lastGenColumn))
+})
+});
             //lastGenColumn = column
             lastGenColumn = any_number(column);
 //The index into the list of sources:
-            //buffer += encodeVlq(0)
-            buffer.value.number += _anyToNumber(SourceMap_encodeVlq(undefined,1,(any_arr){any_number(0)
-            }));
+            //encoded.push encodeVlq(0)
+            METHOD(push_,encoded)(encoded,1,(any_arr){
+        SourceMap_encodeVlq(undefined,1,(any_arr){
+        any_number(0)
+})
+});
 //The starting line in the original source, relative to the previous source line.
-            //buffer += encodeVlq(SourceLoc.lin - lastSourceLine)
-            buffer.value.number += _anyToNumber(SourceMap_encodeVlq(undefined,1,(any_arr){any_number(_anyToNumber(PROP(lin_,SourceLoc)) - _anyToNumber(lastSourceLine))
-            }));
+            //encoded.push encodeVlq(SourceLoc.lin - lastSourceLine)
+            METHOD(push_,encoded)(encoded,1,(any_arr){
+        SourceMap_encodeVlq(undefined,1,(any_arr){
+        any_number(_anyToNumber(PROP(lin_,SourceLoc)) - _anyToNumber(lastSourceLine))
+})
+});
             //lastSourceLine = SourceLoc.lin
             lastSourceLine = PROP(lin_,SourceLoc);
 //The starting column in the original source, relative to the previous column.
-            //buffer += encodeVlq(SourceLoc.col - lastSourceColumn)
-            buffer.value.number += _anyToNumber(SourceMap_encodeVlq(undefined,1,(any_arr){any_number(_anyToNumber(PROP(col_,SourceLoc)) - _anyToNumber(lastSourceColumn))
-            }));
+            //encoded.push encodeVlq(SourceLoc.col - lastSourceColumn)
+            METHOD(push_,encoded)(encoded,1,(any_arr){
+        SourceMap_encodeVlq(undefined,1,(any_arr){
+        any_number(_anyToNumber(PROP(col_,SourceLoc)) - _anyToNumber(lastSourceColumn))
+})
+});
             //lastSourceColumn = SourceLoc.col
             lastSourceColumn = PROP(col_,SourceLoc);
             //needComma = true
@@ -294,23 +345,28 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
           //sourceRoot: sourceRoot
           //sources:    sourceFiles
           //names:      []
-          //mappings:   buffer
-        var v3 = new(Map,6,(any_arr){
+          //mappings:   encoded.join("")
+        var 
+        v3 = new(Map,6,(any_arr){
           _newPair("version",any_number(3)), 
           _newPair("file",generatedFile), 
           _newPair("sourceRoot",sourceRoot), 
           _newPair("sources",sourceFiles), 
           _newPair("names",new(Array,0,NULL)), 
-          _newPair("mappings",buffer)
+          _newPair("mappings",METHOD(join_,encoded)(encoded,1,(any_arr){
+        any_EMPTY_STR
+}))
           })
-        ;
+
+;
         ////declare valid v3.sourcesContent
         ////if options.inline, v3.sourcesContent = [code] 
         //return JSON.stringify(v3, null, 2)
-        return JSON_stringify(undefined,3,(any_arr){v3
-, null
-, any_number(2)
-        });
+        return JSON_stringify(undefined,3,(any_arr){
+        v3, 
+        null, 
+        any_number(2)
+});
       return undefined;
       }
     
@@ -387,15 +443,19 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
         }
         //---------
         //var colInfo= .columns.tryGet(column)
-        var colInfo = __call(tryGet_,PROP(columns_,this),1,(any_arr){column
-        });
+        var 
+        colInfo = __call(tryGet_,PROP(columns_,this),1,(any_arr){
+        column
+})
+;
         //if colInfo and noReplace, return 
         if (_anyToBool(colInfo) && _anyToBool(noReplace)) {return undefined;};
         
         //.columns.set column,source
-        __call(set_,PROP(columns_,this),2,(any_arr){column
-, source
-        });
+        __call(set_,PROP(columns_,this),2,(any_arr){
+        column, 
+        source
+});
       return undefined;
       }
       //method sourceLocation(column)
@@ -410,8 +470,9 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
         for(int64_t col=_anyToNumber(column); col >= 0; col--){
             //if .columns.tryGet(col) into var foundLocation, return foundLocation
             var foundLocation=undefined;
-            if (_anyToBool((foundLocation=__call(tryGet_,PROP(columns_,this),1,(any_arr){any_number(col)
-            })))) {return foundLocation;};
+            if (_anyToBool((foundLocation=__call(tryGet_,PROP(columns_,this),1,(any_arr){
+        any_number(col)
+})))) {return foundLocation;};
         };// end for col
         
       return undefined;
@@ -435,25 +496,34 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
         var value= argc? arguments[0] : undefined;
         //---------
         //var answer = ''
-        var answer = any_EMPTY_STR;
+        var 
+        answer = any_EMPTY_STR
+;
         //# Least significant bit represents the sign.
         //var signBit = value < 0 ? 1 else 0
-        var signBit = _anyToNumber(value) < 0 ? any_number(1) : any_number(0);
+        var 
+        signBit = _anyToNumber(value) < 0 ? any_number(1) : any_number(0)
+;
         //# The next bits are the actual value.
         //var valueToEncode = ( (value<0? -value:value) << 1) + signBit
-        var valueToEncode = any_number(((int64_t)(_anyToNumber(value) < 0 ? -_anyToNumber(value) : _anyToNumber(value)) << (int64_t)1) + _anyToNumber(signBit));
+        var 
+        valueToEncode = any_number(((int64_t)(_anyToNumber(value) < 0 ? -_anyToNumber(value) : _anyToNumber(value)) << (int64_t)1) + _anyToNumber(signBit))
+;
         //# Make sure we encode at least one character, even if valueToEncode is 0.
         //while valueToEncode or no answer
         while(_anyToBool((_anyToBool(__or1=valueToEncode)? __or1 : any_number(!_anyToBool(answer))))){
           //var nextChunk = valueToEncode bitand VLQ_VALUE_MASK
-          var nextChunk = any_number((int64_t)_anyToNumber(valueToEncode) & (int64_t)_anyToNumber(SourceMap_VLQ_VALUE_MASK));
+          var 
+        nextChunk = any_number((int64_t)_anyToNumber(valueToEncode) & (int64_t)_anyToNumber(SourceMap_VLQ_VALUE_MASK))
+;
           //valueToEncode = valueToEncode >> VLQ_SHIFT
           valueToEncode = any_number((int64_t)_anyToNumber(valueToEncode) >> (int64_t)_anyToNumber(SourceMap_VLQ_SHIFT));
           //if valueToEncode, nextChunk = nextChunk bitor VLQ_CONTINUATION_BIT 
           if (_anyToBool(valueToEncode)) {nextChunk = any_number((int64_t)_anyToNumber(nextChunk) | (int64_t)_anyToNumber(SourceMap_VLQ_CONTINUATION_BIT));};
           //answer &= encodeBase64(nextChunk)
-          answer=_concatAny(2,answer,SourceMap_encodeBase64(undefined,1,(any_arr){nextChunk
-          }));
+          answer=_concatAny(2,answer,SourceMap_encodeBase64(undefined,1,(any_arr){
+        nextChunk
+}));
         };// end loop
         //return answer
         return answer;
@@ -469,20 +539,21 @@ any SourceMap_encodeBase64(DEFAULT_ARGUMENTS); //forward declare
       //---------
       //if no BASE64_CHARS.charAt(value) into var encoded
       var encoded=undefined;
-      if (!(_anyToBool((encoded=METHOD(charAt_,SourceMap_BASE64_CHARS)(SourceMap_BASE64_CHARS,1,(any_arr){value
-      })))))  {
+      if (!(_anyToBool((encoded=METHOD(charAt_,SourceMap_BASE64_CHARS)(SourceMap_BASE64_CHARS,1,(any_arr){
+        value
+})))))  {
           //fail with "Cannot Base64 encode value: #{value}"
-          throw(new(Error,1,(any_arr){_concatAny(2,any_LTR("Cannot Base64 encode value: ")
-, value
-          )}));;
+          throw(new(Error,1,(any_arr){_concatAny(2,
+        any_LTR("Cannot Base64 encode value: "), 
+        value
+)}));;
       };
       //return encoded
       return encoded;
     return undefined;
     }
-
-//-------------------------
-void SourceMap__moduleInit(void){
+//------------------
+void SourceMap__namespaceInit(void){
         SourceMap =_newClass("SourceMap", SourceMap__init, sizeof(struct SourceMap_s), Object);
         _declareMethods(SourceMap, SourceMap_METHODS);
         _declareProps(SourceMap, SourceMap_PROPS, sizeof SourceMap_PROPS);
@@ -499,4 +570,10 @@ void SourceMap__moduleInit(void){
     SourceMap_VLQ_CONTINUATION_BIT = any_number((int64_t)1 << (int64_t)_anyToNumber(SourceMap_VLQ_SHIFT));
     SourceMap_VLQ_VALUE_MASK = any_number(_anyToNumber(SourceMap_VLQ_CONTINUATION_BIT) - 1);
     SourceMap_BASE64_CHARS = any_LTR("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+};
+
+
+//-------------------------
+void SourceMap__moduleInit(void){
+    SourceMap__namespaceInit();
 };

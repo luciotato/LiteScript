@@ -20,7 +20,7 @@ extern void GeneralOptions__moduleInit(void);
         any debugEnabled;
         any perf;
         any skip;
-        any nomap;
+        any generateSourceMap;
         any single;
         any compileIfNewer;
         any browser;

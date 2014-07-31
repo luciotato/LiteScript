@@ -23,20 +23,63 @@
 //as the new 'export default' (instead of 'module.exports')
         //.lexer.outCode.exportNamespace = 'module.exports'
         this.lexer.outCode.exportNamespace = 'module.exports';
-        ///*if .exportDefault instance of ASTBase
-            //declare valid .exportDefault.name
-            //.lexer.outCode.exportNamespace = .exportDefault.name
-        //end if
-        //*/
+//Literate programming should allow to reference a function definde later.
+//Leave loose module imperative statements for the last. 
+//Produce all vars & functions definitions first.
+        //var looseStatements=[]
+        var looseStatements = [];
         //for each statement in .statements
         for( var statement__inx=0,statement ; statement__inx<this.statements.length ; statement__inx++){statement=this.statements[statement__inx];
         
-            //statement.produce()
-            statement.produce();
+////            statement.produce
+            //case statement.specific.constructor
+            
+                //when 
+            if ((statement.specific.constructor==Grammar.ImportStatement)
+            ||(statement.specific.constructor==Grammar.VarStatement)
+            ||(statement.specific.constructor==Grammar.ClassDeclaration)
+            ||(statement.specific.constructor==Grammar.FunctionDeclaration)
+            ||(statement.specific.constructor==Grammar.NamespaceDeclaration)
+            ||(statement.specific.constructor==Grammar.AppendToDeclaration)
+            ){
+                    //Grammar.ImportStatement
+                    //Grammar.VarStatement
+                    //Grammar.ClassDeclaration
+                    //Grammar.FunctionDeclaration
+                    //Grammar.NamespaceDeclaration
+                    //Grammar.AppendToDeclaration
+                    //:
+                        //statement.produce
+                        statement.produce();
+            
+            }
+            else {
+                //else
+                    //looseStatements.push statement
+                    looseStatements.push(statement);
+            };
         };// end for each in this.statements
-        //.out NL
-        this.out(NL);
-        ////add end of file comments
+        //var separ = "-"
+        var separ = "-";
+        //.out
+            //{COMMENT: separ.repeat(20)},NL
+            //{COMMENT:"Module code"},NL
+            //{COMMENT: separ.repeat(20)},NL 
+        this.out({COMMENT: separ.repeat(20)}, NL, {COMMENT: "Module code"}, NL, {COMMENT: separ.repeat(20)}, NL);
+        //for each statement in looseStatements
+        for( var statement__inx=0,statement ; statement__inx<looseStatements.length ; statement__inx++){statement=looseStatements[statement__inx];
+        
+            //statement.produce
+            statement.produce();
+        };// end for each in looseStatements
+        ////for each statement in produceThird
+        ////    statement.produce
+        //.out 
+            //NL
+            //{COMMENT:'end of module'},NL
+            //NL
+        this.out(NL, {COMMENT: 'end of module'}, NL, NL);
+//add end of file comments
         //.outSourceLinesAsComment .lexer.infoLines.length
         this.outSourceLinesAsComment(this.lexer.infoLines.length);
 //export 'export default' namespace, if it was set.
@@ -679,9 +722,9 @@
       //method getNodeJSRequireFileRef() 
       Grammar.ImportStatementItem.prototype.getNodeJSRequireFileRef = function(){
         
-//node.js require() require "./" to denote a local module to load.
-//it does like bash does for executable files. A name  without ./ means "look in $PATH".
-//this is not the most intuitive choice.
+//node.js require() use "./" to denote a local module to load.
+//It does as bash does for executable files.
+//A name  without "./"" means "look in $PATH" (node_modules and up)
         //if .importedModule.fileInfo.importInfo.globalImport 
         if (this.importedModule.fileInfo.importInfo.globalImport) {
             //return .name // for node, no './' means "look in node_modules, and up, then global paths"
@@ -690,16 +733,13 @@
         //var thisModule = .getParent(Grammar.Module)
         var thisModule = this.getParent(Grammar.Module);
 //get the required file path, relative to the location of this module (as nodejs's require() requires)
-        //if no .importedModule.fileInfo.outRelFilename
-        if (!this.importedModule.fileInfo.outRelFilename) {
-            //print JSON.stringify(.importedModule.fileInfo)
-            console.log(JSON.stringify(this.importedModule.fileInfo));
-            //print thisModule.fileInfo.dir
-            console.log(thisModule.fileInfo.dir);
-        };
-        //var fn = Environment.relativeFrom(Environment.getDir(thisModule.fileInfo.outRelFilename)
-        var fn = Environment.relativeFrom(Environment.getDir(thisModule.fileInfo.outRelFilename), this.importedModule.fileInfo.outRelFilename);
-                                            //,.importedModule.fileInfo.outRelFilename);
+        //#debug
+        //#if no .importedModule.fileInfo.outRelFilename
+        //#print "thisModule.fileInfo.outRelFilename",thisModule.fileInfo.outFilename
+        //#print  ".importedModule.fileInfo.outRelFilename",.importedModule.fileInfo.outFilename
+        //var fn = Environment.relativeFrom(Environment.getDir(thisModule.fileInfo.outFilename)
+        var fn = Environment.relativeFrom(Environment.getDir(thisModule.fileInfo.outFilename), this.importedModule.fileInfo.outFilename);
+                                            //,.importedModule.fileInfo.outFilename);
         
 //check for 'import x from 'path/file';
         //if .importParameter and fn.charAt(0) is '/' //has `from 'path/file'` AND  is an absolute path 
@@ -708,8 +748,8 @@
             return fn;
         };
 //else, a simple 'import x'
-        //return "./#{fn}"; // node.js require() require "./" to denote a local module to load                
-        return "./" + fn; // node.js require() require "./" to denote a local module to load
+        //return "./#{fn}"; // node.js require() use "./" to denote a local module to load                
+        return "./" + fn; // node.js require() use "./" to denote a local module to load
       };
 //### Append to class Grammar.ImportStatement ###
     
@@ -813,40 +853,42 @@
 //There are 3 variants of `ForStatement` in LiteScript
       //method produce() 
       Grammar.ForStatement.prototype.produce = function(){
-        //declare valid .variant.iterable
-        
-        //declare valid .variant.produce
-        
-//Pre-For code. If required, store the iterable in a temp var.
-//(prettier generated code) Only if the iterable is a complex expression, 
-//(if it can have side-effects) we store it in a temp 
-//var in order to avoid calling it twice. Else, we use it as is.
-        //var iterable:Grammar.Expression = .variant.iterable
-        var iterable = this.variant.iterable;
-        //if iterable 
-        if (iterable) {
-            //declare valid iterable.root.name.hasSideEffects
-            
-            //if iterable.operandCount>1 or iterable.root.name.hasSideEffects or iterable.root.name instanceof Grammar.Literal
-            if (iterable.operandCount > 1 || iterable.root.name.hasSideEffects || iterable.root.name instanceof Grammar.Literal) {
-                //iterable = UniqueID.getVarName('list')  #unique temp iterable var name
-                iterable = UniqueID.getVarName('list');// #unique temp iterable var name
-                //.out "var ",iterable,"=",.variant.iterable,";",NL
-                this.out("var ", iterable, "=", this.variant.iterable, ";", NL);
-            };
-        };
-        //.variant.produce(iterable)
-        this.variant.produce(iterable);
+        //.variant.produce()
+        this.variant.produce();
 //Since al 3 cases are closed with '}; //comment', we skip statement semicolon
         //.skipSemiColon = true
         this.skipSemiColon = true;
+      };
+//Pre-For code. If required, store the iterable in a temp var.
+//(prettier generated code) 
+//Only do it if the iterable is a complex expression, if it can have side-effects or it's a literal.
+//We create a temp var to assign the iterable expression to
+    //Append to class Grammar.Expression
+    
+      //method prepareTempVar() returns string
+      Grammar.Expression.prototype.prepareTempVar = function(){
+        //declare .root.name: Grammar.VariableRef
+        
+        //if .operandCount>1 or .root.name.hasSideEffects or .root.name instanceof Grammar.Literal
+        if (this.operandCount > 1 || this.root.name.hasSideEffects || this.root.name instanceof Grammar.Literal) {
+            //var tempVarIterable = UniqueID.getVarName('list')  #unique temp iterable var name
+            var tempVarIterable = UniqueID.getVarName('list');// #unique temp iterable var name
+            //.out "var ",tempVarIterable,"=",this,";",NL
+            this.out("var ", tempVarIterable, "=", this, ";", NL);
+            //return tempVarIterable
+            return tempVarIterable;
+        };
+        //return this
+        return this;
       };
 //### Append to class Grammar.ForEachProperty
     
 //### Variant 1) 'for each property' to loop over *object property names* 
 //`ForEachProperty: for each [own] property name-VariableDecl in object-VariableRef`
-      //method produce(iterable) 
-      Grammar.ForEachProperty.prototype.produce = function(iterable){
+      //method produce() 
+      Grammar.ForEachProperty.prototype.produce = function(){
+          //var iterable = .iterable.prepareTempVar()
+          var iterable = this.iterable.prepareTempVar();
           //if .mainVar
           if (this.mainVar) {
             //.out "var ", .mainVar.name,"=undefined;",NL
@@ -873,28 +915,39 @@
     
 //### Variant 2) 'for each index' to loop over *Array indexes and items*
 //`ForEachInArray: for each [index-VariableDecl,]item-VariableDecl in array-VariableRef`
-      //method produce(iterable)
-      Grammar.ForEachInArray.prototype.produce = function(iterable){
-//Create a default index var name if none was provided
+      //method produce()
+      Grammar.ForEachInArray.prototype.produce = function(){
+        //var iterable = .iterable.prepareTempVar()
+        var iterable = this.iterable.prepareTempVar();
         //if .isMap //new syntax "for each in map xx"
         if (this.isMap) { //new syntax "for each in map xx"
             //return .produceInMap(iterable)
             return this.produceInMap(iterable);
         };
-        //var indexVar = .indexVar
-        var indexVar = this.indexVar;
-        //if no indexVar
-        if (!indexVar) {
-          //indexVar = {name:.mainVar.name & '__inx', assignedValue:0} #default index var name
-          indexVar = {name: this.mainVar.name + '__inx', assignedValue: 0};// #default index var name
+//Create a default index var name if none was provided
+        //var indexVarName, startValue
+        var indexVarName = undefined, startValue = undefined;
+        //if no .indexVar
+        if (!this.indexVar) {
+            //indexVarName = .mainVar.name & '__inx'  #default index var name
+            indexVarName = this.mainVar.name + '__inx';// #default index var name
+            //startValue = "0"
+            startValue = "0";
+        }
+        else {
+        //else
+            //indexVarName = .indexVar.name
+            indexVarName = this.indexVar.name;
+            //startValue = .indexVar.assignedValue or "0"
+            startValue = this.indexVar.assignedValue || "0";
         };
         //.out "for( var "
-        this.out("for( var ", indexVar.name, "=", indexVar.assignedValue || "0", ",", this.mainVar.name, " ; ", indexVar.name, "<", iterable, ".length", " ; ", indexVar.name, "++){");
-                //, indexVar.name,"=",indexVar.assignedValue or "0",",",.mainVar.name
-                //," ; ",indexVar.name,"<",iterable,".length"
-                //," ; ",indexVar.name,"++){"
-        //.body.out .mainVar.name,"=",iterable,"[",indexVar.name,"];",NL
-        this.body.out(this.mainVar.name, "=", iterable, "[", indexVar.name, "];", NL);
+        this.out("for( var ", indexVarName, "=", startValue, ",", this.mainVar.name, " ; ", indexVarName, "<", iterable, ".length", " ; ", indexVarName, "++){");
+                //, indexVarName,"=",startValue,",",.mainVar.name
+                //," ; ",indexVarName,"<",iterable,".length"
+                //," ; ",indexVarName,"++){"
+        //.body.out .mainVar.name,"=",iterable,"[",indexVarName,"];",NL
+        this.body.out(this.mainVar.name, "=", iterable, "[", indexVarName, "];", NL);
         //if .where 
         if (this.where) {
           //.out '  ',.where,"{",.body,"}"
@@ -955,8 +1008,8 @@
 //`ForIndexNumeric: for index-VariableDecl "=" start-Expression [,|;] (while|until) condition-Expression [(,|;) increment-Statement]`
 //Examples: `for n=0 while n<10`, `for n=0 to 9`
 //Handle by using a js/C standard for(;;){} loop
-      //method produce(iterable)
-      Grammar.ForIndexNumeric.prototype.produce = function(iterable){
+      //method produce()
+      Grammar.ForIndexNumeric.prototype.produce = function(){
         //var isToDownTo: boolean
         var isToDownTo = undefined;
         //var endTempVarName
@@ -1327,10 +1380,13 @@
 //close the function, add source map for function default "return undefined" execution point
       //.out "}"
       this.out("}");
-     };
       ////ifdef PROD_JS // if compile-to-js
-      ////if .lexer.outCode.sourceMap
-          ////.lexer.outCode.sourceMap.add ( .EndFnLineNum, 0, .lexer.outCode.lineNum-1, 0)
+      //if .lexer.outCode.sourceMap
+      if (this.lexer.outCode.sourceMap) {
+          //.lexer.outCode.sourceMap.add ( .EndFnLineNum, 0, .lexer.outCode.lineNum-1, 0)
+          this.lexer.outCode.sourceMap.add(this.EndFnLineNum, 0, this.lexer.outCode.lineNum - 1, 0);
+      };
+     };
       ////endif
 //--------------------
 //### Append to class Grammar.PrintStatement ###
@@ -1565,14 +1621,14 @@
             //if .varRef
             if (this.varRef) {
                 ////case foo...
-                //.out 'if (', {pre:['(',.varRef,'=='], CSL:whenSection.expressions, post:')', separator:'||'}
-                this.out('if (', {pre: ['(', this.varRef, '=='], CSL: whenSection.expressions, post: ')', separator: '||'});
+                //.out 'if (', {pre:['(',.varRef,'=='], CSL:whenSection.expressions, post:')', separator:'||', freeForm:1}
+                this.out('if (', {pre: ['(', this.varRef, '=='], CSL: whenSection.expressions, post: ')', separator: '||', freeForm: 1});
             }
             else {
             //else
                 ////case when TRUE
-                //.out 'if (', {pre:['('], CSL:whenSection.expressions, post:')', separator:'||'}
-                this.out('if (', {pre: ['('], CSL: whenSection.expressions, post: ')', separator: '||'});
+                //.out 'if (', {pre:['('], CSL:whenSection.expressions, post:')', separator:'||', freeForm:1}
+                this.out('if (', {pre: ['('], CSL: whenSection.expressions, post: ')', separator: '||', freeForm: 1});
             };
                 
             //.out '){',
@@ -1707,27 +1763,26 @@
       //'but':          '&&'
       //'or':           '||'
       //'has property': 'in'
-    var OPER_TRANSLATION_map = new Map().fromObject({
-        'no': '!', 
-        'not': '!', 
-        'unary -': '-', 
-        'unary +': '+', 
-        '&': '+', 
-        '&=': '+=', 
-        'bitand': '&', 
-        'bitor': '|', 
-        'bitxor': '^', 
-        'bitnot': '~', 
-        'type of': 'typeof', 
-        'instance of': 'instanceof', 
-        'is': '===', 
-        'isnt': '!==', 
-        '<>': '!==', 
-        'and': '&&', 
-        'but': '&&', 
-        'or': '||', 
-        'has property': 'in'
-});
+    var OPER_TRANSLATION_map = new Map().fromObject({'no': '!'
+      , 'not': '!'
+      , 'unary -': '-'
+      , 'unary +': '+'
+      , '&': '+'
+      , '&=': '+='
+      , 'bitand': '&'
+      , 'bitor': '|'
+      , 'bitxor': '^'
+      , 'bitnot': '~'
+      , 'type of': 'typeof'
+      , 'instance of': 'instanceof'
+      , 'is': '==='
+      , 'isnt': '!=='
+      , '<>': '!=='
+      , 'and': '&&'
+      , 'but': '&&'
+      , 'or': '||'
+      , 'has property': 'in'
+      });
     //function operTranslate(name:string)
     function operTranslate(name){
       //return OPER_TRANSLATION_map.get(name) or name
@@ -1739,18 +1794,25 @@
 //Helper methods and properties, valid for all nodes
 //#### properties skipSemiColon 
      
-//#### helper method assignIfUndefined(name,value) 
+//#### helper method assignIfUndefined(name, value: Grammar.Expression) 
      ASTBase.prototype.assignIfUndefined = function(name, value){
           
           //declare valid value.root.name.name
           
           //#do nothing if value is 'undefined'
-          //if value.root.name.name is 'undefined' #Expression->Operand->VariableRef->name
-          if (value.root.name.name === 'undefined') {// #Expression->Operand->VariableRef->name
-            //.out {COMMENT:[name,": undefined",NL]}
-            this.out({COMMENT: [name, ": undefined", NL]});
-            //return
-            return;
+    
+          //#Expression->Operand->VariableRef->name
+          //var varRef:Grammar.VariableRef = value.root.name
+          var varRef = value.root.name;
+          //if varRef.constructor is Grammar.VariableRef
+          if (varRef.constructor === Grammar.VariableRef) {
+              //if varRef.name is 'undefined' 
+              if (varRef.name === 'undefined') {
+                  //.out {COMMENT:name},": undefined",NL
+                  this.out({COMMENT: name}, ": undefined", NL);
+                  //return
+                  return;
+              };
           };
           //.out "if(",name,'===undefined) ',name,"=",value,";",NL
           this.out("if(", name, '===undefined) ', name, "=", value, ";", NL);
@@ -1779,4 +1841,8 @@
             this.skipSemiColon = true;
         };
      };
+// --------------------
+// Module code
+// --------------------
+// end of module
 //--------------------------------

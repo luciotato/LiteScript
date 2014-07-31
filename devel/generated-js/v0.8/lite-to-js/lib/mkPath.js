@@ -53,4 +53,7 @@
             //throw err //another error
             throw err; //another error
         };
-    };
+    };// --------------------
+// Module code
+// --------------------
+// end of module

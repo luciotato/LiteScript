@@ -293,7 +293,6 @@
     // end class FileInfo
     
     //end class FileInfo
-    
 //### export helper function setBaseInfo(aProjectDir, aOutDir, aTargetExt)
     function setBaseInfo(aProjectDir, aOutDir, aTargetExt){
         ////set module vars
@@ -446,10 +445,8 @@
             //catch e
                 //logger.error "Environment.getGlobalObject '#{name}'"
                 logger.error("Environment.getGlobalObject '" + name + "'");
-                //declare valid e.stack
-                
-                //logger.error e.stack
-                logger.error(e.stack);
+                //logger.error 'stack:',e.stack
+                logger.error('stack:', e.stack);
                 //debugger
                 debugger;
             };
@@ -500,3 +497,8 @@
     module.exports.ImportParameterInfo = ImportParameterInfo;
     
     // end class ImportParameterInfo
+// --------------------
+// Module code
+// --------------------
+    
+// end of module

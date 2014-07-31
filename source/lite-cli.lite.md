@@ -27,7 +27,7 @@
     -version         print LiteScript version & exit
 
     Advanced options:
-    -s,  -single     compile single file. do not follow import/require() calls
+    -s,  -single     compile single file. do not follow import statements
     -ifn, -ifnew     compile only if source is newer
     -wa, -watch      watch current dir for source changes and compile
     -es6, --harmony  used with -run, uses node --harmony

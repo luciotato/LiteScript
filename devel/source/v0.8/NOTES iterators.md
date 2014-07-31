@@ -44,7 +44,7 @@ add "Iterable" interface, make map, array, string, Object "iterable"
         _newIterator(inxNV_t* i, any iterable){
             i->original = iterable;
             case Iterable
-                when String, Array, Map
+                when String, Array, Map:
                     i->bookmark=iterable; //BOF
                     i->index=-1; //BOF
                     i->key=undefined;
@@ -59,7 +59,7 @@ add "Iterable" interface, make map, array, string, Object "iterable"
 
         int _iteratorNext(inxNV_t* i){
             case i->original.class
-                when String
+                when String:
                     if (i->index++==0){ //first
                         if(*(i->bookmark.value.str)==0) return NULL; //empty str
                         i->key.value.number=0;

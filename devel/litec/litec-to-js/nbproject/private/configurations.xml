@@ -24,18 +24,18 @@
       </nativedebugger>
       <runprofile version="9">
         <runcommandpicklist>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../../../source/v0.8/c_lite -o ../../../../out/byv08c/c/lite-to-c/generated -v 2 -D PROD_C -D FROM_C</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../../../source/v0.8/c_lite -o ../../../../out/byv08c/c/lite-to-c/generated -v 0 -perf 1 -D PROD_C -D FROM_C</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../../../source/v0.8/js_lite -o ../../../../out/byv08c/c/lite-to-js/generated -v 2 -perf 1 -D PROD_JS -D FROM_C</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../../../devel/source/v0.8/js_lite -o ../../../../out/byv08c/c/lite-to-js/generated -v 2 -perf 1 -D PROD_JS -D FROM_C</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../../out/byv08c/c/lite-to-js/generated -v 2 -perf 1 -D PROD_JS -D FROM_C</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../../out/byv08c/js -v 2 -perf 1 -D PROD_JS -D FROM_C -debug</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../../out/byv08c/js -v 2 -perf 1 -D PROD_JS -D FROM_C -debug 2>debug.log</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../../out/byv08c/js -v 2 -perf 1 -D PROD_JS -D FROM_C </runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../../out/byv08c/js -v 2 -perf 1 -D PROD_JS -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../out/byv08c/js -v 2 -perf 1 -D PROD_JS -D FROM_C</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../out/byv08c/js -v 2 -perf 1 -D PROD_JS -D FROM_C 1>../../out/byv08c/js/1.log</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../out/byv08c/js -v 1 -perf 1 -D PROD_JS -D FROM_C 1>../../out/byv08c/js/1.log</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../out/byv08c/js -v 1 -perf 1 -D PROD_JS -D FROM_C </runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../out/byv08c/js -v 1 -perf 1 -D PROD_JS -D FROM_C -nomap</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../out/byv08c/js -v 1 -perf 1 -D PROD_JS -D FROM_C -perf</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../out/byv08c/js -v 1 -perf 1 -D PROD_JS -D FROM_C -perf 1</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../out/byv08c/js -v 1 -perf 1 -D PROD_JS -D FROM_C</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../out/byv08c/js -v 2 -perf 1 -D PROD_JS -D FROM_C</runcommand>
+        <runcommand>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../out/byv08c/js -v 1 -perf 1 -D PROD_JS -D FROM_C</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>
@@ -66,16 +66,18 @@
       </nativedebugger>
       <runprofile version="9">
         <runcommandpicklist>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"   test -o lite-out -v 2 -D PROD_C -D FROM_C 2>error.log</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source-v0.8/litec -o lite-out -v 2 -D PROD_C -D FROM_C 2>error.log</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source-v0.8/litec -o lite-out -v 1 -D PROD_C -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../../source-v0.8/c_lite -o ../../../../out/byV08c/$targetLang/lite-to-$targetTarget -v 1 -D PROD_C -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source-v0.8/c_lite -o ../../../out/byV08c/$targetLang/lite-to-$targetTarget -v 1 -D PROD_C -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/c_lite -o ../../../out/byV08c/$targetLang/lite-to-$targetTarget -v 1 -D PROD_C -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/c_lite -o ../../../out/byV08c/$targetLang/lite-to-$targetTarget -v 2 -D PROD_C -D FROM_C</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/c_lite -o ../../../out/byV08c/$targetLang/lite-to-$targetTarget -v 2 -D PROD_C -D FROM_C -perf 1</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/c_lite -o ../../../out/byV08c/$targetLang/lite-to-$targetTarget -v 1 -D PROD_C -D FROM_C -perf 1</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/c_lite -o ../../out/byv08c/js  -v 1 -D PROD_C -D FROM_C -perf 1</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../out/byv08c/js -v 1 -perf 1 -D PROD_JS -D FROM_C</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}"   ../../../source/v0.8/c_lite -o ../../../out/byV08c/$targetLang/lite-to-$targetTarget -v 2 -D PROD_C -D FROM_C</runcommand>
+        <runcommand>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../out/byv08c/js -v 1 -perf 1 -D PROD_JS -D FROM_C</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>

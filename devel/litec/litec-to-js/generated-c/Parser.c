@@ -3,6 +3,9 @@
 //Module Parser
 //-------------------------
 #include "Parser.c.extra"
+//-------------------------
+//NAMESPACE Parser
+//-------------------------
 var Parser_preprocessor_replaces;
     //-----------------------
     // Class Parser_Lexer: static list of METHODS(verbs) and PROPS(things)
@@ -275,8 +278,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
           //.outCode = new OutCode() #helper class
           PROP(outCode_,this) = new(Parser_OutCode,0,NULL);// #helper class
           //.outCode.start .options
-          __call(start_,PROP(outCode_,this),1,(any_arr){PROP(options_,this)
-          });
+          __call(start_,PROP(outCode_,this),1,(any_arr){
+        PROP(options_,this)
+});
 //we start with an empty Token
           
           //.token = new Token()
@@ -292,14 +296,15 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         PROP(sourceLineNum_,this) = any_number(0);
         //.lineInx=0
         PROP(lineInx_,this) = any_number(0);
-        //.lines=""
-        PROP(lines_,this) = any_EMPTY_STR;
+        //.lines=[]
+        PROP(lines_,this) = new(Array,0,NULL);
         //.setPos .last
-        METHOD(setPos_,this)(this,1,(any_arr){PROP(last_,this)
-        });
+        METHOD(setPos_,this)(this,1,(any_arr){
+        PROP(last_,this)
+});
      return undefined;
      }
-//#### Method initSource(filename:string, source:String)
+//#### Method initSource(filename:string, source)
      any Parser_Lexer_initSource(DEFAULT_ARGUMENTS){
           assert(_instanceof(this,Parser_Lexer));
           //---------
@@ -316,8 +321,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
           //.filename = filename
           PROP(filename_,this) = filename;
           //.interfaceMode = filename.indexOf('.interface.') isnt -1
-          PROP(interfaceMode_,this) = any_number(!__is(METHOD(indexOf_,filename)(filename,1,(any_arr){any_LTR(".interface.")
-          }),any_number(-1)));
+          PROP(interfaceMode_,this) = any_number(!__is(METHOD(indexOf_,filename)(filename,1,(any_arr){
+        any_LTR(".interface.")
+}),any_number(-1)));
 //create source lines array
           //if source instanceof Array
           if (_instanceof(source,Array))  {
@@ -333,11 +339,13 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
             if (!__is(_typeof(source),any_LTR("string"))) {source = METHOD(toString_,source)(source,0,NULL);};
             
             //.lines = source.split('\n')
-            PROP(lines_,this) = METHOD(split_,source)(source,1,(any_arr){any_LTR("\n")
-            });
+            PROP(lines_,this) = METHOD(split_,source)(source,1,(any_arr){
+        any_LTR("\n")
+});
             //.lines.push "" # add extra empty line
-            __call(push_,PROP(lines_,this),1,(any_arr){any_EMPTY_STR
-            });// # add extra empty line
+            __call(push_,PROP(lines_,this),1,(any_arr){
+        any_EMPTY_STR
+});// # add extra empty line
           };
      return undefined;
      }
@@ -348,10 +356,15 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 //read from .sourceLines and 
 //prepares a processed infoLines result array
         //var infoLines = []
-        var infoLines = new(Array,0,NULL);
+        var 
+        infoLines = new(Array,0,NULL)
+;
 //Loop processing source code lines 
         //var lastLineWasBlank=true, inCodeBlock=false
-        var lastLineWasBlank = true, inCodeBlock = false;
+        var 
+        lastLineWasBlank = true, 
+        inCodeBlock = false
+;
         //.sourceLineNum = 0
         PROP(sourceLineNum_,this) = any_number(0);
         //do while .nextSourceLine()
@@ -359,9 +372,13 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 //get line indent, by counting whitespace (index of first non-whitespace: \S ),
 //then trim() the line
             //var line = .line
-            var line = PROP(line_,this);
+            var 
+        line = PROP(line_,this)
+;
             //var indent = line.countSpaces()
-            var indent = METHOD(countSpaces_,line)(line,0,NULL);
+            var 
+        indent = METHOD(countSpaces_,line)(line,0,NULL)
+;
             //line = line.trim()
             line = METHOD(trim_,line)(line,0,NULL);
 //LiteScript files (.lite.md) are "literate" markdown code files.
@@ -375,7 +392,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 //Anything else starting on col 1, 2 or 3 is a literate comment, MD syntax.
 //Now, process the lines with this rules
             //var type
-            var type = undefined;
+            var 
+        type = undefined
+;
 //a blank line is always a blank line
             //if no line 
             if (!_anyToBool(line))  {
@@ -399,14 +418,16 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                     //inCodeBlock = false
                     inCodeBlock = false;
                     //if indent is 0 and line.charAt(0) is '#' //starts on column 1, with a '#'
-                    if (__is(indent,any_number(0)) && __is(METHOD(charAt_,line)(line,1,(any_arr){any_number(0)
-                    }),any_LTR("#")))  { //starts on column 1, with a '#'
+                    if (__is(indent,any_number(0)) && __is(METHOD(charAt_,line)(line,1,(any_arr){
+        any_number(0)
+}),any_LTR("#")))  { //starts on column 1, with a '#'
 //checkTitleCode: if found a vlid title-code, rewrite the line, 
 //replacing MarkDown title MD hashs (###) by spaces and making keywords lowercase
                         //if .checkTitleCode(line) into var converted 
                         var converted=undefined;
-                        if (_anyToBool((converted=METHOD(checkTitleCode_,this)(this,1,(any_arr){line
-                        }))))  {
+                        if (_anyToBool((converted=METHOD(checkTitleCode_,this)(this,1,(any_arr){
+        line
+}))))  {
                             //line = converted 
                             line = converted;
                             //indent = line.countSpaces() //re-calc indent
@@ -424,9 +445,11 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                 //if inCodeBlock
                 if (_anyToBool(inCodeBlock))  {
                     //if line.startsWith("#") or line.startsWith("//") # CODE by indent, but all commented
-                    if (_anyToBool((_anyToBool(__or1=METHOD(startsWith_,line)(line,1,(any_arr){any_LTR("#")
-                    }))? __or1 : METHOD(startsWith_,line)(line,1,(any_arr){any_LTR("//")
-                    }))))  {// # CODE by indent, but all commented
+                    if (_anyToBool((_anyToBool(__or1=METHOD(startsWith_,line)(line,1,(any_arr){
+        any_LTR("#")
+}))? __or1 : METHOD(startsWith_,line)(line,1,(any_arr){
+        any_LTR("//")
+}))))  {// # CODE by indent, but all commented
                       //type = LineTypes.COMMENT
                       type = Parser_LineTypes_COMMENT;
                     }
@@ -451,45 +474,55 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 //Example result: var a = 'first line\nsecond line\nThird line\n'
             //#saver reference to source line (for multiline)
             //var sourceLineNum = .sourceLineNum
-            var sourceLineNum = PROP(sourceLineNum_,this);
+            var 
+        sourceLineNum = PROP(sourceLineNum_,this)
+;
             //if type is LineTypes.CODE 
             if (__is(type,Parser_LineTypes_CODE))  {
                 //line = .preprocessor(.parseTripleQuotes( line ))
-                line = METHOD(preprocessor_,this)(this,1,(any_arr){METHOD(parseTripleQuotes_,this)(this,1,(any_arr){line
-                })
-                });
+                line = METHOD(preprocessor_,this)(this,1,(any_arr){
+        METHOD(parseTripleQuotes_,this)(this,1,(any_arr){
+        line
+})
+});
             };
 //check for multi-line comment, C and js style /* .... */ 
 //then check for "#ifdef/#else/#endif"
             //if .checkMultilineComment(infoLines, type, indent, line )
-            if (_anyToBool(METHOD(checkMultilineComment_,this)(this,4,(any_arr){infoLines
-, type
-, indent
-, line
-            })))  {
+            if (_anyToBool(METHOD(checkMultilineComment_,this)(this,4,(any_arr){
+        infoLines, 
+        type, 
+        indent, 
+        line
+})))  {
                 //continue #found and pushed multiline comment, continue with next line
                 continue;// #found and pushed multiline comment, continue with next line
             }
             //else if .checkConditionalCompilation(line)
             
-            else if (_anyToBool(METHOD(checkConditionalCompilation_,this)(this,1,(any_arr){line
-            })))  {
+            else if (_anyToBool(METHOD(checkConditionalCompilation_,this)(this,1,(any_arr){
+        line
+})))  {
                 //continue #processed, continue with next line
                 continue;// #processed, continue with next line
             };
 //Create infoLine, with computed indent, text, and source code line num reference 
             //var infoLine = new InfoLine(this, type, indent, line, sourceLineNum )
-            var infoLine = new(Parser_InfoLine,5,(any_arr){this
-, type
-, indent
-, line
-, sourceLineNum
-            });
+            var 
+        infoLine = new(Parser_InfoLine,5,(any_arr){
+        this, 
+        type, 
+        indent, 
+        line, 
+        sourceLineNum
+})
+;
             //infoLine.dump() # debug
             METHOD(dump_,infoLine)(infoLine,0,NULL);// # debug
             //infoLines.push infoLine 
-            METHOD(push_,infoLines)(infoLines,1,(any_arr){infoLine
-            });
+            METHOD(push_,infoLines)(infoLines,1,(any_arr){
+        infoLine
+});
             //lastLineWasBlank = type is LineTypes.BLANK
             lastLineWasBlank = any_number(__is(type,Parser_LineTypes_BLANK));
         };// end loop
@@ -518,19 +551,30 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 //check for title-keywords: e.g.: `### Class MyClass`, `### export Function compile(sourceLines:string array)`
         ////var titleKeyRegexp = /^(#)+ *(?:(?:public|export|default|helper)\s*)*(class|namespace|append to|function|method|constructor|properties)\b/i
         //var words = line.split(" ")
-        var words = METHOD(split_,line)(line,1,(any_arr){any_LTR(" ")
-        });
+        var 
+        words = METHOD(split_,line)(line,1,(any_arr){
+        any_LTR(" ")
+})
+;
         //if words[0].length<3, return // should be at least indent 4: '### '
         if (_length(ITEM(0,words)) < 3) {return undefined;};
         //// return if first word is not all #'s
         //if words[0].replaceAll("#"," ").trim(), return 
-        if (_anyToBool(__call(trim_,__call(replaceAll_,ITEM(0,words),2,(any_arr){any_LTR("#")
-, any_LTR(" ")
-        }),0,NULL))) {return undefined;};
+        if (_anyToBool(__call(trim_,__call(replaceAll_,ITEM(0,words),2,(any_arr){
+        any_LTR("#"), 
+        any_LTR(" ")
+}),0,NULL))) {return undefined;};
         //var sustantives = ["class","namespace","function","method","constructor","properties"];
-        var sustantives = new(Array,6,(any_arr){any_LTR("class"), any_LTR("namespace"), any_LTR("function"), any_LTR("method"), any_LTR("constructor"), any_LTR("properties")});
+        var 
+        sustantives = new(Array,6,(any_arr){any_LTR("class"), any_LTR("namespace"), any_LTR("function"), any_LTR("method"), any_LTR("constructor"), any_LTR("properties")})
+;
         //var inx=1, countAdj=0, countSust=0, sustLeft=1
-        var inx = any_number(1), countAdj = any_number(0), countSust = any_number(0), sustLeft = any_number(1);
+        var 
+        inx = any_number(1), 
+        countAdj = any_number(0), 
+        countSust = any_number(0), 
+        sustLeft = any_number(1)
+;
         //while inx<words.length
         while(_anyToNumber(inx) < _length(words)){
             //if words[inx] //skip empty items
@@ -569,18 +613,22 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
             
                 //if w.indexOf('(') into var posParen <> -1
                 var posParen=undefined;
-                if (_anyToNumber((posParen=METHOD(indexOf_,w)(w,1,(any_arr){any_LTR("(")
-                }))) != -1)  {
+                if (_anyToNumber((posParen=METHOD(indexOf_,w)(w,1,(any_arr){
+        any_LTR("(")
+}))) != -1)  {
                     ////split at "(". remove composed and insert splitted at "("
                     //words.splice inx,1, w.slice(0,posParen), w.slice(posParen)
-                    METHOD(splice_,words)(words,4,(any_arr){inx
-, any_number(1)
-, METHOD(slice_,w)(w,2,(any_arr){any_number(0)
-, posParen
-                    })
-, METHOD(slice_,w)(w,1,(any_arr){posParen
-                    })
-                    });
+                    METHOD(splice_,words)(words,4,(any_arr){
+        inx, 
+        any_number(1), 
+        METHOD(slice_,w)(w,2,(any_arr){
+        any_number(0), 
+        posParen
+}), 
+        METHOD(slice_,w)(w,1,(any_arr){
+        posParen
+})
+});
                     //w = words[inx]
                     w = ITEM(_anyToNumber(inx),words);
                 };
@@ -603,15 +651,18 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
             inx.value.number++; //next
         };// end loop
         //if countAdj>1 and no countSust, .throwErr "MarkDown Title-keyword, expected a sustantive: #{sustantives.join()}"
-        if (_anyToNumber(countAdj) > 1 && !_anyToBool(countSust)) {METHOD(throwErr_,this)(this,1,(any_arr){_concatAny(2,any_LTR("MarkDown Title-keyword, expected a sustantive: ")
-, (METHOD(join_,sustantives)(sustantives,0,NULL))
-        )
-        });};
+        if (_anyToNumber(countAdj) > 1 && !_anyToBool(countSust)) {METHOD(throwErr_,this)(this,1,(any_arr){
+        _concatAny(2,
+        any_LTR("MarkDown Title-keyword, expected a sustantive: "), 
+        (METHOD(join_,sustantives)(sustantives,0,NULL))
+)
+});};
         //if countSust
         if (_anyToBool(countSust))  {
             //if words[0].length<3, .throwErr "MarkDown Title-keyword, expected at least indent 4: '### '"
-            if (_length(ITEM(0,words)) < 3) {METHOD(throwErr_,this)(this,1,(any_arr){any_LTR("MarkDown Title-keyword, expected at least indent 4: '### '")
-            });};
+            if (_length(ITEM(0,words)) < 3) {METHOD(throwErr_,this)(this,1,(any_arr){
+        any_LTR("MarkDown Title-keyword, expected at least indent 4: '### '")
+});};
             //for recogn=1 to inx //each recognized word, convert to lowercase
             int64_t _end4=_anyToNumber(inx);
             for(int64_t recogn=1; recogn<=_end4; recogn++){
@@ -619,12 +670,14 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                 ITEM(recogn,words) = __call(toLowerCase_,ITEM(recogn,words),0,NULL);
             };// end for recogn
             //words[0] = words[0].replaceAll("#"," ") //replace # by ' '
-            ITEM(0,words) = __call(replaceAll_,ITEM(0,words),2,(any_arr){any_LTR("#")
-, any_LTR(" ")
-            }); //replace # by ' '
+            ITEM(0,words) = __call(replaceAll_,ITEM(0,words),2,(any_arr){
+        any_LTR("#"), 
+        any_LTR(" ")
+}); //replace # by ' '
             //return words.join(' ') // re-join
-            return METHOD(join_,words)(words,1,(any_arr){any_LTR(" ")
-            }); // re-join
+            return METHOD(join_,words)(words,1,(any_arr){
+        any_LTR(" ")
+}); // re-join
         };
      return undefined;
      }
@@ -635,8 +688,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 //*Tokenize CODE lines
 //Now, after processing all lines, we tokenize each CODE line
         //logger.debug "---- TOKENIZE"
-        logger_debug(undefined,1,(any_arr){any_LTR("---- TOKENIZE")
-        });
+        logger_debug(undefined,1,(any_arr){
+        any_LTR("---- TOKENIZE")
+});
         //for each item in .infoLines
         any _list13=PROP(infoLines_,this);
         { var item=undefined;
@@ -650,8 +704,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                 //if item.type is LineTypes.CODE
                 if (__is(PROP(type_,item),Parser_LineTypes_CODE))  {
                     //item.tokenizeLine(this)
-                    METHOD(tokenizeLine_,item)(item,1,(any_arr){this
-                });
+                    METHOD(tokenizeLine_,item)(item,1,(any_arr){
+        this
+});
                 };
                 //end if
                 
@@ -660,13 +715,15 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
             //catch err
                 ////adds position info
                 //throw new ControlledError("#{.filename}:#{item.sourceLineNum}:1 #{err.message}")
-                throw(new(ControlledError,1,(any_arr){_concatAny(5,PROP(filename_,this)
-, any_LTR(":")
-, PROP(sourceLineNum_,item)
-, any_LTR(":1 ")
-, PROP(message_,err)
-                )
-                }));
+                throw(new(ControlledError,1,(any_arr){
+        _concatAny(5,
+        PROP(filename_,this), 
+        any_LTR(":"), 
+        PROP(sourceLineNum_,item), 
+        any_LTR(":1 "), 
+        PROP(message_,err)
+)
+}));
             };
         }};// end for each in
         //end loop code lines
@@ -709,12 +766,14 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
             value= __nvp->value;
         
             //line=line.replaceAll("__#{macro}__",value)
-            line = METHOD(replaceAll_,line)(line,2,(any_arr){_concatAny(3,any_LTR("__")
-, macro
-, any_LTR("__")
-            )
-, value
-            });
+            line = METHOD(replaceAll_,line)(line,2,(any_arr){
+        _concatAny(3,
+        any_LTR("__"), 
+        macro, 
+        any_LTR("__")
+), 
+        value
+});
         }};// end for each in map
         //return line
         return line;
@@ -747,11 +806,13 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         };
 //get source line, replace TAB with 4 spaces, remove trailing withespace and remove CR
         //.line = .lines[.sourceLineNum].replaceAll("\t",'    ').trimRight().replaceAll("\r","")
-        PROP(line_,this) = __call(replaceAll_,__call(trimRight_,__call(replaceAll_,ITEM(_anyToNumber(PROP(sourceLineNum_,this)),PROP(lines_,this)),2,(any_arr){any_LTR("\t")
-, any_LTR("    ")
-        }),0,NULL),2,(any_arr){any_LTR("\r")
-, any_EMPTY_STR
-        });
+        PROP(line_,this) = __call(replaceAll_,__call(trimRight_,__call(replaceAll_,ITEM(_anyToNumber(PROP(sourceLineNum_,this)),PROP(lines_,this)),2,(any_arr){
+        any_LTR("\t"), 
+        any_LTR("    ")
+}),0,NULL),2,(any_arr){
+        any_LTR("\r"), 
+        any_EMPTY_STR
+});
         //.sourceLineNum++ # note: source files line numbers are 1-based
         PROP(sourceLineNum_,this).value.number++;// # note: source files line numbers are 1-based
         //return true
@@ -797,11 +858,14 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 //*/
 //Get section between """ and """
         //var result = new MultilineSection(this,line, '"""', '"""')
-        var result = new(Parser_MultilineSection,4,(any_arr){this
-, line
-, any_LTR("\"\"\"")
-, any_LTR("\"\"\"")
-        });
+        var 
+        result = new(Parser_MultilineSection,4,(any_arr){
+        this, 
+        line, 
+        any_LTR("\"\"\""), 
+        any_LTR("\"\"\"")
+})
+;
         //if result.section
         if (_anyToBool(PROP(section_,result)))  {
           //#discard first and last lines, if empty
@@ -817,14 +881,18 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
           };
           //#search min indent
           //var indent = 999
-          var indent = any_number(999);
+          var 
+        indent = any_number(999)
+;
           //for each sectionLine1 in result.section
           any _list15=PROP(section_,result);
           { var sectionLine1=undefined;
           for(int sectionLine1__inx=0 ; sectionLine1__inx<_list15.value.arr->length ; sectionLine1__inx++){sectionLine1=ITEM(sectionLine1__inx,_list15);
           
             //var lineIndent=sectionLine1.countSpaces()
-            var lineIndent = METHOD(countSpaces_,sectionLine1)(sectionLine1,0,NULL);
+            var 
+        lineIndent = METHOD(countSpaces_,sectionLine1)(sectionLine1,0,NULL)
+;
             //if lineIndent>=0 and lineIndent<indent
             if (_anyToNumber(lineIndent) >= 0 && _anyToNumber(lineIndent) < _anyToNumber(indent))  {
                 //indent = lineIndent
@@ -838,59 +906,86 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
           for(int inx=0 ; inx<_list16.value.arr->length ; inx++){sectionLine=ITEM(inx,_list16);
           
             //result.section[inx] = sectionLine.slice(indent).trimRight()
-            ITEM(inx,PROP(section_,result)) = __call(trimRight_,METHOD(slice_,sectionLine)(sectionLine,1,(any_arr){indent
-            }),0,NULL);
+            ITEM(inx,PROP(section_,result)) = __call(trimRight_,METHOD(slice_,sectionLine)(sectionLine,1,(any_arr){
+        indent
+}),0,NULL);
           }};// end for each in
           //#join with (encoded) newline char and enclose in quotes (for splitExpressions)
           //line = result.section.join("\\n").quoted('"') 
-          line = __call(quoted_,__call(join_,PROP(section_,result),1,(any_arr){any_LTR("\\n")
-          }),1,(any_arr){any_LTR("\"")
-          });
+          line = __call(quoted_,__call(join_,PROP(section_,result),1,(any_arr){
+        any_LTR("\\n")
+}),1,(any_arr){
+        any_LTR("\"")
+});
 //Now we should escape internal d-quotes, but only *outside* string interpolation expressions
           //var parsed = .splitExpressions(line,.stringInterpolationChar)
-          var parsed = METHOD(splitExpressions_,this)(this,2,(any_arr){line
-, PROP(stringInterpolationChar_,this)
-          });
+          var 
+        parsed = METHOD(splitExpressions_,this)(this,2,(any_arr){
+        line, 
+        PROP(stringInterpolationChar_,this)
+})
+;
           //for each inx,item:string in parsed
           any _list17=parsed;
           { var item=undefined;
           for(int inx=0 ; inx<_list17.value.arr->length ; inx++){item=ITEM(inx,_list17);
           
               //if item.charAt(0) is '"' //a string part
-              if (__is(METHOD(charAt_,item)(item,1,(any_arr){any_number(0)
-              }),any_LTR("\"")))  { //a string part
+              if (__is(METHOD(charAt_,item)(item,1,(any_arr){
+        any_number(0)
+}),any_LTR("\"")))  { //a string part
                   //item = item.slice(1,-1) //remove quotes
-                  item = METHOD(slice_,item)(item,2,(any_arr){any_number(1)
-, any_number(-1)
-                  }); //remove quotes
-                  //parsed[inx] = item.replaceAll('"','\\"') #store with *escaped* internal d-quotes
-                  ITEM(inx,parsed) = METHOD(replaceAll_,item)(item,2,(any_arr){any_LTR("\"")
-, any_LTR("\\\"")
-                  });// #store with *escaped* internal d-quotes
-              }
-              //else
-              
-              else {
-                  //#restore string interp. codes
-                  //parsed[inx] = "#{.stringInterpolationChar}{#{item}}"
-                  ITEM(inx,parsed) = _concatAny(4,PROP(stringInterpolationChar_,this)
-, any_LTR("{")
-, item
-, any_LTR("}")
-                  );
+                  item = METHOD(slice_,item)(item,2,(any_arr){
+        any_number(1), 
+        any_number(-1)
+}); //remove quotes
+                  //item = item.replaceAll('"','\\"') #store with *escaped* internal d-quotes
+                  item = METHOD(replaceAll_,item)(item,2,(any_arr){
+        any_LTR("\""), 
+        any_LTR("\\\"")
+});// #store with *escaped* internal d-quotes
+                  //parsed[inx] = '"#{item}"' #restore enclosing quotes
+                  ITEM(inx,parsed) = _concatAny(3,
+        any_LTR("\""), 
+        item, 
+        any_LTR("\"")
+);// #restore enclosing quotes
               };
           }};// end for each in
-          //#re-join & re.enclose in quotes
-          //line = parsed.join("").quoted('"') 
-          line = __call(quoted_,METHOD(join_,parsed)(parsed,1,(any_arr){any_EMPTY_STR
-          }),1,(any_arr){any_LTR("\"")
-          });
-          //line = "#{result.pre} #{line}#{result.post}" #add pre & post
-          line = _concatAny(4,PROP(pre_,result)
-, any_LTR(" ")
-, line
-, PROP(post_,result)
-          );// #add pre & post
+      ////ifdef PROD_C  // compile-to-c
+          
+          ////// code a call to "concat" to handle string interpolation
+          ////line = "any_concat(#{parsed.join(',')})"
+      ////else //  compile-to-js
+          ////if the first expression isnt a quoted string constant
+          //// we add `"" + ` so: we get string concatenation from javascript.
+          //// Also: if the first expression starts with `(`, LiteScript can 
+          //// mis-parse the expression as a "function call"
+          //if parsed.length and parsed[0].charAt(0) isnt '"' 
+          if (_length(parsed) && !__is(__call(charAt_,ITEM(0,parsed),1,(any_arr){
+        any_number(0)
+}),any_LTR("\"")))  {
+              //parsed.unshift "''" // prepend ''
+              METHOD(unshift_,parsed)(parsed,1,(any_arr){
+        any_LTR("''")
+}); // prepend ''
+          };
+          //// code a call to js string concat (+) to handle string interpolation
+          //line = parsed.join(' + ')
+          line = METHOD(join_,parsed)(parsed,1,(any_arr){
+        any_LTR(" + ")
+});
+          //// add pre & post
+      ////endif
+          
+          //// add pre & post
+          //line = "#{result.pre} #{line}#{result.post}" 
+          line = _concatAny(4,
+        PROP(pre_,result), 
+        any_LTR(" "), 
+        line, 
+        PROP(post_,result)
+);
         };
         //return line
         return line;
@@ -914,13 +1009,18 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //---------
 //This method handles multiline comments: `/*` `*/` 
         //var startSourceLine = .sourceLineNum
-        var startSourceLine = PROP(sourceLineNum_,this);
+        var 
+        startSourceLine = PROP(sourceLineNum_,this)
+;
         //var result = new MultilineSection(this, line, '/*', '*/')
-        var result = new(Parser_MultilineSection,4,(any_arr){this
-, line
-, any_LTR("/*")
-, any_LTR("*/")
-        });
+        var 
+        result = new(Parser_MultilineSection,4,(any_arr){
+        this, 
+        line, 
+        any_LTR("/*"), 
+        any_LTR("*/")
+})
+;
         //if no result.section
         if (!_anyToBool(PROP(section_,result)))  {
           //return false
@@ -929,20 +1029,23 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //if result.section.length is 1 # just one line
         if (__is(any_number(_length(PROP(section_,result))),any_number(1)))  {// # just one line
           //line = "#{result.pre} #{result.post}//#{result.section[0]}"
-          line = _concatAny(5,PROP(pre_,result)
-, any_LTR(" ")
-, PROP(post_,result)
-, any_LTR("//")
-, (ITEM(0,PROP(section_,result)))
-          );
+          line = _concatAny(5,
+        PROP(pre_,result), 
+        any_LTR(" "), 
+        PROP(post_,result), 
+        any_LTR("//"), 
+        (ITEM(0,PROP(section_,result)))
+);
           //infoLines.push(new InfoLine(this, lineType, startLineIndent, line, startSourceLine))  
-          METHOD(push_,infoLines)(infoLines,1,(any_arr){new(Parser_InfoLine,5,(any_arr){this
-, lineType
-, startLineIndent
-, line
-, startSourceLine
-          })
-        });
+          METHOD(push_,infoLines)(infoLines,1,(any_arr){
+        new(Parser_InfoLine,5,(any_arr){
+        this, 
+        lineType, 
+        startLineIndent, 
+        line, 
+        startSourceLine
+})
+});
         }
         //else 
         
@@ -950,13 +1053,15 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
           //if result.pre
           if (_anyToBool(PROP(pre_,result)))  {
               //infoLines.push(new InfoLine(this, lineType, startLineIndent, result.pre, startSourceLine))  
-              METHOD(push_,infoLines)(infoLines,1,(any_arr){new(Parser_InfoLine,5,(any_arr){this
-, lineType
-, startLineIndent
-, PROP(pre_,result)
-, startSourceLine
-              })
-          });
+              METHOD(push_,infoLines)(infoLines,1,(any_arr){
+        new(Parser_InfoLine,5,(any_arr){
+        this, 
+        lineType, 
+        startLineIndent, 
+        PROP(pre_,result), 
+        startSourceLine
+})
+});
           };
           //for each inx,sectionLine in result.section
           any _list18=PROP(section_,result);
@@ -964,31 +1069,37 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
           for(int inx=0 ; inx<_list18.value.arr->length ; inx++){sectionLine=ITEM(inx,_list18);
           
               //infoLines.push(new InfoLine(this, LineTypes.COMMENT, 0, sectionLine, startSourceLine+inx))  
-              METHOD(push_,infoLines)(infoLines,1,(any_arr){new(Parser_InfoLine,5,(any_arr){this
-, Parser_LineTypes_COMMENT
-, any_number(0)
-, sectionLine
-, any_number(_anyToNumber(startSourceLine) + inx)
-              })
-          });
+              METHOD(push_,infoLines)(infoLines,1,(any_arr){
+        new(Parser_InfoLine,5,(any_arr){
+        this, 
+        Parser_LineTypes_COMMENT, 
+        any_number(0), 
+        sectionLine, 
+        any_number(_anyToNumber(startSourceLine) + inx)
+})
+});
           }};// end for each in
           //if result.post.trim() 
           if (_anyToBool(__call(trim_,PROP(post_,result),0,NULL)))  {
               //logger.warning "#{.filename}:#{.sourceLineNum}:1. Do not add text on the same line after `*/`. Indent is not clear"
-              logger_warning(undefined,1,(any_arr){_concatAny(4,PROP(filename_,this)
-, any_LTR(":")
-, PROP(sourceLineNum_,this)
-, any_LTR(":1. Do not add text on the same line after `*/`. Indent is not clear")
-              )
-              });
+              logger_warning(undefined,1,(any_arr){
+        _concatAny(4,
+        PROP(filename_,this), 
+        any_LTR(":"), 
+        PROP(sourceLineNum_,this), 
+        any_LTR(":1. Do not add text on the same line after `*/`. Indent is not clear")
+)
+});
               //infoLines.push(new InfoLine(this, LineTypes.CODE, result.postIndent, result.post, .sourceLineNum))  
-              METHOD(push_,infoLines)(infoLines,1,(any_arr){new(Parser_InfoLine,5,(any_arr){this
-, Parser_LineTypes_CODE
-, PROP(postIndent_,result)
-, PROP(post_,result)
-, PROP(sourceLineNum_,this)
-              })
-        });
+              METHOD(push_,infoLines)(infoLines,1,(any_arr){
+        new(Parser_InfoLine,5,(any_arr){
+        this, 
+        Parser_LineTypes_CODE, 
+        PROP(postIndent_,result), 
+        PROP(post_,result), 
+        PROP(sourceLineNum_,this)
+})
+});
           };
         };
         //return true #OK, lines processed
@@ -1005,97 +1116,139 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //---------
 //This method handles "#ifdef/#else/#endif" as multiline comments
         //var startSourceLine = .sourceLineNum
-        var startSourceLine = PROP(sourceLineNum_,this);
+        var 
+        startSourceLine = PROP(sourceLineNum_,this)
+;
         //var words: string array
-        var words = undefined;
+        var 
+        words = undefined
+;
         //var isDefine = line.indexOf("#define ")
-        var isDefine = METHOD(indexOf_,line)(line,1,(any_arr){any_LTR("#define ")
-        });
+        var 
+        isDefine = METHOD(indexOf_,line)(line,1,(any_arr){
+        any_LTR("#define ")
+})
+;
         //if isDefine>=0
         if (_anyToNumber(isDefine) >= 0)  {
             //words = line.trim().split(' ')
-            words = __call(split_,METHOD(trim_,line)(line,0,NULL),1,(any_arr){any_LTR(" ")
-            });
+            words = __call(split_,METHOD(trim_,line)(line,0,NULL),1,(any_arr){
+        any_LTR(" ")
+});
             //.project.setCompilerVar words[1],true
-            __call(setCompilerVar_,PROP(project_,this),2,(any_arr){ITEM(1,words)
-, true
-            });
+            __call(setCompilerVar_,PROP(project_,this),2,(any_arr){
+        ITEM(1,words), 
+        true
+});
             //return false
             return false;
         };
         //var isUndef = line.indexOf("#undef ")
-        var isUndef = METHOD(indexOf_,line)(line,1,(any_arr){any_LTR("#undef ")
-        });
+        var 
+        isUndef = METHOD(indexOf_,line)(line,1,(any_arr){
+        any_LTR("#undef ")
+})
+;
         //if isUndef>=0
         if (_anyToNumber(isUndef) >= 0)  {
             //words = line.trim().split(' ')
-            words = __call(split_,METHOD(trim_,line)(line,0,NULL),1,(any_arr){any_LTR(" ")
-            });
+            words = __call(split_,METHOD(trim_,line)(line,0,NULL),1,(any_arr){
+        any_LTR(" ")
+});
             //.project.setCompilerVar words[1],false
-            __call(setCompilerVar_,PROP(project_,this),2,(any_arr){ITEM(1,words)
-, false
-            });
+            __call(setCompilerVar_,PROP(project_,this),2,(any_arr){
+        ITEM(1,words), 
+        false
+});
             //return false
             return false;
         };
 //ifdef, #ifndef, #else and #endif should be the first thing on the line
         //if line.indexOf("#endif") is 0, .throwErr 'found "#endif" without "#ifdef"'
-        if (__is(METHOD(indexOf_,line)(line,1,(any_arr){any_LTR("#endif")
-        }),any_number(0))) {METHOD(throwErr_,this)(this,1,(any_arr){any_LTR("found \"#endif\" without \"#ifdef\"")
-        });};
+        if (__is(METHOD(indexOf_,line)(line,1,(any_arr){
+        any_LTR("#endif")
+}),any_number(0))) {METHOD(throwErr_,this)(this,1,(any_arr){
+        any_LTR("found \"#endif\" without \"#ifdef\"")
+});};
         //if line.indexOf("#else") is 0, .throwErr 'found "#else" without "#ifdef"'
-        if (__is(METHOD(indexOf_,line)(line,1,(any_arr){any_LTR("#else")
-        }),any_number(0))) {METHOD(throwErr_,this)(this,1,(any_arr){any_LTR("found \"#else\" without \"#ifdef\"")
-        });};
+        if (__is(METHOD(indexOf_,line)(line,1,(any_arr){
+        any_LTR("#else")
+}),any_number(0))) {METHOD(throwErr_,this)(this,1,(any_arr){
+        any_LTR("found \"#else\" without \"#ifdef\"")
+});};
         //var invert = false
-        var invert = false;
+        var 
+        invert = false
+;
         //var pos = line.indexOf("#ifdef ")
-        var pos = METHOD(indexOf_,line)(line,1,(any_arr){any_LTR("#ifdef ")
-        });
+        var 
+        pos = METHOD(indexOf_,line)(line,1,(any_arr){
+        any_LTR("#ifdef ")
+})
+;
         //if pos isnt 0 
         if (!__is(pos,any_number(0)))  {
             //pos = line.indexOf("#ifndef ")
-            pos = METHOD(indexOf_,line)(line,1,(any_arr){any_LTR("#ifndef ")
-            });
+            pos = METHOD(indexOf_,line)(line,1,(any_arr){
+        any_LTR("#ifndef ")
+});
             //invert = true
             invert = true;
         };
         //if pos isnt 0, return 
         if (!__is(pos,any_number(0))) {return undefined;};
         //var startRef = "while processing #ifdef started on line #{startSourceLine}"
-        var startRef = _concatAny(2,any_LTR("while processing #ifdef started on line ")
-, startSourceLine
-        );
+        var 
+        startRef = _concatAny(2,
+        any_LTR("while processing #ifdef started on line "), 
+        startSourceLine
+)
+;
         //words = line.slice(pos).split(' ')
-        words = __call(split_,METHOD(slice_,line)(line,1,(any_arr){pos
-        }),1,(any_arr){any_LTR(" ")
-        });
+        words = __call(split_,METHOD(slice_,line)(line,1,(any_arr){
+        pos
+}),1,(any_arr){
+        any_LTR(" ")
+});
         //var conditional = words.tryGet(1)
-        var conditional = METHOD(tryGet_,words)(words,1,(any_arr){any_number(1)
-        });
+        var 
+        conditional = METHOD(tryGet_,words)(words,1,(any_arr){
+        any_number(1)
+})
+;
         //if no conditional, .throwErr "#ifdef; missing conditional"
-        if (!_anyToBool(conditional)) {METHOD(throwErr_,this)(this,1,(any_arr){any_LTR("#ifdef; missing conditional")
-        });};
+        if (!_anyToBool(conditional)) {METHOD(throwErr_,this)(this,1,(any_arr){
+        any_LTR("#ifdef; missing conditional")
+});};
         //var defValue = .project.compilerVar(conditional)
-        var defValue = __call(compilerVar_,PROP(project_,this),1,(any_arr){conditional
-        });
+        var 
+        defValue = __call(compilerVar_,PROP(project_,this),1,(any_arr){
+        conditional
+})
+;
         //if invert, defValue = not defValue //if it was "#ifndef"
         if (_anyToBool(invert)) {defValue = any_number(!(_anyToBool(defValue)));};
         //.replaceSourceLine .line.replaceAll("#if","//if")
-        METHOD(replaceSourceLine_,this)(this,1,(any_arr){__call(replaceAll_,PROP(line_,this),2,(any_arr){any_LTR("#if")
-, any_LTR("//if")
-        })
-        });
+        METHOD(replaceSourceLine_,this)(this,1,(any_arr){
+        __call(replaceAll_,PROP(line_,this),2,(any_arr){
+        any_LTR("#if"), 
+        any_LTR("//if")
+})
+});
         //var endFound=false
-        var endFound = false;
+        var 
+        endFound = false
+;
         //do
         do{
             //#get next line
             //if no .nextSourceLine(),.throwErr "EOF #{startRef}"
-            if (!_anyToBool(METHOD(nextSourceLine_,this)(this,0,NULL))) {METHOD(throwErr_,this)(this,1,(any_arr){_concatAny(2,any_LTR("EOF ")
-, startRef
-            )
-            });};
+            if (!_anyToBool(METHOD(nextSourceLine_,this)(this,0,NULL))) {METHOD(throwErr_,this)(this,1,(any_arr){
+        _concatAny(2,
+        any_LTR("EOF "), 
+        startRef
+)
+});};
             //line = .line
             line = PROP(line_,this);
             
@@ -1105,44 +1258,55 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                 //line = line.trim()
                 line = METHOD(trim_,line)(line,0,NULL);
                 //if line.charAt(0) is '#' and line.charAt(1) isnt '#' //expected: "#else, #endif #end if"
-                if (__is(METHOD(charAt_,line)(line,1,(any_arr){any_number(0)
-                }),any_LTR("#")) && !__is(METHOD(charAt_,line)(line,1,(any_arr){any_number(1)
-                }),any_LTR("#")))  { //expected: "#else, #endif #end if"
+                if (__is(METHOD(charAt_,line)(line,1,(any_arr){
+        any_number(0)
+}),any_LTR("#")) && !__is(METHOD(charAt_,line)(line,1,(any_arr){
+        any_number(1)
+}),any_LTR("#")))  { //expected: "#else, #endif #end if"
                     //words = line.split(' ')
-                    words = METHOD(split_,line)(line,1,(any_arr){any_LTR(" ")
-                    });
+                    words = METHOD(split_,line)(line,1,(any_arr){
+        any_LTR(" ")
+});
                     //case words.tryGet(0)
                     
-                        //when '#else'
-                    if (__is(METHOD(tryGet_,words)(words,1,(any_arr){any_number(0)
-                    }),any_LTR("#else"))){
+                        //when '#else':
+                    if (__is(METHOD(tryGet_,words)(words,1,(any_arr){
+        any_number(0)
+}),any_LTR("#else"))){
                             //.replaceSourceLine .line.replaceAll("#else","//else")
-                            METHOD(replaceSourceLine_,this)(this,1,(any_arr){__call(replaceAll_,PROP(line_,this),2,(any_arr){any_LTR("#else")
-, any_LTR("//else")
-                            })
-                            });
+                            METHOD(replaceSourceLine_,this)(this,1,(any_arr){
+        __call(replaceAll_,PROP(line_,this),2,(any_arr){
+        any_LTR("#else"), 
+        any_LTR("//else")
+})
+});
                             //defValue = not defValue
                             defValue = any_number(!(_anyToBool(defValue)));
                     
                     }
-                        //when "#end"
-                    else if (__is(METHOD(tryGet_,words)(words,1,(any_arr){any_number(0)
-                    }),any_LTR("#end"))){
+                        //when "#end":
+                    else if (__is(METHOD(tryGet_,words)(words,1,(any_arr){
+        any_number(0)
+}),any_LTR("#end"))){
                             //if words.tryGet(1) isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
-                            if (!__is(METHOD(tryGet_,words)(words,1,(any_arr){any_number(1)
-                            }),any_LTR("if"))) {METHOD(throwErr_,this)(this,1,(any_arr){_concatAny(4,any_LTR("expected '#end if', read '")
-, line
-, any_LTR("' ")
-, startRef
-                            )
-                            });};
+                            if (!__is(METHOD(tryGet_,words)(words,1,(any_arr){
+        any_number(1)
+}),any_LTR("if"))) {METHOD(throwErr_,this)(this,1,(any_arr){
+        _concatAny(4,
+        any_LTR("expected '#end if', read '"), 
+        line, 
+        any_LTR("' "), 
+        startRef
+)
+});};
                             //endFound = true
                             endFound = true;
                     
                     }
-                        //when "#endif"
-                    else if (__is(METHOD(tryGet_,words)(words,1,(any_arr){any_number(0)
-                    }),any_LTR("#endif"))){
+                        //when "#endif":
+                    else if (__is(METHOD(tryGet_,words)(words,1,(any_arr){
+        any_number(0)
+}),any_LTR("#endif"))){
                             //endFound = true
                             endFound = true;
                     
@@ -1150,12 +1314,14 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                     else {
                         //else
                             //.throwErr "expected '#else/#end if', read '#{line}' #{startRef}"
-                            METHOD(throwErr_,this)(this,1,(any_arr){_concatAny(4,any_LTR("expected '#else/#end if', read '")
-, line
-, any_LTR("' ")
-, startRef
-                            )
-                            });
+                            METHOD(throwErr_,this)(this,1,(any_arr){
+        _concatAny(4,
+        any_LTR("expected '#else/#end if', read '"), 
+        line, 
+        any_LTR("' "), 
+        startRef
+)
+});
                     };
                     //end case
                     
@@ -1166,12 +1332,15 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                     //// comment line if .compilerVar not defined (or processing #else)
                     ////and this is not a blank line
                     //if not defValue and line, .replaceSourceLine "#{String.spaces(indent)}//#{line}"
-                    if (!(_anyToBool(defValue)) && _anyToBool(line)) {METHOD(replaceSourceLine_,this)(this,1,(any_arr){_concatAny(3,(String_spaces(undefined,1,(any_arr){indent
-                    }))
-, any_LTR("//")
-, line
-                    )
-                    });};
+                    if (!(_anyToBool(defValue)) && _anyToBool(line)) {METHOD(replaceSourceLine_,this)(this,1,(any_arr){
+        _concatAny(3,
+        (String_spaces(undefined,1,(any_arr){
+        indent
+})), 
+        any_LTR("//"), 
+        line
+)
+});};
                 };
                 //end if
                 
@@ -1181,10 +1350,12 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         } while (!_anyToBool(endFound));// end loop
         //loop until endFound
         //.replaceSourceLine .line.replaceAll("#end","//end")
-        METHOD(replaceSourceLine_,this)(this,1,(any_arr){__call(replaceAll_,PROP(line_,this),2,(any_arr){any_LTR("#end")
-, any_LTR("//end")
-        })
-        });
+        METHOD(replaceSourceLine_,this)(this,1,(any_arr){
+        __call(replaceAll_,PROP(line_,this),2,(any_arr){
+        any_LTR("#end"), 
+        any_LTR("//end")
+})
+});
         //#rewind position after #ifdef, reprocess lines
         //.sourceLineNum = startSourceLine -1 
         PROP(sourceLineNum_,this) = any_number(_anyToNumber(startSourceLine) - 1);
@@ -1201,8 +1372,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //---------
         //#return {lineInx:.lineInx, index:.index, sourceLineNum:.sourceLineNum, token:.token, last:.last}
         //return new LexerPos(this)
-        return new(Parser_LexerPos,1,(any_arr){this
-        });
+        return new(Parser_LexerPos,1,(any_arr){
+        this
+});
      return undefined;
      }
 //----------------------------
@@ -1266,7 +1438,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Parser_Lexer));
         //---------
         //var inx = .lineInx-1
-        var inx = any_number(_anyToNumber(PROP(lineInx_,this)) - 1);
+        var 
+        inx = any_number(_anyToNumber(PROP(lineInx_,this)) - 1)
+;
         //while inx >=0
         while(_anyToNumber(inx) >= 0){
             //if .infoLines[inx].type is LineTypes.CODE
@@ -1308,15 +1482,17 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                     if (!(_anyToBool(METHOD(nextCODELine_,this)(this,0,NULL))))  {
 //if no more CODE lines -> EOF
                         //.infoLine = new InfoLine(this, LineTypes.CODE, -1, '', .lineInx)
-                        PROP(infoLine_,this) = new(Parser_InfoLine,5,(any_arr){this
-, Parser_LineTypes_CODE
-, any_number(-1)
-, any_EMPTY_STR
-, PROP(lineInx_,this)
-                        });
+                        PROP(infoLine_,this) = new(Parser_InfoLine,5,(any_arr){
+        this, 
+        Parser_LineTypes_CODE, 
+        any_number(-1), 
+        any_EMPTY_STR, 
+        PROP(lineInx_,this)
+});
                         //.token = new Token('EOF')
-                        PROP(token_,this) = new(Parser_Token,1,(any_arr){any_LTR("EOF")
-                        });
+                        PROP(token_,this) = new(Parser_Token,1,(any_arr){
+        any_LTR("EOF")
+});
                         //.infoLine.tokens = [.token]
                         PROP(tokens_,PROP(infoLine_,this)) = new(Array,1,(any_arr){PROP(token_,this)});
                         //.indent = -1
@@ -1330,8 +1506,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                     //.indent = .infoLine.indent
                     PROP(indent_,this) = PROP(indent_,PROP(infoLine_,this));
                     //.token = new Token('NEWLINE')
-                    PROP(token_,this) = new(Parser_Token,1,(any_arr){any_LTR("NEWLINE")
-                    });
+                    PROP(token_,this) = new(Parser_Token,1,(any_arr){
+        any_LTR("NEWLINE")
+});
                     //return
                     return undefined;
                 };
@@ -1391,16 +1568,18 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         METHOD(consumeToken_,this)(this,0,NULL);
         //#debug
         //logger.debug ">>>ADVANCE", "#{.sourceLineNum}:#{.token.column or 0} [#{.index}]", .token.toString()
-        logger_debug(undefined,3,(any_arr){any_LTR(">>>ADVANCE")
-, _concatAny(6,PROP(sourceLineNum_,this)
-, any_LTR(":")
-, ((_anyToBool(__or2=PROP(column_,PROP(token_,this)))? __or2 : any_number(0)))
-, any_LTR(" [")
-, PROP(index_,this)
-, any_LTR("]")
-        )
-, __call(toString_,PROP(token_,this),0,NULL)
-        });
+        logger_debug(undefined,3,(any_arr){
+        any_LTR(">>>ADVANCE"), 
+        _concatAny(6,
+        PROP(sourceLineNum_,this), 
+        any_LTR(":"), 
+        ((_anyToBool(__or2=PROP(column_,PROP(token_,this)))? __or2 : any_number(0))), 
+        any_LTR(" ["), 
+        PROP(index_,this), 
+        any_LTR("]")
+), 
+        __call(toString_,PROP(token_,this),0,NULL)
+});
         
         //return true
         return true;
@@ -1413,14 +1592,16 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //---------
         //#restore last saved pos (rewind)
         //.setPos .last
-        METHOD(setPos_,this)(this,1,(any_arr){PROP(last_,this)
-        });
+        METHOD(setPos_,this)(this,1,(any_arr){
+        PROP(last_,this)
+});
         //logger.debug '<< Returned:',.token.toString(),'line',.sourceLineNum 
-        logger_debug(undefined,4,(any_arr){any_LTR("<< Returned:")
-, __call(toString_,PROP(token_,this),0,NULL)
-, any_LTR("line")
-, PROP(sourceLineNum_,this)
-        });
+        logger_debug(undefined,4,(any_arr){
+        any_LTR("<< Returned:"), 
+        __call(toString_,PROP(token_,this),0,NULL), 
+        any_LTR("line"), 
+        PROP(sourceLineNum_,this)
+});
      return undefined;
      }
 //-----------------------------------------------------
@@ -1485,11 +1666,13 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //---------
 //**throwErr** add lexer position and emit error (abort compilation)
         //logger.throwControlled "#{.posToString()} #{msg}"
-        logger_throwControlled(undefined,1,(any_arr){_concatAny(3,(METHOD(posToString_,this)(this,0,NULL))
-, any_LTR(" ")
-, msg
-        )
-        });
+        logger_throwControlled(undefined,1,(any_arr){
+        _concatAny(3,
+        (METHOD(posToString_,this)(this,0,NULL)), 
+        any_LTR(" "), 
+        msg
+)
+});
      return undefined;
      }
 //#### method sayErr(msg)
@@ -1501,9 +1684,10 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //---------
 //**sayErr** add lexer position and emit error (but continue compiling)
         //logger.error .posToString(),msg
-        logger_error(undefined,2,(any_arr){METHOD(posToString_,this)(this,0,NULL)
-, msg
-        });
+        logger_error(undefined,2,(any_arr){
+        METHOD(posToString_,this)(this,0,NULL), 
+        msg
+});
      return undefined;
      }
 //#### method warn(msg)
@@ -1515,9 +1699,10 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //---------
 //**warn** add lexer position and emit warning (continue compiling)
         //logger.warning .posToString(),msg
-        logger_warning(undefined,2,(any_arr){METHOD(posToString_,this)(this,0,NULL)
-, msg
-        });
+        logger_warning(undefined,2,(any_arr){
+        METHOD(posToString_,this)(this,0,NULL), 
+        msg
+});
      return undefined;
      }
 //#### method splitExpressions(text:string) returns array of string
@@ -1529,99 +1714,134 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //---------
 //split on #{expresion} using lexer.stringInterpolationChar
         //var delimiter = .stringInterpolationChar
-        var delimiter = PROP(stringInterpolationChar_,this);
+        var 
+        delimiter = PROP(stringInterpolationChar_,this)
+;
 //look for #{expression} inside a quoted string
 //split expressions
         //if no text then return []
         if (!_anyToBool(text)) {return new(Array,0,NULL);};
         ////get quotes
         //var quotes = text.charAt(0)
-        var quotes = METHOD(charAt_,text)(text,1,(any_arr){any_number(0)
-        });
+        var 
+        quotes = METHOD(charAt_,text)(text,1,(any_arr){
+        any_number(0)
+})
+;
         //if quotes isnt '"' and quotes isnt "'"
         if (!__is(quotes,any_LTR("\"")) && !__is(quotes,any_LTR("'")))  {
             //.throwErr 'splitExpressions: expected text to be a quoted string, quotes included'
-            METHOD(throwErr_,this)(this,1,(any_arr){any_LTR("splitExpressions: expected text to be a quoted string, quotes included")
-            });
+            METHOD(throwErr_,this)(this,1,(any_arr){
+        any_LTR("splitExpressions: expected text to be a quoted string, quotes included")
+});
         };
         //var delimiterPos, closerPos, itemPos, item:string;
-        var delimiterPos = undefined, closerPos = undefined, itemPos = undefined, item = undefined;
+        var 
+        delimiterPos = undefined, 
+        closerPos = undefined, 
+        itemPos = undefined, 
+        item = undefined
+;
         //var items=[];
-        var items = new(Array,0,NULL);
+        var 
+        items = new(Array,0,NULL)
+;
         ////clear start and end quotes
         //var s:string = text.slice(1,-1)
-        var s = METHOD(slice_,text)(text,2,(any_arr){any_number(1)
-, any_number(-1)
-        });
+        var 
+        s = METHOD(slice_,text)(text,2,(any_arr){
+        any_number(1), 
+        any_number(-1)
+})
+;
         //var lastDelimiterPos=0;
-        var lastDelimiterPos = any_number(0);
+        var 
+        lastDelimiterPos = any_number(0)
+;
         
         //do
         while(TRUE){
             //delimiterPos = s.indexOf("#{delimiter}{",lastDelimiterPos);
-            delimiterPos = METHOD(indexOf_,s)(s,2,(any_arr){_concatAny(2,delimiter
-, any_LTR("{")
-            )
-, lastDelimiterPos
-            });
+            delimiterPos = METHOD(indexOf_,s)(s,2,(any_arr){
+        _concatAny(2,
+        delimiter, 
+        any_LTR("{")
+), 
+        lastDelimiterPos
+});
             //if delimiterPos<0 then break
             if (_anyToNumber(delimiterPos) < 0) {break;};
             //// first part - text upto first delimiter
             //pushAt items, s.slice(lastDelimiterPos,delimiterPos),quotes 
-            Parser_pushAt(undefined,3,(any_arr){items
-, METHOD(slice_,s)(s,2,(any_arr){lastDelimiterPos
-, delimiterPos
-            })
-, quotes
-            });
+            Parser_pushAt(undefined,3,(any_arr){
+        items, 
+        METHOD(slice_,s)(s,2,(any_arr){
+        lastDelimiterPos, 
+        delimiterPos
+}), 
+        quotes
+});
             
             //var start = delimiterPos + 1
-            var start = any_number(_anyToNumber(delimiterPos) + 1);
+            var 
+        start = any_number(_anyToNumber(delimiterPos) + 1)
+;
             //closerPos = String.findMatchingPair(s,start,"}")
-            closerPos = String_findMatchingPair(undefined,3,(any_arr){s
-, start
-, any_LTR("}")
-            });
+            closerPos = String_findMatchingPair(undefined,3,(any_arr){
+        s, 
+        start, 
+        any_LTR("}")
+});
             //if closerPos<0
             if (_anyToNumber(closerPos) < 0)  {
                 //.throwErr "unmatched '#{delimiter}{' at string: #{text}"
-                METHOD(throwErr_,this)(this,1,(any_arr){_concatAny(4,any_LTR("unmatched '")
-, delimiter
-, any_LTR("{' at string: ")
-, text
-                )
-                });
+                METHOD(throwErr_,this)(this,1,(any_arr){
+        _concatAny(4,
+        any_LTR("unmatched '"), 
+        delimiter, 
+        any_LTR("{' at string: "), 
+        text
+)
+});
             };
            
             //item = s.slice(start+1, closerPos);
-            item = METHOD(slice_,s)(s,2,(any_arr){any_number(_anyToNumber(start) + 1)
-, closerPos
-            });
+            item = METHOD(slice_,s)(s,2,(any_arr){
+        any_number(_anyToNumber(start) + 1), 
+        closerPos
+});
             //// add parens if expression (no a single number or varname or prop)
             //var singleUnit = PMREX.whileRanges(item,"A-Za-z0-9_$.")
-            var singleUnit = PMREX_whileRanges(undefined,2,(any_arr){item
-, any_LTR("A-Za-z0-9_$.")
-            });
+            var 
+        singleUnit = PMREX_whileRanges(undefined,2,(any_arr){
+        item, 
+        any_LTR("A-Za-z0-9_$.")
+})
+;
             //if item isnt singleUnit, item = '(#{item})';
-            if (!__is(item,singleUnit)) {item = _concatAny(3,any_LTR("(")
-, item
-, any_LTR(")")
-            );};
+            if (!__is(item,singleUnit)) {item = _concatAny(3,
+        any_LTR("("), 
+        item, 
+        any_LTR(")")
+);};
             //lastDelimiterPos = closerPos + 1
             lastDelimiterPos = any_number(_anyToNumber(closerPos) + 1);
             //pushAt items, item //push expression
-            Parser_pushAt(undefined,2,(any_arr){items
-, item
-            }); //push expression
+            Parser_pushAt(undefined,2,(any_arr){
+        items, 
+        item
+}); //push expression
         };// end loop
         //loop
         //// remainder
         //pushAt items, s.slice(lastDelimiterPos),quotes
-        Parser_pushAt(undefined,3,(any_arr){items
-, METHOD(slice_,s)(s,1,(any_arr){lastDelimiterPos
-        })
-, quotes
-        });
+        Parser_pushAt(undefined,3,(any_arr){
+        items, 
+        METHOD(slice_,s)(s,1,(any_arr){
+        lastDelimiterPos
+}), 
+        quotes
+});
         //return items
         return items;
      return undefined;
@@ -1682,12 +1902,13 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
             assert(_instanceof(this,Parser_Token));
             //---------
             //return "'#{.value}'(#{.type})"
-            return _concatAny(5,any_LTR("'")
-, PROP(value_,this)
-, any_LTR("'(")
-, PROP(type_,this)
-, any_LTR(")")
-            );
+            return _concatAny(5,
+        any_LTR("'"), 
+        PROP(value_,this), 
+        any_LTR("'("), 
+        PROP(type_,this), 
+        any_LTR(")")
+);
         return undefined;
         }
     
@@ -1752,14 +1973,17 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //if .type is LineTypes.BLANK
         if (__is(PROP(type_,this),Parser_LineTypes_BLANK))  {
           //logger.debug .sourceLineNum,"(BLANK)"
-          logger_debug(undefined,2,(any_arr){PROP(sourceLineNum_,this)
-, any_LTR("(BLANK)")
-          });
+          logger_debug(undefined,2,(any_arr){
+        PROP(sourceLineNum_,this), 
+        any_LTR("(BLANK)")
+});
           //return
           return undefined;
         };
         //var type = ""
-        var type = any_EMPTY_STR;
+        var 
+        type = any_EMPTY_STR
+;
         //if .type is LineTypes.COMMENT
         if (__is(PROP(type_,this),Parser_LineTypes_COMMENT))  {
           //type="COMMENT"
@@ -1773,21 +1997,25 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         };
         
         //logger.debug .sourceLineNum, "#{.indent}(#{type})", .text
-        logger_debug(undefined,3,(any_arr){PROP(sourceLineNum_,this)
-, _concatAny(4,PROP(indent_,this)
-, any_LTR("(")
-, type
-, any_LTR(")")
-        )
-, PROP(text_,this)
-        });
+        logger_debug(undefined,3,(any_arr){
+        PROP(sourceLineNum_,this), 
+        _concatAny(4,
+        PROP(indent_,this), 
+        any_LTR("("), 
+        type, 
+        any_LTR(")")
+), 
+        PROP(text_,this)
+});
         //if .tokens
         if (_anyToBool(PROP(tokens_,this)))  {
             //logger.debug('   ',.tokens.join(' '))
-            logger_debug(undefined,2,(any_arr){any_LTR("   ")
-, __call(join_,PROP(tokens_,this),1,(any_arr){any_LTR(" ")
-            })
-            });
+            logger_debug(undefined,2,(any_arr){
+        any_LTR("   "), 
+        __call(join_,PROP(tokens_,this),1,(any_arr){
+        any_LTR(" ")
+})
+});
             //logger.debug()
             logger_debug(undefined,0,NULL);
         };
@@ -1805,64 +2033,89 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         var lexer= argc? arguments[0] : undefined;
         //---------
         //var code = .text
-        var code = PROP(text_,this);
+        var 
+        code = PROP(text_,this)
+;
         
         //var words=[]
-        var words = new(Array,0,NULL);
+        var 
+        words = new(Array,0,NULL)
+;
         //var result=[]
-        var result = new(Array,0,NULL);
+        var 
+        result = new(Array,0,NULL)
+;
         //var colInx = 0
-        var colInx = any_number(0);
+        var 
+        colInx = any_number(0)
+;
         //#debug
         //var msg = ""
-        var msg = any_EMPTY_STR;
+        var 
+        msg = any_EMPTY_STR
+;
         //while colInx < code.length
         while(_anyToNumber(colInx) < _length(code)){
             //var chunk = code.slice(colInx)
-            var chunk = METHOD(slice_,code)(code,1,(any_arr){colInx
-            });
+            var 
+        chunk = METHOD(slice_,code)(code,1,(any_arr){
+        colInx
+})
+;
 //This for loop will try each regular expression in `tokenPatterns` 
 //against the current head of the code line until one matches.
             //var token = .recognizeToken(chunk)
-            var token = METHOD(recognizeToken_,this)(this,1,(any_arr){chunk
-            });
+            var 
+        token = METHOD(recognizeToken_,this)(this,1,(any_arr){
+        chunk
+})
+;
 //If there was no match, this is a bad token and we will abort compilation here.
             //if no token
             if (!_anyToBool(token))  {
                 //// calc position from line info (we're at post-lexexr)
                 //msg = "(#{lexer.filename}:#{.sourceLineNum}:#{colInx+1}) Tokenize patterns: invalid token: #{chunk}"
-                msg = _concatAny(8,any_LTR("(")
-, PROP(filename_,lexer)
-, any_LTR(":")
-, PROP(sourceLineNum_,this)
-, any_LTR(":")
-, (any_number(_anyToNumber(colInx) + 1))
-, any_LTR(") Tokenize patterns: invalid token: ")
-, chunk
-                );
+                msg = _concatAny(8,
+        any_LTR("("), 
+        PROP(filename_,lexer), 
+        any_LTR(":"), 
+        PROP(sourceLineNum_,this), 
+        any_LTR(":"), 
+        (any_number(_anyToNumber(colInx) + 1)), 
+        any_LTR(") Tokenize patterns: invalid token: "), 
+        chunk
+);
                 //logger.error msg 
-                logger_error(undefined,1,(any_arr){msg
-                });
+                logger_error(undefined,1,(any_arr){
+        msg
+});
                 //var errPosString=''
-                var errPosString = any_EMPTY_STR;
+                var 
+        errPosString = any_EMPTY_STR
+;
                 //while errPosString.length<colInx
                 while(_length(errPosString) < _anyToNumber(colInx)){
                     //errPosString='#{errPosString} '
-                    errPosString = _concatAny(2,errPosString
-, any_LTR(" ")
-                    );
+                    errPosString = _concatAny(2,
+        errPosString, 
+        any_LTR(" ")
+);
                 };// end loop
                 //logger.error code
-                logger_error(undefined,1,(any_arr){code
-                });
+                logger_error(undefined,1,(any_arr){
+        code
+});
                 //logger.error '#{errPosString}^'
-                logger_error(undefined,1,(any_arr){_concatAny(2,errPosString
-, any_LTR("^")
-                )
-                });
+                logger_error(undefined,1,(any_arr){
+        _concatAny(2,
+        errPosString, 
+        any_LTR("^")
+)
+});
                 //logger.throwControlled "parsing tokens"
-                logger_throwControlled(undefined,1,(any_arr){any_LTR("parsing tokens")
-                });
+                logger_throwControlled(undefined,1,(any_arr){
+        any_LTR("parsing tokens")
+});
             };
             //end if
             
@@ -1881,8 +2134,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                 PROP(column_,token) = any_number(_anyToNumber(PROP(indent_,this)) + _anyToNumber(colInx) + 1);
 //store value in a temp array to parse special lexer options
                 //words.push(token.value)
-                METHOD(push_,words)(words,1,(any_arr){PROP(value_,token)
-                });
+                METHOD(push_,words)(words,1,(any_arr){
+        PROP(value_,token)
+});
 //If its a string constant, and it has `#{`|`${`, process the **Interpolated Expressions**.
                 //if token.type is 'STRING' and token.value.length>3 and lexer.stringInterpolationChar & "{" in token.value
                 if (__is(PROP(type_,token),any_LTR("STRING")) && _length(PROP(value_,token)) > 3 && CALL1(indexOf_,PROP(value_,token),_concatAny(2,PROP(stringInterpolationChar_,lexer),any_LTR("{"))).value.number>=0)  {
@@ -1890,8 +2144,11 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                     
                     //#parse the quoted string, splitting at #{...}, return array 
                     //var parsed = lexer.splitExpressions(token.value)
-                    var parsed = METHOD(splitExpressions_,lexer)(lexer,1,(any_arr){PROP(value_,token)
-                    });
+                    var 
+        parsed = METHOD(splitExpressions_,lexer)(lexer,1,(any_arr){
+        PROP(value_,token)
+})
+;
 //For C generation, replace string interpolation
 //with a call to core function "concat"
                 ////ifdef PROD_C
@@ -1906,31 +2163,40 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                     //// Also: if the first expression starts with `(`, LiteScript can 
                     //// mis-parse the expression as a "function call"
                     //if parsed.length and parsed.tryGet(0).charAt(0) not in "\"\'" // if it do not start with a quote
-                    if (_length(parsed) && CALL1(indexOf_,any_LTR("\"\'"),__call(charAt_,METHOD(tryGet_,parsed)(parsed,1,(any_arr){any_number(0)
-                    }),1,(any_arr){any_number(0)
-                    })).value.number==-1)  { // if it do not start with a quote
+                    if (_length(parsed) && CALL1(indexOf_,any_LTR("\"\'"),__call(charAt_,METHOD(tryGet_,parsed)(parsed,1,(any_arr){
+        any_number(0)
+}),1,(any_arr){
+        any_number(0)
+})).value.number==-1)  { // if it do not start with a quote
                         //parsed.unshift "''" // prepend '' to concat'd expressions
-                        METHOD(unshift_,parsed)(parsed,1,(any_arr){any_LTR("''")
-                        }); // prepend '' to concat'd expressions
+                        METHOD(unshift_,parsed)(parsed,1,(any_arr){
+        any_LTR("''")
+}); // prepend '' to concat'd expressions
                     };
                     ////join expressions using +, so we have a valid js concat'd expression, evaluating to a string.
                     //var composed = new InfoLine(lexer, LineTypes.CODE, token.column, parsed.join(' + '), .sourceLineNum  )
-                    var composed = new(Parser_InfoLine,5,(any_arr){lexer
-, Parser_LineTypes_CODE
-, PROP(column_,token)
-, METHOD(join_,parsed)(parsed,1,(any_arr){any_LTR(" + ")
-                    })
-, PROP(sourceLineNum_,this)
-                    });
+                    var 
+        composed = new(Parser_InfoLine,5,(any_arr){
+        lexer, 
+        Parser_LineTypes_CODE, 
+        PROP(column_,token), 
+        METHOD(join_,parsed)(parsed,1,(any_arr){
+        any_LTR(" + ")
+}), 
+        PROP(sourceLineNum_,this)
+})
+;
                 ////end if
                     //#Now we 'tokenize' the new composed expression
                     //composed.tokenizeLine(lexer) #recurse
-                    METHOD(tokenizeLine_,composed)(composed,1,(any_arr){lexer
-                    });// #recurse
+                    METHOD(tokenizeLine_,composed)(composed,1,(any_arr){
+        lexer
+});// #recurse
                     //#And we append the new tokens instead of the original string constant
                     //result = result.concat( composed.tokens )
-                    result = METHOD(concat_,result)(result,1,(any_arr){PROP(tokens_,composed)
-                    });
+                    result = METHOD(concat_,result)(result,1,(any_arr){
+        PROP(tokens_,composed)
+});
                 }
                 //else
                 
@@ -1938,13 +2204,15 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 //Else it's a single token. Add the token to result array
                     ////ifndef NDEBUG
                     //msg = "#{msg}#{token.toString()}"
-                    msg = _concatAny(2,msg
-, (METHOD(toString_,token)(token,0,NULL))
-                    );
+                    msg = _concatAny(2,
+        msg, 
+        (METHOD(toString_,token)(token,0,NULL))
+);
                     ////endif
                     //result.push(token)
-                    METHOD(push_,result)(result,1,(any_arr){token
-                });
+                    METHOD(push_,result)(result,1,(any_arr){
+        token
+});
                 };
                 //end if
                 
@@ -1966,27 +2234,37 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 //`lexer options string interpolation char [is] (IDENTIFIER|PUCT|STRING)`
 //`lexer options literal (map|object)`
         //if words.tryGet(0) is 'lexer' and words.tryGet(1) is 'options'
-        if (__is(METHOD(tryGet_,words)(words,1,(any_arr){any_number(0)
-        }),any_LTR("lexer")) && __is(METHOD(tryGet_,words)(words,1,(any_arr){any_number(1)
-        }),any_LTR("options")))  {
+        if (__is(METHOD(tryGet_,words)(words,1,(any_arr){
+        any_number(0)
+}),any_LTR("lexer")) && __is(METHOD(tryGet_,words)(words,1,(any_arr){
+        any_number(1)
+}),any_LTR("options")))  {
             //.type = LineTypes.COMMENT # is a COMMENT line
             PROP(type_,this) = Parser_LineTypes_COMMENT;// # is a COMMENT line
             //if words.slice(2,5).join(" ") is "string interpolation char" 
-            if (__is(__call(join_,METHOD(slice_,words)(words,2,(any_arr){any_number(2)
-, any_number(5)
-            }),1,(any_arr){any_LTR(" ")
-            }),any_LTR("string interpolation char")))  {
+            if (__is(__call(join_,METHOD(slice_,words)(words,2,(any_arr){
+        any_number(2), 
+        any_number(5)
+}),1,(any_arr){
+        any_LTR(" ")
+}),any_LTR("string interpolation char")))  {
                 //var ch:string
-                var ch = undefined;
+                var 
+        ch = undefined
+;
                 //if words.tryGet(5) into ch is 'is' then ch = words.tryGet(6) #get it (skip optional 'is')
-                if (__is((ch=METHOD(tryGet_,words)(words,1,(any_arr){any_number(5)
-                })),any_LTR("is"))) {ch = METHOD(tryGet_,words)(words,1,(any_arr){any_number(6)
-                });};
+                if (__is((ch=METHOD(tryGet_,words)(words,1,(any_arr){
+        any_number(5)
+})),any_LTR("is"))) {ch = METHOD(tryGet_,words)(words,1,(any_arr){
+        any_number(6)
+});};
                 //if ch.charAt(0) in ['"',"'"], ch = ch.slice(1,-1) #optionally quoted, remove quotes
-                if (__in(METHOD(charAt_,ch)(ch,1,(any_arr){any_number(0)
-                }),2,(any_arr){any_LTR("\""), any_LTR("'")})) {ch = METHOD(slice_,ch)(ch,2,(any_arr){any_number(1)
-, any_number(-1)
-                });};
+                if (__in(METHOD(charAt_,ch)(ch,1,(any_arr){
+        any_number(0)
+}),2,(any_arr){any_LTR("\""), any_LTR("'")})) {ch = METHOD(slice_,ch)(ch,2,(any_arr){
+        any_number(1), 
+        any_number(-1)
+});};
                 //if no ch then fail with "missing string interpolation char"  #check
                 if (!_anyToBool(ch)) {throw(new(Error,1,(any_arr){any_LTR("missing string interpolation char")}));;};
                 //lexer.stringInterpolationChar = ch
@@ -1995,13 +2273,16 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
             
             //else if words.slice(2,5).join(" ") is "object literal is" 
             
-            else if (__is(__call(join_,METHOD(slice_,words)(words,2,(any_arr){any_number(2)
-, any_number(5)
-            }),1,(any_arr){any_LTR(" ")
-            }),any_LTR("object literal is")))  {
+            else if (__is(__call(join_,METHOD(slice_,words)(words,2,(any_arr){
+        any_number(2), 
+        any_number(5)
+}),1,(any_arr){
+        any_LTR(" ")
+}),any_LTR("object literal is")))  {
                 //if no words.tryGet(5) into lexer.options.literalMap
-                if (!(_anyToBool((PROP(literalMap_,PROP(options_,lexer))=METHOD(tryGet_,words)(words,1,(any_arr){any_number(5)
-                })))))  {
+                if (!(_anyToBool((PROP(literalMap_,PROP(options_,lexer))=METHOD(tryGet_,words)(words,1,(any_arr){
+        any_number(5)
+})))))  {
                     //fail with "missing class to be used instead of object literals"  #check
                     throw(new(Error,1,(any_arr){any_LTR("missing class to be used instead of object literals")}));;// #check
                 };
@@ -2030,16 +2311,21 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
             var chunk= argc? arguments[0] : undefined;
             //---------
             //var remainder
-            var remainder = undefined;
+            var 
+        remainder = undefined
+;
 //Comment lines, start with # or //
             //if chunk.startsWith('#') or chunk.startsWith('//')
-            if (_anyToBool((_anyToBool(__or4=METHOD(startsWith_,chunk)(chunk,1,(any_arr){any_LTR("#")
-            }))? __or4 : METHOD(startsWith_,chunk)(chunk,1,(any_arr){any_LTR("//")
-            }))))  {
+            if (_anyToBool((_anyToBool(__or4=METHOD(startsWith_,chunk)(chunk,1,(any_arr){
+        any_LTR("#")
+}))? __or4 : METHOD(startsWith_,chunk)(chunk,1,(any_arr){
+        any_LTR("//")
+}))))  {
                 //return new Token('COMMENT',chunk)
-                return new(Parser_Token,2,(any_arr){any_LTR("COMMENT")
-, chunk
-                });
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("COMMENT"), 
+        chunk
+});
             };
 //Punctuation: 
 //We include also here punctuation symbols (like `,` `[` `:`)  and the arrow `->`
@@ -2048,25 +2334,31 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
   //['PUNCT',/^(\+\+|--|->)/],
   //['PUNCT',/^[\(\)\[\]\;\,\.\{\}]/],
             //if chunk.charAt(0) in "()[]{};,." 
-            if (CALL1(indexOf_,any_LTR("()[]{};,."),METHOD(charAt_,chunk)(chunk,1,(any_arr){any_number(0)
-            })).value.number>=0)  {
+            if (CALL1(indexOf_,any_LTR("()[]{};,."),METHOD(charAt_,chunk)(chunk,1,(any_arr){
+        any_number(0)
+})).value.number>=0)  {
                 //return new Token('PUNCT',chunk.slice(0,1))
-                return new(Parser_Token,2,(any_arr){any_LTR("PUNCT")
-, METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(1)
-                })
-                });
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("PUNCT"), 
+        METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(1)
+})
+});
             };
             //if chunk.slice(0,2) in ["++","--","->"]
-            if (__in(METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(2)
-            }),3,(any_arr){any_LTR("++"), any_LTR("--"), any_LTR("->")}))  {
+            if (__in(METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(2)
+}),3,(any_arr){any_LTR("++"), any_LTR("--"), any_LTR("->")}))  {
                 //return new Token('PUNCT',chunk.slice(0,2))
-                return new(Parser_Token,2,(any_arr){any_LTR("PUNCT")
-, METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(2)
-                })
-                });
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("PUNCT"), 
+        METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(2)
+})
+});
             };
 //Whitespace is discarded by the lexer, but needs to exist to break up other tokens.
 //We recognize ' .' (space+dot) to be able to recognize: 'myFunc .x' as alias to: 'myFunc this.x'
@@ -2075,96 +2367,126 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
   //['SPACE_BRACKET',/^\s+\[/],
   //['WHITESPACE',/^[\f\r\t\v\u00A0\u2028\u2029 ]+/],
             //if chunk.startsWith(" .")
-            if (_anyToBool(METHOD(startsWith_,chunk)(chunk,1,(any_arr){any_LTR(" .")
-            })))  {
+            if (_anyToBool(METHOD(startsWith_,chunk)(chunk,1,(any_arr){
+        any_LTR(" .")
+})))  {
                 //return new Token('SPACE_DOT',chunk.slice(0,2))
-                return new(Parser_Token,2,(any_arr){any_LTR("SPACE_DOT")
-, METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(2)
-                })
-                });
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("SPACE_DOT"), 
+        METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(2)
+})
+});
             };
             //if chunk.startsWith(" [")
-            if (_anyToBool(METHOD(startsWith_,chunk)(chunk,1,(any_arr){any_LTR(" [")
-            })))  {
+            if (_anyToBool(METHOD(startsWith_,chunk)(chunk,1,(any_arr){
+        any_LTR(" [")
+})))  {
                 //return new Token('SPACE_BRACKET',chunk.slice(0,2))
-                return new(Parser_Token,2,(any_arr){any_LTR("SPACE_BRACKET")
-, METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(2)
-                })
-                });
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("SPACE_BRACKET"), 
+        METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(2)
+})
+});
             };
             //if PMREX.whileRanges(chunk," \t\r") into var whiteSpace
             var whiteSpace=undefined;
-            if (_anyToBool((whiteSpace=PMREX_whileRanges(undefined,2,(any_arr){chunk
-, any_LTR(" \t\r")
-            }))))  {
+            if (_anyToBool((whiteSpace=PMREX_whileRanges(undefined,2,(any_arr){
+        chunk, 
+        any_LTR(" \t\r")
+}))))  {
                 //if chunk.charAt(whiteSpace.length) in '.[', whiteSpace=whiteSpace.slice(0,-1) //allow recognition of SPACE_DOT and SPACE_BRACKET
-                if (CALL1(indexOf_,any_LTR(".["),METHOD(charAt_,chunk)(chunk,1,(any_arr){any_number(_length(whiteSpace))
-                })).value.number>=0) {whiteSpace = METHOD(slice_,whiteSpace)(whiteSpace,2,(any_arr){any_number(0)
-, any_number(-1)
-                });};
+                if (CALL1(indexOf_,any_LTR(".["),METHOD(charAt_,chunk)(chunk,1,(any_arr){
+        any_number(_length(whiteSpace))
+})).value.number>=0) {whiteSpace = METHOD(slice_,whiteSpace)(whiteSpace,2,(any_arr){
+        any_number(0), 
+        any_number(-1)
+});};
                 //return new Token('WHITESPACE',whiteSpace)
-                return new(Parser_Token,2,(any_arr){any_LTR("WHITESPACE")
-, whiteSpace
-                });
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("WHITESPACE"), 
+        whiteSpace
+});
             };
 //Strings can be either single or double quoted.
   //['STRING', /^'(?:[^'\\]|\\.)*'/],
   //['STRING', /^"(?:[^"\\]|\\.)*"/],
             //if chunk.startsWith("'") or chunk.startsWith('"')
-            if (_anyToBool((_anyToBool(__or5=METHOD(startsWith_,chunk)(chunk,1,(any_arr){any_LTR("'")
-            }))? __or5 : METHOD(startsWith_,chunk)(chunk,1,(any_arr){any_LTR("\"")
-            }))))  {
+            if (_anyToBool((_anyToBool(__or5=METHOD(startsWith_,chunk)(chunk,1,(any_arr){
+        any_LTR("'")
+}))? __or5 : METHOD(startsWith_,chunk)(chunk,1,(any_arr){
+        any_LTR("\"")
+}))))  {
                 //var quotedContent = PMREX.quotedContent(chunk)
-                var quotedContent = PMREX_quotedContent(undefined,1,(any_arr){chunk
-                });
+                var 
+        quotedContent = PMREX_quotedContent(undefined,1,(any_arr){
+        chunk
+})
+;
                 //return new Token('STRING',chunk.slice(0,1+quotedContent.length+1)) //include quotes
-                return new(Parser_Token,2,(any_arr){any_LTR("STRING")
-, METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(1 + _length(quotedContent) + 1)
-                })
-                }); //include quotes
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("STRING"), 
+        METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(1 + _length(quotedContent) + 1)
+})
+}); //include quotes
             };
 //ASSIGN are symbols triggering the assignment statements.
 //In LiteScript, assignment is a *statement* not a *expression*
   //['ASSIGN',/^=/],
   //['ASSIGN',/^[\+\-\*\/\&]=/ ], # = += -= *= /= &=
             //if chunk.startsWith("=")
-            if (_anyToBool(METHOD(startsWith_,chunk)(chunk,1,(any_arr){any_LTR("=")
-            })))  {
+            if (_anyToBool(METHOD(startsWith_,chunk)(chunk,1,(any_arr){
+        any_LTR("=")
+})))  {
                 //return new Token('ASSIGN',chunk.slice(0,1))
-                return new(Parser_Token,2,(any_arr){any_LTR("ASSIGN")
-, METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(1)
-                })
-                });
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("ASSIGN"), 
+        METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(1)
+})
+});
             };
             //if chunk.charAt(0) in "+-*/&" and chunk.charAt(1) is "=" 
-            if (CALL1(indexOf_,any_LTR("+-*/&"),METHOD(charAt_,chunk)(chunk,1,(any_arr){any_number(0)
-            })).value.number>=0 && __is(METHOD(charAt_,chunk)(chunk,1,(any_arr){any_number(1)
-            }),any_LTR("=")))  {
+            if (CALL1(indexOf_,any_LTR("+-*/&"),METHOD(charAt_,chunk)(chunk,1,(any_arr){
+        any_number(0)
+})).value.number>=0 && __is(METHOD(charAt_,chunk)(chunk,1,(any_arr){
+        any_number(1)
+}),any_LTR("=")))  {
                 //return new Token('ASSIGN',chunk.slice(0,2))
-                return new(Parser_Token,2,(any_arr){any_LTR("ASSIGN")
-, METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(2)
-                })
-                });
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("ASSIGN"), 
+        METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(2)
+})
+});
             };
 //Regex tokens are regular expressions. The javascript producer, just passes the raw regex to JavaScript.
   //['REGEX', /^(\/(?![\s=])[^[\/\n\\]*(?:(?:\\[\s\S]|\[[^\]\n\\]*(?:\\[\s\S][^\]\n\\]*)*])[^[\/\n\\]*)*\/)([imgy]{0,4})(?!\w)/],
             //if chunk.startsWith('/') 
-            if (_anyToBool(METHOD(startsWith_,chunk)(chunk,1,(any_arr){any_LTR("/")
-            })))  {
+            if (_anyToBool(METHOD(startsWith_,chunk)(chunk,1,(any_arr){
+        any_LTR("/")
+})))  {
                 //var regexpContents = PMREX.quotedContent(chunk) 
-                var regexpContents = PMREX_quotedContent(undefined,1,(any_arr){chunk
-                });
+                var 
+        regexpContents = PMREX_quotedContent(undefined,1,(any_arr){
+        chunk
+})
+;
                 //return new Token('REGEX',chunk.slice(0,regexpContents.length+2)) //include quote-chars: / & /
-                return new(Parser_Token,2,(any_arr){any_LTR("REGEX")
-, METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(_length(regexpContents) + 2)
-                })
-                }); //include quote-chars: / & /
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("REGEX"), 
+        METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(_length(regexpContents) + 2)
+})
+}); //include quote-chars: / & /
             };
 //A "Unary Operator" is a symbol that precedes and transform *one* operand.
 //A "Binary Operator" is a  symbol or a word (like `>=` or `+` or `and`), 
@@ -2174,111 +2496,145 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
   ////identifier-like operators are handled in the identifier section below
   //['OPER', /^(is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|bitnot)\b/],
             //if chunk.slice(0,3) is '!=='
-            if (__is(METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(3)
-            }),any_LTR("!==")))  {
+            if (__is(METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(3)
+}),any_LTR("!==")))  {
                 //return new Token('OPER',chunk.slice(0,3))
-                return new(Parser_Token,2,(any_arr){any_LTR("OPER")
-, METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(3)
-                })
-                });
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("OPER"), 
+        METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(3)
+})
+});
             };
             //if "|#{chunk.slice(0,2)}|" in "|<>|>=|<=|>>|<<|!=|"
-            if (CALL1(indexOf_,any_LTR("|<>|>=|<=|>>|<<|!=|"),_concatAny(3,any_LTR("|")
-, (METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(2)
-            }))
-, any_LTR("|")
-            )).value.number>=0)  {
+            if (CALL1(indexOf_,any_LTR("|<>|>=|<=|>>|<<|!=|"),_concatAny(3,
+        any_LTR("|"), 
+        (METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(2)
+})), 
+        any_LTR("|")
+)).value.number>=0)  {
                 //return new Token('OPER',chunk.slice(0,2))
-                return new(Parser_Token,2,(any_arr){any_LTR("OPER")
-, METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(2)
-                })
-                });
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("OPER"), 
+        METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(2)
+})
+});
             };
             //if chunk.charAt(0) in "><+-*/%&~^|?:" 
-            if (CALL1(indexOf_,any_LTR("><+-*/%&~^|?:"),METHOD(charAt_,chunk)(chunk,1,(any_arr){any_number(0)
-            })).value.number>=0)  {
+            if (CALL1(indexOf_,any_LTR("><+-*/%&~^|?:"),METHOD(charAt_,chunk)(chunk,1,(any_arr){
+        any_number(0)
+})).value.number>=0)  {
                 //return new Token('OPER',chunk.slice(0,1))
-                return new(Parser_Token,2,(any_arr){any_LTR("OPER")
-, METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(1)
-                })
-                });
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("OPER"), 
+        METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(1)
+})
+});
             };
 //**Numbers** can be either in hex format (like `0xa5b`) or decimal/scientific format (`10`, `3.14159`, or `10.02e23`).
 //As in js, all numbers are floating point.
   //['NUMBER',/^0x[a-f0-9]+/i ],
   //['NUMBER',/^[0-9]+(\.[0-9]+)?(e[+-]?[0-9]+)?/i],
             //if chunk.startsWith('0x')
-            if (_anyToBool(METHOD(startsWith_,chunk)(chunk,1,(any_arr){any_LTR("0x")
-            })))  {
+            if (_anyToBool(METHOD(startsWith_,chunk)(chunk,1,(any_arr){
+        any_LTR("0x")
+})))  {
                 //var hexContent=PMREX.whileRanges(chunk.slice(2),"a-fA-F0-9")
-                var hexContent = PMREX_whileRanges(undefined,2,(any_arr){METHOD(slice_,chunk)(chunk,1,(any_arr){any_number(2)
-                })
-, any_LTR("a-fA-F0-9")
-                });
+                var 
+        hexContent = PMREX_whileRanges(undefined,2,(any_arr){
+        METHOD(slice_,chunk)(chunk,1,(any_arr){
+        any_number(2)
+}), 
+        any_LTR("a-fA-F0-9")
+})
+;
                 //return new Token('NUMBER',chunk.slice(0, hexContent.length+2)) //include 0x
-                return new(Parser_Token,2,(any_arr){any_LTR("NUMBER")
-, METHOD(slice_,chunk)(chunk,2,(any_arr){any_number(0)
-, any_number(_length(hexContent) + 2)
-                })
-                }); //include 0x
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("NUMBER"), 
+        METHOD(slice_,chunk)(chunk,2,(any_arr){
+        any_number(0), 
+        any_number(_length(hexContent) + 2)
+})
+}); //include 0x
             };
     
             //var numberDigits,decPoint="",decimalPart="",expE="",exponent=""
-            var numberDigits = undefined, decPoint = any_EMPTY_STR, decimalPart = any_EMPTY_STR, expE = any_EMPTY_STR, exponent = any_EMPTY_STR;
+            var 
+        numberDigits = undefined, 
+        decPoint = any_EMPTY_STR, 
+        decimalPart = any_EMPTY_STR, 
+        expE = any_EMPTY_STR, 
+        exponent = any_EMPTY_STR
+;
             //if PMREX.whileRanges(chunk,"0-9") into numberDigits
-            if (_anyToBool((numberDigits=PMREX_whileRanges(undefined,2,(any_arr){chunk
-, any_LTR("0-9")
-            }))))  {
+            if (_anyToBool((numberDigits=PMREX_whileRanges(undefined,2,(any_arr){
+        chunk, 
+        any_LTR("0-9")
+}))))  {
                 //chunk=chunk.slice(numberDigits.length)
-                chunk = METHOD(slice_,chunk)(chunk,1,(any_arr){any_number(_length(numberDigits))
-                });
+                chunk = METHOD(slice_,chunk)(chunk,1,(any_arr){
+        any_number(_length(numberDigits))
+});
                 //if chunk.charAt(0) is '.'
-                if (__is(METHOD(charAt_,chunk)(chunk,1,(any_arr){any_number(0)
-                }),any_LTR(".")))  {
+                if (__is(METHOD(charAt_,chunk)(chunk,1,(any_arr){
+        any_number(0)
+}),any_LTR(".")))  {
                     //decPoint = '.'
                     decPoint = any_LTR(".");
                     //chunk=chunk.slice(1)
-                    chunk = METHOD(slice_,chunk)(chunk,1,(any_arr){any_number(1)
-                    });
+                    chunk = METHOD(slice_,chunk)(chunk,1,(any_arr){
+        any_number(1)
+});
                     //decimalPart = PMREX.whileRanges(chunk,"0-9")
-                    decimalPart = PMREX_whileRanges(undefined,2,(any_arr){chunk
-, any_LTR("0-9")
-                    });
+                    decimalPart = PMREX_whileRanges(undefined,2,(any_arr){
+        chunk, 
+        any_LTR("0-9")
+});
                     //if no decimalPart, fail with 'missing decimal part after "."'
                     if (!_anyToBool(decimalPart)) {throw(new(Error,1,(any_arr){any_LTR("missing decimal part after \".\"")}));;};
                     //chunk=chunk.slice(decimalPart.length)
-                    chunk = METHOD(slice_,chunk)(chunk,1,(any_arr){any_number(_length(decimalPart))
-                    });
+                    chunk = METHOD(slice_,chunk)(chunk,1,(any_arr){
+        any_number(_length(decimalPart))
+});
                 };
                 //if chunk.charAt(0) is 'e'
-                if (__is(METHOD(charAt_,chunk)(chunk,1,(any_arr){any_number(0)
-                }),any_LTR("e")))  {
+                if (__is(METHOD(charAt_,chunk)(chunk,1,(any_arr){
+        any_number(0)
+}),any_LTR("e")))  {
                     //expE = 'e'
                     expE = any_LTR("e");
                     //chunk=chunk.slice(1)
-                    chunk = METHOD(slice_,chunk)(chunk,1,(any_arr){any_number(1)
-                    });
+                    chunk = METHOD(slice_,chunk)(chunk,1,(any_arr){
+        any_number(1)
+});
                     //exponent=PMREX.whileRanges(chunk,"0-9")
-                    exponent = PMREX_whileRanges(undefined,2,(any_arr){chunk
-, any_LTR("0-9")
-                    });
+                    exponent = PMREX_whileRanges(undefined,2,(any_arr){
+        chunk, 
+        any_LTR("0-9")
+});
                     //if no exponent, fail with 'missing exponent after "e"'
                     if (!_anyToBool(exponent)) {throw(new(Error,1,(any_arr){any_LTR("missing exponent after \"e\"")}));;};
                 };
                 //return new Token('NUMBER',"#{numberDigits}#{decPoint}#{decimalPart}#{expE}#{exponent}")
-                return new(Parser_Token,2,(any_arr){any_LTR("NUMBER")
-, _concatAny(5,numberDigits
-, decPoint
-, decimalPart
-, expE
-, exponent
-                )
-                });
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("NUMBER"), 
+        _concatAny(5,
+        numberDigits, 
+        decPoint, 
+        decimalPart, 
+        expE, 
+        exponent
+)
+});
             };
 //Identifiers (generally variable names), must start with a letter, `$`, or underscore.
 //Subsequent characters can also be numbers. Unicode characters are supported in variable names.
@@ -2289,23 +2645,27 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
 //(Note: we recognized numbers above)
             //if PMREX.whileRanges(chunk,"A-Za-z0-9\x7F-\xFF$_") into var identifier
             var identifier=undefined;
-            if (_anyToBool((identifier=PMREX_whileRanges(undefined,2,(any_arr){chunk
-, any_LTR("A-Za-z0-9\x7F-\xFF$_")
-            }))))  {
+            if (_anyToBool((identifier=PMREX_whileRanges(undefined,2,(any_arr){
+        chunk, 
+        any_LTR("A-Za-z0-9\x7F-\xFF$_")
+}))))  {
                 //if "|#{identifier}|" in "|is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|bitxor|bitnot|"
-                if (CALL1(indexOf_,any_LTR("|is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|bitxor|bitnot|"),_concatAny(3,any_LTR("|")
-, identifier
-, any_LTR("|")
-                )).value.number>=0)  {
+                if (CALL1(indexOf_,any_LTR("|is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|bitxor|bitnot|"),_concatAny(3,
+        any_LTR("|"), 
+        identifier, 
+        any_LTR("|")
+)).value.number>=0)  {
                     //return new Token('OPER',identifier)
-                    return new(Parser_Token,2,(any_arr){any_LTR("OPER")
-, identifier
-                    });
+                    return new(Parser_Token,2,(any_arr){
+        any_LTR("OPER"), 
+        identifier
+});
                 };
                 //return new Token('IDENTIFIER',identifier)
-                return new(Parser_Token,2,(any_arr){any_LTR("IDENTIFIER")
-, identifier
-                });
+                return new(Parser_Token,2,(any_arr){
+        any_LTR("IDENTIFIER"), 
+        identifier
+});
             };
       return undefined;
       }
@@ -2349,17 +2709,19 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         assert(_instanceof(this,Parser_LexerPos));
         //---------
         //if no .token, .token = new Token(type='',tokenText='',column=0)
-        if (!_anyToBool(PROP(token_,this))) {PROP(token_,this) = new(Parser_Token,3,(any_arr){any_EMPTY_STR
-, any_EMPTY_STR
-, any_number(0)
-        });};
+        if (!_anyToBool(PROP(token_,this))) {PROP(token_,this) = new(Parser_Token,3,(any_arr){
+        any_EMPTY_STR, 
+        any_EMPTY_STR, 
+        any_number(0)
+});};
         //return "#{.lexer.filename}:#{.sourceLineNum}:#{(.token.column or 0)+1}"
-        return _concatAny(5,PROP(filename_,PROP(lexer_,this))
-, any_LTR(":")
-, PROP(sourceLineNum_,this)
-, any_LTR(":")
-, (any_number((_anyToNumber((_anyToBool(__or6=PROP(column_,PROP(token_,this)))? __or6 : any_number(0)))) + 1))
-        );
+        return _concatAny(5,
+        PROP(filename_,PROP(lexer_,this)), 
+        any_LTR(":"), 
+        PROP(sourceLineNum_,this), 
+        any_LTR(":"), 
+        (any_number((_anyToNumber((_anyToBool(__or6=PROP(column_,PROP(token_,this)))? __or6 : any_number(0)))) + 1))
+);
       return undefined;
       }
     
@@ -2394,8 +2756,11 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //---------
 //check if startCode is in the line, if not found, exit 
         //var startCol = line.indexOf(startCode)
-        var startCol = METHOD(indexOf_,line)(line,1,(any_arr){startCode
-        });
+        var 
+        startCol = METHOD(indexOf_,line)(line,1,(any_arr){
+        startCode
+})
+;
         //if startCol<0 
         if (_anyToNumber(startCol) < 0)  {
             //#no start code found
@@ -2404,56 +2769,69 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         };
         //// get rid of quoted strings. Still there?
         //if String.replaceQuoted(line,"").indexOf(startCode)<0
-        if (_anyToNumber(__call(indexOf_,String_replaceQuoted(undefined,2,(any_arr){line
-, any_EMPTY_STR
-        }),1,(any_arr){startCode
-        })) < 0)  {
+        if (_anyToNumber(__call(indexOf_,String_replaceQuoted(undefined,2,(any_arr){
+        line, 
+        any_EMPTY_STR
+}),1,(any_arr){
+        startCode
+})) < 0)  {
             //return #no 
             return ;// #no
         };
 //ok, found startCode, initialize
         //logger.debug "**** START MULTILINE ",startCode
-        logger_debug(undefined,2,(any_arr){any_LTR("**** START MULTILINE ")
-, startCode
-        });
+        logger_debug(undefined,2,(any_arr){
+        any_LTR("**** START MULTILINE "), 
+        startCode
+});
         //this.section = []
         PROP(section_,this) = new(Array,0,NULL);
         //var startSourceLine = lexer.sourceLineNum
-        var startSourceLine = PROP(sourceLineNum_,lexer);
+        var 
+        startSourceLine = PROP(sourceLineNum_,lexer)
+;
 //Get and save text previous to startCode
         //this.pre = line.slice(0, startCol).trim()
-        PROP(pre_,this) = __call(trim_,METHOD(slice_,line)(line,2,(any_arr){any_number(0)
-, startCol
-        }),0,NULL);
+        PROP(pre_,this) = __call(trim_,METHOD(slice_,line)(line,2,(any_arr){
+        any_number(0), 
+        startCol
+}),0,NULL);
 //Get text after startCode
         //line = line.slice(startCol+startCode.length).trim()
-        line = __call(trim_,METHOD(slice_,line)(line,1,(any_arr){any_number(_anyToNumber(startCol) + _length(startCode))
-        }),0,NULL);
+        line = __call(trim_,METHOD(slice_,line)(line,1,(any_arr){
+        any_number(_anyToNumber(startCol) + _length(startCode))
+}),0,NULL);
 //read lines until endCode is found
         //var endCol
-        var endCol = undefined;
+        var 
+        endCol = undefined
+;
         //do until line.indexOf(endCode) into endCol >= 0 #found end of section
-        while(!(_anyToNumber((endCol=METHOD(indexOf_,line)(line,1,(any_arr){endCode
-        }))) >= 0)){
+        while(!(_anyToNumber((endCol=METHOD(indexOf_,line)(line,1,(any_arr){
+        endCode
+}))) >= 0)){
             //# still inside the section
             //this.section.push line
-            __call(push_,PROP(section_,this),1,(any_arr){line
-            });
+            __call(push_,PROP(section_,this),1,(any_arr){
+        line
+});
             //#get next line
             //if no lexer.nextSourceLine()
             if (!_anyToBool(METHOD(nextSourceLine_,lexer)(lexer,0,NULL)))  {
                 //lexer.sayErr "EOF while processing multiline #{startCode} (started on #{lexer.filename}:#{startSourceLine}:#{startCol})"
-                METHOD(sayErr_,lexer)(lexer,1,(any_arr){_concatAny(9,any_LTR("EOF while processing multiline ")
-, startCode
-, any_LTR(" (started on ")
-, PROP(filename_,lexer)
-, any_LTR(":")
-, startSourceLine
-, any_LTR(":")
-, startCol
-, any_LTR(")")
-                )
-                });
+                METHOD(sayErr_,lexer)(lexer,1,(any_arr){
+        _concatAny(9,
+        any_LTR("EOF while processing multiline "), 
+        startCode, 
+        any_LTR(" (started on "), 
+        PROP(filename_,lexer), 
+        any_LTR(":"), 
+        startSourceLine, 
+        any_LTR(":"), 
+        startCol, 
+        any_LTR(")")
+)
+});
                 //return
                 return ;
             };
@@ -2463,42 +2841,37 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //loop #until end of section
 //get text after endCode (is multilineSection.post)
         //this.post = line.slice(endCol+endCode.length)
-        PROP(post_,this) = METHOD(slice_,line)(line,1,(any_arr){any_number(_anyToNumber(endCol) + _length(endCode))
-        });
+        PROP(post_,this) = METHOD(slice_,line)(line,1,(any_arr){
+        any_number(_anyToNumber(endCol) + _length(endCode))
+});
 //text before endCode, goes into multiline section
         //line = line.slice(0, endCol)
-        line = METHOD(slice_,line)(line,2,(any_arr){any_number(0)
-, endCol
-        });
+        line = METHOD(slice_,line)(line,2,(any_arr){
+        any_number(0), 
+        endCol
+});
         //if line 
         if (_anyToBool(line))  {
           //this.section.push line
-          __call(push_,PROP(section_,this),1,(any_arr){line
-          });
+          __call(push_,PROP(section_,this),1,(any_arr){
+        line
+});
         };
         //this.postIndent = endCol+endCode.length
         PROP(postIndent_,this) = any_number(_anyToNumber(endCol) + _length(endCode));
       }
-    //-------------------------
-    //NAMESPACE Parser_LineTypes
-    //-------------------------
+        //-------------------------
+        //NAMESPACE Parser_LineTypes
+        //-------------------------
         var Parser_LineTypes_CODE, Parser_LineTypes_COMMENT, Parser_LineTypes_BLANK;
-    
-    
-    //------------------
-    void Parser_LineTypes__namespaceInit(void){
+        
+        
+        //------------------
+        void Parser_LineTypes__namespaceInit(void){
             Parser_LineTypes_CODE = any_number(0);
             Parser_LineTypes_COMMENT = any_number(1);
             Parser_LineTypes_BLANK = any_number(2);
-//------------------------
-//Exported Module vars
-//------------------------
-//### Public namespace LineTypes 
-        //properties 
-            //CODE = 0
-            //COMMENT = 1
-            //BLANK = 2
-        ;};
+        };
     
 
 //--------------
@@ -2517,6 +2890,14 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
     inline any Parser_OutCode_newFromObject(DEFAULT_ARGUMENTS){
         return _newFromObject(Parser_OutCode,argc,arguments);
     }
+//------------------------
+//Exported Module vars
+//------------------------
+//### Public namespace LineTypes 
+        //properties 
+            //CODE = 0
+            //COMMENT = 1
+            //BLANK = 2
 //### Public Helper Class OutCode
 //This class contains helper methods for AST nodes's `produce()` methods
 //It also handles SourceMap generation for Chrome Developer Tools debugger and Firefox Firebug
@@ -2561,8 +2942,8 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         PROP(lastOutCommentLine_,this) = any_number(0);
 //if sourceMap option is set, and we're generating .js
         ////ifdef PROD_JS
-        //if not options.nomap, .sourceMap = new SourceMap
-        if (!(_anyToBool(PROP(nomap_,options)))) {PROP(sourceMap_,this) = new(SourceMap,0,NULL);};
+        //if options.generateSourceMap, .sourceMap = new SourceMap
+        if (_anyToBool(PROP(generateSourceMap_,options))) {PROP(sourceMap_,this) = new(SourceMap,0,NULL);};
      return undefined;
      }
         ////else
@@ -2592,8 +2973,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //if text 
         if (_anyToBool(text))  {
             //.currLine.push text
-            __call(push_,PROP(currLine_,this),1,(any_arr){text
-            });
+            __call(push_,PROP(currLine_,this),1,(any_arr){
+        text
+});
             //.column += text.length
             PROP(column_,this).value.number += _length(text);
         };
@@ -2613,15 +2995,19 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                   if (!_anyToBool(ITEM(_anyToNumber(PROP(header_,this)),PROP(fileIsOpen_,this))))  {
                       //// make sure output dir exists
                       //var filename = .filenames[.header] 
-                      var filename = ITEM(_anyToNumber(PROP(header_,this)),PROP(filenames_,this));
+                      var 
+        filename = ITEM(_anyToNumber(PROP(header_,this)),PROP(filenames_,this))
+;
                       //mkPath.toFile(filename);
-                      mkPath_toFile(undefined,1,(any_arr){filename
-                      });
+                      mkPath_toFile(undefined,1,(any_arr){
+        filename
+});
                       ////optn output file 
                       //.fHandles[.header]=fs.openSync(filename,'w')
-                      ITEM(_anyToNumber(PROP(header_,this)),PROP(fHandles_,this)) = fs_openSync(undefined,2,(any_arr){filename
-, any_LTR("w")
-                      });
+                      ITEM(_anyToNumber(PROP(header_,this)),PROP(fHandles_,this)) = fs_openSync(undefined,2,(any_arr){
+        filename, 
+        any_LTR("w")
+});
                       //.fileIsOpen[.header] = true
                       ITEM(_anyToNumber(PROP(header_,this)),PROP(fileIsOpen_,this)) = true;
                   };
@@ -2634,22 +3020,25 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                   for(int part__inx=0 ; part__inx<_list19.value.arr->length ; part__inx++){part=ITEM(part__inx,_list19);
                   
                       //fs.writeSync .fHandles[.header], part
-                      fs_writeSync(undefined,2,(any_arr){ITEM(_anyToNumber(PROP(header_,this)),PROP(fHandles_,this))
-, part
-                      });
+                      fs_writeSync(undefined,2,(any_arr){
+        ITEM(_anyToNumber(PROP(header_,this)),PROP(fHandles_,this)), 
+        part
+});
                   }};// end for each in
                   //fs.writeSync .fHandles[.header], "\n"
-                  fs_writeSync(undefined,2,(any_arr){ITEM(_anyToNumber(PROP(header_,this)),PROP(fHandles_,this))
-, any_LTR("\n")
-                  });
+                  fs_writeSync(undefined,2,(any_arr){
+        ITEM(_anyToNumber(PROP(header_,this)),PROP(fHandles_,this)), 
+        any_LTR("\n")
+});
               }
               //else
               
               else {
                   ////store in array 
                   //.lines[.header].push .currLine.toString()
-                  __call(push_,ITEM(_anyToNumber(PROP(header_,this)),PROP(lines_,this)),1,(any_arr){__call(toString_,PROP(currLine_,this),0,NULL)
-                  });
+                  __call(push_,ITEM(_anyToNumber(PROP(header_,this)),PROP(lines_,this)),1,(any_arr){
+        __call(toString_,PROP(currLine_,this),0,NULL)
+});
               };
               
               //if .header is 0
@@ -2684,8 +3073,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
           //.startNewLine
           METHOD(startNewLine_,this)(this,0,NULL);
           //.put ""
-          METHOD(put_,this)(this,1,(any_arr){any_EMPTY_STR
-          });
+          METHOD(put_,this)(this,1,(any_arr){
+        any_EMPTY_STR
+});
           //.startNewLine
           METHOD(startNewLine_,this)(this,0,NULL);
      return undefined;
@@ -2703,7 +3093,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         //.startNewLine() #close last line
         METHOD(startNewLine_,this)(this,0,NULL);// #close last line
         //var result = .lines[header]
-        var result = ITEM(_anyToNumber(header),PROP(lines_,this));
+        var 
+        result = ITEM(_anyToNumber(header),PROP(lines_,this))
+;
         //.lines[header].clear
         __call(clear_,ITEM(_anyToNumber(header),PROP(lines_,this)),0,NULL);
         //return result
@@ -2714,6 +3106,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
      any Parser_OutCode_close(DEFAULT_ARGUMENTS){
         assert(_instanceof(this,Parser_OutCode));
         //---------
+        //.startNewLine //save last pending line
+        METHOD(startNewLine_,this)(this,0,NULL); //save last pending line
+        
         //if .fileMode
         if (_anyToBool(PROP(fileMode_,this)))  {
             //for header=0 to 2
@@ -2722,8 +3117,9 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                 //if .fileIsOpen[header]
                 if (_anyToBool(ITEM(header,PROP(fileIsOpen_,this))))  {
                     //fs.closeSync .fHandles[header]
-                    fs_closeSync(undefined,1,(any_arr){ITEM(header,PROP(fHandles_,this))
-                    });
+                    fs_closeSync(undefined,1,(any_arr){
+        ITEM(header,PROP(fHandles_,this))
+});
                     //.fileIsOpen[header] = false
                     ITEM(header,PROP(fileIsOpen_,this)) = false;
                 };
@@ -2740,18 +3136,21 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         var indent= argc? arguments[0] : undefined;
         //---------
         //var col = .column 
-        var col = PROP(column_,this);
+        var 
+        col = PROP(column_,this)
+;
         //if not .currLine.length, col += indent-1
         if (!(_length(PROP(currLine_,this)))) {col.value.number += _anyToNumber(indent) - 1;};
         //return SourceMapMark.{
                       //col:col        
                       //lin:.lineNum-1
-        return Parser_SourceMapMark_newFromObject(undefined,1,(any_arr){new(Map,2,(any_arr){
+        return Parser_SourceMapMark_newFromObject(undefined,1,(any_arr){
+        new(Map,2,(any_arr){
                       _newPair("col",col), 
                       _newPair("lin",any_number(_anyToNumber(PROP(lineNum_,this)) - 1))
         })
-        
-        });
+
+});
      return undefined;
      }
                 //}
@@ -2776,11 +3175,12 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
                 //lin,col
             
             //.sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
-            __call(add_,PROP(sourceMap_,this),4,(any_arr){any_number((_anyToNumber((_anyToBool(__or7=sourceLin)? __or7 : any_number(1)))) - 1)
-, any_number(0)
-, PROP(lin_,mark)
-, any_number(0)
-    });
+            __call(add_,PROP(sourceMap_,this),4,(any_arr){
+        any_number((_anyToNumber((_anyToBool(__or7=sourceLin)? __or7 : any_number(1)))) - 1), 
+        any_number(0), 
+        PROP(lin_,mark), 
+        any_number(0)
+});
         };
      return undefined;
      }
@@ -2819,16 +3219,17 @@ any Parser_pushAt(DEFAULT_ARGUMENTS); //forward declare
         }
         //---------
         if (_anyToBool(content))  {
-            if (_anyToBool(useQuotes)) {content = METHOD(quoted_,content)(content,1,(any_arr){useQuotes
-            });};
-            METHOD(push_,arr)(arr,1,(any_arr){content
-            });
+            if (_anyToBool(useQuotes)) {content = METHOD(quoted_,content)(content,1,(any_arr){
+        useQuotes
+});};
+            METHOD(push_,arr)(arr,1,(any_arr){
+        content
+});
         };
     return undefined;
     }
-
-//-------------------------
-void Parser__moduleInit(void){
+//------------------
+void Parser__namespaceInit(void){
         Parser_Lexer =_newClass("Parser_Lexer", Parser_Lexer__init, sizeof(struct Parser_Lexer_s), Object);
         _declareMethods(Parser_Lexer, Parser_Lexer_METHODS);
         _declareProps(Parser_Lexer, Parser_Lexer_PROPS, sizeof Parser_Lexer_PROPS);
@@ -2857,5 +3258,11 @@ void Parser__moduleInit(void){
         _declareMethods(Parser_SourceMapMark, Parser_SourceMapMark_METHODS);
         _declareProps(Parser_SourceMapMark, Parser_SourceMapMark_PROPS, sizeof Parser_SourceMapMark_PROPS);
     
-        Parser_LineTypes__namespaceInit();
+    Parser_LineTypes__namespaceInit();
+};
+
+
+//-------------------------
+void Parser__moduleInit(void){
+    Parser__namespaceInit();
 };

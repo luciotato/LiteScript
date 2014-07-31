@@ -455,3 +455,7 @@
     module.exports.NameDeclOptions = NameDeclOptions;
     
     // end class NameDeclOptions
+// --------------------
+// Module code
+// --------------------
+// end of module

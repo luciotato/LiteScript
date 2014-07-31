@@ -7,16 +7,12 @@
     //var moduleName = process.argv[2]
     var moduleName = process.argv[2];
     //if no moduleName
-    if (!moduleName) {
         //print """ 
-        console.log("            usage: mkInterface name\n\n            where \"name\" is the name of a module to \"require()\"\n\n            a .interface.md file will be generated for the loaded module\n");
             //usage: mkInterface name
             //where "name" is the name of a module to "require()"
             //a .interface.md file will be generated for the loaded module
         //"""
         //process.exit 1
-        process.exit(1);
-    };
     //var requiredModule = require(moduleName)
     var requiredModule = require(moduleName);
     //var mainOut = new Output
@@ -27,9 +23,7 @@
     //var mainNameDecl = new NameDeclaration(moduleName, requiredModule)
     var mainNameDecl = new NameDeclaration(moduleName, requiredModule);
     //mainNameDecl.processMain mainOut
-    mainNameDecl.processMain(mainOut);
     //mainOut.printAll
-    mainOut.printAll();
 //### class Output
     // constructor
     function Output(){ // default constructor
@@ -173,6 +167,10 @@
                 this.getMembersFromObjProperties();
                 //out.indentSpace = '    '
                 out.indentSpace = '    ';
+                //out.push ""
+                out.push("");
+                //out.push ""
+                out.push("");
                 //out.push 'public '+.type+' '+.name
                 out.push('public ' + this.type + ' ' + this.name);
                 //// constructor
@@ -182,8 +180,6 @@
                     out.indent();
                     //out.push 'constructor new '+.name+' '+.params
                     out.push('constructor new ' + this.name + ' ' + this.params);
-                    //out.push ""
-                    out.push("");
                     //out.deindent
                     out.deindent();
                 };
@@ -507,3 +503,13 @@
             
         };
     // end class Map
+// --------------------
+// Module code
+// --------------------
+    if (!moduleName) {
+        console.log("            usage: mkInterface name\n\n            where \"name\" is the name of a module to \"require()\"\n\n            a .interface.md file will be generated for the loaded module\n");
+        process.exit(1);
+    };
+    mainNameDecl.processMain(mainOut);
+    mainOut.printAll();
+// end of module

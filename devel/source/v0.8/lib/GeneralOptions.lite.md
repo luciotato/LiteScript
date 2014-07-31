@@ -13,7 +13,7 @@
             debugEnabled = undefined
             perf=0 // performace counters 0..2
             skip = undefined
-            nomap = undefined
+            generateSourceMap = true //default is to generate sourcemaps
             single = undefined
             compileIfNewer = undefined //compile only if source is newer
             browser =undefined //compile js for browser environment (instead of node.js env.)

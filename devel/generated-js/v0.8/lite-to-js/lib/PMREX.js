@@ -174,3 +174,7 @@
     }
     // export
     module.exports.quotedContent = quotedContent;
+// --------------------
+// Module code
+// --------------------
+// end of module

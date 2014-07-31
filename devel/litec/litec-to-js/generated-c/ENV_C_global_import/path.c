@@ -3,6 +3,9 @@
 //Module path
 //-------------------------
 #include "path.c.extra"
+//-------------------------
+//NAMESPACE path
+//-------------------------
 any path_normalizeArray(DEFAULT_ARGUMENTS); //forward declare
 any path_splitPath(DEFAULT_ARGUMENTS); //forward declare
 any path_resolve(DEFAULT_ARGUMENTS); //forward declare
@@ -60,27 +63,33 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
       //---------
 //if the path tries to go above the root, `up` ends up > 0
       //var up = 0
-      var up = any_number(0);
+      var 
+        up = any_number(0)
+;
       //for  i = parts.length - 1 down to 0
       int64_t _end1=0;
       for(int64_t i=_length(parts) - 1; i>=_end1; i--){
         //var last = parts[i]
-        var last = ITEM(i,parts);
+        var 
+        last = ITEM(i,parts)
+;
         //if last is '.'
         if (__is(last,any_LTR(".")))  {
           //parts.splice(i, 1)
-          METHOD(splice_,parts)(parts,2,(any_arr){any_number(i)
-, any_number(1)
-        });
+          METHOD(splice_,parts)(parts,2,(any_arr){
+        any_number(i), 
+        any_number(1)
+});
         }
         
         //else if last is '..'
         
         else if (__is(last,any_LTR("..")))  {
           //parts.splice(i, 1)
-          METHOD(splice_,parts)(parts,2,(any_arr){any_number(i)
-, any_number(1)
-          });
+          METHOD(splice_,parts)(parts,2,(any_arr){
+        any_number(i), 
+        any_number(1)
+});
           //up++
           up.value.number++;
         }
@@ -88,9 +97,10 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
         
         else if (_anyToBool(up))  {
           //parts.splice(i, 1)
-          METHOD(splice_,parts)(parts,2,(any_arr){any_number(i)
-, any_number(1)
-          });
+          METHOD(splice_,parts)(parts,2,(any_arr){
+        any_number(i), 
+        any_number(1)
+});
           //up--
           up.value.number--;
         };
@@ -103,8 +113,9 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
         int64_t _end2=_anyToNumber(up);
         for(int64_t n=0; n<=_end2; n++){
           //parts.unshift '..'
-          METHOD(unshift_,parts)(parts,1,(any_arr){any_LTR("..")
-          });
+          METHOD(unshift_,parts)(parts,1,(any_arr){
+        any_LTR("..")
+});
         };// end for n
         
       };
@@ -121,62 +132,83 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
 //'root' is just a slash, or nothing.
 //var splitPathRe = /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
         //var result: string array = []
-        var result = new(Array,0,NULL);
+        var 
+        result = new(Array,0,NULL)
+;
         //var parts = filename.split('/')
-        var parts = METHOD(split_,filename)(filename,1,(any_arr){any_LTR("/")
-        });
+        var 
+        parts = METHOD(split_,filename)(filename,1,(any_arr){
+        any_LTR("/")
+})
+;
         //if no parts[0] # starts with "/"
         if (!_anyToBool(ITEM(0,parts)))  {// # starts with "/"
             //result.push "/"  # result[0] is root
-            METHOD(push_,result)(result,1,(any_arr){any_LTR("/")
-            });// # result[0] is root
+            METHOD(push_,result)(result,1,(any_arr){
+        any_LTR("/")
+});// # result[0] is root
         }
         //else
         
         else {
             //# do not start with "/"
             //result.push "" # result[0] is root = ""
-            METHOD(push_,result)(result,1,(any_arr){any_EMPTY_STR
-            });// # result[0] is root = ""
+            METHOD(push_,result)(result,1,(any_arr){
+        any_EMPTY_STR
+});// # result[0] is root = ""
         };
         //var dir = parts.slice(1,-1).join("/") #rejoin 2nd to last-1 to make "dir"
-        var dir = __call(join_,METHOD(slice_,parts)(parts,2,(any_arr){any_number(1)
-, any_number(-1)
-        }),1,(any_arr){any_LTR("/")
-        });// #rejoin 2nd to last-1 to make "dir"
+        var 
+        dir = __call(join_,METHOD(slice_,parts)(parts,2,(any_arr){
+        any_number(1), 
+        any_number(-1)
+}),1,(any_arr){
+        any_LTR("/")
+})
+;// #rejoin 2nd to last-1 to make "dir"
         //if dir, dir = "#{dir}/"
-        if (_anyToBool(dir)) {dir = _concatAny(2,dir
-, any_LTR("/")
-        );};
+        if (_anyToBool(dir)) {dir = _concatAny(2,
+        dir, 
+        any_LTR("/")
+);};
         //result.push dir
-        METHOD(push_,result)(result,1,(any_arr){dir
-        });
+        METHOD(push_,result)(result,1,(any_arr){
+        dir
+});
         //// now basename
         //var basename:string = parts.slice(-1)[0] //last part
-        var basename = ITEM(0,METHOD(slice_,parts)(parts,1,(any_arr){any_number(-1)
-        })); //last part
+        var 
+        basename = ITEM(0,METHOD(slice_,parts)(parts,1,(any_arr){
+        any_number(-1)
+}))
+; //last part
         //result.push basename
-        METHOD(push_,result)(result,1,(any_arr){basename
-        });
+        METHOD(push_,result)(result,1,(any_arr){
+        basename
+});
 //now the extension.
 //split on ".", last is extension
         //parts=basename.split('.') 
-        parts = METHOD(split_,basename)(basename,1,(any_arr){any_LTR(".")
-        });
+        parts = METHOD(split_,basename)(basename,1,(any_arr){
+        any_LTR(".")
+});
         //if parts.length is 1 //no extension, only filename
         if (__is(any_number(_length(parts)),any_number(1)))  { //no extension, only filename
             //result.push "" 
-            METHOD(push_,result)(result,1,(any_arr){any_EMPTY_STR
-            });
+            METHOD(push_,result)(result,1,(any_arr){
+        any_EMPTY_STR
+});
         }
         //else
         
         else {
             //result.push ".#{parts.pop()}" 
-            METHOD(push_,result)(result,1,(any_arr){_concatAny(2,any_LTR(".")
-, (METHOD(pop_,parts)(parts,0,NULL))
-            )
-            });
+            METHOD(push_,result)(result,1,(any_arr){
+        _concatAny(2,
+        any_LTR("."), 
+        (METHOD(pop_,parts)(parts,0,NULL))
+)
+});
         };
             
             
@@ -193,11 +225,17 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
             //resolvedPath = ''
             //resolvedAbsolute = false
             //args = arguments.toArray()
-        var resolvedPath = any_EMPTY_STR, resolvedAbsolute = false, args = _newArray(argc,arguments);
+        var 
+        resolvedPath = any_EMPTY_STR, 
+        resolvedAbsolute = false, 
+        args = _newArray(argc,arguments)
+;
         //for i = args.length - 1, while i >= -1 and not resolvedAbsolute, i--
         for(int64_t i=_length(args) - 1; i >= -1 && !(_anyToBool(resolvedAbsolute)); i--){
             //var path:string = i>=0 ? args[i] else process.cwd()
-            var path = i >= 0 ? ITEM(i,args) : process_cwd(undefined,0,NULL);
+            var 
+        path = i >= 0 ? ITEM(i,args) : process_cwd(undefined,0,NULL)
+;
             //// Skip empty and invalid entries
             //if no path, continue
             if (!_anyToBool(path)) {continue;};
@@ -207,13 +245,15 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
                 throw(new(Error,1,(any_arr){any_LTR("Arguments to path.resolve must be strings")}));;
             };
             //resolvedPath = "#{path}/#{resolvedPath}"
-            resolvedPath = _concatAny(3,path
-, any_LTR("/")
-, resolvedPath
-            );
+            resolvedPath = _concatAny(3,
+        path, 
+        any_LTR("/"), 
+        resolvedPath
+);
             //resolvedAbsolute = path.charAt(0) is '/'
-            resolvedAbsolute = any_number(__is(METHOD(charAt_,path)(path,1,(any_arr){any_number(0)
-            }),any_LTR("/")));
+            resolvedAbsolute = any_number(__is(METHOD(charAt_,path)(path,1,(any_arr){
+        any_number(0)
+}),any_LTR("/")));
         };// end for i
 //// At this point the path should be resolved to a full absolute path, but
 //// handle relative paths to be safe (might happen when process.cwd() fails)
@@ -223,28 +263,35 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
         ////}), !resolvedAbsolute).join('/');
         ////filter out empty parts
         //var partsOK = []
-        var partsOK = new(Array,0,NULL);
+        var 
+        partsOK = new(Array,0,NULL)
+;
         //for each part in resolvedPath.split('/')
-        any _list1=METHOD(split_,resolvedPath)(resolvedPath,1,(any_arr){any_LTR("/")
-        });
+        any _list1=METHOD(split_,resolvedPath)(resolvedPath,1,(any_arr){
+        any_LTR("/")
+});
         { var part=undefined;
         for(int part__inx=0 ; part__inx<_list1.value.arr->length ; part__inx++){part=ITEM(part__inx,_list1);
           
             //where part
             if(_anyToBool(part)){
                 //partsOK.push part
-                METHOD(push_,partsOK)(partsOK,1,(any_arr){part
-                });
+                METHOD(push_,partsOK)(partsOK,1,(any_arr){
+        part
+});
         }}};// end for each in
         //resolvedPath = normalizeArray(partsOK, allowAboveRoot = not resolvedAbsolute).join('/')
-        resolvedPath = __call(join_,path_normalizeArray(undefined,2,(any_arr){partsOK
-, any_number(!(_anyToBool(resolvedAbsolute)))
-        }),1,(any_arr){any_LTR("/")
-        });
+        resolvedPath = __call(join_,path_normalizeArray(undefined,2,(any_arr){
+        partsOK, 
+        any_number(!(_anyToBool(resolvedAbsolute)))
+}),1,(any_arr){
+        any_LTR("/")
+});
         //return "#{resolvedAbsolute? '/' : ''}#{resolvedPath}" or '.'
-        return (_anyToBool(__or1=_concatAny(2,(_anyToBool(resolvedAbsolute) ? any_LTR("/") : any_EMPTY_STR)
-, resolvedPath
-        ))? __or1 : any_LTR("."));
+        return (_anyToBool(__or1=_concatAny(2,
+        (_anyToBool(resolvedAbsolute) ? any_LTR("/") : any_EMPTY_STR), 
+        resolvedPath
+))? __or1 : any_LTR("."));
     return undefined;
     }
 //// path.normalize(path)
@@ -259,10 +306,18 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
             //trailingSlash = path.charAt(path.length - 1) is '/'
             //segments:array = path.split('/')
             //nonEmptySegments = []
-        var isAbs = path_isAbsolute(undefined,1,(any_arr){path
-            }), trailingSlash = any_number(__is(METHOD(charAt_,path)(path,1,(any_arr){any_number(_length(path) - 1)
-            }),any_LTR("/"))), segments = METHOD(split_,path)(path,1,(any_arr){any_LTR("/")
-            }), nonEmptySegments = new(Array,0,NULL);
+        var 
+        isAbs = path_isAbsolute(undefined,1,(any_arr){
+        path
+}), 
+        trailingSlash = any_number(__is(METHOD(charAt_,path)(path,1,(any_arr){
+        any_number(_length(path) - 1)
+}),any_LTR("/"))), 
+        segments = METHOD(split_,path)(path,1,(any_arr){
+        any_LTR("/")
+}), 
+        nonEmptySegments = new(Array,0,NULL)
+;
         //// Normalize the path
         //for each segment in segments
         any _list2=segments;
@@ -272,14 +327,17 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
           //where segment
           if(_anyToBool(segment)){
             //nonEmptySegments.push segment
-            METHOD(push_,nonEmptySegments)(nonEmptySegments,1,(any_arr){segment
-            });
+            METHOD(push_,nonEmptySegments)(nonEmptySegments,1,(any_arr){
+        segment
+});
         }}};// end for each in
         //path = normalizeArray(nonEmptySegments, allowAboveRoot = not isAbs).join('/')
-        path = __call(join_,path_normalizeArray(undefined,2,(any_arr){nonEmptySegments
-, any_number(!(_anyToBool(isAbs)))
-        }),1,(any_arr){any_LTR("/")
-        });
+        path = __call(join_,path_normalizeArray(undefined,2,(any_arr){
+        nonEmptySegments, 
+        any_number(!(_anyToBool(isAbs)))
+}),1,(any_arr){
+        any_LTR("/")
+});
         //if no path and not isAbs
         if (!_anyToBool(path) && !(_anyToBool(isAbs)))  {
           //path = '.'
@@ -289,15 +347,17 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
         //if path and trailingSlash
         if (_anyToBool(path) && _anyToBool(trailingSlash))  {
           //path = '#{path}/'
-          path = _concatAny(2,path
-, any_LTR("/")
-          );
+          path = _concatAny(2,
+        path, 
+        any_LTR("/")
+);
         };
         
         //return "#{isAbs? '/' : ''}#{path}"
-        return _concatAny(2,(_anyToBool(isAbs) ? any_LTR("/") : any_EMPTY_STR)
-, path
-        );
+        return _concatAny(2,
+        (_anyToBool(isAbs) ? any_LTR("/") : any_EMPTY_STR), 
+        path
+);
     return undefined;
     }
       
@@ -308,8 +368,9 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
         var path= argc? arguments[0] : undefined;
         //---------
         //return path.charAt(0) is '/'
-        return any_number(__is(METHOD(charAt_,path)(path,1,(any_arr){any_number(0)
-        }),any_LTR("/")));
+        return any_number(__is(METHOD(charAt_,path)(path,1,(any_arr){
+        any_number(0)
+}),any_LTR("/")));
     return undefined;
     }
   
@@ -317,7 +378,9 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
     //public function join
     any path_join(DEFAULT_ARGUMENTS){
         //var path = ''
-        var path = any_EMPTY_STR;
+        var 
+        path = any_EMPTY_STR
+;
         //for each segment in arguments.toArray()
         any _list3=_newArray(argc,arguments);
         { var segment=undefined;
@@ -340,15 +403,17 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
             
             else {
                 //path = '#{path}/#{segment}'
-                path = _concatAny(3,path
-, any_LTR("/")
-, segment
-                );
+                path = _concatAny(3,
+        path, 
+        any_LTR("/"), 
+        segment
+);
             };
         }};// end for each in
         //return normalize(path)
-        return path_normalize(undefined,1,(any_arr){path
-        });
+        return path_normalize(undefined,1,(any_arr){
+        path
+});
     return undefined;
     }
 //// path.relative(from, to)
@@ -364,25 +429,41 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
         }
         //---------
         //from = resolve(from).substr(1)
-        from = __call(substr_,path_resolve(undefined,1,(any_arr){from
-        }),1,(any_arr){any_number(1)
-        });
+        from = __call(substr_,path_resolve(undefined,1,(any_arr){
+        from
+}),1,(any_arr){
+        any_number(1)
+});
         //toPath = resolve(toPath).substr(1)
-        toPath = __call(substr_,path_resolve(undefined,1,(any_arr){toPath
-        }),1,(any_arr){any_number(1)
-        });
+        toPath = __call(substr_,path_resolve(undefined,1,(any_arr){
+        toPath
+}),1,(any_arr){
+        any_number(1)
+});
         //var fromParts:array = trim(from.split('/'))
-        var fromParts = path_trim(undefined,1,(any_arr){METHOD(split_,from)(from,1,(any_arr){any_LTR("/")
-        })
-        });
+        var 
+        fromParts = path_trim(undefined,1,(any_arr){
+        METHOD(split_,from)(from,1,(any_arr){
+        any_LTR("/")
+})
+})
+;
         //var toParts:array = trim(toPath.split('/'))
-        var toParts = path_trim(undefined,1,(any_arr){METHOD(split_,toPath)(toPath,1,(any_arr){any_LTR("/")
-        })
-        });
+        var 
+        toParts = path_trim(undefined,1,(any_arr){
+        METHOD(split_,toPath)(toPath,1,(any_arr){
+        any_LTR("/")
+})
+})
+;
         //var length = fromParts.length<toParts.length? fromParts.length : toParts.length
-        var length = _length(fromParts) < _length(toParts) ? any_number(_length(fromParts)) : any_number(_length(toParts));
+        var 
+        length = _length(fromParts) < _length(toParts) ? any_number(_length(fromParts)) : any_number(_length(toParts))
+;
         //var samePartsLength = length
-        var samePartsLength = length;
+        var 
+        samePartsLength = length
+;
         //for i = 0 while i < length
         for(int64_t i=0; i < _anyToNumber(length); i++){
           //if fromParts[i] isnt toParts[i]
@@ -394,21 +475,27 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
           };
         };// end for i
         //var outputParts = []
-        var outputParts = new(Array,0,NULL);
+        var 
+        outputParts = new(Array,0,NULL)
+;
         //for i = samePartsLength, while i < fromParts.length
         for(int64_t i=_anyToNumber(samePartsLength); i < _length(fromParts); i++){
           //outputParts.push('..')
-          METHOD(push_,outputParts)(outputParts,1,(any_arr){any_LTR("..")
-        });
+          METHOD(push_,outputParts)(outputParts,1,(any_arr){
+        any_LTR("..")
+});
         };// end for i
         
         //outputParts = outputParts.concat(toParts.slice(samePartsLength))
-        outputParts = METHOD(concat_,outputParts)(outputParts,1,(any_arr){METHOD(slice_,toParts)(toParts,1,(any_arr){samePartsLength
-        })
-        });
+        outputParts = METHOD(concat_,outputParts)(outputParts,1,(any_arr){
+        METHOD(slice_,toParts)(toParts,1,(any_arr){
+        samePartsLength
+})
+});
         //return outputParts.join('/')
-        return METHOD(join_,outputParts)(outputParts,1,(any_arr){any_LTR("/")
-        });
+        return METHOD(join_,outputParts)(outputParts,1,(any_arr){
+        any_LTR("/")
+});
     return undefined;
     }
     //helper function trim(arr:array) returns array
@@ -417,7 +504,9 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
         var arr= argc? arguments[0] : undefined;
         //---------
         //var start = 0
-        var start = any_number(0);
+        var 
+        start = any_number(0)
+;
         //while start < arr.length
         while(_anyToNumber(start) < _length(arr)){
             //if arr[start] isnt '', break
@@ -426,7 +515,9 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
             start.value.number++;
         };// end loop
         //var endPos = arr.length - 1
-        var endPos = any_number(_length(arr) - 1);
+        var 
+        endPos = any_number(_length(arr) - 1)
+;
         
         //while endPos >= 0
         while(_anyToNumber(endPos) >= 0){
@@ -438,9 +529,10 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
         //if start > endPos, return []
         if (_anyToNumber(start) > _anyToNumber(endPos)) {return new(Array,0,NULL);};
         //return arr.slice(start, endPos + 1)
-        return METHOD(slice_,arr)(arr,2,(any_arr){start
-, any_number(_anyToNumber(endPos) + 1)
-        });
+        return METHOD(slice_,arr)(arr,2,(any_arr){
+        start, 
+        any_number(_anyToNumber(endPos) + 1)
+});
     return undefined;
     }
         
@@ -455,8 +547,13 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
             //result = splitPath(path)
             //root:string = result[0]
             //dir:string = result[1]
-        var result = path_splitPath(undefined,1,(any_arr){path
-            }), root = ITEM(0,result), dir = ITEM(1,result);
+        var 
+        result = path_splitPath(undefined,1,(any_arr){
+        path
+}), 
+        root = ITEM(0,result), 
+        dir = ITEM(1,result)
+;
         //if no root and no dir
         if (!_anyToBool(root) && !_anyToBool(dir))  {
             //// No dirname whatsoever
@@ -468,15 +565,17 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
         if (_anyToBool(dir))  {
             //// It has a dirname, strip trailing slash
             //dir = dir.substr(0, dir.length - 1)
-            dir = METHOD(substr_,dir)(dir,2,(any_arr){any_number(0)
-, any_number(_length(dir) - 1)
-            });
+            dir = METHOD(substr_,dir)(dir,2,(any_arr){
+        any_number(0), 
+        any_number(_length(dir) - 1)
+});
         };
         
         //return "#{root}#{dir}"
-        return _concatAny(2,root
-, dir
-        );
+        return _concatAny(2,
+        root, 
+        dir
+);
     return undefined;
     }
     //public function basename(path:string, ext:string) 
@@ -490,16 +589,21 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
          }
          //---------
          //var f:string = splitPath(path)[2]
-         var f = ITEM(2,path_splitPath(undefined,1,(any_arr){path
-         }));
+         var 
+        f = ITEM(2,path_splitPath(undefined,1,(any_arr){
+        path
+}))
+;
          //// TODO: make this comparison case-insensitive on windows?
          //if ext and f.substr(-1 * ext.length) is ext
-         if (_anyToBool(ext) && __is(METHOD(substr_,f)(f,1,(any_arr){any_number(-1 * _length(ext))
-         }),ext))  {
+         if (_anyToBool(ext) && __is(METHOD(substr_,f)(f,1,(any_arr){
+        any_number(-1 * _length(ext))
+}),ext))  {
             //f = f.substr(0, f.length - ext.length)
-            f = METHOD(substr_,f)(f,2,(any_arr){any_number(0)
-, any_number(_length(f) - _length(ext))
-            });
+            f = METHOD(substr_,f)(f,2,(any_arr){
+        any_number(0), 
+        any_number(_length(f) - _length(ext))
+});
          };
          
          //return f
@@ -512,13 +616,19 @@ any path_extname(DEFAULT_ARGUMENTS); //forward declare
         var path= argc? arguments[0] : undefined;
         //---------
         //return splitPath(path)[3]
-        return ITEM(3,path_splitPath(undefined,1,(any_arr){path
-        }));
+        return ITEM(3,path_splitPath(undefined,1,(any_arr){
+        path
+}));
     return undefined;
     }
+//------------------
+void path__namespaceInit(void){
+    path_sep = any_LTR("/");
+    path_delimiter = any_LTR(":");
+};
+
 
 //-------------------------
 void path__moduleInit(void){
-    path_sep = any_LTR("/");
-    path_delimiter = any_LTR(":");
+    path__namespaceInit();
 };

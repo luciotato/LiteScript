@@ -190,4 +190,8 @@
         //throw new ControlledError(msg)
         throw new ControlledError(msg);
      };
+// --------------------
+// Module code
+// --------------------
+// end of module
 module.exports=logger;

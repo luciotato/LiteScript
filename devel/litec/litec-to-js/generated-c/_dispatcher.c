@@ -160,6 +160,7 @@ static str _ADD_VERBS[] = { //string name for each distinct method name
 ,     "capitalized"
 ,     "quoted"
 ,     "rpad"
+,     "repeat"
 ,     "remove"
 };
 // propery names
@@ -176,7 +177,7 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 ,     "debugEnabled"
 ,     "perf"
 ,     "skip"
-,     "nomap"
+,     "generateSourceMap"
 ,     "single"
 ,     "compileIfNewer"
 ,     "browser"
@@ -196,6 +197,7 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 ,     "main"
 ,     "Producer"
 ,     "recurseLevel"
+,     "filesProducedCount"
 ,     "parent"
 ,     "childs"
 ,     "keyword"
@@ -371,8 +373,8 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 //-------------------------------
 int main(int argc, char** argv) {
     LiteC_init( 87, argc,argv);
-    LiteC_addMethodSymbols( 160, _ADD_VERBS);
-    LiteC_addPropSymbols( 200, _ADD_THINGS);
+    LiteC_addMethodSymbols( 161, _ADD_VERBS);
+    LiteC_addPropSymbols( 201, _ADD_THINGS);
     LiteC_registerShim(String,startsWith_,String_startsWith);
     LiteC_registerShim(String,endsWith_,String_endsWith);
     LiteC_registerShim(String,trimRight_,String_trimRight);
@@ -380,6 +382,7 @@ int main(int argc, char** argv) {
     LiteC_registerShim(String,capitalized_,String_capitalized);
     LiteC_registerShim(String,quoted_,String_quoted);
     LiteC_registerShim(String,rpad_,String_rpad);
+    LiteC_registerShim(String,repeat_,String_repeat);
     LiteC_registerShim(Array,remove_,Array_remove);
     fs__moduleInit();
     path__moduleInit();

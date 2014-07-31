@@ -21,14 +21,14 @@
       <logicalFolder name="ENV_C_global_import"
                      displayName="ENV_C_global_import"
                      projectFiles="true">
+        <itemPath>generated-c/ENV_C_global_import/fs.c</itemPath>
+        <itemPath>generated-c/ENV_C_global_import/fs.c.extra</itemPath>
+        <itemPath>generated-c/ENV_C_global_import/fs.h</itemPath>
         <itemPath>generated-c/ENV_C_global_import/path.c</itemPath>
         <itemPath>generated-c/ENV_C_global_import/path.c.extra</itemPath>
         <itemPath>generated-c/ENV_C_global_import/path.h</itemPath>
       </logicalFolder>
       <logicalFolder name="interfaces" displayName="interfaces" projectFiles="true">
-        <itemPath>generated-c/interfaces/fs.c</itemPath>
-        <itemPath>generated-c/interfaces/fs.c.extra</itemPath>
-        <itemPath>generated-c/interfaces/fs.h</itemPath>
       </logicalFolder>
       <logicalFolder name="lib" displayName="lib" projectFiles="true">
         <itemPath>generated-c/lib/ControlledError.c</itemPath>
@@ -137,8 +137,8 @@
           <standard>3</standard>
           <incDir>
             <pElem>../core</pElem>
-            <pElem>generated-c/C_global_import</pElem>
             <pElem>generated-c/interfaces</pElem>
+            <pElem>generated-c/ENV_C_global_import</pElem>
           </incDir>
           <commandLine>-fmax-errors=10</commandLine>
         </cTool>
@@ -194,6 +194,21 @@
       <item path="generated-c/Compiler.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Compiler.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="generated-c/ENV_C_global_import/fs.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="generated-c/ENV_C_global_import/fs.c.extra"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="generated-c/ENV_C_global_import/fs.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="generated-c/ENV_C_global_import/path.c"
             ex="false"
@@ -255,12 +270,6 @@
       <item path="generated-c/c_lite.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/c_lite.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="generated-c/interfaces/fs.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/interfaces/fs.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="generated-c/interfaces/fs.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/ControlledError.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -346,9 +355,9 @@
           <developmentMode>6</developmentMode>
           <standard>3</standard>
           <incDir>
-            <pElem>generated-c/C_global_import</pElem>
             <pElem>../core</pElem>
             <pElem>../include</pElem>
+            <pElem>generated-c/ENV_C_global_import</pElem>
           </incDir>
           <preprocessorList>
             <Elem>NDEBUG</Elem>
@@ -408,6 +417,21 @@
       <item path="generated-c/Compiler.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Compiler.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="generated-c/ENV_C_global_import/fs.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="generated-c/ENV_C_global_import/fs.c.extra"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="generated-c/ENV_C_global_import/fs.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="generated-c/ENV_C_global_import/path.c"
             ex="false"
@@ -469,12 +493,6 @@
       <item path="generated-c/c_lite.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/c_lite.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="generated-c/interfaces/fs.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/interfaces/fs.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="generated-c/interfaces/fs.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/ControlledError.c" ex="false" tool="0" flavor2="0">
       </item>

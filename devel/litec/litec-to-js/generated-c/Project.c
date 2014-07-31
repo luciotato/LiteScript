@@ -3,6 +3,9 @@
 //Module Project
 //-------------------------
 #include "Project.c.extra"
+//-------------------------
+//NAMESPACE Project
+//-------------------------
     //-----------------------
     // Class Project: static list of METHODS(verbs) and PROPS(things)
     //-----------------------
@@ -32,6 +35,7 @@
     , main_
     , Producer_
     , recurseLevel_
+    , filesProducedCount_
     };
     
     
@@ -87,6 +91,7 @@
         //main: Grammar.Module
         //Producer
         //recurseLevel = 0
+        //filesProducedCount
      ;
         ////lexer=undefined //dummy, to allow Project to be main module's parent
 //#### constructor new Project(filename, options:GeneralOptions)
@@ -106,8 +111,9 @@
 //when imported|required is only compiled once and then cached.
     
         //console.time 'Init Project'
-        console_time(undefined,1,(any_arr){any_LTR("Init Project")
-        });
+        console_time(undefined,1,(any_arr){
+        any_LTR("Init Project")
+});
         //.name = 'Project'
         PROP(name_,this) = any_LTR("Project");
         //options.now = new Date()
@@ -117,38 +123,48 @@
         //.moduleCache = new Map 
         PROP(moduleCache_,this) = new(Map,0,NULL);
         //logger.init options
-        logger_init(undefined,1,(any_arr){options
-        });
+        logger_init(undefined,1,(any_arr){
+        options
+});
 //set basePath from main module path
         //var tempFileInfo = new Environment.FileInfo(filename)
-        var tempFileInfo = new(Environment_FileInfo,1,(any_arr){filename
-        });
+        var 
+        tempFileInfo = new(Environment_FileInfo,1,(any_arr){
+        filename
+})
+;
         //options.projectDir = tempFileInfo.dir
         PROP(projectDir_,options) = PROP(dir_,tempFileInfo);
         //options.mainModuleName = './#{tempFileInfo.base}'
-        PROP(mainModuleName_,options) = _concatAny(2,any_LTR("./")
-, PROP(base_,tempFileInfo)
-        );
+        PROP(mainModuleName_,options) = _concatAny(2,
+        any_LTR("./"), 
+        PROP(base_,tempFileInfo)
+);
         //options.outDir = Environment.resolvePath(options.outDir)
-        PROP(outDir_,options) = Environment_resolvePath(undefined,1,(any_arr){PROP(outDir_,options)
-        });
+        PROP(outDir_,options) = Environment_resolvePath(undefined,1,(any_arr){
+        PROP(outDir_,options)
+});
         //Environment.setBaseInfo options.projectDir, options.outDir, options.target
-        Environment_setBaseInfo(undefined,3,(any_arr){PROP(projectDir_,options)
-, PROP(outDir_,options)
-, PROP(target_,options)
-        });
-        //logger.info 'Project Dir:',.options.projectDir
-        logger_info(undefined,2,(any_arr){any_LTR("Project Dir:")
-, PROP(projectDir_,PROP(options_,this))
-        });
-        //logger.info 'Main Module:',.options.mainModuleName
-        logger_info(undefined,2,(any_arr){any_LTR("Main Module:")
-, PROP(mainModuleName_,PROP(options_,this))
-        });
-        //logger.info 'Out Dir:',.options.outDir
-        logger_info(undefined,2,(any_arr){any_LTR("Out Dir:")
-, PROP(outDir_,PROP(options_,this))
-        });
+        Environment_setBaseInfo(undefined,3,(any_arr){
+        PROP(projectDir_,options), 
+        PROP(outDir_,options), 
+        PROP(target_,options)
+});
+        //logger.msg 'Project Dir:',.options.projectDir
+        logger_msg(undefined,2,(any_arr){
+        any_LTR("Project Dir:"), 
+        PROP(projectDir_,PROP(options_,this))
+});
+        //logger.msg 'Main Module:',.options.mainModuleName
+        logger_msg(undefined,2,(any_arr){
+        any_LTR("Main Module:"), 
+        PROP(mainModuleName_,PROP(options_,this))
+});
+        //logger.msg 'Out Dir:',.options.outDir
+        logger_msg(undefined,2,(any_arr){
+        any_LTR("Out Dir:"), 
+        PROP(outDir_,PROP(options_,this))
+});
 //compiler vars, to use at conditional compilation
         
         //.compilerVars = new Map
@@ -159,10 +175,12 @@
         for(int def__inx=0 ; def__inx<_list5.value.arr->length ; def__inx++){def=ITEM(def__inx,_list5);
         
             //.compilerVars.set def,new Names.Declaration(def)
-            __call(set_,PROP(compilerVars_,this),2,(any_arr){def
-, new(Names_Declaration,1,(any_arr){def
-            })
-            });
+            __call(set_,PROP(compilerVars_,this),2,(any_arr){
+        def, 
+        new(Names_Declaration,1,(any_arr){
+        def
+})
+});
         }};// end for each in
 //add 'inNode' and 'inBrowser' as compiler vars
         ////ifdef TARGET_JS
@@ -177,24 +195,32 @@
         ////endif
         ////ifdef TARGET_C
         //.compilerVars.set 'ENV_C', new Names.Declaration("ENV_C")
-        __call(set_,PROP(compilerVars_,this),2,(any_arr){any_LTR("ENV_C")
-, new(Names_Declaration,1,(any_arr){any_LTR("ENV_C")
-        })
-        });
+        __call(set_,PROP(compilerVars_,this),2,(any_arr){
+        any_LTR("ENV_C"), 
+        new(Names_Declaration,1,(any_arr){
+        any_LTR("ENV_C")
+})
+});
         ////endif
         //var targetDef = 'TARGET_#{options.target.toUpperCase()}'
-        var targetDef = _concatAny(2,any_LTR("TARGET_")
-, (__call(toUpperCase_,PROP(target_,options),0,NULL))
-        );
+        var 
+        targetDef = _concatAny(2,
+        any_LTR("TARGET_"), 
+        (__call(toUpperCase_,PROP(target_,options),0,NULL))
+)
+;
         //.compilerVars.set targetDef,new Names.Declaration(targetDef)
-        __call(set_,PROP(compilerVars_,this),2,(any_arr){targetDef
-, new(Names_Declaration,1,(any_arr){targetDef
-        })
-        });
+        __call(set_,PROP(compilerVars_,this),2,(any_arr){
+        targetDef, 
+        new(Names_Declaration,1,(any_arr){
+        targetDef
+})
+});
         //logger.msg 'preprocessor #defined', .compilerVars.keys()
-        logger_msg(undefined,2,(any_arr){any_LTR("preprocessor #defined")
-, __call(keys_,PROP(compilerVars_,this),0,NULL)
-        });
+        logger_msg(undefined,2,(any_arr){
+        any_LTR("preprocessor #defined"), 
+        __call(keys_,PROP(compilerVars_,this),0,NULL)
+});
         ////logger.message .compilerVars
         ////logger.info ""
 //create a 'rootModule' module to hold global scope
@@ -203,25 +229,29 @@
         //.rootModule.name = '*Global Scope*' 
         PROP(name_,PROP(rootModule_,this)) = any_LTR("*Global Scope*");
         //.rootModule.fileInfo = new Environment.FileInfo('Project') 
-        PROP(fileInfo_,PROP(rootModule_,this)) = new(Environment_FileInfo,1,(any_arr){any_LTR("Project")
-        });
+        PROP(fileInfo_,PROP(rootModule_,this)) = new(Environment_FileInfo,1,(any_arr){
+        any_LTR("Project")
+});
         //.rootModule.fileInfo.relFilename='Project'
         PROP(relFilename_,PROP(fileInfo_,PROP(rootModule_,this))) = any_LTR("Project");
         //.rootModule.fileInfo.dir = options.projectDir
         PROP(dir_,PROP(fileInfo_,PROP(rootModule_,this))) = PROP(projectDir_,options);
         //.rootModule.fileInfo.outFilename = "#{options.outDir}/_project_"
-        PROP(outFilename_,PROP(fileInfo_,PROP(rootModule_,this))) = _concatAny(2,PROP(outDir_,options)
-, any_LTR("/_project_")
-        );
+        PROP(outFilename_,PROP(fileInfo_,PROP(rootModule_,this))) = _concatAny(2,
+        PROP(outDir_,options), 
+        any_LTR("/_project_")
+);
         
 //Validate.initialize will prepare the global scope 
 //by parsing the file: "lib/GlobalScopeJS.interface.md"
         //Validate.initialize this 
-        Validate_initialize(undefined,1,(any_arr){this
-        });
+        Validate_initialize(undefined,1,(any_arr){
+        this
+});
         //if options.perf>1, console.timeEnd 'Init Project'
-        if (_anyToNumber(PROP(perf_,options)) > 1) {console_timeEnd(undefined,1,(any_arr){any_LTR("Init Project")
-        });};
+        if (_anyToNumber(PROP(perf_,options)) > 1) {console_timeEnd(undefined,1,(any_arr){
+        any_LTR("Init Project")
+});};
      }
 //#### Method compile()
      any Project_compile(DEFAULT_ARGUMENTS){
@@ -229,63 +259,84 @@
         //---------
 //Import & compile the main module. The main module will, in turn, 'import' and 'compile' 
 //-if not cached-, all dependent modules. 
-        //console.time 'Parse'
-        console_time(undefined,1,(any_arr){any_LTR("Parse")
-        });
+        //logger.msg "Compiling",.options.mainModuleName
+        logger_msg(undefined,2,(any_arr){
+        any_LTR("Compiling"), 
+        PROP(mainModuleName_,PROP(options_,this))
+});
         //var importInfo = new Environment.ImportParameterInfo
-        var importInfo = new(Environment_ImportParameterInfo,0,NULL);
+        var 
+        importInfo = new(Environment_ImportParameterInfo,0,NULL)
+;
         //importInfo.name = .options.mainModuleName
         PROP(name_,importInfo) = PROP(mainModuleName_,PROP(options_,this));
+        //console.time 'Parse'
+        console_time(undefined,1,(any_arr){
+        any_LTR("Parse")
+});
         //.main = .importModule(.rootModule, importInfo)
-        PROP(main_,this) = METHOD(importModule_,this)(this,2,(any_arr){PROP(rootModule_,this)
-, importInfo
-        });
+        PROP(main_,this) = METHOD(importModule_,this)(this,2,(any_arr){
+        PROP(rootModule_,this), 
+        importInfo
+});
         //.main.isMain = true
         PROP(isMain_,PROP(main_,this)) = true;
         //if .options.perf>1, console.timeEnd 'Parse'
-        if (_anyToNumber(PROP(perf_,PROP(options_,this))) > 1) {console_timeEnd(undefined,1,(any_arr){any_LTR("Parse")
-        });};
+        if (_anyToNumber(PROP(perf_,PROP(options_,this))) > 1) {console_timeEnd(undefined,1,(any_arr){
+        any_LTR("Parse")
+});};
         //if logger.errorCount is 0
         if (__is(logger_errorCount,any_number(0)))  {
             //logger.info "\nParsed OK"
-            logger_info(undefined,1,(any_arr){any_LTR("\nParsed OK")
-            });
+            logger_info(undefined,1,(any_arr){
+        any_LTR("\nParsed OK")
+});
         };
 //Validate
         //if no .options.skip 
         if (!_anyToBool(PROP(skip_,PROP(options_,this))))  {
             //logger.info "Validating"
-            logger_info(undefined,1,(any_arr){any_LTR("Validating")
-            });
+            logger_info(undefined,1,(any_arr){
+        any_LTR("Validating")
+});
             //console.time 'Validate'
-            console_time(undefined,1,(any_arr){any_LTR("Validate")
-            });
+            console_time(undefined,1,(any_arr){
+        any_LTR("Validate")
+});
             //Validate.validate this
-            Validate_validate(undefined,1,(any_arr){this
-            });
+            Validate_validate(undefined,1,(any_arr){
+        this
+});
             //if .options.perf>1, console.timeEnd 'Validate'
-            if (_anyToNumber(PROP(perf_,PROP(options_,this))) > 1) {console_timeEnd(undefined,1,(any_arr){any_LTR("Validate")
-            });};
+            if (_anyToNumber(PROP(perf_,PROP(options_,this))) > 1) {console_timeEnd(undefined,1,(any_arr){
+        any_LTR("Validate")
+});};
             //if logger.errorCount, logger.throwControlled '#{logger.errorCount} errors'
-            if (_anyToBool(logger_errorCount)) {logger_throwControlled(undefined,1,(any_arr){_concatAny(2,logger_errorCount
-, any_LTR(" errors")
-            )
-            });};
+            if (_anyToBool(logger_errorCount)) {logger_throwControlled(undefined,1,(any_arr){
+        _concatAny(2,
+        logger_errorCount, 
+        any_LTR(" errors")
+)
+});};
         };
 //Produce, for each module
         //console.time 'Produce'
-        console_time(undefined,1,(any_arr){any_LTR("Produce")
-        });
-        //logger.msg "\nProducing #{.options.target} at #{.options.outDir}"
-        logger_msg(undefined,1,(any_arr){_concatAny(4,any_LTR("\nProducing ")
-, PROP(target_,PROP(options_,this))
-, any_LTR(" at ")
-, PROP(outDir_,PROP(options_,this))
-        )
-        });
+        console_time(undefined,1,(any_arr){
+        any_LTR("Produce")
+});
+        //logger.msg "Producing #{.options.target}"
+        logger_msg(undefined,1,(any_arr){
+        _concatAny(2,
+        any_LTR("Producing "), 
+        PROP(target_,PROP(options_,this))
+)
+});
+        //.filesProducedCount=0
+        PROP(filesProducedCount_,this) = any_number(0);
         //mkPath.create .options.outDir
-        mkPath_create(undefined,1,(any_arr){PROP(outDir_,PROP(options_,this))
-        });
+        mkPath_create(undefined,1,(any_arr){
+        PROP(outDir_,PROP(options_,this))
+});
         //for each moduleNode:Grammar.Module in map .moduleCache
         any _list6=PROP(moduleCache_,this);
         {NameValuePair_ptr __nvp=NULL; //name:value pair
@@ -296,13 +347,18 @@
             moduleNode= __nvp->value;
         
             //var result:string
-            var result = undefined;
+            var 
+        result = undefined
+;
             //logger.extra "source:", moduleNode.fileInfo.importInfo.name
-            logger_extra(undefined,2,(any_arr){any_LTR("source:")
-, PROP(name_,PROP(importInfo_,PROP(fileInfo_,moduleNode)))
-            });
+            logger_extra(undefined,2,(any_arr){
+        any_LTR("source:"), 
+        PROP(name_,PROP(importInfo_,PROP(fileInfo_,moduleNode)))
+});
             //var shouldProduce = true
-            var shouldProduce = true;
+            var 
+        shouldProduce = true
+;
             //if moduleNode.fileInfo.isCore or no moduleNode.referenceCount 
             if (_anyToBool((_anyToBool(__or1=PROP(isCore_,PROP(fileInfo_,moduleNode)))? __or1 : any_number(!_anyToBool(PROP(referenceCount_,moduleNode))))))  {
                 //shouldProduce = false
@@ -320,22 +376,28 @@
                 //if not moduleNode.fileInfo.isLite 
                 if (!(_anyToBool(PROP(isLite_,PROP(fileInfo_,moduleNode)))))  {
                     //logger.extra 'non-Lite module, copy to out dir.'
-                    logger_extra(undefined,1,(any_arr){any_LTR("non-Lite module, copy to out dir.")
-                    });
+                    logger_extra(undefined,1,(any_arr){
+        any_LTR("non-Lite module, copy to out dir.")
+});
                     //#copy the file to output dir
                     //var contents = Environment.loadFile(moduleNode.fileInfo.filename)
-                    var contents = Environment_loadFile(undefined,1,(any_arr){PROP(filename_,PROP(fileInfo_,moduleNode))
-                    });
+                    var 
+        contents = Environment_loadFile(undefined,1,(any_arr){
+        PROP(filename_,PROP(fileInfo_,moduleNode))
+})
+;
                     //Environment.externalCacheSave(moduleNode.fileInfo.outFilename, contents)
-                    Environment_externalCacheSave(undefined,2,(any_arr){PROP(outFilename_,PROP(fileInfo_,moduleNode))
-, contents
-                    });
+                    Environment_externalCacheSave(undefined,2,(any_arr){
+        PROP(outFilename_,PROP(fileInfo_,moduleNode)), 
+        contents
+});
                     //declare valid contents.length
                     
                     //result = "#{contents.length>>10 or 1} kb"
-                    result = _concatAny(2,((_anyToBool(__or2=any_number((int64_t)_length(contents) >> (int64_t)10))? __or2 : any_number(1)))
-, any_LTR(" kb")
-                    );
+                    result = _concatAny(2,
+        ((_anyToBool(__or2=any_number((int64_t)_length(contents) >> (int64_t)10))? __or2 : any_number(1))), 
+        any_LTR(" kb")
+);
                     //contents=undefined
                     contents = undefined;
                 }
@@ -346,71 +408,97 @@
                     //moduleNode.lexer.outCode.filenames[0]=moduleNode.fileInfo.outFilename
                     ITEM(0,PROP(filenames_,PROP(outCode_,PROP(lexer_,moduleNode)))) = PROP(outFilename_,PROP(fileInfo_,moduleNode));
                     //moduleNode.lexer.outCode.filenames[1]='#{moduleNode.fileInfo.outFilename.slice(0,-1)}h'
-                    ITEM(1,PROP(filenames_,PROP(outCode_,PROP(lexer_,moduleNode)))) = _concatAny(2,(__call(slice_,PROP(outFilename_,PROP(fileInfo_,moduleNode)),2,(any_arr){any_number(0)
-, any_number(-1)
-                    }))
-, any_LTR("h")
-                    );
+                    ITEM(1,PROP(filenames_,PROP(outCode_,PROP(lexer_,moduleNode)))) = _concatAny(2,
+        (__call(slice_,PROP(outFilename_,PROP(fileInfo_,moduleNode)),2,(any_arr){
+        any_number(0), 
+        any_number(-1)
+})), 
+        any_LTR("h")
+);
                     //moduleNode.lexer.outCode.fileMode=true //direct out to file 
                     PROP(fileMode_,PROP(outCode_,PROP(lexer_,moduleNode))) = true; //direct out to file
                     //.produceModule moduleNode
-                    METHOD(produceModule_,this)(this,1,(any_arr){moduleNode
-                    });
+                    METHOD(produceModule_,this)(this,1,(any_arr){
+        moduleNode
+});
                     //moduleNode.lexer.outCode.close
                     __call(close_,PROP(outCode_,PROP(lexer_,moduleNode)),0,NULL);
                     //result = "#{moduleNode.lexer.outCode.lineNum} lines"
-                    result = _concatAny(2,PROP(lineNum_,PROP(outCode_,PROP(lexer_,moduleNode)))
-, any_LTR(" lines")
-                    );
+                    result = _concatAny(2,
+        PROP(lineNum_,PROP(outCode_,PROP(lexer_,moduleNode))), 
+        any_LTR(" lines")
+);
                     ////ifdef PROD_JS
-                    //if .options.nomap is false
-                    if (__is(PROP(nomap_,PROP(options_,this)),false))  {
+                    //if .options.generateSourceMap
+                    if (_anyToBool(PROP(generateSourceMap_,PROP(options_,this))))  {
+                        ////console.time('Generate SourceMap #{moduleNode.fileInfo.base}')
                         //Environment.externalCacheSave '#{moduleNode.fileInfo.outFilename}.map',
                                 //moduleNode.lexer.outCode.sourceMap.generate(
                                               //moduleNode.fileInfo.base & moduleNode.fileInfo.outExtension
                                               //,[moduleNode.fileInfo.sourcename]
-                        Environment_externalCacheSave(undefined,2,(any_arr){_concatAny(2,PROP(outFilename_,PROP(fileInfo_,moduleNode))
-, any_LTR(".map")
-                        )
-, __call(generate_,PROP(sourceMap_,PROP(outCode_,PROP(lexer_,moduleNode))),2,(any_arr){_concatAny(2,PROP(base_,PROP(fileInfo_,moduleNode)),PROP(outExtension_,PROP(fileInfo_,moduleNode)))
-, new(Array,1,(any_arr){PROP(sourcename_,PROP(fileInfo_,moduleNode))})
-                                })
-                        });
+                        Environment_externalCacheSave(undefined,2,(any_arr){
+        _concatAny(2,
+        PROP(outFilename_,PROP(fileInfo_,moduleNode)), 
+        any_LTR(".map")
+), 
+        __call(generate_,PROP(sourceMap_,PROP(outCode_,PROP(lexer_,moduleNode))),2,(any_arr){
+        _concatAny(2,PROP(base_,PROP(fileInfo_,moduleNode)),PROP(outExtension_,PROP(fileInfo_,moduleNode))), 
+        new(Array,1,(any_arr){PROP(sourcename_,PROP(fileInfo_,moduleNode))})
+})
+});
                     };
                 };
                                               //)
+                        ////if .options.perf, console.timeEnd('Generate SourceMap #{moduleNode.fileInfo.base}')
                     ////endif
                 //end if
                 
-                //logger.msg color.green,"[OK]",result, " -> ",moduleNode.fileInfo.outRelFilename,color.normal
-                logger_msg(undefined,6,(any_arr){color_green
-, any_LTR("[OK]")
-, result
-, any_LTR(" -> ")
-, PROP(outRelFilename_,PROP(fileInfo_,moduleNode))
-, color_normal
-                });
+                //logger.info color.green,"[OK]",result, " -> ",moduleNode.fileInfo.outRelFilename,color.normal
+                logger_info(undefined,6,(any_arr){
+        color_green, 
+        any_LTR("[OK]"), 
+        result, 
+        any_LTR(" -> "), 
+        PROP(outRelFilename_,PROP(fileInfo_,moduleNode)), 
+        color_normal
+});
                 //logger.extra #blank line
                 logger_extra(undefined,0,NULL);// #blank line
+                //.filesProducedCount++
+                PROP(filesProducedCount_,this).value.number++;
             };
             //end if //shouldProduce
             
         }};// end for each in map
         //end for each module cached
         
+        //logger.msg "Generated .#{.options.target} files (#{.filesProducedCount}) at #{.options.outDir}"
+        logger_msg(undefined,1,(any_arr){
+        _concatAny(6,
+        any_LTR("Generated ."), 
+        PROP(target_,PROP(options_,this)), 
+        any_LTR(" files ("), 
+        PROP(filesProducedCount_,this), 
+        any_LTR(") at "), 
+        PROP(outDir_,PROP(options_,this))
+)
+});
         //logger.msg "#{logger.errorCount} errors, #{logger.warningCount} warnings."
-        logger_msg(undefined,1,(any_arr){_concatAny(4,logger_errorCount
-, any_LTR(" errors, ")
-, logger_warningCount
-, any_LTR(" warnings.")
-        )
-        });
+        logger_msg(undefined,1,(any_arr){
+        _concatAny(4,
+        logger_errorCount, 
+        any_LTR(" errors, "), 
+        logger_warningCount, 
+        any_LTR(" warnings.")
+)
+});
         ////ifdef PROD_C
         ////if no logger.errorCount, Producer_c.postProduction this
         ////endif
         //if .options.perf>1, console.timeEnd 'Produce'
-        if (_anyToNumber(PROP(perf_,PROP(options_,this))) > 1) {console_timeEnd(undefined,1,(any_arr){any_LTR("Produce")
-        });};
+        if (_anyToNumber(PROP(perf_,PROP(options_,this))) > 1) {console_timeEnd(undefined,1,(any_arr){
+        any_LTR("Produce")
+});};
      return undefined;
      }
 //#### Method compileFile(filename) returns Grammar.Module
@@ -421,22 +509,30 @@
         var filename= argc? arguments[0] : undefined;
         //---------
         //var filenameInfo = new Environment.FileInfo(filename)
-        var filenameInfo = new(Environment_FileInfo,1,(any_arr){filename
-        });
+        var 
+        filenameInfo = new(Environment_FileInfo,1,(any_arr){
+        filename
+})
+;
         ////search the file
         //filenameInfo.searchModule .rootModule.fileInfo.dir
-        METHOD(searchModule_,filenameInfo)(filenameInfo,1,(any_arr){PROP(dir_,PROP(fileInfo_,PROP(rootModule_,this)))
-        });
+        METHOD(searchModule_,filenameInfo)(filenameInfo,1,(any_arr){
+        PROP(dir_,PROP(fileInfo_,PROP(rootModule_,this)))
+});
         //// create a module
         //var newModule = .createNewModule(filenameInfo, .rootModule)
-        var newModule = METHOD(createNewModule_,this)(this,2,(any_arr){filenameInfo
-, PROP(rootModule_,this)
-        });
+        var 
+        newModule = METHOD(createNewModule_,this)(this,2,(any_arr){
+        filenameInfo, 
+        PROP(rootModule_,this)
+})
+;
         //// compile the file
         //.compileFileOnModule filenameInfo.filename, newModule
-        METHOD(compileFileOnModule_,this)(this,2,(any_arr){PROP(filename_,filenameInfo)
-, newModule
-        });
+        METHOD(compileFileOnModule_,this)(this,2,(any_arr){
+        PROP(filename_,filenameInfo), 
+        newModule
+});
         //return newModule
         return newModule;
      return undefined;
@@ -455,29 +551,36 @@
         //---------
 //Compilation:
 //Load source -> Lexer/Tokenize -> Parse/create AST 
-        //logger.msg String.spaces(this.recurseLevel*2),"compile: '#{Environment.relativeFrom(.options.projectDir,filename)}'"
-        logger_msg(undefined,2,(any_arr){String_spaces(undefined,1,(any_arr){any_number(_anyToNumber(PROP(recurseLevel_,this)) * 2)
-        })
-, _concatAny(3,any_LTR("compile: '")
-, (Environment_relativeFrom(undefined,2,(any_arr){PROP(projectDir_,PROP(options_,this))
-, filename
-        }))
-, any_LTR("'")
-        )
-        });
+        //logger.info String.spaces(this.recurseLevel*2),"compile: '#{Environment.relativeFrom(.options.projectDir,filename)}'"
+        logger_info(undefined,2,(any_arr){
+        String_spaces(undefined,1,(any_arr){
+        any_number(_anyToNumber(PROP(recurseLevel_,this)) * 2)
+}), 
+        _concatAny(3,
+        any_LTR("compile: '"), 
+        (Environment_relativeFrom(undefined,2,(any_arr){
+        PROP(projectDir_,PROP(options_,this)), 
+        filename
+})), 
+        any_LTR("'")
+)
+});
 //Load source code, parse
         //.parseOnModule moduleNode, filename, Environment.loadFile(filename)
-        METHOD(parseOnModule_,this)(this,3,(any_arr){moduleNode
-, filename
-, Environment_loadFile(undefined,1,(any_arr){filename
-        })
-        });
+        METHOD(parseOnModule_,this)(this,3,(any_arr){
+        moduleNode, 
+        filename, 
+        Environment_loadFile(undefined,1,(any_arr){
+        filename
+})
+});
 //Check if this module 'imported other modules'. Process Imports (recursive)
         //if no .options.single 
         if (!_anyToBool(PROP(single_,PROP(options_,this))))  {
             //.importDependencies moduleNode
-            METHOD(importDependencies_,this)(this,1,(any_arr){moduleNode
-            });
+            METHOD(importDependencies_,this)(this,1,(any_arr){
+        moduleNode
+});
         };
      return undefined;
      }
@@ -500,11 +603,14 @@
         //logger.errorCount = 0
         logger_errorCount = any_number(0);
         //var stage = "lexer"
-        var stage = any_LTR("lexer");
+        var 
+        stage = any_LTR("lexer")
+;
         //moduleNode.lexer.initSource( filename, sourceLines )
-        __call(initSource_,PROP(lexer_,moduleNode),2,(any_arr){filename
-, sourceLines
-        });
+        __call(initSource_,PROP(lexer_,moduleNode),2,(any_arr){
+        filename, 
+        sourceLines
+});
         //moduleNode.lexer.process()
         __call(process_,PROP(lexer_,moduleNode),0,NULL);
 //Parse source
@@ -515,10 +621,12 @@
         METHOD(parse_,moduleNode)(moduleNode,0,NULL);
 //Check if errors were emitted
         //if logger.errorCount, logger.throwControlled "#{logger.errorCount} errors emitted"
-        if (_anyToBool(logger_errorCount)) {logger_throwControlled(undefined,1,(any_arr){_concatAny(2,logger_errorCount
-, any_LTR(" errors emitted")
-        )
-        });};
+        if (_anyToBool(logger_errorCount)) {logger_throwControlled(undefined,1,(any_arr){
+        _concatAny(2,
+        logger_errorCount, 
+        any_LTR(" errors emitted")
+)
+});};
 //Handle errors, add stage info, and stack
         //exception err
         
@@ -535,20 +643,24 @@
                 //// uncontrolled
                 //// add position & stack
                 //err.message = "#{moduleNode.lexer.posToString()}\n#{err.stack or err.message}" 
-                PROP(message_,err) = _concatAny(3,(__call(posToString_,PROP(lexer_,moduleNode),0,NULL))
-, any_LTR("\n")
-, ((_anyToBool(__or4=PROP(stack_,err))? __or4 : PROP(message_,err)))
-                );
+                PROP(message_,err) = _concatAny(3,
+        (__call(posToString_,PROP(lexer_,moduleNode),0,NULL)), 
+        any_LTR("\n"), 
+        ((_anyToBool(__or4=PROP(stack_,err))? __or4 : PROP(message_,err)))
+);
             };
             //logger.error err.message
-            logger_error(undefined,1,(any_arr){PROP(message_,err)
-            });
+            logger_error(undefined,1,(any_arr){
+        PROP(message_,err)
+});
             //#show last soft error. Can be useful to pinpoint the problem
             //if moduleNode.lexer.softError, logger.msg "previous soft-error: #{moduleNode.lexer.softError.message}"
-            if (_anyToBool(PROP(softError_,PROP(lexer_,moduleNode)))) {logger_msg(undefined,1,(any_arr){_concatAny(2,any_LTR("previous soft-error: ")
-, PROP(message_,PROP(softError_,PROP(lexer_,moduleNode)))
-            )
-            });};
+            if (_anyToBool(PROP(softError_,PROP(lexer_,moduleNode)))) {logger_msg(undefined,1,(any_arr){
+        _concatAny(2,
+        any_LTR("previous soft-error: "), 
+        PROP(message_,PROP(softError_,PROP(lexer_,moduleNode)))
+)
+});};
             ////if process #we're in node.js
             ////    process.exit(1) 
             ////else
@@ -574,8 +686,11 @@
         //default parent = .rootModule
         _default(&parent,PROP(rootModule_,this));
         //var moduleNode = new Grammar.Module(parent)
-        var moduleNode = new(Grammar_Module,1,(any_arr){parent
-        });
+        var 
+        moduleNode = new(Grammar_Module,1,(any_arr){
+        parent
+})
+;
         //moduleNode.name = fileInfo.filename
         PROP(name_,moduleNode) = PROP(filename_,fileInfo);
         //moduleNode.fileInfo = fileInfo
@@ -586,9 +701,10 @@
 //because the lexer preprocessor can compile marcros and generate code on the fly
 //via 'compiler generate'
         //moduleNode.lexer = new Parser.Lexer(this, .options)
-        PROP(lexer_,moduleNode) = new(Parser_Lexer,2,(any_arr){this
-, PROP(options_,this)
-        });
+        PROP(lexer_,moduleNode) = new(Parser_Lexer,2,(any_arr){
+        this, 
+        PROP(options_,this)
+});
 //Now create the module scope, with two local scope vars: 
 //'module' and 'exports = module.exports'. 'exports' will hold all exported members.
         //moduleNode.createScope()
@@ -596,30 +712,38 @@
         ////var opt = new Names.NameDeclOptions
         ////opt.normalizeModeKeepFirstCase = true
         //moduleNode.exports = new Names.Declaration(fileInfo.base,undefined,moduleNode)
-        PROP(exports_,moduleNode) = new(Names_Declaration,3,(any_arr){PROP(base_,fileInfo)
-, undefined
-, moduleNode
-        });
+        PROP(exports_,moduleNode) = new(Names_Declaration,3,(any_arr){
+        PROP(base_,fileInfo), 
+        undefined, 
+        moduleNode
+});
         //moduleNode.exportsReplaced = false
         PROP(exportsReplaced_,moduleNode) = false;
         
         //var moduleVar = moduleNode.addToScope('module')
-        var moduleVar = METHOD(addToScope_,moduleNode)(moduleNode,1,(any_arr){any_LTR("module")
-        });
+        var 
+        moduleVar = METHOD(addToScope_,moduleNode)(moduleNode,1,(any_arr){
+        any_LTR("module")
+})
+;
         ////moduleNode.exports = moduleVar.addMember('exports') #add as member of 'module'
         ////var opt = new Names.NameDeclOptions
         ////opt.pointsTo = moduleNode.exports
         ////moduleNode.addToScope('exports',opt) #add also as 'exports' in scope
 //add other common built-in members of var 'module'. http://nodejs.org/api/modules.html#modules_module_id
         //var fnameOpt = new Names.NameDeclOptions
-        var fnameOpt = new(Names_NameDeclOptions,0,NULL);
+        var 
+        fnameOpt = new(Names_NameDeclOptions,0,NULL)
+;
         //fnameOpt.value = fileInfo.filename
         PROP(value_,fnameOpt) = PROP(filename_,fileInfo);
         //moduleVar.addMember moduleNode.declareName('filename',fnameOpt)
-        METHOD(addMember_,moduleVar)(moduleVar,1,(any_arr){METHOD(declareName_,moduleNode)(moduleNode,2,(any_arr){any_LTR("filename")
-, fnameOpt
-        })
-        });
+        METHOD(addMember_,moduleVar)(moduleVar,1,(any_arr){
+        METHOD(declareName_,moduleNode)(moduleNode,2,(any_arr){
+        any_LTR("filename"), 
+        fnameOpt
+})
+});
 //Also, register every `import|require` in this module body, to track modules dependencies.
 //We create a empty a empty `.requireCallNodes[]`, to hold:
 //1. VariableRef, when is a require() call
@@ -642,29 +766,33 @@
         //if .options.comments>=2
         if (_anyToNumber(PROP(comments_,PROP(options_,this))) >= 2)  {
             //moduleNode.lexer.outCode.put "//Compiled by LiteScript compiler v#{.options.version}, source: #{moduleNode.fileInfo.filename}"
-            __call(put_,PROP(outCode_,PROP(lexer_,moduleNode)),1,(any_arr){_concatAny(4,any_LTR("//Compiled by LiteScript compiler v")
-, PROP(version_,PROP(options_,this))
-, any_LTR(", source: ")
-, PROP(filename_,PROP(fileInfo_,moduleNode))
-            )
-            });
+            __call(put_,PROP(outCode_,PROP(lexer_,moduleNode)),1,(any_arr){
+        _concatAny(4,
+        any_LTR("//Compiled by LiteScript compiler v"), 
+        PROP(version_,PROP(options_,this)), 
+        any_LTR(", source: "), 
+        PROP(filename_,PROP(fileInfo_,moduleNode))
+)
+});
             //moduleNode.lexer.outCode.startNewLine
             __call(startNewLine_,PROP(outCode_,PROP(lexer_,moduleNode)),0,NULL);
         };
         //moduleNode.produce 
         METHOD(produce_,moduleNode)(moduleNode,0,NULL);
         //#referenceSourceMap
-        //if no .options.nomap and moduleNode.fileInfo.outExtension is 'js'
-        if (!_anyToBool(PROP(nomap_,PROP(options_,this))) && __is(PROP(outExtension_,PROP(fileInfo_,moduleNode)),any_LTR("js")))  {
+        //if .options.generateSourceMap and moduleNode.fileInfo.outExtension is 'js'
+        if (_anyToBool(PROP(generateSourceMap_,PROP(options_,this))) && __is(PROP(outExtension_,PROP(fileInfo_,moduleNode)),any_LTR("js")))  {
             //moduleNode.lexer.outCode.startNewLine
             __call(startNewLine_,PROP(outCode_,PROP(lexer_,moduleNode)),0,NULL);
             //moduleNode.lexer.outCode.put "//# sourceMappingURL=#{moduleNode.fileInfo.base}#{moduleNode.fileInfo.outExtension}.map"
-            __call(put_,PROP(outCode_,PROP(lexer_,moduleNode)),1,(any_arr){_concatAny(4,any_LTR("//# sourceMappingURL=")
-, PROP(base_,PROP(fileInfo_,moduleNode))
-, PROP(outExtension_,PROP(fileInfo_,moduleNode))
-, any_LTR(".map")
-            )
-            });
+            __call(put_,PROP(outCode_,PROP(lexer_,moduleNode)),1,(any_arr){
+        _concatAny(4,
+        any_LTR("//# sourceMappingURL="), 
+        PROP(base_,PROP(fileInfo_,moduleNode)), 
+        PROP(outExtension_,PROP(fileInfo_,moduleNode)), 
+        any_LTR(".map")
+)
+});
         };
      return undefined;
      }
@@ -683,7 +811,9 @@
         for(int node__inx=0 ; node__inx<_list7.value.arr->length ; node__inx++){node=ITEM(node__inx,_list7);
         
             //var importInfo = new Environment.ImportParameterInfo
-            var importInfo = new(Environment_ImportParameterInfo,0,NULL);
+            var 
+        importInfo = new(Environment_ImportParameterInfo,0,NULL)
+;
             //importInfo.source=moduleNode.fileInfo.filename
             PROP(source_,importInfo) = PROP(filename_,PROP(fileInfo_,moduleNode));
             //importInfo.line=node.sourceLineNum
@@ -708,9 +838,11 @@
                     PROP(name_,importInfo) = PROP(name_,node);
                 };
                 //if node.hasAdjective('shim') and node.findInScope(importInfo.name) 
-                if (_anyToBool(METHOD(hasAdjective_,node)(node,1,(any_arr){any_LTR("shim")
-                })) && _anyToBool(METHOD(findInScope_,node)(node,1,(any_arr){PROP(name_,importInfo)
-                })))  {
+                if (_anyToBool(METHOD(hasAdjective_,node)(node,1,(any_arr){
+        any_LTR("shim")
+})) && _anyToBool(METHOD(findInScope_,node)(node,1,(any_arr){
+        PROP(name_,importInfo)
+})))  {
                     //continue // do not import if "shim import" and already declared
                     continue; // do not import if "shim import" and already declared
                 };
@@ -725,8 +857,9 @@
                 
                 else if (_instanceof(PROP(parent_,node),Grammar_ImportStatement))  {
                     //importInfo.globalImport = node.hasAdjective("global")
-                    PROP(globalImport_,importInfo) = METHOD(hasAdjective_,node)(node,1,(any_arr){any_LTR("global")
-                    });
+                    PROP(globalImport_,importInfo) = METHOD(hasAdjective_,node)(node,1,(any_arr){
+        any_LTR("global")
+});
                 };
             };
 ///*
@@ -743,9 +876,10 @@
             //if importInfo.name
             if (_anyToBool(PROP(name_,importInfo)))  {
                 //node.importedModule = .importModule(moduleNode, importInfo)
-                PROP(importedModule_,node) = METHOD(importModule_,this)(this,2,(any_arr){moduleNode
-, importInfo
-                });
+                PROP(importedModule_,node) = METHOD(importModule_,this)(this,2,(any_arr){
+        moduleNode, 
+        importInfo
+});
             };
         }};// end for each in
         
@@ -771,58 +905,76 @@
         //.recurseLevel++
         PROP(recurseLevel_,this).value.number++;
         //var indent = String.spaces(.recurseLevel*2)
-        var indent = String_spaces(undefined,1,(any_arr){any_number(_anyToNumber(PROP(recurseLevel_,this)) * 2)
-        });
+        var 
+        indent = String_spaces(undefined,1,(any_arr){
+        any_number(_anyToNumber(PROP(recurseLevel_,this)) * 2)
+})
+;
         //logger.info ""
-        logger_info(undefined,1,(any_arr){any_EMPTY_STR
-        });
+        logger_info(undefined,1,(any_arr){
+        any_EMPTY_STR
+});
         //logger.info indent,"'#{importingModule.fileInfo.relFilename}' imports '#{importInfo.name}'"
-        logger_info(undefined,2,(any_arr){indent
-, _concatAny(5,any_LTR("'")
-, PROP(relFilename_,PROP(fileInfo_,importingModule))
-, any_LTR("' imports '")
-, PROP(name_,importInfo)
-, any_LTR("'")
-        )
-        });
+        logger_info(undefined,2,(any_arr){
+        indent, 
+        _concatAny(5,
+        any_LTR("'"), 
+        PROP(relFilename_,PROP(fileInfo_,importingModule)), 
+        any_LTR("' imports '"), 
+        PROP(name_,importInfo), 
+        any_LTR("'")
+)
+});
 //Determine the full module filename. Search for the module in the environment.
         //var fileInfo = new Environment.FileInfo(importInfo)
-        var fileInfo = new(Environment_FileInfo,1,(any_arr){importInfo
-        });
+        var 
+        fileInfo = new(Environment_FileInfo,1,(any_arr){
+        importInfo
+})
+;
         //fileInfo.searchModule importingModule.fileInfo.dir
-        METHOD(searchModule_,fileInfo)(fileInfo,1,(any_arr){PROP(dir_,PROP(fileInfo_,importingModule))
-        });
+        METHOD(searchModule_,fileInfo)(fileInfo,1,(any_arr){
+        PROP(dir_,PROP(fileInfo_,importingModule))
+});
 //Before compiling the module, check internal, and external cache
 //Check Internal Cache: if it is already compiled, return cached Module node
         //if .moduleCache.has(fileInfo.filename) #registered
-        if (_anyToBool(__call(has_,PROP(moduleCache_,this),1,(any_arr){PROP(filename_,fileInfo)
-        })))  {// #registered
+        if (_anyToBool(__call(has_,PROP(moduleCache_,this),1,(any_arr){
+        PROP(filename_,fileInfo)
+})))  {// #registered
             //logger.info indent,'cached: ',fileInfo.filename
-            logger_info(undefined,3,(any_arr){indent
-, any_LTR("cached: ")
-, PROP(filename_,fileInfo)
-            });
+            logger_info(undefined,3,(any_arr){
+        indent, 
+        any_LTR("cached: "), 
+        PROP(filename_,fileInfo)
+});
             //.recurseLevel--
             PROP(recurseLevel_,this).value.number--;
             //return .moduleCache.get(fileInfo.filename)
-            return __call(get_,PROP(moduleCache_,this),1,(any_arr){PROP(filename_,fileInfo)
-            });
+            return __call(get_,PROP(moduleCache_,this),1,(any_arr){
+        PROP(filename_,fileInfo)
+});
         };
 //It isn't on internal cache, then create a **new Module**.
         //var moduleNode = .createNewModule(fileInfo)
-        var moduleNode = METHOD(createNewModule_,this)(this,1,(any_arr){fileInfo
-        });
+        var 
+        moduleNode = METHOD(createNewModule_,this)(this,1,(any_arr){
+        fileInfo
+})
+;
 //early add to local cache, to cut off circular references
         //.moduleCache.set fileInfo.filename, moduleNode
-        __call(set_,PROP(moduleCache_,this),2,(any_arr){PROP(filename_,fileInfo)
-, moduleNode
-        });
+        __call(set_,PROP(moduleCache_,this),2,(any_arr){
+        PROP(filename_,fileInfo), 
+        moduleNode
+});
 //Check if we can get exports from a "interface.md" file
         //if .getInterface(importingModule, fileInfo, moduleNode)
-        if (_anyToBool(METHOD(getInterface_,this)(this,3,(any_arr){importingModule
-, fileInfo
-, moduleNode
-        })))  {
+        if (_anyToBool(METHOD(getInterface_,this)(this,3,(any_arr){
+        importingModule, 
+        fileInfo, 
+        moduleNode
+})))  {
             //#getInterface also loads and analyze .js interfaces
             //#if it is an interface, but loaded from 'import' statement
             //#we increment .referenceCount in order to produce the file
@@ -844,9 +996,10 @@
             
             else {
                 //this.compileFileOnModule fileInfo.filename, moduleNode
-                METHOD(compileFileOnModule_,this)(this,2,(any_arr){PROP(filename_,fileInfo)
-, moduleNode
-                });
+                METHOD(compileFileOnModule_,this)(this,2,(any_arr){
+        PROP(filename_,fileInfo), 
+        moduleNode
+});
                 //moduleNode.referenceCount++
                 PROP(referenceCount_,moduleNode).value.number++;
             };
@@ -878,9 +1031,10 @@
         if (_anyToBool(PROP(interfaceFileExists_,fileInfo)))  {
             //# compile interface
             //this.compileFileOnModule fileInfo.interfaceFile, moduleNode
-            METHOD(compileFileOnModule_,this)(this,2,(any_arr){PROP(interfaceFile_,fileInfo)
-, moduleNode
-            });
+            METHOD(compileFileOnModule_,this)(this,2,(any_arr){
+        PROP(interfaceFile_,fileInfo), 
+        moduleNode
+});
             //return true //got Interface
             return true; //got Interface
         };
@@ -935,8 +1089,9 @@
 //helper compilerVar(name)
 //return rootModule.compilerVars.members[name].value
         //return .compilerVars.get(name) 
-        return __call(get_,PROP(compilerVars_,this),1,(any_arr){name
-        });
+        return __call(get_,PROP(compilerVars_,this),1,(any_arr){
+        name
+});
      return undefined;
      }
 //#### helper method setCompilerVar(name,value) 
@@ -955,20 +1110,24 @@
 //rootModule.compilerVars.members.set(name,value)
         //if no .compilerVars.get(name) into var nameDecl
         var nameDecl=undefined;
-        if (!(_anyToBool((nameDecl=__call(get_,PROP(compilerVars_,this),1,(any_arr){name
-        })))))  {
+        if (!(_anyToBool((nameDecl=__call(get_,PROP(compilerVars_,this),1,(any_arr){
+        name
+})))))  {
             //nameDecl = new Names.Declaration(name)
-            nameDecl = new(Names_Declaration,1,(any_arr){name
-            });
+            nameDecl = new(Names_Declaration,1,(any_arr){
+        name
+});
             //.compilerVars.set name, nameDecl
-            __call(set_,PROP(compilerVars_,this),2,(any_arr){name
-, nameDecl
-            });
+            __call(set_,PROP(compilerVars_,this),2,(any_arr){
+        name, 
+        nameDecl
+});
         };
         //nameDecl.setMember "**value**",value
-        METHOD(setMember_,nameDecl)(nameDecl,2,(any_arr){any_LTR("**value**")
-, value
-        });
+        METHOD(setMember_,nameDecl)(nameDecl,2,(any_arr){
+        any_LTR("**value**"), 
+        value
+});
      return undefined;
      }
 //#### helper method redirectOutput(newOut)
@@ -1022,8 +1181,9 @@
         assert(_instanceof(this,Grammar_Module));
         //---------
         //return .lexer.outCode.getResult().join('\n')
-        return __call(join_,__call(getResult_,PROP(outCode_,PROP(lexer_,this)),0,NULL),1,(any_arr){any_LTR("\n")
-        });
+        return __call(join_,__call(getResult_,PROP(outCode_,PROP(lexer_,this)),0,NULL),1,(any_arr){
+        any_LTR("\n")
+});
      return undefined;
      }
 ///*### Append to class Grammar.VariableRef
@@ -1035,13 +1195,17 @@
 //#### Properties
         //importedModule: Grammar.Module
      ;
-
-
-//-------------------------
-void Project__moduleInit(void){
+//------------------
+void Project__namespaceInit(void){
         Project =_newClass("Project", Project__init, sizeof(struct Project_s), Object);
         _declareMethods(Project, Project_METHODS);
         _declareProps(Project, Project_PROPS, sizeof Project_PROPS);
     
+};
+
+
+//-------------------------
+void Project__moduleInit(void){
+    Project__namespaceInit();
     
 };

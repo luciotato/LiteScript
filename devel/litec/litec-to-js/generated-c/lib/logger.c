@@ -3,10 +3,6 @@
 //Module logger
 //-------------------------
 #include "logger.c.extra"
-    //-------------------------
-    //NAMESPACE logger
-    //-------------------------
-     var logger_options, logger_errorCount, logger_warningCount, logger_storeMessages, logger_messages;
 //Logger Utility
 //==============
 //Dependencies:
@@ -16,6 +12,11 @@
     //import mkPath 
 //## Main namespace
 //### Namespace logger
+    //-------------------------
+     //NAMESPACE logger
+     //-------------------------
+     var logger_options, logger_errorCount, logger_warningCount, logger_storeMessages, logger_messages;
+     
 //#### properties 
         //options: GeneralOptions
         //errorCount = 0
@@ -49,7 +50,9 @@
         //if logger.options.debugEnabled
         if (_anyToBool(PROP(debugEnabled_,logger_options)))  {
             //var args = arguments.toArray()
-            var args = _newArray(argc,arguments);
+            var 
+        args = _newArray(argc,arguments)
+;
             //console.error.apply undefined,args
             __applyArr(any_func(console_error),undefined,args);
         };
@@ -82,31 +85,38 @@
         //logger.errorCount++
         logger_errorCount.value.number++;
         //var args = arguments.toArray()
-        var args = _newArray(argc,arguments);
+        var 
+        args = _newArray(argc,arguments)
+;
 //add "ERROR:", send to debug logger
         //args.unshift('ERROR:')
-        METHOD(unshift_,args)(args,1,(any_arr){any_LTR("ERROR:")
-        });
+        METHOD(unshift_,args)(args,1,(any_arr){
+        any_LTR("ERROR:")
+});
         //logger.debug.apply undefined,args
         __applyArr(any_func(logger_debug),undefined,args);
 //if messages should be stored...
         //if logger.storeMessages
         if (_anyToBool(logger_storeMessages))  {
             //logger.messages.push args.join(" ")
-            __call(push_,logger_messages,1,(any_arr){METHOD(join_,args)(args,1,(any_arr){any_LTR(" ")
-            })
-            });
+            __call(push_,logger_messages,1,(any_arr){
+        METHOD(join_,args)(args,1,(any_arr){
+        any_LTR(" ")
+})
+});
         }
 //else, add red color, send to stderr
         //else
         
         else {
             //args.unshift(color.red)
-            METHOD(unshift_,args)(args,1,(any_arr){color_red
-            });
+            METHOD(unshift_,args)(args,1,(any_arr){
+        color_red
+});
             //args.push(color.normal)
-            METHOD(push_,args)(args,1,(any_arr){color_normal
-            });
+            METHOD(push_,args)(args,1,(any_arr){
+        color_normal
+});
             //console.error.apply undefined,args
             __applyArr(any_func(console_error),undefined,args);
         };
@@ -117,10 +127,13 @@
         //logger.warningCount++
         logger_warningCount.value.number++;
         //var args = arguments.toArray()
-        var args = _newArray(argc,arguments);
+        var 
+        args = _newArray(argc,arguments)
+;
         //args.unshift('WARNING:')
-        METHOD(unshift_,args)(args,1,(any_arr){any_LTR("WARNING:")
-        });
+        METHOD(unshift_,args)(args,1,(any_arr){
+        any_LTR("WARNING:")
+});
         //logger.debug.apply(undefined,args)
         __applyArr(any_func(logger_debug),undefined,args);
         
@@ -130,20 +143,24 @@
             //if logger.storeMessages
             if (_anyToBool(logger_storeMessages))  {
                 //logger.messages.push args.join(" ")
-                __call(push_,logger_messages,1,(any_arr){METHOD(join_,args)(args,1,(any_arr){any_LTR(" ")
-                })
-                });
+                __call(push_,logger_messages,1,(any_arr){
+        METHOD(join_,args)(args,1,(any_arr){
+        any_LTR(" ")
+})
+});
             }
 //else, add yellow color, send to stderr
             //else
             
             else {
                 //args.unshift(color.yellow);
-                METHOD(unshift_,args)(args,1,(any_arr){color_yellow
-                });
+                METHOD(unshift_,args)(args,1,(any_arr){
+        color_yellow
+});
                 //args.push(color.normal);
-                METHOD(push_,args)(args,1,(any_arr){color_normal
-                });
+                METHOD(push_,args)(args,1,(any_arr){
+        color_normal
+});
                 //console.error.apply(undefined,args);
                 __applyArr(any_func(console_error),undefined,args);
             };
@@ -154,7 +171,9 @@
 //#### method msg
      any logger_msg(DEFAULT_ARGUMENTS){
         //var args = arguments.toArray()
-        var args = _newArray(argc,arguments);
+        var 
+        args = _newArray(argc,arguments)
+;
         //logger.debug.apply(undefined,args)
         __applyArr(any_func(logger_debug),undefined,args);
         //if logger.options.verboseLevel >= 1
@@ -163,9 +182,11 @@
             //if logger.storeMessages
             if (_anyToBool(logger_storeMessages))  {
                 //logger.messages.push args.join(" ")
-                __call(push_,logger_messages,1,(any_arr){METHOD(join_,args)(args,1,(any_arr){any_LTR(" ")
-                })
-                });
+                __call(push_,logger_messages,1,(any_arr){
+        METHOD(join_,args)(args,1,(any_arr){
+        any_LTR(" ")
+})
+});
             }
 //else, send to console
             //else 
@@ -180,7 +201,9 @@
 //#### method info
      any logger_info(DEFAULT_ARGUMENTS){
         //var args = arguments.toArray()
-        var args = _newArray(argc,arguments);
+        var 
+        args = _newArray(argc,arguments)
+;
         //if logger.options.verboseLevel >= 2
         if (_anyToNumber(PROP(verboseLevel_,logger_options)) >= 2)  {
             //logger.msg.apply(undefined,args)
@@ -191,7 +214,9 @@
 //#### method extra
      any logger_extra(DEFAULT_ARGUMENTS){
         //var args = arguments.toArray()
-        var args = _newArray(argc,arguments);
+        var 
+        args = _newArray(argc,arguments)
+;
         //if logger.options.verboseLevel >= 3
         if (_anyToNumber(PROP(verboseLevel_,logger_options)) >= 3)  {
             //logger.msg.apply(undefined,args)
@@ -203,7 +228,9 @@
      any logger_getMessages(DEFAULT_ARGUMENTS){
 //get & clear
         //var result = logger.messages
-        var result = logger_messages;
+        var 
+        result = logger_messages
+;
         //logger.messages =[]
         logger_messages = new(Array,0,NULL);
         //return result
@@ -219,26 +246,26 @@
 //Throws Error, but with a "controlled" flag set, 
 //to differentiate from unexpected compiler errors
         //logger.debug "Controlled ERROR:", msg
-        logger_debug(undefined,2,(any_arr){any_LTR("Controlled ERROR:")
-, msg
-        });
+        logger_debug(undefined,2,(any_arr){
+        any_LTR("Controlled ERROR:"), 
+        msg
+});
         //throw new ControlledError(msg)
-        throw(new(ControlledError,1,(any_arr){msg
-        }));
+        throw(new(ControlledError,1,(any_arr){
+        msg
+}));
      return undefined;
      }
-    
-    //------------------
-    void logger__namespaceInit(void){
+     
+     //------------------
+     void logger__namespaceInit(void){
          logger_errorCount = any_number(0);
          logger_warningCount = any_number(0);
          logger_messages = new(Array,0,NULL);
-     ;};
-    
-    
-    
+     };
+    ;
 
 //-------------------------
 void logger__moduleInit(void){
-        logger__namespaceInit();
+    logger__namespaceInit();
 };

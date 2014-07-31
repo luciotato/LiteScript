@@ -23,7 +23,7 @@ Examples:
 `function`       : all-lowercase means the literal word<br>
 `":"`            : literal symbols are quoted<br>
 
-`IDENTIFIER`,`OPER` : all-uppercase denotes entire classes of symbols<br>
+`IDENTIFIER`,`OPER` : all-uppercase denotes a entire class of symbols<br>
 `NEWLINE`,`EOF`     : or special unprintable characters<br>
 
 `[to]`               : Optional symbols are enclosed in brackets<br>
@@ -33,21 +33,48 @@ Examples:
 `(Oper Operand)*`    : Asterisk after a group `()*` means the group can repeat (meaning one or more)<br>
 `[Oper Operand]*`    : Asterisk after a optional group `[]*` means *zero* or more of the group.<br>
 
-`[Expression,]` : the comma means a comma "Separated List".<br>
-`Body: (Statement;)` : the semicolon means: a semicolon "Separated List".<br>
+`[Expression,]` : means: "optional comma separated list of Expressions".<br>
+`Body: (Statement;)` : means "Body is a semicolon-separated list of statements".<br>
 
 
-###"Separated List"
+###More on separated lists
 
-Example: `FunctionCall: IDENTIFIER '(' [Expression,] ')'`
+Let's analyze the example: `FunctionCall: IDENTIFIER '(' [Expression,] ')'`
 
 `[Expression,]` means *optional* **comma "Separated List"** of Expressions. 
 Since the comma is inside a **[ ]** group, it means the entire list is optional.
 
-Example: `VarStatement: (VariableDecl,)`, where `VariableDecl: IDENTIFIER ["=" Expression]`
+Another example:
+
+`VariableDecl: IDENTIFIER ["=" Expression]`
+
+`VarStatement: (VariableDecl,)`, where 
 
 `(VariableDecl,)` means **comma "Separated List"** of `VariableDecl` 
-Since the comma is inside a **( )** group, it means at least one of the Symbol is required.
+Since the comma is inside a **( )** group, it means at least one VariableDecl is required.
+
+###separated lists are flexible - "Free form"
+
+Sseparated lists can be presented in "free-form" mode. 
+In "free-form", the list is indented, and commas(or semicolons) are optional.
+
+Example:
+
+For the grammar: `FunctionCall: IDENTIFIER '(' [Expression,] ')'`
+
+This is a valid text: `console.log(1,2,3,"Foo")`
+
+and the following is *also* a valid text:
+/*
+
+    console.log (
+          1
+          2
+          3
+          "Foo"
+          )
+
+*/
 
 
 Implementation
@@ -99,7 +126,7 @@ Words that are reserved in LiteScript and cannot be used as variable or function
         'like','this','super'
         'export','compiler','compile','debugger'
         //-----------------
-        // "C" production reserved words
+        // "compile-to-c" reserved words
         'char','short','long','int','unsigned','void','NULL','bool','assert' 
         ]
 
@@ -1221,7 +1248,7 @@ Loop parsing accessors
 
               case .lexer.token.value
                 
-                when '.' //property acceess
+                when '.': //property acceess
 
                     ac = new PropertyAccess(this)
                     ac.parse
@@ -1233,12 +1260,12 @@ Loop parsing accessors
                         ac.args = []
                         ac.args.push .req(ObjectLiteral) //.newFromObject() argument is the object literal
 
-                when "(" //function access
+                when "(": //function access
 
                     ac = new FunctionAccess(this)
                     ac.parse
 
-                when "[" //index access
+                when "[": //index access
 
                     ac = new IndexAccess(this)
                     ac.parse
@@ -2525,32 +2552,32 @@ get specifier 'on|valid|name|all'
 
         case .specifier
 
-          when  'on-the-fly','type'
+          when  'on-the-fly','type':
             #declare VarRef:Type
             .varRef = .req(VariableRef)
             .req(':') //type expected
             .parseType 
 
-          when 'valid'
+          when 'valid':
             .varRef = .req(VariableRef)
             if no .varRef.accessors, .sayErr "declare valid: expected accesor chain. Example: 'declare valid name.member.member'"
             if .opt(':') 
                 .parseType //optional type
 
-          when 'name'
+          when 'name':
             .specifier = .req('affinity')
             .names = .reqSeparatedList(VariableDecl,',')
             for each varDecl in .names
                if (varDecl.type and varDecl.type isnt 'any') or varDecl.assignedValue
                   .sayErr "declare name affinity: expected 'name,name,...'"
 
-          when 'var'
+          when 'var':
             .names = .reqSeparatedList(VariableDecl,',')
             for each varDecl in .names
                if varDecl.assignedValue
                   .sayErr "declare var. Cannot assign value in .interface.md file."
 
-          when 'on'
+          when 'on':
             .name = .req('IDENTIFIER')
             .names = .reqSeparatedList(VariableDecl,',')
 
@@ -2791,9 +2818,9 @@ but it is a "statement" not a expression
 Examples: /*
 
     case b 
-      when 2,4,6 
+      when 2,4,6:
         print 'even' 
-      when 1,3,5 
+      when 1,3,5:
         print 'odd'
       else 
         print 'idk' 
@@ -2802,16 +2829,16 @@ Examples: /*
     // case instance of
     case b instance of
 
-      when VarStatement
+      when VarStatement:
         print 'variables #{b.list}' 
 
-      when AppendToDeclaration
+      when AppendToDeclaration:
         print 'it is append to #{b.varRef}'
 
-      when NamespaceDeclaration
+      when NamespaceDeclaration:
         print 'namespace #{b.name}'
 
-      when ClassDeclaration
+      when ClassDeclaration:
         print 'a class, extends #{b.varRefSuper}'
 
       else 
@@ -2822,9 +2849,9 @@ Examples: /*
     // case when TRUE
     var result
     case 
-        when a is 3 or b < 10 
+        when a is 3 or b < 10:
             result = 'option 1'
-        when b >= 10 or a<0 or c is 5 
+        when b >= 10 or a<0 or c is 5:
             result= 'option 2'
         else 
             result = 'other' 
@@ -2874,7 +2901,7 @@ we allow a list of comma separated expressions to compare to and a body
 
             .req 'when'
             .lock
-            .expressions = .reqSeparatedList(Expression, ",")
+            .expressions = .reqSeparatedList(Expression, ",",":")
             .body = .req(Body)
 
 

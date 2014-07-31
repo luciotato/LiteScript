@@ -98,7 +98,7 @@ OK, now you can:
 1. Go cowboy-style, get hands-on and try it online, 
 go to [LiteScript Online Playground](http://luciotato.github.io/LiteScript_online_playground/playground/)
 
-2. Be more academic, and read the whole [LiteScript Grammar](/source/Grammar.lite.md) (is also the code)
+2. Be more academic, and read the whole [LiteScript Grammar](/source/Grammar.lite.md) (it is also the code)
 
 3. Continue reading the highlights at [/doc](/doc)
 

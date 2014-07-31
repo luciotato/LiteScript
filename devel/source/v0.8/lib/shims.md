@@ -57,25 +57,21 @@ Dependencies:
         shim method rpad(howMany)
             return .concat(String.spaces(howMany-.length))
 
+repeat(howMany)
+
+        shim method repeat(howMany)
+            if howMany<=0, return ''
+            
+            var a=''
+            while howMany--
+                a &= this
+            
+            return a
 
 ### append to namespace String
 
         shim method spaces(howMany)
-            return String.repeat(" ",howMany)
-
-
-repeat(str, howMany)
-
-        shim method repeat(str,howMany)
-            
-            if howMany<=0, return ""
-            
-            var a=''
-            while howMany--
-                a="#{a}#{str}"
-            
-            return a
-
+            return " ".repeat(howMany)
 
 Checks if a name is Capitalized, unicode aware.
 capitalized is like: /^[A-Z]+[$_a-z0-9]+$/ ,but unicode aware.

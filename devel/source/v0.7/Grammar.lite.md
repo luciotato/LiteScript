@@ -3178,7 +3178,7 @@ we allow a list of comma separated expressions to compare to and a body
 
             .req 'when'
             .lock
-            .expressions = .reqSeparatedList(Expression, ",")
+            .expressions = .reqSeparatedList(Expression, ",",":")
             .body = .req(Body)
 
 

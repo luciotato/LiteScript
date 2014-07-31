@@ -513,18 +513,33 @@
              // if item.charAt(0) is '"' //a string part
              if (item.charAt(0) === '"') { //a string part
                  item = item.slice(1, -1); //remove quotes
-                 parsed[inx] = item.replaceAll('"', '\\"');// #store with *escaped* internal d-quotes
-             }
-             
-             else {
-                  // #restore string interp. codes
-                 parsed[inx] = "" + this.stringInterpolationChar + "{" + item + "}";
+                 item = item.replaceAll('"', '\\"');// #store with *escaped* internal d-quotes
+                 parsed[inx] = '"' + item + '"';// #restore enclosing quotes
              };
          };// end for each in parsed
 
-          // #re-join & re.enclose in quotes
-         line = parsed.join("").quoted('"');
-         line = "" + result.pre + " " + line + result.post;// #add pre & post
+
+          //// code a call to "concat" to handle string interpolation
+          //line = "any_concat(#{parsed.join(',')})"
+
+      // #else //  compile-to-js
+
+          //if the first expression isnt a quoted string constant
+          // we add `"" + ` so: we get string concatenation from javascript.
+          // Also: if the first expression starts with `(`, LiteScript can
+          // mis-parse the expression as a "function call"
+         // if parsed.length and parsed[0].charAt(0) isnt '"' //match[0] is the quote: ' or "
+         if (parsed.length && parsed[0].charAt(0) !== '"') { //match[0] is the quote: ' or "
+             parsed.unshift("''"); // prepend ''
+         };
+
+          // code a call to js string concat (+) to handle string interpolation
+         line = parsed.join(' + ');
+          // add pre & post
+      // #endif
+
+          // add pre & post
+         line = "" + result.pre + " " + line + result.post;
        };
 
        return line;
@@ -1564,3 +1579,4 @@
 
 
 module.exports=Lexer;
+//# sourceMappingURL=Lexer.js.map

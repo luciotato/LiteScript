@@ -57,6 +57,7 @@
         //main: Grammar.Module
         //Producer
         //recurseLevel = 0
+        //filesProducedCount
          this.recurseLevel=0;
         ////lexer=undefined //dummy, to allow Project to be main module's parent
 //#### constructor new Project(filename, options:GeneralOptions)
@@ -87,12 +88,12 @@
         options.outDir = Environment.resolvePath(options.outDir);
         //Environment.setBaseInfo options.projectDir, options.outDir, options.target
         Environment.setBaseInfo(options.projectDir, options.outDir, options.target);
-        //logger.info 'Project Dir:',.options.projectDir
-        logger.info('Project Dir:', this.options.projectDir);
-        //logger.info 'Main Module:',.options.mainModuleName
-        logger.info('Main Module:', this.options.mainModuleName);
-        //logger.info 'Out Dir:',.options.outDir
-        logger.info('Out Dir:', this.options.outDir);
+        //logger.msg 'Project Dir:',.options.projectDir
+        logger.msg('Project Dir:', this.options.projectDir);
+        //logger.msg 'Main Module:',.options.mainModuleName
+        logger.msg('Main Module:', this.options.mainModuleName);
+        //logger.msg 'Out Dir:',.options.outDir
+        logger.msg('Out Dir:', this.options.outDir);
 //compiler vars, to use at conditional compilation
         
         //.compilerVars = new Map
@@ -160,12 +161,14 @@
      Project.prototype.compile = function(){
 //Import & compile the main module. The main module will, in turn, 'import' and 'compile' 
 //-if not cached-, all dependent modules. 
-        //console.time 'Parse'
-        console.time('Parse');
+        //logger.msg "Compiling",.options.mainModuleName
+        logger.msg("Compiling", this.options.mainModuleName);
         //var importInfo = new Environment.ImportParameterInfo
         var importInfo = new Environment.ImportParameterInfo();
         //importInfo.name = .options.mainModuleName
         importInfo.name = this.options.mainModuleName;
+        //console.time 'Parse'
+        console.time('Parse');
         //.main = .importModule(.rootModule, importInfo)
         this.main = this.importModule(this.rootModule, importInfo);
         //.main.isMain = true
@@ -194,73 +197,100 @@
 //Produce, for each module
         //console.time 'Produce'
         console.time('Produce');
-        //logger.msg "\nProducing #{.options.target} at #{.options.outDir}"
-        logger.msg("\nProducing " + this.options.target + " at " + this.options.outDir);
+        //logger.msg "Producing #{.options.target}"
+        logger.msg("Producing " + this.options.target);
+        //.filesProducedCount=0
+        this.filesProducedCount = 0;
         //mkPath.create .options.outDir
         mkPath.create(this.options.outDir);
         //for each moduleNode:Grammar.Module in map .moduleCache
         var moduleNode=undefined;
         if(!this.moduleCache.dict) throw(new Error("for each in map: not a Map, no .dict property"));
         for ( var moduleNode__propName in this.moduleCache.dict) if (this.moduleCache.dict.hasOwnProperty(moduleNode__propName)){moduleNode=this.moduleCache.dict[moduleNode__propName];
-          {
-          //if not moduleNode.fileInfo.isCore and moduleNode.referenceCount 
-          if (!(moduleNode.fileInfo.isCore) && moduleNode.referenceCount) {
-            //logger.extra "source:", moduleNode.fileInfo.importInfo.name
-            logger.extra("source:", moduleNode.fileInfo.importInfo.name);
+            {
             //var result:string
             var result = undefined;
-            //if not moduleNode.fileInfo.isLite 
-            if (!(moduleNode.fileInfo.isLite)) {
-                //logger.extra 'non-Lite module, copy to out dir.'
-                logger.extra('non-Lite module, copy to out dir.');
-                //#copy the file to output dir
-                //var contents = Environment.loadFile(moduleNode.fileInfo.filename)
-                var contents = Environment.loadFile(moduleNode.fileInfo.filename);
-                //Environment.externalCacheSave(moduleNode.fileInfo.outFilename, contents)
-                Environment.externalCacheSave(moduleNode.fileInfo.outFilename, contents);
-                //declare valid contents.length
-                
-                //result = "#{contents.length>>10 or 1} kb"
-                result = '' + (contents.length >> 10 || 1) + " kb";
-                //contents=undefined
-                contents = undefined;
-            }
-            else {
-            //else
-//produce & get result target code
-                //moduleNode.lexer.outCode.filenames[0]=moduleNode.fileInfo.outFilename
-                moduleNode.lexer.outCode.filenames[0] = moduleNode.fileInfo.outFilename;
-                //moduleNode.lexer.outCode.filenames[1]='#{moduleNode.fileInfo.outFilename.slice(0,-1)}h'
-                moduleNode.lexer.outCode.filenames[1] = '' + (moduleNode.fileInfo.outFilename.slice(0, -1)) + 'h';
-                //moduleNode.lexer.outCode.fileMode=true //direct out to file 
-                moduleNode.lexer.outCode.fileMode = true; //direct out to file
-                //.produceModule moduleNode
-                this.produceModule(moduleNode);
-                //moduleNode.lexer.outCode.close
-                moduleNode.lexer.outCode.close();
-                //result = "#{moduleNode.lexer.outCode.lineNum} lines"
-                result = '' + moduleNode.lexer.outCode.lineNum + " lines";
+            //logger.extra "source:", moduleNode.fileInfo.importInfo.name
+            logger.extra("source:", moduleNode.fileInfo.importInfo.name);
+            //var shouldProduce = true
+            var shouldProduce = true;
+            //if moduleNode.fileInfo.isCore or no moduleNode.referenceCount 
+            if (moduleNode.fileInfo.isCore || !moduleNode.referenceCount) {
+                //shouldProduce = false
+                shouldProduce = false;
             };
-                ////ifdef PROD_JS
-                ////if .options.nomap is false
-                    ////Environment.externalCacheSave '#{moduleNode.fileInfo.outFilename}.map',
-                            ////moduleNode.lexer.outCode.sourceMap.generate(
-                                          ////moduleNode.fileInfo.base & moduleNode.fileInfo.outExtension
-                                          ////,[moduleNode.fileInfo.sourcename]
-                                          ////)
-                ////endif
-            //end if
             
-            //logger.msg color.green,"[OK]",result, " -> ",moduleNode.fileInfo.outRelFilename,color.normal
-            logger.msg(color.green, "[OK]", result, " -> ", moduleNode.fileInfo.outRelFilename, color.normal);
-            //logger.extra #blank line
-            logger.extra();// #blank line
-          };
-          }
-          
-          }// end for each property
+            //if moduleNode.lexer.interfaceMode and .options.target is 'js'            
+            if (moduleNode.lexer.interfaceMode && this.options.target === 'js') {
+                //// no interface files in js.
+                //shouldProduce = false
+                shouldProduce = false;
+            };
+            //if shouldProduce 
+            if (shouldProduce) {
+                //if not moduleNode.fileInfo.isLite 
+                if (!(moduleNode.fileInfo.isLite)) {
+                    //logger.extra 'non-Lite module, copy to out dir.'
+                    logger.extra('non-Lite module, copy to out dir.');
+                    //#copy the file to output dir
+                    //var contents = Environment.loadFile(moduleNode.fileInfo.filename)
+                    var contents = Environment.loadFile(moduleNode.fileInfo.filename);
+                    //Environment.externalCacheSave(moduleNode.fileInfo.outFilename, contents)
+                    Environment.externalCacheSave(moduleNode.fileInfo.outFilename, contents);
+                    //declare valid contents.length
+                    
+                    //result = "#{contents.length>>10 or 1} kb"
+                    result = '' + (contents.length >> 10 || 1) + " kb";
+                    //contents=undefined
+                    contents = undefined;
+                }
+                else {
+                //else
+//produce & get result target code
+                    //moduleNode.lexer.outCode.filenames[0]=moduleNode.fileInfo.outFilename
+                    moduleNode.lexer.outCode.filenames[0] = moduleNode.fileInfo.outFilename;
+                    //moduleNode.lexer.outCode.filenames[1]='#{moduleNode.fileInfo.outFilename.slice(0,-1)}h'
+                    moduleNode.lexer.outCode.filenames[1] = '' + (moduleNode.fileInfo.outFilename.slice(0, -1)) + 'h';
+                    //moduleNode.lexer.outCode.fileMode=true //direct out to file 
+                    moduleNode.lexer.outCode.fileMode = true; //direct out to file
+                    //.produceModule moduleNode
+                    this.produceModule(moduleNode);
+                    //moduleNode.lexer.outCode.close
+                    moduleNode.lexer.outCode.close();
+                    //result = "#{moduleNode.lexer.outCode.lineNum} lines"
+                    result = '' + moduleNode.lexer.outCode.lineNum + " lines";
+                    ////ifdef PROD_JS
+                    //if .options.generateSourceMap
+                    if (this.options.generateSourceMap) {
+                        ////console.time('Generate SourceMap #{moduleNode.fileInfo.base}')
+                        //Environment.externalCacheSave '#{moduleNode.fileInfo.outFilename}.map',
+                                //moduleNode.lexer.outCode.sourceMap.generate(
+                                              //moduleNode.fileInfo.base & moduleNode.fileInfo.outExtension
+                                              //,[moduleNode.fileInfo.sourcename]
+                        Environment.externalCacheSave('' + moduleNode.fileInfo.outFilename + '.map', moduleNode.lexer.outCode.sourceMap.generate(moduleNode.fileInfo.base + moduleNode.fileInfo.outExtension, [moduleNode.fileInfo.sourcename]));
+                    };
+                };
+                                              //)
+                        ////if .options.perf, console.timeEnd('Generate SourceMap #{moduleNode.fileInfo.base}')
+                    ////endif
+                //end if
+                
+                //logger.info color.green,"[OK]",result, " -> ",moduleNode.fileInfo.outRelFilename,color.normal
+                logger.info(color.green, "[OK]", result, " -> ", moduleNode.fileInfo.outRelFilename, color.normal);
+                //logger.extra #blank line
+                logger.extra();// #blank line
+                //.filesProducedCount++
+                this.filesProducedCount++;
+            };
+            //end if //shouldProduce
+            
+            }
+            
+            }// end for each property
         //end for each module cached
         
+        //logger.msg "Generated .#{.options.target} files (#{.filesProducedCount}) at #{.options.outDir}"
+        logger.msg("Generated ." + this.options.target + " files (" + this.filesProducedCount + ") at " + this.options.outDir);
         //logger.msg "#{logger.errorCount} errors, #{logger.warningCount} warnings."
         logger.msg('' + logger.errorCount + " errors, " + logger.warningCount + " warnings.");
         ////ifdef PROD_C
@@ -289,8 +319,8 @@
      Project.prototype.compileFileOnModule = function(filename, moduleNode){
 //Compilation:
 //Load source -> Lexer/Tokenize -> Parse/create AST 
-        //logger.msg String.spaces(this.recurseLevel*2),"compile: '#{Environment.relativeFrom(.options.projectDir,filename)}'"
-        logger.msg(String.spaces(this.recurseLevel * 2), "compile: '" + (Environment.relativeFrom(this.options.projectDir, filename)) + "'");
+        //logger.info String.spaces(this.recurseLevel*2),"compile: '#{Environment.relativeFrom(.options.projectDir,filename)}'"
+        logger.info(String.spaces(this.recurseLevel * 2), "compile: '" + (Environment.relativeFrom(this.options.projectDir, filename)) + "'");
 //Load source code, parse
         //.parseOnModule moduleNode, filename, Environment.loadFile(filename)
         this.parseOnModule(moduleNode, filename, Environment.loadFile(filename));
@@ -417,8 +447,8 @@
         //moduleNode.produce 
         moduleNode.produce();
         //#referenceSourceMap
-        //if no .options.nomap and moduleNode.fileInfo.outExtension is 'js'
-        if (!this.options.nomap && moduleNode.fileInfo.outExtension === 'js') {
+        //if .options.generateSourceMap and moduleNode.fileInfo.outExtension is 'js'
+        if (this.options.generateSourceMap && moduleNode.fileInfo.outExtension === 'js') {
             //moduleNode.lexer.outCode.startNewLine
             moduleNode.lexer.outCode.startNewLine();
             //moduleNode.lexer.outCode.put "//# sourceMappingURL=#{moduleNode.fileInfo.base}#{moduleNode.fileInfo.outExtension}.map"
@@ -679,7 +709,6 @@
      };
     // end class Project
     //end class Project
-    
 //##Add helper properties and methods to AST node class Module
 //### Append to class Grammar.Module
     
@@ -710,4 +739,9 @@
 //#### Properties
         //importedModule: Grammar.Module
      
+// --------------------
+// Module code
+// --------------------
+    
+// end of module
 module.exports=Project;

@@ -141,4 +141,8 @@
             return JSON.stringify(this.dict);
         };
     // end class Map
+// --------------------
+// Module code
+// --------------------
+// end of module
 module.exports=Map;

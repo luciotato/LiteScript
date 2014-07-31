@@ -22,6 +22,10 @@
     ControlledError.prototype.__proto__ = Error.prototype;
     
     // end class ControlledError
+// --------------------
+// Module code
+// --------------------
+// end of module
 //Note: we're setting the class.prototype.__proto__
 //There will be only one instance of ControlledError with useful info.
         ////endif

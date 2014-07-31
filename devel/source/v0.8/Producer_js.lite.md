@@ -25,17 +25,49 @@ as the new 'export default' (instead of 'module.exports')
 
         .lexer.outCode.exportNamespace = 'module.exports'
 
-        /*if .exportDefault instance of ASTBase
-            declare valid .exportDefault.name
-            .lexer.outCode.exportNamespace = .exportDefault.name
-        end if
-        */
+Literate programming should allow to reference a function definde later.
+Leave loose module imperative statements for the last. 
+Produce all vars & functions definitions first.
+
+        var looseStatements=[]
 
         for each statement in .statements
-            statement.produce()
-        .out NL
+//            statement.produce
 
-        //add end of file comments
+            case statement.specific.constructor
+  
+                when 
+                    Grammar.ImportStatement
+                    Grammar.VarStatement
+                    Grammar.ClassDeclaration
+                    Grammar.FunctionDeclaration
+                    Grammar.NamespaceDeclaration
+                    Grammar.AppendToDeclaration
+                    :
+                        statement.produce
+
+                else
+                    looseStatements.push statement
+
+        var separ = "-"
+        .out
+            {COMMENT: separ.repeat(20)},NL
+            {COMMENT:"Module code"},NL
+            {COMMENT: separ.repeat(20)},NL 
+
+        for each statement in looseStatements
+            statement.produce
+
+        //for each statement in produceThird
+        //    statement.produce
+
+        .out 
+            NL
+            {COMMENT:'end of module'},NL
+            NL
+
+add end of file comments
+
         .outSourceLinesAsComment .lexer.infoLines.length
 
 export 'export default' namespace, if it was set.
@@ -565,9 +597,9 @@ If 'var' was adjectivated 'export', add all vars to exportNamespace
 
       method getNodeJSRequireFileRef() 
         
-node.js require() require "./" to denote a local module to load.
-it does like bash does for executable files. A name  without ./ means "look in $PATH".
-this is not the most intuitive choice.
+node.js require() use "./" to denote a local module to load.
+It does as bash does for executable files.
+A name  without "./"" means "look in $PATH" (node_modules and up)
 
         if .importedModule.fileInfo.importInfo.globalImport 
             return .name // for node, no './' means "look in node_modules, and up, then global paths"
@@ -576,12 +608,13 @@ this is not the most intuitive choice.
 
 get the required file path, relative to the location of this module (as nodejs's require() requires)
 
-        if no .importedModule.fileInfo.outRelFilename
-            print JSON.stringify(.importedModule.fileInfo)
-            print thisModule.fileInfo.dir
+        #debug
+        #if no .importedModule.fileInfo.outRelFilename
+        #print "thisModule.fileInfo.outRelFilename",thisModule.fileInfo.outFilename
+        #print  ".importedModule.fileInfo.outRelFilename",.importedModule.fileInfo.outFilename
 
-        var fn = Environment.relativeFrom(Environment.getDir(thisModule.fileInfo.outRelFilename)
-                                            ,.importedModule.fileInfo.outRelFilename);
+        var fn = Environment.relativeFrom(Environment.getDir(thisModule.fileInfo.outFilename)
+                                            ,.importedModule.fileInfo.outFilename);
         
 check for 'import x from 'path/file';
 
@@ -590,7 +623,7 @@ check for 'import x from 'path/file';
 
 else, a simple 'import x'
 
-        return "./#{fn}"; // node.js require() require "./" to denote a local module to load                
+        return "./#{fn}"; // node.js require() use "./" to denote a local module to load                
 
 
 ### Append to class Grammar.ImportStatement ###
@@ -1291,10 +1324,10 @@ if we have a varRef, is a case over a value
 
             if .varRef
                 //case foo...
-                .out 'if (', {pre:['(',.varRef,'=='], CSL:whenSection.expressions, post:')', separator:'||'}
+                .out 'if (', {pre:['(',.varRef,'=='], CSL:whenSection.expressions, post:')', separator:'||', freeForm:1}
             else
                 //case when TRUE
-                .out 'if (', {pre:['('], CSL:whenSection.expressions, post:')', separator:'||'}
+                .out 'if (', {pre:['('], CSL:whenSection.expressions, post:')', separator:'||', freeForm:1}
                 
             .out '){',
                 whenSection.body, NL,

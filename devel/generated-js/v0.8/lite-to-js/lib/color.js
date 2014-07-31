@@ -10,4 +10,8 @@
             color.yellow="\x1b[93m";
             color.green="\x1b[32m";
         
+// --------------------
+// Module code
+// --------------------
+// end of module
 module.exports=color;
