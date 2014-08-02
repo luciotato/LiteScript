@@ -27,16 +27,18 @@ echo "MAIN ${MAIN}"
 echo "SRC VERSION ${SRCVRS}"
 echo ---------------
 
-echo COPY /out/lib to main dir /lib
+echo "COPY /out/lib to main dir /lib"
+rm -rf ${MAIN}/lib/
 mkdir -p ${MAIN}/lib
-rm -r ${MAIN}/lib/*
-cp -rp out/lib/* ${MAIN}/lib/
+cp -r out/lib/* ${MAIN}/lib/
 
+echo "COPY ${SRCVRS} to main dir /source (snapshot)"
 # update sources snapshot
-rm -r ${MAIN}/source/
-cp -r ${SRCVRS}/ ${MAIN}/source/
-rm ${MAIN}/source/*.sh
-rm ${MAIN}/source/*.json
+rm -rf ${MAIN}/source
+mkdir -p ${MAIN}/source
+cp -r ${SRCVRS}/* ${MAIN}/source/
+rm -f ${MAIN}/source/*.sh
+rm -f ${MAIN}/source/*.json
 cat >${MAIN}/source/README.md <<end_of_README
 LiteScript Compiler Source SNAPSHOT
 ===================================
@@ -45,11 +47,8 @@ LiteScript Compiler Source SNAPSHOT
 
 This dir, /source, it's just a ***snapshot** of the last released source code: v${VERSION}
 
-Do NOT work on *this dir*, work on [/devel/source/v${VERSION}](devel/source/v${VERSION})
+Do NOT work on *this dir*, work on [/devel/source/v${VERSION}](/devel/source/v${VERSION})
 end_of_README
-
-cp -r ${SRCVRS}/ ${MAIN}/source/
-
 
 cd ${CWD}
 
