@@ -10,7 +10,6 @@
 #include "any.h"
 #include "exceptions.h"
 #include "PMREX-native.h"
-#include <unistd.h> // process.cwd
 
     //type for symbols. Symbols are negative (methods) and positive(properties). Must be intX.
     typedef int16_t symbol_t; // max 32768 methods & 32768 props. Elevate to int32_t if needed
@@ -525,6 +524,8 @@
     extern any process_argv; // namespace process - node.js compat with core object process
     extern any process_cwd(DEFAULT_ARGUMENTS);
     extern any process_exit(DEFAULT_ARGUMENTS);
+
+    extern any __dirname; //fill with current process dir name (similar to node.js)
 
     //out to stdout
     extern void _out(any s);

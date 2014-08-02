@@ -1,3 +1,4 @@
+
     //public namespace color
     var color={};
         //properties 
@@ -14,4 +15,7 @@
 // Module code
 // --------------------
 // end of module
+
+
+
 module.exports=color;

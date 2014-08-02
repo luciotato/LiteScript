@@ -78,12 +78,12 @@ you can write code that work when it receives a Map (compile-to-c) or a Object (
         method join() returns string
         method pop() 
         method push() 
-        method concat() 
+        method concat() returns array
         //method reverse() 
         method shift() 
         method unshift() 
-        method slice() 
-        method splice() 
+        method slice() returns array
+        method splice() returns array
         //method sort() 
         //method filter() 
         //method forEach() 

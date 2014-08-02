@@ -1,35 +1,46 @@
+
 //Shim for Lite-C core support (used when target is JS)
+
 //### namespace LiteCore
     var LiteCore={};
+
         //shim method getSymbol(name)
         if (!LiteCore.getSymbol)
         LiteCore.getSymbol = function(name){
             //return name
             return name;
         };
-            //// in js, every object property is accessed by 'name' (a string)
-            //// in LiteC, every object property is accessed by a "symbol" (a integer)
+            // in js, every object property is accessed by 'name' (a string)
+            // in LiteC, every object property is accessed by a "symbol" (a integer)
+
         //shim method getSymbolName(symbol)
         if (!LiteCore.getSymbolName)
         LiteCore.getSymbolName = function(symbol){
             //return symbol
             return symbol;
         };
-            //// in js, a symbol "name" is the same symbol (a symbol is already a string)
-            //// in LiteC, a symbol name is looked-up in the table _symbol[]
+            // in js, a symbol "name" is the same symbol (a symbol is already a string)
+            // in LiteC, a symbol name is looked-up in the table _symbol[]
+
+
 //## portability
+
 //when compiling-to-c, Maps will be created (instead of objects) when passing 
 //literal objects {} as function arguments.
+
 //we add a "getProperty" method to access *BOTH* map keys *and* object properties.
 //This allows to make portable to-js to-c code, by using:
 //- hasOwnProperty
-//- getProperty
+//- tryGetProperty
 //- setProperty
 //- getObjectKeys
+
 //Map and Object implement this methods, so by using this methods
 //you can write code that work when it receives a Map (compile-to-c) or a Object (compile-to-js)
+
 //### Append to Class Object
     
+
         //shim method hasProperty(key:string) [not enumerable] //use Map|Object interchangeably
         if (!Object.prototype.hasProperty)
         Object.defineProperty(
@@ -39,6 +50,7 @@
         }
         ,enumerable:false
         });
+
         //shim method tryGetMethod(methodSymbol) returns function [not enumerable] //portable code -to-js & -to-c
         if (!Object.prototype.tryGetMethod)
         Object.defineProperty(
@@ -48,6 +60,7 @@
         }
         ,enumerable:false
         });
+
         //shim method tryGetProperty(key) [not enumerable] //use Map|Object interchangeably
         if (!Object.prototype.tryGetProperty)
         Object.defineProperty(
@@ -57,6 +70,7 @@
         }
         ,enumerable:false
         });
+
         //shim method setProperty(key:string, value) [not enumerable] //use Map|Object interchangeably
         if (!Object.prototype.setProperty)
         Object.defineProperty(
@@ -66,6 +80,7 @@
         }
         ,enumerable:false
         });
+
         //shim method getObjectKeys() returns array [not enumerable] //use Map|Object interchangeably
         if (!Object.prototype.getObjectKeys)
         Object.defineProperty(
@@ -75,6 +90,7 @@
         }
         ,enumerable:false
         });
+
         //shim method getPropertyNameAtIndex(index:number) [not enumerable] //LiteC-compatible
         if (!Object.prototype.getPropertyNameAtIndex)
         Object.defineProperty(
@@ -84,8 +100,10 @@
         }
         ,enumerable:false
         });
+
 //### Append to Class Function #Function-Class for js
     
+
         //shim method newFromObject(model) //LiteC-compatible
         if (!Function.prototype.newFromObject)
         Function.prototype.newFromObject = function(model){ //LiteC-compatible
@@ -103,9 +121,13 @@
             //return newInstance
             return newInstance;
         };
+
+
 //# JS array access 
+
 //### Append to class Array 
     
+
         //shim method tryGet(index:Number) [not enumerable]
         if (!Array.prototype.tryGet)
         Object.defineProperty(
@@ -115,6 +137,7 @@
         }
         ,enumerable:false
         });
+
         //shim method set(index:Number, value) [not enumerable]
         if (!Array.prototype.set)
         Object.defineProperty(
@@ -126,35 +149,54 @@
         }
         ,enumerable:false
         });
+
+
 //## set array item value
+
 //js also allows you to do: 
  //`var a = []`
  //`a[100]='foo'`
+
 //and after that the js "array" will have only one element, index:100 value:'foo',
 //but length will be 101
+
 //LiteC arrays do not behave like that, if you do:
     //`var a = []`
     //`a[100]='foo'` => EXCEPTION: OUT OF BOUNDS
+
 //you'll get an "OUT OF BOUNDS" exception. You cannot use [] set value for an
 //array item out of current bounds.
+
 //In order to get such behavior, you'll have to use `Array.set(index,value)`
+
+
 //## get array item value
+
 //LiteC arrays will also give an "OUT OF BOUNDS" exception, when accessing an unexisting array item.
+
 //*Sometimes* is useful to get "undefined" when accessing a "out of bounds" array index.
 //In order to get such behavior, you'll have to use `Array.tryGet(index)`
+
 //js: 
  //`var a = []`
  //`console.log(a[100]);` => OK, undefined
+
 //LiteC:
  //`var a = []`
  //`console.log(a[100]);` => EXCEPTION: OUT OF BOUNDS
  //`console.log(a.tryGet(100));` => OK, undefined
+
+
+
 //### append to namespace console
     
+
 //Note: Today, Node.js "console" object do not have `group` & `groupEnd` methods
 //neither some older browsers
+
         //properties indentLevel
         
+
         //shim method group() 
         if (!console.group)
         console.group = function(){
@@ -163,6 +205,7 @@
             //console.indentLevel = console.indentLevel or 0 + 1
             console.indentLevel = console.indentLevel || 0 + 1;
         };
+
         //shim method groupEnd() 
         if (!console.groupEnd)
         console.groupEnd = function(){
@@ -176,4 +219,6 @@
 // Module code
 // --------------------
 // end of module
+
+
 module.exports=LiteCore;

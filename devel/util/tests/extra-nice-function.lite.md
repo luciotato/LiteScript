@@ -34,7 +34,8 @@
             var self=this;
             // callback after 1.5 secs
             
-            setTimeout -> return callback(null, 'the answer is: '+self.value)
+            setTimeout 
+                function = callback(null, 'the answer is: '+self.value)
                 , Math.floor(Math.random()*400)+200
 
         method pingPong (ping,callback)

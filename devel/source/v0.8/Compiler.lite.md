@@ -29,30 +29,9 @@ The `Environment` abstraction allows us to support compile on server(node) or th
     import Environment
 
    
-## Main API functions: LiteScript.compile & LiteScript.compileProject
+## Main API functions: LiteScript.compileProject & LiteScript.compile 
 
-### export Function compile (filename, sourceLines, options: GeneralOptions) returns string
-
-Used to compile source code loaded in memory (instead of loading a file)
-input: 
-* filename (for error reporting), 
-* sourceLines: LiteScript code: string array | large string | Buffer 
-
-output: 
-* string, compiled code
-
-        options.version = version
-
-        if options.storeMessages
-            logger.options.storeMessages = true
-            logger.getMessages //clear
-
-        var moduleNode = compileModule(filename, sourceLines, options)
-
-        return moduleNode.getCompiledText()
-
-
-### export Function compileProject (mainModule, options:GeneralOptions) returns Project
+### export Function compileProject (options:GeneralOptions) returns Project
 
 The 'compileProject' function will load and compile the main Module of a project. 
 The compilation of the main module will trigger import and compilation of all its "child" modules 
@@ -71,11 +50,12 @@ Create a 'Project' to hold the main module and dependant modules
         default options.target = 'js'
         #endif
 
-        options.version = version
+        #since "options" come from a external source, it can be anything
+        options = normalizeOptions(options)
 
         console.time 'Total Compile Project'
 
-        var project = new Project(mainModule, options)
+        var project = new Project(options)
 
         project.compile
 
@@ -87,6 +67,31 @@ Create a 'Project' to hold the main module and dependant modules
 After generating all modules, if no errors occurred, 
 mainModuleName and all its dependencies will be compiled in the output dir
 
+### export Function compile (filename, sourceLines, options: GeneralOptions) returns array of string
+
+Used to compile source code loaded in memory (instead of loading a file)
+result is sotred also in memory (instead of writing to a file)
+
+input: 
+* filename (for error reporting), 
+* sourceLines: LiteScript code: string array | large string | Buffer 
+* options: GeneralOptions
+
+output: 
+* string, compiled code
+
+        #since "options" come from a external source, it can be anything
+        options = normalizeOptions(options)
+
+        if options.storeMessages
+            logger.options.storeMessages = true
+            logger.getMessages //clear
+
+        var moduleNode = compileModule(filename, sourceLines, options)
+
+        return moduleNode.getCompiledLines()
+
+
 ## Secondary Function: compileModule, returns Grammar.Module
 
 ### export Function compileModule (filename, sourceLines, options:GeneralOptions) returns Grammar.Module
@@ -94,26 +99,34 @@ Compile a module from source in memory
 input: 
 * filename (for error reporting), 
 * sourceLines: LiteScript code: string array | large string | Buffer 
+* options: GeneralOptions
 
 output: 
 * moduleNode: Grammar.Module: module's code AST root node 
 
-		default filename = 'unnamed'
+        default filename = 'unnamed'
+        options.mainModuleName = filename
 
-        options.version = version
+        #since "options" come from a external source, it can be anything
+        options = normalizeOptions(options)
 
-        var project = new Project(filename, options)
+        var project = new Project(options)
 
         var fileInfo = new Environment.FileInfo(filename)
 
         var moduleNode = project.createNewModule(fileInfo)
 
-parse source lines & store in moduleCache for validation
-        
-        project.parseOnModule moduleNode, filename, sourceLines
-        project.moduleCache.set filename,moduleNode
+add to module list, so WalkAllNodes includes it
 
-import dependencies
+        project.moduleCache.set fileInfo.filename, moduleNode
+
+store result in memory
+        
+        moduleNode.lexer.outCode.fileMode=false
+
+parse source lines
+
+        project.parseOnModule moduleNode, filename, sourceLines
 
         if no project.options.single
             project.importDependencies moduleNode
@@ -138,12 +151,26 @@ text compiled result can be obtained with: moduleNode.lexer.out.getResult() :str
 
         return moduleNode
 
+### helper function normalizeOptions(options) returns GeneralOptions
 
-    // if this compiler will generate js code
-    #ifdef TARGET_JS
+
+        if options instance of GeneralOptions, return options
+
+        var normalizedOptions = new GeneralOptions
+        for each property key,value in options
+            normalizedOptions.setProperty key, value
+
+        normalizedOptions.version = version
+
+        return normalizedOptions
+
 
 Require Extensions
 ------------------
+
+only if this compiler will generate js code
+
+    #ifdef TARGET_JS
 
 This segment adds extensions to node's `require` function 
 for LiteScript files so that you can just `require` a .lite.md file 

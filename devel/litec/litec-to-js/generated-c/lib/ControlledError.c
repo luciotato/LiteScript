@@ -34,6 +34,7 @@
     inline any ControlledError_newFromObject(DEFAULT_ARGUMENTS){
         return _newFromObject(ControlledError,argc,arguments);
     }
+
     //class ControlledError extends Error
         //properties 
             //soft: boolean

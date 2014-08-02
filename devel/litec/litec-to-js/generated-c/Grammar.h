@@ -1448,6 +1448,7 @@ extern void Grammar__moduleInit(void);
     extern void Grammar_Literal__init(DEFAULT_ARGUMENTS);
     extern any Grammar_Literal_newFromObject(DEFAULT_ARGUMENTS);
     extern any Grammar_Literal_getValue(DEFAULT_ARGUMENTS);
+    extern any Grammar_Literal_toString(DEFAULT_ARGUMENTS);
     
 
 //--------------
@@ -1635,6 +1636,7 @@ extern void Grammar__moduleInit(void);
         //ObjectLiteral
         any items;
         any produceType;
+        any nameDecl;
     
     } Grammar_ObjectLiteral_s;
     
@@ -1642,6 +1644,7 @@ extern void Grammar__moduleInit(void);
     extern any Grammar_ObjectLiteral_newFromObject(DEFAULT_ARGUMENTS);
     extern any Grammar_ObjectLiteral_parse(DEFAULT_ARGUMENTS);
     extern any Grammar_ObjectLiteral_forEach(DEFAULT_ARGUMENTS);
+    extern any Grammar_ObjectLiteral_declare(DEFAULT_ARGUMENTS);
     extern any Grammar_ObjectLiteral_getResultType(DEFAULT_ARGUMENTS);
     extern any Grammar_ObjectLiteral_produce(DEFAULT_ARGUMENTS);
     
@@ -1675,6 +1678,7 @@ extern void Grammar__moduleInit(void);
         any skipSemiColon;
         //NameValuePair
         any value;
+        any nameDecl;
     
     } Grammar_NameValuePair_s;
     
@@ -1682,6 +1686,7 @@ extern void Grammar__moduleInit(void);
     extern any Grammar_NameValuePair_newFromObject(DEFAULT_ARGUMENTS);
     extern any Grammar_NameValuePair_parse(DEFAULT_ARGUMENTS);
     extern any Grammar_NameValuePair_forEach(DEFAULT_ARGUMENTS);
+    extern any Grammar_NameValuePair_declare(DEFAULT_ARGUMENTS);
     extern any Grammar_NameValuePair_produce(DEFAULT_ARGUMENTS);
     
 
@@ -1716,6 +1721,7 @@ extern void Grammar__moduleInit(void);
         //ObjectLiteral
         any items;
         any produceType;
+        any nameDecl;
         //FreeObjectLiteral
     
     } Grammar_FreeObjectLiteral_s;

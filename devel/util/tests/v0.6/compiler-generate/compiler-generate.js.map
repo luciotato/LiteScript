@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "compiler-generate.js",
+  "sourceRoot": "",
+  "sources": [
+    "compiler-generate.lite.md"
+  ],
+  "names": [],
+  "mappings": ";;AAKI;;;;AAIA;;AATA;;;AAcA;;;;;AAdA;;AACA;;AACA;;AACA;;AACA;;AACA;;AACA;;AACA;;AACA;;AACA"
+}

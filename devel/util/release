@@ -1,6 +1,6 @@
 #!/bin/bash
 #This script will create at ../out
-#a release version of the LiteScript compiler, in order to
+#a release version of the LiteScript compiler (>v0.8), in order to
 #make the litescript compiler stable package for the npm repository
 
 echo release $1 $2 $3
@@ -8,14 +8,14 @@ set -e
 
 VERSION=$1
 using=$2
-PREV=$3
+CVER=$3
 
 if [ "$2" = "" ]; then 
     using=using
-    PREV=$VERSION #compile itself 
+    CVER=$VERSION #compile itself 
 fi
 
-if [ "$1" = "" -o "$using" != "using" -o "$PREV" = "" ]; then 
+if [ "$1" = "" -o "$using" != "using" -o "$CVER" = "" ]; then 
     echo usage: ./release 0.6 [using x.y]
     exit 1
 fi
@@ -33,30 +33,29 @@ echo dest dir: ${out}
 
 mkdir -p ${out}
 
-#compile lite-cli (command line interface) v${VERSION} using ${PREV} version, w/o comments or mapsource
-node liteVersion -use v${PREV}/lite-to-js -noval -nomap -comments 0  ../source/v${VERSION}/lite-cli -o ${out}/lib
+#compile ${VERSION} using ${CVER} version, w/o comments or mapsource
+node liteVersion -use v${CVER}/lite-to-js -nomap  ../source/v${VERSION}/js_lite -o ${out}/lib
 
-#compile main Compiler ${VERSION} using ${PREV} version, w/o comments or mapsource
-node liteVersion -use v${PREV}/lite-to-js -nomap  ../source/v${VERSION}/Compiler -o ${out}/lib
+#copy interfaces dir
+mkdir -p ${out}/lib/interfaces
+cp -r ../source/v${VERSION}/interfaces ${out}/lib
 
-#copy if newer: lite (#!/usr/bin/env node), calls lite-cli.js
+#copy if newer: lite (#!/usr/bin/env node), just: require('./js_lite')
 cp -u lite ${out}/lib/lite
 chmod 777 ${out}/lib/lite
 
 #copy v0.x/package.json to Litescript root
 cp ../source/v${VERSION}/package.json ../..
 
-#extra tests
+#extra tests - use new compiler
 
 #check version consistency
 
-node liteVersion -use v${PREV}/lite-to-js -nomap tests/extra-check-version -o out
-node --harmony out/extra-check-version
-rm out/extra-check-version.js
+${out}/lib/lite -run tests/extra-check-version -o out -i ../../source/v0.8/interfaces
 
-#test nice functions
+#test nice functionss
 
-node liteVersion -use v${PREV}/lite-to-js -nomap tests/extra-nice-function -o out
+${out}/lib/lite -nomap tests/extra-nice-function -o out -i ../../source/v0.8/interfaces
 node --harmony out/extra-nice-function
 rm out/extra-nice-function.js
 

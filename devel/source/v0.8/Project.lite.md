@@ -59,7 +59,7 @@ The Modules dependency tree is the *Project tree*.
 
         //lexer=undefined //dummy, to allow Project to be main module's parent
 
-#### constructor new Project(filename, options:GeneralOptions)
+#### constructor new Project(options:GeneralOptions)
 
 Initialize this project. Project has a cache for required modules. 
 As with node's `require` mechanism, a module, 
@@ -78,12 +78,12 @@ when imported|required is only compiled once and then cached.
 
 set basePath from main module path
 
-        var tempFileInfo = new Environment.FileInfo(filename)
+        var tempFileInfo = new Environment.FileInfo(options.mainModuleName)
         options.projectDir = tempFileInfo.dir
         options.mainModuleName = './#{tempFileInfo.base}'
-        options.outDir = Environment.resolvePath(options.outDir)
+        options.outDir = Environment.resolvePath(options.outDir or '.')
 
-        Environment.setBaseInfo options.projectDir, options.outDir, options.target
+        Environment.setBaseInfo options
 
         logger.msg 'Project Dir:',.options.projectDir
         logger.msg 'Main Module:',.options.mainModuleName
@@ -148,6 +148,8 @@ Import & compile the main module. The main module will, in turn, 'import' and 'c
 
         var importInfo = new Environment.ImportParameterInfo
         importInfo.name = .options.mainModuleName
+        importInfo.source = 'Project'
+        importInfo.line=0
 
         console.time 'Parse'
         .main = .importModule(.rootModule, importInfo)
@@ -192,11 +194,8 @@ Produce, for each module
                 if not moduleNode.fileInfo.isLite 
                     logger.extra 'non-Lite module, copy to out dir.'
                     #copy the file to output dir
-                    var contents = Environment.loadFile(moduleNode.fileInfo.filename)
-                    Environment.externalCacheSave(moduleNode.fileInfo.outFilename, contents)
-                    declare valid contents.length
-                    result = "#{contents.length>>10 or 1} kb"
-                    contents=undefined
+                    logger.msg "Note: non-lite module '#{moduleNode.fileInfo.filename}' required"
+                    result = moduleNode.fileInfo.filename
 
                 else
 
@@ -243,7 +242,11 @@ produce & get result target code
 
 #### Method compileFile(filename) returns Grammar.Module
 
+Called to compile GlobalScopeX.interface.md, from Validate module
+
         var filenameInfo = new Environment.FileInfo(filename)
+        filenameInfo.importInfo.source = 'Compiler'
+        filenameInfo.importInfo.line=0
 
         //search the file
         filenameInfo.searchModule .rootModule.fileInfo.dir
@@ -255,6 +258,7 @@ produce & get result target code
         .compileFileOnModule filenameInfo.filename, newModule
 
         return newModule
+
 
 #### Method compileFileOnModule(filename, moduleNode:Grammar.Module)
 
@@ -271,7 +275,6 @@ Check if this module 'imported other modules'. Process Imports (recursive)
 
         if no .options.single 
             .importDependencies moduleNode
-
 
 
 #### method parseOnModule(moduleNode:Grammar.Module, filename, sourceLines)
@@ -415,18 +418,6 @@ else search will be local: './' and './lib'
 
                 else if node.parent instanceof Grammar.ImportStatement 
                     importInfo.globalImport = node.hasAdjective("global")
-
-/*
-else, If the origin is a require() call
-
-            else if node instance of Grammar.VariableRef #require() call
-                declare node:Grammar.VariableRef
-                if node.accessors and node.accessors[0] instanceof Grammar.FunctionAccess
-                    var requireCall:Grammar.FunctionAccess = node.accessors[0]
-                    if requireCall.args[0].expression.root.name instanceof Grammar.StringLiteral
-                        var stringLiteral = requireCall.args[0].expression.root.name
-                        importInfo.name = stringLiteral.getValue()
-*/
 
 if found a valid filename to import
 

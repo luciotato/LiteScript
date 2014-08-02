@@ -118,7 +118,8 @@
 
     any
         null, undefined, true, false,
-        process_argv;
+        process_argv,
+        __dirname;
 
 // --------------------------
 // _typeof, _instanceof
@@ -660,7 +661,8 @@
 
     any _newString(str source, len_t len){
         assert(source);
-        assert(len>=0); if (!len) return any_EMPTY_STR;
+        assert(len>=0);
+        if (!len) return any_EMPTY_STR;
         any a = _newStringSize(len+1); //+1 fo null-terminator
         memcpy(a.value.ptr, source, len);
         a.value.charPtr[len]=0; //null terminated
@@ -827,21 +829,16 @@
     }
 
     any Object_getProperty(DEFAULT_ARGUMENTS) {
-        assert_arg(Number);
-        if (arguments[0].value.number<0 || arguments[0].value.number>=_allPropsLength) {
-            fail_with("invalid prop symbol");
-        }
-        return _getProperty(this,arguments[0].value.number);
+        assert(argc==1);
+        symbol_t symbol=_getSymbol(arguments[0]); //search symbol from symbol number or name
+        return _getProperty(this,symbol);
     }
 
     // returns prop value from symbol or undefined (if symbol is not valid for this class)
     any Object_tryGetProperty(DEFAULT_ARGUMENTS) {
-        assert_arg(Number);
-        if (arguments[0].value.number<0 || arguments[0].value.number>=_allPropsLength) {
-            fail_with("invalid prop symbol");
-        }
-        symbol_t symbol=arguments[0].value.number;
-        if (symbol==0) return any_class(this.class);  //symbol:0 is "constructor":Class
+        assert(argc==1);
+        symbol_t symbol=_getSymbol(arguments[0]); //search symbol from symbol number or name
+        if (symbol==0) return any_class(this.class);  //symbol:0 is "constructor", returns class
 
         any* propPtr = _getPropPtr(this,symbol);
         if (!propPtr) return undefined; //this class do not has required property
@@ -850,7 +847,7 @@
 
     //check property by name
     int _hasProperty(any this, any name) {
-        symbol_t symbol=_getSymbol(name); //search symbol from symbol name
+        symbol_t symbol=_getSymbol(name); //search symbol from symbol number or name
         //symbol:0 is "constructor":Class
         if (symbol==0 || _getPropPtr(this,symbol)!=NULL) return TRUE;
         return FALSE;
@@ -2835,6 +2832,18 @@
 
         //init process_argv with program arguments
         process_argv = _newArrayFromCharPtrPtr(argc,CharPtrPtrargv);
+
+        //init __dirname
+        #define PROC_EXE "/proc/self/exe"
+        int nameLen;
+        if ((nameLen=readlink(PROC_EXE, tempBuffer , sizeof(tempBuffer)-1))<=0) {
+            perror("readlink " PROC_EXE);
+            fatal("cannot determine __dirname");
+        }
+        //remove file name, leave dir only
+        while(nameLen>1 && tempBuffer[nameLen]!='/') nameLen--;
+        __dirname = _newString(tempBuffer,nameLen);
+        DEBUG(__dirname);
     };
 
     void LiteC_finish(){

@@ -54,7 +54,7 @@ global Classes pre-created are:
         method reverse() 
         method shift() 
         method unshift() 
-        method slice() 
+        method slice() returns array
         method splice() 
         method sort() 
         method filter() 
@@ -91,7 +91,7 @@ global Classes pre-created are:
         //method normalize() 
         method replace() 
         method search() 
-        method slice() 
+        method slice() returns string
         method split() returns array of string
         method substring() 
         method substr() 

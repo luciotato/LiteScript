@@ -18,17 +18,17 @@
       <itemPath>../core/util.h</itemPath>
     </logicalFolder>
     <logicalFolder name="generated-c" displayName="generated-c" projectFiles="true">
-      <logicalFolder name="ENV_C_global_import"
-                     displayName="ENV_C_global_import"
-                     projectFiles="true">
-        <itemPath>generated-c/ENV_C_global_import/fs.c</itemPath>
-        <itemPath>generated-c/ENV_C_global_import/fs.c.extra</itemPath>
-        <itemPath>generated-c/ENV_C_global_import/fs.h</itemPath>
-        <itemPath>generated-c/ENV_C_global_import/path.c</itemPath>
-        <itemPath>generated-c/ENV_C_global_import/path.c.extra</itemPath>
-        <itemPath>generated-c/ENV_C_global_import/path.h</itemPath>
-      </logicalFolder>
       <logicalFolder name="interfaces" displayName="interfaces" projectFiles="true">
+        <logicalFolder name="C_standalone"
+                       displayName="C_standalone"
+                       projectFiles="true">
+          <itemPath>generated-c/interfaces/C_standalone/fs.c</itemPath>
+          <itemPath>generated-c/interfaces/C_standalone/fs.c.extra</itemPath>
+          <itemPath>generated-c/interfaces/C_standalone/fs.h</itemPath>
+          <itemPath>generated-c/interfaces/C_standalone/path.c</itemPath>
+          <itemPath>generated-c/interfaces/C_standalone/path.c.extra</itemPath>
+          <itemPath>generated-c/interfaces/C_standalone/path.h</itemPath>
+        </logicalFolder>
       </logicalFolder>
       <logicalFolder name="lib" displayName="lib" projectFiles="true">
         <itemPath>generated-c/lib/ControlledError.c</itemPath>
@@ -138,7 +138,7 @@
           <incDir>
             <pElem>../core</pElem>
             <pElem>generated-c/interfaces</pElem>
-            <pElem>generated-c/ENV_C_global_import</pElem>
+            <pElem>generated-c/interfaces/C_standalone</pElem>
           </incDir>
           <commandLine>-fmax-errors=10</commandLine>
         </cTool>
@@ -195,36 +195,6 @@
       </item>
       <item path="generated-c/Compiler.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="generated-c/ENV_C_global_import/fs.c"
-            ex="false"
-            tool="0"
-            flavor2="0">
-      </item>
-      <item path="generated-c/ENV_C_global_import/fs.c.extra"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="generated-c/ENV_C_global_import/fs.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="generated-c/ENV_C_global_import/path.c"
-            ex="false"
-            tool="0"
-            flavor2="0">
-      </item>
-      <item path="generated-c/ENV_C_global_import/path.c.extra"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="generated-c/ENV_C_global_import/path.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="generated-c/Grammar.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="generated-c/Grammar.c.extra" ex="false" tool="3" flavor2="0">
@@ -270,6 +240,36 @@
       <item path="generated-c/c_lite.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/c_lite.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="generated-c/interfaces/C_standalone/fs.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="generated-c/interfaces/C_standalone/fs.c.extra"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="generated-c/interfaces/C_standalone/fs.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="generated-c/interfaces/C_standalone/path.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="generated-c/interfaces/C_standalone/path.c.extra"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="generated-c/interfaces/C_standalone/path.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="generated-c/lib/ControlledError.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -357,7 +357,8 @@
           <incDir>
             <pElem>../core</pElem>
             <pElem>../include</pElem>
-            <pElem>generated-c/ENV_C_global_import</pElem>
+            <pElem>generated-c/interfaces</pElem>
+            <pElem>generated-c/interfaces/C_standalone</pElem>
           </incDir>
           <preprocessorList>
             <Elem>NDEBUG</Elem>
@@ -418,36 +419,6 @@
       </item>
       <item path="generated-c/Compiler.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="generated-c/ENV_C_global_import/fs.c"
-            ex="false"
-            tool="0"
-            flavor2="0">
-      </item>
-      <item path="generated-c/ENV_C_global_import/fs.c.extra"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="generated-c/ENV_C_global_import/fs.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="generated-c/ENV_C_global_import/path.c"
-            ex="false"
-            tool="0"
-            flavor2="0">
-      </item>
-      <item path="generated-c/ENV_C_global_import/path.c.extra"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="generated-c/ENV_C_global_import/path.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="generated-c/Grammar.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="generated-c/Grammar.c.extra" ex="false" tool="3" flavor2="0">
@@ -493,6 +464,36 @@
       <item path="generated-c/c_lite.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/c_lite.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="generated-c/interfaces/C_standalone/fs.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="generated-c/interfaces/C_standalone/fs.c.extra"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="generated-c/interfaces/C_standalone/fs.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="generated-c/interfaces/C_standalone/path.c"
+            ex="false"
+            tool="0"
+            flavor2="0">
+      </item>
+      <item path="generated-c/interfaces/C_standalone/path.c.extra"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="generated-c/interfaces/C_standalone/path.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="generated-c/lib/ControlledError.c" ex="false" tool="0" flavor2="0">
       </item>

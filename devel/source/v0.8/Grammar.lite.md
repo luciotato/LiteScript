@@ -444,6 +444,7 @@ Defines a `catch` block for trapping exceptions and handling them.
 
       method parse()
         .keyword = .req('catch','exception','Exception')
+        .keyword = .keyword.toLowerCase()
         .lock()
 
 in order to correctly count frames to unwind on "return" from inside a try-catch
@@ -1837,6 +1838,9 @@ This class groups: NumberLiteral, StringLiteral, RegExpLiteral, ArrayLiteral and
       method getValue()
         return .name
 
+      method toString()
+        return .name
+
 
 ## NumberLiteral
 
@@ -2072,7 +2076,7 @@ Functions: parametrized pieces of callable code.
         .specifier = .req('function','method','->')
         .lock()
 
-        if .specifier isnt 'method' and .getParent(ClassDeclaration)
+        if .specifier isnt 'method' and .parent.parent instance of ClassDeclaration
             .throwError "unexpected 'function' in 'class/namespace' body. You should use 'method'"
 
 '->' are anonymous functions
@@ -3177,16 +3181,16 @@ Anything standing alone in it's own line, its an imperative statement (it does s
 ##### helper method parseType
 
 parse type declaration: 
+
   function [(VariableDecl,)]
   type-IDENTIFIER [array]
   [array of] type-IDENTIFIER 
   map type-IDENTIFIER to type-IDENTIFIER
 
-        if .opt('function','Function') #function as type declaration
-            if .opt('(')
-                declare valid .paramsDeclarations
-                .paramsDeclarations = .optSeparatedList(VariableDecl,',',')')
+
+        if .opt('function','Function') #function as type 
             .type= new VariableRef(this, 'Function')
+            if .lexer.token.value is '(', .parseAccessors
             return
 
 check for 'array', e.g.: `var list : array of String`

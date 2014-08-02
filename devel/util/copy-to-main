@@ -29,30 +29,34 @@ echo ---------------
 
 echo COPY /out/lib to main dir /lib
 mkdir -p ${MAIN}/lib
-rm ${MAIN}/lib/*
-cp -p out/lib/* ${MAIN}/lib/
+rm -r ${MAIN}/lib/*
+cp -rp out/lib/* ${MAIN}/lib/
 
-# delete deleted
-cd ${MAIN}/source
-pwd
-for file in *.md; do
-    #echo ${file}
-    if [ ! -e ${SRCVRS}/${file} ]; then 
-        echo deleted: ${file}
-        rm ${file}
-    fi
-done
+# update sources snapshot
+rm -r ${MAIN}/source/
+cp -r ${SRCVRS}/ ${MAIN}/source/
+rm ${MAIN}/source/*.sh
+rm ${MAIN}/source/*.json
+cat >${MAIN}/source/README.md <<end_of_README
+LiteScript Compiler Source SNAPSHOT
+===================================
 
-# update newer sources
-echo UPDATE /source 
-echo from ${SRCVRS}/ to $(pwd)
-cp -uvp ${SRCVRS}/*.lite.md .
+###IMPORTANT: development is made at /devel/source/${VERSION}
+
+This dir, /source, it's just a ***snapshot** of the last released source code: v${VERSION}
+
+Do NOT work on *this dir*, work on [/devel/source/v${VERSION}](devel/source/v${VERSION})
+end_of_README
+
+cp -r ${SRCVRS}/ ${MAIN}/source/
+
 
 cd ${CWD}
 
 #update extras/sublime
 mkdir -p ${MAIN}/extras/sublime/LiteScript
-if [ -d /home/ltato/.config/sublime-text-2/Packages/LiteScript ]; then 
-	cp -uvp /home/ltato/.config/sublime-text-2/Packages/LiteScript/* ${MAIN}/extras/sublime/LiteScript
+if [ -d $HOME/.config/sublime-text-2/Packages/LiteScript ]; then 
+	cp -uvp $HOME/.config/sublime-text-2/Packages/LiteScript/*  ${MAIN}/extras/sublime/LiteScript
     rm ${MAIN}/extras/sublime/LiteScript/*.cache
+    rm ${MAIN}/extras/sublime/LiteScript/*~
 fi

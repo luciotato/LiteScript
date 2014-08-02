@@ -3,6 +3,7 @@
 //Module color
 //-------------------------
 #include "color.c.extra"
+
     //public namespace color
     //-------------------------
         //NAMESPACE color

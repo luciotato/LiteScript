@@ -32,7 +32,6 @@
 
        var 
        compileAndRun = undefined, 
-       mainModuleName = undefined, 
        compileAndRunParams = undefined
        ;
 
@@ -63,7 +62,8 @@
            browser: args.option('b', "browser"),
            comments: Number(args.value('comment', "comments")||1),
            perf: Number(args.value('perf', "performance")||0),
-           defines:[]
+           defines:[],
+           includeDirs:[]
            };
 
        //get defines
@@ -72,6 +72,12 @@
           if(!def)break;
           options.defines.push(def);
         }
+
+        //while args.valueFor('i') 
+        var includeDir;
+        while((includeDir=args.value('i'))){
+            options.includeDirs.push(includeDir);
+        };
 
        if (!useVersion) {
            console.error("Missing -use v0.8/lite-to-js");
@@ -89,10 +95,10 @@
        };
 
        //mainModuleName 
-       mainModuleName = args[0];
+       options.mainModuleName = args[0];
 
-       //if no mainModuleName
-       if (!mainModuleName) {
+       //if no options.mainModuleName
+       if (!options.mainModuleName) {
            console.error("Missing MainModule");
            process.exit(2);
        };
@@ -104,7 +110,7 @@
        if (options.verboseLevel) {
            console.log('compiler options: ' + (JSON.stringify(options,null,0)));
            console.log('cwd: ' + (process.cwd()));
-           console.log('compile' + (compileAndRun ? " and run" : "") + ': ' + mainModuleName);
+           console.log('compile' + (compileAndRun ? " and run" : "") + ': ' + options.mainModuleName);
            console.log('out: ' + options.outDir);
        };
 
@@ -132,23 +138,23 @@
            //if compileAndRun
            if (compileAndRun) {
 
-               var filename = mainModuleName;
-               //if not fs.existsSync(filename), filename=mainModuleName+'.md'
+               var filename = options.mainModuleName;
+               //if not fs.existsSync(filename), filename=options.mainModuleName+'.md'
                if (!(fs.existsSync(filename))) {
-                   filename = mainModuleName + '.md'};
-               //if not fs.existsSync(filename), filename=mainModuleName+'.lite.md'
+                   filename = options.mainModuleName + '.md'};
+               //if not fs.existsSync(filename), filename=options.mainModuleName+'.lite.md'
                if (!(fs.existsSync(filename))) {
-                   filename = mainModuleName + '.lite.md'};
-               //if not fs.existsSync(filename), fail with 'Compile and Run,  File not found: "#{mainModuleName}"'
+                   filename = options.mainModuleName + '.lite.md'};
+               //if not fs.existsSync(filename), fail with 'Compile and Run,  File not found: "#{options.mainModuleName}"'
                if (!(fs.existsSync(filename))) {
-                   throw new Error('Compile and Run,  File not found: "' + mainModuleName + '"')};
+                   throw new Error('Compile and Run,  File not found: "' + options.mainModuleName + '"')};
                var sourceLines = fs.readFileSync(filename);
                var compiledCode = Compiler.compile(filename, sourceLines, options);
 
                 // if options.debug, save compiled file, run node --debug.brk
                //if options.debug
                if (options.debugEnabled) {
-                   var outFile = path.join(options.outDir, mainModuleName + '.js');
+                   var outFile = path.join(options.outDir, options.mainModuleName + '.js');
                    fsUtil.mkPathToFile(outFile);
                    fs.writeFileSync(outFile, compiledCode);
                    var exec = require('child_process').exec;
@@ -169,14 +175,15 @@
 //else, launch compile Project
            
            else {
-               //if Compiler has property 'compileProject' #v0.4
-               if ('compileProject' in Compiler) {// #v0.4
-                    //declare valid Compiler.compileProject
-                   Compiler.compileProject(mainModuleName, options);
+               if (['0.5','0.6','0.7'].indexOf(Compiler.version.slice(0,3))!=-1) {// #v0.5 and up
+                   Compiler.compileProject(options.mainModuleName, options);
+               }
+               else if ('compileProject' in Compiler) {// #v0.8 and up
+                   Compiler.compileProject(options);
                }
                
                else {
-                   Compiler.compile(mainModuleName, options);
+                   Compiler.compile(options.mainModuleName, options);
                };
 
                //end if
@@ -194,7 +201,7 @@
            }
            
            else if (e.code === 'EISDIR') {
-               console.error(color.red + 'ERROR: "' + mainModuleName + '" is a directory', color.normal);
+               console.error(color.red + 'ERROR: "' + options.mainModuleName + '" is a directory', color.normal);
                console.error('Please specify a *file* as the main module to compile');
                process.exit(2);
            }
@@ -215,7 +222,7 @@
 //Run
 //add 'lite filename...' to arguments
 
-           compileAndRunParams.unshift('lite', mainModuleName);
+           compileAndRunParams.unshift('lite', options.mainModuleName);
            //if options.verboseLevel, print "RUN: #{compileAndRunParams.join(' ')}"
            if (options.verboseLevel) {
                console.log("RUN: " + (compileAndRunParams.join(' ')))};

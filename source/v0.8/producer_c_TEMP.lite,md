@@ -1,0 +1,163 @@
+
+      helper method varRefToArray(upto:Number) returns array of array
+
+        var result: array //array of arrays
+        var partial: string
+
+Start with main variable name, to check property names
+
+        var actualVar = .tryGetFromScope(.name, {informError:true, isForward:true, isDummy:true})
+
+now follow each accessor
+
+        if no actualVar or no .accessors 
+            out .name
+            return 
+
+        result.push [actualVar.name]
+        partial = .name
+
+        var avType:Names.Declaration
+
+        for each inx,ac in .accessors
+            declare valid ac.name
+
+            if no actualVar
+                .throwError("processing '#{partial}', cant follow property chain types")
+
+for FunctionAccess
+
+            if ac.constructor is Grammar.FunctionAccess
+
+                if inx>1 and .accessors[inx-1].constructor isnt PropertyAccess
+                    .throwError("'#{partial}.apply' must be used to call a function on a variable")
+
+                var callCmd = result.pop()
+                callCmd.push "(" //add "(", put "methodname(" first - call to dispatcher
+
+                if inx is 0 //first accessor is function access, is a call to a global function
+                    callCmd.push "undefined," //"this" for global fn call 1st param
+
+                //add arguments
+                if ac.args
+                    callCmd.push ",(any){Array,#{ac.args.length},.value.item=(any_arr){",{CSL:ac.args},"}}"
+                else
+                    callCmd.push ",EMPTY_ARGS"
+                callCmd.push ")"                    
+
+                result.push callCmd
+
+                actualVar = actualVar.findMember('**return type**')
+                #the actualVar is now function's return type'
+                #and next property access should be on defined members of the return type
+
+for PropertyAccess, we must apply AS(type...) to prev item
+
+            else if ac instanceof Grammar.PropertyAccess
+
+                avType = actualVar.findOwnMember('**proto**')
+                if no avType, 
+                    .sayErr "Can't determine type of '#{partial}'. Can't code Property Access(.)"
+                    return
+
+                var prevNameArr = result.pop()
+                prevNameArr.unshift "AS(",avType,","
+                prevNameArr.push ")->"
+
+                result.push prevNameArr, [ac.name]
+
+                //get prop definition
+                partial +=".#{ac.name}"
+                actualVar = .tryGetMember(actualVar, ac.name,{informError:true})
+
+else, for IndexAccess, the varRef type is now 'name.value.item[...]'
+and next property access should be on defined members of the type
+
+            else if ac instanceof Grammar.IndexAccess
+
+                //add .value.item[...]
+                prevName = result.pop()
+                prevName.push ".value.item[anyToInt(", ac.expr, ")]"
+                result.push prevName
+                partial +="[...]"
+
+                actualVar = actualVar.findMember('**item type**')
+
+            end if //type of accessor
+
+            if actualVar instanceof Grammar.VariableRef
+                declare actualVar:Grammar.VariableRef
+                actualVar = actualVar.tryGetReference({informError:true, isForward:true, isDummy:true})
+
+        end for #each accessor
+
+        return result
+
+
+
+------------------------
+
+
+
+-----------
+## Accessors
+1) Property access "." translates to pointer dereference "->"
+2) Function access "()", if it's a method, we must add "->call" to access
+the class jmp table. Also we must add the object as first parameter (this)
+3) IndexAccess: we use C's built in `[ ]` accessor
+
+### append to class Grammar.PropertyAccess ##
+      method produce() 
+        .out "->",.name
+
+### append to class Grammar.FunctionAccess
+      method produce() 
+        declare .parent:Grammar.VariableRef
+        if .parent.accessors[0] is this //simple function call
+            .out "("
+        else
+            //member?
+            .out "->call("
+            .out .parent.getInstanceAccessors(),", " //value for "this" param
+        end if
+        .out {CSL:.args},")"
+
+### append to class Grammar.IndexAccess
+      method produce() 
+        .out "[",.name,"]"
+
+-----------------------
+
+      helper method getInstanceAccessors() returns Object array
+
+This method will get all the accessors up to a method call
+returns an array, to send to .out
+
+        var upto = 0
+        if .accessors
+          // search from the end of the accessor chain, upto the function call
+          upto = .accessors.length
+          while --upto>=0
+              if .accessors[upto] instanceof Grammar.FunctionAccess
+                //found the function call ()
+                upto-- //move one back
+                if .accessors[upto] instanceof Grammar.PropertyAccess
+                    //is the function name, remove it to get the instance
+                    upto-- //move one back
+          end while
+
+        return .varRefToArray(upto) //prop chain upto instance on which the function is called
+
+--------------------
+
+
+   // for n=fromIndex while n<.myArr.length
+   for(int n=fromIndex.value.number; n.value.number < AS(TestClass,this)->AS(Array,myArr)->length.value.number; n++) {
+   for(int n=fromIndex.value.number; n              < AS(TestClass,this)->myArr.length                        ; n++) {
+       // if .myArr[n] is searched, return n;
+       if (AS(TestClass,this)->myArr.value.item[anyToInt(n.value.number)].value.number == searched.value.number) {return any_number(n.value.number);};
+       if (AS(TestClass,this)->myArr.value.item[         n              ]              == searched             ) {return any_number(n);};
+   };// end for n
+   return any_number(-1);
+
+

@@ -343,16 +343,6 @@ Prefix ++/--, varName, Accessors and postfix ++/--
             .out 'Array.prototype.slice.call(arguments)' 
             return
 
-        if .name is 'onTimeout' //hack to call setTimeout with arguments in inverted order
-
-            if no .accessors or .accessors.length isnt 1 or .accessors[1].constructor isnt Grammar.FunctionAccess 
-                .sayErr "expected onTimeout(milliseconds,function)"
-            var fnAccess: Grammar.FunctionAccess = .accessors[1]
-            if fnAccess.args.length isnt 2
-                .sayErr "expected two arguments: onTimeout(milliseconds,function)"
-
-            .out "setTimeout(", fnAccess.args[1],fnAccess.args[0],")" //call setTimeout, invert parameter order
-
         else 
             var refNameDecl = .tryGetFromScope(.name)
             if no refNameDecl
@@ -601,7 +591,7 @@ node.js require() use "./" to denote a local module to load.
 It does as bash does for executable files.
 A name  without "./"" means "look in $PATH" (node_modules and up)
 
-        if .importedModule.fileInfo.importInfo.globalImport 
+        if no .importedModule or .importedModule.fileInfo.importInfo.globalImport 
             return .name // for node, no './' means "look in node_modules, and up, then global paths"
 
         var thisModule = .getParent(Grammar.Module)

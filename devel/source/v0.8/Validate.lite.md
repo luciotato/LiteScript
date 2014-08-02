@@ -20,8 +20,7 @@ methods to validate var & property names.
     import 
         ASTBase, Grammar
         Names, Environment
-
-    import logger, UniqueID
+        logger, UniqueID
 
     shim import LiteCore, Map
 
@@ -354,6 +353,9 @@ Inform forward declarations not fulfilled, as errors
 
         var methodSymbol = LiteCore.getSymbol(methodName)
 
+        if project.moduleCache.size is 0 
+            throw new Error("walkAllNodes: no modules in moduleCache")
+
 For all modules, for each node, if the specific AST node has methodName, call it
 
         for each moduleNode:Grammar.Module in map project.moduleCache
@@ -431,6 +433,8 @@ b.2) Lite-C: the Lexer replaces string interpolation with calls to `_concatAny`
         globalScope.addMember 'parseFloat',opt //used for string interpolation
         globalScope.addMember 'parseInt',opt //used for string interpolation
 
+        globalScope.addMember '__dirname' // current module dir (node.js)
+
         //var core = globalScope.addMember('LiteCore') //core supports
         //core.isNamespace = true
         //opt.returnType='Number'
@@ -460,6 +464,7 @@ Process the global scope declarations interface file: GlobalScope(JS|C|NODE).int
 
         logger.msg "Declare global scope using #{globalInterfaceFile}.interface.md"
         var globalInterfaceModule = project.compileFile(globalInterfaceFile)
+        if project.options.verboseLevel is 1, print 'from:',globalInterfaceModule.fileInfo.relFilename
 
 call "declare" on each item of the GlobalScope interface file, to create the NameDeclarations
 
@@ -506,7 +511,7 @@ Add a built-in class to global scope, return class prototype
       nameDecl.getMembersFromObjProperties Environment.getGlobalObject(name)
 
       if no nameDecl.findOwnMember("prototype") into var classProto:Names.Declaration
-          throw("addBuiltInClass '#{name}, expected to have a prototype")
+          throw new Error("addBuiltInClass '#{name}, expected to have a prototype")
 
       nameDecl.setMember '**proto**', globalPrototype('Function')
       // commented v0.8: classes can not be used as functions. 
@@ -525,7 +530,7 @@ Add a built-in object to global scope, return object
       nameDecl.getMembersFromObjProperties Environment.getGlobalObject(name)
 
       if nameDecl.findOwnMember("prototype") 
-          throw("addBuiltObject '#{name}, expected *Object* to have not a prototype")
+          throw new Error("addBuiltObject '#{name}, expected *Object* to have not a prototype")
 
       return nameDecl
 
@@ -933,18 +938,19 @@ If the found item has a different case than the name we're adding, emit error & 
         if .findInScope(name) into var found 
 
             if found.caseMismatch(name, this)
-              #case mismatch informed
-              do nothing
+                #case mismatch informed
+                do nothing
 
             else if found.isForward
-              found.isForward = false
-              found.nodeDeclared = this
-              if item instanceof Names.Declaration
-                found.replaceForward item
+                found.isForward = false
+                found.nodeDeclared = this
+                if item instanceof Names.Declaration
+                    found.replaceForward item
 
             else 
-              .sayErr "DUPLICATED name in scope: '#{name}'"
-              logger.error found.originalDeclarationPosition() #add extra information line
+                var errPosNode:ASTBase = item instanceof Names.Declaration? item else this
+                errPosNode.sayErr "DUPLICATED name in scope: '#{name}'"
+                logger.error found.originalDeclarationPosition() #add extra information line
 
             return found
 
@@ -1292,7 +1298,11 @@ Class's properties & methods will be added to 'prototype' as valid member member
 
         if isClass
             var prtypeNameDecl = .nameDecl.findOwnMember('prototype') or .addMemberTo(.nameDecl,'prototype')
-            if .varRefSuper, prtypeNameDecl.setMember('**proto**',.varRefSuper)
+            if .varRefSuper 
+                prtypeNameDecl.setMember('**proto**',.varRefSuper)
+            //else
+            //    prtypeNameDecl.setMember('**proto**',globalPrototype('Object'))
+
             opt.pointsTo = .nameDecl
             prtypeNameDecl.addMember('constructor',opt) 
 
@@ -1338,39 +1348,39 @@ When producing C-code, an ArrayLiteral creates a "new(Array" at module level
 
 ### Append to class Grammar.ObjectLiteral ###
 
-/*
      properties nameDecl
 
      method declare
 
-When producing C-code, an ObjectLiteral creates a "Map string to any" on the fly, 
-but it does not declare a valid type/class.
+When producing js-code, an ObjectLiteral declares a new ad-hoc "type". 
+The var is assigned this ad-hoc "type"
 
-        if project.options.target is 'c'
-            .nameDecl = .declareName(UniqueID.getVarName('_literalMap'))
-            .getParent(Grammar.Module).addToScope .nameDecl
-        
-        else
-            if .parent.hasProperty("nameDecl")
-                  .nameDecl = .parent.nameDecl 
-            else
-                  .nameDecl = .declareName(UniqueID.getVarName('*ObjectLiteral*'))
-*/
+When producing c-code, an ObjectLiteral creates a "Map string to any" on the fly, 
+so *it does not declare a type with members*
+
+        if project.options.target is 'js'
+
+if the .parent has a .nameDecl we copy that so members get added there.
+if it does not, create a new one (we're a interal LiteralObject, 'value'
+of a name:value pair)
+
+          .nameDecl = .parent.tryGetProperty('nameDecl') 
+
+          if no .nameDecl
+              .nameDecl = .declareName(UniqueID.getVarName('*ObjectLiteral*'))
 
 When producing the LiteScript-to-C compiler, a ObjectLiteral's return type is 'Map string to any'
 
+When producing js-code is the ad-hoc type created for the ObjectLiteral
+
      method getResultType
 
-          return tryGetGlobalPrototype( project.options.target is 'c'? 'Map' else 'Object')
-
-/*        if project.options.target is 'c' 
+        if project.options.target is 'c' 
             return tryGetGlobalPrototype('Map')
         else
             return  .nameDecl
-*/
 
 
-/*
 ### Append to class Grammar.NameValuePair ###
     
      properties nameDecl
@@ -1382,7 +1392,9 @@ but it does not declare a valid type/class.
 
         if project.options.target is 'c', return
 
-        declare valid .parent.nameDecl
+Add this name as member of the parent ObjectLiteral/Value
+        
+        declare .parent: Grammar.ObjectLiteral 
         .nameDecl = .addMemberTo(.parent.nameDecl, .name)
 
 check if we can determine type from value 
@@ -1392,7 +1404,6 @@ check if we can determine type from value
 
         else if .value
             .nameDecl.assignTypeFromValue .value
-*/
 
 ### Append to class Grammar.FunctionDeclaration ###
 `FunctionDeclaration: '[export][generator] (function|method|constructor) [name] '(' FunctionParameterDecl* ')' Block`

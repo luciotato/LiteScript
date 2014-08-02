@@ -1,0 +1,68 @@
+#!/bin/bash
+#This script will create at ../out
+#a release version of the LiteScript compiler, in order to
+#make the litescript compiler stable package for the npm repository
+
+echo release $1 $2 $3
+set -e
+
+VERSION=$1
+using=$2
+PREV=$3
+
+if [ "$2" = "" ]; then 
+    using=using
+    PREV=$VERSION #compile itself 
+fi
+
+if [ "$1" = "" -o "$using" != "using" -o "$PREV" = "" ]; then 
+    echo usage: ./release 0.6 [using x.y]
+    exit 1
+fi
+
+CWD=$(pwd) 
+out='out'
+
+#--------------------------------------
+# MAIN
+
+echo Release LiteScript ${VERSION} 
+echo -----------------------
+echo cwd: ${CWD}
+echo dest dir: ${out}
+
+mkdir -p ${out}
+
+#compile lite-cli (command line interface) v${VERSION} using ${PREV} version, w/o comments or mapsource
+node liteVersion -use v${PREV}/lite-to-js -noval -nomap -comments 0  ../source/v${VERSION}/lite-cli -o ${out}/lib
+
+#compile main Compiler ${VERSION} using ${PREV} version, w/o comments or mapsource
+node liteVersion -use v${PREV}/lite-to-js -nomap  ../source/v${VERSION}/Compiler -o ${out}/lib
+
+#copy if newer: lite (#!/usr/bin/env node), calls lite-cli.js
+cp -u lite ${out}/lib/lite
+chmod 777 ${out}/lib/lite
+
+#copy v0.x/package.json to Litescript root
+cp ../source/v${VERSION}/package.json ../..
+
+#extra tests
+
+#check version consistency
+
+node liteVersion -use v${PREV}/lite-to-js -nomap tests/extra-check-version -o out
+node --harmony out/extra-check-version
+rm out/extra-check-version.js
+
+#test nice functions
+
+node liteVersion -use v${PREV}/lite-to-js -nomap tests/extra-nice-function -o out
+node --harmony out/extra-nice-function
+rm out/extra-nice-function.js
+
+#test compiler at ${out}/lib
+node test -use $VERSION
+
+echo files created at: ${out}/
+
+bash ./copy-to-main ${VERSION} 

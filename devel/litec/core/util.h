@@ -11,6 +11,9 @@
 extern "C" {
 #endif
 
+    #define _XOPEN_SOURCE 500
+
+    #include <unistd.h>
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
@@ -21,7 +24,7 @@ extern "C" {
     #include <inttypes.h>
     #include <ctype.h>
     #include <time.h>
-    //#include <math.h>
+
 
     typedef int bool;
     #define TRUE 1

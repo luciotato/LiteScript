@@ -8,7 +8,7 @@ var green = "\x1b[32m";
 
 var count={OK:0,FAILED:0}
 
-var compilerOptions={verbose:0, debug:false}
+var compilerOptions={verboseLevel:0}
 var testOptions={verbose:0}
 
 //------------------------
@@ -123,8 +123,7 @@ function testFile(filename)	{
 	
 	try{
 		sourceLines = fs.readFileSync(filename);
-		moduleNode = compiler.compileModule(filename,sourceLines,compilerOptions);
-		compiledLines = moduleNode.getCompiledLines();
+		compiledLines = compiler.compile(filename,sourceLines,compilerOptions);
 		compiledLines.push('return Tests;');
 	}catch(e){
         console.error(red,'Error compiling ',filename);
@@ -246,11 +245,16 @@ function runTestsFromDir(testPath){
     console.error('Starting tests from dir '+testPath+'/*');
     separ();
 
+    if (!fs.existsSync(testPath)){
+        console.log("no dir ",testPath);
+        return;
+    }
+
     var files=fs.readdirSync(testPath);
     for(var i=0;i<files.length;i++){
         filename=path.join(testPath,files[i]);
         //console.error(filename,path.extname(filename));
-        if (path.extname(filename)==='.lite'
+        if ((filename.slice(-8)=='.lite.md')
             && (filter===undefined || filename.indexOf(filter)>=0))      
                 testFile(filename);
     };
@@ -309,7 +313,7 @@ testOptions.verbose>=1 && console.error("compiler options:",JSON.stringify(compi
 
 //get Litescript compiler to compile tests
 compiler = require(compilerPath+'/Compiler');
-console.error('compiler v',compiler.version);
+console.error('compiler v',compiler.version,'build date',compiler.buildDate);
 
 //DEBUG - SINGLE FILE
 //testFile('tests/DoWhileUntil.lite');
@@ -319,6 +323,7 @@ console.error('---------------------------------');
 console.error("cwd:",process.cwd())
 
 runTestsFromDir('tests/allVersions');
+
 runTestsFromDir('tests/v'+use);
 
 //console.timeEnd("tests")

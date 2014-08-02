@@ -1,7 +1,8 @@
 LiteScript Compiler Source SNAPSHOT
 ===================================
 
-###IMPORTANT: development is made at /devel/source-v0.x
+###IMPORTANT: development is made at /devel/source/0.8
 
-If you're reading /source/, it's just a ***snapshot** of the last release's main source code.
-Do NOT work on /source/, work on /devel/source-v0.x
+This dir, /source, it's just a ***snapshot** of the last released source code: v0.8
+
+Do NOT work on *this dir*, work on [/devel/source/v0.8](devel/source/v0.8)

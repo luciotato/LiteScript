@@ -27,8 +27,9 @@
     , single_
     , compileIfNewer_
     , browser_
-    , defines_
     , es6_
+    , defines_
+    , includeDirs_
     , projectDir_
     , mainModuleName_
     , outDir_
@@ -57,6 +58,7 @@
       PROP(compileIfNewer_,this)=undefined;
       PROP(browser_,this)=undefined;
       PROP(defines_,this)=new(Array,0,NULL);
+      PROP(includeDirs_,this)=new(Array,0,NULL);
       PROP(mainModuleName_,this)=any_LTR("unnamed");
       PROP(outDir_,this)=any_LTR("./out");
       PROP(storeMessages_,this)=false;
@@ -67,16 +69,18 @@
     inline any GeneralOptions_newFromObject(DEFAULT_ARGUMENTS){
         return _newFromObject(GeneralOptions,argc,arguments);
     }
+
 //### class GeneralOptions
+
       //properties
             //verboseLevel = 1
             //warningLevel = 1
             //comments = 1
-            ////ifdef PROD_C
-            ////target ="c"
-            ////else
+            //ifdef PROD_C
+            //target ="c"
+            //else
             //target ="js"
-            ////end if
+            //end if
             //debugEnabled = undefined
             //perf=0 // performace counters 0..2
             //skip = undefined
@@ -84,30 +88,36 @@
             //single = undefined
             //compileIfNewer = undefined //compile only if source is newer
             //browser =undefined //compile js for browser environment (instead of node.js env.)
-            //defines: array of string = []
             //es6: boolean //compile to js-EcmaScript6
+
+            //defines: array of string = []
+            //includeDirs: array of string = []
+
             //projectDir:string 
             //mainModuleName:string = 'unnamed'
             //outDir = './out'
+
             //storeMessages: boolean = false
             //literalMap: string // produce "new Class().fromObject({})" on "{}"" instead of a js object
-            //// activate with: 'lexer options object literal is Foo'. A class is required to produce C-code 
+            // activate with: 'lexer options object literal is Foo'. A class is required to produce C-code 
+
             //version: string
+
             //now: Date = new Date()
       ;
+
       //method toString
       any GeneralOptions_toString(DEFAULT_ARGUMENTS){
             assert(_instanceof(this,GeneralOptions));
             //---------
             //return """
-            return _concatAny(6,
-        any_LTR("outDir:"), 
-        PROP(outDir_,this), 
-        any_LTR("\nverbose:"), 
-        PROP(verboseLevel_,this), 
-        any_LTR("\ndefines:"), 
-        ((__call(join_,PROP(defines_,this),0,NULL)))
-);
+            return _concatAny(6,any_LTR("outDir:")
+            , PROP(outDir_,this)
+            , any_LTR("\nverbose:")
+            , PROP(verboseLevel_,this)
+            , any_LTR("\ndefines:")
+            , (__call(join_,PROP(defines_,this),0,NULL))
+            );
       return undefined;
       }
 //------------------

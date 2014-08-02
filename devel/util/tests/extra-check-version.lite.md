@@ -1,7 +1,6 @@
 check-version.lite.md
 
     global import fs, path
-    declare var __dirname
 
 read version fom package.json, compiler.js and from lib/out/lite -v 
 

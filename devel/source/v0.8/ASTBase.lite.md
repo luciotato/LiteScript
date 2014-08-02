@@ -644,11 +644,11 @@ Note: check if we can remove "outLineAsComment" and use this instead
         .lexer.outCode.ensureNewLine
 
         if line.trim() is ""
-            .lexer.outCode.put line
+            .lexer.outCode.blankLine
         else
             var indent = line.countSpaces()
             .lexer.outCode.put line.slice(0,indent)
-            .lexer.outCode.put "//"
+            if line.substr(indent,2) isnt '//', .lexer.outCode.put "//"
             .lexer.outCode.put line.slice(indent)
 
         .lexer.outCode.startNewLine

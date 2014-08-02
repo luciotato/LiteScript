@@ -1,5 +1,16 @@
 {
 	"working_dir": "$file_path",
 	"cmd": ["sh","build-lite.sh","$file_name","$file_path"],
-	"file_regex": "([\\w/_-]+[.]{1}[\\w./_-]+?):([0-9]+):?([0-9]+)?(.*)?"
+	"file_regex": "([\\w/_-]+[.]{1}[\\w./_-]+?):([0-9]+):?([0-9]+)?(.*)?",
+	"selector": "source.LiteScript",
+	
+	"variants":[
+	  { 
+
+	    "name": "debug compiler",
+	    "cmd": ["sh","build-lite.sh","$file_name","$file_path","--debug-brk"]
+
+	  }
+	]
+	
 }

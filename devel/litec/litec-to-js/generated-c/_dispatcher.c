@@ -181,8 +181,9 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 ,     "single"
 ,     "compileIfNewer"
 ,     "browser"
-,     "defines"
 ,     "es6"
+,     "defines"
+,     "includeDirs"
 ,     "projectDir"
 ,     "mainModuleName"
 ,     "outDir"
@@ -374,7 +375,7 @@ static str _ADD_THINGS[] = { //string name for each distinct property name
 int main(int argc, char** argv) {
     LiteC_init( 87, argc,argv);
     LiteC_addMethodSymbols( 161, _ADD_VERBS);
-    LiteC_addPropSymbols( 201, _ADD_THINGS);
+    LiteC_addPropSymbols( 202, _ADD_THINGS);
     LiteC_registerShim(String,startsWith_,String_startsWith);
     LiteC_registerShim(String,endsWith_,String_endsWith);
     LiteC_registerShim(String,trimRight_,String_trimRight);

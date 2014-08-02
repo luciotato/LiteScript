@@ -185,8 +185,9 @@ enum _THINGS { //a symbol for each distinct property name
     single_,
     compileIfNewer_,
     browser_,
-    defines_,
     es6_,
+    defines_,
+    includeDirs_,
     projectDir_,
     mainModuleName_,
     outDir_,
@@ -372,8 +373,8 @@ enum _THINGS { //a symbol for each distinct property name
     createFile_,
 _LAST_THING};
 #include "c_lite.h"
-#include "ENV_C_global_import/fs.h"
-#include "ENV_C_global_import/path.h"
+#include "interfaces/C_standalone/fs.h"
+#include "interfaces/C_standalone/path.h"
 #include "lib/color.h"
 #include "lib/ControlledError.h"
 #include "lib/OptionsParser.h"

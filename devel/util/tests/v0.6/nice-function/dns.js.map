@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "dns.js",
+  "sourceRoot": "",
+  "sources": [
+    "dns.lite.md"
+  ],
+  "names": [],
+  "mappings": ";;;;AACI;;;;;;;;;;;;;;;AASA;;;;;AAEI;;;AAEE;;;;AAEA;SACI;AAAd;;AAHA;;AAMc;AAAd;AARA;;;;AAUI;;;;;;;;AAKA;;;;;AAEI;;;AAEI;;;AAEA;;;;AAEA;WACI;AAAhB;;AALA;;AAQY;AAAZ;AAVA;;;;AAYI;;;;;;;;;;AAOA;;;AAKQ;AACA;AADZ;;;;;;AAIQ;;;AAEI;;;AAEA;;;;AAGA;AALZ;;;;AAQQ;;AAEI;AAAZ;;;;;;AAGI;AACA;;;;;;;;;AAMA;;;;AAEI;AACA;AACA;AACA;AACA;AACA;AACA;;;AAEA;;;AAEA;;AACA;AACA;;;AAEA;;AACA;AACA;;;AAEA;AACA;;;AAEA;AACA;AAtBR;;;;AAwBI;;;;;AAIA"
+}
