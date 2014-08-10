@@ -13,7 +13,7 @@ compile LiteScript code.
         ControlledError, GeneralOptions
         logger, color, shims, mkPath
 
-    shim import Map
+    shim import LiteCore
 
 Get the 'Environment' object for the compiler to use.
 The 'Environment' object, must provide functions to load files, search modules, 
@@ -89,37 +89,43 @@ set basePath from main module path
         logger.msg 'Main Module:',.options.mainModuleName
         logger.msg 'Out Dir:',.options.outDir
 
-compiler vars, to use at conditional compilation
+compiler vars, #defines, to use at conditional compilation
         
         .compilerVars = new Map
 
         for each def in options.defines
-            .compilerVars.set def,new Names.Declaration(def)
+            .setCompilerVar def
 
-add 'inNode' and 'inBrowser' as compiler vars
+add 'ENV_JS' => this compiler is JS code
 
         #ifdef TARGET_JS
-        .compilerVars.set 'ENV_JS', new Names.Declaration("ENV_JS")
+        .setCompilerVar 'ENV_JS'
+
+add 'ENV_NODE' or 'ENV_JS' as compiler vars.
+ENV_NODE: this compiler is JS code & we're running on node
+ENV_NODE: this compiler is JS code & we're running on the browser
+
         declare var window
         var inNode = type of window is 'undefined'
-        if inNode
-            .compilerVars.set 'ENV_NODE',new Names.Declaration("ENV_NODE")
-        else
-            .compilerVars.set 'ENV_BROWSER',new Names.Declaration("ENV_BROWSER")
-        end if
+        .setCompilerVar inNode? 'ENV_NODE' else 'ENV_BROWSER'
         #endif
+
+add 'ENV_C' => this compiler is C-code (*native exe*)
 
         #ifdef TARGET_C
-        .compilerVars.set 'ENV_C', new Names.Declaration("ENV_C")
+        .setCompilerVar 'ENV_C' 
         #endif
 
-        var targetDef = 'TARGET_#{options.target.toUpperCase()}'
-        .compilerVars.set targetDef,new Names.Declaration(targetDef)
+add 'TARGET_x'
+
+TARGET_JS: this is the compile-to-js version of LiteScript compiler
+
+TARGET_C: this is the compile-to-c version of LiteScript compiler
+
+        .setCompilerVar 'TARGET_#{options.target.toUpperCase()}'
 
         logger.msg 'preprocessor #defined', .compilerVars.keys()
-
-        //logger.message .compilerVars
-        //logger.info ""
+        logger.info "" //blank line
 
 create a 'rootModule' module to hold global scope
 
@@ -131,13 +137,13 @@ create a 'rootModule' module to hold global scope
         .rootModule.fileInfo.dir = options.projectDir
         .rootModule.fileInfo.outFilename = "#{options.outDir}/_project_"
         
-
 Validate.initialize will prepare the global scope 
-by parsing the file: "lib/GlobalScopeJS.interface.md"
+by parsing the file: "lib/GlobalScope(JS|NODE|C).interface.md"
 
         Validate.initialize this 
 
         if options.perf>1, console.timeEnd 'Init Project'
+
 
 #### Method compile()
 
@@ -165,7 +171,7 @@ Validate
         if no .options.skip 
             logger.info "Validating"
             console.time 'Validate'
-            Validate.validate this
+            Validate.launch this
             if .options.perf>1, console.timeEnd 'Validate'
             if logger.errorCount, logger.throwControlled '#{logger.errorCount} errors'
 
@@ -340,12 +346,12 @@ Now create the module scope, with two local scope vars:
 'module' and 'exports = module.exports'. 'exports' will hold all exported members.
 
         moduleNode.createScope()
-        //var opt = new Names.NameDeclOptions
-        //opt.normalizeModeKeepFirstCase = true
-        moduleNode.exports = new Names.Declaration(fileInfo.base,undefined,moduleNode)
+        var opt = new Names.NameDeclOptions
+        opt.nodeClass = Grammar.NamespaceDeclaration // each "Module" is a Namespace
+        moduleNode.exports = new Names.Declaration(fileInfo.base,opt,moduleNode)
         moduleNode.exportsReplaced = false
         
-        var moduleVar = moduleNode.addToScope('module')
+        var moduleVar = moduleNode.addToScope('module',opt)
         //moduleNode.exports = moduleVar.addMember('exports') #add as member of 'module'
         //var opt = new Names.NameDeclOptions
         //opt.pointsTo = moduleNode.exports
@@ -355,6 +361,7 @@ add other common built-in members of var 'module'. http://nodejs.org/api/modules
 
         var fnameOpt = new Names.NameDeclOptions
         fnameOpt.value = fileInfo.filename
+        fnameOpt.nodeClass = Grammar.VariableDecl
         moduleVar.addMember moduleNode.declareName('filename',fnameOpt)
 
 Also, register every `import|require` in this module body, to track modules dependencies.
@@ -459,6 +466,7 @@ Check Internal Cache: if it is already compiled, return cached Module node
 It isn't on internal cache, then create a **new Module**.
 
         var moduleNode = .createNewModule(fileInfo)
+        moduleNode.dependencyTreeLevel = .recurseLevel
 
 early add to local cache, to cut off circular references
 
@@ -568,7 +576,9 @@ helper compilerVar(name)
 rootModule.compilerVars.members.set(name,value)
 
         if no .compilerVars.get(name) into var nameDecl
-            nameDecl = new Names.Declaration(name)
+            var opt = new Names.NameDeclOptions
+            opt.nodeClass = Grammar.VariableDecl
+            nameDecl = new Names.Declaration(name,opt)
             .compilerVars.set name, nameDecl
 
         nameDecl.setMember "**value**",value

@@ -8,7 +8,7 @@
     module.exports.version = version;
 
     //public var buildDate = "__DATE__ __TIME__"
-    var buildDate = "Sat Aug 02 2014 01:57:22 GMT-0300 (ART)";
+    var buildDate = "Sun Aug 10 2014 01:53:55 GMT-0300 (ART)";
     // export
     module.exports.buildDate = buildDate;
 
@@ -31,7 +31,7 @@
     var GeneralOptions = require('./lib/GeneralOptions.js');
     var Grammar = require('./Grammar.js');
     var logger = require('./lib/logger.js');
-    var shims = require('./lib/shims.js');
+    var shims = require('./interfaces/shims.js');
 
 //Get the 'Environment' object for the compiler to use.
 //The 'Environment' object, must provide functions to load files, search modules, 
@@ -187,8 +187,8 @@
         //if no project.options.skip
         if (!project.options.skip) {
 
-            //Validate.validate project
-            Validate.validate(project);
+            //Validate.launch project
+            Validate.launch(project);
             //if logger.errorCount is 0, logger.info "Validation OK"
             if (logger.errorCount === 0) {logger.info("Validation OK")};
         };
@@ -222,7 +222,7 @@
 
         //var normalizedOptions = new GeneralOptions
         var normalizedOptions = new GeneralOptions();
-        //for each property key,value in options
+        //for each own property key,value in options
         var value=undefined;
         for ( var key in options)if (options.hasOwnProperty(key)){value=options[key];
             {
@@ -307,10 +307,6 @@
     }
     // export
     module.exports.getMessages = getMessages;
-// --------------------
-// Module code
-// --------------------
-// end of module
 
 
 

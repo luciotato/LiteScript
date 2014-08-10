@@ -15,8 +15,6 @@
  */
 
 #include "LiteC-core.h"
-#include "utf8strings.h"
-
 
 // _symbol names
     any * _symbolTable;
@@ -36,6 +34,7 @@
         ,"join"
         ,"splice"
         ,"tryGet"
+        ,"sort"
 
         ,"toISOString"
         ,"toUTCString"
@@ -44,6 +43,7 @@
 
         ,"copy"  //Buffer
         ,"write"
+        ,"append"
 
         ,"slice"
         ,"split"
@@ -53,10 +53,16 @@
         ,"toLowerCase"
         ,"toUpperCase"
         ,"charAt"
+        ,"charCodeAt"
         ,"replaceAll"
         ,"trim"
         ,"substr"
         ,"countSpaces"
+        ,"repeat"
+
+        ,"byteSubstr"
+        ,"byteIndexOf"
+        ,"byteSlice"
 
         ,"tryGetMethod"
         ,"tryGetProperty"
@@ -65,7 +71,7 @@
         ,"setProperty"
         ,"hasProperty"
         ,"hasOwnProperty"
-        ,"getObjectKeys"
+        ,"allPropertyNames"
         ,"initFromObject"
 
         ,"has"
@@ -75,18 +81,21 @@
         ,"clear"
         ,"keys"
 
+        ,"iterableNext"
         ,"toString"
 
     };
 
     static str _CORE_PROPS_NAMES[]= {
         "constructor" //all instances, symbol:0
-
-        ,"name" // Class.name -1
+        ,"name" // Class.name | NameValuePair
         ,"initInstance" // Class.initInstance
 
-        ,"size" // Map size
-        ,"value" // NameValuePair
+        ,"key" // Map | Iterable
+        ,"value" // NameValuePair | Iterable
+        ,"index" // Iterable
+        ,"size" // Map | Iterable
+        ,"extra" // Iterable
 
         ,"message" // Error.message
         ,"stack" // Error.stack
@@ -96,28 +105,30 @@
 // core classes array: CLASSES-------------------
 
     len_t CLASSES_allocd;
-    Class_s* CLASSES; //array of registered classes
     len_t CLASSES_len;
+    ARRAY_OF(Class_s, CLASSES); //array of registered classes
+    ARRAY_OF(any, any_CLASSES); //array of any vars with registered classes. any_CLASSES[x] = (any){.class=Class_inx,.value.ptr=&CLASSES[x]}
 
 // core Classes (any) -------------------
 
-    /**
-     * Undefined is the only Class-var initializable here
-     * with constant values, all zeroes
-     */
-    any Undefined = {0};
-
     any
-        Null, NaN, Infinity,
-        Object, Class, Function,
+        Undefined, Null, NotANumber, InfinityClass,
+        Object, Class, Function, Iterable_Position,
         String, Boolean, Number, Date,
         Array, Map, NameValuePair,
         Error, Buffer, FileDescriptor;
 
 // core-class instances -------------------
 
+    /**
+     * undefined is the only value initializable here
+     * with constant values, all zeroes
+     */
+    any undefined = {0};
+
     any
-        null, undefined, true, false,
+        null, true, false,
+        NaN, Infinity,
         process_argv,
         __dirname;
 
@@ -150,6 +161,7 @@
         str cmsg = _tempCString(message);
         //__assert_fail(cmsg,file,line,NULL);
         fprintf(stderr,"%s:%d:1 function %s: %s\n",file,line,func,cmsg);
+        fflush(stderr);
         abort();
     }
 
@@ -238,7 +250,7 @@
                 )));
     }
 
-    any* __item(int64_t index, any arrProp, str file, int line, str func){
+    any* __itemAny(int64_t index, any arrProp, str file, int line, str func){
 
         if (arrProp.class!=Array_inx) {
             debug_abort(file,line,func,any_LTR(" index access: [], object isnt instance of Array"));
@@ -261,7 +273,32 @@
                     ,any_number(arrProp.value.arr->length)
                     )));
         }
-        return &(arrProp.value.arr->item[index]);
+        return arrProp.value.arr->base.anyPtr+index;
+
+    }
+
+    void* __itemPtr(int64_t index, Array_ptr arr, str file, int line, str func){
+
+        if (index<0) {
+            debug_abort(file,line,func,any_LTR("index access: [], negative index"));
+        }
+
+        // check index against arr->length
+        if (index >= arr->length){
+            throw(_newErr(_concatAny(9
+                    ,any_CStr(file)
+                    ,any_COLON
+                    ,any_number(line)
+                    ,any_LTR(":1 function ")
+                    ,any_CStr(func)
+                    ,any_LTR(". OUT OF BOUNDS index[")
+                    ,any_number(index)
+                    ,any_LTR("]. Array.length is ")
+                    ,any_number(arr->length)
+                    )));
+        }
+
+        return arr->base.bytePtr + index*arr->itemSize;
 
     }
 
@@ -282,7 +319,7 @@
             //Note: to be js-compat, tryGet just returns "undefined"
             return undefined;
         }
-        return this.value.arr->item[index];
+        return this.value.arr->base.anyPtr[index];
     }
 
     /**
@@ -304,7 +341,7 @@
                     ,any_LTR("' is not instance of Array")
                     ));
         }
-        return __item(index,arrProp,file,line,func);
+        return __itemAny(index,arrProp,file,line,func);
     }
 
     /** js function.apply - call a function with specific values for: this, argc, arguments
@@ -318,7 +355,7 @@
     any __applyArr(any anyFunc, any this, any argsArray){
         assert(anyFunc.class==Function_inx);
         assert(argsArray.class==Array_inx); //must be array to convert to argc,any* arguments
-        return __apply(anyFunc, this, argsArray.value.arr->length, argsArray.value.arr->item);
+        return __apply(anyFunc, this, argsArray.value.arr->length, argsArray.value.arr->base.anyPtr);
     }
 
     void _default(any* variable,any value){
@@ -407,14 +444,13 @@
 
  */
 
-    bool __in(any needle, len_t haystackLength, any* haystackItem){
+    bool __inLiteralArray(any needle, len_t haystackLength, any* haystackItem){
         if (!haystackLength) return FALSE; //empty haystack
         for(;haystackLength--;){
             if (__is(needle,*haystackItem++)) return TRUE;
         }
         return FALSE;
     }
-
 
 // --------------------
 // core classes helper register functions
@@ -448,45 +484,53 @@
         return new(Error,1,(any_arr){msg});
     }
 
-    Array_ptr _initArrayStruct(Array_ptr arrPtr, len_t initialLen, any* optionalValues){
+    Array_ptr _initArrayStruct(Array_ptr arrPtr, uint16_t itemSize, len_t initialAlloc){
         assert(arrPtr);
-        size_t size = (initialLen? initialLen : 4) * sizeof(any);
-        arrPtr->item = mem_alloc(size);
-        arrPtr->allocd = size;
-        arrPtr->length=initialLen;
-        if (initialLen){
-            if (optionalValues) {
-                memcpy(arrPtr->item, optionalValues, initialLen*sizeof(any));
-            }
-            else {
-                _clearArrayItems(arrPtr->item,initialLen); //initialize with undefined
-            }
-        }
+        arrPtr->itemSize = itemSize;
+        arrPtr->allocd = initialAlloc>=4? initialAlloc : 4;
+        arrPtr->base.anyPtr = mem_alloc(arrPtr->allocd * itemSize);
+        arrPtr->length=0;
         return arrPtr;
     };
 
-    void _clearArrayItems(any* start, len_t count){
-        memset(start,0,count*sizeof(any));
+    Array_ptr _setArrayItems(Array_ptr arrPtr, uint16_t itemLen, len_t argc, void* contents){
+        assert(argc && contents);
+        assert(arrPtr->allocd>=argc);
+        assert(arrPtr->itemSize==itemLen);
+        arrPtr->length=argc;
+        memcpy(arrPtr->base.bytePtr, contents, argc*arrPtr->itemSize);
     }
 
+    void _zeroArrayItems(Array_ptr arrPtr, len_t count){
+        memset(arrPtr->base.anyPtr, 0, count*arrPtr->itemSize);
+    }
+
+    /**
+     * returns any{class=Array_inx} Array of any
+     * @param initialLen
+     * @param optionalValues
+     * @return
+     */
     any _newArray(len_t initialLen, any* optionalValues){
         any arr={Array_inx,
                 .res=0,
                 .len=0,
                 .value.ptr=mem_alloc(sizeof(struct Array_s))
         };
-        _initArrayStruct(arr.value.ptr, initialLen, optionalValues);
+        _initArrayStruct(arr.value.ptr, sizeof(any), initialLen+4);
+        if (initialLen && optionalValues) _setArrayItems(arr.value.ptr, sizeof(any), initialLen, optionalValues);
+
         return arr;
     }
 
     any Array_clone(any this, len_t argc, any* arguments){
-        return _newArray(this.value.arr->length, this.value.arr->item);
+        return _newArray(this.value.arr->length, this.value.arr->base.anyPtr);
     };
 
     any _newArrayFromCharPtrPtr(len_t argc, char** argv){
         // convert main function args into Array
         any a = _newArray(argc,NULL);
-        any* item = a.value.arr->item;
+        any* item = a.value.arr->base.anyPtr;
         for(;argc--;argv++){
               *item++=any_CStr(*argv);
         }
@@ -502,19 +546,45 @@
         if(argc==1 && arguments[0].class==Number_inx) {
             if (arguments[0].value.number >= UINT32_MAX) fatal("new Array, length limit is 4,294,967,296");
             len_t len = arguments[0].value.number;
-            _initArrayStruct(this.value.arr, len, NULL);
+            _initArrayStruct(this.value.arr, sizeof(any),len);
+            this.value.arr->length = len; //force length - all values => undefined
         }
-        else {
-            _initArrayStruct(this.value.arr, argc, arguments);
+        else { //init with values argc,arguments
+            _initArrayStruct(this.value.arr, sizeof(any), argc+4);
+            if (argc) _setArrayItems(this.value.arr, sizeof(any), argc, arguments);
         }
     };
 
     //init Fn for Map Objects. arguments can be a argc NameValuePairs initializing the map
     //new Map(this,argc,(any_arr){NameValuePair,*})
     void Map__init(DEFAULT_ARGUMENTS){
-        //Map is (by now) implemented with an array of NameValuePair - no optimizations yet
-        this.value.map->array= _newArray(argc,arguments);
+
+        //Map is implemented with an internal array of NameValuePair
+        // and also a KeyTree string->index for fast access
+        //
         this.value.map->size=any_number(argc);
+        Array_ptr nvpArr=&(this.value.map->nvpArr);
+        _initArrayStruct(nvpArr, sizeof(NameValuePair_s), argc+4);
+
+        //init keyTree
+        _initKeyTreeRootStruct(&this.value.map->keyTreeRoot,8);
+
+        //init map's nvp array with passed args
+        if (argc){
+            for(len_t inxValue=0; argc--; arguments++,inxValue++) {
+                assert(arguments->class==NameValuePair_inx);
+                NameValuePair_ptr argNvp = (NameValuePair_ptr)arguments->value.ptr;
+
+                int64_t found = _map_KeyTree_do(this.value.map,FIND_OR_INSERT,argNvp->name,inxValue);
+                if (found!=inxValue){ //key already-exists
+                    throw(_newErr(_concatAny(3,any_LTR("Map: Duplicate key:'"),argNvp->name,any_SINGLE_QUOTE)));
+                }
+                //store nvp
+                _array_push(nvpArr,argNvp);
+            }
+
+            this.value.map->size = any_number(nvpArr->length); //keep "size" property in sync
+            }
     };
 
     //initFromObject for Map Objects. arguments are argc NameValuePairs initializing the map
@@ -600,11 +670,10 @@
             fatal("not enough space to register a new class");
         }
         class_t newClassIndex = CLASSES_len;
-        Class_ptr Cl = &CLASSES[CLASSES_len++];
+        Class_ptr Cl = &CLASSES[CLASSES_len];
         //---------
-        // any, visible
+        // any, visible props
         Cl->name = any_CStr(className);
-        Cl->typeName = String_toLowerCase(Cl->name,0,NULL);
         Cl->initInstance = any_func(initFn);
         // native, invisible
         Cl->classInx = newClassIndex;
@@ -623,6 +692,11 @@
         Cl->method = _newJmpTableFrom(super.value.classPtr->method); //starts with super's jmp table
         Cl->pos = _newPosTableFrom(super.value.classPtr->pos); //starts with super's props table
 
+        // classes as vars of type Class
+        any_CLASSES[CLASSES_len]=(any){.class=Class_inx,.res=0,.len=0,.value.ptr=Cl};
+
+        CLASSES_len++;
+
         return any_class(newClassIndex);
     };
 
@@ -640,18 +714,42 @@
         if (anyClass.value.classPtr==Map.value.classPtr) return arguments[0];
 
         //else, create instance and assign properties from map
-        Map_ptr theMap=((Map_ptr)arguments[0].value.ptr);
+        Map_ptr theMap=arguments[0].value.map;
         var newInstance = new(anyClass,0,NULL);
         len_t len = theMap->size.value.number;
-        assert(len==theMap->array.value.arr->length);
+        assert(len==theMap->nvpArr.length);
         //assign properties from map
-        for( any* item = theMap->array.value.arr->item; len--; item++){
-            assert(item->class == NameValuePair_inx);
-            NameValuePair_ptr nvp = item->value.ptr;
+        NameValuePair_ptr nvp = theMap->nvpArr.base.nvp;
+        for(; len--; nvp++){
             Object_setProperty(newInstance,2,(any_arr){nvp->name,nvp->value});
         }
         return newInstance;
     };
+
+    /**
+     * _fastNew(class,argc, symbol_,anyValue, symbol_,anyValue,...)
+     * @param anyClass instance to create
+     * @param argc how many pairs of symbol_:anyValue
+     * @return
+     */
+    any _fastNew(any anyClass, len_t argc, ...) {
+        assert(argc>0);
+
+        va_list argPointer; //create ptr to arguments
+        va_start(argPointer, argc); //make argPointer point to first argument *after* arg
+
+        var instance = new(anyClass,0,NULL);
+
+        any value;
+        int symbol;
+        while(argc--) {
+            symbol = va_arg(argPointer,int);
+            value = va_arg(argPointer,any);
+            *PROP_PTR(symbol,instance) = value;
+        }
+        return instance; //return created instance
+    }
+
 
     any _newStringSize(len_t memSize){
         //create a new String, make space for size-1 ASCII chars + '\0'
@@ -670,7 +768,7 @@
         return a;
     }
 
-    #define CONCATD_ITEMS_PER_RES 4
+    #define CONCATD_ITEMS_PER_RES 8
     any _newConcatdSlices(){
         return (any){String_inx, .res=1, .len=0, .value.ptr=mem_alloc(CONCATD_ITEMS_PER_RES*sizeof(ConcatdItem_s))};
     }
@@ -706,7 +804,7 @@
             }
         }
         else if (nameOrNumber.class==Number_inx){
-            symbol = (symbol_t)nameOrNumber.value.number;
+            symbol = (symbol_t)int64_from_Number(nameOrNumber);
             if (symbol < -_allMethodsMax || symbol >= _allPropsLength) {
                 throw(_newErr(_concatAny(2
                         ,any_LTR("invalid symbol number: "),nameOrNumber
@@ -857,6 +955,26 @@
         assert(argc==1);
         return _hasProperty(this,arguments[0])? true:false;
     }
+
+    any Object_hasOwnProperty(DEFAULT_ARGUMENTS) {
+        assert(argc==1);
+        symbol_t symbol=_getSymbol(arguments[0]); //search symbol from symbol number or name
+
+        //symbol:0 is "constructor":Class, inherited from "any"
+        if (symbol==0 || _getPropPtr(this,symbol)!=NULL) return false;
+
+        posTable_t posTable=CLASSES[this.class].pos;
+        propIndex_t pos;
+        if (symbol>=TABLE_LENGTH(posTable) || (pos=posTable[symbol])==INVALID_PROP_POS) {
+            return false;
+        }
+        if (pos < CLASSES[CLASSES[this.class].super].propertyCount){
+            //the property is in one of the super classes
+            return false; //not own prop
+        }
+        return true; //has own property
+    }
+
     /** .setProperty(name:String, value:any)
      * from name, set property for object & Maps
      */
@@ -883,16 +1001,16 @@
     };
 
     //get property name from index
-    any _getPropertyNameAtIndex(any this, propIndex_t index) {
+    any _object_getPropertyNameAtIndex(any this, propIndex_t index) {// from prop index
         len_t propLength=CLASSES[this.class].propertyCount;
         if(index<0 || index>=propLength) {
             throw(_newErr(_concatAny(6
-                    ,any_LTR("getPropertyName at invalid index ")
+                    ,any_LTR("getPropertyName at invalid index: ")
                     ,any_number(index)
                     ,any_LTR(". Class [")
                     ,CLASSES[this.class].name
-                    ,any_LTR("] valid props are 0..")
-                    ,any_number(propLength-1)
+                    ,any_LTR("] property count is ")
+                    ,any_number(propLength)
                     )));
         }
         return _symbol[CLASSES[this.class].symbolNames[index]];
@@ -900,19 +1018,326 @@
 
     any Object_getPropertyNameAtIndex(DEFAULT_ARGUMENTS) { // from prop index
         assert_arg(Number);
-        return _getPropertyNameAtIndex(this,arguments[0].value.number);
+        return _object_getPropertyNameAtIndex(this,arguments[0].value.number);
     }
 
-    extern any Object_getObjectKeys(DEFAULT_ARGUMENTS){
+    /**
+     * unified _unifiedGetNVPAtIndex, for Objects & Maps.
+     *
+     * Unified get name-value pair at index
+     *
+     * to make js LiteralObjects and Maps interchangeable,
+     * _unifiedGetNVPAtIndex(), if the object is a Map,
+     * returns *MAP_NVP_PTR(index)
+     * else returns a NameValuePair with decoded PropName and PropValue
+    */
+    NameValuePair_s
+    _unifiedGetNVPAtIndex(any this, len_t index) {
+        if (this.class==Map_inx)
+            return *(MAP_NVP_PTR(index,this));
+        else
+            //note: _object_getPropertyNameAtIndex will validate "index"
+            return (NameValuePair_s){
+                .name=_object_getPropertyNameAtIndex(this,index)
+                ,.value=this.value.prop[index]
+            };
+    }
+
+    extern any Object_allPropertyNames(DEFAULT_ARGUMENTS){
         len_t propsLength = CLASSES[this.class].propertyCount;
         var result = _newArray(propsLength,NULL);
         posTable_t table = CLASSES[this.class].symbolNames;
-        any* item=result.value.arr->item;
+        any* item=result.value.arr->base.anyPtr;
         for(int n=0; n<propsLength; n++,item++){
             *item=_symbol[table[n]];
         }
         return result;
     }
+
+    //----------------------
+    // x_iterableNext
+    //----------------------
+    void Iterable_Position__init(DEFAULT_ARGUMENTS){
+        this.value.iterable->index=any_int64(-1); //mark as pre-start
+    }
+
+    any Object_iterableNext(DEFAULT_ARGUMENTS){
+        assert_arg(Iterable_Position);
+        Iterable_Position_ptr iter = arguments[0].value.iterable;
+
+        int64_t inx = iter->index.value.int64;
+
+        if (inx==-1) {//initialization
+            iter->size = any_int64(CLASSES[this.class].propertyCount);
+        }
+
+        if (++inx >= iter->size.value.int64) return false;
+
+        iter->key = _symbol[CLASSES[this.class].symbolNames[inx]];
+        iter->value = this.value.prop[inx];
+
+        iter->index.value.int64 = inx;
+        return true;
+    }
+
+    any Array_iterableNext(DEFAULT_ARGUMENTS){
+        assert_arg(Iterable_Position);
+        Iterable_Position_ptr iter = arguments[0].value.iterable;
+
+        int64_t inx = iter->index.value.int64;
+
+        if (inx==-1) {//initialization
+            iter->size = any_int64(this.value.arr->length);
+        }
+
+        if (++inx >= iter->size.value.int64) return false;
+
+        iter->key = any_number(inx);
+        iter->value = ITEM(this,inx);
+
+        iter->index.value.int64 = inx;
+        return true;
+    }
+
+    any Map_iterableNext(DEFAULT_ARGUMENTS){
+        assert_arg(Iterable_Position);
+        Iterable_Position_ptr iter = arguments[0].value.iterable;
+
+        int64_t inx = iter->index.value.int64;
+
+        if (inx==-1) {//initialization
+            iter->size = any_int64(this.value.map->size.value.number);
+        }
+
+        if (++inx >= iter->size.value.int64) return false;
+
+        NameValuePair_ptr nvp = MAP_NVP_PTR(inx,this);
+        iter->key = nvp->name;
+        iter->value = nvp->value;
+
+        iter->index.value.int64 = inx;
+        return true;
+    }
+
+    /** _string_ByteLen
+     *  returns the number of bytes (bytes, not unicode points)
+     */
+    len_t _string_ByteLen(any s){
+        if (s.res){// multiple slices
+            ConcatdItem_ptr slicePtr=s.value.slices;
+            len_t result=0;
+            for(;s.len--; slicePtr++) result+=slicePtr->byteLen;
+            return result;
+        }
+        else return s.len;
+    }
+
+    any String_iterableNext(DEFAULT_ARGUMENTS){
+        assert_arg(Iterable_Position);
+        Iterable_Position_ptr iter = arguments[0].value.iterable;
+
+        int64_t inx = iter->index.value.int64;
+
+        if (inx==-1) {//initialization
+            iter->size = any_int64(_string_ByteLen(this)); //byteLength
+            iter->key = any_number(0);  //iter.name is the *codepoint* index in the string (usually < inx because of multibyte unicode points)
+            iter->extra = (any){.class=0, .res=0, .len=0}; //res=actual slice index, len=slice offset in total string
+        }
+
+        if (++inx >= iter->size.value.int64 ) return false;
+
+        len_t byteIndex = inx;
+
+        len_t maxCount;
+        str sliceStart;
+
+        if (this.res) {//in concatd slices
+            ConcatdItem_s actualSlice = this.value.slices[iter->extra.res];
+            byteIndex -= iter->extra.len; //slice offset
+            if (byteIndex >= actualSlice.byteLen){ //end of slice
+                iter->extra.len += actualSlice.byteLen; //add to offset
+                actualSlice = this.value.slices[++(iter->extra.res)]; //get next slice
+                byteIndex=0;
+            }
+            sliceStart = actualSlice.str + byteIndex;
+            maxCount = actualSlice.byteLen - byteIndex;
+        }
+        else { //simple string
+            sliceStart = this.value.str + byteIndex;
+            maxCount = this.len - byteIndex;
+        }
+
+        len_t count=1; //assume 1st is sequence start
+        //take all the bytes of one utf-8 sequence
+        for (str p=sliceStart+1; count < maxCount && isUFT8SequenceExtra(*p); count++, p++, inx++);
+
+        //value is a slice with the codepoint (1..4 bytes)
+        iter->value = any_slice(sliceStart,count);
+
+        //iter.name (key) counts the *codepoint* index in the string
+        iter->key.value.number++;
+
+        iter->index.value.int64 = inx;
+        return true;
+    }
+
+    /**
+     * String_byteSubstr(start, count)
+     * similar to String_substr, but start position
+     * is the start index *in bytes* -not codepoints-
+     * from the beginning of the string.
+     *
+     * Since internal representation is UTF-8, this method is faster than Substr
+     * for large strings and large values of "start"
+     *
+     * Note: "count" is still in measuerd in *codepoints*, only *start* is measured in bytes
+     */
+    any String_byteSubstr(DEFAULT_ARGUMENTS){
+        assert_args({.req=1,.max=2,.control=2},Number,Number);
+
+        int64_t byteIndex = int64_from_Number(arguments[0]);
+        if (byteIndex<0 || byteIndex>this.len) return any_EMPTY_STR;
+
+        _FLATTEN(this);
+        str sliceStart = this.value.str + byteIndex;
+        len_t maxByteCount = this.len - byteIndex;
+
+        //2nd arg - count
+        if (argc==1) {//from start up to end
+            return any_slice(sliceStart, maxByteCount);
+        }
+        int64_t codePointCount = int64_from_Number(arguments[1]);
+        if (codePointCount<=0) return any_EMPTY_STR;
+
+        //take all the bytes up to codePointCount codepoints
+        str p=sliceStart;
+        for (;codePointCount && maxByteCount; p++,maxByteCount--) {
+            if (isUFT8SequenceStart(*p)) codePointCount--;
+        }
+
+        return any_slice(sliceStart, p-sliceStart);
+    }
+
+
+    /**
+     * String_byteSlice(byteStart, byteEnd)
+     * similar to String_slice, but start & end position
+     * are measured *in bytes* -not codepoints-
+     * from the beginning of the string.
+     *
+     * Since internal representation is UTF-8, this method is faster than *slice*
+     * for large strings and large values of start & end
+     *
+     */
+    any String_byteSlice(DEFAULT_ARGUMENTS){
+        assert_args({.req=1,.max=2,.control=2},Number,Number);
+
+        int64_t startByteIndex = int64_from_Number(arguments[0]);
+        if (startByteIndex<0 || startByteIndex>this.len) return any_EMPTY_STR;
+
+        _FLATTEN(this);
+        str sliceStart = this.value.str + startByteIndex;
+        len_t maxByteCount = this.len - startByteIndex;
+        if (argc==1) {//from start up to end
+            return any_slice(sliceStart, maxByteCount);
+        }
+
+        //2nd arg - endByteIndex
+        int64_t endByteIndex = int64_from_Number(arguments[1]);
+        int64_t byteCount = endByteIndex-startByteIndex;
+        if (byteCount<=0) return any_EMPTY_STR;
+        if (byteCount>maxByteCount) byteCount=maxByteCount;
+        return any_slice(sliceStart, byteCount);
+    }
+
+    int64_t _byteIndexOf(any haystack, any needle, int64_t startByteIndex) {
+        if (needle.len==0 ||startByteIndex<0) return -1;
+
+        _FLATTEN(needle); //we require contiguos strings
+        _FLATTEN(haystack);
+        if (startByteIndex>haystack.len) return -1;
+
+        str found=utf8Find(haystack, needle, haystack.value.str+startByteIndex);
+        if (!found) return -1;
+        return found - haystack.value.str; //byte index of found string
+    }
+
+    /**
+     * return -1 if not found, byteIndex for strings (fast)
+     * @param needle
+     * @param haystack
+     * @return int64_t
+     */
+    int64_t __byteIndex(any needle, any haystack){
+        if (haystack.class==String_inx){
+            if (needle.class!=String_inx) needle=CALL0(toString_,needle);
+            return _byteIndexOf(haystack,needle,0);
+        }
+        else {
+            any result = CALL1(indexOf_,haystack,needle);
+            return (int64_t)result.value.number;
+        }
+    }
+
+
+    /** String_byteIndexOf(searched:string, fromByteIndex:number) {
+     * similar to String_indexOf, but start position
+     * is the start index *in bytes* -not codepoints-
+     * from the beggining of the string.
+     *
+     * @returns: *BYTE* index of the found string, or -1
+     */
+    any String_byteIndexOf(DEFAULT_ARGUMENTS) {
+        assert_args({.req=1,.max=2,.control=2},String,Number);
+        any needle=arguments[0];
+        int64_t startByteIndex=0;
+        if (argc>1) startByteIndex = int64_from_Number(arguments[1]);
+        return any_int64(_byteIndexOf(this, needle,startByteIndex)); //byte index of found string
+    }
+
+    /** _string_charAtBytePos
+     * return a unicode char from a specific byte-index position in the String
+     * @param s String
+     * @param startByte byte-index start position
+     * @return String, .length=1, byteLength=1..4 depending on utf-8 sequence
+     *
+    any _string_charAtBytePos(any s, len_t startByte)
+    {
+        assert(s.class==String_inx);
+
+        str sliceStart;
+        len_t sliceLen;
+
+        if (s.res){// set ptrs for multiple slices
+            int found=FALSE;
+            ConcatdItem_ptr slicePtr=s.value.slices;
+            //search which slice has the char
+            for(;s.len--; slicePtr++){
+                sliceLen = slicePtr->byteLen;
+                if (sliceLen > startByte){//its here
+                    sliceStart = slicePtr->str;
+                    found=TRUE;
+                    break;
+                }
+                startByte-=sliceLen;
+            };
+            if (!found) sliceLen=0;
+        }
+        else {// set ptrs for simple str
+            sliceLen = s.len;
+            sliceStart = s.value.ptr;
+        }
+
+        if (startByte>=sliceLen) return any_EMPTY_STR;
+
+        len_t count=1;
+        len_t maxCount = sliceLen - startByte;
+        //take all the bytes of the utf-8 sequence
+        for (str p=sliceStart+startByte+1; count < maxCount && isUFT8SequenceExtra(*p); count++,p++);
+        //return a slice with the char
+        return any_slice(sliceStart+startByte,count);
+    }
+    */
 
     //----------------------
     // x_toString
@@ -981,6 +1406,38 @@
     };
 
     //----------------------
+    // C-null-term-string to String methods
+    //----------------------
+
+    static char tempBuffer[4096];
+    /**
+     * use-and-reuse a temp buffer
+     * making a c-compatible null-terminated string, w/o malloc
+     */
+    str _tempCString(any s){
+        _toCStringCompatBuf(s, tempBuffer, sizeof(tempBuffer));
+        return tempBuffer;
+    }
+    /**
+     * copy chars from simple|conctd string to a fixed buffer
+     * making a c-compatible null-terminated string, w/o malloc
+     *
+     */
+    void _toCStringCompatBuf(any s, char* buf, len_t bufSize){
+        assert(s.class==String_inx);
+        if (!s.res){ //simple
+            if (s.len>bufSize-1) s.len=bufSize-1;
+            memcpy(buf, s.value.str, s.len);
+            buf[s.len]=0;
+        }
+        else {
+            //copy Concatd slices
+            len_t copied=_copyConcatd(s, buf, bufSize-1);
+            buf[copied]=0;
+        }
+    }
+
+    //----------------------
     // String methods
     //----------------------
     /**
@@ -1030,10 +1487,85 @@
         return utf8slice(this, startUTF8Inx, startUTF8Inx+1);
     }
 
+    any String_charCodeAt(DEFAULT_ARGUMENTS) {
+        assert_arg(Number);
+        int64_t startUTF8Inx = (int64_t)arguments[0].value.number;
+        var codepoint = utf8slice(this, startUTF8Inx, startUTF8Inx+1);
+        if (!codepoint.len) return NaN;
+
+        str p=codepoint.value.str;
+        uint32_t result;
+        switch(codepoint.len){
+            case 1:
+                result = *p & 0b01111111;
+                break;
+            case 2:
+                result = (*p & 0b00011111)<<6;
+                result += (*(p+1) & 0b00111111);
+                break;
+            case 3:
+                result = (*p & 0b00001111)<<12;
+                result += (*(p+1) & 0b00111111)<<6;
+                result += (*(p+2) & 0b00111111);
+                break;
+            case 4:
+                result = (*p & 0b00000111)<<18;
+                result += (*(p+1) & 0b00111111)<<12;
+                result += (*(p+2) & 0b00111111)<<6;
+                result += (*(p+3) & 0b00111111);
+                break;
+        }
+        return any_number(result);
+
+        /*
+         * commented: switch is faster.
+        // convert UTF-8 to a number - see table at: http://en.wikipedia.org/wiki/UTF-8
+        char* p=codepoint.value.str+codepoint.len-1; //last component
+        byte mask = 0b00111111;
+        byte finalMask = 0b00111111;
+        int shift=0;
+        for(int n=codepoint.len;n;n--){
+            result.value.number += (*p & mask)<<shift;
+            shift+=8;
+            finalMask>>=1
+        }
+        */
+    }
+
+    any String_fromCharCode(DEFAULT_ARGUMENTS) {
+        assert_args({.req=1,.max=-1,.control=1},Number);
+        if (argc>=sizeof(tempBuffer)/4) fail_with("String_fromCharCode:too many chars");
+
+        char* p = tempBuffer;
+        for(any* arg=arguments;argc--;arg++){
+            if (arg->value.number<0||arg->value.number>=(1<<22)) fail_with("String_fromCharCode:invalid code");
+            uint32_t v = (uint32_t)arg->value.number;
+            if (v< (1<<7)){
+                *p++=v;
+            }
+            else if (v< (1<<11)){
+                *p++=((v>>6) | 0b11000000);
+                *p++= v & 0b00111111 | 0b10000000;
+            }
+            else if (v< (1<<16)){
+                *p++=((v>>12) | 0b11100000);
+                *p++=((v>>6) & 0b00111111 | 0b10000000);
+                *p++= v & 0b00111111 | 0b10000000;
+            }
+            else if (v< (1<<21)){
+                *p++=((v>>18) | 0b11110000);
+                *p++=((v>>12) & 0b00111111 | 0b10000000);
+                *p++=((v>>6) & 0b00111111 |0b10000000);
+                *p++= v & 0b00111111 | 0b10000000;
+            }
+        }
+        return _newString(tempBuffer, p - (char*)&tempBuffer);
+    }
+
     /**
      * .replaceAll(searched,newStr)
      */
-    any String_replaceAll(any this, len_t argc, any* arguments) {
+    any String_replaceAll(DEFAULT_ARGUMENTS) {
         assert_args({.req=2,.max=2,.control=2},String,String);
         any searched = arguments[0];
         any newStr = arguments[1];
@@ -1073,7 +1605,26 @@
         if (c.class==Undefined_inx) { //never found
             return this; //return original
         }
+
+        #ifdef FLATTEN_ALL
+        c=_newCCompatString(c);
+        #endif
+
         return c; //composed with all replacements
+    }
+
+    any String_repeat(DEFAULT_ARGUMENTS) {
+        assert_args({.req=1,.max=1,.control=1},Number);
+        if (arguments[0].value.number<=0) return any_EMPTY_STR;
+
+        /*if ( (arguments[0].value.number * this.len) >= MAX_LEN_T )
+                fail_with("String_repeat: string too large");
+         */
+        len_t howMany = (len_t)arguments[0].value.number;
+
+        var c=_newConcatdSlices();
+        while(howMany--) _pushToConcatd(&c,this);
+        return c; //composed with all repetitions
     }
 
     any String_toLowerCase(any this, len_t argc, any* arguments) {
@@ -1125,9 +1676,9 @@
         sl->str = str;
         sl->byteLen = len;
         c->len++; //one more item in ConcatdSlices
-        if (c->len > c->res*CONCATD_ITEMS_PER_RES) { // no more space, next-free is outside alloc'd area
+        if (c->len >= c->res*CONCATD_ITEMS_PER_RES) { // no more space, next-free is outside alloc'd area
             if (c->res==UINT16_MAX) { // a very large concatd, we realloc per addition at this point
-                c->value.ptr = mem_realloc(c->value.ptr, c->len*sizeof(ConcatdItem_s));
+                c->value.ptr = mem_realloc(c->value.ptr, ((c->len+127)/128)*128*sizeof(ConcatdItem_s));
             }
             else { //normal, allocate another unit
                 c->res++;
@@ -1168,6 +1719,10 @@
             arg = va_arg(argPointer,any);
         }
 
+        #ifdef FLATTEN_ALL
+        c=_newCCompatString(c);
+        #endif
+
         return c; //return ConcatdSlices
     }
 
@@ -1198,35 +1753,6 @@
         }
         return dest-buf; //how many copied
     }
-
-    static char tempBuffer[4096];
-    /**
-     * use-and-reuse a temp buffer
-     * making a c-compatible null-terminated string, w/o malloc
-     */
-    str _tempCString(any s){
-        _toCStringCompatBuf(s, tempBuffer, sizeof(tempBuffer));
-        return tempBuffer;
-    }
-    /**
-     * copy chars from simple|conctd string to a fixed buffer
-     * making a c-compatible null-terminated string, w/o malloc
-     *
-     */
-    void _toCStringCompatBuf(any s, char* buf, len_t bufSize){
-        assert(s.class==String_inx);
-        if (!s.res){ //simple
-            if (s.len>bufSize-1) s.len=bufSize-1;
-            memcpy(buf, s.value.str, s.len);
-            buf[s.len]=0;
-        }
-        else {
-            //copy Concatd slices
-            len_t copied=_copyConcatd(s, buf, bufSize-1);
-            buf[copied]=0;
-        }
-    }
-
 
     any _cloneSimpleString(any s){
         any result;
@@ -1284,6 +1810,10 @@
             if (separ.len && count) _pushToConcatd(&c,separ);
             _pushToConcatd(&c,*item);
         }
+
+        #ifdef FLATTEN_ALL
+        c=_newCCompatString(c);
+        #endif
 
         return c;
     }
@@ -1427,26 +1957,27 @@
     void _array_realloc(Array_s *arr, uint64_t newLen64){
         if (newLen64>=UINT32_MAX) fatal("Array too large");
         size_t newLen=newLen64;
-        size_t actualSize = arr->allocd;
-        size_t newSize = newLen*sizeof(any);
+        size_t actualSize = arr->allocd * arr->itemSize;
+        size_t newSize = newLen * arr->itemSize;
         //realloc if required or of we're freeing at least 64kb
         if (actualSize < newSize || actualSize-newSize > 64*1024){
-            newSize = (newLen+8)*sizeof(any);
-            arr->item = mem_realloc(arr->item, newSize);
-            arr->allocd = newSize;
+            len_t newAllocd = newLen+8;
+            arr->base.bytePtr = mem_realloc(arr->base.bytePtr, newAllocd * arr->itemSize);
+            arr->allocd = newAllocd;
         }
     }
 
-    void _concatToArray(Array_ptr arrPtr, len_t itemCount, any* items){
+    void _concatToArrayOfAny(Array_ptr arrPtr, len_t itemCount, any* items){
         if(!itemCount || !items) return;
+        if(!arrPtr->itemSize==sizeof(any)) fatal("not array of any");
         len_t len = arrPtr->length;
         _array_realloc(arrPtr, len + itemCount);
-        memcpy(arrPtr->item + len, items, itemCount*sizeof(any));
+        memcpy(arrPtr->base.anyPtr + len, items, itemCount*sizeof(any));
         arrPtr->length+=itemCount;
     }
 
     any Array_push(any this, len_t argc, any* arguments){
-        _concatToArray(this.value.arr,argc,arguments);
+        _concatToArrayOfAny(this.value.arr,argc,arguments);
         return any_number(this.value.arr->length);
     }
 
@@ -1458,7 +1989,7 @@
     void _array_pushSlice(any this, any slice){
         assert(slice.class==String_inx);
         if (!slice.len) slice = any_EMPTY_STR;
-        _concatToArray(this.value.arr,1,(any_arr){slice});
+        _concatToArrayOfAny(this.value.arr,1,(any_arr){slice});
     }
 
     any _concatToArrayFlat(any this, len_t itemCount, any* item){
@@ -1467,7 +1998,7 @@
         for(len_t n=0;n<itemCount; n++,item++){
             if(item->class==Array_inx){
                 //recurse
-                _concatToArrayFlat(this, item->value.arr->length, item->value.arr->item );
+                _concatToArrayFlat(this, item->value.arr->length, item->value.arr->base.anyPtr );
             }
             else { //single item
                 Array_push(this,1,item);
@@ -1497,7 +2028,7 @@
         any searched = arguments[0];
         len_t inx = argc>=2? (len_t)arguments[1].value.number:0;
         //---------
-        any* item = this.value.arr->item + inx;
+        any* item = this.value.arr->base.anyPtr + inx;
         for( ;inx<len; inx++,item++){
             if (__is(searched,*item)) return any_number(inx);
         }
@@ -1519,7 +2050,7 @@
         if (inx<0) return any_number(-1);
         if (inx>len) inx=len-1;
         //---------
-        any* item = this.value.arr->item + inx;
+        any* item = this.value.arr->base.anyPtr + inx;
         while(TRUE){
             if (inx<0 || __is(*item,searched)) break;
             item--;
@@ -1527,7 +2058,6 @@
         }
         return any_number(inx);
     }
-
 
    any Array_slice(any this, len_t argc, any* arguments) {
         // slice(0:start, 1:end)
@@ -1544,36 +2074,38 @@
         if (endPos<0) if ((endPos+=len)<0) endPos=0;
         if (endPos>len) endPos=len;
         if (endPos<startPos) endPos=startPos; //empty arr
-        return _newArray(endPos-startPos, this.value.arr->item + startPos);
+        return _newArray(endPos-startPos, this.value.arr->base.anyPtr + startPos);
     }
 
-    any _array_splice(Array_ptr arrPtr, int64_t startPos, int64_t deleteHowMany, len_t toInsert, any* toInsertItems, int returnDeleted) {
+    void _array_splice(Array_ptr arrPtr, int64_t startPos, int64_t deleteHowMany, len_t toInsert, void* toInsertItemsPtr) {
         int64_t len = (int64_t) arrPtr->length;
         //---------
         if (startPos<0) if ((startPos+=len)<0) startPos=0;
+        uint16_t itemSize=arrPtr->itemSize;
         if (startPos+deleteHowMany>len) deleteHowMany = len-startPos;
-        any result= returnDeleted? _newArray(deleteHowMany, arrPtr->item+startPos): undefined; // newArray handles argc==0
         int64_t moveFromPos = startPos+deleteHowMany;
         int64_t amount=len-moveFromPos;
         int64_t moveToPos = startPos + toInsert;
         if (amount && moveFromPos>moveToPos) {
             //delete some
-            memmove(arrPtr->item + moveToPos, arrPtr->item + moveFromPos, amount*sizeof(any));
+            memmove(arrPtr->base.bytePtr+(moveToPos*itemSize), arrPtr->base.bytePtr+ (moveFromPos*itemSize), amount*itemSize);
             //clear space
-            memset(arrPtr->item + len - (moveFromPos-moveToPos), 0, (moveFromPos-moveToPos)*sizeof(any));
+            memset(arrPtr->base.bytePtr+((len-(moveFromPos-moveToPos))*itemSize), 0, (moveFromPos-moveToPos)*itemSize);
         }
         else if(moveFromPos<moveToPos){ //insert some
             _array_realloc(arrPtr, len + moveToPos-moveFromPos);
             //make space
-            memmove(arrPtr->item + moveToPos, arrPtr->item + moveFromPos, amount*sizeof(any));
+            if (amount) memmove(arrPtr->base.bytePtr + moveToPos*itemSize, arrPtr->base.bytePtr + moveFromPos*itemSize, amount*itemSize);
         }
 
         //insert new items
-        if (toInsert) memcpy(arrPtr->item + startPos, toInsertItems, toInsert*sizeof(any));
+        if (toInsert) memcpy(arrPtr->base.bytePtr + startPos*itemSize, toInsertItemsPtr, toInsert*itemSize);
         // recalc length
         arrPtr->length += toInsert-deleteHowMany;
-        return result;
+    }
 
+    void _array_push(Array_ptr arrPtr, void* newItem){
+        _array_splice(arrPtr,arrPtr->length, 0,1,newItem);
     }
 
     /**
@@ -1589,32 +2121,39 @@
         int64_t deleteHowMany = arguments[1].value.number;
         len_t toInsertCount = argc>=3? argc-2: 0;
         any* toInsertItems = argc>=3? arguments+2: NULL;
-        return _array_splice(this.value.arr, startPos, deleteHowMany, toInsertCount, toInsertItems, 1);
+
+        any arrDeleted= Array_slice(this,2,(any_arr){arguments[0],any_number(startPos+deleteHowMany)});
+        _array_splice(this.value.arr, startPos, deleteHowMany, toInsertCount, toInsertItems);
+        return arrDeleted;
     };
 
     any Array_unshift(any this, len_t argc, any* arguments) {
        assert(argc>=1 && arguments!=NULL);
        // insert arguments at array position 0
-       return _array_splice(this.value.arr,0,0,argc,arguments, 0);
+       _array_splice(this.value.arr,0,0,argc,arguments);
+       return undefined;
     }
 
     any Array_shift(any this, len_t argc, any* arguments) {
        assert(argc==0);
+       if (!this.value.arr->length) return undefined;
        // remove arguments at array position 0
-       return _array_splice(this.value.arr,0,1,argc,arguments,1);
+       var firstItem = ITEM(this,0);
+       _array_splice(this.value.arr,0,1,0,NULL);
+       return firstItem;
     }
 
     any Array_pop(any this, len_t argc, any* arguments) {
         assert(argc==0);
         len_t len;
         if ((len=this.value.arr->length) <= 0) return undefined;
-        return this.value.arr->item[this.value.arr->length=(len-1)];
+        return this.value.arr->base.anyPtr[this.value.arr->length=(len-1)];
     }
 
     any Array_join(any this, len_t argc, any* arguments) {
         assert_args({.req=0,.max=1,.control=1},String);
         return _arrayJoin(undefined
-                , this.value.arr->length, this.value.arr->item
+                , this.value.arr->length, this.value.arr->base.anyPtr
                 , argc? arguments[0]: any_COMMA);
     }
 
@@ -1636,7 +2175,30 @@
             this.value.arr->length = index+1; //set new length
         }
         // set value at index
-        return  this.value.arr->item[index] = arguments[1];
+        return  this.value.arr->base.anyPtr[index] = arguments[1];
+    }
+
+    any Array_isArray(any this, len_t argc, any* arguments) {
+        assert(argc==1);
+        return (arguments[0].class==Array_inx||_instanceof(arguments[0],Array))?true:false;
+    }
+
+    function_ptr _array_sort_user_fn; //no thread-safe
+    int _array_compare(const void *v1, const void *v2){
+        if (_array_sort_user_fn){
+            any result = _array_sort_user_fn(undefined,2,(any_arr){*(any*)v1,*(any*)v2});
+            return (int)result.value.number;
+        }
+        else{
+            var a=CALL0(toString_,*(any*)v1), b=CALL0(toString_,*(any*)v2);
+            return __compareStrings(a,b);
+        }
+    }
+
+    any Array_sort(any this, len_t argc, any* arguments) {
+        assert_args({.req=0,.max=1,.control=1},Function);
+        _array_sort_user_fn= argc? arguments[0].value.ptr : NULL;
+        qsort(this.value.arr->base.anyPtr, this.value.arr->length, sizeof(any), _array_compare);
     }
 
    /** Map methods.
@@ -1660,26 +2222,47 @@
     //-----------
     //Map helpers
 
-    NameValuePair_ptr
-    _map_findKey(Map_ptr map, any key, int doDelete) {
-        NameValuePair_ptr nv;
+    int64_t _map_KeyTree_do(Map_ptr map, byte what, any key, len_t valueIndex) {
+        assert(key.class==String_inx && map->keyTreeRoot.allocd); //has KeyTree
+        return _KeyTree_do(&map->keyTreeRoot,what,key,valueIndex);
+    }
+
+    NameValuePair_ptr _map_find(Map_ptr map, any key, byte doDelete) {
+
         len_t len;
-        len_t inx=0;
-        if (len=map->array.value.arr->length){
-            //DEBUG(key);
-            for(any* item=map->array.value.arr->item; len--; item++, inx++){
-                assert(item->class == NameValuePair_inx);
-                nv=((NameValuePair_ptr)item->value.ptr);
-                //DEBUG(nv->name);
-                if (__is(nv->name, key)) {
-                    if (doDelete) {//remove found index from map array
-                        _array_splice(map->array.value.arr, inx,1,0 ,NULL,0);
+        if ((len=map->nvpArr.length)==0) return NULL; //if no length
+
+        //DEBUG(key);
+        _FLATTEN(key);
+        assert(key.class==String_inx); //has KeyTree
+
+        int64_t foundInx=-1;
+        NameValuePair_ptr foundNVP=NULL;
+        NameValuePair_ptr nvpArrBase = map->nvpArr.base.nvp;
+
+        //_KeyTree_do 1:FIND 2:REMOVE, found?
+        if ((foundInx=_KeyTree_do(&map->keyTreeRoot,doDelete?REMOVE_KEY:FIND_KEY,key,0))>=0) {
+            foundNVP=nvpArrBase+foundInx;
+        }
+
+        /* OLD - linear search
+                len_t inx=0;
+                for(NameValuePair_ptr nvp=nvpArrBase; len--; nvp++, inx++){
+                    //DEBUG(nv->name);
+                    if (__is(nvp->name, key)) {
+                        foundInx=inx;
+                        foundNVP=nvp;
+                        break; //found
                     }
-                    return nv;
                 }
             }
         }
-        return NULL;
+         */
+
+        if (foundNVP && doDelete) {//remove found index from map array
+            _array_splice(&map->nvpArr, foundInx,1, 0,NULL);
+        }
+        return foundNVP;
     }
 
     NameValuePair_ptr
@@ -1687,7 +2270,7 @@
         if (index<0) {
             debug_abort(file,line,func,any_LTR("index access: [], negative index"));
         }
-        Array_s arr = *(this.value.map->array.value.arr);
+        Array_s arr = this.value.map->nvpArr;
         // check index against arr->length
         if (index >= arr.length){
             debug_abort(file,line,func,_concatAny(4,
@@ -1696,8 +2279,7 @@
                     ,any_LTR("]. Map.array.length is ")
                     ,any_number(arr.length)));
         }
-        assert(arr.item[index].class==NameValuePair_inx);
-        return (NameValuePair_ptr) arr.item[index].value.ptr;
+        return arr.base.nvp+index;
     }
 
     //-----------
@@ -1706,7 +2288,18 @@
     any Map_get(any this, len_t argc, any* arguments) {
         assert(argc==1);
         assert(_instanceof(this,Map));
-        NameValuePair_ptr nv=_map_findKey(this.value.map, arguments[0],0);
+        NameValuePair_ptr nv=_map_find(this.value.map, arguments[0],0);
+        if (!nv) return undefined;
+        return nv->value;
+    }
+
+    /**
+     * Map_getProperty: get existent key or throws
+     */
+    any Map_getProperty(any this, len_t argc, any* arguments) {
+        assert(argc==1);
+        assert(_instanceof(this,Map));
+        NameValuePair_ptr nv=_map_find(this.value.map, arguments[0],0);
         if(!nv) return undefined;
         return nv->value;
     }
@@ -1714,23 +2307,31 @@
     any Map_has(any this, len_t argc, any* arguments) {
         assert(argc==1);
         assert(_instanceof(this,Map));
-        NameValuePair_ptr nv=_map_findKey(this.value.map, arguments[0],0);
+        NameValuePair_ptr nv=_map_find(this.value.map, arguments[0],0);
         if(!nv) return false;
         return true;
     }
+
 
     // Map.set(key,value)
     any Map_set(any this, len_t argc, any* arguments) {
         assert(argc==2);
         assert(_instanceof(this,Map));
-        NameValuePair_ptr nv=_map_findKey(this.value.map, arguments[0],0);
-        if(!nv) {
-            _concatToArray(this.value.map->array.value.arr,1,(any_arr){new(NameValuePair,2,arguments)});
-            this.value.map->size.value.number++;
-            assert(this.value.map->size.value.number==this.value.map->array.value.arr->length);
+        any key=arguments[0];
+
+        _FLATTEN(key);
+        assert(key.class=String_inx);
+
+        len_t nextInx = this.value.map->nvpArr.length;
+        int64_t found = _map_KeyTree_do(this.value.map,FIND_OR_INSERT,key,nextInx);
+        if (found==nextInx){ //key inserted
+            NameValuePair_s newItem={.name=key,.value=arguments[1]};
+            _array_push(&(this.value.map->nvpArr),&newItem);
+            this.value.map->size.value.number = this.value.map->nvpArr.length; //keep size prop
+            assert(this.value.map->nvpArr.length==found+1);
         }
-        else{
-            nv->value = arguments[1];
+        else { //key exists, replace value
+            this.value.map->nvpArr.base.nvp[found].value = arguments[1];
         }
     }
 
@@ -1738,18 +2339,18 @@
         assert(argc==1);
         assert(_instanceof(this,Map));
         NameValuePair_ptr removedNVP;
-        removedNVP=_map_findKey( this.value.map, arguments[0], 1); //1=doDelete
+        removedNVP=_map_find( this.value.map, arguments[0], 1); //1=doDelete
         //remove found index from map array
-        this.value.map->size.value.number--;
+        this.value.map->size.value.number--; //keep "size" prop
         if (!removedNVP) return undefined;
         return removedNVP->value;
     }
 
     any Map_keys(DEFAULT_ARGUMENTS) {
-        len_t len = this.value.map->array.value.arr->length;
+        len_t len = this.value.map->nvpArr.length;
         var result = _newArray(len,NULL);
-        any* resItem = result.value.arr->item;
-        for( any* item = this.value.map->array.value.arr->item; len--; item++){
+        any* resItem = result.value.arr->base.anyPtr;
+        for( any* item = this.value.map->nvpArr.base.anyPtr; len--; item++){
             assert(item->class == NameValuePair_inx);
             NameValuePair_ptr nvp = item->value.ptr;
             *resItem++ = nvp->name;
@@ -1795,6 +2396,12 @@
         return _DateTo(this.value.time,"%T GMT%z (%Z)",1);
     }
 
+    // Number
+    any Number_isNaN(DEFAULT_ARGUMENTS) {
+        assert(argc==1);
+        return (arguments[0].class==NotANumber_inx)?true:false;
+    }
+
     // ------------
     // JSON
     //-------------
@@ -1828,7 +2435,7 @@
         else if (what.class==Array_inx){
             // Array
             _json_open(c,any_OPEN_BRACKET);
-            any* item = what.value.arr->item;
+            any* item = what.value.arr->base.anyPtr;
             len_t count=what.value.arr->length;
             for(int n=0; count--; n++,item++){
                 if (n==0) _json_newLine(c); else _json_comma(c);
@@ -1841,8 +2448,8 @@
             // Map, (js Object)
             _json_open(c,any_OPEN_CURLY);
             _json_newLine(c);
-            any* item = what.value.map->array.value.arr->item;
-            len_t count = what.value.map->array.value.arr->length;
+            any* item = what.value.map->nvpArr.base.anyPtr;
+            len_t count = what.value.map->nvpArr.length;
             for(int n=0; count--; n++,item++){
                 NameValuePair_ptr nv = item->value.ptr;
                 if (n) _json_comma(c);
@@ -1865,7 +2472,7 @@
                 if (n) _json_comma(c);
                 _json_newLine(c);
                 _pushToConcatd(c, any_QUOTE);
-                _pushToConcatd(c, _getPropertyNameAtIndex(what,n));
+                _pushToConcatd(c, _object_getPropertyNameAtIndex(what,n));
                 _pushToConcatd(c, any_QUOTE);
                 _pushToConcatd(c, any_COLON);
                 _json_stringify(*prop, c); //recurse
@@ -1874,9 +2481,30 @@
             _json_close(c,any_CLOSE_CURLY);
         }
         else {
-            if (what.class==String_inx) _pushToConcatd(c, any_QUOTE);
-            _pushToConcatd(c, what);
-            if (what.class==String_inx) _pushToConcatd(c, any_QUOTE);
+            if (what.class==String_inx) {
+                Buffer_s b = _newBuffer();
+                _Buffer_add(&b,any_QUOTE);
+                _FLATTEN(what);
+                for(int n=0;n<what.len;n++){
+                    char ch=what.value.str[n];
+                    // escape d-quotes & backslash
+                    int escape=TRUE;
+                    switch(ch){
+                        case '"': case'\\': break;
+                        case '\n': ch='n'; break;
+                        case '\t': ch='t'; break;
+                        case '\r': ch='r'; break;
+                        default: escape=FALSE;
+                    }
+                    if (escape) _Buffer_addStr(&b,"\\");
+                    _Buffer_addBytes(&b,&ch,1);
+                }
+                _Buffer_add(&b,any_QUOTE);
+                _pushToConcatd(c,_Buffer_toString(&b));
+            }
+            else {
+                _pushToConcatd(c, what);
+            }
         }
 
     }
@@ -2213,7 +2841,11 @@
             _Buffer_toMallocd(dbuf,dbuf->used);
         }
         _freeBuffer(dbuf); // toString means "free" because buffer is converted to malloc'd
-        return any_CStr(dbuf->ptr); //convert to any
+        return any_slice(dbuf->ptr,dbuf->used); //convert to any
+    }
+
+    any Buffer_toString(DEFAULT_ARGUMENTS){
+        return _Buffer_toString((Buffer_ptr)this.value.ptr);
     }
 
     /** pseudo-property ".length" is converted to a call
@@ -2239,6 +2871,7 @@
         // use parseFloat to convert strings with number representations.
         //
         if (this.class==String_inx) return (double)this.value.str[0];
+        if (this.class==Number_inx && this.res) return (double)this.value.uint64;
         else return this.value.number;
     }
 
@@ -2252,17 +2885,23 @@
             return any_number(strtod(parseNumberTempBuffer,&endConverted));
         }
         else if (arguments[0].class==Number_inx) return arguments[0];
-        else return NaN;
+        else return NotANumber;
     }
 
     any parseInt(DEFAULT_ARGUMENTS){
-        assert(argc==1);
+        assert_args({.req=1,.max=2,.control=2},Undefined,Number);
+        int base=0;
+        if (argc>1) base=(int)arguments[1].value.number;
+        char* endConverted;
         if (arguments[0].class==String_inx) {
             _toCStringCompatBuf(arguments[0], parseNumberTempBuffer, sizeof(parseNumberTempBuffer));
-            return any_number(atol(parseNumberTempBuffer));
+            any result = any_number(strtol(parseNumberTempBuffer,&endConverted,base));
+            //if (errno=ERANGE) return NaN;
+            if (endConverted==parseNumberTempBuffer) return NaN;
+            return result;
         }
         if (arguments[0].class==Number_inx) return any_number((int64_t)(arguments[0].value.number));
-        else return NaN;
+        else return NotANumber;
 
     }
 
@@ -2280,15 +2919,12 @@
         }
     }
 
-
-    int _anyToBool(any this){
-        if (!this.class || this.class==Undefined_inx
-            || this.class==Null_inx
-            || this.class==NaN_inx ){
+     /*int _anyToBoolI(any this){
+        if (!this.value.int64 || this.class<=Null_inx) {
             return FALSE;
         }
         else if (this.class==Number_inx || this.class==Boolean_inx){
-                 return this.value.number;
+            return TRUE; //because the prev if, we know this.value.int64!=0
         }
         else if (this.class==String_inx){
             if (!this.len) return FALSE;
@@ -2296,13 +2932,33 @@
             // else concatdSlices. if a slice has something => TRUE
             for(int n=0;n<this.len;n++) if (this.value.slices[n].byteLen) return TRUE;
             return FALSE;
-
         }
         else {
             return TRUE; //a valid object pointer / non-empty var, returns "thruthy"
             //fail_with(_concatToNULL("cannot convert [",this.class->name.value.str,"] to boolean\n",NULL));
         }
     }
+    */
+
+     int _anyToBool(any this){
+        if(this.class==String_inx) {
+            if (!this.len) return FALSE;
+            if (!this.res) return this.value.str[0]!=0; //false if "" - js compatibility
+            //else //concatdSlices. if a slice has something => TRUE
+            for(int n=0;n<this.len;n++) if (this.value.slices[n].byteLen) return TRUE;
+            return FALSE;
+        }
+        else{
+            return this.value.uint64!=0;
+        }
+    }
+
+     /*int _anyToBool(any this){
+         int a = _anyToBoolI(this);
+         int b = _anyToBoolsw(this);
+         return a|b;
+     }*/
+
 
     #ifndef NDEBUG
     void _assert_args(DEFAULT_ARGUMENTS, str file, int line, str func, _assert_args_options options, any anyClass, ...){
@@ -2436,13 +3092,17 @@
     #define M(symbol) { symbol##_, Object_##symbol },
     static _methodInfoArr Object_CORE_METHODS = {
          M( toString )
-         M( tryGetMethod )
+         M( hasOwnProperty )
+
+         M( hasProperty )
          M( tryGetProperty )
          M( getProperty )
-         M( hasProperty )
-         { hasOwnProperty_, Object_hasProperty },
+         M( setProperty )
+         M( allPropertyNames )
+
          M( getPropertyNameAtIndex )
-         M( getObjectKeys )
+         M( tryGetMethod )
+         M( iterableNext )
     M_END
     #undef M
 
@@ -2455,6 +3115,7 @@
     #define M(symbol) { symbol##_, String_##symbol },
     static _methodInfoArr String_CORE_METHODS = {
         M( toString )
+        M( iterableNext )
         M( slice )
         M( split )
         M( indexOf )
@@ -2463,10 +3124,17 @@
         M( toLowerCase )
         M( toUpperCase )
         M( charAt )
+        M( charCodeAt )
         M( replaceAll )
+        M( repeat )
         M( trim )
         M( substr )
         M( countSpaces )
+
+        M( byteSubstr )
+        M( byteIndexOf )
+        M( byteSlice )
+
     M_END
     #undef M
 
@@ -2505,6 +3173,7 @@
     #define M(symbol) { symbol##_, Array_##symbol },
     static _methodInfoArr Array_CORE_METHODS = {
         M( toString )
+        M( iterableNext )
         M( push )
         M( pop )
         M( unshift )
@@ -2518,22 +3187,31 @@
         M( tryGet )  //equivalent to js array access, returns undefined on OUT OF BOUNDS
         M( set )    //equivalent to js array access-set, extends array on OUT OF BOUNDS
         M( clear )
+        M( sort )
     M_END
     #undef M
 
     //Map
     #define M(symbol) { symbol##_, Map_##symbol },
     static _methodInfoArr Map_CORE_METHODS = {
+        M( iterableNext )
+
         M( has )
         M( get )
         M( set )
         M( delete )
         M( clear )
         M( keys )
+
+        // Map is interchangeable with Object, so it can act as a dynamic js object
          { hasProperty_, Map_has },
          { hasOwnProperty_, Map_has },
          { tryGetProperty_, Map_get },
-         { getObjectKeys_, Map_keys },
+         { setProperty_, Map_set },
+         { allPropertyNames_, Map_keys },
+
+        M( getProperty ) //get or throw
+
     M_END
     #undef M
     static propIndex_t Map_PROPS[] = {
@@ -2549,11 +3227,19 @@
     // Buffer
     #define M(symbol) { symbol##_, Buffer_##symbol },
     static _methodInfoArr Buffer_CORE_METHODS = {
+        M( toString )
+        M( append )
         M( write )
         M( copy )
     M_END
     #undef M
 
+    // Iterable_Position
+    static propIndex_t IterablePos_PROPS[] = {
+            key_,value_,
+            index_,size_,
+            extra_
+        };
 
 //-------------------
 // init lib util
@@ -2606,6 +3292,18 @@
             *ptr=any_CStr(*_things_table);
         }
     }
+
+    any _typeof(any this){ //js compatible (with all the quirks)
+        switch(this.class){
+            case Undefined_inx: return any_LTR("undefined");
+            case Boolean_inx: return any_LTR("boolean");
+            case Number_inx: return any_LTR("number");
+            case String_inx: return any_LTR("string");
+            case Function_inx: case Class_inx: return any_LTR("function");
+            default: return any_LTR("object");
+        }
+    }
+    #define _typeof(S) CLASSES[S.class].typeName
 
 //-------------------
 // init lib
@@ -2673,6 +3371,7 @@
         assert(_symbol - _CORE_METHODS_MAX >= _symbolTable);
         LiteC_addMethodSymbols(_CORE_METHODS_MAX, _CORE_METHODS_NAMES);
         // add core props names
+        assert(_CORE_PROPS_LENGTH==sizeof(_CORE_PROPS_NAMES)/sizeof(str));
         LiteC_addPropSymbols(_CORE_PROPS_LENGTH, _CORE_PROPS_NAMES);
 
         assert(constructor_== 0);
@@ -2685,6 +3384,7 @@
         //-------
         CLASSES_allocd=_LAST_CORE_CLASS+classesCount+16;
         CLASSES=mem_alloc(sizeof(Class_s)*CLASSES_allocd);
+        any_CLASSES=mem_alloc(sizeof(any)*CLASSES_allocd);
 
         //-------
         // class hierarchy root
@@ -2708,7 +3408,7 @@
         // hierarchy root - base CLASSES
         //-------
         CLASSES[AnyBoxedValue_inx] = (struct Class_s){
-                .name = any_LTR("AnyBoxedValue"), // str type name
+                .name = any_LTR("AnyBoxedValue"), // str class name
                 .initInstance = any_func(NULL), // function __init
                 .instanceSize = 0, //size_t instanceSize
                 .classInx = 0, // index into CLASSES
@@ -2731,6 +3431,9 @@
                 .pos = Object_POSTABLE //prop rel pos table
                 };
 
+        // class as var of type Class
+        any_CLASSES[Object_inx]=(any){.class=Class_inx,.res=0,.len=0,.value.ptr=&CLASSES[Object_inx]};
+
         CLASSES[Class_inx] = (struct Class_s){
                 .name = any_LTR("Class"), // str type name
                 .initInstance = any_func(NULL), // function __init
@@ -2741,6 +3444,8 @@
                 .pos = _newPosTableFrom(Object_POSTABLE) //basic prop rel pos table
                 };
 
+        // class as var of type Class
+        any_CLASSES[Class_inx]=(any){.class=Class_inx,.res=0,.len=0,.value.ptr=&CLASSES[Class_inx]};
 
         CLASSES_len = _LAST_CORE_CLASS;
 
@@ -2749,8 +3454,11 @@
         Class = (any){.class=Class_inx, .res=0, .value.classPtr=&CLASSES[Class_inx]};
 
         // hierarchy root - Object's methods & class props
-        _declareMethods(Object, Object_CORE_METHODS); //no props
-        _declareProps(Class, Class_CORE_PROPS, sizeof Class_CORE_PROPS); // no methods
+        _declareMethods(Object, Object_CORE_METHODS);
+        //no props on "Object"
+
+        // no methods on "Class"
+        _declareProps(Class, Class_CORE_PROPS, sizeof Class_CORE_PROPS);
 
         //-------
         // no-allocd-instance-classes (native types & classes w/o instance memory space)
@@ -2758,11 +3466,11 @@
         #define BOXED_VALUE(X); \
             CLASSES[X##_inx] = (struct Class_s){ \
                 .name=any_LTR(#X), .initInstance=any_func(NULL),\
-                .typeName=String_toLowerCase(any_LTR(#X),0,NULL), \
                 .instanceSize=0, .propertyCount = 0, .symbolNames=NULL, \
                 .classInx=X##_inx, .super=AnyBoxedValue_inx, \
                 .method=_newJmpTableFrom(Object_JMPTABLE), \
                 .pos=_newPosTableFrom(Object_POSTABLE) }; \
+            any_CLASSES[X##_inx]=(any){.class=Class_inx,.res=0,.len=0,.value.ptr=&CLASSES[X##_inx]}; \
             X = (any){.class=Class_inx, .res=0, .value.classPtr=&CLASSES[X##_inx]}
 
         BOXED_VALUE(String);
@@ -2780,13 +3488,15 @@
 
         BOXED_VALUE(Null);
         CLASSES[Null_inx].method[-toString_]=&Null_toString;
-        null = (any){Undefined_inx,0};
+        null = (any){Null_inx,0};
 
-        BOXED_VALUE(NaN);
-        CLASSES[NaN_inx].method[-toString_]=&NaN_toString;
+        BOXED_VALUE(NotANumber);
+        CLASSES[NotANumber_inx].method[-toString_]=&NaN_toString;
+        NaN= (any){NotANumber_inx,.value.uint64=0};
 
-        BOXED_VALUE(Infinity);
-        CLASSES[Infinity_inx].method[-toString_]=&Infinity_toString;
+        BOXED_VALUE(InfinityClass);
+        CLASSES[InfinityClass_inx].method[-toString_]=&Infinity_toString;
+        Infinity= (any){InfinityClass_inx,.value.uint64=0};
 
         //String methods
         _declareMethods(String, String_CORE_METHODS); //no props
@@ -2800,12 +3510,12 @@
         #define FROM_OBJECT(X); \
             CLASSES[X##_inx] = (struct Class_s){ \
                 .name=any_LTR(#X), .initInstance=any_func(X##__init), \
-                .typeName=String_toLowerCase(any_LTR(#X),0,NULL), \
                 .instanceSize=sizeof(struct X##_s),\
                 .propertyCount = 0, .symbolNames=NULL, \
                 .classInx=X##_inx, .super=Object_inx, \
                 .method=_newJmpTableFrom(Object_JMPTABLE), \
                 .pos=_newPosTableFrom(Object_POSTABLE) }; \
+            any_CLASSES[X##_inx]=(any){.class=Class_inx,.res=0,.len=0,.value.ptr=&CLASSES[X##_inx]}; \
             X = (any){Class_inx, .res=0, .value.classPtr=&CLASSES[X##_inx]}
 
         FROM_OBJECT(Error);
@@ -2824,6 +3534,9 @@
 
         FROM_OBJECT(Buffer); // only internal props (allocd, used, ptr)
         _declareMethods(Buffer, Buffer_CORE_METHODS);
+
+        FROM_OBJECT(Iterable_Position);
+        _declareProps(Iterable_Position, IterablePos_PROPS, sizeof IterablePos_PROPS);
 
         BOXED_VALUE(FileDescriptor);
 
@@ -2847,6 +3560,6 @@
     };
 
     void LiteC_finish(){
-        _Buffer_report();
+        //_Buffer_report();
     }
 

@@ -5,7 +5,7 @@
 
 //Dependencies
 
-    //global import fs, path
+    //import fs, path
     var fs = require('fs');
     var path = require('path');
 
@@ -119,8 +119,13 @@
 //if parameter has no extension or extension is [.lite].md
 //we search the module 
 
-        //var full,found = undefined
-        var full = undefined, found = undefined;
+        //var full, found, foundIndex, includeDirsIndex
+        var 
+           full = undefined
+           , found = undefined
+           , foundIndex = undefined
+           , includeDirsIndex = undefined
+       ;
 
         //if this.importInfo.createFile
         if (this.importInfo.createFile) {
@@ -174,18 +179,31 @@
 
 //add compiler directory to "include dirs" so GlobalScopeX.interface.md can be found
 
+                //includeDirsIndex = search.length
+                includeDirsIndex = search.length;
                 //if __dirname 
                 if (__dirname) {
+
+                    //if options.target is 'c' //include first: /interfaces/C_standalone'
+                    if (options.target === 'c') { //include first: /interfaces/C_standalone'
+                        //search.push path.resolve('#{__dirname}/../interfaces/C_standalone')
+                        search.push(path.resolve('' + __dirname + '/../interfaces/C_standalone'));
+                    };
+                    //end if
+                    
+
                     //search.push path.resolve('#{__dirname}/../interfaces')
                     search.push(path.resolve('' + __dirname + '/../interfaces'));
                 };
+                //end if
+                
             };
 
 
 //Now search the file in all specidief dirs/with all the extensions
 
-            //for each dir in search 
-            for( var dir__inx=0,dir ; dir__inx<search.length ; dir__inx++){dir=search[dir__inx];
+            //for each dirIndex,dir in search 
+            for( var dirIndex=0,dir ; dirIndex<search.length ; dirIndex++){dir=search[dirIndex];
             
                 //var fname = path.join(dir,this.importInfo.name)
                 var fname = path.join(dir, this.importInfo.name);
@@ -199,6 +217,8 @@
                     if (fs.existsSync(full)) {
                         //found=full
                         found = full;
+                        //foundIndex=dirIndex
+                        foundIndex = dirIndex;
                         //break
                         break;
                     };
@@ -251,10 +271,21 @@
         this.sourcename = path.basename(this.filename);// #with extensions
         //this.isInterface = this.sourcename.indexOf('.interface.') isnt -1
         this.isInterface = this.sourcename.indexOf('.interface.') !== -1;
-        //this.relPath = path.relative(options.projectDir, this.dir); //relative to basePath
-        this.relPath = path.relative(options.projectDir, this.dir); //relative to basePath
         //this.relFilename = path.relative(options.projectDir, this.filename); //relative to basePath
         this.relFilename = path.relative(options.projectDir, this.filename); //relative to basePath
+
+        //if foundIndex >= includeDirsIndex //the "extra" dir are normally outside project dir subdirs
+        if (foundIndex >= includeDirsIndex) { //the "extra" dir are normally outside project dir subdirs
+            //this.relPath = path.relative(options.projectDir, path.basename(this.dir)); // use only one subdir
+            this.relPath = path.relative(options.projectDir, path.basename(this.dir)); // use only one subdir
+        }
+        else {
+        //else
+            //this.relPath = path.relative(options.projectDir, this.dir); //relative to basePath
+            this.relPath = path.relative(options.projectDir, this.dir); //relative to basePath
+        };
+        //end if
+        
 
         // based on result extension                
         //this.isLite = this.extension in ['.md','.lite']
@@ -353,6 +384,7 @@
     // end class FileInfo
 
     //end class FileInfo
+    
 
 //### export helper function setBaseInfo(projectOptions)
     function setBaseInfo(projectOptions){
@@ -588,8 +620,3 @@
     module.exports.ImportParameterInfo = ImportParameterInfo;
     
     // end class ImportParameterInfo
-// --------------------
-// Module code
-// --------------------
-    
-// end of module

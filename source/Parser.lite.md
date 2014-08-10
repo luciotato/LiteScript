@@ -1248,7 +1248,7 @@ Identifier-like OPERs, as: 'and', 'not', 'is','or' are checked before concluding
   ['OPER', /^(is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor)\b/],
 
 a IDENTIFIER starts with A-Z a-z (a unicode codepoint), $ or _
-(Note: we recognized numbers above)
+(Note: we recognized numbers before this)
 
             if PMREX.whileRanges(chunk,"A-Za-z0-9\x7F-\xFF$_") into var identifier
 

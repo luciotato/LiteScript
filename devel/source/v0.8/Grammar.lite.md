@@ -103,7 +103,7 @@ utility methods to **req**uire tokens and allow **opt**ional ones.
 
     import ASTBase, logger, UniqueID
 
-    shim import Map, PMREX
+    shim import LiteCore, PMREX
 
 Reserved Words
 ---------------
@@ -538,9 +538,8 @@ either SingleLineBody or Body (multiline indented)
 
         if .opt(',','then')
             .body = .req(SingleLineBody)
-            .req 'NEWLINE'
 
-        else # and indented block
+        else # an indented block
             .body = .req(Body)
         end if
 
@@ -759,7 +758,7 @@ we now require one of the variants
 
         .variant = .req(ForEachProperty,ForEachInArray,ForIndexNumeric)
 
-##Variant 1) **for each property** 
+##Variant 1) **for each [own] property** 
 ###Loop over **object property names**
 
 Grammar:
@@ -771,13 +770,19 @@ and `object-VariableRef` is the object having the properties
 ### export class ForEachProperty extends ASTBase
 
       properties 
-        indexVar:VariableDecl, mainVar:VariableDecl
+        keyIndexVar:VariableDecl, valueVar:VariableDecl
         iterable:Expression 
         where:ForWhereFilter
         body
+        ownKey
 
       method parse()
         .req('each')
+
+optional "own"
+
+        if .opt("own") into .ownKey
+          .lock()
 
 next we require: 'property', and lock.
 
@@ -786,13 +791,13 @@ next we require: 'property', and lock.
 
 Get main variable name (to store property value)
 
-        .mainVar = .req(VariableDecl)
+        .valueVar = .req(VariableDecl)
 
 if comma present, it was propName-index (to store property names)
 
         if .opt(",")
-          .indexVar = .mainVar
-          .mainVar = .req(VariableDecl)
+          .keyIndexVar = .valueVar
+          .valueVar = .req(VariableDecl)
 
 Then we require `in`, and the iterable-Expression (a object)
 
@@ -822,7 +827,8 @@ and `array-VariableRef` is the array to iterate over
 ### export class ForEachInArray extends ASTBase
       
       properties 
-        indexVar:VariableDecl, mainVar:VariableDecl, iterable:Expression
+        intIndexVar:VariableDecl, keyIndexVar:VariableDecl, valueVar:VariableDecl 
+        iterable:Expression
         where:ForWhereFilter
         body
 
@@ -832,18 +838,26 @@ first, require 'each'
 
         .req 'each'
 
-Get index variable and value variable.
+Get value variable name.
 Keep it simple: index and value are always variables declared on the spot
 
-        .mainVar = .req(VariableDecl)
+        .valueVar = .req(VariableDecl)
 
-a comma means: previous var was 'index', so register as index and get main var
+a comma means: previous var was 'nameIndex', so register previous as index and get value var
   
         if .opt(',')
-          .indexVar = .mainVar
-          .mainVar = .req(VariableDecl)
+          .keyIndexVar = .valueVar
+          .valueVar = .req(VariableDecl)
 
-we now *require* `in` and the iterable (array)
+another comma means: full 3 vars: for each intIndex,nameIndex,value in iterable.
+Previous two where intIndex & nameIndex
+  
+        if .opt(',')
+          .intIndexVar = .keyIndexVar
+          .keyIndexVar = .valueVar
+          .valueVar = .req(VariableDecl)
+
+we now *require* `in` and the iterable: Object|Map|Array... any class having a iterableNext(iter) method
 
         .req 'in'
         .lock()
@@ -879,7 +893,7 @@ If omitted the default is `index++`
 ### export class ForIndexNumeric extends ASTBase
       
       properties 
-        indexVar:VariableDecl
+        keyIndexVar:VariableDecl
         conditionPrefix, endExpression
         increment: SingleLineBody
         body
@@ -887,7 +901,7 @@ If omitted the default is `index++`
 we require: a variableDecl, with optional assignment
 
       method parse()
-        .indexVar = .req(VariableDecl)
+        .keyIndexVar = .req(VariableDecl)
         .lock()
 
 next comma is  optional, then
@@ -900,8 +914,9 @@ get 'while|until|to' and condition
 
 another optional comma, and increment-Statement(s)
 
-        .opt ','
-        .increment = .opt(SingleLineBody)
+        if .opt(',')
+          .increment = .req(SingleLineBody)
+          .lexer.returnToken //return closing NEWLINE, for the indented body
 
 Now, get the loop body
 
@@ -1301,8 +1316,6 @@ if any accessor is a function call, this statement is assumed to have side-effec
             if .executes, .hasSideEffects = true
 
 
-
-
 ## Operand
 
 ```
@@ -1448,8 +1461,14 @@ In this case we require the next token to be `in|like`
 A.4) handle 'into [var] x', assignment-Expression
 
         if .name is 'into' and .opt('var')
-            .intoVar = true
+            .intoVar = '*r' //.right operand is "into" var
             .getParent(Statement).intoVars = true #mark owner statement
+
+A.4) mark 'or' operations, since for c-generation a temp var is required
+
+        else if .name is 'or'
+            if .lexer.options.target is 'c'
+                .intoVar = UniqueID.getVarName('__or')
 
 B) Synonyms 
 
@@ -2218,13 +2237,12 @@ Now parse optional `,(extend|proto is|inherits from)` setting the super class
           .opt('from','is') 
           .varRefSuper = .req(VariableRef)
 
-Now get body.
+Now get the class body
 
-        .body = .opt(Body)
-
+        .body = .req(Body)
         .body.validate 
             PropertiesDeclaration, ConstructorDeclaration 
-            MethodDeclaration, DeclareStatement
+            MethodDeclaration, DeclareStatement, DoNothingStatement
 
 
 ## ConstructorDeclaration 
@@ -2286,7 +2304,7 @@ Adds methods and properties to an existent object, e.g., Class.prototype
 
         if .toNamespace, .name=.varRef.toString()
 
-Now get body.
+Now get the append-to body
 
         .body = .req(Body)
 
@@ -2313,7 +2331,7 @@ for LiteC, just declare a namespace. All classes created inside will have the na
         .lock()
         .name=.req('IDENTIFIER')
 
-Now get body.
+Now get the namespace body
 
         .body = .req(Body)
 
@@ -2394,7 +2412,7 @@ get list of declared names, add to root node 'Compiler Vars'
 
 `ImportStatement: import (ImportStatementItem,)`
 
-Example: `global import fs, path` ->  js:`var fs=require('fs'),path=require('path')`
+Example: `import fs, path` ->  js:`var fs=require('fs'),path=require('path')`
 
 Example: `import Args, wait from 'wait.for'` ->  js:`var http=require('./Args'),wait=require('./wait.for')`
 
@@ -2906,8 +2924,11 @@ we allow a list of comma separated expressions to compare to and a body
             .req 'when'
             .lock
             .expressions = .reqSeparatedList(Expression, ",",":")
-            .body = .req(Body)
-
+            
+            if .lexer.token.type is 'NEWLINE'
+                .body = .req(Body) //indented body block
+            else
+                .body = .req(SingleLineBody)
 
 
 
@@ -3004,9 +3025,9 @@ Check validity of adjective-statement combination
               export: ['class','namespace','function','var'] 
               generator: ['function','method'] 
               nice: ['function','method'] 
-              shim: ['function','method','class','namespace','import'] 
+              shim: ['function','method','import'] 
               helper:  ['function','method','class','namespace']
-              global: ['import','declare']
+              global: ['declare','class','namespace']
 
         for each adjective in .adjectives
 
@@ -3081,7 +3102,6 @@ normally: ReturnStatement, ThrowStatement, PrintStatement, AssignmentStatement
       method parse()
 
         .statements = .reqSeparatedList(Statement,";",'NEWLINE')
-        .lexer.returnToken() #return closing NEWLINE
 
 
 ## Module
@@ -3093,6 +3113,7 @@ The `Module` represents a complete source file.
       properties
         isMain: boolean
         exportDefault: ASTBase
+        dependencyTreeLevel = 0
 
 
       method parse()

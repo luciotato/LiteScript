@@ -538,7 +538,6 @@ either SingleLineBody or Body (multiline indented)
 
         if .opt(',','then')
             .body = .req(SingleLineBody)
-            .req 'NEWLINE'
 
         else # and indented block
             .body = .req(Body)
@@ -900,8 +899,9 @@ get 'while|until|to' and condition
 
 another optional comma, and increment-Statement(s)
 
-        .opt ','
-        .increment = .opt(SingleLineBody)
+        if .opt(',')
+          .increment = .req(SingleLineBody)
+          .lexer.returnToken //return NEWLINE closing increment
 
 Now, get the loop body
 
@@ -1448,8 +1448,14 @@ In this case we require the next token to be `in|like`
 A.4) handle 'into [var] x', assignment-Expression
 
         if .name is 'into' and .opt('var')
-            .intoVar = true
+            .intoVar = '*r' //.right operand is "into" var
             .getParent(Statement).intoVars = true #mark owner statement
+
+A.4) mark 'or' operations, since for c-generation a temp var is required
+
+        else if .name is 'or'
+            if .lexer.options.target is 'c'
+                .intoVar = UniqueID.getVarName('__or')
 
 B) Synonyms 
 
@@ -2906,8 +2912,11 @@ we allow a list of comma separated expressions to compare to and a body
             .req 'when'
             .lock
             .expressions = .reqSeparatedList(Expression, ",",":")
-            .body = .req(Body)
-
+            
+            if .opt('NEWLINE')
+                .body = .req(Body)
+            else
+                .body = .req(SingleLineBody)
 
 
 

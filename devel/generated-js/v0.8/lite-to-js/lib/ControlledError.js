@@ -1,8 +1,10 @@
 
     //class ControlledError extends Error
     // constructor
-    function ControlledError(msg){// default constructor: call super.constructor
-        Error.prototype.constructor.apply(this,arguments)
+    function ControlledError(msg){//Sadly, the Error Class in javascript is not easily subclassed.
+//http://stackoverflow.com/questions/8802845/inheriting-from-the-error-object-where-is-the-message-property
+this.__proto__.__proto__=Error.apply(null,arguments);
+//NOTE: all instances of ControlledError will share the same info
         //properties 
             //soft: boolean
 
@@ -29,10 +31,6 @@
     ControlledError.prototype.__proto__ = Error.prototype;
     
     // end class ControlledError
-// --------------------
-// Module code
-// --------------------
-// end of module
 
 //Note: we're setting the class.prototype.__proto__
 

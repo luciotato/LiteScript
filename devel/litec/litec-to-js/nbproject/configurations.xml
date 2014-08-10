@@ -12,6 +12,7 @@
       <itemPath>../core/exceptions.c</itemPath>
       <itemPath>../core/exceptions.h</itemPath>
       <itemPath>../core/fs-native.c</itemPath>
+      <itemPath>../core/fs-native.h</itemPath>
       <itemPath>../core/utf8strings.c</itemPath>
       <itemPath>../core/utf8strings.h</itemPath>
       <itemPath>../core/util.c</itemPath>
@@ -23,10 +24,8 @@
                        displayName="C_standalone"
                        projectFiles="true">
           <itemPath>generated-c/interfaces/C_standalone/fs.c</itemPath>
-          <itemPath>generated-c/interfaces/C_standalone/fs.c.extra</itemPath>
           <itemPath>generated-c/interfaces/C_standalone/fs.h</itemPath>
           <itemPath>generated-c/interfaces/C_standalone/path.c</itemPath>
-          <itemPath>generated-c/interfaces/C_standalone/path.c.extra</itemPath>
           <itemPath>generated-c/interfaces/C_standalone/path.h</itemPath>
         </logicalFolder>
       </logicalFolder>
@@ -63,33 +62,24 @@
         <itemPath>generated-c/lib/shims.h</itemPath>
       </logicalFolder>
       <itemPath>generated-c/ASTBase.c</itemPath>
-      <itemPath>generated-c/ASTBase.c.extra</itemPath>
       <itemPath>generated-c/ASTBase.h</itemPath>
       <itemPath>generated-c/Compiler.c</itemPath>
-      <itemPath>generated-c/Compiler.c.extra</itemPath>
       <itemPath>generated-c/Compiler.h</itemPath>
       <itemPath>generated-c/Grammar.c</itemPath>
-      <itemPath>generated-c/Grammar.c.extra</itemPath>
       <itemPath>generated-c/Grammar.h</itemPath>
       <itemPath>generated-c/Names.c</itemPath>
-      <itemPath>generated-c/Names.c.extra</itemPath>
       <itemPath>generated-c/Names.h</itemPath>
       <itemPath>generated-c/Parser.c</itemPath>
-      <itemPath>generated-c/Parser.c.extra</itemPath>
       <itemPath>generated-c/Parser.h</itemPath>
       <itemPath>generated-c/Producer_js.c</itemPath>
-      <itemPath>generated-c/Producer_js.c.extra</itemPath>
       <itemPath>generated-c/Producer_js.h</itemPath>
       <itemPath>generated-c/Project.c</itemPath>
-      <itemPath>generated-c/Project.c.extra</itemPath>
       <itemPath>generated-c/Project.h</itemPath>
       <itemPath>generated-c/Validate.c</itemPath>
-      <itemPath>generated-c/Validate.c.extra</itemPath>
       <itemPath>generated-c/Validate.h</itemPath>
       <itemPath>generated-c/_dispatcher.c</itemPath>
       <itemPath>generated-c/_dispatcher.h</itemPath>
       <itemPath>generated-c/c_lite.c</itemPath>
-      <itemPath>generated-c/c_lite.c.extra</itemPath>
       <itemPath>generated-c/c_lite.h</itemPath>
     </logicalFolder>
     <logicalFolder name="HeaderFiles"
@@ -108,6 +98,9 @@
                    displayName="Test Files"
                    projectFiles="false"
                    kind="TEST_LOGICAL_FOLDER">
+      <logicalFolder name="f1" displayName="String" projectFiles="true" kind="TEST">
+        <itemPath>../core/tests/String_charCodeAt.c</itemPath>
+      </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -139,10 +132,17 @@
             <pElem>../core</pElem>
             <pElem>generated-c/interfaces</pElem>
             <pElem>generated-c/interfaces/C_standalone</pElem>
+            <pElem>.</pElem>
           </incDir>
           <commandLine>-fmax-errors=10</commandLine>
         </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
         <linkerTool>
+          <output>${TESTDIR}/TestFiles/f2</output>
           <linkerLibItems>
             <linkerLibLibItem>gc</linkerLibLibItem>
           </linkerLibItems>
@@ -168,6 +168,10 @@
       </item>
       <item path="../core/fs-native.c" ex="false" tool="0" flavor2="0">
       </item>
+      <item path="../core/fs-native.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../core/tests/String_charCodeAt.c" ex="false" tool="0" flavor2="0">
+      </item>
       <item path="../core/utf8strings.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../core/utf8strings.h" ex="false" tool="3" flavor2="0">
@@ -183,51 +187,50 @@
           </incDir>
         </cTool>
       </folder>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+        </linkerTool>
+      </folder>
       <item path="generated-c/ASTBase.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/ASTBase.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/ASTBase.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Compiler.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/Compiler.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/Compiler.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Grammar.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/Grammar.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Grammar.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Names.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/Names.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/Names.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Parser.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/Parser.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Parser.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Producer_js.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/Producer_js.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/Producer_js.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Project.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/Project.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/Project.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Validate.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/Validate.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Validate.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -237,18 +240,11 @@
       </item>
       <item path="generated-c/c_lite.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/c_lite.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/c_lite.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/interfaces/C_standalone/fs.c"
             ex="false"
             tool="0"
-            flavor2="0">
-      </item>
-      <item path="generated-c/interfaces/C_standalone/fs.c.extra"
-            ex="false"
-            tool="3"
             flavor2="0">
       </item>
       <item path="generated-c/interfaces/C_standalone/fs.h"
@@ -259,11 +255,6 @@
       <item path="generated-c/interfaces/C_standalone/path.c"
             ex="false"
             tool="0"
-            flavor2="0">
-      </item>
-      <item path="generated-c/interfaces/C_standalone/path.c.extra"
-            ex="false"
-            tool="3"
             flavor2="0">
       </item>
       <item path="generated-c/interfaces/C_standalone/path.h"
@@ -399,6 +390,10 @@
       </item>
       <item path="../core/fs-native.c" ex="false" tool="0" flavor2="0">
       </item>
+      <item path="../core/fs-native.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../core/tests/String_charCodeAt.c" ex="false" tool="0" flavor2="0">
+      </item>
       <item path="../core/utf8strings.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../core/utf8strings.h" ex="false" tool="3" flavor2="0">
@@ -407,51 +402,50 @@
       </item>
       <item path="../core/util.h" ex="false" tool="3" flavor2="0">
       </item>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+        </linkerTool>
+      </folder>
       <item path="generated-c/ASTBase.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/ASTBase.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/ASTBase.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Compiler.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/Compiler.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/Compiler.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Grammar.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/Grammar.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Grammar.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Names.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/Names.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/Names.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Parser.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/Parser.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Parser.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Producer_js.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/Producer_js.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/Producer_js.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Project.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/Project.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/Project.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Validate.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/Validate.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/Validate.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -461,18 +455,11 @@
       </item>
       <item path="generated-c/c_lite.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/c_lite.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/c_lite.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/interfaces/C_standalone/fs.c"
             ex="false"
             tool="0"
-            flavor2="0">
-      </item>
-      <item path="generated-c/interfaces/C_standalone/fs.c.extra"
-            ex="false"
-            tool="3"
             flavor2="0">
       </item>
       <item path="generated-c/interfaces/C_standalone/fs.h"
@@ -483,11 +470,6 @@
       <item path="generated-c/interfaces/C_standalone/path.c"
             ex="false"
             tool="0"
-            flavor2="0">
-      </item>
-      <item path="generated-c/interfaces/C_standalone/path.c.extra"
-            ex="false"
-            tool="3"
             flavor2="0">
       </item>
       <item path="generated-c/interfaces/C_standalone/path.h"

@@ -820,6 +820,7 @@
         // indexVar:VariableDecl, mainVar:VariableDecl
         // iterable, where:ForWhereFilter
         // body
+        // ownKey
    };
    // ForEachProperty (extends|proto is) ASTBase
    ForEachProperty.prototype.__proto__ = ASTBase.prototype;
@@ -827,6 +828,14 @@
      // method parse()
      ForEachProperty.prototype.parse = function(){
        this.req('each');
+
+
+// optional "own"
+
+       // if .opt("own") into .ownKey
+       if ((this.ownKey=this.opt("own"))) {
+         this.lock();
+       };
 
 // next we require: 'property', and lock.
 
@@ -4062,7 +4071,7 @@
                    nice: ['function', 'method'], 
                    shim: ['function', 'method', 'class', 'namespace', 'import'], 
                    helper: ['function', 'method', 'class', 'namespace'], 
-                   global: ['import', 'declare']
+                   global: ['import', 'declare', 'class', 'namespace']
                    };
 
              var valid = validCombinations[adj.name] || ['-*none*-'];

@@ -156,7 +156,7 @@ Example:
 */
 
 
-### export function validate()
+### export function launch()
 
 We start this module once the entire multi-node AST tree has been parsed.
 
@@ -258,7 +258,12 @@ make referenceNameDecl point to importedModule.exports
 
               if referenceNameDecl
                 
-                referenceNameDecl.makePointTo node.importedModule.exports
+                var sameName = node.importedModule.exports.findOwnMember(referenceNameDecl.name)
+                if sameName
+                    referenceNameDecl.makePointTo sameName
+                else
+                    referenceNameDecl.makePointTo node.importedModule.exports
+
                 if no node.importedModule.exports.findOwnMember('prototype') 
                     // if it does not have a 'prototype' => it's not a Function-Class
                     // we assume all exported from module is a namespace (object/singleton)
@@ -387,6 +392,8 @@ Populate the global scope
         #Function is declared here so ':function' type properties (methods) of "Array" or "String" 
         #can be properly typified
 
+        objProto.ownMember("hasOwnProperty").setMember '**proto**', functionProto
+
         var stringProto = addBuiltInObject('String')
         var arrayProto = addBuiltInObject('Array')
         
@@ -456,6 +463,7 @@ Note: Today, Node.js "console" object do not have `group` & `groupEnd` methods
         globalScope.addMember 'clearTimeout'
         globalScope.addMember 'setInterval'
         globalScope.addMember 'clearInterval'
+        globalScope.addMember '__dirname'
 
         #ifndef PROD_C
         declare valid project.options.browser
@@ -797,8 +805,11 @@ or inform error. We need this AST node, to correctly report error.
           found.caseMismatch name,this
         
         else #not found
-          if options.informError, log.warning "#{.positionText()}. No member named '#{name}' on #{nameDecl.info()}"
-          if options.isForward, found = .addMemberTo(nameDecl,name,options)
+          if options.informError 
+              log.warning "#{.positionText()}. No member named '#{name}' on #{nameDecl.info()}"
+          
+          if options.isForward 
+              found = .addMemberTo(nameDecl,name,options)
 
         return found
 
@@ -1161,19 +1172,26 @@ if it is 'append to', nothing to declare, object must pre-exist
     
 Add class name, to parent scope. A "class" in js is a function
 
-        .nameDecl = .addToScope(.name,{type:globalPrototype('Function')})
 
-        #If we're in a namespace, add class to namespace, 
-        if .getParent(Grammar.NamespaceDeclaration) into var namespaceDeclaration
-            namespaceDeclaration.nameDecl.addMember .nameDecl
+        if .hasAdjective('global')
+            .nameDecl = .declareName(.name,{type:globalPrototype('Function')})
+            globalScope.addMember .nameDecl,{scopeCase:true}
 
-        #else, If we're inside an "Append To",add to referenced 
-        else if .getParent(Grammar.AppendToDeclaration) into var appendToDeclaration
-            var refNameDecl = appendToDeclaration.varRef.tryGetReference()
-            if refNameDecl, refNameDecl.addMember .nameDecl
+        else
+            .nameDecl = .addToScope(.name,{type:globalPrototype('Function')})
 
-        #else, if public/export, add to module.exports
-        else if .export
+            #If we're in a namespace, add class to namespace, 
+            if .getParent(Grammar.NamespaceDeclaration) into var namespaceDeclaration
+                namespaceDeclaration.nameDecl.addMember .nameDecl
+
+            #else, If we're inside an "Append To",add to referenced 
+            else if .getParent(Grammar.AppendToDeclaration) into var appendToDeclaration
+                var refNameDecl = appendToDeclaration.varRef.tryGetReference()
+                if refNameDecl, refNameDecl.addMember .nameDecl
+
+if public/export, add to module.exports
+
+        if .export
            .addToExport .nameDecl, .default
 
 We create 'Class.prototype' member
@@ -1465,7 +1483,12 @@ if it's a simple IDENTIFIER, declare it in the scope
 
         if no .varRef.accessors
 
-            .nameDecl = .addToScope(.declareName(.varRef.name))
+            if .hasAdjective('global')
+                .nameDecl = .declareName(.varRef.name)
+                globalScope.addMember .nameDecl,{scopeCase:true}
+
+            else
+                .nameDecl = .addToScope(.declareName(.varRef.name))
 
 else, a composed Identifier
 
@@ -1625,6 +1648,8 @@ check if we can continue on the chain
 #### method processAppendTo() 
 when target is '.c' we do not allow treating classes as namespaces
 so an "append to namespace classX" should throw an error
+
+      if this.constructor isnt Grammar.AppendToDeclaration, return //namespace extends append-to
     
 get referenced class/namespace
 

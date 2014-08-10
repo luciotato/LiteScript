@@ -67,7 +67,7 @@ extern struct e4c_global{
 /*
  * try:
  *
- * 1.- create a new frame. stage=beggining
+ * 1.- create a new frame. stage=beginning
  * 2.- setjmp. record position at e4c[frame].jump (condition always true)
  * 3.- while incStage() // advance stage (returns TRUE if stage<done) - loop all stages
  * 5.      if stage == trying

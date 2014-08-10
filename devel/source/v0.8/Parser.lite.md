@@ -22,11 +22,9 @@ then each CODE line is *Tokenized*, getting a `tokens[]` array
 
     import 
         ControlledError, GeneralOptions
-        logger
+        logger, fs, mkPath
 
-    global import fs
-
-    shim import Map, PMREX, mkPath
+    shim import LiteCore, PMREX
 
     #ifdef PROD_JS
     //if we're creating a compile-to-js compiler
@@ -1105,10 +1103,11 @@ Special lexer options: string interpolation char
                 if no ch then fail with "missing string interpolation char"  #check
                 lexer.stringInterpolationChar = ch
             
-            else if words.slice(2,5).join(" ") is "object literal is" 
+            /*else if words.slice(2,5).join(" ") is "object literal is" 
                 if no words.tryGet(5) into lexer.options.literalMap
                     fail with "missing class to be used instead of object literals"  #check
-
+            */
+            
             else
                 fail with "Lexer options, expected: 'literal map'|'literal object'"
             
@@ -1248,7 +1247,7 @@ Identifier-like OPERs, as: 'and', 'not', 'is','or' are checked before concluding
   ['OPER', /^(is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor)\b/],
 
 a IDENTIFIER starts with A-Z a-z (a unicode codepoint), $ or _
-(Note: we recognized numbers above)
+(Note: we recognized numbers before this)
 
             if PMREX.whileRanges(chunk,"A-Za-z0-9\x7F-\xFF$_") into var identifier
 
@@ -1420,6 +1419,10 @@ put a string into produced code
             .currLine.push text
             .column += text.length
 
+#### Method getIndent()
+        if no .currLine.length, return 0
+        return .currLine[0].countSpaces()
+
 #### Method startNewLine()
 Start New Line into produced code
 
@@ -1519,6 +1522,49 @@ get result and clear memory
       properties 
         col, lin
 
+
+### append to namespace String
+
+String.replaceQuoted(text,rep)
+replace every quoted string inside text, by rep
+
+        method replaceQuoted(text:string, rep:string)
+
+            var p = 0
+
+look for first quote (single or double?),
+loop until no quotes found 
+
+            var anyQuote = '"' & "'"
+
+            var resultText=""
+
+            do 
+                var preQuotes=PMREX.untilRanges(text,anyQuote) 
+                
+                resultText &= preQuotes
+                text = text.slice(preQuotes.length)
+                if no text, break // all text processed|no quotes found
+
+                if text.slice(0,3) is '"""' //ignore triple quotes (valid token)
+                    resultText &= text.slice(0,3)
+                    text = text.slice(3)
+                else
+
+                    var quotedContent
+                    
+                    try // accept malformed quoted chunks (do not replace)
+
+                         quotedContent = PMREX.quotedContent(text)
+                         text = text.slice(1+quotedContent.length+1)
+
+                    catch err // if malformed - closing quote not found
+                        resultText &= text.slice(0,1) //keep quote
+                        text = text.slice(1) //only remove quote
+
+            loop until no text
+            
+            return resultText
 
 /*
 ### Class DynBuffer

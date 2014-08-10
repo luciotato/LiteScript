@@ -24,9 +24,8 @@
     var color = require('./lib/color.js');
     var UniqueID = require('./lib/UniqueID.js');
 
-    //shim import LiteCore, Map
-    var LiteCore = require('./lib/LiteCore.js');
-    var Map = require('./lib/Map.js');
+    //shim import LiteCore
+    var LiteCore = require('./interfaces/LiteCore.js');
 
 //To be able to compile-to-c this source, we instruct the
 //compiler to create a *new Map* when it encounters an *untyped* object literal.
@@ -35,7 +34,7 @@
     //lexer options object literal is Map
 
 //Map & Object implement common methods:
-//.hasProperty, .tryGetProperty, .setProperty, .getObjectKeys
+//.hasProperty, .tryGetProperty, .setProperty, .allClassProperties
 //so the same code can handle "objects" (when compiled-to-js) 
 //and "Maps" (when compiled-to-c)
 
@@ -56,24 +55,24 @@
 
     //var allMethodNames: Map string to Names.Declaration = {}  // all distinct methodnames, to declare method symbols
     var allMethodNames = new Map().fromObject({}); // all distinct methodnames, to declare method symbols
-    //var allPropertyNames: Map string to Names.Declaration = {} // all distinct propname, to declare props symbols
-    var allPropertyNames = new Map().fromObject({}); // all distinct propname, to declare props symbols
+    //var allClassProperties: Map string to Names.Declaration = {} // all distinct propname, to declare props symbols
+    var allClassProperties = new Map().fromObject({}); // all distinct propname, to declare props symbols
 
     //var coreSupportedMethods = [
-        //"toString"
+        //"toString","iterableNext"
         //"tryGetMethod","tryGetProperty","getProperty", "getPropertyName","hasProperty"
         //"has", "get", "set", "clear", "delete", "keys"
         //"slice", "split", "indexOf", "lastIndexOf", "concat"
-        //"toUpperCase", "toLowerCase","charAt", "replaceAll","trim","substr","countSpaces"
+        //"toUpperCase", "toLowerCase","charAt", "replaceAll","trim","substr","countSpaces","byteIndexOf","byteSlice"
         //"toDateString","toTimeString","toUTCString","toISOString"
         //"copy", "write" //Buffer
         //"shift","push","unshift", "pop", "join","splice"
-    var coreSupportedMethods = ["toString", "tryGetMethod", "tryGetProperty", "getProperty", "getPropertyName", "hasProperty", "has", "get", "set", "clear", "delete", "keys", "slice", "split", "indexOf", "lastIndexOf", "concat", "toUpperCase", "toLowerCase", "charAt", "replaceAll", "trim", "substr", "countSpaces", "toDateString", "toTimeString", "toUTCString", "toISOString", "copy", "write", "shift", "push", "unshift", "pop", "join", "splice"];
+    var coreSupportedMethods = ["toString", "iterableNext", "tryGetMethod", "tryGetProperty", "getProperty", "getPropertyName", "hasProperty", "has", "get", "set", "clear", "delete", "keys", "slice", "split", "indexOf", "lastIndexOf", "concat", "toUpperCase", "toLowerCase", "charAt", "replaceAll", "trim", "substr", "countSpaces", "byteIndexOf", "byteSlice", "toDateString", "toTimeString", "toUTCString", "toISOString", "copy", "write", "shift", "push", "unshift", "pop", "join", "splice"];
     //]
 
     //var coreSupportedProps = [
-        //'name','size','value','message','stack','code'
-    var coreSupportedProps = ['name', 'size', 'value', 'message', 'stack', 'code'];
+        //'name','value','key','size','message','stack','code','extra'
+    var coreSupportedProps = ['name', 'value', 'key', 'size', 'message', 'stack', 'code', 'extra'];
     //]
 
     //public var dispatcherModule: Grammar.Module
@@ -136,6 +135,7 @@
     module.exports.postProduction = postProduction;
 
     //end function
+    
 
     //helper function normalizeDefine(name:string)
     function normalizeDefine(name){
@@ -196,7 +196,7 @@
         //for each methodDeclaration in map allMethodNames
         var methodDeclaration=undefined;
         if(!allMethodNames.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-        for ( var methodDeclaration__propName in allMethodNames.dict) if (allMethodNames.dict.hasOwnProperty(methodDeclaration__propName)){methodDeclaration=allMethodNames.dict[methodDeclaration__propName];
+        for ( var methodDeclaration__propName in allMethodNames.dict){methodDeclaration=allMethodNames.dict[methodDeclaration__propName];
             {
             //.out '    ',makeSymbolName(methodDeclaration.name),initialValue,",",NL
             this.out('    ', makeSymbolName(methodDeclaration.name), initialValue, ",", NL);
@@ -211,16 +211,16 @@
 //all  distinct property names
 
         //.out 
-            //{COMMENT: 'propery names'},NL,NL
+            //{COMMENT: 'property names'},NL,NL
             //"enum _THINGS { //a symbol for each distinct property name",NL
-        this.out({COMMENT: 'propery names'}, NL, NL, "enum _THINGS { //a symbol for each distinct property name", NL);
+        this.out({COMMENT: 'property names'}, NL, NL, "enum _THINGS { //a symbol for each distinct property name", NL);
 
         //initialValue = "= _CORE_PROPS_LENGTH"
         initialValue = "= _CORE_PROPS_LENGTH";
-        //for each name,value in map allPropertyNames
+        //for each name,value in map allClassProperties
         var value=undefined;
-        if(!allPropertyNames.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-        for ( var name in allPropertyNames.dict) if (allPropertyNames.dict.hasOwnProperty(name)){value=allPropertyNames.dict[name];
+        if(!allClassProperties.dict) throw(new Error("for each in map: not a Map, no .dict property"));
+        for ( var name in allClassProperties.dict){value=allClassProperties.dict[name];
             {
             //.out '    ',makeSymbolName(name), initialValue, ",",NL
             this.out('    ', makeSymbolName(name), initialValue, ",", NL);
@@ -232,6 +232,28 @@
         //.out NL,"_LAST_THING};",NL,NL,NL
         this.out(NL, "_LAST_THING};", NL, NL, NL);
 
+        //.out """
+        this.out("\n            // a MACRO for each property name, to circumvent C-preprocessor problem with commas\n            // and to be able to include foo__(this) as a parameter in a ITEM(arr,index) MACRO\n");
+
+            // a MACRO for each property name, to circumvent C-preprocessor problem with commas
+            // and to be able to include foo__(this) as a parameter in a ITEM(arr,index) MACRO
+
+            //"""
+
+        //for each name,value in map allClassProperties
+        var value=undefined;
+        if(!allClassProperties.dict) throw(new Error("for each in map: not a Map, no .dict property"));
+        for ( var name in allClassProperties.dict){value=allClassProperties.dict[name];
+            {
+            //.out "    #define ",makeSymbolName(name), "_(this) PROP(",makeSymbolName(name),",this)",NL
+            this.out("    #define ", makeSymbolName(name), "_(this) PROP(", makeSymbolName(name), ",this)", NL);
+            }
+            
+            }// end for each property
+
+        //.out NL,NL,NL
+        this.out(NL, NL, NL);
+
 //Now include headers for all the imported modules.
 //To put this last is important, because if there's a error in the included.h 
 //and it's *before* declaring _VERBS and _THINGS, _VERBS and _THINGS don't get
@@ -240,7 +262,7 @@
         //for each moduleNode:Grammar.Module in map project.moduleCache
         var moduleNode=undefined;
         if(!project.moduleCache.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-        for ( var moduleNode__propName in project.moduleCache.dict) if (project.moduleCache.dict.hasOwnProperty(moduleNode__propName)){moduleNode=project.moduleCache.dict[moduleNode__propName];
+        for ( var moduleNode__propName in project.moduleCache.dict){moduleNode=project.moduleCache.dict[moduleNode__propName];
             {
             //var hFile = moduleNode.fileInfo.outWithExtension(".h")
             var hFile = moduleNode.fileInfo.outWithExtension(".h");
@@ -276,9 +298,9 @@
         //.out 
             //{COMMENT: 'propery names'},NL,NL
             //"static str _ADD_THINGS[] = { //string name for each distinct property name",NL
-            //{pre:'    "', CSL:allPropertyNames.keys(), post:'"\n'}
+            //{pre:'    "', CSL:allClassProperties.keys(), post:'"\n'}
             //'};',NL,NL
-        this.out({COMMENT: 'propery names'}, NL, NL, "static str _ADD_THINGS[] = { //string name for each distinct property name", NL, {pre: '    "', CSL: allPropertyNames.keys(), post: '"\n'}, '};', NL, NL);
+        this.out({COMMENT: 'propery names'}, NL, NL, "static str _ADD_THINGS[] = { //string name for each distinct property name", NL, {pre: '    "', CSL: allClassProperties.keys(), post: '"\n'}, '};', NL, NL);
 
 //All literal Maps & arrays
 
@@ -294,8 +316,8 @@
             //"int main(int argc, char** argv) {",NL
             //'    LiteC_init( #{allClasses.length}, argc,argv);',NL
             //'    LiteC_addMethodSymbols( #{allMethodNames.size}, _ADD_VERBS);',NL
-            //'    LiteC_addPropSymbols( #{allPropertyNames.size}, _ADD_THINGS);',NL
-        this.out("\n\n\n//-------------------------------", NL, "int main(int argc, char** argv) {", NL, '    LiteC_init( ' + allClasses.length + ', argc,argv);', NL, '    LiteC_addMethodSymbols( ' + allMethodNames.size + ', _ADD_VERBS);', NL, '    LiteC_addPropSymbols( ' + allPropertyNames.size + ', _ADD_THINGS);', NL);
+            //'    LiteC_addPropSymbols( #{allClassProperties.size}, _ADD_THINGS);',NL
+        this.out("\n\n\n//-------------------------------", NL, "int main(int argc, char** argv) {", NL, '    LiteC_init( ' + allClasses.length + ', argc,argv);', NL, '    LiteC_addMethodSymbols( ' + allMethodNames.size + ', _ADD_VERBS);', NL, '    LiteC_addPropSymbols( ' + allClassProperties.size + ', _ADD_THINGS);', NL);
 
 
 //process methods appended to core classes, by calling LiteC_registerShim
@@ -321,7 +343,7 @@
         //for each moduleNode:Grammar.Module in map project.moduleCache
         var moduleNode=undefined;
         if(!project.moduleCache.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-        for ( var moduleNode__propName in project.moduleCache.dict) if (project.moduleCache.dict.hasOwnProperty(moduleNode__propName)){moduleNode=project.moduleCache.dict[moduleNode__propName];
+        for ( var moduleNode__propName in project.moduleCache.dict){moduleNode=project.moduleCache.dict[moduleNode__propName];
         if(moduleNode !== project.main){
             //where moduleNode isnt project.main
                 //moduleList.push moduleNode //order in moduleCache is lower level to higher level
@@ -330,13 +352,17 @@
                 
                 }// end for each property
 
+        // sort list so base-modules (deeper level) come first 
+        //moduleList.sort(sortByRecurseLevel)
+        moduleList.sort(sortByRecurseLevel);
+
         //.out '\n'
         this.out('\n');
         //for each nodeModule in moduleList
         for( var nodeModule__inx=0,nodeModule ; nodeModule__inx<moduleList.length ; nodeModule__inx++){nodeModule=moduleList[nodeModule__inx];
         
-            //.out '    ',nodeModule.fileInfo.base,'__moduleInit();',NL 
-            this.out('    ', nodeModule.fileInfo.base, '__moduleInit();', NL);
+            //.out '    ',nodeModule.fileInfo.base,'__moduleInit();',' // level:',nodeModule.dependencyTreeLevel ,NL 
+            this.out('    ', nodeModule.fileInfo.base, '__moduleInit();', ' // level:', nodeModule.dependencyTreeLevel, NL);
         };// end for each in moduleList
 
 //call main module __init (main program execution),
@@ -421,12 +447,13 @@
             //"//-------------------------",NL
         this.out({h: 0}, '#include "' + prefix + '.h"', NL, NL, "//-------------------------", NL, "//Module ", prefix, this.fileInfo.isInterface ? ' - INTERFACE' : '', NL, "//-------------------------", NL);
 
-//include __or temp vars
+///*
+//OLD include __or temp vars
 
         //.out '#include "#{.fileInfo.base}.c.extra"',NL
-        this.out('#include "' + this.fileInfo.base + '.c.extra"', NL);
         //.lexer.outCode.filenames[2] = "#{.fileInfo.outFilename}.extra"
-        this.lexer.outCode.filenames[2] = '' + this.fileInfo.outFilename + ".extra";
+//*/
+
 
 //Check if there's a explicit namespace/class with the same name as the module (default export)
 
@@ -468,10 +495,6 @@
         //.out '    ',prefix,'__namespaceInit();',NL
         this.out('    ', prefix, '__namespaceInit();', NL);
 
-        // all other loose statements in module body
-        //.produceLooseExecutableStatements()
-        this.produceLooseExecutableStatements();
-
         //if .fileInfo.isInterface // add call to native hand-coded C support for this module 
         if (this.fileInfo.isInterface) { // add call to native hand-coded C support for this module
             //.out NL,'    ',prefix,"__nativeInit();"
@@ -481,28 +504,8 @@
         //.out NL,"};",NL
         this.out(NL, "};", NL);
 
-//insert at .c file start, helper tempvars for 'or' expressions short-circuit evaluation
-
-        //.out 
-            //{h:2}
-            //"//helper tempvars for 'or' expressions short-circuit evaluation",NL
-            //"any __or1"
-        this.out({h: 2}, "//helper tempvars for 'or' expressions short-circuit evaluation", NL, "any __or1");
-
-        //for n=2 to .lexer.outCode.orTempVarCount
-        var _end8=this.lexer.outCode.orTempVarCount;
-        for( var n=2; n<=_end8; n++) {
-            //.out ",__or#{n}"
-            this.out(",__or" + n);
-        };// end for n
-
-        //.out ";", {h:1}
-        this.out(";", {h: 1});
-
-
         //.skipSemiColon = true
         this.skipSemiColon = true;
-
 
 //close .h #ifdef
 
@@ -512,6 +515,13 @@
             //{h:0}
         this.out({h: 1}, NL, '#endif', NL, {h: 0});
      };
+
+
+//### function sortByRecurseLevel(moduleA:Grammar.Module, moduleB:Grammar.Module)
+    function sortByRecurseLevel(moduleA, moduleB){
+        //return moduleB.dependencyTreeLevel - moduleA.dependencyTreeLevel // deeper level first
+        return moduleB.dependencyTreeLevel - moduleA.dependencyTreeLevel; // deeper level first
+    };
 
 
 //----------------------------
@@ -617,21 +627,23 @@
         //for each member in map .nameDecl.members
         var member=undefined;
         if(!this.nameDecl.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-        for ( var member__propName in this.nameDecl.members.dict) if (this.nameDecl.members.dict.hasOwnProperty(member__propName)){member=this.nameDecl.members.dict[member__propName];
+        for ( var member__propName in this.nameDecl.members.dict){member=this.nameDecl.members.dict[member__propName];
         if(['constructor', 'length', 'prototype'].indexOf(member.name)===-1){
             //where member.name not in ['constructor','length','prototype']
                 //case member.nodeClass
                 
                     //when Grammar.VariableDecl:
-                if ((member.nodeClass==Grammar.VariableDecl)
-                ){
+                if (
+                   (member.nodeClass==Grammar.VariableDecl)
+               ){
                         //.out '    extern var ',prefix,'_',member.name,';',NL
                         this.out('    extern var ', prefix, '_', member.name, ';', NL);
                 
                 }
                     //when Grammar.MethodDeclaration:
-                else if ((member.nodeClass==Grammar.MethodDeclaration)
-                ){
+                else if (
+                   (member.nodeClass==Grammar.MethodDeclaration)
+               ){
                         //.out '    extern any ',prefix,'_',member.name,'(DEFAULT_ARGUMENTS);',NL
                         this.out('    extern any ', prefix, '_', member.name, '(DEFAULT_ARGUMENTS);', NL);
                 
@@ -720,7 +732,7 @@
         //for each prtNameDecl in map prt.members
         var prtNameDecl=undefined;
         if(!prt.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-        for ( var prtNameDecl__propName in prt.members.dict) if (prt.members.dict.hasOwnProperty(prtNameDecl__propName)){prtNameDecl=prt.members.dict[prtNameDecl__propName];
+        for ( var prtNameDecl__propName in prt.members.dict){prtNameDecl=prt.members.dict[prtNameDecl__propName];
         if(['constructor', 'length', 'prototype'].indexOf(prtNameDecl.name)===-1){
             //where prtNameDecl.name not in ['constructor','length','prototype']
                 //if prtNameDecl.nodeClass is Grammar.VariableDecl
@@ -748,7 +760,7 @@
         //for each nameDecl in map .nameDecl.members
         var nameDecl=undefined;
         if(!this.nameDecl.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-        for ( var nameDecl__propName in this.nameDecl.members.dict) if (this.nameDecl.members.dict.hasOwnProperty(nameDecl__propName)){nameDecl=this.nameDecl.members.dict[nameDecl__propName];
+        for ( var nameDecl__propName in this.nameDecl.members.dict){nameDecl=this.nameDecl.members.dict[nameDecl__propName];
         if(nameDecl.name !== 'prototype' && nameDecl.name.charAt(0) !== '*'){
             //where nameDecl.name isnt 'prototype' and nameDecl.name.charAt(0) isnt '*'
                 //if nameDecl.nodeClass is Grammar.MethodDeclaration
@@ -905,7 +917,7 @@
         //for each nameDecl in map prt.members
         var nameDecl=undefined;
         if(!prt.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-        for ( var nameDecl__propName in prt.members.dict) if (prt.members.dict.hasOwnProperty(nameDecl__propName)){nameDecl=prt.members.dict[nameDecl__propName];
+        for ( var nameDecl__propName in prt.members.dict){nameDecl=prt.members.dict[nameDecl__propName];
         if(['constructor', 'length', 'prototype'].indexOf(nameDecl.name)===-1){
             //where nameDecl.name not in ['constructor','length','prototype']
                 //if nameDecl.nodeClass is Grammar.MethodDeclaration
@@ -972,7 +984,7 @@
         //for each prtNameDecl in map prt.members
         var prtNameDecl=undefined;
         if(!prt.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-        for ( var prtNameDecl__propName in prt.members.dict) if (prt.members.dict.hasOwnProperty(prtNameDecl__propName)){prtNameDecl=prt.members.dict[prtNameDecl__propName];
+        for ( var prtNameDecl__propName in prt.members.dict){prtNameDecl=prt.members.dict[prtNameDecl__propName];
         if(['constructor', 'length', 'prototype'].indexOf(prtNameDecl.name)===-1){
             //where prtNameDecl.name not in ['constructor','length','prototype']
                 //if prtNameDecl.nodeClass is Grammar.VariableDecl
@@ -1040,10 +1052,10 @@
         //.callOnSubTree LiteCore.getSymbol('produceClassRegistration')
         this.callOnSubTree(LiteCore.getSymbol('produceClassRegistration'));
 
-//namespace vars initialization
+//namespace initialization vars & code
 
-        //.produceVarInitialization prefix
-        this.produceVarInitialization(prefix);
+        //.produceInitializationCode prefix
+        this.produceInitializationCode(prefix);
 
         //.out "};",NL
         this.out("};", NL);
@@ -1072,8 +1084,9 @@
             //case item.specific.constructor
             
                 //when Grammar.VarStatement:
-            if ((item.specific.constructor==Grammar.VarStatement)
-            ){
+            if (
+               (item.specific.constructor==Grammar.VarStatement)
+           ){
                     //declare item.specific:Grammar.VarStatement
                     
                     //if isPublic, .out 'extern var ',{pre:prefix, CSL:item.specific.getNames()},";",NL
@@ -1081,9 +1094,10 @@
             
             }
                 //when Grammar.FunctionDeclaration, Grammar.MethodDeclaration: //method: append to class xx - when is a core class
-            else if ((item.specific.constructor==Grammar.FunctionDeclaration)
-            ||(item.specific.constructor==Grammar.MethodDeclaration)
-            ){
+            else if (
+               (item.specific.constructor==Grammar.FunctionDeclaration)
+               ||(item.specific.constructor==Grammar.MethodDeclaration)
+           ){
                     //declare item.specific:Grammar.FunctionDeclaration
                     
                     //export module function
@@ -1092,9 +1106,10 @@
             
             }
                 //when Grammar.ClassDeclaration, Grammar.AppendToDeclaration:
-            else if ((item.specific.constructor==Grammar.ClassDeclaration)
-            ||(item.specific.constructor==Grammar.AppendToDeclaration)
-            ){
+            else if (
+               (item.specific.constructor==Grammar.ClassDeclaration)
+               ||(item.specific.constructor==Grammar.AppendToDeclaration)
+           ){
                     //declare item.specific:Grammar.ClassDeclaration
                     
                     //produce class header declarations
@@ -1103,8 +1118,9 @@
             
             }
                 //when Grammar.NamespaceDeclaration:
-            else if ((item.specific.constructor==Grammar.NamespaceDeclaration)
-            ){
+            else if (
+               (item.specific.constructor==Grammar.NamespaceDeclaration)
+           ){
                     //declare item.specific:Grammar.NamespaceDeclaration
                     
                     //item.specific.produceHeader #recurses
@@ -1210,11 +1226,12 @@
      };
 
 
-//#### method produceVarInitialization(prefix)
-     Grammar.Body.prototype.produceVarInitialization = function(prefix){
+//#### method produceInitializationCode(prefix)
+     Grammar.Body.prototype.produceInitializationCode = function(prefix){
 
 //Third: assign values for module vars.
 //if there is var or properties with assigned values, produce those assignment.
+//also produce any other executable statement (non-declarations) in the body.
 //User classes must be registered previously, in case the module vars use them as initial values.
 
         //for each item in .statements 
@@ -1241,6 +1258,12 @@
                 // add call to __namespaceInit
                 //.out '    ',item.specific.nameDecl.getComposedName(),'__namespaceInit();',NL
                 this.out('    ', item.specific.nameDecl.getComposedName(), '__namespaceInit();', NL);
+            }
+            else if (item.isExecutableStatement()) {
+
+            //else if item.isExecutableStatement()
+                //item.produce //produce here
+                item.produce(); //produce here
             };
         };// end for each in this.statements
         
@@ -1262,24 +1285,10 @@
                 for( var variableDecl__inx=0,variableDecl ; variableDecl__inx<item.specific.list.length ; variableDecl__inx++){variableDecl=item.specific.list[variableDecl__inx];
                   if(variableDecl.assignedValue){
                     //where variableDecl.assignedValue
-                        //.out 'PROP(',variableDecl.name,'_,this)=',variableDecl.assignedValue,";",NL
-                        this.out('PROP(', variableDecl.name, '_,this)=', variableDecl.assignedValue, ";", NL);
+                        //.out makeSymbolName(variableDecl.name),'_(this)=',variableDecl.assignedValue,";",NL
+                        this.out(makeSymbolName(variableDecl.name), '_(this)=', variableDecl.assignedValue, ";", NL);
                 }};// end for each in item.specific.list
                 
-        }};// end for each in this.statements
-        
-     };
-
-
-//#### method produceLooseExecutableStatements()
-     Grammar.Body.prototype.produceLooseExecutableStatements = function(){
-        // all loose executable statements in a namespace or module body
-        //for each item in .statements
-        for( var item__inx=0,item ; item__inx<this.statements.length ; item__inx++){item=this.statements[item__inx];
-          if(item.isExecutableStatement()){
-            //where item.isExecutableStatement()
-                //item.produce //produce here
-                item.produce(); //produce here
         }};// end for each in this.statements
         
      };
@@ -1333,7 +1342,8 @@
         };
 
 //if there are one or more 'into var x' in a expression in this statement, 
-//declare vars before the statement (exclude body of FunctionDeclaration)
+//declare vars before the statement (exclude body of FunctionDeclaration).
+//Also declare __orXX temp vars to implement js || behavior.
 
         //this.callOnSubTree LiteCore.getSymbol('declareIntoVar'), excludeClass=Grammar.Body
         this.callOnSubTree(LiteCore.getSymbol('declareIntoVar'), Grammar.Body);
@@ -1387,17 +1397,29 @@
         return !(this.isDeclaration());
       };
 
-//called above, pre-declare vars from 'into var x' assignment-expression
-
     //append to class Grammar.Oper
     
+
       //method declareIntoVar()
       Grammar.Oper.prototype.declareIntoVar = function(){
-          //if .intoVar
-          if (this.intoVar) {
-              //.out "var ",.right,"=undefined;",NL
-              this.out("var ", this.right, "=undefined;", NL);
-          };
+
+//called above, pre-declare vars from 'into var x' assignment-expression
+//and also "__orX" vars to emulate js's || operator behavior.
+
+//.intoVar values:
+//- '*r' means use .right operaand (used for "into x")
+//- anything else is the var name to declare
+
+        //var varName = .intoVar
+        var varName = this.intoVar;
+
+        //if varName
+        if (varName) {
+            //if varName is '*r', varName = .right
+            if (varName === '*r') {varName = this.right};
+            //.out "var ",varName,"=undefined;",NL
+            this.out("var ", varName, "=undefined;", NL);
+        };
       };
 
 
@@ -1660,8 +1682,55 @@
         if (translated === "new" && this.right.name instanceof Grammar.VariableRef) {
             //declare .right.name:Grammar.VariableRef
             
-            //.out "new(", .right.name.calcReference(callNew=true)
-            this.out("new(", this.right.name.calcReference(true));
+
+//hacked optimization, call with object and prop names 
+//instead of code a new(X,1,new(map(new(nvp... wich is slow (calls to getSymbol)
+//code a call to _fastNew(X,n,prop,value,prop,value)...
+
+            //var optimized = false;
+            var optimized = false;
+            //if .right.name.accessors.length > 0 and .right.name.accessors[.right.name.accessors.length-1] instanceof Grammar.FunctionAccess
+            if (this.right.name.accessors.length > 0 && this.right.name.accessors[this.right.name.accessors.length - 1] instanceof Grammar.FunctionAccess) {
+                //var ac:Grammar.FunctionAccess = .right.name.accessors[.right.name.accessors.length-1]
+                var ac = this.right.name.accessors[this.right.name.accessors.length - 1];
+                //if ac.args and ac.args.length is 1 and ac.args[0].expression.operandCount is 1
+                if (ac.args && ac.args.length === 1 && ac.args[0].expression.operandCount === 1) {
+
+                    //var objLit:Grammar.ObjectLiteral = ac.args[0].expression.root.name
+                    var objLit = ac.args[0].expression.root.name;
+                    //if objLit instanceof Grammar.ObjectLiteral
+                    if (objLit instanceof Grammar.ObjectLiteral) {
+
+                        //OK here we can optimize
+
+                        //.out "_fastNew(", .right.name.calcPropAccessOnly(),","
+                        this.out("_fastNew(", this.right.name.calcPropAccessOnly(), ",");
+                        //.out objLit.items.length,NL
+                        this.out(objLit.items.length, NL);
+
+                        //for each nameValuePair in objLit.items
+                        for( var nameValuePair__inx=0,nameValuePair ; nameValuePair__inx<objLit.items.length ; nameValuePair__inx++){nameValuePair=objLit.items[nameValuePair__inx];
+                        
+                            //.out ",",nameValuePair.name,"_,",nameValuePair.value,NL
+                            this.out(",", nameValuePair.name, "_,", nameValuePair.value, NL);
+                        };// end for each in objLit.items
+
+                        //.out ")",NL
+                        this.out(")", NL);
+                        //optimized   = true
+                        optimized = true;
+                    };
+                };
+            };
+            //end if
+            
+
+            //if not optimized
+            if (!(optimized)) {
+                    //.out "new(", .right.name.calcReference(callNew=true)
+                    this.out("new(", this.right.name.calcReference(true));
+            };
+
             //return
             return;
         };
@@ -1680,10 +1749,20 @@
         //else
             //if .produceType is 'any'
             if (this.produceType === 'any') {
-                //pre="any_number("
-                pre = "any_number(";
-                //post=")"
-                post = ")";
+                //if translated is "!"         
+                if (translated === "!") {
+                    //pre = 'any_bool('
+                    pre = 'any_bool(';
+                    //post = ")"
+                    post = ")";
+                }
+                else {
+                //else
+                    //pre="any_number("
+                    pre = "any_number(";
+                    //post=")"
+                    post = ")";
+                };
             };
 
             //.right.produceType = translated is "!"? 'Bool' else 'Number' //Except "!", unary opers require numbers
@@ -1736,8 +1815,6 @@
                             //e.g.: DO: "#\{stra}: #\{strb}"  vs.  DO NOT: stra + ": " + strb
                             //"""
 
-//default mechanism to handle 'negated' operand
-
         //var toAnyPre, toAnyPost
         var toAnyPre = undefined, toAnyPost = undefined;
         //if .produceType is 'any' 
@@ -1747,6 +1824,8 @@
             //toAnyPost = ")"
             toAnyPost = ")";
         };
+
+//default mechanism to handle 'negated' operand
 
         //var prepend,append
         var prepend = undefined, append = undefined;
@@ -1771,32 +1850,35 @@
         //case .name 
         
           //when 'in':
-        if ((this.name=='in')
-        ){
+        if (
+           (this.name=='in')
+       ){
             //if .right.name instanceof Grammar.ArrayLiteral
             if (this.right.name instanceof Grammar.ArrayLiteral) {
                 //var haystack:Grammar.ArrayLiteral = .right.name
                 var haystack = this.right.name;
-                //.out toAnyPre,prepend,"__in(",.left,",",haystack.items.length,",(any_arr){",{CSL:haystack.items},"})",append,toAnyPost
-                this.out(toAnyPre, prepend, "__in(", this.left, ",", haystack.items.length, ",(any_arr){", {CSL: haystack.items}, "})", append, toAnyPost);
+                //.out toAnyPre,prepend,"__inLiteralArray(",.left,",",haystack.items.length,",(any_arr){",{CSL:haystack.items},"})",append,toAnyPost
+                this.out(toAnyPre, prepend, "__inLiteralArray(", this.left, ",", haystack.items.length, ",(any_arr){", {CSL: haystack.items}, "})", append, toAnyPost);
             }
             else {
             //else
-                //.out toAnyPre,"CALL1(indexOf_,",.right,",",.left,").value.number", .negated? "==-1" : ">=0",toAnyPost
-                this.out(toAnyPre, "CALL1(indexOf_,", this.right, ",", this.left, ").value.number", this.negated ? "==-1" : ">=0", toAnyPost);
+                //.out toAnyPre,"__byteIndex(",.left,",",.right,")", .negated? "==-1" : ">=0",toAnyPost
+                this.out(toAnyPre, "__byteIndex(", this.left, ",", this.right, ")", this.negated ? "==-1" : ">=0", toAnyPost);
             };
         
         }
           //when 'has property':
-        else if ((this.name=='has property')
-        ){
+        else if (
+           (this.name=='has property')
+       ){
             //.out toAnyPre,prepend,"_hasProperty(",.left,",",.right,")",append,toAnyPost
             this.out(toAnyPre, prepend, "_hasProperty(", this.left, ",", this.right, ")", append, toAnyPost);
         
         }
           //when 'into':
-        else if ((this.name=='into')
-        ){
+        else if (
+           (this.name=='into')
+       ){
             //if .produceType and .produceType isnt 'any', .out '_anyTo',.produceType,'('
             if (this.produceType && this.produceType !== 'any') {this.out('_anyTo', this.produceType, '(')};
             //.left.produceType='any'
@@ -1808,8 +1890,9 @@
         
         }
           //when 'instance of':
-        else if ((this.name=='instance of')
-        ){
+        else if (
+           (this.name=='instance of')
+       ){
             //.left.produceType = 'any'
             this.left.produceType = 'any';
             //.right.produceType = 'any'
@@ -1819,15 +1902,17 @@
         
         }
           //when 'like':
-        else if ((this.name=='like')
-        ){
+        else if (
+           (this.name=='like')
+       ){
             //.throwError "like not supported yet for C-production"
             this.throwError("like not supported yet for C-production");
         
         }
           //when 'is':
-        else if ((this.name=='is')
-        ){
+        else if (
+           (this.name=='is')
+       ){
             //.left.produceType = 'any'
             this.left.produceType = 'any';
             //.right.produceType = 'any'
@@ -1837,12 +1922,11 @@
         
         }
           //when 'or':
-        else if ((this.name=='or')
-        ){
+        else if (
+           (this.name=='or')
+       ){
             //.lexer.outCode.orTempVarCount++
             this.lexer.outCode.orTempVarCount++;
-            //var orTmp = '__or#{.lexer.outCode.orTempVarCount}'
-            var orTmp = '__or' + this.lexer.outCode.orTempVarCount;
 
             //.left.produceType = 'any'
             this.left.produceType = 'any';
@@ -1851,21 +1935,22 @@
             //if .produceType and .produceType isnt 'any', .out '_anyTo',.produceType,'('
             if (this.produceType && this.produceType !== 'any') {this.out('_anyTo', this.produceType, '(')};
 
-            //.out '(_anyToBool(#{orTmp}=',.left,')? #{orTmp} : ',.right,')'
-            this.out('(_anyToBool(' + orTmp + '=', this.left, ')? ' + orTmp + ' : ', this.right, ')');
+            //.out '(_anyToBool(', .intoVar,'=',.left,')? ',.intoVar,' : ',.right,')'
+            this.out('(_anyToBool(', this.intoVar, '=', this.left, ')? ', this.intoVar, ' : ', this.right, ')');
 
             //if .produceType and .produceType isnt 'any', .out ')'
             if (this.produceType && this.produceType !== 'any') {this.out(')')};
         
         }
           //when '%',"<<",">>","bitand","bitor","bitxor":
-        else if ((this.name=='%')
-        ||(this.name=="<<")
-        ||(this.name==">>")
-        ||(this.name=="bitand")
-        ||(this.name=="bitor")
-        ||(this.name=="bitxor")
-        ){
+        else if (
+           (this.name=='%')
+           ||(this.name=="<<")
+           ||(this.name==">>")
+           ||(this.name=="bitand")
+           ||(this.name=="bitor")
+           ||(this.name=="bitxor")
+       ){
             //if .produceType and .produceType isnt 'Number', .out 'any_number('
             if (this.produceType && this.produceType !== 'Number') {this.out('any_number(')};
             //.left.produceType = 'Number'
@@ -1879,8 +1964,9 @@
         
         }
           //when '&':
-        else if ((this.name=='&')
-        ){
+        else if (
+           (this.name=='&')
+       ){
             //if .produceType is 'Number', .throwError 'cannot use & to concat and produce a number'
             if (this.produceType === 'Number') {this.throwError('cannot use & to concat and produce a number')};
             //.left.produceType = 'any'
@@ -1903,8 +1989,9 @@
             //case operC
             
                 //when '?': // left is condition, right is: if_true
-            if ((operC=='?')
-            ){
+            if (
+               (operC=='?')
+           ){
                     //.left.produceType = 'Bool'
                     this.left.produceType = 'Bool';
                     //.right.produceType = .produceType
@@ -1912,8 +1999,9 @@
             
             }
                 //when ':': // left is a?b, right is: if_false
-            else if ((operC==':')
-            ){
+            else if (
+               (operC==':')
+           ){
                     //.left.produceType = .produceType
                     this.left.produceType = this.produceType;
                     //.right.produceType = .produceType
@@ -1921,8 +2009,9 @@
             
             }
                 //when '&&': // boolean and
-            else if ((operC=='&&')
-            ){
+            else if (
+               (operC=='&&')
+           ){
                     //.left.produceType = 'Bool'
                     this.left.produceType = 'Bool';
                     //.right.produceType = 'Bool'
@@ -1931,7 +2020,8 @@
             }
             else {
 
-                //else //default for binary opers: numbers
+                //else // a+b  a>=b  a<b 
+                     //default for two-operand operators: numbers
                     //.left.produceType = 'Number'
                     this.left.produceType = 'Number';
                     //.right.produceType = 'Number'
@@ -1952,10 +2042,31 @@
                     }
                     else {
                     //else
-                        //preExtra = 'any_number('
-                        preExtra = 'any_number(';
-                        //extra = ")"
-                        extra = ")";
+                        //case operC
+                        
+                            //when '>','<','>=','<=','!=','==':
+                        if (
+                           (operC=='>')
+                           ||(operC=='<')
+                           ||(operC=='>=')
+                           ||(operC=='<=')
+                           ||(operC=='!=')
+                           ||(operC=='==')
+                       ){
+                                // comparision operators, result is converted to boolean
+                                //preExtra = 'any_bool('
+                                preExtra = 'any_bool(';
+                                //extra = ")"
+                                extra = ")";
+                        
+                        }
+                        else {
+                            //else
+                                //preExtra = 'any_number('
+                                preExtra = 'any_number(';
+                                //extra = ")"
+                                extra = ")";
+                        };
                     };
                 }
                 else if (this.produceType) {
@@ -2091,18 +2202,40 @@
 
         //var result = .calcReference()
         var result = this.calcReference();
-
         //var pre,post
         var pre = undefined, post = undefined;
 
+//if what is required is what is referenced, do nothing
+
+        //if .produceType is .calcType 
+        if (this.produceType === this.calcType) {
+            //do nothing 
+            null;
+        };
+
+//else, if we require 'any' but the variable ref is referencing something else...
+
         //if .produceType is 'any' and not .calcType is 'any'
         if (this.produceType === 'any' && !(this.calcType === 'any')) {
-            //pre = 'any_number('
-            pre = 'any_number(';
+            //if .calcType is 'functionPtr'
+            if (this.calcType === 'functionPtr') {
+                //pre = 'any_func('
+                pre = 'any_func(';
+            }
+            else {
+            //else
+                //assume returnes is number|native number
+                //pre = 'any_number('
+                pre = 'any_number(';
+            };
+            //end if
+            
             //post = ')'
             post = ')';
         }
         else if (this.produceType && this.produceType !== 'any' && this.calcType === 'any') {
+
+//else, if we require other than 'any' and the varRef returns 'any'...
 
         //else if .produceType and .produceType isnt 'any' and .calcType is 'any'
             //pre = '_anyTo#{.produceType}('
@@ -2176,36 +2309,56 @@
         //if no actualVar, .throwError("var '#{.name}' not found in scope")
         if (!actualVar) {this.throwError("var '" + this.name + "' not found in scope")};
 
+        //var actualType = actualVar //determines valid memebers at actual point in accesor chain analysis
+        var actualType = actualVar; //determines valid memebers at actual point in accesor chain analysis
+
+//*actualVar* determines the specific var at actual point in the chain analysis.
+//actualVar can be calculated on each [PropertyAccess] accessor, but cannot
+//pass a [FunctionAccess] (we dont know which instance the fn will return)
+//or a [IndexAccess] (we dont evaluate the index value, neither know what is stored)
+
+
+//*actualType* determines the specific *type* at actual point in the chain analysis.
+//actualType follows actualVar (is the same) during [PropertyAccess], but, unlike actualVar
+//is able to pass a [FunctionAccess] and [IndexAccess] if typified.
+
+//if the function referenced in the [FunctionAccess] has a *result type* (at function declaration),
+//actualType continues with that type.
+
+//if the array referenced at [IndexAccess] has a *item type* (at array declaration),
+//actualType continues with that **item type**
+
+
         //var result: array = [] //array of arrays
         var result = []; //array of arrays
 
         //var partial = actualVar.getComposedName()
         var partial = actualVar.getComposedName();
-
         //result.push [partial]
         result.push([partial]);
 
         //.calcType = 'any' //default
         this.calcType = 'any'; //default
-        //if actualVar.findOwnMember("**proto**") is '**native number**', .calcType = '**native number**'
-        if (actualVar.findOwnMember("**proto**") === '**native number**') {this.calcType = '**native number**'};
+        //if actualVar.findOwnMember("**proto**") is '**native number**' 
+        if (actualVar.findOwnMember("**proto**") === '**native number**') {
+            //e.g.:loop index var, is: int64_t
+            //.calcType = '**native number**'
+            this.calcType = '**native number**';
+        };
 
         //if no .accessors, return result
         if (!this.accessors) {return result};
 
 //now follow each accessor
 
-        //var avType:Names.Declaration
-        var avType = undefined;
-
         //var hasInstanceReference:boolean
         var hasInstanceReference = undefined;
-
         //var isOk, functionAccess, args:array
-        var isOk = undefined
-        , functionAccess = undefined
-        , args = undefined
-        ;
+        var 
+           isOk = undefined
+           , functionAccess = undefined
+           , args = undefined
+       ;
 
         //for each inx,ac in .accessors
         for( var inx=0,ac ; inx<this.accessors.length ; inx++){ac=this.accessors[inx];
@@ -2216,85 +2369,125 @@
             //if no actualVar
             //    .throwError("processing '#{partial}', cant follow property chain types")
 
-//for PropertyAccess
+//##### PropertyAccess: ***.***
+
+//for PropertyAccess: `foo.bar`
 
             //if ac instanceof Grammar.PropertyAccess
             if (ac instanceof Grammar.PropertyAccess) {
 
+                //partial ="#{partial}.#{ac.name}"
+                partial = '' + partial + "." + ac.name;
+
                 //var classNameArr:array
                 var classNameArr = undefined;
 
-                //if ac.name is 'constructor' //hack, all vars have a "constructor". 
-                if (ac.name === 'constructor') { //hack, all vars have a "constructor".
-                    //convert "bar.constructor" to: "any_class(bar.class)"
-                    //var classNameArr:array = result.pop()
+//**.constructor**: hack, all vars have a "constructor" property.
+
+//`foo.constructor` resolves to the class-function of which foo is instance of.
+
+//compile-to-c: convert "bar.constructor" into: "any_class(bar.class)"
+
+                //if ac.name is 'constructor' 
+                if (ac.name === 'constructor') {
+
                     //result.unshift ['any_class(']
                     result.unshift(['any_class(']);
-                    // here goes any class
+                    // here goes anyClass var
                     //result.push [".class)"]
                     result.push([".class)"]);
-                    //result.push classNameArr
+
                     //.calcType = 'any'
                     this.calcType = 'any';
                     //hasInstanceReference=true
                     hasInstanceReference = true;
-                    //if actualVar, actualVar = actualVar.findOwnMember('**proto**')
-                    if (actualVar) {actualVar = actualVar.findOwnMember('**proto**')};
-                }
-                else if (ac.name === 'prototype') { //hack, all classes have a "prototype" to access methods
 
-                //else if ac.name is 'prototype' //hack, all classes have a "prototype" to access methods
-                    //convert "Foo.prototype.toString" to: "__classMethodAny(toString,Foo)"
+                    //if actualVar
+                    if (actualVar) {
+                        //actualVar = actualVar.findOwnMember('**proto**')
+                        actualVar = actualVar.findOwnMember('**proto**');
+                    };
+                        //now we're referencig the Class
+
+                    //actualType = actualVar //actualtype follows actualVar on [PropertyAccess]
+                    actualType = actualVar; //actualtype follows actualVar on [PropertyAccess]
+                }
+                else if (ac.name === 'prototype') {
+
+
+//**.prototype**: hack, all classes have a "prototype" property to access methods.
+
+//compile-to-c: convert "Foo.prototype.slice" into: "__classMethodAny(slice_,Foo)" :returns any
+
+                //else if ac.name is 'prototype'
+
                     //if inx+1 >= .accessors.length or .accessors[inx+1].constructor isnt Grammar.PropertyAccess
                     if (inx + 1 >= this.accessors.length || this.accessors[inx + 1].constructor !== Grammar.PropertyAccess) {
                         //.sayErr "expected: Class.prototype.method, e.g.: 'Foo.prototype.toString'"
                         this.sayErr("expected: Class.prototype.method, e.g.: 'Foo.prototype.toString'");
-                    }
-                    else {
-                    //else
-                        //classNameArr = result.pop()
-                        classNameArr = result.pop();
-                        //classNameArr.unshift '__classMethodFunc(',.accessors[inx+1].name,"_ ," //__classMethodFunc(methodName,
-                        classNameArr.unshift('__classMethodFunc(', this.accessors[inx + 1].name, "_ ,"); //__classMethodFunc(methodName,
-                        // here goes any class
-                        //classNameArr.push ")"
-                        classNameArr.push(")");
-                        //result.push classNameArr //now converted to any Function
-                        result.push(classNameArr); //now converted to any Function
-                        //inx+=1 //skip method name
-                        inx += 1; //skip method name
-                        //.calcType = 'any' // __classMethodFunc returns any_func
-                        this.calcType = 'any'; // __classMethodFunc returns any_func
-                        //hasInstanceReference = true
-                        hasInstanceReference = true;
-
-                        //actualVar = .tryGetFromScope('Function')
-                        actualVar = this.tryGetFromScope('Function');
-                        //if actualVar, actualVar=actualVar.findOwnMember('prototype') //actual var is now function prototype
-                        if (actualVar) {actualVar = actualVar.findOwnMember('prototype')};
+                        //return result
+                        return result;
                     };
-                }
-                else if (ac.name === 'length') { //hack, convert x.length in a funcion call, _length(x)
 
-                //else if ac.name is 'length' //hack, convert x.length in a funcion call, _length(x)
-                    //result.unshift ['_length','('] // put "length(" first - call to dispatcher
-                    result.unshift(['_length', '(']); // put "length(" first - call to dispatcher
+                    //classNameArr = result.pop()
+                    classNameArr = result.pop();
+                    //classNameArr.unshift '__classMethodFunc(',.accessors[inx+1].name,"_ ," //__classMethodFunc(methodName,
+                    classNameArr.unshift('__classMethodFunc(', this.accessors[inx + 1].name, "_ ,"); //__classMethodFunc(methodName,
+                    // here goes any class
+                    //classNameArr.push ")"
+                    classNameArr.push(")");
+                    //result.push classNameArr //now converted to any Function
+                    result.push(classNameArr); //now converted to any Function
+                    //inx+=1 //skip method name
+                    inx += 1; //skip method name
+
+                    //.calcType = 'any' // __classMethodFunc() returns any_func
+                    this.calcType = 'any'; // __classMethodFunc() returns any_func
+                    //hasInstanceReference = true
+                    hasInstanceReference = true;
+
+                    //if actualVar 
+                    if (actualVar) {
+                        //actualVar = actualVar.findMember(.accessors[inx+1].name) 
+                        actualVar = actualVar.findMember(this.accessors[inx + 1].name);
+                    };
+                        //move to method
+
+                    //actualType = actualVar //actualtype follows actualVar on [PropertyAccess]
+                    actualType = actualVar; //actualtype follows actualVar on [PropertyAccess]
+                }
+                else if (ac.name === 'length') {
+
+ //hack, convert x.length in a funcion call, _length(x)
+
+                //else if ac.name is 'length'
+                    //result.unshift ['_length','('] // put "_length(" first
+                    result.unshift(['_length', '(']); // put "_length(" first
                     //result.push [")"]
                     result.push([")"]);
+
                     //.calcType = '**native number**'
                     this.calcType = '**native number**';
                     //actualVar = undefined
                     actualVar = undefined;
+                    //actualType = undefined 
+                    actualType = undefined;
                 }
                 else if (ac.name === 'call') {
 
+
+//hack: *.call(...)*
+
+//convert .call(...) to  __apply(Function,instance,argc,arguments)
+
                 //else if ac.name is 'call' 
-                    //hack: .call
-                    // this is .call use __apply(Function,instance,argc,arguments)
 
                     //should be here after Class.prototype.xxx.call
-                    //if no actualVar or no actualVar.findMember('call')
-                    if (!actualVar || !actualVar.findMember('call')) {
+                    // or foo.call(...) when foo:Function
+                    //if no actualType or no actualType.findMember('call')
+                    if (!actualType || !actualType.findMember('call')) {
+                        //.sayErr "#{partial}: #{actualType? actualType.info(): '-no actual Type-'}"
+                        this.sayErr('' + partial + ": " + (actualType ? actualType.info() : '-no actual Type-'));
                         //.throwError 'cannot use .call on a non-Function. Use: Class.prototype.method.call(this,arg1,...)'
                         this.throwError('cannot use .call on a non-Function. Use: Class.prototype.method.call(this,arg1,...)');
                     };
@@ -2317,8 +2510,8 @@
                         };
                     };
 
-                    //if no isOk, .throwError 'expected instance and optional arguments after ".call": foo.call(this,arg1,arg2)'
-                    if (!isOk) {this.throwError('expected instance and optional arguments after ".call": foo.call(this,arg1,arg2)')};
+                    //if not isOk, .throwError 'expected instance and optional arguments after ".call": foo.call(this,arg1,arg2)'
+                    if (!(isOk)) {this.throwError('expected instance and optional arguments after ".call": foo.call(this,arg1,arg2)')};
 
                     //args = functionAccess.args
                     args = functionAccess.args;
@@ -2335,21 +2528,38 @@
 
                     //result.push FnArr
                     result.push(FnArr);
+
+                    //new actual type is method's return type
+                    //if actualVar
+                    if (actualVar) {
+                        //actualType = actualVar.findMember("**return type**")
+                        actualType = actualVar.findMember("**return type**");
+                    }
+                    else {
+                    //else
+                        //actualType = undefined //any
+                        actualType = undefined; //any
+                    };
+
                     //inx+=1 //skip fn.call and args
                     inx += 1; //skip fn.call and args
-                    //actualVar = undefined
-                    actualVar = undefined;
+                    //actualVar = undefined //we dont know what instance the pointed function returns
+                    actualVar = undefined; //we dont know what instance the pointed function returns
+                    //.calcType = 'any' // all funcs returns any
+                    this.calcType = 'any'; // all funcs returns any
                 }
                 else if (ac.name === 'apply') {
 
+//hack: *.apply(x,arr[])*
+
+//convert .apply(x,arr[]) to:  __apply(Function,x,arr.length,arr.itemd)
 
                 //else if ac.name is 'apply' 
-                    //hack: .apply
-                    // this is .apply(this,args:anyArr) use __applyArr(Function,instance,anyArgsArray)
 
-                    //should be here after Class.prototype.xxx.apply
-                    //if no actualVar or no actualVar.findMember('apply')
-                    if (!actualVar || !actualVar.findMember('apply')) {
+                    //should be here after Class.prototype.xxx.call
+                    // or foo.call(...) when foo:Function
+                    //if no actualType or no actualType.findMember('apply')
+                    if (!actualType || !actualType.findMember('apply')) {
                         //.throwError 'cannot use .apply on a non-Function. Use: Class.prototype.method.apply(this,args:Array)'
                         this.throwError('cannot use .apply on a non-Function. Use: Class.prototype.method.apply(this,args:Array)');
                     };
@@ -2383,14 +2593,35 @@
                     //result.push [hasInstanceReference? '': ')',',',args[0],',',args[1],')']
                     result.push([hasInstanceReference ? '' : ')', ',', args[0], ',', args[1], ')']);
 
+                    //new actual type is method's return type
+                    //if actualVar
+                    if (actualVar) {
+                        //actualType = actualVar.findMember("**return type**")
+                        actualType = actualVar.findMember("**return type**");
+                    }
+                    else {
+                    //else
+                        //actualType = undefined //any
+                        actualType = undefined; //any
+                    };
+
                     //inx+=1 //skip fn.call and args
                     inx += 1; //skip fn.call and args
-                    //actualVar = undefined
-                    actualVar = undefined;
+                    //actualVar = undefined //we dont know what does the pointed function returns
+                    actualVar = undefined; //we dont know what does the pointed function returns
+                    //.calcType = 'any' // all funcs returns any
+                    this.calcType = 'any'; // all funcs returns any
                 }
-                else if (actualVar && (actualVar.nodeClass === Grammar.NamespaceDeclaration || actualVar.findOwnMember('prototype'))) {
+                else if (actualVar && (actualVar.nodeClass === Grammar.NamespaceDeclaration || (actualVar.nodeClass === Grammar.ClassDeclaration && ac.name !== 'name'))) { //is namespace
 
-                //else if actualVar and (actualVar.nodeClass is Grammar.NamespaceDeclaration or actualVar.findOwnMember('prototype'))
+
+//access to a namespace property or function. Implies *no* redirection. 
+//when compiled-to-c, namespaces are just lexical name concatenations (better performance)
+
+                //else if actualVar and ( actualVar.nodeClass is Grammar.NamespaceDeclaration //is namespace
+                                        //or (actualVar.nodeClass is Grammar.ClassDeclaration and ac.name isnt 'name' ) // or a class prop other than .name
+                                      //)
+
                     //just namespace access or accessing a "property" of a class "as namespace"
                     //var prevArr:array = result.pop() 
                     var prevArr = result.pop();
@@ -2399,48 +2630,101 @@
                     //result.push prevArr
                     result.push(prevArr);
 
-                    //actualVar = actualVar.findOwnMember(ac.name)
-                    actualVar = actualVar.findOwnMember(ac.name);
+//if we're accessing a namespace function, it could be:
+
+//a) a raw C function (it is *not*: `(any){.class=Function_inx}` var)
+
+//b) a class, then *it is*: `(any){.class=Class_inx}`
+
+//on case a), we mark ".calcType" as 'functionPtr', so it can be enlosed by "any_func()" 
+//in case type "any" is required from this varRef
+
+                    //actualType = undefined
+                    actualType = undefined;
+
+                    //if actualVar.findMember(ac.name) into actualVar
+                    if ((actualVar=actualVar.findMember(ac.name))) {
+                        //got the accessed member
+                        //if actualVar.nodeDeclared instanceof Grammar.FunctionDeclaration 
+                        if (actualVar.nodeDeclared instanceof Grammar.FunctionDeclaration) {
+                            //if it is a function...
+                            //.calcType = 'functionPtr' //it's a raw c-function
+                            this.calcType = 'functionPtr'; //it's a raw c-function
+                            //actualType = undefined //it's a raw c-function
+                            actualType = undefined; //it's a raw c-function
+                            //actualVar = undefined //it's a raw c-function
+                            actualVar = undefined; //it's a raw c-function
+                        }
+                        else {
+                        //else
+                            // a namespace property
+                            //.calcType = 'any'
+                            this.calcType = 'any';
+                            //actualType = actualVar //actualType follows actualVar on [PropertyAccess]
+                            actualType = actualVar; //actualType follows actualVar on [PropertyAccess]
+                        };
+                    };
                 }
                 else if (inx + 1 < this.accessors.length && this.accessors[inx + 1].constructor === Grammar.FunctionAccess) {
 
+//avoid evaluating as a property if the next accessor is a function call
+
                 //else if inx+1 < .accessors.length and .accessors[inx+1].constructor is Grammar.FunctionAccess
-                    // if next is function access, this is a method name. just make name a symbol
+
+                    // if next is function access, this is a method name. just make ac.name a symbol
                     //result.push [makeSymbolName(ac.name)]
                     result.push([makeSymbolName(ac.name)]);
                     //.calcType = 'any'
                     this.calcType = 'any';
                     //hasInstanceReference=true
                     hasInstanceReference = true;
-                    //if actualVar, actualVar = actualVar.findOwnMember(ac.name)
-                    if (actualVar) {actualVar = actualVar.findOwnMember(ac.name)};
+
+                    //if actualVar 
+                    if (actualVar) {
+                        //actualVar = actualVar.findMember(ac.name)
+                        actualVar = actualVar.findMember(ac.name);
+                    };
+
+                    //actualType = actualVar //actualType follows actualVar on [PropertyAccess]
+                    actualType = actualVar; //actualType follows actualVar on [PropertyAccess]
                 }
                 else {
 
+
+//else, normal property access. out: `propName__(instance)`. 
+
+//macro "foo__(this)" will evaluate to direct|fast access #ifdef NDEBUG, 
+//and a controlled|checked access otherwise 
+
                 //else
-                    // normal property access
-                    //out PROP(propName,instance)
+
                     //.calcType = 'any'
                     this.calcType = 'any';
                     //hasInstanceReference=true
                     hasInstanceReference = true;
-                    //result.unshift ["PROP","(", makeSymbolName(ac.name), ","] // PROP macro enclose all 
-                    result.unshift(["PROP", "(", makeSymbolName(ac.name), ","]); // PROP macro enclose all
+                    //result.unshift [makeSymbolName(ac.name),"_("] // foo__(this) macro enclose all 
+                    result.unshift([makeSymbolName(ac.name), "_("]); // foo__(this) macro enclose all
                     // here goes thisValue (instance)
                     //result.push [")"]
                     result.push([")"]);
 
-                    //if actualVar, actualVar = actualVar.findOwnMember(ac.name)
-                    if (actualVar) {actualVar = actualVar.findOwnMember(ac.name)};
+                    //if actualVar 
+                    if (actualVar) {
+                        //actualVar = actualVar.findMember(ac.name)
+                        actualVar = actualVar.findMember(ac.name);
+                    };
+
+                    //actualType = actualVar //actualType follows actualVar on [PropertyAccess]
+                    actualType = actualVar; //actualType follows actualVar on [PropertyAccess]
                 };
 
                 //end if // subtypes of propertyAccess
                 
-
-                //partial ="#{partial}.#{ac.name}"
-                partial = '' + partial + "." + ac.name;
             }
             else if (ac.constructor === Grammar.FunctionAccess) {
+
+
+//##### FunctionAccess: (...)
 
 //else, for FunctionAccess
 
@@ -2454,18 +2738,15 @@
                 //functionAccess = ac
                 functionAccess = ac;
 
-                //we're calling on an IndexAccess or the result of a function. Mandatory use of apply/call
-                //if inx>1 and .accessors[inx-1].constructor isnt Grammar.PropertyAccess
-                if (inx > 1 && this.accessors[inx - 1].constructor !== Grammar.PropertyAccess) {
-                    //.throwError("'#{partial}.call' or '.apply' must be used to call a function pointer stored in a variable")
-                    this.throwError("'" + partial + ".call' or '.apply' must be used to call a function pointer stored in a variable");
-                };
-
                 //var callParams:array
                 var callParams = undefined;
 
+//if there was a "new" unary-op: "new Foo(bar)" 
+//the `new Foo(bar,baz)` call translates to `new(Foo,1,[bar,baz])`
+
                 //if callNew
                 if (callNew) {
+
                     //callParams = [","] // new(Class,argc,arguments*)
                     callParams = [","]; // new(Class,argc,arguments*)
                     //add arguments: count,(any_arr){...}
@@ -2473,12 +2754,60 @@
                     this.addArguments(functionAccess.args, callParams);
                     //callParams.push ")" //close 
                     callParams.push(")"); //close
+
+                    // new(Foo..) result type is a Foo.prototype object
+                    //if actualVar 
+                    if (actualVar) {
+                        //actualType = actualVar.findOwnMember('prototype')
+                        actualType = actualVar.findOwnMember('prototype');
+                    }
+                    else {
+                    //else
+                        //actualType = undefined
+                        actualType = undefined;
+                    };
+
+                    //actualVar = undefined //a new instance
+                    actualVar = undefined; //a new instance
                 }
                 else {
 
+//else, a method call
+
                 //else
+
+//Mandatory use of apply/call, 
+//if we're calling on the result of an IndexAccess 
+//or the result of a function 
+//or a var type:function.
+
+                    //var callOnValue
+                    var callOnValue = undefined;
+                    //if inx>0 and .accessors[inx-1].constructor isnt Grammar.PropertyAccess
+                    if (inx > 0 && this.accessors[inx - 1].constructor !== Grammar.PropertyAccess) {
+                        //callOnValue = true 
+                        callOnValue = true;
+                    }
+                    else if (actualVar && [Grammar.FunctionDeclaration, Grammar.MethodDeclaration].indexOf(actualVar.nodeClass)===-1) {
+                        // calling on: "foo[x](...)"
+                        // calling on: "foo(a,b,c)(...)"
+
+                    //else if actualVar and actualVar.nodeClass not in [Grammar.FunctionDeclaration,Grammar.MethodDeclaration]
+                        // calling on: "foo.prop(a,b,c)" when "prop" is  property
+                        // calling on: "avar(a,b,c)" when "avar" is a scope var
+                        //callOnValue = true
+                        callOnValue = true;
+                    };
+
+                    //if callOnValue
+                    if (callOnValue) {
+                        //.throwError("'#{partial}: .call() or '.apply()' must be used to call a function from a 'value'")
+                        this.throwError("'" + partial + ": .call() or '.apply()' must be used to call a function from a 'value'");
+                    };
+
                     //var fnNameArray:array = result.pop() //take fn name 
                     var fnNameArray = result.pop(); //take fn name
+
                     //if no hasInstanceReference //first accessor is function access, this is a call to a global function
                     if (!hasInstanceReference) { //first accessor is function access, this is a call to a global function
 
@@ -2513,6 +2842,7 @@
                     //else
                         //method call
 
+                        // DISABLED-
                         //to ease C-code reading, use macros CALL1 to CALL4 if possible
                         //if false /*functionAccess.args and functionAccess.args.length<=4*/
                         if (false) { //functionAccess.args and functionAccess.args.length<=4
@@ -2569,7 +2899,7 @@
                             else {
 
                             //else
-                                // METHOD()(... ) enclose all
+                                // __call() enclose all
                                 //fnNameArray.unshift "__call(" 
                                 fnNameArray.unshift("__call(");
                                 // here goes methodName
@@ -2598,24 +2928,38 @@
 
                     //end if //global fn or method
                     
+
+                    // foo(...) 
+                    // new actual type is method's return type
+                    //if actualVar
+                    if (actualVar) {
+                        //actualType = actualVar.findMember("**return type**")
+                        actualType = actualVar.findMember("**return type**");
+                    }
+                    else {
+                    //else
+                        //actualType = undefined //any
+                        actualType = undefined; //any
+                    };
+
+                    //actualVar = undefined // we cannot know return instance
+                    actualVar = undefined; // we cannot know return instance
                 };
 
-                //end if //callNew
+
+                //end if //new x() or x()
                 
 
                 //result.push callParams
                 result.push(callParams);
-
-                //if actualVar, actualVar = actualVar.findMember('**return type**')
-                if (actualVar) {actualVar = actualVar.findMember('**return type**')};
             }
             else if (ac.constructor === Grammar.IndexAccess) {
-                //#the actualVar is now function's return type'
-                //#and next property access should be on defined members of the return type
 
+
+//##### IndexAccess: [...]
 
 //else, for IndexAccess, the varRef type is now 'name.value.item[...]'
-//and next property access should be on defined members of the type
+//and next property access should be on members type of the array
 
             //else if ac.constructor is Grammar.IndexAccess
 
@@ -2632,16 +2976,29 @@
                 //ac.name.produceType = 'Number'
                 ac.name.produceType = 'Number';
 
-                //add macro ITEM(index, array )
+                //add macro ITEM(array,index)
                 //macro ITEM() encloses all 
-                //result.unshift ["ITEM(",ac.name,"," ]
-                result.unshift(["ITEM(", ac.name, ","]);
+                //result.unshift ["ITEM(" ]
+                result.unshift(["ITEM("]);
                 // here goes instance
-                //result.push [")"]
-                result.push([")"]);
+                //result.push [",",ac.name,")"]
+                result.push([",", ac.name, ")"]);
 
-                //if actualVar, actualVar = actualVar.findOwnMember('**item type**')
-                if (actualVar) {actualVar = actualVar.findOwnMember('**item type**')};
+                //if actualVar 
+                if (actualVar) {
+                    //actualType = actualVar.findMember('**item type**')
+                    actualType = actualVar.findMember('**item type**');
+                    //if no actualVar.hasProto("Array"), .sayErr "#{partial} is not Array"
+                    if (!actualVar.hasProto("Array")) {this.sayErr('' + partial + " is not Array")};
+                }
+                else {
+                //else
+                    //actualType = undefined
+                    actualType = undefined;
+                };
+
+                //actualVar = undefined // we cannot know return instance
+                actualVar = undefined; // we cannot know return instance
             };
 
             //end if //type of accessor
@@ -2656,37 +3013,7 @@
       };
 
 
-
-      //method getTypeName() returns string
-      Grammar.VariableRef.prototype.getTypeName = function(){
-
-        //var opt = new Names.NameDeclOptions
-        var opt = new Names.NameDeclOptions();
-        //opt.informError = true
-        opt.informError = true;
-        //opt.isForward = true
-        opt.isForward = true;
-        //opt.isDummy = true
-        opt.isDummy = true;
-        //var avType = .tryGetReference(opt)
-        var avType = this.tryGetReference(opt);
-        //#get type name
-        //var typeStr = avType.name
-        var typeStr = avType.name;
-        //if typeStr is 'prototype'
-        if (typeStr === 'prototype') {
-            //typeStr = avType.parent.name
-            typeStr = avType.parent.name;
-        };
-        //end if
-        
-
-        //return typeStr
-        return typeStr;
-      };
-
-
-      //helper method addArguments(args:array , callParams:array, skipAnyArr:boolean)
+//##### helper method addArguments(args:array , callParams:array, skipAnyArr:boolean)
       Grammar.VariableRef.prototype.addArguments = function(args, callParams, skipAnyArr){
 
         //var pre=skipAnyArr?'' else '(any_arr){'
@@ -2710,6 +3037,81 @@
 
 
 
+//##### helper method calcPropAccessOnly() returns array 
+      Grammar.VariableRef.prototype.calcPropAccessOnly = function(){
+
+//Start with main variable name, upto functionAccess or indexAccess
+
+        //var actualVar = .tryGetFromScope(.name)
+        var actualVar = this.tryGetFromScope(this.name);
+        //if no actualVar, .throwError("var '#{.name}' not found in scope")
+        if (!actualVar) {this.throwError("var '" + this.name + "' not found in scope")};
+
+        //var result: array = []
+        var result = [];
+
+        //var partial = actualVar.getComposedName()
+        var partial = actualVar.getComposedName();
+        //result.push partial
+        result.push(partial);
+
+        //if no .accessors, return result
+        if (!this.accessors) {return result};
+
+//now follow each PropertyAccess
+
+        //for each inx,ac:Grammar.PropertyAccess in .accessors
+        for( var inx=0,ac ; inx<this.accessors.length ; inx++){ac=this.accessors[inx];
+        
+
+            //if ac isnt instanceof Grammar.PropertyAccess, return result
+            if (!(ac instanceof Grammar.PropertyAccess)) {return result};
+
+            //partial ="#{partial}.#{ac.name}"
+            partial = '' + partial + "." + ac.name;
+
+//access to a namespace property or function. Implies *no* redirection. 
+//when compiled-to-c, namespaces are just lexical name concatenations (better performance)
+
+            //if actualVar and ( actualVar.nodeClass is Grammar.NamespaceDeclaration //is namespace
+            if (actualVar && (actualVar.nodeClass === Grammar.NamespaceDeclaration || (actualVar.nodeClass === Grammar.ClassDeclaration && ac.name !== 'name'))) { //is namespace
+                                    //or (actualVar.nodeClass is Grammar.ClassDeclaration and ac.name isnt 'name' ) // or a class prop other than .name
+                                  //)
+
+                    //just namespace access or accessing a "property" of a class "as namespace"
+                    //result.push "_",ac.name
+                    result.push("_", ac.name);
+            }
+            else {
+
+//else, normal property access. out: `propName__(instance)`. 
+
+//macro "PROP" will evaluate to direct|fast access #ifdef NDEBUG, 
+//and a controlled|checked access otherwise 
+
+            //else
+
+                //result.unshift makeSymbolName(ac.name),"_("  // foo__() macro enclose all 
+                result.unshift(makeSymbolName(ac.name), "_("); // foo__() macro enclose all
+                // here goes thisValue (instance)
+                //result.push ")"
+                result.push(")");
+            };
+
+            //end if
+            
+
+            //if actualVar 
+            if (actualVar) {
+                //actualVar = actualVar.findMember(ac.name)
+                actualVar = actualVar.findMember(ac.name);
+            };
+        };// end for each in this.accessors
+
+        //end loop
+        
+      };
+
 //### append to class Grammar.AssignmentStatement ###
     
 
@@ -2731,11 +3133,12 @@
         //case oper
         
             //when "+=","-=","*=","/=":
-        if ((oper=="+=")
-        ||(oper=="-=")
-        ||(oper=="*=")
-        ||(oper=="/=")
-        ){
+        if (
+           (oper=="+=")
+           ||(oper=="-=")
+           ||(oper=="*=")
+           ||(oper=="/=")
+       ){
 
                 //if oper is '+='
                 if (oper === '+=') {
@@ -2759,8 +3162,9 @@
         
         }
             //when "&=": //string concat
-        else if ((oper=="&=")
-        ){
+        else if (
+           (oper=="&=")
+       ){
                 //.rvalue.produceType = 'any'
                 this.rvalue.produceType = 'any';
                 //.out .lvalue, '=', "_concatAny(2,",.lvalue,',',.rvalue,')'
@@ -2882,8 +3286,8 @@
 
         //var name = .name
         var name = this.name;
-        //if name not in coreSupportedProps and not allPropertyNames.has(name) 
-        if (coreSupportedProps.indexOf(name)===-1 && !(allPropertyNames.has(name))) {
+        //if name not in coreSupportedProps and not allClassProperties.has(name) 
+        if (coreSupportedProps.indexOf(name)===-1 && !(allClassProperties.has(name))) {
             //if allMethodNames.has(name)
             if (allMethodNames.has(name)) {
                 //.sayErr "Ambiguity: A method named '#{name}' is already defined. Cannot reuse the symbol for a property"
@@ -2898,8 +3302,8 @@
             }
             else {
             //else
-                //allPropertyNames.set name, this
-                allPropertyNames.set(name, this);
+                //allClassProperties.set name, this
+                allClassProperties.set(name, this);
             };
         };
       };
@@ -3088,8 +3492,8 @@
 
 //Create a default index var name if none was provided
 
-        //.out "{",NL //enclose defined temp vars in their own scope
-        this.out("{", NL); //enclose defined temp vars in their own scope
+        //.out "{" //enclose defined temp vars in their own scope
+        this.out("{"); //enclose defined temp vars in their own scope
 
         //var listName, uniqueName = UniqueID.getVarName('list')  #unique temp listName var name
         var listName = undefined, uniqueName = UniqueID.getVarName('list');// #unique temp listName var name
@@ -3099,8 +3503,8 @@
         if (this.iterable.operandCount > 1 || this.iterable.root.name.hasSideEffects || this.iterable.root.name instanceof Grammar.Literal) {
             //listName = uniqueName
             listName = uniqueName;
-            //.out "any ",listName,"=",.iterable,";",NL
-            this.out("any ", listName, "=", this.iterable, ";", NL);
+            //.out "any ",listName,"=",.iterable,";"
+            this.out("any ", listName, "=", this.iterable, ";");
         }
         else {
         //else
@@ -3110,37 +3514,42 @@
 
 //create a var holding object property count
 
-        //.out "len_t __propCount=_length(",listName,');' ,NL
-        this.out("len_t __propCount=_length(", listName, ');', NL);
+        //.out "len_t __propCount=_length(",listName,');'
+        this.out("len_t __propCount=_length(", listName, ');');
 
         //var startValue = "0"
         var startValue = "0";
-        //var intIndexVarName = '#{.mainVar.name}__inx';
-        var intIndexVarName = '' + this.mainVar.name + '__inx';
+        //var intIndexVarName = '#{.valueVar.name}__inx';
+        var intIndexVarName = '' + this.valueVar.name + '__inx';
 
-        //if .indexVar 
-        if (this.indexVar) {
-            //.out "any ",.indexVar.name,"=undefined;",NL
-            this.out("any ", this.indexVar.name, "=undefined;", NL);
+        //if .keyIndexVar 
+        if (this.keyIndexVar) {
+            //.out " any ",.keyIndexVar.name,"=undefined;"
+            this.out(" any ", this.keyIndexVar.name, "=undefined;");
         };
 
-        //.out "any ",.mainVar.name,"=undefined;",NL
-        this.out("any ", this.mainVar.name, "=undefined;", NL);
+        //.out " any ",.valueVar.name,"=undefined;", NL
+        this.out(" any ", this.valueVar.name, "=undefined;", NL);
 
         //.out 
             //"for(int __propIndex=", startValue
             //" ; __propIndex < __propCount"
-            //" ; __propIndex++ ){"
-        this.out("for(int __propIndex=", startValue, " ; __propIndex < __propCount", " ; __propIndex++ ){");
+            //" ; __propIndex++ ){", NL
+        this.out("for(int __propIndex=", startValue, " ; __propIndex < __propCount", " ; __propIndex++ ){", NL);
 
-        //.body.out .mainVar.name,"=",listName,".value.prop[__propIndex];",NL
-        this.body.out(this.mainVar.name, "=", listName, ".value.prop[__propIndex];", NL);
 
-        //if .indexVar 
-        if (this.indexVar) {
-            //.body.out .indexVar.name,"= _getPropertyNameAtIndex(",listName,",__propIndex);",NL
-            this.body.out(this.indexVar.name, "= _getPropertyNameAtIndex(", listName, ",__propIndex);", NL);
+        // loop vars assignment block
+        //.body.out "NameValuePair_s _nvp = _unifiedGetNVPAtIndex(",listName,", __propIndex);",NL
+        this.body.out("NameValuePair_s _nvp = _unifiedGetNVPAtIndex(", listName, ", __propIndex);", NL);
+        //.body.out .valueVar.name,"= _nvp.value;"
+        this.body.out(this.valueVar.name, "= _nvp.value;");
+        //if .keyIndexVar
+        if (this.keyIndexVar) {
+            //.body.out .keyIndexVar.name,"= _nvp.name;"
+            this.body.out(this.keyIndexVar.name, "= _nvp.name;");
         };
+        //.body.out NL
+        this.body.out(NL);
 
         //if .where 
         if (this.where) {
@@ -3168,51 +3577,108 @@
 
 //Create a default index var name if none was provided
 
+//vars declaration code in a bracket block to contain scope
+
+        //.out 
+            //"{",NL
+        this.out("{", NL);
+
+//Determine type for loop var indexNameVar
+
+        //var nameIndexType, valueType
+        var nameIndexType = undefined, valueType = undefined;
+        //if .iterable.root.name instanceof Grammar.ArrayLiteral
+        if (this.iterable.root.name instanceof Grammar.ArrayLiteral || this.iterable.root.name instanceof Grammar.StringLiteral) {
+            //or .iterable.root.name instanceof Grammar.StringLiteral
+                //nameIndexType='**native number**'
+                nameIndexType = '**native number**';
+        };
+
+//Check if we can use the iterable as it is, or we need to create a temp var
+
         //var listName
         var listName = undefined;
-        //listName = UniqueID.getVarName('list')  #unique temp listName var name
-        listName = UniqueID.getVarName('list');// #unique temp listName var name
-        //.out "any ",listName,"=",.iterable,";",NL
-        this.out("any ", listName, "=", this.iterable, ";", NL);
 
-        //if .isMap
-        if (this.isMap) {
-            //return .produceForMap(listName)
-            return this.produceForMap(listName);
+        //if .iterable.operandCount>1 or .iterable.root.name.hasSideEffects or .iterable.root.name instanceof Grammar.Literal
+        if (this.iterable.operandCount > 1 || this.iterable.root.name.hasSideEffects || this.iterable.root.name instanceof Grammar.Literal) {
+            //listName = UniqueID.getVarName('list')  #unique temp listName var name
+            listName = UniqueID.getVarName('list');// #unique temp listName var name
+            //.out "var ",listName,"=",.iterable,";",NL
+            this.out("var ", listName, "=", this.iterable, ";", NL);
+        }
+        else {
+        //else
+            //simple var
+            //listName = .iterable
+            listName = this.iterable;
         };
+
+
+//check if a intIndexVarName was specified: `for each inx,name,value in iterable`
 
         //var intIndexVarName
         var intIndexVarName = undefined;
         //var startValue = "0"
         var startValue = "0";
-        //if .indexVar 
-        if (this.indexVar) {
-            //.indexVar.nameDecl.members.set '**proto**','**native number**'
-            this.indexVar.nameDecl.members.set('**proto**', '**native number**');
-            //intIndexVarName = .indexVar.name
-            intIndexVarName = this.indexVar.name;
-            //startValue = .indexVar.assignedValue or "0"
-            startValue = this.indexVar.assignedValue || "0";
+        //if .intIndexVar 
+        if (this.intIndexVar) {
+            //.intIndexVar.nameDecl.setMember '**proto**','**native number**'
+            this.intIndexVar.nameDecl.setMember('**proto**', '**native number**');
+            //intIndexVarName = .intIndexVar.name
+            intIndexVarName = this.intIndexVar.name;
+            //startValue = .intIndexVar.assignedValue or "0"
+            startValue = this.intIndexVar.assignedValue || "0";
         }
         else {
         //else
-            //intIndexVarName = '#{.mainVar.name}__inx';
-            intIndexVarName = '' + this.mainVar.name + '__inx';
+            //intIndexVarName = '#{.valueVar.name}__inx';
+            intIndexVarName = '' + this.valueVar.name + '__inx';
         };
 
-//include mainVar.name in a bracket block to contain scope
+//check if a nameIndexVarName was specified: `for each name,value in iterable`
 
-        //.out "{ var ",.mainVar.name,"=undefined;",NL
-        this.out("{ var ", this.mainVar.name, "=undefined;", NL);
+        //var keyVarName
+        var keyVarName = undefined;
+        //if .keyIndexVar
+        if (this.keyIndexVar) {
+            //keyVarName = .keyIndexVar.name
+            keyVarName = this.keyIndexVar.name;
+        }
+        else {
+        //else
+            //keyVarName = '#{.valueVar.name}__name';
+            keyVarName = '' + this.valueVar.name + '__name';
+        };
+
+//create Iterable.Position, start loop 
 
         //.out 
-            //"for(int ", intIndexVarName,"=", startValue
-            //" ; ",intIndexVarName,"<",listName,".value.arr->length"
-            //" ; ",intIndexVarName,"++){"
-        this.out("for(int ", intIndexVarName, "=", startValue, " ; ", intIndexVarName, "<", listName, ".value.arr->length", " ; ", intIndexVarName, "++){");
+            //"var iter=_newIterPos(); int __inx=0;",NL
+            //"for(int __inx=0; ITER_NEXT(",listName,",iter); __inx++ ){",NL
+        this.out("var iter=_newIterPos(); int __inx=0;", NL, "for(int __inx=0; ITER_NEXT(", listName, ",iter); __inx++ ){", NL);
 
-        //.body.out .mainVar.name,"=ITEM(",intIndexVarName,",",listName,");",NL
-        this.body.out(this.mainVar.name, "=ITEM(", intIndexVarName, ",", listName, ");", NL);
+//declare loop variables (up to three), assign values from item
+
+        //.out
+            //"  var ",.valueVar.name,"=value__(iter)"
+        this.out("  var ", this.valueVar.name, "=value__(iter)");
+
+        //if keyVarName
+        if (keyVarName) {
+            //.out ", ",keyVarName,"=key__(iter)"
+            this.out(", ", keyVarName, "=key__(iter)");
+        };
+
+        //if intIndexVarName
+        if (intIndexVarName) {
+            //.out ", ",intIndexVarName,"=any_number(__inx)"
+            this.out(", ", intIndexVarName, "=any_number(__inx)");
+        };
+
+        //.out ";",NL
+        this.out(";", NL);
+
+//out filter and body
 
         //if .where 
         if (this.where) {
@@ -3225,52 +3691,74 @@
             this.out(this.body);
         };
 
-        //.out "}};",{COMMENT:"end for each in"},NL
-        this.out("}};", {COMMENT: "end for each in"}, NL);
+        //.out "}};",{COMMENT:"end for each loop"},NL
+        this.out("}};", {COMMENT: "end for each loop"}, NL);
       };
+
+///*
+//Create a default index var name if none was provided
+
+        //var listName
+        //listName = UniqueID.getVarName('list')  #unique temp listName var name
+        //.out "any ",listName,"=",.iterable,";",NL
+
+        //if .isMap
+            //return .produceForMap(listName)
+
+        //var intIndexVarName
+        //var startValue = "0"
+        //if .keyIndexVar 
+            //.keyIndexVar.nameDecl.members.set '**proto**','**native number**'
+            //intIndexVarName = .keyIndexVar.name
+            //startValue = .keyIndexVar.assignedValue or "0"
+        //else
+            //intIndexVarName = '#{.valueVar.name}__inx';
+
+//include valueVar.name in a bracket block to contain scope
+
+        //.out "{ var ",.valueVar.name,"=undefined;",NL
+
+        //.out 
+            //"for(int ", intIndexVarName,"=", startValue
+            //" ; ",intIndexVarName,"<",listName,".value.arr->length"
+            //" ; ",intIndexVarName,"++){"
+
+        //.body.out .valueVar.name,"=ITEM(",listName,",",intIndexVarName,");",NL
+
+        //if .where 
+            //.out '  ',.where,"{",.body,"}" //filter condition
+        //else 
+            //.out .body
+
+        //.out "}};",{COMMENT:"end for each in"},NL
 
 
 //####  method produceForMap(listName)
-      Grammar.ForEachInArray.prototype.produceForMap = function(listName){
 
         //.out 
             //"{" //enclose in a block to limit scope of loop vars
             //"NameValuePair_ptr __nvp=NULL; //name:value pair",NL
             //"int64_t __len=MAPSIZE(",listName,"); //how many pairs",NL
-        this.out("{", "NameValuePair_ptr __nvp=NULL; //name:value pair", NL, "int64_t __len=MAPSIZE(", listName, "); //how many pairs", NL);
 
-        //if .indexVar, .out "var ",.indexVar.name,"=undefined; //key",NL 
-        if (this.indexVar) {this.out("var ", this.indexVar.name, "=undefined; //key", NL)};
-        //.out "var ",.mainVar.name,"=undefined; //value",NL
-        this.out("var ", this.mainVar.name, "=undefined; //value", NL);
+        //if .keyIndexVar, .out "var ",.keyIndexVar.name,"=undefined; //key",NL 
+        //.out "var ",.valueVar.name,"=undefined; //value",NL
 
         //.out 
             //"for(int64_t __inx=0"
             //" ; __inx < __len"
             //" ; __inx++ ){",NL
-        this.out("for(int64_t __inx=0", " ; __inx < __len", " ; __inx++ ){", NL);
 
         //.body.out "__nvp = MAPITEM( __inx,",listName,");",NL //get nv pair ptr
-        this.body.out("__nvp = MAPITEM( __inx,", listName, ");", NL); //get nv pair ptr
-        //if .indexVar, .body.out .indexVar.name,"= __nvp->name;",NL //get key
-        if (this.indexVar) {this.body.out(this.indexVar.name, "= __nvp->name;", NL)};
-        //.body.out .mainVar.name,"= __nvp->value;",NL //get value
-        this.body.out(this.mainVar.name, "= __nvp->value;", NL); //get value
+        //if .keyIndexVar, .body.out .keyIndexVar.name,"= __nvp->name;",NL //get key
+        //.body.out .valueVar.name,"= __nvp->value;",NL //get value
 
         //if .where 
-        if (this.where) {
           //.out '  ',.where,"{",.body,"}" //filter condition
-          this.out('  ', this.where, "{", this.body, "}"); //filter condition
-        }
-        else {
         //else 
           //.out .body
-          this.out(this.body);
-        };
 
         //.out "}};",{COMMENT:"end for each in map"},NL
-        this.out("}};", {COMMENT: "end for each in map"}, NL);
-      };
+//*/
 
 //### Append to class Grammar.ForIndexNumeric
     
@@ -3292,12 +3780,12 @@
         //.endExpression.produceType='Number'
         this.endExpression.produceType = 'Number';
 
-        // indicate .indexVar is a native number, so no ".value.number" required to produce a number
-        //.indexVar.nameDecl.members.set '**proto**','**native number**'
-        this.indexVar.nameDecl.members.set('**proto**', '**native number**');
+        // indicate .keyIndexVar is a native number, so no ".value.number" required to produce a number
+        //.keyIndexVar.nameDecl.members.set '**proto**','**native number**'
+        this.keyIndexVar.nameDecl.members.set('**proto**', '**native number**');
 
-        //if .indexVar.assignedValue, .indexVar.assignedValue.produceType='Number'
-        if (this.indexVar.assignedValue) {this.indexVar.assignedValue.produceType = 'Number'};
+        //if .keyIndexVar.assignedValue, .keyIndexVar.assignedValue.produceType='Number'
+        if (this.keyIndexVar.assignedValue) {this.keyIndexVar.assignedValue.produceType = 'Number'};
 
         //if .conditionPrefix in['to','down']
         if (['to', 'down'].indexOf(this.conditionPrefix)>=0) {
@@ -3317,16 +3805,16 @@
         //end if
         
 
-        //.out "for(int64_t ", .indexVar.name,"=", .indexVar.assignedValue or "0","; "
-        this.out("for(int64_t ", this.indexVar.name, "=", this.indexVar.assignedValue || "0", "; ");
+        //.out "for(int64_t ", .keyIndexVar.name,"=", .keyIndexVar.assignedValue or "0","; "
+        this.out("for(int64_t ", this.keyIndexVar.name, "=", this.keyIndexVar.assignedValue || "0", "; ");
 
         //if isToDownTo
         if (isToDownTo) {
 
             //#'for n=0 to 10' -> for(n=0;n<=10;n++)
             //#'for n=10 down to 0' -> for(n=10;n>=0;n--)
-            //.out .indexVar.name, .conditionPrefix is 'to'? "<=" else ">=", endTempVarName
-            this.out(this.indexVar.name, this.conditionPrefix === 'to' ? "<=" : ">=", endTempVarName);
+            //.out .keyIndexVar.name, .conditionPrefix is 'to'? "<=" else ">=", endTempVarName
+            this.out(this.keyIndexVar.name, this.conditionPrefix === 'to' ? "<=" : ">=", endTempVarName);
         }
         else {
 
@@ -3348,7 +3836,7 @@
         //.out "; "
         this.out("; ");
 
-//if no increment specified, the default is indexVar++/--
+//if no increment specified, the default is keyIndexVar++/--
 
         //if .increment
         if (this.increment) {
@@ -3358,14 +3846,14 @@
         else {
         //else
             //default index++ (to) or index-- (down to)
-            //.out .indexVar.name, .conditionPrefix is 'down'? '--' else '++'
-            this.out(this.indexVar.name, this.conditionPrefix === 'down' ? '--' : '++');
+            //.out .keyIndexVar.name, .conditionPrefix is 'down'? '--' else '++'
+            this.out(this.keyIndexVar.name, this.conditionPrefix === 'down' ? '--' : '++');
         };
 
         //.out 
             //"){", .body, "};" 
-            //{COMMENT:"end for #{.indexVar.name}"}, NL
-        this.out("){", this.body, "};", {COMMENT: "end for " + this.indexVar.name}, NL);
+            //{COMMENT:"end for #{.keyIndexVar.name}"}, NL
+        this.out("){", this.body, "};", {COMMENT: "end for " + this.keyIndexVar.name}, NL);
       };
 
 
@@ -3825,8 +4313,8 @@
 
                     //for inx=namedParams.length-1, while inx>=0, inx--
                     for( var inx=namedParams.length - 1; inx >= 0; inx--) {
-                        //.body.out "  case #{inx+1}:#{namedParams[inx]}=arguments[#{inx}];",NL
-                        this.body.out("  case " + (inx + 1) + ":" + (namedParams[inx]) + "=arguments[" + inx + "];", NL);
+                        //.body.out "  case #{inx+1}: #{namedParams[inx]}=arguments[#{inx}];",NL
+                        this.body.out("  case " + (inx + 1) + ": " + (namedParams[inx]) + "=arguments[" + inx + "];", NL);
                     };// end for inx
 
                     //.body.out "}",NL
@@ -4046,12 +4534,12 @@
 
             //if methodName not in coreSupportedMethods and not allMethodNames.has(methodName) 
             if (coreSupportedMethods.indexOf(methodName)===-1 && !(allMethodNames.has(methodName))) {
-                //if allPropertyNames.has(methodName)
-                if (allPropertyNames.has(methodName)) {
+                //if allClassProperties.has(methodName)
+                if (allClassProperties.has(methodName)) {
                     //.sayErr "Ambiguity: A property '#{methodName}' is already defined. Cannot reuse the symbol for a method."
                     this.sayErr("Ambiguity: A property '" + methodName + "' is already defined. Cannot reuse the symbol for a method.");
-                    //allPropertyNames.get(methodName).sayErr "Definition of property '#{methodName}'."
-                    allPropertyNames.get(methodName).sayErr("Definition of property '" + methodName + "'.");
+                    //allClassProperties.get(methodName).sayErr "Definition of property '#{methodName}'."
+                    allClassProperties.get(methodName).sayErr("Definition of property '" + methodName + "'.");
                 }
                 else if (coreSupportedProps.indexOf(methodName)>=0) {
                 //else if methodName in coreSupportedProps
@@ -4110,6 +4598,16 @@
             return this.produceInstanceOfLoop;
         };
 
+//start "case-when", store expression in a tempVar
+
+        //if .varRef
+        if (this.varRef) {
+            //var tmpVar=UniqueID.getVarName('case')
+            var tmpVar = UniqueID.getVarName('case');
+            //.out "var ",tmpVar,"=",.varRef,";",NL
+            this.out("var ", tmpVar, "=", this.varRef, ";", NL);
+        };
+
         //for each index,whenSection in .cases
         for( var index=0,whenSection ; index<this.cases.length ; index++){whenSection=this.cases[index];
         
@@ -4118,14 +4616,14 @@
             //.outSourceLineAsComment whenSection.sourceLineNum
             this.outSourceLineAsComment(whenSection.sourceLineNum);
 
-            //.out index>0? 'else ' : '' 
-            this.out(index > 0 ? 'else ' : '');
+            //.out '    ',index>0? 'else ' : '' 
+            this.out('    ', index > 0 ? 'else ' : '');
 
             //if .varRef
             if (this.varRef) {
                 //case foo...
-                //.out 'if (', {pre:['__is(',.varRef,','], CSL:whenSection.expressions, post:')', separator:'||'}
-                this.out('if (', {pre: ['__is(', this.varRef, ','], CSL: whenSection.expressions, post: ')', separator: '||'});
+                //.out 'if (', {pre:['__is(',tmpVar,','], CSL:whenSection.expressions, post:')', separator:'||'}
+                this.out('if (', {pre: ['__is(', tmpVar, ','], CSL: whenSection.expressions, post: ')', separator: '||'});
             }
             else {
             //else
@@ -4134,11 +4632,11 @@
                 this.out('if (', {pre: ['('], CSL: whenSection.expressions, post: ')', separator: '||'});
             };
 
-            //.out
-                //'){'
-                //whenSection.body, NL
-                //'}'
-            this.out('){', whenSection.body, NL, '}');
+            //.out 
+                //'){',NL
+                //'        ',whenSection.body,";", NL
+                //'    }'
+            this.out('){', NL, '        ', whenSection.body, ";", NL, '    }');
         };// end for each in this.cases
 
 //else body
@@ -4342,24 +4840,25 @@
       //'but':          '&&'
       //'or':           '||'
       //'has property': 'in'
-    var OPER_TRANSLATION = {'no': '!'
-      , 'not': '!'
-      , 'unary -': '-'
-      , 'unary +': '+'
-      , 'type of': 'typeof'
-      , 'instance of': 'instanceof'
-      , 'bitand': '&'
-      , 'bitor': '|'
-      , 'bitxor': '^'
-      , 'bitnot': '~'
-      , 'is': '=='
-      , 'isnt': '!='
-      , '<>': '!='
-      , 'and': '&&'
-      , 'but': '&&'
-      , 'or': '||'
-      , 'has property': 'in'
-      };
+    var OPER_TRANSLATION = {
+       'no': '!'
+       , 'not': '!'
+       , 'unary -': '-'
+       , 'unary +': '+'
+       , 'type of': 'typeof'
+       , 'instance of': 'instanceof'
+       , 'bitand': '&'
+       , 'bitor': '|'
+       , 'bitxor': '^'
+       , 'bitnot': '~'
+       , 'is': '=='
+       , 'isnt': '!='
+       , '<>': '!='
+       , 'and': '&&'
+       , 'but': '&&'
+       , 'or': '||'
+       , 'has property': 'in'
+   };
 
 
     //function operTranslate(name:string)
@@ -4384,8 +4883,3 @@
           //.out "_default(&",name,",",expression,");",NL
           this.out("_default(&", name, ",", expression, ");", NL);
      };
-// --------------------
-// Module code
-// --------------------
-    
-// end of module

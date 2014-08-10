@@ -198,7 +198,7 @@
        // if no .options.skip
        if (!this.options.skip) {
            log.info("Validating");
-           Validate.validate(this);
+           Validate.launch(this);
            // if log.error.count, log.throwControled log.error.count,"errors"
            if (log.error.count) {log.throwControled(log.error.count, "errors")};
        };
@@ -476,20 +476,16 @@
 
            // if importInfo.name
            if (importInfo.name) {
-               // try
-               try{
+                //try
                    node.importedModule = this.importModule(moduleNode, importInfo);
-               
-               }catch(err){
-                    // #show import statement source location
-                   node.sayErr('' + err.message + ' importing module "' + importInfo.name + '"');
-                   // raise err //re-throw
-                   throw err; //re-throw
-               };
            };
        };// end for each in moduleNode.requireCallNodes
        
     };
+                //catch err
+                //    #show import statement source location
+                //    node.sayErr '#{err.message} importing module "#{importInfo.name}"'
+                //    raise err //re-throw
 
 
         // #loop

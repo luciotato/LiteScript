@@ -22,18 +22,16 @@
 
     //import 
         //ControlledError, GeneralOptions
-        //logger
+        //logger, fs, mkPath
     var ControlledError = require('./lib/ControlledError.js');
     var GeneralOptions = require('./lib/GeneralOptions.js');
     var logger = require('./lib/logger.js');
-
-    //global import fs
     var fs = require('fs');
-
-    //shim import Map, PMREX, mkPath
-    var Map = require('./lib/Map.js');
-    var PMREX = require('./lib/PMREX.js');
     var mkPath = require('./lib/mkPath.js');
+
+    //shim import LiteCore, PMREX
+    var LiteCore = require('./interfaces/LiteCore.js');
+    var PMREX = require('./interfaces/PMREX.js');
 
     //ifdef PROD_JS
     //if we're creating a compile-to-js compiler
@@ -101,10 +99,11 @@
               //DATE: .options.now.toDateString()
               //TIME: .options.now.toTimeString()
               //TIMESTAMP: .options.now.toISOString()
-          preprocessor_replaces = new Map().fromObject({DATE: this.options.now.toDateString()
-              , TIME: this.options.now.toTimeString()
-              , TIMESTAMP: this.options.now.toISOString()
-              });
+          preprocessor_replaces = new Map().fromObject({
+             DATE: this.options.now.toDateString()
+             , TIME: this.options.now.toTimeString()
+             , TIMESTAMP: this.options.now.toISOString()
+         });
 
 //stringInterpolationChar starts for every file the same: "#"
 //can be changed in-file with `lexer options` directive
@@ -386,11 +385,12 @@
         var sustantives = ["class", "namespace", "function", "method", "constructor", "properties"];
 
         //var inx=1, countAdj=0, countSust=0, sustLeft=1
-        var inx = 1
-        , countAdj = 0
-        , countSust = 0
-        , sustLeft = 1
-        ;
+        var 
+           inx = 1
+           , countAdj = 0
+           , countSust = 0
+           , sustLeft = 1
+       ;
 
         //while inx<words.length
         while(inx < words.length){
@@ -559,7 +559,7 @@
         //for each macro,value in map preprocessor_replaces
         var value=undefined;
         if(!preprocessor_replaces.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-        for ( var macro in preprocessor_replaces.dict) if (preprocessor_replaces.dict.hasOwnProperty(macro)){value=preprocessor_replaces.dict[macro];
+        for ( var macro in preprocessor_replaces.dict){value=preprocessor_replaces.dict[macro];
             {
             //line=line.replaceAll("__#{macro}__",value)
             line = line.replaceAll("__" + macro + "__", value);
@@ -895,8 +895,9 @@
                     //case words.tryGet(0)
                     
                         //when '#else':
-                    if ((words.tryGet(0)=='#else')
-                    ){
+                    if (
+                       (words.tryGet(0)=='#else')
+                   ){
                             //.replaceSourceLine .line.replaceAll("#else","//else")
                             this.replaceSourceLine(this.line.replaceAll("#else", "//else"));
                             //defValue = not defValue
@@ -904,8 +905,9 @@
                     
                     }
                         //when "#end":
-                    else if ((words.tryGet(0)=="#end")
-                    ){
+                    else if (
+                       (words.tryGet(0)=="#end")
+                   ){
                             //if words.tryGet(1) isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
                             if (words.tryGet(1) !== 'if') {this.throwErr("expected '#end if', read '" + line + "' " + startRef)};
                             //endFound = true
@@ -913,8 +915,9 @@
                     
                     }
                         //when "#endif":
-                    else if ((words.tryGet(0)=="#endif")
-                    ){
+                    else if (
+                       (words.tryGet(0)=="#endif")
+                   ){
                             //endFound = true
                             endFound = true;
                     
@@ -1307,11 +1310,12 @@
         };
 
         //var delimiterPos, closerPos, itemPos, item:string;
-        var delimiterPos = undefined
-        , closerPos = undefined
-        , itemPos = undefined
-        , item = undefined
-        ;
+        var 
+           delimiterPos = undefined
+           , closerPos = undefined
+           , itemPos = undefined
+           , item = undefined
+       ;
         //var items=[];
         var items = [];
 
@@ -1696,16 +1700,12 @@
                 //lexer.stringInterpolationChar = ch
                 lexer.stringInterpolationChar = ch;
             }
-            else if (words.slice(2, 5).join(" ") === "object literal is") {
-
-            //else if words.slice(2,5).join(" ") is "object literal is" 
-                //if no words.tryGet(5) into lexer.options.literalMap
-                if (!((lexer.options.literalMap=words.tryGet(5)))) {
-                    //fail with "missing class to be used instead of object literals"  #check
-                    throw new Error("missing class to be used instead of object literals");// #check
-                };
-            }
             else {
+
+            ///*else if words.slice(2,5).join(" ") is "object literal is" 
+                //if no words.tryGet(5) into lexer.options.literalMap
+                    //fail with "missing class to be used instead of object literals"  #check
+            //*/
 
             //else
                 //fail with "Lexer options, expected: 'literal map'|'literal object'"
@@ -1872,12 +1872,13 @@
             };
 
             //var numberDigits,decPoint="",decimalPart="",expE="",exponent=""
-            var numberDigits = undefined
-            , decPoint = ""
-            , decimalPart = ""
-            , expE = ""
-            , exponent = ""
-            ;
+            var 
+               numberDigits = undefined
+               , decPoint = ""
+               , decimalPart = ""
+               , expE = ""
+               , exponent = ""
+           ;
 
             //if PMREX.whileRanges(chunk,"0-9") into numberDigits
             if ((numberDigits=PMREX.whileRanges(chunk, "0-9"))) {
@@ -1925,7 +1926,7 @@
   //['OPER', /^(is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor)\b/],
 
 //a IDENTIFIER starts with A-Z a-z (a unicode codepoint), $ or _
-//(Note: we recognized numbers above)
+//(Note: we recognized numbers before this)
 
             //if PMREX.whileRanges(chunk,"A-Za-z0-9\x7F-\xFF$_") into var identifier
             var identifier=undefined;
@@ -2188,6 +2189,14 @@
         };
      };
 
+//#### Method getIndent()
+     OutCode.prototype.getIndent = function(){
+        //if no .currLine.length, return 0
+        if (!this.currLine.length) {return 0};
+        //return .currLine[0].countSpaces()
+        return this.currLine[0].countSpaces();
+     };
+
 //#### Method startNewLine()
      OutCode.prototype.startNewLine = function(){
 //Start New Line into produced code
@@ -2359,11 +2368,78 @@
     };
     
     // end class SourceMapMark
-// --------------------
-// Module code
-// --------------------
-// end of module
 
+
+//### append to namespace String
+    
+
+//String.replaceQuoted(text,rep)
+//replace every quoted string inside text, by rep
+
+        //method replaceQuoted(text:string, rep:string)
+        String.replaceQuoted = function(text, rep){
+
+            //var p = 0
+            var p = 0;
+
+//look for first quote (single or double?),
+//loop until no quotes found 
+
+            //var anyQuote = '"' & "'"
+            var anyQuote = '"' + "'";
+
+            //var resultText=""
+            var resultText = "";
+
+            //do 
+            do{
+                //var preQuotes=PMREX.untilRanges(text,anyQuote) 
+                var preQuotes = PMREX.untilRanges(text, anyQuote);
+
+                //resultText &= preQuotes
+                resultText += preQuotes;
+                //text = text.slice(preQuotes.length)
+                text = text.slice(preQuotes.length);
+                //if no text, break // all text processed|no quotes found
+                if (!text) {break};
+
+                //if text.slice(0,3) is '"""' //ignore triple quotes (valid token)
+                if (text.slice(0, 3) === '"""') { //ignore triple quotes (valid token)
+                    //resultText &= text.slice(0,3)
+                    resultText += text.slice(0, 3);
+                    //text = text.slice(3)
+                    text = text.slice(3);
+                }
+                else {
+                //else
+
+                    //var quotedContent
+                    var quotedContent = undefined;
+
+                    //try // accept malformed quoted chunks (do not replace)
+                    try{
+
+                         //quotedContent = PMREX.quotedContent(text)
+                         quotedContent = PMREX.quotedContent(text);
+                         //text = text.slice(1+quotedContent.length+1)
+                         text = text.slice(1 + quotedContent.length + 1);
+                    
+                    }catch(err){
+
+                    //catch err // if malformed - closing quote not found
+                        //resultText &= text.slice(0,1) //keep quote
+                        resultText += text.slice(0, 1); //keep quote
+                        //text = text.slice(1) //only remove quote
+                        text = text.slice(1); //only remove quote
+                    };
+                };
+            } while (!!text);// end loop
+
+            //loop until no text
+
+            //return resultText
+            return resultText;
+        };
 
 ///*
 //### Class DynBuffer

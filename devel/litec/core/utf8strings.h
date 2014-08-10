@@ -30,8 +30,8 @@
 extern "C" {
 #endif
 
-    #define isSequenceStart(s) ((s & 0xC0) != 0x80)
-    #define isContinuationChar(s) ((s & 0xC0) == 0x80)
+    #define isUFT8SequenceStart(s) ((s & 0xC0) != 0x80)
+    #define isUFT8SequenceExtra(s) ((s & 0xC0) == 0x80)
     // bytes 0xxxxxxx (<0x80) are sequence "start" and "end" - ASCII chars 0-127
     // bytes 11xxxxxx (0xC0) are multibyte sequence start
     // bytes 10xxxxxx (0x80) are sequence continuations

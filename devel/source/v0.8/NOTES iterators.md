@@ -1,5 +1,13 @@
 #LiteScript Iterables without generators
 
+replace "for each in map X" implementation to use iterable interface to map
+
+Note: JS/MDN seems to implement the "EOF" signal for iterators by throwing a "StopIteration" Exception.
+
+##Also utf-8 Strings cannot be handled as arrays since element size isnt fixed
+utf-8 Strings will benefit from a "iterable" interface
+
+
 ## ES6 Implementation
 
     ES6 implements iterables by using generators. You have several concepts:
@@ -22,29 +30,31 @@
     YourClassIterable or make method next() a generator. 
     method next() should return a *object* with two properties {done:false,value:[next object in sequence]}
 
-    b) add a method @@iterator to YourClass, returning new YourClassIterator()
+    a.2) add a method @@iterator to YourClass, returning new YourClassIterator()
         
 
 ## LiteScript Implementation
 
-    LiteScript simplifies iterable to a core class *IterablePos* and single interface *iterable*
+    LiteScript simplifies iterable to a core class *Iterable.Position* (a cursor) 
+    and single interface *iterable*
 
-    a) The *IterablePos* core class, is a simple object with no methods, abstracting the position inside
+    a) The *Iterable.Position* core class, is a simple object with no methods, abstracting the position inside
     a iterable sequence.
 
-        class IterablePos
+        class Iterable.Position
             properties 
-                index=-1
-                key=undefined
-                value=undefined
-                extra=undefined
+                index=-1            // numeric 0..n , -1=>BOF
+                len=undefined       // string byteLength | array.length | map.size
+                key=undefined       
+                value=undefined     
+                extra=undefined     
 
-    b) The *Iterable* "interface" consisting of a method "iteratorNext(pos:IterablePos)", advancing
+    b) The *Iterable* "interface" consisting of a method "iterableNext(pos:Iterable.Position)", advancing
     pos to the next item in the sequence and returning false if there is no more items.
 
 ### To make your own class *iterable* in LiteScript you need to:
 
-    a) add to YourClass a `method iteratorNext(pos:IterablePos)` returning the next item in the sequence
+    a) add to YourClass a `method iterableNext(pos:Iterable.Position)` returning the next item in the sequence
     
     b) nothing more. just a)    
 
@@ -52,44 +62,50 @@
 ### Examples: core classes *iterable* implementation in LiteScript:
 
         append to class Object
-            method iterableNext(iter:IterablePos)
+            method iterableNext(iter:Iterable.Position)
 
                 if (iter.index==-1) //initialization
-                    extra=Object.keys(this)
-                
-                iter.index++
-                if index>=extra.length, return false
+                    iter.extra=Object.keys(this)
+                    iter.len = extra.length
 
-                iter.key=iter.extra[index]
+                if ++iter.index >= iter.len, return false
+
+                iter.key=iter.extra[iter.index]
                 iter.value=this.getProperty(iter.key)
                 return true
 
         append to class Array
-            method iterableNext(iter:IterablePos)
+            method iterableNext(iter:Iterable.Position)
 
-                iter.index++
-                if iter.index>=this.length, return false
+                if (iter.index==-1) //initialization
+                    iter.len = this.length
+
+                if ++iter.index >= iter.len, return false
 
                 iter.key=iter.index
                 iter.value=this[iter.index]
                 return true
 
         append to class Map
-            method iterableNext(iter:IterablePos) 
+            method iterableNext(iter:Iterable.Position) 
             // for the naive implementation of Map with a simple array of Name:Value pairs
 
-                iter.index++
-                if iter.index>=this.length, return false
+                if (iter.index==-1) //initialization
+                    iter.len = this.array.length
+
+                if ++iter.index >= iter.len, return false
 
                 iter.key=this.array[iter.index].key
                 iter.value=this.array[iter.index].value
                 return true
 
         append to class String
-            method iterableNext(iter:IterablePos) 
+            method iterableNext(iter:Iterable.Position) 
 
-                iter.index++
-                if iter.index>=this.length, return false
+                if (iter.index==-1) //initialization
+                    iter.len = this.length
+
+                if ++iter.index >= iter.len, return false
 
                 iter.key=iter.index
                 iter.value=this.substr(iter.index,1)
@@ -139,9 +155,11 @@ add "Iterable" interface, make map, array, string, Object "iterable"
 
 #### => C
 
-        typedef struct {any bookmark, int64t_t index, any key, any value} inxNV_t;
+        typedef struct Iterable.Position 
+                {int64t_t index, int64t_t len, any key, any value, any extra} 
+            Iterable_Position_s;
 
-        for(inxNV_t inxNV,_newIterator(s,&inxNV); _iteratorNext(&inxNV);)
+        for(Iterable_Position_s __i,_newIterator(s,&inxNV); _iteratorNext(&inxNV);)
             print inxNV.index,inxNV.key,inxNV.value
 
         _newIterator(inxNV_t* i, any iterable){
@@ -194,14 +212,6 @@ add "Iterable" interface, make map, array, string, Object "iterable"
         method getBookmark
         method moveToBookmark
 
-replace "for each in map X" implementation to use iterable interface to map
-
-Note: JS/MDN seems to implement the "EOF" signal for iterators by throwwing a "StopIteration" Exception.
-Not a good use of exceptions IMHO.
-
-##Also utf-8 Strings cant be handled as arrays since element size isnt fixed
-Strings will benefit from a "iterable" interface
-
 
 ###for each in
 
@@ -217,7 +227,7 @@ Strings will benefit from a "iterable" interface
             print codepoint
         }
 
-        class IterablePos
+        class Iterable.Position
             properties 
                 index=-1
                 key=undefined
@@ -225,7 +235,7 @@ Strings will benefit from a "iterable" interface
                 extra=undefined
 
         append to class Object
-            method iterableNext(iter:IterablePos)
+            method iterableNext(iter:Iterable.Position)
                 if (iter.index==-1) {
                     //initialization
                     extra=Object.keys(this);
@@ -237,7 +247,7 @@ Strings will benefit from a "iterable" interface
                 return true
 
         append to class Array
-            method iterableNext(iter:IterablePos)
+            method iterableNext(iter:Iterable.Position)
                 iter.index++
                 if iter.index>=this.length, return false;
                 iter.key=iter.index
@@ -245,7 +255,7 @@ Strings will benefit from a "iterable" interface
                 return true
 
         append to class Map
-            method iterableNext(iter:IterablePos) //when implemented as a simple array
+            method iterableNext(iter:Iterable.Position) //when implemented as a simple array
                 iter.index++
                 if iter.index>=this.length, return false;
                 iter.key=this.array[iter.index].key
@@ -253,7 +263,7 @@ Strings will benefit from a "iterable" interface
                 return true
 
         append to class String
-            method iterableNext(iter:IterablePos) //when implemented as a simple array
+            method iterableNext(iter:Iterable.Position) //when implemented as a simple array
                 iter.index++
                 if iter.index>=this.length, return false;
                 iter.key=iter.index

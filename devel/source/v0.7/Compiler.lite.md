@@ -123,7 +123,7 @@ validate var & property names
 
         if no project.options.skip
 
-            Validate.validate project
+            Validate.launch project
             if log.error.count is 0, log.info "Validation OK"
 
 initialize out buffer & produce target code 

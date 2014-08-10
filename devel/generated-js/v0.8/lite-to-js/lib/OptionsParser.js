@@ -82,10 +82,6 @@
         return -1;
      };
     // end class OptionsParser
-// --------------------
-// Module code
-// --------------------
-// end of module
 
 
 module.exports=OptionsParser;

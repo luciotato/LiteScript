@@ -294,10 +294,13 @@ Now produce the .c file,
             "//Module ",prefix, .fileInfo.isInterface? ' - INTERFACE':'',NL
             "//-------------------------",NL
 
-include __or temp vars
+/*
+OLD include __or temp vars
 
         .out '#include "#{.fileInfo.base}.c.extra"',NL
         .lexer.outCode.filenames[2] = "#{.fileInfo.outFilename}.extra"
+*/
+
 
 Check if there's a explicit namespace/class with the same name as the module (default export)
 
@@ -333,6 +336,8 @@ __moduleInit: module main function
 
         .out NL,"};",NL
 
+/* __OLD_OR_SUPPORT
+
 insert at .c file start, helper tempvars for 'or' expressions short-circuit evaluation
 
         .out 
@@ -345,6 +350,7 @@ insert at .c file start, helper tempvars for 'or' expressions short-circuit eval
 
         .out ";", {h:1}
 
+*/
 
         .skipSemiColon = true
 
@@ -856,7 +862,8 @@ Each statement in its own line
           .lexer.outCode.ensureNewLine
 
 if there are one or more 'into var x' in a expression in this statement, 
-declare vars before the statement (exclude body of FunctionDeclaration)
+declare vars before the statement (exclude body of FunctionDeclaration).
+Also declare __orXX temp vars to implement js || behavior.
 
         this.callOnSubTree LiteCore.getSymbol('declareIntoVar'), excludeClass=Grammar.Body
 
@@ -893,12 +900,22 @@ or a "statement" (must be inside a funcion in "C")
 
         return not .isDeclaration()
 
-called above, pre-declare vars from 'into var x' assignment-expression
-
     append to class Grammar.Oper
+
       method declareIntoVar()
-          if .intoVar
-              .out "var ",.right,"=undefined;",NL
+
+called above, pre-declare vars from 'into var x' assignment-expression
+and also "__orX" vars to emulate js's || operator behavior.
+
+.intoVar values:
+- '*r' means use .right operaand (used for "into x")
+- anything else is the var name to declare
+
+        var varName = .intoVar
+
+        if varName
+            if varName is '*r', varName = .right
+            .out "var ",varName,"=undefined;",NL
 
 
 ---------------------------------
@@ -1192,13 +1209,12 @@ C: `any __or1;`
 
           when 'or':
             .lexer.outCode.orTempVarCount++
-            var orTmp = '__or#{.lexer.outCode.orTempVarCount}'
 
             .left.produceType = 'any'
             .right.produceType = 'any'
             if .produceType and .produceType isnt 'any', .out '_anyTo',.produceType,'('
             
-            .out '(_anyToBool(#{orTmp}=',.left,')? #{orTmp} : ',.right,')'
+            .out '(_anyToBool(', .intoVar,'=',.left,')? ',.intoVar,' : ',.right,')'
 
             if .produceType and .produceType isnt 'any', .out ')'
 

@@ -21,11 +21,11 @@
     var GeneralOptions = require('./lib/GeneralOptions.js');
     var logger = require('./lib/logger.js');
     var color = require('./lib/color.js');
-    var shims = require('./lib/shims.js');
+    var shims = require('./interfaces/shims.js');
     var mkPath = require('./lib/mkPath.js');
 
-    //shim import Map
-    var Map = require('./lib/Map.js');
+    //shim import LiteCore
+    var LiteCore = require('./interfaces/LiteCore.js');
 
 //Get the 'Environment' object for the compiler to use.
 //The 'Environment' object, must provide functions to load files, search modules, 
@@ -120,7 +120,7 @@
         //logger.msg 'Out Dir:',.options.outDir
         logger.msg('Out Dir:', this.options.outDir);
 
-//compiler vars, to use at conditional compilation
+//compiler vars, #defines, to use at conditional compilation
 
         //.compilerVars = new Map
         this.compilerVars = new Map();
@@ -128,47 +128,47 @@
         //for each def in options.defines
         for( var def__inx=0,def ; def__inx<options.defines.length ; def__inx++){def=options.defines[def__inx];
         
-            //.compilerVars.set def,new Names.Declaration(def)
-            this.compilerVars.set(def, new Names.Declaration(def));
+            //.setCompilerVar def
+            this.setCompilerVar(def);
         };// end for each in options.defines
 
-//add 'inNode' and 'inBrowser' as compiler vars
+//add 'ENV_JS' => this compiler is JS code
 
         //ifdef TARGET_JS
-        //.compilerVars.set 'ENV_JS', new Names.Declaration("ENV_JS")
-        this.compilerVars.set('ENV_JS', new Names.Declaration("ENV_JS"));
+        //.setCompilerVar 'ENV_JS'
+        this.setCompilerVar('ENV_JS');
+
+//add 'ENV_NODE' or 'ENV_JS' as compiler vars.
+//ENV_NODE: this compiler is JS code & we're running on node
+//ENV_NODE: this compiler is JS code & we're running on the browser
+
         //declare var window
         
         //var inNode = type of window is 'undefined'
         var inNode = typeof window === 'undefined';
-        //if inNode
-        if (inNode) {
-            //.compilerVars.set 'ENV_NODE',new Names.Declaration("ENV_NODE")
-            this.compilerVars.set('ENV_NODE', new Names.Declaration("ENV_NODE"));
-        }
-        else {
-        //else
-            //.compilerVars.set 'ENV_BROWSER',new Names.Declaration("ENV_BROWSER")
-            this.compilerVars.set('ENV_BROWSER', new Names.Declaration("ENV_BROWSER"));
-        };
-        //end if
-        
+        //.setCompilerVar inNode? 'ENV_NODE' else 'ENV_BROWSER'
+        this.setCompilerVar(inNode ? 'ENV_NODE' : 'ENV_BROWSER');
         //endif
+
+//add 'ENV_C' => this compiler is C-code (*native exe*)
 
         //ifdef TARGET_C
-        //.compilerVars.set 'ENV_C', new Names.Declaration("ENV_C")
+        //.setCompilerVar 'ENV_C'
         //endif
 
-        //var targetDef = 'TARGET_#{options.target.toUpperCase()}'
-        var targetDef = 'TARGET_' + (options.target.toUpperCase());
-        //.compilerVars.set targetDef,new Names.Declaration(targetDef)
-        this.compilerVars.set(targetDef, new Names.Declaration(targetDef));
+//add 'TARGET_x'
+
+//TARGET_JS: this is the compile-to-js version of LiteScript compiler
+
+//TARGET_C: this is the compile-to-c version of LiteScript compiler
+
+        //.setCompilerVar 'TARGET_#{options.target.toUpperCase()}'
+        this.setCompilerVar('TARGET_' + (options.target.toUpperCase()));
 
         //logger.msg 'preprocessor #defined', .compilerVars.keys()
         logger.msg('preprocessor #defined', this.compilerVars.keys());
-
-        //logger.message .compilerVars
-        //logger.info ""
+        //logger.info "" //blank line
+        logger.info(""); //blank line
 
 //create a 'rootModule' module to hold global scope
 
@@ -186,9 +186,8 @@
         //.rootModule.fileInfo.outFilename = "#{options.outDir}/_project_"
         this.rootModule.fileInfo.outFilename = '' + options.outDir + "/_project_";
 
-
 //Validate.initialize will prepare the global scope 
-//by parsing the file: "lib/GlobalScopeJS.interface.md"
+//by parsing the file: "lib/GlobalScope(JS|NODE|C).interface.md"
 
         //Validate.initialize this 
         Validate.initialize(this);
@@ -196,6 +195,7 @@
         //if options.perf>1, console.timeEnd 'Init Project'
         if (options.perf > 1) {console.timeEnd('Init Project')};
      };
+
 
 //#### Method compile()
      Project.prototype.compile = function(){
@@ -239,8 +239,8 @@
             logger.info("Validating");
             //console.time 'Validate'
             console.time('Validate');
-            //Validate.validate this
-            Validate.validate(this);
+            //Validate.launch this
+            Validate.launch(this);
             //if .options.perf>1, console.timeEnd 'Validate'
             if (this.options.perf > 1) {console.timeEnd('Validate')};
             //if logger.errorCount, logger.throwControlled '#{logger.errorCount} errors'
@@ -261,7 +261,7 @@
         //for each moduleNode:Grammar.Module in map .moduleCache
         var moduleNode=undefined;
         if(!this.moduleCache.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-        for ( var moduleNode__propName in this.moduleCache.dict) if (this.moduleCache.dict.hasOwnProperty(moduleNode__propName)){moduleNode=this.moduleCache.dict[moduleNode__propName];
+        for ( var moduleNode__propName in this.moduleCache.dict){moduleNode=this.moduleCache.dict[moduleNode__propName];
             {
 
             //var result:string
@@ -510,14 +510,16 @@
         //moduleNode.createScope()
         moduleNode.createScope();
         //var opt = new Names.NameDeclOptions
-        //opt.normalizeModeKeepFirstCase = true
-        //moduleNode.exports = new Names.Declaration(fileInfo.base,undefined,moduleNode)
-        moduleNode.exports = new Names.Declaration(fileInfo.base, undefined, moduleNode);
+        var opt = new Names.NameDeclOptions();
+        //opt.nodeClass = Grammar.NamespaceDeclaration // each "Module" is a Namespace
+        opt.nodeClass = Grammar.NamespaceDeclaration; // each "Module" is a Namespace
+        //moduleNode.exports = new Names.Declaration(fileInfo.base,opt,moduleNode)
+        moduleNode.exports = new Names.Declaration(fileInfo.base, opt, moduleNode);
         //moduleNode.exportsReplaced = false
         moduleNode.exportsReplaced = false;
 
-        //var moduleVar = moduleNode.addToScope('module')
-        var moduleVar = moduleNode.addToScope('module');
+        //var moduleVar = moduleNode.addToScope('module',opt)
+        var moduleVar = moduleNode.addToScope('module', opt);
         //moduleNode.exports = moduleVar.addMember('exports') #add as member of 'module'
         //var opt = new Names.NameDeclOptions
         //opt.pointsTo = moduleNode.exports
@@ -529,6 +531,8 @@
         var fnameOpt = new Names.NameDeclOptions();
         //fnameOpt.value = fileInfo.filename
         fnameOpt.value = fileInfo.filename;
+        //fnameOpt.nodeClass = Grammar.VariableDecl
+        fnameOpt.nodeClass = Grammar.VariableDecl;
         //moduleVar.addMember moduleNode.declareName('filename',fnameOpt)
         moduleVar.addMember(moduleNode.declareName('filename', fnameOpt));
 
@@ -693,6 +697,8 @@
 
         //var moduleNode = .createNewModule(fileInfo)
         var moduleNode = this.createNewModule(fileInfo);
+        //moduleNode.dependencyTreeLevel = .recurseLevel
+        moduleNode.dependencyTreeLevel = this.recurseLevel;
 
 //early add to local cache, to cut off circular references
 
@@ -857,8 +863,12 @@
         //if no .compilerVars.get(name) into var nameDecl
         var nameDecl=undefined;
         if (!((nameDecl=this.compilerVars.get(name)))) {
-            //nameDecl = new Names.Declaration(name)
-            nameDecl = new Names.Declaration(name);
+            //var opt = new Names.NameDeclOptions
+            var opt = new Names.NameDeclOptions();
+            //opt.nodeClass = Grammar.VariableDecl
+            opt.nodeClass = Grammar.VariableDecl;
+            //nameDecl = new Names.Declaration(name,opt)
+            nameDecl = new Names.Declaration(name, opt);
             //.compilerVars.set name, nameDecl
             this.compilerVars.set(name, nameDecl);
         };
@@ -873,7 +883,7 @@
         //for each moduleNode:Grammar.Module in map .moduleCache
         var moduleNode=undefined;
         if(!this.moduleCache.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-        for ( var moduleNode__propName in this.moduleCache.dict) if (this.moduleCache.dict.hasOwnProperty(moduleNode__propName)){moduleNode=this.moduleCache.dict[moduleNode__propName];
+        for ( var moduleNode__propName in this.moduleCache.dict){moduleNode=this.moduleCache.dict[moduleNode__propName];
               {
               //moduleNode.lexer.outCode = newOut
               moduleNode.lexer.outCode = newOut;
@@ -885,6 +895,7 @@
     // end class Project
 
     //end class Project
+    
 
 //##Add helper properties and methods to AST node class Module
 
@@ -921,10 +932,5 @@
 //#### Properties
         //importedModule: Grammar.Module
      
-// --------------------
-// Module code
-// --------------------
-    
-// end of module
 
 module.exports=Project;

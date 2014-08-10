@@ -1,10 +1,9 @@
 //Module mkPath
 //=============
 
-    //global import fs, path
+    //import fs, path
     var fs = require('fs');
     var path = require('path');
-
 
 //### export function toFile(filename, mode)
     function toFile(filename, mode){
@@ -68,10 +67,7 @@
             //throw err //another error
             throw err; //another error
         };
-    };// --------------------
-// Module code
-// --------------------
-// end of module
+    };
 
 
 

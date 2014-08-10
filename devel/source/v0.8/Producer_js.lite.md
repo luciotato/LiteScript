@@ -11,7 +11,7 @@ We extend the Grammar classes, so this module require the `Grammar` module.
 
     import ASTBase, Grammar, Environment, UniqueID 
 
-    shim import Map
+    shim import LiteCore
     
 JavaScript Producer Functions
 ==============================
@@ -24,6 +24,9 @@ if a 'export default' was declared, set the referenced namespace
 as the new 'export default' (instead of 'module.exports')
 
         .lexer.outCode.exportNamespace = 'module.exports'
+
+
+/* COMMENTED - reordering statementes in js is destructive
 
 Literate programming should allow to reference a function definde later.
 Leave loose module imperative statements for the last. 
@@ -65,6 +68,10 @@ Produce all vars & functions definitions first.
             NL
             {COMMENT:'end of module'},NL
             NL
+*/
+
+        for each statement in .statements
+            statement.produce
 
 add end of file comments
 
@@ -591,7 +598,7 @@ node.js require() use "./" to denote a local module to load.
 It does as bash does for executable files.
 A name  without "./"" means "look in $PATH" (node_modules and up)
 
-        if no .importedModule or .importedModule.fileInfo.importInfo.globalImport 
+        if no .importedModule or .importedModule.fileInfo.isCore or '.interface.' in .importedModule.fileInfo.filename
             return .name // for node, no './' means "look in node_modules, and up, then global paths"
 
         var thisModule = .getParent(Grammar.Module)
@@ -732,15 +739,17 @@ We create a temp var to assign the iterable expression to
 
           var iterable = .iterable.prepareTempVar()
 
-          if .mainVar
-            .out "var ", .mainVar.name,"=undefined;",NL
+          if .valueVar
+            .out "var ", .valueVar.name,"=undefined;",NL
 
-          var index=.indexVar or UniqueID.getVarName('inx');
+          var index=.keyIndexVar or UniqueID.getVarName('inx');
 
           .out "for ( var ", index, " in ", iterable, ")"
-          .out "if (",iterable,".hasOwnProperty(",index,"))"
+          
+          if .ownKey
+              .out "if (",iterable,".hasOwnProperty(",index,"))"
 
-          .body.out "{", .mainVar.name,"=",iterable,"[",index,"];",NL
+          .body.out "{", .valueVar.name,"=",iterable,"[",index,"];",NL
 
           .out .where
 
@@ -767,19 +776,19 @@ Create a default index var name if none was provided
 
         var indexVarName, startValue
 
-        if no .indexVar
-            indexVarName = .mainVar.name & '__inx'  #default index var name
+        if no .keyIndexVar
+            indexVarName = .valueVar.name & '__inx'  #default index var name
             startValue = "0"
         else
-            indexVarName = .indexVar.name
-            startValue = .indexVar.assignedValue or "0"
+            indexVarName = .keyIndexVar.name
+            startValue = .keyIndexVar.assignedValue or "0"
 
         .out "for( var "
-                , indexVarName,"=",startValue,",",.mainVar.name
+                , indexVarName,"=",startValue,",",.valueVar.name
                 ," ; ",indexVarName,"<",iterable,".length"
                 ," ; ",indexVarName,"++){"
 
-        .body.out .mainVar.name,"=",iterable,"[",indexVarName,"];",NL
+        .body.out .valueVar.name,"=",iterable,"[",indexVarName,"];",NL
 
         if .where 
           .out '  ',.where,"{",.body,"}"
@@ -795,24 +804,23 @@ When Map is implemented using js "Object"
       method produceInMap(iterable)
 
           var indexVarName:string
-          if no .indexVar
-            indexVarName = .mainVar.name & '__propName'
+          if no .keyIndexVar
+            indexVarName = .valueVar.name & '__propName'
           else
-            indexVarName = .indexVar.name
+            indexVarName = .keyIndexVar.name
 
-          .out "var ", .mainVar.name,"=undefined;",NL
+          .out "var ", .valueVar.name,"=undefined;",NL
           .out 'if(!',iterable,'.dict) throw(new Error("for each in map: not a Map, no .dict property"));',NL
           .out "for ( var ", indexVarName, " in ", iterable, ".dict)"
-          .out " if (",iterable,".dict.hasOwnProperty(",indexVarName,"))"
 
-          if .mainVar
-              .body.out "{", .mainVar.name,"=",iterable,".dict[",indexVarName,"];",NL
+          if .valueVar
+              .body.out "{", .valueVar.name,"=",iterable,".dict[",indexVarName,"];",NL
 
           .out .where
 
           .body.out "{", .body, "}",NL
 
-          if .mainVar
+          if .valueVar
             .body.out NL, "}"
 
           .out {COMMENT:"end for each property"},NL
@@ -842,13 +850,13 @@ For loops "to/down to" evaluate end expresion only once
 
         end if
 
-        .out "for( var ",.indexVar.name, "=", .indexVar.assignedValue or "0", "; "
+        .out "for( var ",.keyIndexVar.name, "=", .keyIndexVar.assignedValue or "0", "; "
 
         if isToDownTo
 
             #'for n=0 to 10' -> for(n=0;n<=10;n++)
             #'for n=10 down to 0' -> for(n=10;n>=0;n--)
-            .out .indexVar.name, .conditionPrefix is 'to'? "<=" else ">=", endTempVarName
+            .out .keyIndexVar.name, .conditionPrefix is 'to'? "<=" else ">=", endTempVarName
 
         else # is while|until
 
@@ -861,17 +869,17 @@ Produce the condition, negated if the prefix is 'until'.
 
         .out "; "
 
-if no increment specified, the default is indexVar++
+if no increment specified, the default is keyIndexVar++
 
         if .increment
             .out .increment //statements separated by ","
         else
             //default index++ (to) or index-- (down to)
-            .out .indexVar.name, .conditionPrefix is 'down'? '--' else '++'
+            .out .keyIndexVar.name, .conditionPrefix is 'down'? '--' else '++'
 
         .out ") "
 
-        .out "{", .body, "};",{COMMENT:"end for #{.indexVar.name}"}, NL
+        .out "{", .body, "};",{COMMENT:"end for #{.keyIndexVar.name}"}, NL
 
 
 
@@ -1036,13 +1044,15 @@ A `FreeObjectLiteral` is an object definition using key/value pairs, but in free
               if no .getOwnerPrefix() into prefix 
                   fail with 'method "#{.name}" Cannot determine owner object'
 
+          var ownerName:string = prefix.join("")
+          if ownerName.slice(-1) is '.', ownerName = ownerName.slice(0,-1)
+
           #if shim, check before define
-          if .hasAdjective("shim"), .out "if (!",prefix,.name,")",NL
+          if .hasAdjective("shim"), .out "if (!Object.prototype.hasOwnProperty.call(",ownerName,",'",.name,"'))",NL
 
           if .definePropItems #we should code Object.defineProperty
-              if prefix[1].slice(-1) is '.', prefix[1] = prefix[1].slice(0,-1) #remove extra dot
               .out "Object.defineProperty(",NL,
-                    prefix, ",'",.name,"',{value:function",generatorMark
+                    ownerName, ",'",.name,"',{value:function",generatorMark
           else
               .out prefix,.name," = function",generatorMark
 
@@ -1219,9 +1229,7 @@ js: function-constructor-class-namespace-object (All-in-one)
 
 call super-class __init
 
-        if .varRefSuper
-            .out {COMMENT:["default constructor: call super.constructor"]}
-            .out NL,"    ",.varRefSuper,".prototype.constructor.apply(this,arguments)",NL
+        .addCallToSuperClassInit
 
 initialize own properties
 
@@ -1233,6 +1241,12 @@ initialize own properties
             .out ";",NL
         else
             .out "};",NL
+
+if the class is global...
+
+        if .hasAdjective('global')
+            .out '//global class',NL
+            .out 'GLOBAL.',.name,"=",.name,";",NL //set declared fn-Class as method of GLOBAL
 
 if the class is inside a namespace...
 
@@ -1258,6 +1272,28 @@ If the class was adjectivated 'export', add to module.exports
         .skipSemiColon = true
 
 
+      method addCallToSuperClassInit
+
+        if .varRefSuper 
+
+            if .varRefSuper.name is 'Error'
+
+a hack to overcome a js quirk - extending Error class
+
+              .out """
+                  //Sadly, the Error Class in javascript is not easily subclassed.
+                  //http://stackoverflow.com/questions/8802845/inheriting-from-the-error-object-where-is-the-message-property
+                  this.__proto__.__proto__=Error.apply(null,arguments);
+                  //NOTE: all instances of ControlledError will share the same info
+                  """
+            
+            else //other "normal" supers
+
+              .out 
+                  {COMMENT:["default constructor: call super.constructor"]},NL
+                  "    ",.varRefSuper,".prototype.constructor.apply(this,arguments)",NL
+
+
 ### Append to class Grammar.AppendToDeclaration ###
 
 Any class|object can have properties or methods appended at any time. 
@@ -1277,6 +1313,10 @@ Append-to body contains properties and methods definitions.
         .out 'var ',.name,'={};'
         .out .body
         .skipSemiColon = true
+
+        if .hasAdjective('global')
+            .out '//global class',NL
+            .out 'GLOBAL.',.name,"=",.name,";",NL //set declared fn-Class as method of GLOBAL
 
         .produceExport .name
 

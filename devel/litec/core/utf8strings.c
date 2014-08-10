@@ -36,7 +36,7 @@
         assert(s.class==String_inx);
         uint64_t len = 0;
         if (!s.res){// simple str
-            for (; s.len--; ++s.value.str) if isSequenceStart(*s.value.str) ++len;
+            for (; s.len--; ++s.value.str) if isUFT8SequenceStart(*s.value.str) ++len;
             return len;
         }
 
@@ -47,12 +47,11 @@
         for( ;s.len--; slicePtr++){
             ConcatdItem_s sl = *slicePtr;
             str ptr=sl.str;
-            for (; sl.byteLen--; ptr++) if (isSequenceStart(*ptr)) len++;
+            for (; sl.byteLen--; ptr++) if (isUFT8SequenceStart(*ptr)) len++;
         }
         if (len>UINT32_MAX) fatal("utf8len:concatdSlices: string too large");
         return len;
     }
-
 
     /** returns
      *
@@ -69,7 +68,7 @@
         assert(ptr >= s.value.str);
         int64_t inx = -1;
         for (; s.len-- && s.value.str <= ptr; ++s.value.str) {
-            if isSequenceStart(*s.value.str) ++inx;
+            if isUFT8SequenceStart(*s.value.str) ++inx;
         }
         return inx;
     }
@@ -97,7 +96,7 @@
             actual = pastEnd;
             while(index++){
                 actual--;
-                while(isContinuationChar(*actual)) { //while multi-code sequence
+                while(isUFT8SequenceExtra(*actual)) { //while multi-code sequence
                     actual--;
                     if (actual<=s.value.str) return actual; //if neg index too large
                 };
@@ -108,7 +107,7 @@
         // >0, from start
         actual = s.value.ptr + 1; //skip first (trivial case index==0 managed above)
         while(TRUE){
-            if isSequenceStart(*actual) {
+            if isUFT8SequenceStart(*actual) {
                 if (--index==0) return actual; //reached nt'h codepoint
             }
             if (actual>=pastEnd) return pastEnd; //if index too large

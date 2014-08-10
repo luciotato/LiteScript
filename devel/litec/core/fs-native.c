@@ -6,7 +6,7 @@
  */
 
     // fs.h gets generated based on fs.interface.lite.md
-    #include "fs.h"
+    #include "fs-native.h"
     #include "LiteC-core.h"
     #include <sys/stat.h>
     #include <errno.h>
@@ -30,7 +30,8 @@
         struct stat st;
         int result;
         if (result=stat(_tempCString(arguments[0]), &st) == -1){
-            var err=new(Error,1,(any_arr){any_CStr(strerror(errno))});
+            var errMsg=_concatAny(3,any_CStr(strerror(errno)),any_COLON,arguments[0]);
+            var err=new(Error,1,(any_arr){errMsg});
             str errCode;
             switch(errno){
                 case EPERM: errCode="EPERM";break;
@@ -97,7 +98,7 @@
     };
 
     any fs_readFileSync( any this, len_t argc, any *arguments ) {
-        any stat=fs_statSync(this,argc,arguments);
+        any stat=fs_statSync(this,1,arguments);
         if (STAT->size.value.number > UINT32_MAX) {
             throw(_newErr(_concatAny(3
                     ,any_LTR("at fs_readFileSync('")
@@ -200,3 +201,4 @@
     //native required initialization
     void fs__nativeInit(){
     }
+

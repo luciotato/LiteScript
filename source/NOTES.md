@@ -12,6 +12,12 @@
   caso 2: estaba llamando compileProject(name,options) 
   pero compileProject now is compileProject(options)
 
+#multicoment on same line fails:
+
+example:
+
+    /* -----[ Tokenizer ]----- */
+
 
 # for each property, confusing
 

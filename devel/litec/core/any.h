@@ -33,6 +33,7 @@ extern "C" {
     typedef struct Function_s * Function_ptr;
     typedef struct Buffer_s * Buffer_ptr;
     typedef struct ConcatdItem_s * ConcatdItem_ptr;
+    typedef struct Iterable_Position_s * IterablePos_ptr;
     typedef struct __instance_s * __instance_ptr;
 
     /**
@@ -45,6 +46,7 @@ extern "C" {
         // native property values
         double number;
         uint64_t uint64;
+        int64_t int64;
         time_t time;
 
         // shortcuts for core methods
@@ -56,6 +58,7 @@ extern "C" {
         Error_ptr err; ///<if class Err
         Map_ptr map; ///<if class Map
         Buffer_ptr buf; ///<if class Buffer
+        IterablePos_ptr iterable; //iteratorPos (cursor)
 
         // to help debugging
         __instance_ptr instance; ///<generic instance pointer, to ease debug
@@ -69,6 +72,7 @@ extern "C" {
         class_t class;  /**< 2-byte - CLASSES[class] defines the model for the memory space pointed by .value.property */
         reserved_t res; /**< 2-byte - reserved units of memory - byteLen=MEMUNITSIZE*.res - MEMUNITSIZE=64 (bytes)
                          * for Strings: .res=0 for simple string, res>0 for ConcatdSlices
+                         * for Number: .res=0 =>value.number .res=1 => .value.int64
                          * for ImmArray: .res= reserved units of memory
                          * for large ConcatdStrings & large ImmArrays
                          *   .len*sizeOf(x) can be > MEMUNITSIZE*.res

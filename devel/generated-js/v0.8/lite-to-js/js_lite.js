@@ -3,7 +3,7 @@
 //when the LiteScript compiler is generated as js-code 
 //to run on node.js or the browser
 
-    //global import path,fs
+    //import path,fs
     var path = require('path');
     var fs = require('fs');
 
@@ -19,6 +19,7 @@
 //execute commands
 
     //execute process.argv
+    execute(process.argv);
 
 
 //### function execute(params:array)
@@ -29,8 +30,11 @@
 
 //#### usage
 
+        //var options = new GeneralOptions()
+        var options = new GeneralOptions();
+
         //var usage = """
-        var usage = "\n        " + title + "\n\n        Usage:\n                lite mainModule.lite.md [options]\n                lite -run mainModule.lite.md [options]\n\n        This command will launch the LiteScript Compiler for mainModule.lite.md\n\n        options are:\n        -r, -run         compile & run .lite.md file\n        -o dir           output dir. Default is './generated/js/'\n        -b, -browser     compile for a browser environment (window instead of global, no process, etc)\n        -v, -verbose     verbose level, default is 0 (0-3)\n        -w, -warning     warning level, default is 1 (0-1)\n        -comments        comment level on generated files, default is 1 (0-2)\n        -version         print LiteScript version & exit\n        -i dir           additional \"import\" dir. e.g: -i ../../intefaces\n\n        Advanced options:\n        -s,  -single     compile single file. do not follow \"import\" statements\n        -wa, -watch      watch current dir for source changes and compile\n        -es6, --harmony  used with -run, uses node --harmony\n        -nm, -nomap      do not generate sourcemap\n        -noval           skip property name validation\n        -D NAME -D NAME  preprocessor defines (#define)\n        -d, -debug       enable full compiler debug logger file at 'out/debug.logger'\n        -run -debug      when -run used with -debug, launch compiled file with: node --debug-brk\n";
+        var usage = "\n        " + title + "\n\n        Usage:\n                lite mainModule.lite.md [options]\n                lite -run mainModule.lite.md [options]\n\n        This command will launch the LiteScript Compiler for mainModule.lite.md\n\n        options are:\n        -r, -run         compile & run .lite.md file\n        -o dir           output dir. Default is '" + options.outDir + "'\n        -v, -verbose     verbose level, default is " + options.verboseLevel + " (0-3)\n        -w, -warning     warning level, default is " + options.warningLevel + " (0-1)\n        -c, -comment     comment level on generated files, default is " + options.comments + " (0-2)\n        -b, -browser     compile for a browser environment (window instead of global, no process, etc)\n        -i dir           additional \"import\" dir. e.g: -i ../../intefaces\n\n        -h, -help        print this help\n        -version         print LiteScript version & exit\n\n        Advanced options:\n        -s,  -single     compile single file. do not follow \"import\" statements\n        -wa, -watch      watch current dir for source changes and compile\n        -es6, --harmony  used with -run, uses node --harmony\n        -nm, -nomap      do not generate sourcemap\n        -noval           skip property name validation\n        -D NAME -D NAME  preprocessor defines (#define)\n        -d, -debug       enable full compiler debug logger file at 'out/debug.logger'\n        -run -debug      when -run used with -debug, launch compiled file with: node --debug-brk\n";
 
         //#{title}
 
@@ -42,13 +46,15 @@
 
         //options are:
         //-r, -run         compile & run .lite.md file
-        //-o dir           output dir. Default is './generated/js/'
+        //-o dir           output dir. Default is '#{options.outDir}'
+        //-v, -verbose     verbose level, default is #{options.verboseLevel} (0-3)
+        //-w, -warning     warning level, default is #{options.warningLevel} (0-1)
+        //-c, -comment     comment level on generated files, default is #{options.comments} (0-2)
         //-b, -browser     compile for a browser environment (window instead of global, no process, etc)
-        //-v, -verbose     verbose level, default is 0 (0-3)
-        //-w, -warning     warning level, default is 1 (0-1)
-        //-comments        comment level on generated files, default is 1 (0-2)
-        //-version         print LiteScript version & exit
         //-i dir           additional "import" dir. e.g: -i ../../intefaces
+
+        //-h, -help        print this help
+        //-version         print LiteScript version & exit
 
         //Advanced options:
         //-s,  -single     compile single file. do not follow "import" statements
@@ -62,14 +68,10 @@
 
         //"""
 
-
 //Get & process command line arguments
 
         //var args = new OptionsParser(params)
         var args = new OptionsParser(params);
-
-        //var options = new GeneralOptions
-        var options = new GeneralOptions();
 
         //var 
             //isCompileAndRun:boolean
@@ -113,38 +115,37 @@
 
 //set other options
 
+        //var optValue
+        var optValue = undefined;
+
         //with options
         var _with1=options;
-            //.outDir         = path.resolve(args.valueFor('o') or './generated/js') //output dir
-            _with1.outDir = path.resolve(args.valueFor('o') || './generated/js'); //output dir
-            //.verboseLevel   = Number(args.valueFor('v',"verbose") or 0) 
-            _with1.verboseLevel = Number(args.valueFor('v', "verbose") || 0);
-            //.warningLevel   = Number(args.valueFor('w',"warning") or 1)
-            _with1.warningLevel = Number(args.valueFor('w', "warning") || 1);
-            //.comments       = Number(args.valueFor('comment',"comments") or 1) 
-            _with1.comments = Number(args.valueFor('comment', "comments") || 1);
-            //.debugEnabled   = args.option('d',"debug") 
-            _with1.debugEnabled = args.option('d', "debug");
-            //.skip           = args.option('noval',"novalidation") // skip name validation
-            _with1.skip = args.option('noval', "novalidation"); // skip name validation
-            //.generateSourceMap = args.option('nm',"nomap")? false:true // do not generate sourcemap
-            _with1.generateSourceMap = args.option('nm', "nomap") ? false : true; // do not generate sourcemap
-            //.single         = args.option('s',"single") // single file- do not follow require() calls
-            _with1.single = args.option('s', "single"); // single file- do not follow require() calls
-            //.compileIfNewer = args.option('ifn',"ifnew") // single file, compile if source is newer
-            _with1.compileIfNewer = args.option('ifn', "ifnew"); // single file, compile if source is newer
-            //.browser        = args.option('b',"browser") 
-            _with1.browser = args.option('b', "browser");
-            //.es6            = args.option('es6',"harmony") 
-            _with1.es6 = args.option('es6', "harmony");
-            //.perf           = parseInt(args.valueFor('perf',"performance") or 0)
-            _with1.perf = parseInt(args.valueFor('perf', "performance") || 0);
-            //.defines = []
-            _with1.defines = [];
-            //.includeDirs = []
-            _with1.includeDirs = [];
+            //if args.valueFor('o') into optValue,            .outDir = path.resolve(optValue) //output dir
+            if ((optValue=args.valueFor('o'))) {_with1.outDir = path.resolve(optValue)};
+            //if args.valueFor('v',"verbose") into optValue,  .verboseLevel = parseInt(optValue)
+            if ((optValue=args.valueFor('v', "verbose"))) {_with1.verboseLevel = parseInt(optValue)};
+            //if args.valueFor('w',"warning") into optValue,  .warningLevel = parseInt(optValue)
+            if ((optValue=args.valueFor('w', "warning"))) {_with1.warningLevel = parseInt(optValue)};
+            //if args.valueFor('c',"comment") into optValue,  .comments = parseInt(optValue)
+            if ((optValue=args.valueFor('c', "comment"))) {_with1.comments = parseInt(optValue)};
+            //if args.valueFor('perf') into optValue,         .perf = parseInt(optValue)
+            if ((optValue=args.valueFor('perf'))) {_with1.perf = parseInt(optValue)};
+
+            //if args.option('d',"debug"),     .debugEnabled = true
+            if (args.option('d', "debug")) {_with1.debugEnabled = true};
+            //if args.option('noval'),         .skip = true
+            if (args.option('noval')) {_with1.skip = true};
+            //if args.option('nm',"nomap"),    .generateSourceMap = false // do not generate sourcemap
+            if (args.option('nm', "nomap")) {_with1.generateSourceMap = false};
+            //if args.option('s',"single"),    .single = true // single file- do not follow imports
+            if (args.option('s', "single")) {_with1.single = true};
+            //if args.option('b',"browser"),   .browser = true // single file- do not follow imports
+            if (args.option('b', "browser")) {_with1.browser = true};
+            //if args.option('es6',"harmony"), .browser = true // single file- do not follow imports
+            if (args.option('es6', "harmony")) {_with1.browser = true};
         ;
 
+            //.compileIfNewer = args.option('ifn',"ifnew") // single file, compile if source is newer
 
         //while args.valueFor('D') into var newDef
         var newDef=undefined;
@@ -176,8 +177,9 @@
         //case args.items.length 
         
             //when 0:
-        if ((args.items.length==0)
-        ){
+        if (
+           (args.items.length==0)
+       ){
                 //if no options.mainModuleName
                 if (!options.mainModuleName) {
                     //console.error  """
@@ -192,8 +194,9 @@
         
         }
             //when 1:
-        else if ((args.items.length==1)
-        ){
+        else if (
+           (args.items.length==1)
+       ){
                 //options.mainModuleName = args.items[0]
                 options.mainModuleName = args.items[0];
         
@@ -280,6 +283,7 @@
     };
 
     //end function execute
+    
 
 
 //### function compileAndRun(compileAndRunParams:array, options:GeneralOptions)
@@ -465,9 +469,4 @@
             //console.log err.message
             console.log(err.message);
         };
-    };// --------------------
-// Module code
-// --------------------
-    execute(process.argv);
-    
-// end of module
+    };

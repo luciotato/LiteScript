@@ -571,10 +571,10 @@ If 'var' was adjectivated 'export', add to exportNamespace
       method getNodeJSRequireFileRef() 
         
 node.js require() require "./" to denote a local module to load.
-it does like bash does for executable files. A name  without ./ means "look in $PATH".
+it does as bash does for executable files. A name  without ./ means "look in $PATH".
 this is not the most intuitive choice.
 
-        if .importedModule.fileInfo.importInfo.globalImport 
+        if '.interface.' in .importedModule.fileInfo.filename or .importedModule.fileInfo.isCore
             return .name // for node, no './' means "look in node_modules, and up, then global paths"
 
         var thisModule = .getParent(Grammar.Module)
@@ -715,7 +715,8 @@ Since al 3 cases are closed with '}; //comment', we skip statement semicolon
           var index=.indexVar or ASTBase.getUniqueVarName('inx');
 
           .out "for ( var ", index, " in ", iterable, ")"
-          //.out "if (",iterable,".hasOwnProperty(",index,"))"
+          if .ownKey
+              .out "if (",iterable,".hasOwnProperty(",index,"))"
 
           .body.out "{", .mainVar.name,"=",iterable,"[",index,"];",NL
 
@@ -773,7 +774,6 @@ When Map is implemented using js "Object"
           .out "var ", .mainVar.name,"=undefined;",NL
           .out 'if(!',iterable,'.dict) throw(new Error("for each in map: not a Map, no .dict property"));',NL
           .out "for ( var ", indexVarName, " in ", iterable, ".dict)"
-          .out " if (",iterable,".dict.hasOwnProperty(",indexVarName,"))"
 
           if .mainVar
               .body.out "{", .mainVar.name,"=",iterable,".dict[",indexVarName,"];",NL
@@ -1221,10 +1221,16 @@ initialize own properties
         else
             .out "};",NL
 
+if the class is global...
+
+        if .hasAdjective('global')
+            .out 'GLOBAL.',.name,"=",.name,";",NL //set declared fn-Class as method of GLOBAL
+
 if the class is inside a namespace...
 
         if prefix and prefix.length 
             .out prefix,.name,"=",.name,";",NL //set declared fn-Class as method of owner-namespace
+
 
 Set super-class if we have one indicated
 
@@ -1267,6 +1273,9 @@ Append-to body contains properties and methods definitions.
         .out no .varRef.accessors? 'var ':'' ,.varRef,'={};'
         .out .body
         .skipSemiColon = true
+
+        if .hasAdjective('global')
+            .out 'GLOBAL.',.varRef.name,"=",.varRef.name,";",NL //set declared fn-Class as method of GLOBAL
 
         if not .lexer.out.browser
             if .export and not .default

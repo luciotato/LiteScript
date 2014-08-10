@@ -1,8 +1,7 @@
 Module mkPath
 =============
 
-    global import fs, path
-
+    import fs, path
 
 ### export function toFile(filename, mode)
 Create a path to a file

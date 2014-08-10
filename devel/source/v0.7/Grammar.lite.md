@@ -734,9 +734,16 @@ if the optional `own` keyword is used, only instance properties will be looped
         indexVar:VariableDecl, mainVar:VariableDecl
         iterable, where:ForWhereFilter
         body
+        ownKey
 
       method parse()
         .req('each')
+
+
+optional "own"
+
+        if .opt("own") into .ownKey
+          .lock()
 
 next we require: 'property', and lock.
 
@@ -3272,7 +3279,7 @@ Check validity of adjective-statement combination
                     nice: ['function','method'] 
                     shim: ['function','method','class','namespace','import'] 
                     helper:  ['function','method','class','namespace']
-                    global: ['import','declare']
+                    global: ['import','declare','class','namespace']
 
               var valid:string array = validCombinations[adj.name] or ['-*none*-']
               if key not in valid, .throwError "'#{adj.name}' can only apply to #{valid.join('|')} not to '#{key}'"

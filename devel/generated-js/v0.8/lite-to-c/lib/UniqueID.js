@@ -2,8 +2,8 @@
 
 //### dependencies
 
-    //shim import Map
-    var Map = require('./Map.js');
+    //import Map
+    var Map = require('./../interfaces/Map.js');
 
 //### Support Module Var:
 
@@ -48,10 +48,6 @@
     }
     // export
     module.exports.getVarName = getVarName;
-// --------------------
-// Module code
-// --------------------
-// end of module
 
 
 

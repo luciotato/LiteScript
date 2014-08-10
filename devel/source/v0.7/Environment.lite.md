@@ -93,6 +93,8 @@ we search the module
                     path.join(importingModuleFileInfo.dirname, this.importInfo.name)
                     path.join(importingModuleFileInfo.dirname,'/lib',this.importInfo.name)
                     path.join(importingModuleFileInfo.dirname,'../lib',this.importInfo.name)
+                    path.join(importingModuleFileInfo.dirname,'/interfaces',this.importInfo.name)
+                    path.join(importingModuleFileInfo.dirname,'../interfaces',this.importInfo.name)
                     ]
 
             for each item in search where not found

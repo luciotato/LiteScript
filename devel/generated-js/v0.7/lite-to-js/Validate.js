@@ -141,8 +141,8 @@
 //   bObj.classBProp1 = 5 // <-- this is ok
 
 
-   // export function validate()
-   function validate(){
+   // export function launch()
+   function launch(){
 
 // We start this module once the entire multi-node AST tree has been parsed.
 
@@ -265,7 +265,16 @@
              // if referenceNameDecl
              if (referenceNameDecl) {
 
-               referenceNameDecl.makePointTo(node.importedModule.exports);
+               var sameName = node.importedModule.exports.findOwnMember(referenceNameDecl.name);
+               // if sameName
+               if (sameName) {
+                   referenceNameDecl.makePointTo(sameName);
+               }
+               
+               else {
+                   referenceNameDecl.makePointTo(node.importedModule.exports);
+               };
+
                // if no node.importedModule.exports.findOwnMember('prototype')
                if (!node.importedModule.exports.findOwnMember('prototype')) {
                     // if it does not have a 'prototype' => it's not a Function-Class
@@ -380,7 +389,7 @@
        
    };
    // export
-   module.exports.validate=validate;
+   module.exports.launch=launch;
 
    // end function validate
 
@@ -434,6 +443,8 @@
        functionProto.addMember('initInstance', {type: functionProto});// #unified way to call Class Initialization function
         // #Function is declared here so ':function' type properties (methods) of "Array" or "String"
         // #can be properly typified
+
+       objProto.ownMember("hasOwnProperty").setMember('**proto**', functionProto);
 
        var stringProto = addBuiltInObject('String');
        var arrayProto = addBuiltInObject('Array');
@@ -506,6 +517,7 @@
        globalScope.addMember('clearTimeout');
        globalScope.addMember('setInterval');
        globalScope.addMember('clearInterval');
+       globalScope.addMember('__dirname');
 
         // declare valid project.options.browser
        // if project.options.browser
@@ -980,10 +992,15 @@
        }
        
        else {
-         // if options.informError, log.warning "#{.positionText()}. No member named '#{name}' on #{nameDecl.info()}"
-         if (options.informError) {log.warning("" + (this.positionText()) + ". No member named '" + name + "' on " + (nameDecl.info()))};
-         // if options.isForward, found = .addMemberTo(nameDecl,name,options)
-         if (options.isForward) {found = this.addMemberTo(nameDecl, name, options)};
+         // if options.informError
+         if (options.informError) {
+             log.warning("" + (this.positionText()) + ". No member named '" + name + "' on " + (nameDecl.info()));
+         };
+
+         // if options.isForward
+         if (options.isForward) {
+             found = this.addMemberTo(nameDecl, name, options);
+         };
        };
 
        return found;
@@ -1475,25 +1492,36 @@
 
 // Add class name, to parent scope. A "class" in js is a function
 
-       this.nameDecl = this.addToScope(this.name, {type: globalPrototype('Function')});
 
-        // #If we're in a namespace, add class to namespace,
-       // if .getParent(Grammar.NamespaceDeclaration) into var namespaceDeclaration
-       var namespaceDeclaration=undefined;
-       var appendToDeclaration=undefined;
-       if ((namespaceDeclaration=this.getParent(Grammar.NamespaceDeclaration))) {
-           namespaceDeclaration.nameDecl.addMember(this.nameDecl);
+       // if .hasAdjective('global')
+       if (this.hasAdjective('global')) {
+           this.nameDecl = this.declareName(this.name, {type: globalPrototype('Function')});
+           globalScope.addMember(this.nameDecl, {scopeCase: true});
        }
-
        
-       else if ((appendToDeclaration=this.getParent(Grammar.AppendToDeclaration))) {
-           var refNameDecl = appendToDeclaration.varRef.tryGetReference();
-           // if refNameDecl, refNameDecl.addMember .nameDecl
-           if (refNameDecl) {refNameDecl.addMember(this.nameDecl)};
-       }
+       else {
+           this.nameDecl = this.addToScope(this.name, {type: globalPrototype('Function')});
 
-       
-       else if (this.export) {
+            // #If we're in a namespace, add class to namespace,
+           // if .getParent(Grammar.NamespaceDeclaration) into var namespaceDeclaration
+           var namespaceDeclaration=undefined;
+           var appendToDeclaration=undefined;
+           if ((namespaceDeclaration=this.getParent(Grammar.NamespaceDeclaration))) {
+               namespaceDeclaration.nameDecl.addMember(this.nameDecl);
+           }
+
+           
+           else if ((appendToDeclaration=this.getParent(Grammar.AppendToDeclaration))) {
+               var refNameDecl = appendToDeclaration.varRef.tryGetReference();
+               // if refNameDecl, refNameDecl.addMember .nameDecl
+               if (refNameDecl) {refNameDecl.addMember(this.nameDecl)};
+           };
+       };
+
+// if public/export, add to module.exports
+
+       // if .export
+       if (this.export) {
           this.addToExport(this.nameDecl, this.default);
        };
 
@@ -1879,7 +1907,15 @@
        // if no .varRef.accessors
        if (!this.varRef.accessors) {
 
-           this.nameDecl = this.addToScope(this.declareName(this.varRef.name));
+           // if .hasAdjective('global')
+           if (this.hasAdjective('global')) {
+               this.nameDecl = this.declareName(this.varRef.name);
+               globalScope.addMember(this.nameDecl, {scopeCase: true});
+           }
+           
+           else {
+               this.nameDecl = this.addToScope(this.declareName(this.varRef.name));
+           };
        }
 
 // else, a composed Identifier
@@ -2095,6 +2131,9 @@
     Grammar.AppendToDeclaration.prototype.processAppendTo = function(){
 // when target is '.c' we do not allow treating classes as namespaces
 // so an "append to namespace classX" should throw an error
+
+     // if this.constructor isnt Grammar.AppendToDeclaration, return //namespace extends append-to
+     if (this.constructor !== Grammar.AppendToDeclaration) {return};
 
 // get referenced class/namespace
 

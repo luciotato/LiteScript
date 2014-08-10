@@ -8,6 +8,7 @@
 
 #include "util.h"
 #include "any.h"
+#include "utf8strings.h"
 #include "exceptions.h"
 #include "PMREX-native.h"
 
@@ -35,14 +36,16 @@
     ;
 
 // core instances -------------------
-    extern any null, undefined, true, false;
+    extern any null, undefined, true, false, NaN, Infinity;
 
     #define any_LTR(S) (any){.class=String_inx, .res=0, .len=sizeof(S)-1, .value.str=S}
     #define any_slice(PTR,BYTELEN) (any){.class=String_inx, .res=0, .len=BYTELEN, .value.str=PTR}
     #define any_CStr(CSTR) any_slice(CSTR,strlen(CSTR))
     #define any_number(S) (any){.class=Number_inx, .res=0, .len=0, .value.number=S}
+    #define any_int64(S) (any){.class=Number_inx, .res=1, .len=0, .value.int64=S}
     #define any_func(S) (any){.class=Function_inx, .res=0, .len=0, .value.ptr=(function_ptr)S}
-    #define any_class(CLASS_INX) (any){.class=Class_inx, .res=0, .len=0, .value.ptr=&CLASSES[CLASS_INX]}
+    #define any_bool(S) (any){.class=Boolean_inx, .res=0, .len=0, .value.number= (S)!=0}
+    #define any_class(CLASS_INX) any_CLASSES[CLASS_INX]
 
     //by ditching null-terminated strings, .slice becomes vert unexpensive, just a #define
     #define _slicedTo(ANY,TO) (any){.class=String_inx, .res=0, .len=TO, .value.str=ANY.value.str}
@@ -64,7 +67,6 @@
     extern symbol_t _tryGetSymbol(any name);
     extern int _hasProperty(any this, any name);
     extern any _getProperty(any this, symbol_t symbol );
-    extern any _getPropertyNameAtIndex(any this, propIndex_t index);
 
     // get symbol (number) from Symbol name (string)
     // function LiteCore_getSymbol(symbolName:string) returns number
@@ -88,8 +90,8 @@
     };
     typedef struct _propertyInfoItem _propertyInfoArr[];
 
-    // core methods, negative ints
-    #define _CORE_METHODS_MAX 41 // means -1..-_CORE_METHODS_MAX are valid method symbols
+    // core methods, negative ints - (only instance (virtual) methods. namespace methods do not need symbols)
+    #define _CORE_METHODS_MAX 49 // means -1..-_CORE_METHODS_MAX are valid method symbols
     // means 1.._CORE_METHODS_MAX are used jmpTable indexes, so initial TABLE_LENGTH(jmpTable)=_CORE_METHODS_MAX+1
     // 0 is a reserved jmpTable index (TABLE_LENGTH is stored there), but symbol:0 is PROPERTY constructor:Class
     enum _CORE_METHODS_ENUM {
@@ -100,6 +102,7 @@
         ,join_
         ,splice_
         ,tryGet_
+        ,sort_
 
         ,toISOString_
         ,toUTCString_
@@ -108,6 +111,7 @@
 
         ,copy_  //Buffer
         ,write_
+        ,append_
 
         ,slice_
         ,split_
@@ -117,10 +121,16 @@
         ,toLowerCase_
         ,toUpperCase_
         ,charAt_
+        ,charCodeAt_
         ,replaceAll_
         ,trim_
         ,substr_
         ,countSpaces_
+        ,repeat_
+
+        ,byteSubstr_
+        ,byteIndexOf_
+        ,byteSlice_
 
         ,tryGetMethod_
         ,tryGetProperty_
@@ -129,7 +139,7 @@
         ,setProperty_
         ,hasProperty_
         ,hasOwnProperty_
-        ,getObjectKeys_
+        ,allPropertyNames_
         ,initFromObject_
 
         ,has_
@@ -139,20 +149,23 @@
         ,clear_
         ,keys_
 
+        ,iterableNext_
         ,toString_
 
     ,_END_CORE_METHODS_ENUM //enum should reach 0 here.
     };
 
-    // core symbols
+    // core property symbols
     enum _CORE_PROPERTIES_ENUM {
         constructor_, // always constructor is symbol:0 and prop[0]
-
-        name_, //class name
+        name_, //class name | NameValuePair
         initInstance_, //class __init:Function
 
-        size_, //Map.size
-        value_, //NameValuePair
+        key_, // Iterable_Position
+        value_, //NameValuePair | Iterable_Position
+        index_, // Iterable_Position
+        size_, // Map | Iterable_Position
+        extra_, // Iterable_Position
 
         message_, //error.message
         stack_, //error.stack
@@ -160,6 +173,25 @@
 
     _CORE_PROPS_LENGTH
     };
+
+    // a MACRO for each property name, to circumvent C-preprocessor problem with commas
+    // and to be able to include foo__(this) as a parameter in a ITEM(arr,index) MACRO
+    // e.g:
+    // var value = ITEM( myArr__(this) , 12 )  <-- OK for C-preprocessor
+    //
+    // var value = ITEM( PROP(myArr_,this), 12 )  <-- NOT OK for C-preprocessor
+    //
+
+    #define name__(this) PROP(name_,this)
+    #define key__(this) PROP(key_,this)
+    #define value__(this) PROP(value_,this)
+    #define index__(this) PROP(index_,this)
+
+    #define size__(this) PROP(size_,this)
+    #define extra__(this) PROP(extra_,this)
+    #define message__(this) PROP(message_,this)
+    #define stack__(this) PROP(stack_,this)
+    #define code__(this) PROP(code_,this)
 
 //-- access props, call methods
 
@@ -181,7 +213,6 @@
     typedef struct Class_s * Class_ptr;
     typedef struct Class_s {
         any     name;         // class name
-        any     typeName;     // result for js "typeof", same as class name but lowercased
         any     initInstance; // :Function, __init function
         //private-native
         size_t      instanceSize; // sizeof struct holding instance props
@@ -216,31 +247,39 @@
 
     enum _KNOWN_CLASSES {
         Undefined_inx=0,
-        AnyBoxedValue_inx=1,
-        Object_inx=2,
-        Class_inx=3,
-        Null_inx, NaN_inx, Infinity_inx,
-        Number_inx, Boolean_inx, Date_inx,
-        String_inx, Function_inx,
-        Array_inx, Map_inx, NameValuePair_inx,
-        Error_inx, Buffer_inx, FileDescriptor_inx,
+        NotANumber_inx=1, Null_inx=2,
+        // .class<=Null_inx => "FALSEY"
+        AnyBoxedValue_inx,
+        Object_inx,
+        Class_inx,
+        Function_inx,
+        String_inx, Number_inx, Integer_inx, Boolean_inx,
+        Array_inx, Map_inx,
+        NameValuePair_inx, Iterable_Position_inx,
+        InfinityClass_inx,
+        Date_inx, Error_inx, Buffer_inx,
+        FileDescriptor_inx,
 
     _LAST_CORE_CLASS //end mark
     };
 
 // core classes array: CLASSES-------------------
 
+    #define ARRAY_OF(type,name) type* name
+
     extern len_t CLASSES_allocd;
-    extern Class_s* CLASSES; //array of registered classes
     extern len_t CLASSES_len;
+    extern ARRAY_OF(Class_s, CLASSES); //array of registered classes
+    extern ARRAY_OF(any, any_CLASSES); //array of registered classes
 
 // core classes.  Foo = (any){class=Class_inx, .res=0, .value.class = Foo_inx}
     extern any
-        Undefined, Null, NaN, Infinity,
+        Undefined, Null, NotANumber, InfinityClass,
         Object, Class, Function,
         String, Number, Date,
         Array, Map, NameValuePair,
-        Error, Buffer, FileDescriptor;
+        Error, Buffer, Iterable_Position,
+        FileDescriptor;
 
 //-------
     // -- ConcatdSlices --
@@ -256,29 +295,74 @@
         len_t byteLen ;
     } ConcatdItem_s;
 
-
-    //Array
-    typedef struct Array_s * Array_ptr;
-    typedef struct Array_s {
-        //private-native - array "properties" are (as in js) array "items"
-        size_t allocd;
-        len_t length;
-        any* item;
-    } Array_s;
-    extern any Array; //class object
-
     //NameValuePair
     typedef struct NameValuePair_s * NameValuePair_ptr;
     typedef struct NameValuePair_s {
         any name,value;
     } NameValuePair_s;
+
     extern any NameValuePair; //class object
+
+    //Array
+    typedef struct Array_s * Array_ptr;
+    typedef struct Array_s {
+        //private-native - array Object "properties" are (as in js arrays) the same array "items"
+        union base{ // by default any*, but not always any*. see: itemSize
+            any* anyPtr;
+            NameValuePair_ptr nvp;
+            char* bytePtr;
+        } base;
+        len_t length;
+        len_t allocd; //# of items. bytes allocd = allocd*itemSize
+        uint16_t itemSize; //by default sizeof(any) - but also sizeOf(NameValuePair) sizeOf(char*) for keytrees
+                            // having a generic size allows to reuse _array_split _array_extend for any array
+    } Array_s;
+    extern any Array; //class object
+
+    /** Unified get name-value pair at index
+     *
+     * to make js LiteralObjects and Maps interchangeable,
+     * _unifiedGetNVPAtIndex(), if the object is a Map,
+     * returns *MAP_NVP_PTR(index)
+     * else returns a NameValuePair with decoded PropName and PropValue
+    */
+    extern NameValuePair_s
+        _unifiedGetNVPAtIndex(any this, len_t index);
+
+    //Key Tree
+    //typedef struct KeyTreeSizesBranch * KeyTreeSizesBranch_ptr;
+    typedef struct KeyTreeSortedBranch * KeyTreeSortedBranch_ptr;
+
+    /*typedef struct KeyTreeSizesBranch{
+        len_t maxLen;
+        KeyTreeSortedBranch_ptr * ofSizeX;
+    } KeyTreeSizesBranch_s;
+     */
+
+    typedef struct KeyTreeSortedBranch{
+        int16_t keyLenHere; //measured in bytes
+        Array_s keys; // size of key is: max(keyLenHere,8)
+        Array_s values; // if keyLenHere<=8, values are indexes:len_t, else values are KeyTreeSortedBranch_ptr (next branch)
+    } KeyTreeSortedBranch_s;
+
+    enum KeyTreeAction{
+        SET_KEY=0, //set value or insert if not found, return found, or value set
+        FIND_OR_INSERT=1, //insert if not found - return found, or value inserted
+        FIND_KEY=2, // return found or -1
+        REMOVE_KEY=3 // return found or -1
+    };
+
+    extern Array_s _newKeyTreeRoot(len_t maxLen);
+    extern int64_t _KeyTree_do(Array_ptr keyTreeRoot, byte what, any key, len_t index);
+    extern void _initKeyTreeRootStruct(Array_s * arr, len_t maxLen);
+
 
     //Map
     typedef struct Map_s * Map_ptr;
     typedef struct Map_s {
         any size;
-        any array; // Array of NameValuePairs
+        Array_s nvpArr; // Array of NameValuePairs
+        Array_s keyTreeRoot; // fast key search
     } Map_s;
     extern any Map; //class object
 
@@ -302,32 +386,58 @@
     } Buffer_s;
     extern any Buffer; //class object
 
+    //IterablePos
+    typedef struct Iterable_Position_s * Iterable_Position_ptr;
+    typedef struct Iterable_Position_s {
+        any key,value,
+            index,size,
+            extra;
+        }
+    Iterable_Position_s;
+
 //------------------------
 // Access methods and properties
 // direct, fast access if NDEBUG
 // bound-checked access for debug mode
 
     #ifdef NDEBUG
+        #define _AT_ ,
         #define METHOD(symbol,this) (CLASSES[this.class].method[-symbol])
         #define PROP(symbol,this) this.value.prop[CLASSES[this.class].pos[symbol]]
-        #define ITEM(index,anyArr) anyArr.value.arr->item[(len_t)index]
+        #define stack_PROP(this) PROP(stack_,this)
+        #define PROP_PTR(symbol,this) &(this.value.prop[CLASSES[this.class].pos[symbol]])
+        #define ARR_ITEM_PTR(TYPE,index,arrPtr) ((TYPE*)((arrPtr)->base.bytePtr+(index*(arrPtr)->itemSize)))
+        #define ARR_ITEM(TYPE,index,arrPtr) *ARR_ITEM_PTR(TYPE,index,arrPtr)
+        #define ITEM(anyArr,...) anyArr.value.arr->base.anyPtr[(len_t)(__VA_ARGS__)]
         //#define ITEM_PROP(index,symbol,this) this.value.prop[this.class.pos[symbol]].value.arr[index]
-        #define MAPITEM(index,this) ((NameValuePair_ptr)(this.value.map->array.value.arr->item[index].value.ptr))
+        #define MAP_NVP_PTR(index,this) (this.value.map->nvpArr.base.nvp+index)
+
+        #define int64_from_Number(ANY) (ANY.res? ANY.value.int64 : (int64_t)ANY.value.number)
+        #define double_from_Number(ANY) (ANY.res? (double)ANY.value.int64:ANY.value.number)
+
     #else
+
+        #define int64_from_Number(ANY) (assert(ANY.class==Number_inx),(ANY.res? ANY.value.int64:(int64_t)ANY.value.number))
+        #define double_from_Number(ANY) (assert(ANY.class==Number_inx),(ANY.res? (double)ANY.value.int64:ANY.value.number))
+
         // access a method on the instance
         #define METHOD(symbol,this) __method(symbol,this)
         extern function_ptr __method(symbol_t symbol, any this);
         // access a property of the instance
         #define PROP(prop,this) (*(__prop(prop,this,__FILE__, __LINE__, __func__, #this)))
+        #define PROP_PTR(prop,this) __prop(prop,this,__FILE__, __LINE__, __func__, #this)
         extern any* __prop(symbol_t prop, any this, str file, int line, str func, str varName);
         // access arr[index]. Access item[index]
-        #define ITEM(index,this) (*(__item(index,this,__FILE__, __LINE__, __func__)))
-        extern any* __item(int64_t index, any this, str file, int line, str func);
+        #define ITEM(this,index) (*(__itemAny(index,this,__FILE__, __LINE__, __func__)))
+        extern any* __itemAny(int64_t index, any this, str file, int line, str func);
+        #define ARR_ITEM_PTR(TYPE,index,arrPtr) (TYPE*)__itemPtr(index,arrPtr,__FILE__, __LINE__, __func__)
+        extern void* __itemPtr(int64_t index, Array_ptr arr, str file, int line, str func);
+        #define ARR_ITEM(TYPE,index,arrPtr) *ARR_ITEM_PTR(TYPE,index,arrPtr)
         // access this.arr[index]. Access item[index] of a given property (type Array)
         //#define ITEM_PROP(index,prop,this) (*(__item(index,prop,this)))
         //extern any* __item2(int index, int prop, any this, str file, int line);
         // access map.array[index]. get a NVP by index, used to implement for each in map, w/o iterators
-        #define MAPITEM(index,this) _map_getNVP(index,this,__FILE__, __LINE__, __func__)
+        #define MAP_NVP_PTR(index,this) _map_getNVP(index,this,__FILE__, __LINE__, __func__)
         extern NameValuePair_ptr _map_getNVP(int64_t index, any this, str file, int line, str func);
         #include <signal.h>
         extern void debug_abort(str file, int line, str func, any message);
@@ -353,6 +463,7 @@
     extern any _newClass ( str className, __initFn_ptr initFn, len_t instanceSize, any super);
 
     extern any _newFromObject ( any anyClass, len_t argc, any* arguments);
+    extern any _fastNew(any anyClass, len_t argc, ...);
 
     extern any _newStringSize(len_t memSize);
     extern any _newErr(any msg);
@@ -362,14 +473,16 @@
     extern any Array_clone(any this, len_t argc, any* arguments);
 
     extern int64_t _length(any this);
-    #define _typeof(S) CLASSES[S.class].typeName
+    extern any _typeof(any this);
     //extern any _typeof(any this);
     extern bool _instanceof(any this, any class);
     extern bool __is(any a,any b);  //js triple-equal, "==="
-    extern bool __in(any needle, len_t haystackLength, any* haystackItem);
+    extern bool __inLiteralArray(any needle, len_t haystackLength, any* haystackItem);
+    extern int64_t __byteIndex(any needle, any haystack);
     extern int __compareStrings(any strA, any strB);  //js triple-equal, "==="
 
     extern int _anyToBool(any a);
+
     extern int64_t _anyToInt64(any a);
     extern double _anyToNumber(any a);
 
@@ -433,6 +546,19 @@
 //------------------------
 // export core class methods
 
+    // x_iterableNext
+    void IterablePos__init(DEFAULT_ARGUMENTS);
+    any Object_iterableNext(DEFAULT_ARGUMENTS);
+    any Array_iterableNext(DEFAULT_ARGUMENTS);
+    any Map_iterableNext(DEFAULT_ARGUMENTS);
+    any String_iterableNext(DEFAULT_ARGUMENTS);
+
+    // macro to call iterableNext_
+    #define _newIterPos() new(Iterable_Position,0,NULL)
+    #define ITER_NEXT(ITERABLE_VAR,ITER_POS) (METHOD(iterableNext_,ITERABLE_VAR)(ITERABLE_VAR,1,(any_arr){ITER_POS})).value.uint64
+    // since iterableNext(iter) returns true|false, we access .value.uint64 => 0=false 1=true
+    // note: use only with vars - no expressions- to avoid evaluating expression twice
+
     // x_ToString
     extern any Object_toString(DEFAULT_ARGUMENTS);
     extern any Class_toString(DEFAULT_ARGUMENTS);
@@ -451,7 +577,7 @@
     extern any Object_hasProperty(DEFAULT_ARGUMENTS); //from name, returns true or false
     extern any Object_hasOwnProperty(DEFAULT_ARGUMENTS); //from name, returns true or false
     extern any Object_setProperty(DEFAULT_ARGUMENTS); //from name, set property for object & Maps
-    extern any Object_getObjectKeys(DEFAULT_ARGUMENTS);
+    extern any Object_allPropertyNames(DEFAULT_ARGUMENTS);
 
     extern void Error__init(DEFAULT_ARGUMENTS);
 
@@ -466,10 +592,24 @@
     extern any String_countSpaces(DEFAULT_ARGUMENTS);
     extern any String_toLowerCase(DEFAULT_ARGUMENTS);
     extern any String_toUpperCase(DEFAULT_ARGUMENTS);
+    extern any String_charAt(DEFAULT_ARGUMENTS);
+    extern any String_charCodeAt(DEFAULT_ARGUMENTS);
+    extern any String_replaceAll(DEFAULT_ARGUMENTS);
+    extern any String_repeat(DEFAULT_ARGUMENTS);
+
+    /** faster methods using byteIndex for positioning
+     */
+    extern any String_byteSubstr(DEFAULT_ARGUMENTS);
+    extern any String_byteIndexOf(DEFAULT_ARGUMENTS);
 
     //String as namespace methods
     extern any String_spaces(DEFAULT_ARGUMENTS);
+    extern any String_fromCharCode(DEFAULT_ARGUMENTS);
 
+    //Number
+    extern any Number_isNaN(DEFAULT_ARGUMENTS);
+
+    //Date
     extern void Date_init(DEFAULT_ARGUMENTS);
     extern any Date_toISOString(DEFAULT_ARGUMENTS);
     extern any Date_toUTCString(DEFAULT_ARGUMENTS);
@@ -489,12 +629,21 @@
     extern any Array_concat(DEFAULT_ARGUMENTS);
     extern any Array_join(DEFAULT_ARGUMENTS);
     extern any Array_tryGet(DEFAULT_ARGUMENTS);
+    extern any Array_isArray(DEFAULT_ARGUMENTS);
 
     extern void _clearArrayItems(any* start, len_t count);
     extern void _array_pushSlice(any this, any slice);
 
+    //handling routines for: dynamic array with variable item-size
+    extern Array_ptr _initArrayStruct(Array_ptr arrPtr, uint16_t itemSize, len_t initialAlloc);
+    extern Array_ptr _setArrayItems(Array_ptr arrPtr, uint16_t itemLen, len_t argc, void* contents);
+    extern void _array_splice(Array_ptr arrPtr, int64_t startPos, int64_t deleteHowMany, len_t toInsert, void* toInsertItemsPtr);
+    extern void _array_realloc(Array_s *arr, uint64_t newLen64);
+    extern void _array_push(Array_ptr arrPtr, void* newItem);
+
     extern void Map__init(DEFAULT_ARGUMENTS);
     extern any Map_newFromObject(DEFAULT_ARGUMENTS); //when called x = new Map.{a:1,b:2}
+    extern int64_t _map_KeyTree_do(Map_ptr map, byte what, any key, len_t valueIndex);
 
     extern any Map_get(DEFAULT_ARGUMENTS); //Map = js Object, array of props
     extern any Map_has(DEFAULT_ARGUMENTS); //Map = js Object, array of props

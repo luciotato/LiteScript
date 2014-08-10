@@ -5,11 +5,15 @@
             verboseLevel = 1
             warningLevel = 1
             comments = 1
+
             #ifdef PROD_C
             target ="c"
+            outDir = 'generated/c'
             #else
             target ="js"
+            outDir = 'generated/js'
             #end if
+
             debugEnabled = undefined
             perf=0 // performace counters 0..2
             skip = undefined
@@ -22,12 +26,12 @@
             defines: array of string = []
             includeDirs: array of string = []
 
-            projectDir:string 
+            projectDir:string = '.'
             mainModuleName:string = 'unnamed'
-            outDir = './out'
 
             storeMessages: boolean = false
-            literalMap: string // produce "new Class().fromObject({})" on "{}"" instead of a js object
+
+            //literalMap: string // produce "new Class().fromObject({})" on "{}"" instead of a js object
             // activate with: 'lexer options object literal is Foo'. A class is required to produce C-code 
 
             version: string
@@ -37,7 +41,5 @@
       method toString
             return """
                 outDir:#{.outDir}
-                verbose:#{.verboseLevel}
                 defines:#{.defines.join()}
                 """
-

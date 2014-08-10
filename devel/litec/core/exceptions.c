@@ -19,7 +19,7 @@ void fatal(char * msg) {
 
 str e4c_stageStr(){
     switch (e4c.frame[e4c.activeFrame].stage) {
-        case e4c_beginning: return "e4c_beggining";
+        case e4c_beginning: return "e4c_beginning";
         case e4c_trying: return "e4c enter try{";
         case e4c_catching: return "e4c enter catch{";
         case e4c_finalizing: return "e4c enter finalize{";

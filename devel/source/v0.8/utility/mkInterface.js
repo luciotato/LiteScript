@@ -520,8 +520,8 @@
             //return Object.keys(.dict)
             return Object.keys(this.dict);
         };
-        //method getObjectKeys() returns array  //use Map|Object interchangeably
-        Map.prototype.getObjectKeys = function(){ //use Map|Object interchangeably
+        //method allPropertyNames() returns array  //use Map|Object interchangeably
+        Map.prototype.allPropertyNames = function(){ //use Map|Object interchangeably
             //return Object.keys(.dict)
             return Object.keys(this.dict);
         };

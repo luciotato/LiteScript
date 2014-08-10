@@ -2003,7 +2003,7 @@ for 'into var x' oper, we declare the var, and we deduce type
 
 #### Method declare() 
         
-        if .intoVar # is a into-assignment operator with 'var' declaration
+        if .intoVar is '*r' # is a into-assignment operator with 'var' declaration
 
             var varRef = .right.name
             if varRef isnt instance of Grammar.VariableRef

@@ -11,7 +11,7 @@ Dependencies
     import Parser, ControlledError
     import logger
     
-    shim import LiteCore, Map
+    shim import LiteCore
 
 ### public Class ASTBase 
 
@@ -579,17 +579,20 @@ else, Object codes
                   if CSL 
                       // additional keys: pre,post,separator
                       var separator = item.tryGetProperty('separator') or ', '
-                      
+                      var freeFormMode = item.tryGetProperty('freeForm')
+                      var newLineIncluded = false
+                      var actualIndent = rawOut.getIndent()
+
                       for each inx,listItem in CSL
 
                             declare valid listItem.out
 
+                            if freeFormMode
+                                rawOut.startNewLine
+                                rawOut.put String.spaces(actualIndent+4)
+                                newLineIncluded = true
+
                             if inx>0 
-
-                                if item.tryGetProperty('freeForm')
-                                    rawOut.put '\n'
-                                    rawOut.put String.spaces(.indent)
-
                                 rawOut.put separator
 
                             #recurse
@@ -597,9 +600,9 @@ else, Object codes
 
                       end for
 
-                      if item.tryGetProperty('freeForm') # prettier generated code
-                            rawOut.put '\n'
-                            rawOut.put String.spaces(.indent)
+                      if newLineIncluded # prettier generated code
+                            rawOut.startNewLine
+                            rawOut.put String.spaces(actualIndent)
 
 {COMMENT:text} --> output text as a comment 
  
@@ -617,7 +620,7 @@ else, Object codes
                   rawOut.setHeader header
 
               else 
-                  .sayErr "ASTBase method out Map|Object: unrecognized keys: #{item.getObjectKeys()}"
+                  .sayErr "ASTBase method out Map|Object: unrecognized keys: #{item.allPropertyNames()}"
 
 Last option, out item.toString()
 

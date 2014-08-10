@@ -15,8 +15,8 @@
     var Environment = require('./lib/Environment.js');
     var UniqueID = require('./lib/UniqueID.js');
 
-    //shim import Map
-    var Map = require('./lib/Map.js');
+    //shim import LiteCore
+    var LiteCore = require('./interfaces/LiteCore.js');
 
 //JavaScript Producer Functions
 //==============================
@@ -33,28 +33,21 @@
         //.lexer.outCode.exportNamespace = 'module.exports'
         this.lexer.outCode.exportNamespace = 'module.exports';
 
+
+///* COMMENTED - reordering statementes in js is destructive
+
 //Literate programming should allow to reference a function definde later.
 //Leave loose module imperative statements for the last. 
 //Produce all vars & functions definitions first.
 
         //var looseStatements=[]
-        var looseStatements = [];
 
         //for each statement in .statements
-        for( var statement__inx=0,statement ; statement__inx<this.statements.length ; statement__inx++){statement=this.statements[statement__inx];
-        
 //            statement.produce
 
             //case statement.specific.constructor
-            
+
                 //when 
-            if ((statement.specific.constructor==Grammar.ImportStatement)
-            ||(statement.specific.constructor==Grammar.VarStatement)
-            ||(statement.specific.constructor==Grammar.ClassDeclaration)
-            ||(statement.specific.constructor==Grammar.FunctionDeclaration)
-            ||(statement.specific.constructor==Grammar.NamespaceDeclaration)
-            ||(statement.specific.constructor==Grammar.AppendToDeclaration)
-            ){
                     //Grammar.ImportStatement
                     //Grammar.VarStatement
                     //Grammar.ClassDeclaration
@@ -63,31 +56,18 @@
                     //Grammar.AppendToDeclaration
                     //:
                         //statement.produce
-                        statement.produce();
-            
-            }
-            else {
 
                 //else
                     //looseStatements.push statement
-                    looseStatements.push(statement);
-            };
-        };// end for each in this.statements
 
         //var separ = "-"
-        var separ = "-";
         //.out
             //{COMMENT: separ.repeat(20)},NL
             //{COMMENT:"Module code"},NL
             //{COMMENT: separ.repeat(20)},NL 
-        this.out({COMMENT: separ.repeat(20)}, NL, {COMMENT: "Module code"}, NL, {COMMENT: separ.repeat(20)}, NL);
 
         //for each statement in looseStatements
-        for( var statement__inx=0,statement ; statement__inx<looseStatements.length ; statement__inx++){statement=looseStatements[statement__inx];
-        
             //statement.produce
-            statement.produce();
-        };// end for each in looseStatements
 
         //for each statement in produceThird
         //    statement.produce
@@ -96,7 +76,14 @@
             //NL
             //{COMMENT:'end of module'},NL
             //NL
-        this.out(NL, {COMMENT: 'end of module'}, NL, NL);
+//*/
+
+        //for each statement in .statements
+        for( var statement__inx=0,statement ; statement__inx<this.statements.length ; statement__inx++){statement=this.statements[statement__inx];
+        
+            //statement.produce
+            statement.produce();
+        };// end for each in this.statements
 
 //add end of file comments
 
@@ -909,8 +896,8 @@
 //It does as bash does for executable files.
 //A name  without "./"" means "look in $PATH" (node_modules and up)
 
-        //if no .importedModule or .importedModule.fileInfo.importInfo.globalImport 
-        if (!this.importedModule || this.importedModule.fileInfo.importInfo.globalImport) {
+        //if no .importedModule or .importedModule.fileInfo.isCore or '.interface.' in .importedModule.fileInfo.filename
+        if (!this.importedModule || this.importedModule.fileInfo.isCore || this.importedModule.fileInfo.filename.indexOf('.interface.')>=0) {
             //return .name // for node, no './' means "look in node_modules, and up, then global paths"
             return this.name; // for node, no './' means "look in node_modules, and up, then global paths"
         };
@@ -1128,22 +1115,26 @@
           //var iterable = .iterable.prepareTempVar()
           var iterable = this.iterable.prepareTempVar();
 
-          //if .mainVar
-          if (this.mainVar) {
-            //.out "var ", .mainVar.name,"=undefined;",NL
-            this.out("var ", this.mainVar.name, "=undefined;", NL);
+          //if .valueVar
+          if (this.valueVar) {
+            //.out "var ", .valueVar.name,"=undefined;",NL
+            this.out("var ", this.valueVar.name, "=undefined;", NL);
           };
 
-          //var index=.indexVar or UniqueID.getVarName('inx');
-          var index = this.indexVar || UniqueID.getVarName('inx');
+          //var index=.keyIndexVar or UniqueID.getVarName('inx');
+          var index = this.keyIndexVar || UniqueID.getVarName('inx');
 
           //.out "for ( var ", index, " in ", iterable, ")"
           this.out("for ( var ", index, " in ", iterable, ")");
-          //.out "if (",iterable,".hasOwnProperty(",index,"))"
-          this.out("if (", iterable, ".hasOwnProperty(", index, "))");
 
-          //.body.out "{", .mainVar.name,"=",iterable,"[",index,"];",NL
-          this.body.out("{", this.mainVar.name, "=", iterable, "[", index, "];", NL);
+          //if .ownKey
+          if (this.ownKey) {
+              //.out "if (",iterable,".hasOwnProperty(",index,"))"
+              this.out("if (", iterable, ".hasOwnProperty(", index, "))");
+          };
+
+          //.body.out "{", .valueVar.name,"=",iterable,"[",index,"];",NL
+          this.body.out("{", this.valueVar.name, "=", iterable, "[", index, "];", NL);
 
           //.out .where
           this.out(this.where);
@@ -1182,29 +1173,29 @@
         //var indexVarName, startValue
         var indexVarName = undefined, startValue = undefined;
 
-        //if no .indexVar
-        if (!this.indexVar) {
-            //indexVarName = .mainVar.name & '__inx'  #default index var name
-            indexVarName = this.mainVar.name + '__inx';// #default index var name
+        //if no .keyIndexVar
+        if (!this.keyIndexVar) {
+            //indexVarName = .valueVar.name & '__inx'  #default index var name
+            indexVarName = this.valueVar.name + '__inx';// #default index var name
             //startValue = "0"
             startValue = "0";
         }
         else {
         //else
-            //indexVarName = .indexVar.name
-            indexVarName = this.indexVar.name;
-            //startValue = .indexVar.assignedValue or "0"
-            startValue = this.indexVar.assignedValue || "0";
+            //indexVarName = .keyIndexVar.name
+            indexVarName = this.keyIndexVar.name;
+            //startValue = .keyIndexVar.assignedValue or "0"
+            startValue = this.keyIndexVar.assignedValue || "0";
         };
 
         //.out "for( var "
-        this.out("for( var ", indexVarName, "=", startValue, ",", this.mainVar.name, " ; ", indexVarName, "<", iterable, ".length", " ; ", indexVarName, "++){");
-                //, indexVarName,"=",startValue,",",.mainVar.name
+        this.out("for( var ", indexVarName, "=", startValue, ",", this.valueVar.name, " ; ", indexVarName, "<", iterable, ".length", " ; ", indexVarName, "++){");
+                //, indexVarName,"=",startValue,",",.valueVar.name
                 //," ; ",indexVarName,"<",iterable,".length"
                 //," ; ",indexVarName,"++){"
 
-        //.body.out .mainVar.name,"=",iterable,"[",indexVarName,"];",NL
-        this.body.out(this.mainVar.name, "=", iterable, "[", indexVarName, "];", NL);
+        //.body.out .valueVar.name,"=",iterable,"[",indexVarName,"];",NL
+        this.body.out(this.valueVar.name, "=", iterable, "[", indexVarName, "];", NL);
 
         //if .where 
         if (this.where) {
@@ -1230,30 +1221,28 @@
 
           //var indexVarName:string
           var indexVarName = undefined;
-          //if no .indexVar
-          if (!this.indexVar) {
-            //indexVarName = .mainVar.name & '__propName'
-            indexVarName = this.mainVar.name + '__propName';
+          //if no .keyIndexVar
+          if (!this.keyIndexVar) {
+            //indexVarName = .valueVar.name & '__propName'
+            indexVarName = this.valueVar.name + '__propName';
           }
           else {
           //else
-            //indexVarName = .indexVar.name
-            indexVarName = this.indexVar.name;
+            //indexVarName = .keyIndexVar.name
+            indexVarName = this.keyIndexVar.name;
           };
 
-          //.out "var ", .mainVar.name,"=undefined;",NL
-          this.out("var ", this.mainVar.name, "=undefined;", NL);
+          //.out "var ", .valueVar.name,"=undefined;",NL
+          this.out("var ", this.valueVar.name, "=undefined;", NL);
           //.out 'if(!',iterable,'.dict) throw(new Error("for each in map: not a Map, no .dict property"));',NL
           this.out('if(!', iterable, '.dict) throw(new Error("for each in map: not a Map, no .dict property"));', NL);
           //.out "for ( var ", indexVarName, " in ", iterable, ".dict)"
           this.out("for ( var ", indexVarName, " in ", iterable, ".dict)");
-          //.out " if (",iterable,".dict.hasOwnProperty(",indexVarName,"))"
-          this.out(" if (", iterable, ".dict.hasOwnProperty(", indexVarName, "))");
 
-          //if .mainVar
-          if (this.mainVar) {
-              //.body.out "{", .mainVar.name,"=",iterable,".dict[",indexVarName,"];",NL
-              this.body.out("{", this.mainVar.name, "=", iterable, ".dict[", indexVarName, "];", NL);
+          //if .valueVar
+          if (this.valueVar) {
+              //.body.out "{", .valueVar.name,"=",iterable,".dict[",indexVarName,"];",NL
+              this.body.out("{", this.valueVar.name, "=", iterable, ".dict[", indexVarName, "];", NL);
           };
 
           //.out .where
@@ -1262,8 +1251,8 @@
           //.body.out "{", .body, "}",NL
           this.body.out("{", this.body, "}", NL);
 
-          //if .mainVar
-          if (this.mainVar) {
+          //if .valueVar
+          if (this.valueVar) {
             //.body.out NL, "}"
             this.body.out(NL, "}");
           };
@@ -1307,16 +1296,16 @@
         //end if
         
 
-        //.out "for( var ",.indexVar.name, "=", .indexVar.assignedValue or "0", "; "
-        this.out("for( var ", this.indexVar.name, "=", this.indexVar.assignedValue || "0", "; ");
+        //.out "for( var ",.keyIndexVar.name, "=", .keyIndexVar.assignedValue or "0", "; "
+        this.out("for( var ", this.keyIndexVar.name, "=", this.keyIndexVar.assignedValue || "0", "; ");
 
         //if isToDownTo
         if (isToDownTo) {
 
             //#'for n=0 to 10' -> for(n=0;n<=10;n++)
             //#'for n=10 down to 0' -> for(n=10;n>=0;n--)
-            //.out .indexVar.name, .conditionPrefix is 'to'? "<=" else ">=", endTempVarName
-            this.out(this.indexVar.name, this.conditionPrefix === 'to' ? "<=" : ">=", endTempVarName);
+            //.out .keyIndexVar.name, .conditionPrefix is 'to'? "<=" else ">=", endTempVarName
+            this.out(this.keyIndexVar.name, this.conditionPrefix === 'to' ? "<=" : ">=", endTempVarName);
         }
         else {
 
@@ -1334,7 +1323,7 @@
         //.out "; "
         this.out("; ");
 
-//if no increment specified, the default is indexVar++
+//if no increment specified, the default is keyIndexVar++
 
         //if .increment
         if (this.increment) {
@@ -1344,15 +1333,15 @@
         else {
         //else
             //default index++ (to) or index-- (down to)
-            //.out .indexVar.name, .conditionPrefix is 'down'? '--' else '++'
-            this.out(this.indexVar.name, this.conditionPrefix === 'down' ? '--' : '++');
+            //.out .keyIndexVar.name, .conditionPrefix is 'down'? '--' else '++'
+            this.out(this.keyIndexVar.name, this.conditionPrefix === 'down' ? '--' : '++');
         };
 
         //.out ") "
         this.out(") ");
 
-        //.out "{", .body, "};",{COMMENT:"end for #{.indexVar.name}"}, NL
-        this.out("{", this.body, "};", {COMMENT: "end for " + this.indexVar.name}, NL);
+        //.out "{", .body, "};",{COMMENT:"end for #{.keyIndexVar.name}"}, NL
+        this.out("{", this.body, "};", {COMMENT: "end for " + this.keyIndexVar.name}, NL);
       };
 
 
@@ -1609,19 +1598,22 @@
               };
           };
 
+          //var ownerName:string = prefix.join("")
+          var ownerName = prefix.join("");
+          //if ownerName.slice(-1) is '.', ownerName = ownerName.slice(0,-1)
+          if (ownerName.slice(-1) === '.') {ownerName = ownerName.slice(0, -1)};
+
           //#if shim, check before define
-          //if .hasAdjective("shim"), .out "if (!",prefix,.name,")",NL
-          if (this.hasAdjective("shim")) {this.out("if (!", prefix, this.name, ")", NL)};
+          //if .hasAdjective("shim"), .out "if (!Object.prototype.hasOwnProperty.call(",ownerName,",'",.name,"'))",NL
+          if (this.hasAdjective("shim")) {this.out("if (!Object.prototype.hasOwnProperty.call(", ownerName, ",'", this.name, "'))", NL)};
 
           //if .definePropItems #we should code Object.defineProperty
           if (this.definePropItems) {// #we should code Object.defineProperty
-              //if prefix[1].slice(-1) is '.', prefix[1] = prefix[1].slice(0,-1) #remove extra dot
-              if (prefix[1].slice(-1) === '.') {prefix[1] = prefix[1].slice(0, -1)};
               //.out "Object.defineProperty(",NL,
-              this.out("Object.defineProperty(", NL, prefix, ",'", this.name, "',{value:function", generatorMark);
+              this.out("Object.defineProperty(", NL, ownerName, ",'", this.name, "',{value:function", generatorMark);
           }
           else {
-                    //prefix, ",'",.name,"',{value:function",generatorMark
+                    //ownerName, ",'",.name,"',{value:function",generatorMark
           //else
               //.out prefix,.name," = function",generatorMark
               this.out(prefix, this.name, " = function", generatorMark);
@@ -1913,13 +1905,8 @@
 
 //call super-class __init
 
-        //if .varRefSuper
-        if (this.varRefSuper) {
-            //.out {COMMENT:["default constructor: call super.constructor"]}
-            this.out({COMMENT: ["default constructor: call super.constructor"]});
-            //.out NL,"    ",.varRefSuper,".prototype.constructor.apply(this,arguments)",NL
-            this.out(NL, "    ", this.varRefSuper, ".prototype.constructor.apply(this,arguments)", NL);
-        };
+        //.addCallToSuperClassInit
+        this.addCallToSuperClassInit();
 
 //initialize own properties
 
@@ -1941,6 +1928,16 @@
         //else
             //.out "};",NL
             this.out("};", NL);
+        };
+
+//if the class is global...
+
+        //if .hasAdjective('global')
+        if (this.hasAdjective('global')) {
+            //.out '//global class',NL
+            this.out('//global class', NL);
+            //.out 'GLOBAL.',.name,"=",.name,";",NL //set declared fn-Class as method of GLOBAL
+            this.out('GLOBAL.', this.name, "=", this.name, ";", NL); //set declared fn-Class as method of GLOBAL
         };
 
 //if the class is inside a namespace...
@@ -1982,6 +1979,38 @@
       };
 
 
+      //method addCallToSuperClassInit
+      Grammar.ClassDeclaration.prototype.addCallToSuperClassInit = function(){
+
+        //if .varRefSuper 
+        if (this.varRefSuper) {
+
+            //if .varRefSuper.name is 'Error'
+            if (this.varRefSuper.name === 'Error') {
+
+//a hack to overcome a js quirk - extending Error class
+
+              //.out """
+              this.out("//Sadly, the Error Class in javascript is not easily subclassed.\n//http://stackoverflow.com/questions/8802845/inheriting-from-the-error-object-where-is-the-message-property\nthis.__proto__.__proto__=Error.apply(null,arguments);\n//NOTE: all instances of ControlledError will share the same info");
+            }
+            else {
+                  //Sadly, the Error Class in javascript is not easily subclassed.
+                  //http://stackoverflow.com/questions/8802845/inheriting-from-the-error-object-where-is-the-message-property
+                  //this.__proto__.__proto__=Error.apply(null,arguments);
+                  //NOTE: all instances of ControlledError will share the same info
+                  //"""
+
+            //else //other "normal" supers
+
+              //.out 
+                  //{COMMENT:["default constructor: call super.constructor"]},NL
+                  //"    ",.varRefSuper,".prototype.constructor.apply(this,arguments)",NL
+              this.out({COMMENT: ["default constructor: call super.constructor"]}, NL, "    ", this.varRefSuper, ".prototype.constructor.apply(this,arguments)", NL);
+            };
+        };
+      };
+
+
 //### Append to class Grammar.AppendToDeclaration ###
     
 
@@ -2011,6 +2040,14 @@
         this.out(this.body);
         //.skipSemiColon = true
         this.skipSemiColon = true;
+
+        //if .hasAdjective('global')
+        if (this.hasAdjective('global')) {
+            //.out '//global class',NL
+            this.out('//global class', NL);
+            //.out 'GLOBAL.',.name,"=",.name,";",NL //set declared fn-Class as method of GLOBAL
+            this.out('GLOBAL.', this.name, "=", this.name, ";", NL); //set declared fn-Class as method of GLOBAL
+        };
 
         //.produceExport .name
         this.produceExport(this.name);
@@ -2257,26 +2294,27 @@
       //'but':          '&&'
       //'or':           '||'
       //'has property': 'in'
-    var OPER_TRANSLATION_map = new Map().fromObject({'no': '!'
-      , 'not': '!'
-      , 'unary -': '-'
-      , 'unary +': '+'
-      , '&': '+'
-      , '&=': '+='
-      , 'bitand': '&'
-      , 'bitor': '|'
-      , 'bitxor': '^'
-      , 'bitnot': '~'
-      , 'type of': 'typeof'
-      , 'instance of': 'instanceof'
-      , 'is': '==='
-      , 'isnt': '!=='
-      , '<>': '!=='
-      , 'and': '&&'
-      , 'but': '&&'
-      , 'or': '||'
-      , 'has property': 'in'
-      });
+    var OPER_TRANSLATION_map = new Map().fromObject({
+       'no': '!'
+       , 'not': '!'
+       , 'unary -': '-'
+       , 'unary +': '+'
+       , '&': '+'
+       , '&=': '+='
+       , 'bitand': '&'
+       , 'bitor': '|'
+       , 'bitxor': '^'
+       , 'bitnot': '~'
+       , 'type of': 'typeof'
+       , 'instance of': 'instanceof'
+       , 'is': '==='
+       , 'isnt': '!=='
+       , '<>': '!=='
+       , 'and': '&&'
+       , 'but': '&&'
+       , 'or': '||'
+       , 'has property': 'in'
+   });
 
     //function operTranslate(name:string)
     function operTranslate(name){
@@ -2349,14 +2387,4 @@
             this.skipSemiColon = true;
         };
      };
-// --------------------
-// Module code
-// --------------------
-// end of module
-
-
-//--------------------------------
-
-
-
 

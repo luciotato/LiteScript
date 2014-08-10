@@ -106,9 +106,9 @@
     var logger = require('./lib/logger.js');
     var UniqueID = require('./lib/UniqueID.js');
 
-    //shim import Map, PMREX
-    var Map = require('./lib/Map.js');
-    var PMREX = require('./lib/PMREX.js');
+    //shim import LiteCore, PMREX
+    var LiteCore = require('./interfaces/LiteCore.js');
+    var PMREX = require('./interfaces/PMREX.js');
 
 //Reserved Words
 //---------------
@@ -769,12 +769,10 @@
         if (this.opt(',', 'then')) {
             //.body = .req(SingleLineBody)
             this.body = this.req(SingleLineBody);
-            //.req 'NEWLINE'
-            this.req('NEWLINE');
         }
         else {
 
-        //else # and indented block
+        //else # an indented block
             //.body = .req(Body)
             this.body = this.req(Body);
         };
@@ -1153,7 +1151,7 @@
     
     // end class ForStatement
 
-//##Variant 1) **for each property** 
+//##Variant 1) **for each [own] property** 
 //###Loop over **object property names**
 
 //Grammar:
@@ -1169,10 +1167,11 @@
         ASTBase.prototype.constructor.apply(this,arguments)
 
       //properties 
-        //indexVar:VariableDecl, mainVar:VariableDecl
+        //keyIndexVar:VariableDecl, valueVar:VariableDecl
         //iterable:Expression 
         //where:ForWhereFilter
         //body
+        //ownKey
     };
     // ForEachProperty (extends|proto is) ASTBase
     ForEachProperty.prototype.__proto__ = ASTBase.prototype;
@@ -1181,6 +1180,14 @@
       ForEachProperty.prototype.parse = function(){
         //.req('each')
         this.req('each');
+
+//optional "own"
+
+        //if .opt("own") into .ownKey
+        if ((this.ownKey=this.opt("own"))) {
+          //.lock()
+          this.lock();
+        };
 
 //next we require: 'property', and lock.
 
@@ -1191,17 +1198,17 @@
 
 //Get main variable name (to store property value)
 
-        //.mainVar = .req(VariableDecl)
-        this.mainVar = this.req(VariableDecl);
+        //.valueVar = .req(VariableDecl)
+        this.valueVar = this.req(VariableDecl);
 
 //if comma present, it was propName-index (to store property names)
 
         //if .opt(",")
         if (this.opt(",")) {
-          //.indexVar = .mainVar
-          this.indexVar = this.mainVar;
-          //.mainVar = .req(VariableDecl)
-          this.mainVar = this.req(VariableDecl);
+          //.keyIndexVar = .valueVar
+          this.keyIndexVar = this.valueVar;
+          //.valueVar = .req(VariableDecl)
+          this.valueVar = this.req(VariableDecl);
         };
 
 //Then we require `in`, and the iterable-Expression (a object)
@@ -1245,7 +1252,8 @@
         ASTBase.prototype.constructor.apply(this,arguments)
 
       //properties 
-        //indexVar:VariableDecl, mainVar:VariableDecl, iterable:Expression
+        //intIndexVar:VariableDecl, keyIndexVar:VariableDecl, valueVar:VariableDecl 
+        //iterable:Expression
         //where:ForWhereFilter
         //body
     };
@@ -1260,23 +1268,36 @@
         //.req 'each'
         this.req('each');
 
-//Get index variable and value variable.
+//Get value variable name.
 //Keep it simple: index and value are always variables declared on the spot
 
-        //.mainVar = .req(VariableDecl)
-        this.mainVar = this.req(VariableDecl);
+        //.valueVar = .req(VariableDecl)
+        this.valueVar = this.req(VariableDecl);
 
-//a comma means: previous var was 'index', so register as index and get main var
+//a comma means: previous var was 'nameIndex', so register previous as index and get value var
 
         //if .opt(',')
         if (this.opt(',')) {
-          //.indexVar = .mainVar
-          this.indexVar = this.mainVar;
-          //.mainVar = .req(VariableDecl)
-          this.mainVar = this.req(VariableDecl);
+          //.keyIndexVar = .valueVar
+          this.keyIndexVar = this.valueVar;
+          //.valueVar = .req(VariableDecl)
+          this.valueVar = this.req(VariableDecl);
         };
 
-//we now *require* `in` and the iterable (array)
+//another comma means: full 3 vars: for each intIndex,nameIndex,value in iterable.
+//Previous two where intIndex & nameIndex
+
+        //if .opt(',')
+        if (this.opt(',')) {
+          //.intIndexVar = .keyIndexVar
+          this.intIndexVar = this.keyIndexVar;
+          //.keyIndexVar = .valueVar
+          this.keyIndexVar = this.valueVar;
+          //.valueVar = .req(VariableDecl)
+          this.valueVar = this.req(VariableDecl);
+        };
+
+//we now *require* `in` and the iterable: Object|Map|Array... any class having a iterableNext(iter) method
 
         //.req 'in'
         this.req('in');
@@ -1327,7 +1348,7 @@
         ASTBase.prototype.constructor.apply(this,arguments)
 
       //properties 
-        //indexVar:VariableDecl
+        //keyIndexVar:VariableDecl
         //conditionPrefix, endExpression
         //increment: SingleLineBody
         //body
@@ -1339,8 +1360,8 @@
 
       //method parse()
       ForIndexNumeric.prototype.parse = function(){
-        //.indexVar = .req(VariableDecl)
-        this.indexVar = this.req(VariableDecl);
+        //.keyIndexVar = .req(VariableDecl)
+        this.keyIndexVar = this.req(VariableDecl);
         //.lock()
         this.lock();
 
@@ -1358,10 +1379,13 @@
 
 //another optional comma, and increment-Statement(s)
 
-        //.opt ','
-        this.opt(',');
-        //.increment = .opt(SingleLineBody)
-        this.increment = this.opt(SingleLineBody);
+        //if .opt(',')
+        if (this.opt(',')) {
+          //.increment = .req(SingleLineBody)
+          this.increment = this.req(SingleLineBody);
+          //.lexer.returnToken //return closing NEWLINE, for the indented body
+          this.lexer.returnToken(); //return closing NEWLINE, for the indented body
+        };
 
 //Now, get the loop body
 
@@ -1972,8 +1996,9 @@
               //case .lexer.token.value
               
                 //when '.': //property acceess
-              if ((this.lexer.token.value=='.')
-              ){
+              if (
+                 (this.lexer.token.value=='.')
+             ){
 
                     //ac = new PropertyAccess(this)
                     ac = new PropertyAccess(this);
@@ -1996,8 +2021,9 @@
               
               }
                 //when "(": //function access
-              else if ((this.lexer.token.value=="(")
-              ){
+              else if (
+                 (this.lexer.token.value=="(")
+             ){
 
                     //ac = new FunctionAccess(this)
                     ac = new FunctionAccess(this);
@@ -2006,8 +2032,9 @@
               
               }
                 //when "[": //index access
-              else if ((this.lexer.token.value=="[")
-              ){
+              else if (
+                 (this.lexer.token.value=="[")
+             ){
 
                     //ac = new IndexAccess(this)
                     ac = new IndexAccess(this);
@@ -2061,8 +2088,6 @@
       };
 
 
-
-
 //## Operand
 
 //```
@@ -2089,11 +2114,12 @@
           //'NUMBER': NumberLiteral
           //'REGEX': RegExpLiteral
           //'SPACE_BRACKET':ArrayLiteral # one or more spaces + "[" 
-    var OPERAND_DIRECT_TYPE = new Map().fromObject({'STRING': StringLiteral
-          , 'NUMBER': NumberLiteral
-          , 'REGEX': RegExpLiteral
-          , 'SPACE_BRACKET': ArrayLiteral
-          });
+    var OPERAND_DIRECT_TYPE = new Map().fromObject({
+       'STRING': StringLiteral
+       , 'NUMBER': NumberLiteral
+       , 'REGEX': RegExpLiteral
+       , 'SPACE_BRACKET': ArrayLiteral
+   });
 
 
     //var OPERAND_DIRECT_TOKEN = map
@@ -2104,13 +2130,14 @@
           //'function': FunctionDeclaration
           //'->': FunctionDeclaration
           //'yield': YieldExpression
-    var OPERAND_DIRECT_TOKEN = new Map().fromObject({'(': ParenExpression
-          , '[': ArrayLiteral
-          , '{': ObjectLiteral
-          , 'function': FunctionDeclaration
-          , '->': FunctionDeclaration
-          , 'yield': YieldExpression
-          });
+    var OPERAND_DIRECT_TOKEN = new Map().fromObject({
+       '(': ParenExpression
+       , '[': ArrayLiteral
+       , '{': ObjectLiteral
+       , 'function': FunctionDeclaration
+       , '->': FunctionDeclaration
+       , 'yield': YieldExpression
+   });
 
 
 //### public class Operand extends ASTBase
@@ -2159,6 +2186,7 @@
     // end class Operand
 
     //end Operand
+    
 
 
 //## Oper
@@ -2277,10 +2305,21 @@
 
         //if .name is 'into' and .opt('var')
         if (this.name === 'into' && this.opt('var')) {
-            //.intoVar = true
-            this.intoVar = true;
+            //.intoVar = '*r' //.right operand is "into" var
+            this.intoVar = '*r'; //.right operand is "into" var
             //.getParent(Statement).intoVars = true #mark owner statement
             this.getParent(Statement).intoVars = true;// #mark owner statement
+        }
+        else if (this.name === 'or') {
+
+//A.4) mark 'or' operations, since for c-generation a temp var is required
+
+        //else if .name is 'or'
+            //if .lexer.options.target is 'c'
+            if (this.lexer.options.target === 'c') {
+                //.intoVar = UniqueID.getVarName('__or')
+                this.intoVar = UniqueID.getVarName('__or');
+            };
         }
         else if (this.name === 'isnt') {
 
@@ -3516,15 +3555,14 @@
           this.varRefSuper = this.req(VariableRef);
         };
 
-//Now get body.
+//Now get the class body
 
-        //.body = .opt(Body)
-        this.body = this.opt(Body);
-
+        //.body = .req(Body)
+        this.body = this.req(Body);
         //.body.validate 
             //PropertiesDeclaration, ConstructorDeclaration 
-            //MethodDeclaration, DeclareStatement
-        this.body.validate(PropertiesDeclaration, ConstructorDeclaration, MethodDeclaration, DeclareStatement);
+            //MethodDeclaration, DeclareStatement, DoNothingStatement
+        this.body.validate(PropertiesDeclaration, ConstructorDeclaration, MethodDeclaration, DeclareStatement, DoNothingStatement);
       };
     // export
     module.exports.ClassDeclaration = ClassDeclaration;
@@ -3630,7 +3668,7 @@
         //if .toNamespace, .name=.varRef.toString()
         if (this.toNamespace) {this.name = this.varRef.toString()};
 
-//Now get body.
+//Now get the append-to body
 
         //.body = .req(Body)
         this.body = this.req(Body);
@@ -3675,7 +3713,7 @@
         //.name=.req('IDENTIFIER')
         this.name = this.req('IDENTIFIER');
 
-//Now get body.
+//Now get the namespace body
 
         //.body = .req(Body)
         this.body = this.req(Body);
@@ -3802,7 +3840,7 @@
 
 //`ImportStatement: import (ImportStatementItem,)`
 
-//Example: `global import fs, path` ->  js:`var fs=require('fs'),path=require('path')`
+//Example: `import fs, path` ->  js:`var fs=require('fs'),path=require('path')`
 
 //Example: `import Args, wait from 'wait.for'` ->  js:`var http=require('./Args'),wait=require('./wait.for')`
 
@@ -4045,9 +4083,10 @@
         //case .specifier
         
           //when  'on-the-fly','type':
-        if ((this.specifier=='on-the-fly')
-        ||(this.specifier=='type')
-        ){
+        if (
+           (this.specifier=='on-the-fly')
+           ||(this.specifier=='type')
+       ){
             //#declare VarRef:Type
             //.varRef = .req(VariableRef)
             this.varRef = this.req(VariableRef);
@@ -4058,8 +4097,9 @@
         
         }
           //when 'valid':
-        else if ((this.specifier=='valid')
-        ){
+        else if (
+           (this.specifier=='valid')
+       ){
             //.varRef = .req(VariableRef)
             this.varRef = this.req(VariableRef);
             //if no .varRef.accessors, .sayErr "declare valid: expected accesor chain. Example: 'declare valid name.member.member'"
@@ -4072,8 +4112,9 @@
         
         }
           //when 'name':
-        else if ((this.specifier=='name')
-        ){
+        else if (
+           (this.specifier=='name')
+       ){
             //.specifier = .req('affinity')
             this.specifier = this.req('affinity');
             //.names = .reqSeparatedList(VariableDecl,',')
@@ -4091,8 +4132,9 @@
         
         }
           //when 'var':
-        else if ((this.specifier=='var')
-        ){
+        else if (
+           (this.specifier=='var')
+       ){
             //.names = .reqSeparatedList(VariableDecl,',')
             this.names = this.reqSeparatedList(VariableDecl, ',');
             //for each varDecl in .names
@@ -4108,8 +4150,9 @@
         
         }
           //when 'on':
-        else if ((this.specifier=='on')
-        ){
+        else if (
+           (this.specifier=='on')
+       ){
             //.name = .req('IDENTIFIER')
             this.name = this.req('IDENTIFIER');
             //.names = .reqSeparatedList(VariableDecl,',')
@@ -4598,14 +4641,22 @@
             this.lock();
             //.expressions = .reqSeparatedList(Expression, ",",":")
             this.expressions = this.reqSeparatedList(Expression, ",", ":");
-            //.body = .req(Body)
-            this.body = this.req(Body);
+
+            //if .lexer.token.type is 'NEWLINE'
+            if (this.lexer.token.type === 'NEWLINE') {
+                //.body = .req(Body) //indented body block
+                this.body = this.req(Body); //indented body block
+            }
+            else {
+            //else
+                //.body = .req(SingleLineBody)
+                this.body = this.req(SingleLineBody);
+            };
         };
     // export
     module.exports.WhenSection = WhenSection;
     
     // end class WhenSection
-
 
 
 
@@ -4736,16 +4787,17 @@
               //export: ['class','namespace','function','var'] 
               //generator: ['function','method'] 
               //nice: ['function','method'] 
-              //shim: ['function','method','class','namespace','import'] 
+              //shim: ['function','method','import'] 
               //helper:  ['function','method','class','namespace']
-              //global: ['import','declare']
-        var validCombinations = new Map().fromObject({export: ['class', 'namespace', 'function', 'var']
-              , generator: ['function', 'method']
-              , nice: ['function', 'method']
-              , shim: ['function', 'method', 'class', 'namespace', 'import']
-              , helper: ['function', 'method', 'class', 'namespace']
-              , global: ['import', 'declare']
-              });
+              //global: ['declare','class','namespace']
+        var validCombinations = new Map().fromObject({
+           export: ['class', 'namespace', 'function', 'var']
+           , generator: ['function', 'method']
+           , nice: ['function', 'method']
+           , shim: ['function', 'method', 'import']
+           , helper: ['function', 'method', 'class', 'namespace']
+           , global: ['declare', 'class', 'namespace']
+       });
 
         //for each adjective in .adjectives
         for( var adjective__inx=0,adjective ; adjective__inx<this.adjectives.length ; adjective__inx++){adjective=this.adjectives[adjective__inx];
@@ -4878,8 +4930,6 @@
 
         //.statements = .reqSeparatedList(Statement,";",'NEWLINE')
         this.statements = this.reqSeparatedList(Statement, ";", 'NEWLINE');
-        //.lexer.returnToken() #return closing NEWLINE
-        this.lexer.returnToken();// #return closing NEWLINE
       };
     // export
     module.exports.SingleLineBody = SingleLineBody;
@@ -4900,6 +4950,8 @@
       //properties
         //isMain: boolean
         //exportDefault: ASTBase
+        //dependencyTreeLevel = 0
+          this.dependencyTreeLevel=0;
     };
     // Module (extends|proto is) Body
     Module.prototype.__proto__ = Body.prototype;
@@ -4981,45 +5033,46 @@
       //'compile':CompilerStatement
       //'compiler':CompilerStatement
       //'yield':YieldExpression
-    var StatementsDirect = new Map().fromObject({'class': ClassDeclaration
-      , 'Class': ClassDeclaration
-      , 'append': AppendToDeclaration
-      , 'Append': AppendToDeclaration
-      , 'function': FunctionDeclaration
-      , 'constructor': ConstructorDeclaration
-      , 'properties': PropertiesDeclaration
-      , 'namespace': NamespaceDeclaration
-      , 'method': MethodDeclaration
-      , 'var': VarStatement
-      , 'let': VarStatement
-      , 'default': DefaultAssignment
-      , 'if': IfStatement
-      , 'when': IfStatement
-      , 'case': CaseStatement
-      , 'for': ForStatement
-      , 'while': WhileUntilLoop
-      , 'until': WhileUntilLoop
-      , 'do': [DoNothingStatement, DoLoop]
-      , 'break': LoopControlStatement
-      , 'continue': LoopControlStatement
-      , 'end': EndStatement
-      , 'return': ReturnStatement
-      , 'with': WithStatement
-      , 'print': PrintStatement
-      , 'throw': ThrowStatement
-      , 'raise': ThrowStatement
-      , 'fail': ThrowStatement
-      , 'try': TryCatch
-      , 'exception': ExceptionBlock
-      , 'Exception': ExceptionBlock
-      , 'debugger': DebuggerStatement
-      , 'declare': DeclareStatement
-      , 'import': ImportStatement
-      , 'delete': DeleteStatement
-      , 'compile': CompilerStatement
-      , 'compiler': CompilerStatement
-      , 'yield': YieldExpression
-      });
+    var StatementsDirect = new Map().fromObject({
+       'class': ClassDeclaration
+       , 'Class': ClassDeclaration
+       , 'append': AppendToDeclaration
+       , 'Append': AppendToDeclaration
+       , 'function': FunctionDeclaration
+       , 'constructor': ConstructorDeclaration
+       , 'properties': PropertiesDeclaration
+       , 'namespace': NamespaceDeclaration
+       , 'method': MethodDeclaration
+       , 'var': VarStatement
+       , 'let': VarStatement
+       , 'default': DefaultAssignment
+       , 'if': IfStatement
+       , 'when': IfStatement
+       , 'case': CaseStatement
+       , 'for': ForStatement
+       , 'while': WhileUntilLoop
+       , 'until': WhileUntilLoop
+       , 'do': [DoNothingStatement, DoLoop]
+       , 'break': LoopControlStatement
+       , 'continue': LoopControlStatement
+       , 'end': EndStatement
+       , 'return': ReturnStatement
+       , 'with': WithStatement
+       , 'print': PrintStatement
+       , 'throw': ThrowStatement
+       , 'raise': ThrowStatement
+       , 'fail': ThrowStatement
+       , 'try': TryCatch
+       , 'exception': ExceptionBlock
+       , 'Exception': ExceptionBlock
+       , 'debugger': DebuggerStatement
+       , 'declare': DeclareStatement
+       , 'import': ImportStatement
+       , 'delete': DeleteStatement
+       , 'compile': CompilerStatement
+       , 'compiler': CompilerStatement
+       , 'yield': YieldExpression
+   });
 
 
 //##### Helpers
@@ -5133,8 +5186,3 @@
             };
         };
       };
-// --------------------
-// Module code
-// --------------------
-    
-// end of module

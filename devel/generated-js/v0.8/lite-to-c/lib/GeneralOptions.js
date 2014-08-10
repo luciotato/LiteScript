@@ -7,11 +7,15 @@
             //verboseLevel = 1
             //warningLevel = 1
             //comments = 1
+
             //ifdef PROD_C
             //target ="c"
+            //outDir = 'generated/c'
             //else
             //target ="js"
+            //outDir = 'generated/js'
             //end if
+
             //debugEnabled = undefined
             //perf=0 // performace counters 0..2
             //skip = undefined
@@ -24,11 +28,11 @@
             //defines: array of string = []
             //includeDirs: array of string = []
 
-            //projectDir:string 
+            //projectDir:string = '.'
             //mainModuleName:string = 'unnamed'
-            //outDir = './out'
 
             //storeMessages: boolean = false
+
             //literalMap: string // produce "new Class().fromObject({})" on "{}"" instead of a js object
             // activate with: 'lexer options object literal is Foo'. A class is required to produce C-code 
 
@@ -39,6 +43,7 @@
           this.warningLevel=1;
           this.comments=1;
           this.target="c";
+          this.outDir='generated/c';
           this.debugEnabled=undefined;
           this.perf=0;
           this.skip=undefined;
@@ -48,8 +53,8 @@
           this.browser=undefined;
           this.defines=[];
           this.includeDirs=[];
+          this.projectDir='.';
           this.mainModuleName='unnamed';
-          this.outDir='./out';
           this.storeMessages=false;
           this.now=new Date();
     };
@@ -57,14 +62,9 @@
       //method toString
       GeneralOptions.prototype.toString = function(){
             //return """
-            return "outDir:" + this.outDir + "\nverbose:" + this.verboseLevel + "\ndefines:" + (this.defines.join());
+            return "outDir:" + this.outDir + "\ndefines:" + (this.defines.join());
       };
     // end class GeneralOptions
-// --------------------
-// Module code
-// --------------------
-// end of module
                 //outDir:#{.outDir}
-                //verbose:#{.verboseLevel}
                 //defines:#{.defines.join()}
 module.exports=GeneralOptions;

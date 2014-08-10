@@ -736,11 +736,11 @@
      Grammar.ImportStatementItem.prototype.getNodeJSRequireFileRef = function(){
 
 // node.js require() require "./" to denote a local module to load.
-// it does like bash does for executable files. A name  without ./ means "look in $PATH".
+// it does as bash does for executable files. A name  without ./ means "look in $PATH".
 // this is not the most intuitive choice.
 
-       // if .importedModule.fileInfo.importInfo.globalImport
-       if (this.importedModule.fileInfo.importInfo.globalImport) {
+       // if '.interface.' in .importedModule.fileInfo.filename or .importedModule.fileInfo.isCore
+       if (this.importedModule.fileInfo.filename.indexOf('.interface.')>=0 || this.importedModule.fileInfo.isCore) {
            return this.name; // for node, no './' means "look in node_modules, and up, then global paths"
        };
 
@@ -920,7 +920,10 @@
          var index = this.indexVar || ASTBase.getUniqueVarName('inx');
 
          this.out("for ( var ", index, " in ", iterable, ")");
-          //.out "if (",iterable,".hasOwnProperty(",index,"))"
+         // if .ownKey
+         if (this.ownKey) {
+             this.out("if (", iterable, ".hasOwnProperty(", index, "))");
+         };
 
          this.body.out("{", this.mainVar.name, "=", iterable, "[", index, "];", NL);
 
@@ -991,7 +994,6 @@
          this.out("var ", this.mainVar.name, "=undefined;", NL);
          this.out('if(!', iterable, '.dict) throw(new Error("for each in map: not a Map, no .dict property"));', NL);
          this.out("for ( var ", indexVarName, " in ", iterable, ".dict)");
-         this.out(" if (", iterable, ".dict.hasOwnProperty(", indexVarName, "))");
 
          // if .mainVar
          if (this.mainVar) {
@@ -1574,12 +1576,20 @@
            this.out("};", NL);
        };
 
+// if the class is global...
+
+       // if .hasAdjective('global')
+       if (this.hasAdjective('global')) {
+           this.out('GLOBAL.', this.name, "=", this.name, ";", NL); //set declared fn-Class as method of GLOBAL
+       };
+
 // if the class is inside a namespace...
 
        // if prefix and prefix.length
        if (prefix && prefix.length) {
            this.out(prefix, this.name, "=", this.name, ";", NL); //set declared fn-Class as method of owner-namespace
        };
+
 
 // Set super-class if we have one indicated
 
@@ -1634,6 +1644,11 @@
        this.out(!this.varRef.accessors ? 'var ' : '', this.varRef, '={};');
        this.out(this.body);
        this.skipSemiColon = true;
+
+       // if .hasAdjective('global')
+       if (this.hasAdjective('global')) {
+           this.out('GLOBAL.', this.varRef.name, "=", this.varRef.name, ";", NL); //set declared fn-Class as method of GLOBAL
+       };
 
        // if not .lexer.out.browser
        if (!(this.lexer.out.browser)) {

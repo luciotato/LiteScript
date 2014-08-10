@@ -189,7 +189,7 @@ Validate
 
         if no .options.skip 
             log.info "Validating"
-            Validate.validate this
+            Validate.launch this
             if log.error.count, log.throwControled log.error.count,"errors"
 
 Produce, for each module
@@ -421,12 +421,12 @@ else, If the origin is a require() call
 if found a valid filename to import
 
             if importInfo.name
-                try
+                //try
                     node.importedModule = .importModule(moduleNode, importInfo)
-                catch err
-                    #show import statement source location
-                    node.sayErr '#{err.message} importing module "#{importInfo.name}"'
-                    raise err //re-throw
+                //catch err
+                //    #show import statement source location
+                //    node.sayErr '#{err.message} importing module "#{importInfo.name}"'
+                //    raise err //re-throw
 
 
         #loop

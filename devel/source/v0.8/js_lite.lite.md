@@ -3,7 +3,7 @@ This is the command line interface to LiteScript-to-js Compiler
 when the LiteScript compiler is generated as js-code 
 to run on node.js or the browser
 
-    global import path,fs
+    import path,fs
     
     import GeneralOptions, OptionsParser, ControlledError, color
 
@@ -20,6 +20,8 @@ execute commands
 
 #### usage
 
+        var options = new GeneralOptions()
+
         var usage = """
         
         #{title}
@@ -32,13 +34,15 @@ execute commands
         
         options are:
         -r, -run         compile & run .lite.md file
-        -o dir           output dir. Default is './generated/js/'
+        -o dir           output dir. Default is '#{options.outDir}'
+        -v, -verbose     verbose level, default is #{options.verboseLevel} (0-3)
+        -w, -warning     warning level, default is #{options.warningLevel} (0-1)
+        -c, -comment     comment level on generated files, default is #{options.comments} (0-2)
         -b, -browser     compile for a browser environment (window instead of global, no process, etc)
-        -v, -verbose     verbose level, default is 0 (0-3)
-        -w, -warning     warning level, default is 1 (0-1)
-        -comments        comment level on generated files, default is 1 (0-2)
-        -version         print LiteScript version & exit
         -i dir           additional "import" dir. e.g: -i ../../intefaces
+
+        -h, -help        print this help
+        -version         print LiteScript version & exit
 
         Advanced options:
         -s,  -single     compile single file. do not follow "import" statements
@@ -52,12 +56,9 @@ execute commands
         
         """
 
-
 Get & process command line arguments
 
         var args = new OptionsParser(params)
-
-        var options = new GeneralOptions
 
         var 
             isCompileAndRun:boolean
@@ -87,22 +88,23 @@ get compiler version to --use
 
 set other options
 
-        with options
-            .outDir         = path.resolve(args.valueFor('o') or './generated/js') //output dir
-            .verboseLevel   = Number(args.valueFor('v',"verbose") or 0) 
-            .warningLevel   = Number(args.valueFor('w',"warning") or 1)
-            .comments       = Number(args.valueFor('comment',"comments") or 1) 
-            .debugEnabled   = args.option('d',"debug") 
-            .skip           = args.option('noval',"novalidation") // skip name validation
-            .generateSourceMap = args.option('nm',"nomap")? false:true // do not generate sourcemap
-            .single         = args.option('s',"single") // single file- do not follow require() calls
-            .compileIfNewer = args.option('ifn',"ifnew") // single file, compile if source is newer
-            .browser        = args.option('b',"browser") 
-            .es6            = args.option('es6',"harmony") 
-            .perf           = parseInt(args.valueFor('perf',"performance") or 0)
-            .defines = []
-            .includeDirs = []
+        var optValue
 
+        with options
+            if args.valueFor('o') into optValue,            .outDir = path.resolve(optValue) //output dir
+            if args.valueFor('v',"verbose") into optValue,  .verboseLevel = parseInt(optValue)
+            if args.valueFor('w',"warning") into optValue,  .warningLevel = parseInt(optValue)
+            if args.valueFor('c',"comment") into optValue,  .comments = parseInt(optValue)
+            if args.valueFor('perf') into optValue,         .perf = parseInt(optValue)
+
+            if args.option('d',"debug"),     .debugEnabled = true
+            if args.option('noval'),         .skip = true
+            if args.option('nm',"nomap"),    .generateSourceMap = false // do not generate sourcemap
+            if args.option('s',"single"),    .single = true // single file- do not follow imports
+            if args.option('b',"browser"),   .browser = true // single file- do not follow imports
+            if args.option('es6',"harmony"), .browser = true // single file- do not follow imports
+
+            //.compileIfNewer = args.option('ifn',"ifnew") // single file, compile if source is newer
 
         while args.valueFor('D') into var newDef
             options.defines.push newDef

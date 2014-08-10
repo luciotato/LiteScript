@@ -14,9 +14,8 @@
     //import logger
     var logger = require('./lib/logger.js');
 
-    //shim import LiteCore, Map
-    var LiteCore = require('./lib/LiteCore.js');
-    var Map = require('./lib/Map.js');
+    //shim import LiteCore
+    var LiteCore = require('./interfaces/LiteCore.js');
 
 //### public Class ASTBase 
     // constructor
@@ -848,6 +847,12 @@
                       // additional keys: pre,post,separator
                       //var separator = item.tryGetProperty('separator') or ', '
                       var separator = item.tryGetProperty('separator') || ', ';
+                      //var freeFormMode = item.tryGetProperty('freeForm')
+                      var freeFormMode = item.tryGetProperty('freeForm');
+                      //var newLineIncluded = false
+                      var newLineIncluded = false;
+                      //var actualIndent = rawOut.getIndent()
+                      var actualIndent = rawOut.getIndent();
 
                       //for each inx,listItem in CSL
                       for( var inx=0,listItem ; inx<CSL.length ; inx++){listItem=CSL[inx];
@@ -856,17 +861,18 @@
                             //declare valid listItem.out
                             
 
+                            //if freeFormMode
+                            if (freeFormMode) {
+                                //rawOut.startNewLine
+                                rawOut.startNewLine();
+                                //rawOut.put String.spaces(actualIndent+4)
+                                rawOut.put(String.spaces(actualIndent + 4));
+                                //newLineIncluded = true
+                                newLineIncluded = true;
+                            };
+
                             //if inx>0 
                             if (inx > 0) {
-
-                                //if item.tryGetProperty('freeForm')
-                                if (item.tryGetProperty('freeForm')) {
-                                    //rawOut.put '\n'
-                                    rawOut.put('\n');
-                                    //rawOut.put String.spaces(.indent)
-                                    rawOut.put(String.spaces(this.indent));
-                                };
-
                                 //rawOut.put separator
                                 rawOut.put(separator);
                             };
@@ -879,12 +885,12 @@
                       //end for
                       
 
-                      //if item.tryGetProperty('freeForm') # prettier generated code
-                      if (item.tryGetProperty('freeForm')) {// # prettier generated code
-                            //rawOut.put '\n'
-                            rawOut.put('\n');
-                            //rawOut.put String.spaces(.indent)
-                            rawOut.put(String.spaces(this.indent));
+                      //if newLineIncluded # prettier generated code
+                      if (newLineIncluded) {// # prettier generated code
+                            //rawOut.startNewLine
+                            rawOut.startNewLine();
+                            //rawOut.put String.spaces(actualIndent)
+                            rawOut.put(String.spaces(actualIndent));
                       };
                   };
               }
@@ -915,8 +921,8 @@
               else {
 
               //else 
-                  //.sayErr "ASTBase method out Map|Object: unrecognized keys: #{item.getObjectKeys()}"
-                  this.sayErr("ASTBase method out Map|Object: unrecognized keys: " + (item.getObjectKeys()));
+                  //.sayErr "ASTBase method out Map|Object: unrecognized keys: #{item.allPropertyNames()}"
+                  this.sayErr("ASTBase method out Map|Object: unrecognized keys: " + (item.allPropertyNames()));
               };
           }
           else {
@@ -1058,14 +1064,10 @@
         return String.spaces(indent);
      };
     // end class ASTBase
-// --------------------
-// Module code
-// --------------------
 
 
     //end class ASTBase
     
-// end of module
 
 
 
