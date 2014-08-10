@@ -1114,7 +1114,7 @@ code a call to _fastNew(X,n,prop,value,prop,value)...
 
         else
             if .produceType is 'any'
-                if translated is "!"         
+                if translated is "!"  //result of ! (not) is type:bool (true|false)
                     pre = 'any_bool('
                     post = ")"
                 else

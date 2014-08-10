@@ -278,18 +278,22 @@ console.log("------------");
 // get command line options
 var args = new Args(process.argv);
 
-var use = args.value('u','use') 
+var compilerPath = args.value('comppath','compiler-path')||'../../lib';
+if (!compilerPath) {
+    console.log('INVALID ARGUMENTS\nusage: node test -version 0.x -compiler-path ../out/lib\n');
+    process.exit(1);
+};
+
+//get Litescript compiler to compile tests
+compiler = require(compilerPath+'/Compiler');
+console.error('compiler v',compiler.version,'build date',compiler.buildDate);
+
+var use = args.value('u','use')|| compiler.version.slice(0,3);
 if (!use) {
     console.log('INVALID ARGUMENTS\nusage: node test -use 0.x\n');
     process.exit(1);
 };
 if (use[0]==='v') use=use.slice(1);
-
-var compilerPath = args.value('comppath','compiler-path')||'./out/lib';
-if (!compilerPath) {
-    console.log('INVALID ARGUMENTS\nusage: node test -version 0.x -compiler-path ../out/lib\n');
-    process.exit(1);
-};
 
 var outDir = args.value('o','outdir');
 
@@ -310,10 +314,6 @@ if (args.length){
 separ();
 console.error('TEST using compiler at',compilerPath);
 testOptions.verbose>=1 && console.error("compiler options:",JSON.stringify(compilerOptions));
-
-//get Litescript compiler to compile tests
-compiler = require(compilerPath+'/Compiler');
-console.error('compiler v',compiler.version,'build date',compiler.buildDate);
 
 //DEBUG - SINGLE FILE
 //testFile('tests/DoWhileUntil.lite');
