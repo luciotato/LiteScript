@@ -124,8 +124,8 @@ from UglifyJS into LiteScript code, and the compile such code to-js and to-c
 parsing of: `jquery-1.11.1.js + Underscore.js 1.6.0 + AngularJS` 366 KiB
 
 source code        | target/generated      | time   | relative to base
------------------------------------------- | ------:| -----------------
-Original UglifyJS2 | N/A                   | 425 ms | base
+------------------ | --------------------- | ------:| -----------------
+Original UglifyJS2 |                       | 425 ms | base
 Uglify-LS code     | compile-to-js         | 455 ms | +30 ms, 7% slower
 Uglify-LS code     | compile-to-c - debug  | 250 ms | 1.8 times faster
 Uglify-LS code     | compile-to-c - NDEBUG | 200 ms | twice as fast
