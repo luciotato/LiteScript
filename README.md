@@ -116,22 +116,19 @@ See: devel/litec
 
 ### UgilfyLS - proof of concept
 
-In order to measure preformance gain when compiling-to-c, I've "translated" the parser
+In order to measure performance gains when compiling-to-c, I've "translated" the parser
 from UglifyJS into LiteScript code, and the compile such code to-js and to-c
 
 ##Results:
 
 parsing of: `jquery-1.11.1.js + Underscore.js 1.6.0 + AngularJS` 366 KiB
 
-code | time | difference
---|--
-Original UglifyJS2, parse.js code | 425 ms | base
---|--
-Uglify-LS code, compile-to-js | 455 ms  | +30 ms, 7% slower
---|--
-Uglify-LS code, compile-to-c - debug | 250 ms | 1.8 times faster
---|--
-Uglify-LS code, compile-to-c - NDEBUG | 200 ms | twice as fast
+source code        | target/generated      | time   | relative to base
+------------------------------------------ | ------:| -----------------
+Original UglifyJS2 | N/A                   | 425 ms | base
+Uglify-LS code     | compile-to-js         | 455 ms | +30 ms, 7% slower
+Uglify-LS code     | compile-to-c - debug  | 250 ms | 1.8 times faster
+Uglify-LS code     | compile-to-c - NDEBUG | 200 ms | twice as fast
 
 
 
