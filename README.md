@@ -117,7 +117,7 @@ See: devel/litec
 ### UgilfyLS - proof of concept
 
 In order to measure performance gains when compiling-to-c, I've "translated" the parser
-from UglifyJS into LiteScript code, and the compile such code to-js and to-c
+from UglifyJS into LiteScript code, and then compile the LS code to-js and to-c
 
 ##Results:
 
