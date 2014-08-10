@@ -29,9 +29,9 @@ I've reached a point, in pure js projects, at which refactoring code gets too ri
 It's far too easy to introduce subtle bugs in pure js, just with a typo.
 After hours lost debugging js code. You end up fearing to alter code that's already tested.
 ***I needed a tool to ease up javascript production for large projects, catching common 
-errors in the compilation phase, to avoiding long debugging hours.***
+errors in the compilation phase, to avoid long debugging hours.***
 
-**Good Start**: By migrating a few projects to LiteScript I've found bugs lurking in js code I believe was bug-free. 
+**Good Start**: By migrating a few projects to LiteScript I've found bugs lurking in js code I thought was bug-free. 
 Also with LiteScript I found myself coding faster, fearless, trusting LiteScript compiler to catch typos 
 and object misuse.
 
@@ -39,15 +39,16 @@ and object misuse.
 
 ##LiteScript is Literate
 
-LiteScript is literate with a twist. (based on the idea of *Literate CoffeeScript*)  
+LiteScript is literate (based on the idea of *Literate CoffeeScript*).
 You write code and documentation on the same file, using *Github flavored Markdown* syntax.  
 Code blocks, denoted by four spaces of indentation after a blank line, are treated as **code**.
 Every other line not indented at least 4 spaces, is considered Markdown 
-and treated as comments by the compiler, *with some exceptions*. (the twist)
+and treated as comments by the compiler, *with some exceptions*.
 
 The exception are: MarkDown *Titles* **(###, ####, #####)** introducing classes, methods and functions.
 
-This exception exists to allow markdown titles to act as block starters (class, function, method), and then keep literate markdown comment paragraphs *inside classes and functions*. 
+This exception exists to allow markdown titles to act as block starters (class, function, method), 
+and then keep literate markdown comment paragraphs *inside classes and functions*. 
 Comments, if left outside the class or function, tend to get detached from their 
 code on reorganizations.
 Anything else not indented 4 spaces is a literate comment, Github flavor MarkDown syntax.
@@ -104,9 +105,35 @@ go to [LiteScript Online Playground](http://luciotato.github.io/LiteScript_onlin
 
 4. Install and start enjoying
 
-5. Check additional documentation
-  
-  - [Javascript API Example] (doc/compile-from-js.md)
+----
+##Compile-to-C
+
+LiteScript can also be compiled-to-c  (beta in version 0.8.5)
+
+when compiled-to-C, the LiteScript compiler itself runs 5x-7x faster.
+
+See: devel/litec 
+
+### UgilfyLS - proof of concept
+
+In order to measure preformance gain when compiling-to-c, I've "translated" the parser
+from UglifyJS into LiteScript code, and the compile such code to-js and to-c
+
+##Results:
+
+parsing of: `jquery-1.11.1.js + Underscore.js 1.6.0 + AngularJS` 366 KiB
+
+code | time | difference
+--|--
+Original UglifyJS2, parse.js code | 425 ms | base
+--|--
+Uglify-LS code, compile-to-js | 455 ms  | +30 ms, 7% slower
+--|--
+Uglify-LS code, compile-to-c - debug | 250 ms | 1.8 times faster
+--|--
+Uglify-LS code, compile-to-c - NDEBUG | 200 ms | twice as fast
+
+
 
 ----
 ##Installation
@@ -119,15 +146,14 @@ See ***Development Environment*** below for tools installation.
 ##Usage
 Primary usage is from the command line, to compile a project, a single file or to run a script:
 
-To compile a project: `lite -compile mainModule.lite.md`
+To compile a project: `lite mainModule.lite.md`
 
 To run a script: `lite -run mainModule.lite.md`
 
 ###Options:
 ```
   -r, -run         compile & run .lite.md file
-  -c, -compile     compile project, mainModule & all dependent files
-  -o dir           output dir. Default is '.'
+  -o dir           output dir. Default is 'out'
   -b, -browser     compile for a browser environment (window instead of global, no process, etc)
   -v, -verbose     verbose level, default is 1 (0-2)
   -w, -warning     warning level, default is 1 (0-1)
@@ -139,7 +165,6 @@ To run a script: `lite -run mainModule.lite.md`
   -s,  -single     compile single file. do not follow import/require() calls
   -nm, -nomap      do not generate sourcemap
   -noval           skip name validation
-  -u, -use vX.Y.Z  select LiteScript Compiler Version to use (devel)
   -d, -debug       enable full compiler debug log file at 'out/debug.log'
   -run -debug      when -run used with -debug, launch compiled file with: node --debug-brk 
 ```
@@ -148,11 +173,11 @@ To run a script: `lite -run mainModule.lite.md`
 
 It's very useful to have syntax coloring to try a new language. This is what I use:
 
-- OS: Linux, Debian, with KDE / or the linux distro that pleases you
+- OS: Linux, Debian with KDE / or the linux distro that pleases you
 - node.js >= 0.10
 - [Sublime Text 2](http://www.sublimetext.com/2) - Higly recommended 
 - [LiteScript tmLanguage](/extras/sublime) for Sublime Text. 
-- A custom theme for Sublime Text ["Lite Dark"](/extras/sublime) based on "Soda Dark". 
+- A custom theme for Sublime Text ["Lite Day/Night"](/extras/sublime) based on "Soda Dark". 
 - A very simple Sublime "build system" (Ctrl-B)
 ```
 {
@@ -171,14 +196,15 @@ Once you have all that, with Sublime, "open folder" for example:
 `~/litescript_reception_demo/WebServer`, then open "BareWebServer.lite.md".
 
 - You can now compile (current dir) with Ctrl-B 
-and then use F4 to check each compiler error (Sublime jumps automatically to source pos)
+and then use F4 to check each compiler error (Sublime jumps automatically to source position)
 
 This is a higly recommendable environment to be productive with the language.
 
-If you have a windows box, it's time to start using Linux. Node.js works on windows, 
-but some other very useful tools do not work smoothly on windows (like node-inspector). 
+If you have a windows box, the better option is to install Linux on Virtual Box. 
+Node.js works on windows, but some other very useful tools do not work smoothly on windows (like node-inspector). 
 Go now and download "Virtual Box". After installing "Virtual Box" 
-try http://www.debian.org/distrib/netinst and continue from there until you've got the above configuration.
+try http://www.debian.org/distrib/netinst and continue from there until 
+you reach the above configuration.
 
 ----
 
