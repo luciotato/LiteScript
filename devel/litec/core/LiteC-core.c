@@ -82,6 +82,7 @@
         ,"keys"
 
         ,"iterableNext"
+        ,"next"
         ,"toString"
 
     };
@@ -91,11 +92,12 @@
         ,"name" // Class.name | NameValuePair
         ,"initInstance" // Class.initInstance
 
-        ,"key" // Map | Iterable
-        ,"value" // NameValuePair | Iterable
-        ,"index" // Iterable
-        ,"size" // Map | Iterable
-        ,"extra" // Iterable
+        ,"key" // Map | Iterable_Position
+        ,"value" // NameValuePair | Iterable_Position
+        ,"index" // Iterable_Position
+        ,"size" // Map | Iterable_Position
+        ,"iterable" // Iterable_Position
+        ,"extra" // Iterable_Position
 
         ,"message" // Error.message
         ,"stack" // Error.stack
@@ -362,24 +364,6 @@
         if (variable->class==Undefined_inx) *variable=value;
     }
 
-    // --------------------------
-    //-- any comparision helpers
-    // --------------------------
-
-    bool __is(any a, any b){  //js triple-equal, "==="
-        //check first for strings
-        if (a.class == String_inx && b.class == String_inx){
-            if(!a.res && !b.res) { //both simple
-                if (a.len!=b.len) return FALSE; //diff length
-                return memcmp(a.value.str,b.value.str,a.len)==0;
-            }
-            //else concatdSlices
-            return __compareStrings(a,b)==0;
-        }
-        //else: not String
-        // === if same class & value
-        return (a.class==b.class && a.value.uint64 == b.value.uint64); //same number or points to same object
-    }
 
     IteratorCursor_s _newIterator(any s){
         return (IteratorCursor_s){
@@ -530,6 +514,7 @@
     any _newArrayFromCharPtrPtr(len_t argc, char** argv){
         // convert main function args into Array
         any a = _newArray(argc,NULL);
+        a.value.arr->length = argc;
         any* item = a.value.arr->base.anyPtr;
         for(;argc--;argv++){
               *item++=any_CStr(*argv);
@@ -1058,12 +1043,33 @@
     // x_iterableNext
     //----------------------
     void Iterable_Position__init(DEFAULT_ARGUMENTS){
-        this.value.iterable->index=any_int64(-1); //mark as pre-start
+        assert(argc==1);
+        this.value.iterPos->iterable=arguments[0];
+        this.value.iterPos->index=any_int64(-1); //mark as pre-start
+    }
+
+    any Iterable_Position_next(DEFAULT_ARGUMENTS){
+        any iterable = this.value.iterPos->iterable;
+        if (iterable.class==String_inx) return String_iterableNext(iterable,1,&this);
+        // call .iterableNext() in the iterable Object
+        return METHOD(iterableNext_,iterable)(iterable,1,(any_arr){this});
+    }
+
+    int _iterNext(any this, any* valueVar, any* keyVar, any* indexVar){
+        any iterable = this.value.iterPos->iterable;
+        // call .iterableNext() in the iterable Object
+        var result = METHOD(iterableNext_,iterable)(iterable,1,(any_arr){this});
+        if (!result.value.uint64) return FALSE; //no more items
+        //assign values to loop vars
+        if (valueVar) *valueVar=this.value.iterPos->value;
+        if (keyVar) *keyVar = this.value.iterPos->key;
+        if (indexVar) *indexVar = this.value.iterPos->index;
+        return TRUE;
     }
 
     any Object_iterableNext(DEFAULT_ARGUMENTS){
         assert_arg(Iterable_Position);
-        Iterable_Position_ptr iter = arguments[0].value.iterable;
+        Iterable_Position_ptr iter = arguments[0].value.iterPos;
 
         int64_t inx = iter->index.value.int64;
 
@@ -1082,7 +1088,7 @@
 
     any Array_iterableNext(DEFAULT_ARGUMENTS){
         assert_arg(Iterable_Position);
-        Iterable_Position_ptr iter = arguments[0].value.iterable;
+        Iterable_Position_ptr iter = arguments[0].value.iterPos;
 
         int64_t inx = iter->index.value.int64;
 
@@ -1101,7 +1107,7 @@
 
     any Map_iterableNext(DEFAULT_ARGUMENTS){
         assert_arg(Iterable_Position);
-        Iterable_Position_ptr iter = arguments[0].value.iterable;
+        Iterable_Position_ptr iter = arguments[0].value.iterPos;
 
         int64_t inx = iter->index.value.int64;
 
@@ -1134,7 +1140,7 @@
 
     any String_iterableNext(DEFAULT_ARGUMENTS){
         assert_arg(Iterable_Position);
-        Iterable_Position_ptr iter = arguments[0].value.iterable;
+        Iterable_Position_ptr iter = arguments[0].value.iterPos;
 
         int64_t inx = iter->index.value.int64;
 
@@ -1857,14 +1863,27 @@
     any String_split(any this, len_t argc, any* arguments) {
         assert_args({.req=0,.max=2,.control=2},String,Number);
 
-        _FLATTEN(this); //make simple strings (if it is not)
+        //if string empty||
+        //MDN-JS:If separator is omitted, the array returned contains one element consisting of the entire string.
+        if (!this.len||!argc) return this;
 
-        var sep=arguments[0];
-        _FLATTEN(sep); //make simple strings (if it is not)
+        len_t limit= argc==2? arguments[1].value.number : UINT32_MAX;
 
         var result = _newArray(0,NULL);
 
-        len_t limit= argc==2? arguments[1].value.number : UINT32_MAX;
+        var sep=arguments[0];
+        if (!sep.len){
+            //MDN-JS: If separator is an empty string, str is converted to an array of characters.
+            var iter=_newIterPos();
+            for(;limit-- && String_iterableNext(this,1,&iter).value.uint64;){
+                _array_pushSlice(result,iter.value.iterPos->value);
+            }
+            return result;
+        }
+
+        _FLATTEN(sep); //make simple strings (if it is not)
+        _FLATTEN(this); //make simple strings (if it is not)
+
         len_t pushed=0;
 
         str foundPtr;
@@ -2940,7 +2959,15 @@
     }
     */
 
-     int _anyToBool(any this){
+     any __atb;
+     int _anyToBool2(){
+        if (!__atb.len) return FALSE;
+        if (!__atb.res) return __atb.value.str[0]!=0; //false if "" - js compatibility
+        //else //concatdSlices. if a slice has something => TRUE
+        for(int n=0;n<__atb.len;n++) if (__atb.value.slices[n].byteLen) return TRUE;
+        return FALSE;
+    }
+/*     int _anyToBool2(any this){
         if(this.class==String_inx) {
             if (!this.len) return FALSE;
             if (!this.res) return this.value.str[0]!=0; //false if "" - js compatibility
@@ -2952,12 +2979,50 @@
             return this.value.uint64!=0;
         }
     }
+*/
 
-     /*int _anyToBool(any this){
-         int a = _anyToBoolI(this);
-         int b = _anyToBoolsw(this);
-         return a|b;
-     }*/
+    // -------------------------
+    //-- __is2 OPTIMIZED string comparision helper
+    // -------------------------
+    any __isA,__isB; //temp storage non-thread safe
+    // OPTIMIZED js triple-equal  "===" for strings
+    bool __is2(){
+        //check first for strings
+        assert(__isA.class==String_inx && __isB.class==String_inx);
+
+        //if (a.class == String_inx && b.class == String_inx){
+            if(!__isA.res && !__isB.res) { //both simple
+                if (__isA.len!=__isB.len) return FALSE; //diff length
+                if (!__isA.len) return TRUE; //both empty
+                if (__isA.value.str[0]!=__isB.value.str[0]) return FALSE; //1st byte differ
+                if (__isA.value.str[__isA.len-1]!=__isB.value.str[__isA.len-1]) return FALSE; //last byte differ
+                if (__isA.len<=2) return TRUE; //both bytes match
+                switch(__isA.len){
+                    case 3:
+                        return __isA.value.str[1]==__isB.value.str[1]; //center defines
+                    case 4:
+                        return (uint16_t)*(uint16_t*)(__isA.value.str+1)==(uint16_t)*(uint16_t*)(__isB.value.str+1); //center 2 define
+                    case 5: case 6:
+                        return (uint32_t)*(uint32_t*)(__isA.value.str+1)==(uint32_t)*(uint32_t*)(__isB.value.str+1); //center 4 define
+                    case 7:
+                        if (__isA.value.str[1]!=__isB.value.str[1]) return FALSE; //1st byte differ
+                        return (uint32_t)*(uint32_t*)(__isA.value.str+2)==(uint32_t)*(uint32_t*)(__isB.value.str+2); //center 4 define
+                    case 8:
+                        return (uint64_t)*(uint64_t*)(__isA.value.str)==(uint64_t)*(uint64_t*)(__isB.value.str); //center 8 define
+                    case 9: case 10:
+                        return (uint64_t)*(uint64_t*)(__isA.value.str+1)==(uint64_t)*(uint64_t*)(__isB.value.str+1); //center 8 define
+                    default:
+                        return memcmp(__isA.value.str+1,__isB.value.str+1,__isA.len-2)==0;
+                }
+                //return memcmp(a.value.str,b.value.str,a.len)==0;
+            }
+            //else concatdSlices
+            return __compareStrings(__isA,__isB)==0;
+        //}
+        //else: not String
+        // === if same class & value
+        //return (a.class==b.class && a.value.uint64 == b.value.uint64); //same number or points to same object
+    }
 
 
     #ifndef NDEBUG
@@ -3169,6 +3234,13 @@
             code_
         };
 
+    //Iterable_Position
+    #define M(symbol) { symbol##_, Iterable_Position_##symbol },
+    static _methodInfoArr Iterable_Position_CORE_METHODS = {
+        M( next )
+    M_END
+    #undef M
+
     //Array
     #define M(symbol) { symbol##_, Array_##symbol },
     static _methodInfoArr Array_CORE_METHODS = {
@@ -3238,6 +3310,7 @@
     static propIndex_t IterablePos_PROPS[] = {
             key_,value_,
             index_,size_,
+            iterable_,
             extra_
         };
 
@@ -3536,6 +3609,7 @@
         _declareMethods(Buffer, Buffer_CORE_METHODS);
 
         FROM_OBJECT(Iterable_Position);
+        _declareMethods(Iterable_Position, Iterable_Position_CORE_METHODS);
         _declareProps(Iterable_Position, IterablePos_PROPS, sizeof IterablePos_PROPS);
 
         BOXED_VALUE(FileDescriptor);

@@ -61,7 +61,6 @@ The Lexer class turns the input lines into an array of "infoLines"
         stringInterpolationChar: string
 
         last:LexerPos
-        maxSourceLineNum=0 //max source line num in indented block
 
         hardError:Error, softError:Error
 
@@ -767,7 +766,7 @@ Save current pos, and get next token
         logger.debug '<< Returned:',.token.toString(),'line',.sourceLineNum 
 
 -----------------------------------------------------
-This method gets the next line CODE from infoLines
+This method gets the next CODE line from infoLines
 BLANK and COMMENT lines are skipped.
 return true if a CODE Line is found, false otherwise
 
@@ -801,6 +800,31 @@ if it is a CODE line, store in lexer.sourceLineNum, and return true (ok)
 
       #end method
 
+#### method getPrevCODEInfoLineIndex(baseSourceLineNum)
+
+        //search prev CODE line
+        var inx = baseSourceLineNum
+        if inx>=.infoLines.length, inx = .infoLines.length-1
+
+        do until inx <= 0
+            or ( .infoLines[inx].sourceLineNum < baseSourceLineNum 
+                  and .infoLines[inx].type is LineTypes.CODE )
+
+            inx--
+        loop
+
+        return inx
+
+#### method getInfoLineIndex(sourceLineNum)
+
+        //search InfoLine where the required source line resides
+        var inx = sourceLineNum //line index is always<sourceLineNum
+        if inx>=.infoLines.length, inx = .infoLines.length-1
+
+        while inx and .infoLines[inx].sourceLineNum > sourceLineNum
+            inx--
+
+        return inx
 
 #### method say()
 **say** emit error (but continue compiling)
@@ -879,6 +903,8 @@ split expressions
         pushAt items, s.slice(lastDelimiterPos),quotes
 
         return items
+
+
       
 ### end class Lexer
 
@@ -948,7 +974,22 @@ Each "infoLine" has:
       #end InfoLine constructor
 
              
-      method dump() # out debug info
+      helper method outAsComment(outCode)
+
+output this line as a comment      
+
+        if .type is LineTypes.BLANK 
+            outCode.blankLine
+        else
+            //text as comment
+            outCode.ensureNewLine
+            outCode.put String.spaces(.indent)
+            if .text.slice(0,2) isnt '//', outCode.put "//"
+            outCode.put .text
+            outCode.startNewLine
+
+
+      helper method dump() # out debug info
 
         if .type is LineTypes.BLANK
           logger.debug .sourceLineNum,"(BLANK)"
@@ -1203,7 +1244,7 @@ that sits between *two* operands in a `Expressions`.
             if "|#{chunk.slice(0,2)}|" in "|<>|>=|<=|>>|<<|!=|"
                 return new Token('OPER',chunk.slice(0,2))
 
-            if chunk.charAt(0) in "><+-*/%&~^|?:" 
+            if chunk.charAt(0) in "><+-*/%&~^?:" 
                 return new Token('OPER',chunk.slice(0,1))
 
 **Numbers** can be either in hex format (like `0xa5b`) or decimal/scientific format (`10`, `3.14159`, or `10.02e23`).
@@ -1376,8 +1417,8 @@ It also handles SourceMap generation for Chrome Developer Tools debugger and Fir
 
       lines:array  // array of array of string lines[header][0..n]
 
-      lastOriginalCodeComment
-      lastOutCommentLine
+      //lastOriginalCodeComment
+      //lastOutCommentLine
       browser:boolean
 
       exportNamespace
@@ -1396,8 +1437,8 @@ Initialize output array
         .currLine = []
         .lines=[[],[],[]]
         
-        .lastOriginalCodeComment = 0
-        .lastOutCommentLine = 0
+        //.lastOriginalCodeComment = 0
+        //.lastOutCommentLine = 0
 
 if sourceMap option is set, and we're generating .js
 

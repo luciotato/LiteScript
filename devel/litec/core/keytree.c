@@ -102,7 +102,10 @@
             keyTreeRoot->length = treeIndex+1;
         }
 
-        KeyTreeSortedBranch_ptr thisBranch = ARR_ITEM_PTR(KeyTreeSortedBranch_s,treeIndex, keyTreeRoot); //get tree to use
+        //get tree to use based on keylen
+        //KeyTreeSortedBranch_ptr thisBranch = ARR_ITEM_PTR(KeyTreeSortedBranch_s,treeIndex,keyTreeRoot);
+        //define ARR_ITEM_PTR(TYPE,index,arrPtr) ((TYPE*)((arrPtr)->base.bytePtr+(index*(arrPtr)->itemSize)))
+        KeyTreeSortedBranch_ptr thisBranch = (KeyTreeSortedBranch_s*)(keyTreeRoot->base.bytePtr + treeIndex*sizeof(KeyTreeSortedBranch_s));
 
         while(kpartCount){ //process the key in 8 bytes chunks
 
@@ -115,9 +118,35 @@
 
             //how many btes will process (tops 8)
             byte cpcount= kpartCount>8? 8: kpartCount;
+            assert(cpcount);
+
             // move up to 8 chars of the key to "composed"
-            uint64_t composed={0};
+            uint64_t composed=0;
             memcpy(&composed, key.value.str+kpartStart, cpcount);
+
+            /*register str keyStart = key.value.str+kpartStart;
+            switch(cpcount){
+                case 1:
+                    composed = *keyStart;
+                    break;
+                case 2:
+                    composed = *(uint16_t*)keyStart;
+                    break;
+                case 4:
+                    composed = *(uint32_t*)keyStart;
+                    break;
+                case 8:
+                    composed = *(uint64_t*)keyStart;
+                    break;
+                default:
+                    memcpy(((char*)(&composed))+(8-cpcount), keyStart, cpcount);
+            }
+             */
+
+            //uint64_t assert_control;
+            //assert( memcpy(&assert_control, key.value.str+kpartStart, cpcount));
+            //assert( assert_control==composed);
+
 
             //prepare binary search
             uint64_t* keys = (uint64_t*)thisBranch->keys.base.bytePtr;

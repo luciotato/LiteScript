@@ -108,9 +108,9 @@ after adding any comment lines preceding the statement
 
       method produce()
 
-add previous comment lines, in the same position as the source
+add preceeding comment lines, in the same position as the source
 
-        .outSourceLinesAsComment
+        .outPreviousComments
 
 To enhance compiled code readability, add original Lite line as comment 
 
@@ -126,7 +126,7 @@ To enhance compiled code readability, add original Lite line as comment
 
             .outSourceLinesAsComment commentTo
 
-            .lexer.outCode.lastOriginalCodeComment = commentTo
+            //.lexer.outCode.lastOriginalCodeComment = commentTo
 
 Each statement in its own line
 
@@ -150,8 +150,8 @@ then NEWLINE
         if not .specific.skipSemiColon
           .addSourceMap mark
           .out ";"
-          if .specific hasnt property "body"
-            .out .getEOLComment()
+          //if .specific hasnt property "body"
+          //  .out .getEOLComment()
 
 called above, pre-declare vars from 'into var x' assignment-expression
 
@@ -537,6 +537,9 @@ var with__1=frontDoor;
         .out "var ",.name,'=',.varRef,";"
         .out .body
 
+        .out {COMMENT:"end with #{.name}"}
+        .skipSemiColon = true
+
 
 ---
 ### Append to class Grammar.PropertiesDeclaration ###
@@ -679,7 +682,7 @@ if it has AssginedValue, we out assignment if ES6 is available.
         if .body instanceof Grammar.SingleLineBody
             .out "if (", .conditional,") {",.body,"}"
         else
-            .out "if (", .conditional, ") {", .getEOLComment()
+            .out "if (", .conditional, ") {", NL // .getEOLComment()
             .out  .body, "}"
 
         if .elseStatement
@@ -927,7 +930,7 @@ is used by both symbols.
 
 if we have a post-condition, for example: `do ... loop while x>0`, 
 
-            .out "do{", .getEOLComment()
+            .out "do{",NL // .getEOLComment()
             .out .body
             .out "} while ("
             .postWhileUntilExpression.produce(askFor='while')
@@ -1067,15 +1070,15 @@ if 'nice', produce default nice body, and then the generator header for real bod
       if isNice
           var argsArray:array = .paramsDeclarations or []
           argsArray.push "__callback"
-          .out "(", {CSL:argsArray},"){", .getEOLComment(),NL
-          .out '  nicegen(this, ',prefix,.name,"_generator, arguments);",NL
+          .out "(", {CSL:argsArray},"){", NL // .getEOLComment(),NL
+          .out '  nicegen.run(this, ',prefix,.name,"_generator, arguments);",NL
           .out "};",NL
           .out "function* ",prefix,.name,"_generator"
       end if
 
 Produce function parameters declaration
        
-      .out "(", {CSL:.paramsDeclarations}, "){", .getEOLComment()
+      .out "(", {CSL:.paramsDeclarations}, "){", NL //.getEOLComment()
 
 now produce function body
 
@@ -1167,7 +1170,7 @@ Marks the end of a block. It's just a comment for javascript
 
 out this line as comment 
 
-        .outSourceLineAsComment .sourceLineNum
+        .outSourceLinesAsComment
         .skipSemiColon = true
 
 
@@ -1223,7 +1226,7 @@ js: function-constructor-class-namespace-object (All-in-one)
         .out "function ",.name
 
         if theConstructorDeclaration //there was a constructor body, add specified params
-            .out "(", {CSL:theConstructorDeclaration.paramsDeclarations}, "){", .getEOLComment()
+            .out "(", {CSL:theConstructorDeclaration.paramsDeclarations}, "){", NL // .getEOLComment()
         else
             .out "(){ // default constructor",NL
 
@@ -1348,7 +1351,7 @@ if we have a varRef, is a case over a value
 
         for each index,whenSection in .cases
 
-            .outSourceLineAsComment whenSection.sourceLineNum
+            whenSection.outSourceLinesAsComment
 
             .out index>0? 'else ' : '' 
 
@@ -1376,7 +1379,7 @@ else body
 
         for each index,whenSection in .cases
 
-            .outSourceLineAsComment whenSection.sourceLineNum
+            whenSection.outSourceLinesAsComment
 
             whenSection.out index>0? 'else ' : '' ,
                 'if (', {pre:['(',.varRef,'.class=='], CSL:whenSection.expressions, post:')', separator:'||'},

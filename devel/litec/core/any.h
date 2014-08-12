@@ -58,7 +58,7 @@ extern "C" {
         Error_ptr err; ///<if class Err
         Map_ptr map; ///<if class Map
         Buffer_ptr buf; ///<if class Buffer
-        IterablePos_ptr iterable; //iteratorPos (cursor)
+        IterablePos_ptr iterPos; //iteratorPos (cursor)
 
         // to help debugging
         __instance_ptr instance; ///<generic instance pointer, to ease debug

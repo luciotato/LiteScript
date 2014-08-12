@@ -1,8 +1,7 @@
-//##module UniqueID
 
 //### dependencies
 
-    //import Map
+    //shim import Map
     var Map = require('./../interfaces/Map.js');
 
 //### Support Module Var:
@@ -10,7 +9,7 @@
     //var uniqueIds = new Map
     var uniqueIds = new Map();
 
-//### public function set(prefix, value)
+    //    public function set(prefix, value)
     function set(prefix, value){
 //Generate unique numbers, starting at 1
 
@@ -20,7 +19,7 @@
     // export
     module.exports.set = set;
 
-//### public function get(prefix) returns number
+    //    public function get(prefix) returns number
     function get(prefix){
 //Generate unique numbers, starting at 1
 
@@ -39,7 +38,7 @@
     // export
     module.exports.get = get;
 
-//### public function getVarName(prefix) returns string
+    //    public function getVarName(prefix) returns string
     function getVarName(prefix){
 //Generate unique variable names
 
@@ -48,6 +47,3 @@
     }
     // export
     module.exports.getVarName = getVarName;
-
-
-

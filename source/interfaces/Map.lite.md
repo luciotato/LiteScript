@@ -1,7 +1,7 @@
 ##Map
 
-Use this class instead of js built-in objects, when you're
-using the js built-in Object as a "dictionary" or "map string to object"
+Use this class instead of js built-in Object Class, 
+when you're using the js built-in Object as a "dictionary" 
 and you want to be able to compile the code to C 
 
 You can declare a Map *Literally" using the keyword `map`.
@@ -62,37 +62,42 @@ a) add the keyword "map" after "var foo ="
 b) use `map.get(key)` and `map.set(key,value)` instead of `object[key]` and `object[key]=value`
 
 
-    class Map
+    global class Map
+
         properties
             dict:Object
             size
 
-        method clear()
-            .dict= new Object
-            .size=0
-
         constructor new Map
             .clear
             
-To keep compatibility with ES6, we have a special "Map.fromObject()"
+        method clear()
+            .dict= new Object()
+            .dict.__proto__ = null //no __proto__ chain, no "extra" properties
+            .size=0
+
+we have a special "Map.fromObject()"
 used to create a Map from a Literal Object. 
-We can't use default Map constructor, since ES6 Map constructor is: new Map([iterator])
+To keep compatibility with ES6, we can't use default Map constructor, 
+since ES6 Map constructor is: new Map([iterator])
 
         method fromObject(object)
             .dict = object
+            .dict.__proto__ = null //no __proto__ chain, no "extra" properties
             .size = Object.keys(.dict).length
             return this
 
         method set(key:string, value)
-            if no .dict.hasOwnProperty(key), .size++
+            if .dict hasnt property key, .size++
             .dict[key]=value
 
         method setProperty(name:string, value) //use Map|Object interchangeably
             .dict[name] = value
 
         method delete(key:string)
-            if .dict.hasOwnProperty(key), .size--
-            delete .dict[key]
+            if .dict has property key 
+                .size--
+                delete .dict[key]
 
         method get(key:string)
             return .dict[key]
@@ -109,17 +114,16 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
         method hasOwnProperty(key:string) //use Map|Object interchangeably
             return .dict has property key
 
-        method keys() returns array
+        method allPropertyNames(map) returns array  //use Map|Object interchangeably
             return Object.keys(.dict)
 
-        method getObjectKeys() returns array  //use Map|Object interchangeably
-            return Object.keys(.dict)
-
-        method forEach(callb)
+        method forEach(callb:function)
             for each property propName,value in .dict
-                callb(propName,value)
+                callb.call(this,propName,value)
 
         method toString()
             return JSON.stringify(.dict)
 
+        method keys() returns array
+            return Object.keys(.dict)
 

@@ -4,7 +4,7 @@
       properties
             verboseLevel = 1
             warningLevel = 1
-            comments = 1
+            comments = 1   // 0=>no comments, 1=>source line & source comments 2=>add "compiled by..."
 
             #ifdef PROD_C
             target ="c"

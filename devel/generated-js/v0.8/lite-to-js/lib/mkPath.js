@@ -1,11 +1,10 @@
-//Module mkPath
 //=============
 
     //import fs, path
     var fs = require('fs');
     var path = require('path');
 
-//### export function toFile(filename, mode)
+    //    export function toFile(filename, mode)
     function toFile(filename, mode){
 //Create a path to a file
 
@@ -16,7 +15,7 @@
     module.exports.toFile = toFile;
 
 
-//### export function create (dirPath, mode)
+    //    export function create (dirPath, mode)
     function create(dirPath, mode){
 //Make sure a path exists - Recursive
 
@@ -43,16 +42,19 @@
     module.exports.create = create;
 
 
-//### helper function dirExists(dirPath)
-    function dirExists(dirPath){ try{
+    //    helper function dirExists(dirPath)
+    function dirExists(dirPath){
+     try{
 
         //if fs.statSync(dirPath).isDirectory()
         if (fs.statSync(dirPath).isDirectory()) {
+        
             //return true //ok! exists and is a directory
-            return true; //ok! exists and is a directory
+            return true;
         }
+        //if fs.statSync(dirPath).isDirectory()
+        
         else {
-        //else 
             //throw new Error('#{dirPath} exists but IT IS NOT a directory')
             throw new Error('' + dirPath + ' exists but IT IS NOT a directory');
         };
@@ -65,9 +67,6 @@
             //if err.code is 'ENOENT', return false
             if (err.code === 'ENOENT') {return false};
             //throw err //another error
-            throw err; //another error
+            throw err;
         };
     };
-
-
-

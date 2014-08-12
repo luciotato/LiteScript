@@ -5,7 +5,7 @@ The `Environment` abstraction helps us to support compile on server (nodejs) or 
 
 Dependencies
 
-    global import fs, path
+    import fs, path
 
     import mkPath, logger, GeneralOptions
 
@@ -86,7 +86,7 @@ if compiling for node, and "global import" and no extension, asume global lib or
 if parameter has no extension or extension is [.lite].md
 we search the module 
 
-        var full,found = undefined
+        var full, found, foundIndex, includeDirsIndex
 
         if this.importInfo.createFile
             full = path.join(options.projectDir, this.importInfo.name)
@@ -122,18 +122,26 @@ include command-line (-i foo/bar) specified dirs
 
 add compiler directory to "include dirs" so GlobalScopeX.interface.md can be found
 
+                includeDirsIndex = search.length
                 if __dirname 
+
+                    if options.target is 'c' //include first: /interfaces/C_standalone'
+                        search.push path.resolve('#{__dirname}/../interfaces/C_standalone')
+                    end if
+
                     search.push path.resolve('#{__dirname}/../interfaces')
+                end if
 
 
 Now search the file in all specidief dirs/with all the extensions
 
-            for each dir in search 
+            for each dirIndex,dir in search 
                 var fname = path.join(dir,this.importInfo.name)
                 for each ext in ['.lite.md','.md','.interface.md','.js'] 
                     full = fname & ext
                     if fs.existsSync(full)
                         found=full
+                        foundIndex=dirIndex
                         break
                 end for
                 if found, break
@@ -169,8 +177,13 @@ Now search the file in all specidief dirs/with all the extensions
         this.dir = path.dirname(this.filename);
         this.sourcename = path.basename(this.filename); #with extensions
         this.isInterface = this.sourcename.indexOf('.interface.') isnt -1
-        this.relPath = path.relative(options.projectDir, this.dir); //relative to basePath
         this.relFilename = path.relative(options.projectDir, this.filename); //relative to basePath
+
+        if foundIndex >= includeDirsIndex //the "extra" dir are normally outside project dir subdirs
+            this.relPath = path.relative(options.projectDir, path.basename(this.dir)); // use only one subdir
+        else
+            this.relPath = path.relative(options.projectDir, this.dir); //relative to basePath
+        end if
 
         // based on result extension                
         this.isLite = this.extension in ['.md','.lite']

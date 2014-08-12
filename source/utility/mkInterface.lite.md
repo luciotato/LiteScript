@@ -364,7 +364,7 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
         method keys() returns array
             return Object.keys(.dict)
 
-        method getObjectKeys() returns array  //use Map|Object interchangeably
+        method allPropertyNames() returns array  //use Map|Object interchangeably
             return Object.keys(.dict)
 
         method forEach(callb)

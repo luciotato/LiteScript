@@ -7,6 +7,8 @@
 # if no errors before production, this script replaces the same .js executing as compiler
 # at: 
 
+cd ..
+pwd
 OUT="../../generated-js/v0.8/lite-to-js"
 
 #create js code

@@ -5,6 +5,7 @@
 #
 # (v0.8-js compile v08-source to v08-c lite-to-js compiler)
 
+cd ..
 OUT="../../litec/litec-to-js"
 
 #create c code

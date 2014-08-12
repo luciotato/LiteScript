@@ -99,7 +99,7 @@ OK, now you can:
 1. Go cowboy-style, get hands-on and try it online, 
 go to [LiteScript Online Playground](http://luciotato.github.io/LiteScript_online_playground/playground/)
 
-2. Be more academic, and read the whole [LiteScript Grammar](/source/Grammar.lite.md) (it is also the code)
+2. Be more academic, and read the [LiteScript Grammar](/source/Grammar.lite.md) (it is also the code)
 
 3. Continue reading the highlights at [/doc](/doc)
 
@@ -117,18 +117,20 @@ See: devel/litec
 ### UgilfyLS - proof of concept
 
 In order to measure performance gains when compiling-to-c, I've "translated" the parser
-from UglifyJS into LiteScript code, and then compile the LS code to-js and to-c
+from UglifyJS into LiteScript code, and then compiled the LS code to-js and to-c
 
 ##Results:
 
 parsing of: `jquery-1.11.1.js + Underscore.js 1.6.0 + AngularJS` 366 KiB
 
-source code        | target/generated      | time   | relative to base
------------------- | --------------------- | ------:| -----------------
-Original UglifyJS2 |                       | 425 ms | base
-Uglify-LS code     | compile-to-js         | 455 ms | +30 ms, 7% slower
-Uglify-LS code     | compile-to-c - debug  | 250 ms | 1.8 times faster
-Uglify-LS code     | compile-to-c - NDEBUG | 200 ms | twice as fast
+source code               | target/generated   | parse time | relative to base
+------------------        | ------------------ | ------:| -----------------
+Original Uglify2 parse.js |                    | 430 ms | base
+LiteScript code           | compile-to-js      | 450 ms | +20 ms, 5% slower
+LiteScript code           | compile-to-c       | 150 ms | 2.5 times faster !!
+
+####Conclusion: 
+>Uglify2.JS parser "translated" to LiteScript and compiled-to-c, runs 2.5 times faster
 
 
 
@@ -207,12 +209,30 @@ you reach the above configuration.
 
 ###Real use cases so far 
 
-##### On the server: LiteScript itself
+##### On the server 
+
+###### LiteScript itself
 
 LiteScript is written in LiteScript, every new version must be able to 
 compile itself to be ready for release.
 LiteScript is a real-use case of a heavy, server run,
 text processing, class based program written in LiteScript.
+
+Now (v0.8.5) LiteScript compiler can compile itelf to C, creating
+a c-based LiteScript compiler which runs 5x-7x times faster than its .js counterpart.
+
+###### UglifyLS - alpha
+
+A proof-of-concept project, to measure performance increases from:
+
+1) pure js hand-optimized code  (Uglify2.JS parser)
+
+2) the same code "translated" to LiteScript and compiled-to-js 
+
+3) the previous LiteScript code compiled-to-c 
+
+see: [UglifyLS](https://github.com/luciotato/UglifyLS)
+
 
 ##### On the browser: 
 

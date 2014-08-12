@@ -27,7 +27,7 @@ The following statement **is not valid in C**
 But we can use a var and the ternary operator to emulate js || behavior:
 We'll use a ternary operator to emulate js behavior
 
-code js "||" in C, using ternary if ?:
+code js "||" in C, using ternary-if:
 
 js: `A || B` 
 C: `any __or1;`

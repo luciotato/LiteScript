@@ -12,12 +12,75 @@
   caso 2: estaba llamando compileProject(name,options) 
   pero compileProject now is compileProject(options)
 
+# When Compile-to-C ORDER of execution on ObjectLiteal *IS NOT GUARANTEED*
+
+e.g.: UglifyLS 
+
+            return new AST_Conditional({
+                start       : start,
+                condition   : expr,
+                consequent  : yes,
+                alternative : func1(),
+                end         : prev()
+            });
+
+    *prev()* was executing *FIRST* and then *func1()*
+
+Reason: *prev()* was a very simple function {return TKZ.prevToken} so GCC optimized by inlining
+
+Solution: Do not code a ObjectLiteral where order of evaluation determines result.
+
+            var func1Result = func1()
+            
+            return new AST_Conditional({
+                start       : start,
+                condition   : expr,
+                consequent  : yes,
+                alternative : func1Result,
+                end         : prev()
+            });
+
+
 #multicoment on same line fails:
 
 example:
 
     /* -----[ Tokenizer ]----- */
 
+# fix comments - posible SUBTLE bug
+    
+    process.exit 0 //------
+=>
+    //process.exit 0 //------
+    process_exit(undefined,1,(any_arr){
+       any_number(0)
+   }); //------    Test3_sortedResult = TestOut_mkSorted(undefined,2,(any_arr){
+      any_LTR("toplevel")
+      , Test3_toplevel
+  });
+
+#separate Map (ES6) from DynObject (LiteScript)
+
+when compile-to-c, a ObjectLiteral declares a "DynObject"
+DynObject extends Map, it's basically a "Map String to any"
+
+# no se trasnfiere la propiedad "nodeClass" - COMPILE-TO-C
+
+e.g.: 
+
+  import fs
+
+  var a = fs
+
+  fs.readFileSync => "fs_readFileSync", because is a namespace
+  a.readFileSync  => "CALL0(readFileSync_,a)", because a IS NOT a namespace
+
+
+# ahora no se puede extender Map
+ya que tiene props ocultas y entonces la instancia derivada
+node puede "dejar espacio" para las props ocultas de map
+
+ver class Predicate extednds Map de UglifyLS/Utils
 
 # for each property, confusing
 
@@ -32,6 +95,23 @@ normalize to:
 
     for each name,value in Object obj //key and value
 
+#shim import es necesario
+
+si permitis *shim class|namespace*
+se complica TODO p q el parent|container no esta declarado
+
+# make parseType() recursive
+
+and define types on the on-the-fly
+accept, e.g:
+
+    array of array of string 
+    =>
+    array of (array-of-string)
+
+    array of map string to array of Names.Declaration
+    =>
+    array of (map-string-to-(array-of-(Names.Declaration))
 
 # named-params
 
@@ -41,7 +121,6 @@ Use instead of:
   - Names.NameDeclOptions 
   - ImportParameterInfo
 remove those explicit classes
-
 
 
 # el SCOPE es diferente en C - eso crea diferencias importantes

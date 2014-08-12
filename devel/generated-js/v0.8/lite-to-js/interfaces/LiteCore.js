@@ -1,13 +1,12 @@
+//#Shim for Lite-C core support
 
-//#Shim for Lite-C core support 
-
-//Import this file if you want to create LiteScript code 
+//Import this file if you want to create LiteScript code
 //that can be compiled-to-js and also compiled-to-c
 
 //Most of the methods here are shims for Lite-C core methods.
 
 //When compiled-to-js, this methods will be used,
-//When compiled-to-c, native, fast methods from Lite-C core 
+//When compiled-to-c, native, fast methods from Lite-C core
 //will be used. See file: "GlobalScopeC.interface.md"
 
 
@@ -35,35 +34,35 @@
 
 //when compiling-to-c, any Literal Object *{ ... }*
 //will be coded as a new *Map*() instead of a *Object*.
-//In Lite-C, the Object Class is the root of all classes, 
+//In Lite-C, the Object Class is the root of all classes,
 //but has no properties, and you cannot add or remove
 //properties from Object or any other class except "Map" and derivates.
 
-//Also Maps will be created (instead of objects) when passing 
+//Also Maps will be created (instead of objects) when passing
 //literal objects {...} as function arguments.
 
 //We add here a "tryGetProperty" method to access *BOTH* map keys *and* object properties.
 //This allows you to write portable Litescript-to-js and Litescript-to-c code, by using:
 
 //- hasProperty       : js "in" operator. true if property in this object or super classes
-//- tryGetProperty    : js normal property access, returns "undefined" on invalid key 
+//- tryGetProperty    : js normal property access, returns "undefined" on invalid key
 //- getProperty       : controlled property access, *throws* if invalid key
 //- setProperty       : js normal property set
 //- allPropertyNames  : js Object.keys(objFoo)
 
 
 //Both *Map* and *Object* implement this methods, so by using this methods
-//you can write code that will work when it receives 
+//you can write code that will work when it receives
 //a Map (compile-to-c) or a Object (compile-to-js)
 
 
-//### Append to Class Object
+    //    append to class Object
     
 
         //shim method hasProperty(key:string) [not enumerable] //use Map|Object interchangeably
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'hasProperty'))
         Object.defineProperty(
-        Object.prototype,'hasProperty',{value:function(key){ //use Map|Object interchangeably
+        Object.prototype,'hasProperty',{value:function(key){
             //return this has property key
             return key in this;
         }
@@ -73,8 +72,8 @@
         //shim method tryGetProperty(key) [not enumerable] //use Map|Object interchangeably
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'tryGetProperty'))
         Object.defineProperty(
-        Object.prototype,'tryGetProperty',{value:function(key){ //use Map|Object interchangeably
-            //return this[key]            
+        Object.prototype,'tryGetProperty',{value:function(key){
+            //return this[key]
             return this[key];
         }
         ,enumerable:false
@@ -83,10 +82,10 @@
         //shim method getProperty(key) [not enumerable] //use Map|Object interchangeably
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'getProperty'))
         Object.defineProperty(
-        Object.prototype,'getProperty',{value:function(key){ //use Map|Object interchangeably
+        Object.prototype,'getProperty',{value:function(key){
             //if this hasnt property key, fail with "invalid property: #{key}"
             if (!(key in this)) {throw new Error("invalid property: " + key)};
-            //return this[key]            
+            //return this[key]
             return this[key];
         }
         ,enumerable:false
@@ -95,7 +94,7 @@
         //shim method setProperty(key:string, value) [not enumerable] //use Map|Object interchangeably
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'setProperty'))
         Object.defineProperty(
-        Object.prototype,'setProperty',{value:function(key, value){ //use Map|Object interchangeably
+        Object.prototype,'setProperty',{value:function(key, value){
             //this[key] = value
             this[key] = value;
         }
@@ -104,7 +103,7 @@
 
 //portable code -to-js & -to-c
 
-        //shim method tryGetMethod(methodSymbol) returns function [not enumerable] 
+        //shim method tryGetMethod(methodSymbol) returns function [not enumerable]
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'tryGetMethod'))
         Object.defineProperty(
         Object.prototype,'tryGetMethod',{value:function(methodSymbol){
@@ -117,7 +116,7 @@
         //shim method allPropertyNames() returns array [not enumerable] //use Map|Object interchangeably
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'allPropertyNames'))
         Object.defineProperty(
-        Object.prototype,'allPropertyNames',{value:function(){ //use Map|Object interchangeably
+        Object.prototype,'allPropertyNames',{value:function(){
             //var result=[]
             var result = [];
             //for each property prop in this
@@ -138,7 +137,7 @@
         //shim method getPropertyNameAtIndex(index:number) [not enumerable] //LiteC-compatible
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'getPropertyNameAtIndex'))
         Object.defineProperty(
-        Object.prototype,'getPropertyNameAtIndex',{value:function(index){ //LiteC-compatible
+        Object.prototype,'getPropertyNameAtIndex',{value:function(index){
             //for each property prop in this
             var prop=undefined;
             for ( var _inx2 in this){prop=this[_inx2];
@@ -155,22 +154,22 @@
         ,enumerable:false
         });
 
-//In JS the global environment (global|window) is a *Object*, and as such it 
-//*has* Object.prototype in its prototype chain, which means 
+//In JS the global environment (global|window) is a *Object*, and as such it
+//*has* Object.prototype in its prototype chain, which means
 //*all properties in Object.prototype are also in the global scope*
 
-//**To avoid ramifications of this (quirky) behavior, you should be very careful 
+//**To avoid ramifications of this (quirky) behavior, you should be very careful
 //altering Object.prototype. e.g.: all the methods declared above are now
 //part of the global scope.
 
 
-//### Append to Class Function #Function-Class - "Class" in LiteC
+    //    append to class Function #Function-Class - "Class" in LiteC
     
 
         //shim method newFromObject(model) [not enumerable] //LiteC-compatible
         if (!Object.prototype.hasOwnProperty.call(Function.prototype,'newFromObject'))
         Object.defineProperty(
-        Function.prototype,'newFromObject',{value:function(model){ //LiteC-compatible
+        Function.prototype,'newFromObject',{value:function(model){
             //var newInstance = new this()
             var newInstance = new this();
             //for each own property name,value in model
@@ -189,9 +188,9 @@
         });
 
 
-//# JS array access 
+//# JS array access
 
-//### Append to class Array 
+    //    append to class Array
     
 
         //shim method tryGet(index:Number) [not enumerable]
@@ -219,7 +218,7 @@
 
 //## set array item value
 
-//js also allows you to do: 
+//js also allows you to do:
  //`var a = []`
  //`a[100]='foo'`
 
@@ -243,7 +242,7 @@
 //*Sometimes* is useful to get "undefined" when accessing a "out of bounds" array index.
 //In order to get such behavior, you'll have to use `Array.tryGet(index)`
 
-//js: 
+//js:
  //`var a = []`
  //`console.log(a[100]);` => OK, undefined
 
@@ -253,33 +252,33 @@
  //`console.log(a.tryGet(100));` => OK, undefined
 
 
-//### Append to Class String
+    //    append to class String
     
 
-        ///**
-        //* String_byteSubstr(byteStartIndex:number, charCount:number)
-        //* similar to String_substr, but start position
-        //* is the start index *in bytes* -not codepoints-
-        //* from the beginning of the string.
-        //*
-        //* Since internal representation is UTF-8, this method is faster than Substr
-        //* for large strings and large values of "start"
-        //*
-        //* Note: "count" is still in measuerd in *codepoints*, only *start* is measured in bytes
-        //*/
-        //method byteSubstr(byteStartIndex:number, charCount:number) 
+//*
+//        * String_byteSubstr(byteStartIndex:number, charCount:number)
+//        * similar to String_substr, but start position
+//        * is the start index *in bytes* -not codepoints-
+//        * from the beginning of the string.
+//        *
+//        * Since internal representation is UTF-8, this method is faster than Substr
+//        * for large strings and large values of "start"
+//        *
+//        * Note: "count" is still in measuerd in *codepoints*, only *start* is measured in bytes
+//        
+        //method byteSubstr(byteStartIndex:number, charCount:number)
         String.prototype.byteSubstr = function(byteStartIndex, charCount){
             //return this.substr(byteStartIndex,charCount)
             return this.substr(byteStartIndex, charCount);
         };
 
-        ///** String_byteIndexOf(searched:string, fromByteIndex:number) 
-        //* similar to String_indexOf, but start position
-        //* is the start index *in bytes* -not codepoints-
-        //* from the beginning of the string.
-        //*
-        //* @returns: *BYTE* index of the found string, or -1
-        //*/
+//* String_byteIndexOf(searched:string, fromByteIndex:number)
+//        * similar to String_indexOf, but start position
+//        * is the start index *in bytes* -not codepoints-
+//        * from the beginning of the string.
+//        *
+//        * @returns: *BYTE* index of the found string, or -1
+//        
         //method byteIndexOf(searched:string, fromByteIndex:number)
         String.prototype.byteIndexOf = function(searched, fromByteIndex){
             //return this.indexOf(searched,fromByteIndex)
@@ -291,7 +290,4 @@
             //return this.slice(startByteIndex,endByteIndex)
             return this.slice(startByteIndex, endByteIndex);
         };
-
-
-
 module.exports=LiteCore;

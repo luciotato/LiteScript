@@ -21,7 +21,7 @@
 				<string>#FFFFFF</string>
 
 				<key>foreground</key>
-				<string>#909090</string> // 80B457 HERE - other not defined // -- default colum 1 markup
+				<string>#909090</string> // #909090 80B457 HERE - other not defined // -- default colum 1 markup
 
 				<key>invisibles</key>
 				<string>#CAE2FB30</string>
@@ -34,6 +34,29 @@
 			</dict>
 		</dict>
 
+		<dict>
+			<key>name</key>
+			<string>meta</string>
+			<key>scope</key>
+			<string>meta, meta.name</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#a0a0a0</string> // meta=markdown, meta.name = markdown titles
+			</dict>
+		</dict>
+
+		<dict>
+			<key>name</key>
+			<string>meta</string>
+			<key>scope</key>
+			<string>comment.line</string> 
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#408080</string> 
+			</dict>
+		</dict>
 
 		<dict>
 			<key>name</key>
@@ -90,13 +113,13 @@
 
 		<dict>
 			<key>scope</key>
-			<string>storage.this</string>
+			<string>support.variable, support.variable.this</string>
 			<key>settings</key>
 			<dict>
 				<key>fontStyle</key>
-				<string></string>
+				<string>italic</string>
 				<key>foreground</key>
-				<string>#609060</string> // me|this, gyray - #CCB86A gold 
+				<string>#609060</string> // "this" #609060 greenish blue - #CCB86A gold 
 			</dict>
 		</dict>
 
@@ -116,13 +139,13 @@
 
 		<dict>
 			<key>scope</key>
-			<string>keyword, storage.type.function</string>
+			<string>keyword, keyword.operator.boolean, storage.type.function</string>
 			<key>settings</key>
 			<dict>
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#c07040</string> // KEYWORD - orange
+				<string>#c07040</string> //# lang KEYWORD - orange
 			</dict>
 		</dict>
 
@@ -160,15 +183,16 @@
 				<string>#568F8F</string> // comment #80B457 green as markup, #60B0B0 cyan
 			</dict>
 		</dict>
+
 		<dict>
 			<key>name</key>
 			<string>Constant</string>
 			<key>scope</key>
-			<string>constant</string>
+			<string>constant, string.quoted</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#F0F0F0</string> // CONSTANTS - Tests.length === *0*
+				<string>#d0d0d0</string> // CONSTANTS - Tests.length === *0*
 			</dict>
 		</dict>
 
@@ -185,7 +209,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>keyword.operator</string>
+			<string>keyword.operator, keyword.control.when</string>
 			<key>settings</key>
 			<dict>
 				<key>fontStyle</key>
@@ -195,9 +219,24 @@
 			</dict>
 		</dict>
 
+
 		<dict>
 			<key>scope</key>
-			<string>entity.name.class</string>
+			<string>constant.language, constant.language.boolean</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string>italic</string>
+				<key>foreground</key>
+				<string>#90a0b0</string> // true, false, undefined
+			</dict>
+		</dict>
+
+
+
+		<dict>
+			<key>scope</key>
+			<string>entity.name.type.class, entity.other.inherited-class</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -209,7 +248,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>entity.other.inherited-class, keyword.class, keyword.properties, keyword.method</string>
+			<string>keyword.other.class, keyword.properties, keyword.method</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -295,7 +334,7 @@
 			<key>name</key>
 			<string>tag</string>
 			<key>scope</key>
-			<string>entity.name.tag</string>
+			<string>entity, entity.name.tag</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -332,7 +371,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>string, constant</string>
+			<string>string</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -450,7 +489,7 @@
 			<key>name</key>
 			<string>Meta.tag.«all»</string>
 			<key>scope</key>
-			<string>meta.tag, meta.tag entity</string>
+			<string>meta.tag</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -738,7 +777,7 @@
 				<key>background</key>
 				<string>#0a190a</string>
 				<key>foreground</key>
-				<string>#b0b0b0</string>  //MARKUP TITLE #CDA869 #B6A574 #A0A020
+				<string>#c0c0c0</string>  //MARKUP TITLE #CDA869 #B6A574 #A0A020
 			</dict>
 		</dict>
 

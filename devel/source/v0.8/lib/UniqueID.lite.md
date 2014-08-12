@@ -2,7 +2,7 @@
 
 ### dependencies
 
-    import Map
+    shim import Map
 
 ### Support Module Var:
 

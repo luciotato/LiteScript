@@ -41,7 +41,7 @@ mkdir -p ${out}/lib/interfaces
 cp -r ../source/v${VERSION}/interfaces ${out}/lib
 
 #copy if newer: lite (#!/usr/bin/env node), just: require('./js_lite')
-cp -u lite ${out}/lib/lite
+cp -u ../source/v${VERSION}/lite ${out}/lib/lite
 chmod 777 ${out}/lib/lite
 
 #copy v0.x/package.json to Litescript root
@@ -55,9 +55,9 @@ ${out}/lib/lite -run tests/extra-check-version -o out -i ../../source/v0.8/inter
 
 #test nice functionss
 
-${out}/lib/lite -nomap tests/extra-nice-function -o out -i ../../source/v0.8/interfaces
-node --harmony out/extra-nice-function
-rm out/extra-nice-function.js
+${out}/lib/lite -v 2 -nomap tests/extra-nice-function 
+node --harmony tests/out/extra-nice-function
+rm -r tests/out
 
 #test compiler at ${out}/lib
 node test -use $VERSION

@@ -91,9 +91,15 @@ Other Object methods - LiteC specific
         class Position
             properties 
                 key, value 
-                index // (=-1 set at constructor new Iterable.Position)
+                index // (=-1 set at constructor new Iterable.Position(iterable)
                 size 
+                iterable // iterable object
                 extra 
+
+            constructor new Position(iterable)
+
+            method next()
+            
 
 ### Append to class Array 
 

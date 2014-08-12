@@ -34,6 +34,17 @@
 			</dict>
 		</dict>
 
+		<dict>
+			<key>name</key>
+			<string>meta</string>
+			<key>scope</key>
+			<string>comment.line.js</string> //commetn line js
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#A6DFDF</string> 
+			</dict>
+		</dict>
 
 		<dict>
 			<key>name</key>
@@ -116,7 +127,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>keyword, storage.type.function</string>
+			<string>keyword, keyword.operator.boolean, storage.type.function</string>
 			<key>settings</key>
 			<dict>
 				<key>fontStyle</key>
@@ -197,7 +208,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>entity.name.class</string>
+			<string>entity.name.type.class, entity.other.inherited-class</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -209,7 +220,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>entity.other.inherited-class, keyword.class, keyword.properties, keyword.method</string>
+			<string>keyword.other.class, keyword.properties, keyword.method</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>

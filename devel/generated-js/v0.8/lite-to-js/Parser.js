@@ -1,18 +1,17 @@
-//The Parser Module
 //=================
 
 //The main class in this module is the Lexer.
 
 //The Lexer translates code (an array of lines) into an array of tokenized lines to be parsed.
 
-//The Lexer class acts as 
+//The Lexer class acts as
 //* Lexer/Tokenizer
 //* Token Stream (input)
 
 //All the parts of the lexer work with "arrays" of lines.
 //(instead of a buffer or a large string)
 
-//The first lexer pass analyzes entire lines. 
+//The first lexer pass analyzes entire lines.
 //Each line of the array is classified with a 'Line Type': CODE, COMMENT or BLANK
 
 //then each CODE line is *Tokenized*, getting a `tokens[]` array
@@ -20,9 +19,11 @@
 //-------------------------
 //### dependencies
 
-    //import 
+    //import
         //ControlledError, GeneralOptions
         //logger, fs, mkPath
+
+    //shim import LiteCore, PMREX
     var ControlledError = require('./lib/ControlledError.js');
     var GeneralOptions = require('./lib/GeneralOptions.js');
     var logger = require('./lib/logger.js');
@@ -47,13 +48,10 @@
 //The Lexer Class
 //===============
 
-//### public Class Lexer
+    //    public class Lexer
     // constructor
     function Lexer(project, options){
-
-//The Lexer class turns the input lines into an array of "infoLines"
-
-//#### properties 
+     //     properties
 
         //project
         //filename:string
@@ -63,8 +61,8 @@
         //infoLines: InfoLine array
 
         //#current line
-        //line :string 
-        //indent 
+        //line :string
+        //indent
         //lineInx, sourceLineNum
         //infoLine, token, index
 
@@ -72,18 +70,14 @@
         //stringInterpolationChar: string
 
         //last:LexerPos
-        //maxSourceLineNum=0 //max source line num in indented block
 
         //hardError:Error, softError:Error
 
         //outCode: OutCode
-         this.maxSourceLineNum=0;
-
-//#### Constructor new Lexer(project, options:GeneralOptions)
 
           //.compiler = compiler #Compiler.lite.md module.exports
           //.project = project #Compiler.lite.md class Project
-          this.project = project;// #Compiler.lite.md class Project
+          this.project = project;
 
 //use same options as compiler
 
@@ -99,25 +93,30 @@
               //DATE: .options.now.toDateString()
               //TIME: .options.now.toTimeString()
               //TIMESTAMP: .options.now.toISOString()
-          preprocessor_replaces = new Map().fromObject({
-             DATE: this.options.now.toDateString()
-             , TIME: this.options.now.toTimeString()
-             , TIMESTAMP: this.options.now.toISOString()
-         });
 
 //stringInterpolationChar starts for every file the same: "#"
 //can be changed in-file with `lexer options` directive
 
-          //.stringInterpolationChar = "#" 
+          //.stringInterpolationChar = "#"
+          preprocessor_replaces = new Map().fromObject({
+             DATE: this.options.now.toDateString()
+             , TIME: this.options.now.toTimeString()
+             , TIMESTAMP: this.options.now.toISOString()
+              });
+
+//stringInterpolationChar starts for every file the same: "#"
+//can be changed in-file with `lexer options` directive
+
+          //.stringInterpolationChar = "#"
           this.stringInterpolationChar = "#";
 
           //.hardError = null # stores most significative (deepest) error, when parsing fails
-          this.hardError = null;// # stores most significative (deepest) error, when parsing fails
+          this.hardError = null;
 
 //clear out helper
 
           //.outCode = new OutCode() #helper class
-          this.outCode = new OutCode();// #helper class
+          this.outCode = new OutCode();
           //.outCode.start .options
           this.outCode.start(this.options);
 
@@ -129,7 +128,7 @@
 
       //#end constructor
 
-//#### Method reset()
+     //     method reset()
      Lexer.prototype.reset = function(){
 
         //.sourceLineNum = 0
@@ -143,10 +142,10 @@
      };
 
 
-//#### Method initSource(filename:string, source)
+     //     method initSource(filename:string, source)
      Lexer.prototype.initSource = function(filename, source){
 //Load filename and source code in the lexer.
-//First, remember filename (for error reporting) 
+//First, remember filename (for error reporting)
 
           //.filename = filename
           this.filename = filename;
@@ -157,15 +156,16 @@
 
           //if source instanceof Array
           if (source instanceof Array) {
+          
             //.lines = source
             this.lines = source;
           }
+          //if source instanceof Array
+          
           else {
 
-          //else
-
 //If code is passed as a buffer, convert it to string
-//then to lines array 
+//then to lines array
 
             //if typeof source isnt 'string', source = source.toString()
             if (typeof source !== 'string') {source = source.toString()};
@@ -173,20 +173,20 @@
             //.lines = source.split('\n')
             this.lines = source.split('\n');
             //.lines.push "" # add extra empty line
-            this.lines.push("");// # add extra empty line
+            this.lines.push("");
           };
      };
 
 
-//#### Method preParseSource() returns InfoLine array
+     //     method preParseSource() returns InfoLine array
      Lexer.prototype.preParseSource = function(){
-//read from .sourceLines and 
+//read from .sourceLines and
 //prepares a processed infoLines result array
 
         //var infoLines = []
         var infoLines = [];
 
-//Loop processing source code lines 
+//Loop processing source code lines
 
         //var lastLineWasBlank=true, inCodeBlock=false
         var lastLineWasBlank = true, inCodeBlock = false;
@@ -208,7 +208,7 @@
 
 //LiteScript files (.lite.md) are "literate" markdown code files.
 
-//To be considered "code", a block of lines must be indented at least four spaces. 
+//To be considered "code", a block of lines must be indented at least four spaces.
 //(see: Github Flavored MarkDown syntax)
 
 //The exception are: MARKDOWN TITLES (###) introducing classes, methods and functions.
@@ -228,75 +228,83 @@
 
 //a blank line is always a blank line
 
-            //if no line 
+            //if no line
             if (!line) {
+            
                 //type = LineTypes.BLANK
                 type = LineTypes.BLANK;
             }
+            //if no line
+            
             else {
-
-//else, if indented 4 spaces or more, can be the start of a code block
-
-            //else 
                 //if indent >= 4
                 if (indent >= 4) {
+                
                     //if lastLineWasBlank,inCodeBlock = true
                     if (lastLineWasBlank) {inCodeBlock = true};
                 }
+                //if indent >= 4
+                
                 else {
-
-//else, (not indented 4) probably a literate comment,
-//except for title-keywords 
-
-                //else
                     //inCodeBlock = false
                     inCodeBlock = false;
 
                     //if indent is 0 and line.charAt(0) is '#' //starts on column 1, with a '#'
-                    if (indent === 0 && line.charAt(0) === '#') { //starts on column 1, with a '#'
+                    if (indent === 0 && line.charAt(0) === '#') {
+                    
 
-//checkTitleCode: if found a vlid title-code, rewrite the line, 
+//checkTitleCode: if found a vlid title-code, rewrite the line,
 //replacing MarkDown title MD hashs (###) by spaces and making keywords lowercase
 
-                        //if .checkTitleCode(line) into var converted 
+                        //if .checkTitleCode(line) into var converted
                         var converted=undefined;
                         if ((converted=this.checkTitleCode(line))) {
+                        
 
-                            //line = converted 
+                            //line = converted
                             line = converted;
                             //indent = line.countSpaces() //re-calc indent
-                            indent = line.countSpaces(); //re-calc indent
+                            indent = line.countSpaces();
                             //inCodeBlock = indent>=4
                             inCodeBlock = indent >= 4;
                         };
                     };
 
                     //end if startted with #
+
+                //end if - line, check indent
                     
                 };
 
                 //end if - line, check indent
+
+//After applying rules: if we're in a Code Block, is CODE, else is a COMMENT
+
+                //if inCodeBlock
                 
 
 //After applying rules: if we're in a Code Block, is CODE, else is a COMMENT
 
                 //if inCodeBlock
                 if (inCodeBlock) {
+                
 
                     //if line.startsWith("#") or line.startsWith("//") # CODE by indent, but all commented
-                    if (line.startsWith("#") || line.startsWith("//")) {// # CODE by indent, but all commented
+                    if (line.startsWith("#") || line.startsWith("//")) {
+                    
                       //type = LineTypes.COMMENT
                       type = LineTypes.COMMENT;
                     }
+                    //if line.startsWith("#") or line.startsWith("//") # CODE by indent, but all commented
+                    
                     else {
-                    //else
                       //type = LineTypes.CODE
                       type = LineTypes.CODE;
                     };
                 }
+                //if inCodeBlock
+                
                 else {
-
-                //else
                     //type = LineTypes.COMMENT
                     type = LineTypes.COMMENT;
                 };
@@ -305,56 +313,58 @@
 
             //#end if line wasnt blank
 
-//parse multi-line string (triple quotes) and convert to one logical line: 
+//parse multi-line string (triple quotes) and convert to one logical line:
 //Example result: var a = 'first line\nsecond line\nThird line\n'
 
             //#saver reference to source line (for multiline)
             //var sourceLineNum = .sourceLineNum
             var sourceLineNum = this.sourceLineNum;
 
-            //if type is LineTypes.CODE 
+            //if type is LineTypes.CODE
             if (type === LineTypes.CODE) {
+            
                 //line = .preprocessor(.parseTripleQuotes( line ))
                 line = this.preprocessor(this.parseTripleQuotes(line));
             };
 
-//check for multi-line comment, C and js style /* .... */ 
+//check for multi-line comment, C and js style //.... 
 //then check for "#ifdef/#else/#endif"
 
             //if .checkMultilineComment(infoLines, type, indent, line )
             if (this.checkMultilineComment(infoLines, type, indent, line)) {
+            
                 //continue #found and pushed multiline comment, continue with next line
-                continue;// #found and pushed multiline comment, continue with next line
+                continue;
             }
+            //if .checkMultilineComment(infoLines, type, indent, line )
+            
             else if (this.checkConditionalCompilation(line)) {
-
-            //else if .checkConditionalCompilation(line)
+            
                 //continue #processed, continue with next line
-                continue;// #processed, continue with next line
+                continue;
             };
 
-//Create infoLine, with computed indent, text, and source code line num reference 
+//Create infoLine, with computed indent, text, and source code line num reference
 
             //var infoLine = new InfoLine(this, type, indent, line, sourceLineNum )
             var infoLine = new InfoLine(this, type, indent, line, sourceLineNum);
             //infoLine.dump() # debug
-            infoLine.dump();// # debug
+            infoLine.dump();
 
-            //infoLines.push infoLine 
+            //infoLines.push infoLine
             infoLines.push(infoLine);
 
             //lastLineWasBlank = type is LineTypes.BLANK
             lastLineWasBlank = type === LineTypes.BLANK;
         };// end loop
 
-        //loop #process next source line
-
 //now we have a infoLine array, tokenized, ready to be parsed
 //if we do not need to produce comments with original source
-//for reference at produced .c or .js, clear source lines from memory 
+//for reference at produced .c or .js, clear source lines from memory
 
         //if no .options.comments
         if (!this.options.comments) {
+        
             //.lines = undefined
             this.lines = undefined;
         };
@@ -364,8 +374,8 @@
      };
 
 
-//#### method checkTitleCode(line:string) returns string // or undefined
-     Lexer.prototype.checkTitleCode = function(line){ // or undefined
+     //     method checkTitleCode(line:string) returns string // or undefined
+     Lexer.prototype.checkTitleCode = function(line){
 
 //check for title-keywords: e.g.: `### Class MyClass`, `### export Function compile(sourceLines:string array)`
 
@@ -378,7 +388,7 @@
         if (words[0].length < 3) {return};
 
         // return if first word is not all #'s
-        //if words[0].replaceAll("#"," ").trim(), return 
+        //if words[0].replaceAll("#"," ").trim(), return
         if (words[0].replaceAll("#", " ").trim()) {return};
 
         //var sustantives = ["class","namespace","function","method","constructor","properties"];
@@ -390,36 +400,41 @@
            , countAdj = 0
            , countSust = 0
            , sustLeft = 1
-       ;
+        ;
 
         //while inx<words.length
         while(inx < words.length){
 
             //if words[inx] //skip empty items
-            if (words[inx]) { //skip empty items
+            if (words[inx]) {
+            
 
                 //if words[inx].toLowerCase() in ["public","export","default","helper"]
                 if (["public", "export", "default", "helper"].indexOf(words[inx].toLowerCase())>=0) {
+                
                     //countAdj++ //valid
-                    countAdj++; //valid
+                    countAdj++;
                 }
+                //if words[inx].toLowerCase() in ["public","export","default","helper"]
+                
                 else {
-                //else
                   //break //invalid word
-                  break; //invalid word
+                  break;
                 };
             };
 
             //inx++ //next
-            inx++; //next
+            inx++;
         };// end loop
 
         //if no countAdj and inx<words.length-1
         if (!countAdj && inx < words.length - 1) {
+        
             //if words[inx].toLowerCase() is 'append'
             if (words[inx].toLowerCase() === 'append') {
+            
                 //inx++ //skip 'append'
-                inx++; //skip 'append'
+                inx++;
                 //if words[inx] is 'to', inx++ //skip to
                 if (words[inx] === 'to') {inx++};
             };
@@ -430,11 +445,13 @@
 
             //if words[inx] into var w:string //skip empty items
             var w=undefined;
-            if ((w=words[inx])) { //skip empty items
+            if ((w=words[inx])) {
+            
 
                 //if w.indexOf('(') into var posParen <> -1
                 var posParen=undefined;
                 if ((posParen=w.indexOf('(')) !== -1) {
+                
                     //split at "(". remove composed and insert splitted at "("
                     //words.splice inx,1, w.slice(0,posParen), w.slice(posParen)
                     words.splice(inx, 1, w.slice(0, posParen), w.slice(posParen));
@@ -444,20 +461,22 @@
 
                 //if w.toLowerCase() in sustantives
                 if (sustantives.indexOf(w.toLowerCase())>=0) {
+                
                     //countSust++ //valid
-                    countSust++; //valid
+                    countSust++;
                     //break //exit, sustantive found
-                    break; //exit, sustantive found
+                    break;
                 }
+                //if w.toLowerCase() in sustantives
+                
                 else {
-                //else
                   //break //invalid word
-                  break; //invalid word
+                  break;
                 };
             };
 
             //inx++ //next
-            inx++; //next
+            inx++;
         };// end loop
 
         //if countAdj>1 and no countSust, .throwErr "MarkDown Title-keyword, expected a sustantive: #{sustantives.join()}"
@@ -465,28 +484,29 @@
 
         //if countSust
         if (countSust) {
+        
 
             //if words[0].length<3, .throwErr "MarkDown Title-keyword, expected at least indent 4: '### '"
             if (words[0].length < 3) {this.throwErr("MarkDown Title-keyword, expected at least indent 4: '### '")};
 
             //for recogn=1 to inx //each recognized word, convert to lowercase
-            var _end2=inx;
-            for( var recogn=1; recogn<=_end2; recogn++) {
+            var _end3=inx;
+            for( var recogn=1; recogn<=_end3; recogn++) {
                 //words[recogn]=words[recogn].toLowerCase()
                 words[recogn] = words[recogn].toLowerCase();
             };// end for recogn
 
             //words[0] = words[0].replaceAll("#"," ") //replace # by ' '
-            words[0] = words[0].replaceAll("#", " "); //replace # by ' '
+            words[0] = words[0].replaceAll("#", " ");
 
             //return words.join(' ') // re-join
-            return words.join(' '); // re-join
+            return words.join(' ');
         };
      };
 
 
 
-//#### method tokenize
+     //     method tokenize
      Lexer.prototype.tokenize = function(){
 
 //*Tokenize CODE lines
@@ -504,19 +524,20 @@
             try{
 
                 //item.dump() # debug
-                item.dump();// # debug
+                item.dump();
 
                 //if item.type is LineTypes.CODE
                 if (item.type === LineTypes.CODE) {
+                
                     //item.tokenizeLine(this)
                     item.tokenizeLine(this);
                 };
                 //end if
+
+            //catch err
                 
             
             }catch(err){
-
-            //catch err
                 //adds position info
                 //throw new ControlledError("#{.filename}:#{item.sourceLineNum}:1 #{err.message}")
                 throw new ControlledError('' + this.filename + ":" + item.sourceLineNum + ":1 " + err.message);
@@ -524,23 +545,27 @@
         };// end for each in this.infoLines
 
         //end loop code lines
+
+//reset Lexer position, to allow the parser to start reading tokens
+
+        //.lineInx = -1 #line index
         
 
 //reset Lexer position, to allow the parser to start reading tokens
 
         //.lineInx = -1 #line index
-        this.lineInx = -1;// #line index
+        this.lineInx = -1;
         //.infoLine = null #current infoLine
-        this.infoLine = null;// #current infoLine
+        this.infoLine = null;
         //.index = -1 #token index
-        this.index = -1;// #token index
+        this.index = -1;
 
         //.last = .getPos() #last position
-        this.last = this.getPos();// #last position
+        this.last = this.getPos();
 
 //read first token
 
-        //.nextToken() 
+        //.nextToken()
         this.nextToken();
      };
 
@@ -550,7 +575,7 @@
 //Pre-Processor
 //-------------
 
-//#### method preprocessor(line:string)
+     //     method preprocessor(line:string)
      Lexer.prototype.preprocessor = function(line){
 
 //This is a ver crude preprocessor.
@@ -573,10 +598,10 @@
 
 
 
-//#### method process()
+     //     method process()
      Lexer.prototype.process = function(){
 
-//Analyze generated lines. preParseSource() set line type, calculates indent, 
+//Analyze generated lines. preParseSource() set line type, calculates indent,
 //handles multiline string, comments, string interpolation, etc.
 
       //.infoLines = .preParseSource()
@@ -591,13 +616,14 @@
 //Next Source Line
 //----------------
 
-//#### method nextSourceLine()
+     //     method nextSourceLine()
      Lexer.prototype.nextSourceLine = function(){
 
 //returns false is there are no more lines
 
         //if .sourceLineNum >= .lines.length
         if (this.sourceLineNum >= this.lines.length) {
+        
             //return false
             return false;
         };
@@ -607,13 +633,13 @@
         //.line = .lines[.sourceLineNum].replaceAll("\t",'    ').trimRight().replaceAll("\r","")
         this.line = this.lines[this.sourceLineNum].replaceAll("\t", '    ').trimRight().replaceAll("\r", "");
         //.sourceLineNum++ # note: source files line numbers are 1-based
-        this.sourceLineNum++;// # note: source files line numbers are 1-based
+        this.sourceLineNum++;
 
         //return true
         return true;
      };
 
-//#### method replaceSourceLine(newLine)
+     //     method replaceSourceLine(newLine)
      Lexer.prototype.replaceSourceLine = function(newLine){
         //.lines[.sourceLineNum-1] = newLine
         this.lines[this.sourceLineNum - 1] = newLine;
@@ -624,27 +650,26 @@
 //Multiline strings
 //-----------------
 
-//#### method parseTripleQuotes(line:string)
+     //     method parseTripleQuotes(line:string)
      Lexer.prototype.parseTripleQuotes = function(line){
 
 //This method handles `"""` triple quotes multiline strings
 //Mulitple coded-enclosed source lines are converted to one logical infoLine
 
 //Example:
-///*
- //var c = """
-   //first line
-   //second line
-   //That's all
-   //""".length
-
+//
+// var c = """
+//   first line
+//   second line
+//   That's all
+//   """.length
+//
 //gets converted to:
 //<pre>
-  //var c = 'first line\nsecond line\nThat\'s all\n'.length
-  //^^^^^^^   ^^^^^^^                               ^^^^^
-    //pre    |- section                          --| post
+//  var c = 'first line\nsecond line\nThat\'s all\n'.length
+//  ^^^^^^^   ^^^^^^^                               ^^^^^
+//    pre    |- section                          --| post
 //</pre>
-//*/
 
 //Get section between """ and """
 
@@ -652,16 +677,19 @@
         var result = new MultilineSection(this, line, '"""', '"""');
         //if result.section
         if (result.section) {
+        
 
           //#discard first and last lines, if empty
           //if no result.section[0].trim()
           if (!result.section[0].trim()) {
+          
             //result.section.shift()
             result.section.shift();
           };
 
           //if no result.section[result.section.length-1].trim()
           if (!result.section[result.section.length - 1].trim()) {
+          
             //result.section.pop()
             result.section.pop();
           };
@@ -676,6 +704,7 @@
             var lineIndent = sectionLine1.countSpaces();
             //if lineIndent>=0 and lineIndent<indent
             if (lineIndent >= 0 && lineIndent < indent) {
+            
                 //indent = lineIndent
                 indent = lineIndent;
             };
@@ -690,7 +719,7 @@
           };// end for each in result.section
 
           //#join with (encoded) newline char and enclose in quotes (for splitExpressions)
-          //line = result.section.join("\\n").quoted('"') 
+          //line = result.section.join("\\n").quoted('"')
           line = result.section.join("\\n").quoted('"');
 
 //Now we should escape internal d-quotes, but only *outside* string interpolation expressions
@@ -701,13 +730,14 @@
           for( var inx=0,item ; inx<parsed.length ; inx++){item=parsed[inx];
           
               //if item.charAt(0) is '"' //a string part
-              if (item.charAt(0) === '"') { //a string part
+              if (item.charAt(0) === '"') {
+              
                   //item = item.slice(1,-1) //remove quotes
-                  item = item.slice(1, -1); //remove quotes
+                  item = item.slice(1, -1);
                   //item = item.replaceAll('"','\\"') #store with *escaped* internal d-quotes
-                  item = item.replaceAll('"', '\\"');// #store with *escaped* internal d-quotes
+                  item = item.replaceAll('"', '\\"');
                   //parsed[inx] = '"#{item}"' #restore enclosing quotes
-                  parsed[inx] = '"' + item + '"';// #restore enclosing quotes
+                  parsed[inx] = '"' + item + '"';
               };
           };// end for each in parsed
 
@@ -720,12 +750,13 @@
 
           //if the first expression isnt a quoted string constant
           // we add `"" + ` so: we get string concatenation from javascript.
-          // Also: if the first expression starts with `(`, LiteScript can 
+          // Also: if the first expression starts with `(`, LiteScript can
           // mis-parse the expression as a "function call"
-          //if parsed.length and parsed[0].charAt(0) isnt '"' 
+          //if parsed.length and parsed[0].charAt(0) isnt '"'
           if (parsed.length && parsed[0].charAt(0) !== '"') {
+          
               //parsed.unshift "''" // prepend ''
-              parsed.unshift("''"); // prepend ''
+              parsed.unshift("''");
           };
 
           // code a call to js string concat (+) to handle string interpolation
@@ -735,7 +766,7 @@
       //endif
 
           // add pre & post
-          //line = "#{result.pre} #{line}#{result.post}" 
+          //line = "#{result.pre} #{line}#{result.post}"
           line = '' + result.pre + " " + line + result.post;
         };
 
@@ -746,10 +777,10 @@
       //#end parse triple quotes
 
 //----------------------------
-//#### method checkMultilineComment(infoLines:InfoLine array, lineType, startLineIndent, line)
+     //     method checkMultilineComment(infoLines:InfoLine array, lineType, startLineIndent, line)
      Lexer.prototype.checkMultilineComment = function(infoLines, lineType, startLineIndent, line){
 
-//This method handles multiline comments: `/*` `*/` 
+//This method handles multiline comments: ` `//` `
 
         //var startSourceLine = .sourceLineNum
         var startSourceLine = this.sourceLineNum;
@@ -758,48 +789,52 @@
         var result = new MultilineSection(this, line, '/*', '*/');
         //if no result.section
         if (!result.section) {
+        
           //return false
           return false;
         };
 
         //if result.section.length is 1 # just one line
-        if (result.section.length === 1) {// # just one line
+        if (result.section.length === 1) {
+        
           //line = "#{result.pre} #{result.post}//#{result.section[0]}"
           line = '' + result.pre + " " + result.post + "//" + (result.section[0]);
-          //infoLines.push(new InfoLine(this, lineType, startLineIndent, line, startSourceLine))  
+          //infoLines.push(new InfoLine(this, lineType, startLineIndent, line, startSourceLine))
           infoLines.push(new InfoLine(this, lineType, startLineIndent, line, startSourceLine));
         }
+        //if result.section.length is 1 # just one line
+        
         else {
-
-        //else 
           //if result.pre
           if (result.pre) {
-              //infoLines.push(new InfoLine(this, lineType, startLineIndent, result.pre, startSourceLine))  
+          
+              //infoLines.push(new InfoLine(this, lineType, startLineIndent, result.pre, startSourceLine))
               infoLines.push(new InfoLine(this, lineType, startLineIndent, result.pre, startSourceLine));
           };
 
           //for each inx,sectionLine in result.section
           for( var inx=0,sectionLine ; inx<result.section.length ; inx++){sectionLine=result.section[inx];
           
-              //infoLines.push(new InfoLine(this, LineTypes.COMMENT, 0, sectionLine, startSourceLine+inx))  
+              //infoLines.push(new InfoLine(this, LineTypes.COMMENT, 0, sectionLine, startSourceLine+inx))
               infoLines.push(new InfoLine(this, LineTypes.COMMENT, 0, sectionLine, startSourceLine + inx));
           };// end for each in result.section
 
-          //if result.post.trim() 
+          //if result.post.trim()
           if (result.post.trim()) {
+          
               //logger.warning "#{.filename}:#{.sourceLineNum}:1. Do not add text on the same line after `*/`. Indent is not clear"
               logger.warning('' + this.filename + ":" + this.sourceLineNum + ":1. Do not add text on the same line after `*/`. Indent is not clear");
-              //infoLines.push(new InfoLine(this, LineTypes.CODE, result.postIndent, result.post, .sourceLineNum))  
+              //infoLines.push(new InfoLine(this, LineTypes.CODE, result.postIndent, result.post, .sourceLineNum))
               infoLines.push(new InfoLine(this, LineTypes.CODE, result.postIndent, result.post, this.sourceLineNum));
           };
         };
 
         //return true #OK, lines processed
-        return true;// #OK, lines processed
+        return true;
      };
 
 //----------------------------
-//#### method checkConditionalCompilation(line:string)
+     //     method checkConditionalCompilation(line:string)
      Lexer.prototype.checkConditionalCompilation = function(line){
 
 //This method handles "#ifdef/#else/#endif" as multiline comments
@@ -814,6 +849,7 @@
         var isDefine = line.indexOf("#define ");
         //if isDefine>=0
         if (isDefine >= 0) {
+        
             //words = line.trim().split(' ')
             words = line.trim().split(' ');
             //.project.setCompilerVar words[1],true
@@ -826,6 +862,7 @@
         var isUndef = line.indexOf("#undef ");
         //if isUndef>=0
         if (isUndef >= 0) {
+        
             //words = line.trim().split(' ')
             words = line.trim().split(' ');
             //.project.setCompilerVar words[1],false
@@ -845,15 +882,16 @@
         var invert = false;
         //var pos = line.indexOf("#ifdef ")
         var pos = line.indexOf("#ifdef ");
-        //if pos isnt 0 
+        //if pos isnt 0
         if (pos !== 0) {
+        
             //pos = line.indexOf("#ifndef ")
             pos = line.indexOf("#ifndef ");
             //invert = true
             invert = true;
         };
 
-        //if pos isnt 0, return 
+        //if pos isnt 0, return
         if (pos !== 0) {return};
 
         //var startRef = "while processing #ifdef started on line #{startSourceLine}"
@@ -877,6 +915,7 @@
         var endFound = false;
         //do
         do{
+        
             //#get next line
             //if no .nextSourceLine(),.throwErr "EOF #{startRef}"
             if (!this.nextSourceLine()) {this.throwErr("EOF " + startRef)};
@@ -886,10 +925,12 @@
             //if line.countSpaces() into var indent >= 0
             var indent=undefined;
             if ((indent=line.countSpaces()) >= 0) {
+            
                 //line = line.trim()
                 line = line.trim();
                 //if line.charAt(0) is '#' and line.charAt(1) isnt '#' //expected: "#else, #endif #end if"
-                if (line.charAt(0) === '#' && line.charAt(1) !== '#') { //expected: "#else, #endif #end if"
+                if (line.charAt(0) === '#' && line.charAt(1) !== '#') {
+                
                     //words = line.split(' ')
                     words = line.split(' ');
                     //case words.tryGet(0)
@@ -897,7 +938,7 @@
                         //when '#else':
                     if (
                        (words.tryGet(0)=='#else')
-                   ){
+                    ){
                             //.replaceSourceLine .line.replaceAll("#else","//else")
                             this.replaceSourceLine(this.line.replaceAll("#else", "//else"));
                             //defValue = not defValue
@@ -907,7 +948,7 @@
                         //when "#end":
                     else if (
                        (words.tryGet(0)=="#end")
-                   ){
+                    ){
                             //if words.tryGet(1) isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
                             if (words.tryGet(1) !== 'if') {this.throwErr("expected '#end if', read '" + line + "' " + startRef)};
                             //endFound = true
@@ -917,42 +958,44 @@
                         //when "#endif":
                     else if (
                        (words.tryGet(0)=="#endif")
-                   ){
+                    ){
                             //endFound = true
                             endFound = true;
                     
                     }
                     else {
-                        //else
                             //.throwErr "expected '#else/#end if', read '#{line}' #{startRef}"
                             this.throwErr("expected '#else/#end if', read '" + line + "' " + startRef);
                     };
                     //end case
+                //else
                     
                 }
+                //if line.charAt(0) is '#' and line.charAt(1) isnt '#' //expected: "#else, #endif #end if"
+                
                 else {
-                //else
                     // comment line if .compilerVar not defined (or processing #else)
                     //and this is not a blank line
                     //if not defValue and line, .replaceSourceLine "#{String.spaces(indent)}//#{line}"
                     if (!(defValue) && line) {this.replaceSourceLine('' + (String.spaces(indent)) + "//" + line)};
                 };
                 //end if
+            //end if
                 
             };
-            //end if              
+            //end if
+        //loop until endFound
             
         } while (!endFound);// end loop
-        //loop until endFound
 
         //.replaceSourceLine .line.replaceAll("#end","//end")
         this.replaceSourceLine(this.line.replaceAll("#end", "//end"));
 
         //#rewind position after #ifdef, reprocess lines
-        //.sourceLineNum = startSourceLine -1 
+        //.sourceLineNum = startSourceLine -1
         this.sourceLineNum = startSourceLine - 1;
         //return true #OK, lines processed
-        return true;// #OK, lines processed
+        return true;
      };
 
 
@@ -960,7 +1003,7 @@
 //Methods getPos() and setPos() are used to save and restore a specific lexer position in code
 //When a AST node parse() fails, the lexer position is rewound to try another AST class
 
-//#### method getPos() returns LexerPos
+     //     method getPos() returns LexerPos
      Lexer.prototype.getPos = function(){
         //#return {lineInx:.lineInx, index:.index, sourceLineNum:.sourceLineNum, token:.token, last:.last}
         //return new LexerPos(this)
@@ -969,7 +1012,7 @@
 
 //----------------------------
 
-//#### method setPos(pos:LexerPos)
+     //     method setPos(pos:LexerPos)
      Lexer.prototype.setPos = function(pos){
 
         //.lineInx = pos.lineInx
@@ -977,13 +1020,15 @@
 
         //if .lineInx>=0 and .lineInx<.infoLines.length
         if (this.lineInx >= 0 && this.lineInx < this.infoLines.length) {
+        
             //.infoLine = .infoLines[.lineInx]
             this.infoLine = this.infoLines[this.lineInx];
             //.indent = .infoLine.indent
             this.indent = this.infoLine.indent;
         }
+        //if .lineInx>=0 and .lineInx<.infoLines.length
+        
         else {
-        //else
             //.infoLine = null
             this.infoLine = null;
             //.indent = 0
@@ -1001,7 +1046,7 @@
      };
 
 
-//#### helper method posToString()
+     //     helper method posToString()
      Lexer.prototype.posToString = function(){
 //Create a full string with last position. Useful to inform errors
 
@@ -1012,21 +1057,21 @@
      };
 
 
-        ///*
-        //if no .last.token
-            //.last.token = {column:0}
-
-        //var col = (.last.token.column or .infoLine.indent or 0 ) 
-
-        //return "#{.filename}:#{.last.sourceLineNum}:#{col+1}"
-        //*/
+//
+//        if no .last.token
+//            .last.token = {column:0}
+//
+//        var col = (.last.token.column or .infoLine.indent or 0 )
+//
+//        return "#{.filename}:#{.last.sourceLineNum}:#{col+1}"
+//        
 
 //----------------------------
 //getPrevIndent() method returns the indent of the previous code line
-//is used in 'Parser.lite' when processing an indented block of code, 
+//is used in 'Parser.lite' when processing an indented block of code,
 //to validate the line indents and give meaningful compiler error messages
 
-//#### method getPrevIndent()
+     //     method getPrevIndent()
      Lexer.prototype.getPrevIndent = function(){
         //var inx = .lineInx-1
         var inx = this.lineInx - 1;
@@ -1034,6 +1079,7 @@
         while(inx >= 0){
             //if .infoLines[inx].type is LineTypes.CODE
             if (this.infoLines[inx].type === LineTypes.CODE) {
+            
                 //return .infoLines[inx].indent
                 return this.infoLines[inx].indent;
             };
@@ -1052,7 +1098,7 @@
 //All other tokens (COMMENT and WHITESPACE) are discarded.
 
 
-//#### method consumeToken()
+     //     method consumeToken()
      Lexer.prototype.consumeToken = function(){
 
 //loop until a CODE token is found
@@ -1071,6 +1117,7 @@
 
                 //if not .infoLine
                 if (!(this.infoLine)) {
+                
 
                     //.index = -1
                     this.index = -1;
@@ -1079,6 +1126,7 @@
 
                     //if not .nextCODELine()
                     if (!(this.nextCODELine())) {
+                    
 
 //if no more CODE lines -> EOF
 
@@ -1110,6 +1158,7 @@
 
                 //if no .infoLine.tokens
                 if (!this.infoLine.tokens) {
+                
                   //debugger
                   debugger;
                 };
@@ -1119,11 +1168,12 @@
                 this.index += 1;
                 //if .index < .infoLine.tokens.length
                 if (this.index < this.infoLine.tokens.length) {
+                
                     //break #ok, a line with tokens
-                    break;// #ok, a line with tokens
+                    break;
                 };
 
-//if there was no more tokens, set infoLine to null, 
+//if there was no more tokens, set infoLine to null,
 //and continue (get the next line)
 
                 //.infoLine = null
@@ -1138,22 +1188,20 @@
             //.token = .infoLine.tokens[.index]
             this.token = this.infoLine.tokens[this.index];
 
-//if the token is a COMMENT, discard it, 
+//if the token is a COMMENT, discard it,
 //by continuing the loop (get the next token)
 
             //if .token.type is 'COMMENT'
             if (this.token.type === 'COMMENT') {
+            
                 //continue #discard COMMENT
-                continue;// #discard COMMENT
+                continue;
             }
+            //if .token.type is 'COMMENT'
+            
             else {
-
-//if it is not a COMMENT, break the loop
-//returning the CODE Token in lexer.token
-
-            //else
                 //break #the loop, CODE token is in lexer.token
-                break;// #the loop, CODE token is in lexer.token
+                break;
             };
         };// end loop
         
@@ -1165,7 +1213,7 @@
 
 //---------------------------------------------------------
 
-//#### method nextToken()
+     //     method nextToken()
      Lexer.prototype.nextToken = function(){
 
 //Save current pos, and get next token
@@ -1187,28 +1235,29 @@
 
 //-----------------------------------------------------
 
-//#### method returnToken()
+     //     method returnToken()
      Lexer.prototype.returnToken = function(){
         //#restore last saved pos (rewind)
 
         //.setPos .last
         this.setPos(this.last);
-        //logger.debug '<< Returned:',.token.toString(),'line',.sourceLineNum 
+        //logger.debug '<< Returned:',.token.toString(),'line',.sourceLineNum
         logger.debug('<< Returned:', this.token.toString(), 'line', this.sourceLineNum);
      };
 
 //-----------------------------------------------------
-//This method gets the next line CODE from infoLines
+//This method gets the next CODE line from infoLines
 //BLANK and COMMENT lines are skipped.
 //return true if a CODE Line is found, false otherwise
 
-//#### method nextCODELine()
+     //     method nextCODELine()
      Lexer.prototype.nextCODELine = function(){
 
         //if .lineInx >= .infoLines.length
         if (this.lineInx >= this.infoLines.length) {
+        
             //return false # no more lines
-            return false;// # no more lines
+            return false;
         };
 
 //loop until a CODE line is found
@@ -1220,8 +1269,9 @@
             this.lineInx += 1;
             //if .lineInx >= .infoLines.length
             if (this.lineInx >= this.infoLines.length) {
+            
                 //return false # no more lines
-                return false;// # no more lines
+                return false;
             };
 //Get line
 
@@ -1232,6 +1282,7 @@
 
             //if .infoLine.type is LineTypes.CODE
             if (this.infoLine.type === LineTypes.CODE) {
+            
 
                 //.sourceLineNum = .infoLine.sourceLineNum
                 this.sourceLineNum = this.infoLine.sourceLineNum;
@@ -1241,7 +1292,7 @@
                 this.index = -1;
 
                 //return true #ok nextCODEline found
-                return true;// #ok nextCODEline found
+                return true;
             };
         };// end loop
         
@@ -1251,8 +1302,46 @@
 
       //#end method
 
+     //     method getPrevCODEInfoLineIndex(baseSourceLineNum)
+     Lexer.prototype.getPrevCODEInfoLineIndex = function(baseSourceLineNum){
 
-//#### method say()
+        //search prev CODE line
+        //var inx = baseSourceLineNum
+        var inx = baseSourceLineNum;
+        //if inx>=.infoLines.length, inx = .infoLines.length-1
+        if (inx >= this.infoLines.length) {inx = this.infoLines.length - 1};
+
+        //do until inx <= 0
+        while(!(inx <= 0 || (this.infoLines[inx].sourceLineNum < baseSourceLineNum && this.infoLines[inx].type === LineTypes.CODE))){
+
+            //inx--
+            inx--;
+        };// end loop
+
+        //return inx
+        return inx;
+     };
+
+     //     method getInfoLineIndex(sourceLineNum)
+     Lexer.prototype.getInfoLineIndex = function(sourceLineNum){
+
+        //search InfoLine where the required source line resides
+        //var inx = sourceLineNum //line index is always<sourceLineNum
+        var inx = sourceLineNum;
+        //if inx>=.infoLines.length, inx = .infoLines.length-1
+        if (inx >= this.infoLines.length) {inx = this.infoLines.length - 1};
+
+        //while inx and .infoLines[inx].sourceLineNum > sourceLineNum
+        while(inx && this.infoLines[inx].sourceLineNum > sourceLineNum){
+            //inx--
+            inx--;
+        };// end loop
+
+        //return inx
+        return inx;
+     };
+
+     //     method say()
      Lexer.prototype.say = function(){
 //**say** emit error (but continue compiling)
 
@@ -1261,7 +1350,7 @@
      };
 
 
-//#### method throwErr(msg)
+     //     method throwErr(msg)
      Lexer.prototype.throwErr = function(msg){
 //**throwErr** add lexer position and emit error (abort compilation)
 
@@ -1269,7 +1358,7 @@
         logger.throwControlled('' + (this.posToString()) + " " + msg);
      };
 
-//#### method sayErr(msg)
+     //     method sayErr(msg)
      Lexer.prototype.sayErr = function(msg){
 //**sayErr** add lexer position and emit error (but continue compiling)
 
@@ -1278,7 +1367,7 @@
      };
 
 
-//#### method warn(msg)
+     //     method warn(msg)
      Lexer.prototype.warn = function(msg){
 //**warn** add lexer position and emit warning (continue compiling)
 
@@ -1287,7 +1376,7 @@
      };
 
 
-//#### method splitExpressions(text:string) returns array of string
+     //     method splitExpressions(text:string) returns array of string
      Lexer.prototype.splitExpressions = function(text){
 //split on #{expresion} using lexer.stringInterpolationChar
 
@@ -1305,6 +1394,7 @@
         var quotes = text.charAt(0);
         //if quotes isnt '"' and quotes isnt "'"
         if (quotes !== '"' && quotes !== "'") {
+        
             //.throwErr 'splitExpressions: expected text to be a quoted string, quotes included'
             this.throwErr('splitExpressions: expected text to be a quoted string, quotes included');
         };
@@ -1315,7 +1405,7 @@
            , closerPos = undefined
            , itemPos = undefined
            , item = undefined
-       ;
+        ;
         //var items=[];
         var items = [];
 
@@ -1335,7 +1425,7 @@
             if (delimiterPos < 0) {break};
 
             // first part - text upto first delimiter
-            //pushAt items, s.slice(lastDelimiterPos,delimiterPos),quotes 
+            //pushAt items, s.slice(lastDelimiterPos,delimiterPos),quotes
             pushAt(items, s.slice(lastDelimiterPos, delimiterPos), quotes);
 
             //var start = delimiterPos + 1
@@ -1346,6 +1436,7 @@
 
             //if closerPos<0
             if (closerPos < 0) {
+            
                 //.throwErr "unmatched '#{delimiter}{' at string: #{text}"
                 this.throwErr("unmatched '" + delimiter + "{' at string: " + text);
             };
@@ -1363,10 +1454,8 @@
             lastDelimiterPos = closerPos + 1;
 
             //pushAt items, item //push expression
-            pushAt(items, item); //push expression
+            pushAt(items, item);
         };// end loop
-
-        //loop
 
         // remainder
         //pushAt items, s.slice(lastDelimiterPos),quotes
@@ -1380,6 +1469,8 @@
     
     // end class Lexer
 
+
+
 //### end class Lexer
 
     // helper internal function
@@ -1387,6 +1478,7 @@
     function pushAt(arr, content, useQuotes){
         //if content
         if (content) {
+        
             //if useQuotes, content = content.quoted(useQuotes)
             if (useQuotes) {content = content.quoted(useQuotes)};
             //arr.push content
@@ -1407,18 +1499,15 @@
     //class Token
     // constructor
     function Token(type, tokenText, column){
-
         //properties
           //type:string
           //value:string
           //column
 
-        //constructor(type, tokenText, column)
-
-            //.type = type 
+            //.type = type
             this.type = type;
             //.value = tokenText or ' ' # no text is represened by ' ', since '' is "falsey" in js
-            this.value = tokenText || ' ';// # no text is represened by ' ', since '' is "falsey" in js
+            this.value = tokenText || ' ';
             //.column = column
             this.column = column;
         };
@@ -1438,9 +1527,9 @@
 //A **infoLine** is a clean, tipified, indent computed, trimmed line
 //it has a source line number reference, and a tokens[] array if it's a CODE line
 
-//Each "infoLine" has: 
-//* a line "type" of: `BLANK`, `COMMENT` or `CODE` (LineTypes), 
-//* a tokens[] array if it's `CODE` 
+//Each "infoLine" has:
+//* a line "type" of: `BLANK`, `COMMENT` or `CODE` (LineTypes),
+//* a tokens[] array if it's `CODE`
 //* sourceLineNum: the original source line number (for SourceMap)
 //* indent: the line indent
 //* text: the line text (clean, trimmed)
@@ -1448,14 +1537,11 @@
     //class InfoLine
     // constructor
     function InfoLine(lexer, type, indent, text, sourceLineNum){
-
       //properties
           //type
           //indent,sourceLineNum
           //text:String
           //tokens: Token array
-
-      //constructor new InfoLine(lexer,type,indent,text,sourceLineNum)
         //.type = type
         this.type = type;
         //.indent = indent
@@ -1471,11 +1557,41 @@
       //#end InfoLine constructor
 
 
-      //method dump() # out debug info
-      InfoLine.prototype.dump = function(){// # out debug info
+      //helper method outAsComment(outCode)
+      InfoLine.prototype.outAsComment = function(outCode){
+
+//output this line as a comment
 
         //if .type is LineTypes.BLANK
         if (this.type === LineTypes.BLANK) {
+        
+            //outCode.blankLine
+            outCode.blankLine();
+        }
+        //if .type is LineTypes.BLANK
+        
+        else {
+            //text as comment
+            //outCode.ensureNewLine
+            outCode.ensureNewLine();
+            //outCode.put String.spaces(.indent)
+            outCode.put(String.spaces(this.indent));
+            //if .text.slice(0,2) isnt '//', outCode.put "//"
+            if (this.text.slice(0, 2) !== '//') {outCode.put("//")};
+            //outCode.put .text
+            outCode.put(this.text);
+            //outCode.startNewLine
+            outCode.startNewLine();
+        };
+      };
+
+
+      //helper method dump() # out debug info
+      InfoLine.prototype.dump = function(){
+
+        //if .type is LineTypes.BLANK
+        if (this.type === LineTypes.BLANK) {
+        
           //logger.debug .sourceLineNum,"(BLANK)"
           logger.debug(this.sourceLineNum, "(BLANK)");
           //return
@@ -1486,11 +1602,14 @@
         var type = "";
         //if .type is LineTypes.COMMENT
         if (this.type === LineTypes.COMMENT) {
+        
           //type="COMMENT"
           type = "COMMENT";
         }
+        //if .type is LineTypes.COMMENT
+        
         else if (this.type === LineTypes.CODE) {
-        //else if .type is LineTypes.CODE
+        
           //type="CODE"
           type = "CODE";
         };
@@ -1499,6 +1618,7 @@
         logger.debug(this.sourceLineNum, '' + this.indent + "(" + type + ")", this.text);
         //if .tokens
         if (this.tokens) {
+        
             //logger.debug('   ',.tokens.join(' '))
             logger.debug('   ', this.tokens.join(' '));
             //logger.debug()
@@ -1510,7 +1630,7 @@
 //The Tokenize Line method
 //------------------------
 
-//The Infoline.tokenizeLine() method, creates the 'tokens' array by parsing the .text 
+//The Infoline.tokenizeLine() method, creates the 'tokens' array by parsing the .text
 //It also replaces *Embdeded Expressions* #{} in string constants, storing the expression tokens
 
       //method tokenizeLine(lexer)
@@ -1536,7 +1656,7 @@
             //var chunk = code.slice(colInx)
             var chunk = code.slice(colInx);
 
-//This for loop will try each regular expression in `tokenPatterns` 
+//This for loop will try each regular expression in `tokenPatterns`
 //against the current head of the code line until one matches.
 
             //var token = .recognizeToken(chunk)
@@ -1546,11 +1666,12 @@
 
             //if no token
             if (!token) {
+            
 
                 // calc position from line info (we're at post-lexexr)
                 //msg = "(#{lexer.filename}:#{.sourceLineNum}:#{colInx+1}) Tokenize patterns: invalid token: #{chunk}"
                 msg = "(" + lexer.filename + ":" + this.sourceLineNum + ":" + (colInx + 1) + ") Tokenize patterns: invalid token: " + chunk;
-                //logger.error msg 
+                //logger.error msg
                 logger.error(msg);
 
                 //var errPosString=''
@@ -1571,22 +1692,27 @@
             };
 
             //end if
+
+//If its 'WHITESPACE' we ignore it.
+
+            //if token.type is 'WHITESPACE'
             
 
-//If its 'WHITESPACE' we ignore it. 
+//If its 'WHITESPACE' we ignore it.
 
             //if token.type is 'WHITESPACE'
             if (token.type === 'WHITESPACE') {
+            
                 //do nothing #ignore it
-                null;// #ignore it
+                null;
             }
+            //if token.type is 'WHITESPACE'
+            
             else {
-
-            //else
 
 //set token column
 
-                //token.column = .indent + colInx + 1 
+                //token.column = .indent + colInx + 1
                 token.column = this.indent + colInx + 1;
 
 //store value in a temp array to parse special lexer options
@@ -1598,11 +1724,13 @@
 
                 //if token.type is 'STRING' and token.value.length>3 and lexer.stringInterpolationChar & "{" in token.value
                 if (token.type === 'STRING' && token.value.length > 3 && token.value.indexOf(lexer.stringInterpolationChar + "{")>=0) {
+                
 
                     //declare parsed:Array
                     
+                    //declare parsed:Array
 
-                    //#parse the quoted string, splitting at #{...}, return array 
+                    //#parse the quoted string, splitting at #{...}, return array
                     //var parsed = lexer.splitExpressions(token.value)
                     var parsed = lexer.splitExpressions(token.value);
 
@@ -1619,12 +1747,13 @@
                 //else //generating JavaScript
                     //if the first expression isnt a quoted string constant
                     // we add `"" + ` so we get string concatenation from javascript.
-                    // Also: if the first expression starts with `(`, LiteScript can 
+                    // Also: if the first expression starts with `(`, LiteScript can
                     // mis-parse the expression as a "function call"
                     //if parsed.length and parsed.tryGet(0).charAt(0) not in "\"\'" // if it do not start with a quote
-                    if (parsed.length && "\"\'".indexOf(parsed.tryGet(0).charAt(0))===-1) { // if it do not start with a quote
+                    if (parsed.length && "\"\'".indexOf(parsed.tryGet(0).charAt(0))===-1) {
+                    
                         //parsed.unshift "''" // prepend '' to concat'd expressions
-                        parsed.unshift("''"); // prepend '' to concat'd expressions
+                        parsed.unshift("''");
                     };
                     //join expressions using +, so we have a valid js concat'd expression, evaluating to a string.
                     //var composed = new InfoLine(lexer, LineTypes.CODE, token.column, parsed.join(' + '), .sourceLineNum  )
@@ -1633,15 +1762,15 @@
 
                     //#Now we 'tokenize' the new composed expression
                     //composed.tokenizeLine(lexer) #recurse
-                    composed.tokenizeLine(lexer);// #recurse
+                    composed.tokenizeLine(lexer);
 
                     //#And we append the new tokens instead of the original string constant
                     //result = result.concat( composed.tokens )
                     result = result.concat(composed.tokens);
                 }
+                //if token.type is 'STRING' and token.value.length>3 and lexer.stringInterpolationChar & "{" in token.value
+                
                 else {
-
-                //else
 
 //Else it's a single token. Add the token to result array
 
@@ -1655,10 +1784,16 @@
                 };
 
                 //end if
+
+            //end if WITHESPACE
                 
             };
 
             //end if WITHESPACE
+
+//Advance col index into code line
+
+            //colInx += token.value.length
             
 
 //Advance col index into code line
@@ -1668,6 +1803,13 @@
         };// end loop
 
         //end while text in the line
+
+        //#debug
+        //#debug msg
+
+//Store tokenize result in .tokens
+
+        //.tokens = result
         
 
         //#debug
@@ -1684,11 +1826,13 @@
 
         //if words.tryGet(0) is 'lexer' and words.tryGet(1) is 'options'
         if (words.tryGet(0) === 'lexer' && words.tryGet(1) === 'options') {
+        
             //.type = LineTypes.COMMENT # is a COMMENT line
-            this.type = LineTypes.COMMENT;// # is a COMMENT line
+            this.type = LineTypes.COMMENT;
 
-            //if words.slice(2,5).join(" ") is "string interpolation char" 
+            //if words.slice(2,5).join(" ") is "string interpolation char"
             if (words.slice(2, 5).join(" ") === "string interpolation char") {
+            
                 //var ch:string
                 var ch = undefined;
                 //if words.tryGet(5) into ch is 'is' then ch = words.tryGet(6) #get it (skip optional 'is')
@@ -1700,14 +1844,9 @@
                 //lexer.stringInterpolationChar = ch
                 lexer.stringInterpolationChar = ch;
             }
+            //if words.slice(2,5).join(" ") is "string interpolation char"
+            
             else {
-
-            ///*else if words.slice(2,5).join(" ") is "object literal is" 
-                //if no words.tryGet(5) into lexer.options.literalMap
-                    //fail with "missing class to be used instead of object literals"  #check
-            //*/
-
-            //else
                 //fail with "Lexer options, expected: 'literal map'|'literal object'"
                 throw new Error("Lexer options, expected: 'literal map'|'literal object'");
             };
@@ -1715,6 +1854,14 @@
       };
 
       //end tokenizeLine
+
+//The recognize method
+//--------------------
+
+//The Infoline.recognize() method matches the current position in the text stream
+//with the known tokens, returning a new Token or undefined
+
+      //method recognizeToken(chunk:string) returns Token // or undefined
       
 
 //The recognize method
@@ -1724,7 +1871,7 @@
 //with the known tokens, returning a new Token or undefined
 
       //method recognizeToken(chunk:string) returns Token // or undefined
-      InfoLine.prototype.recognizeToken = function(chunk){ // or undefined
+      InfoLine.prototype.recognizeToken = function(chunk){
 
             //var remainder
             var remainder = undefined;
@@ -1733,11 +1880,12 @@
 
             //if chunk.startsWith('#') or chunk.startsWith('//')
             if (chunk.startsWith('#') || chunk.startsWith('//')) {
+            
                 //return new Token('COMMENT',chunk)
                 return new Token('COMMENT', chunk);
             };
 
-//Punctuation: 
+//Punctuation:
 //We include also here punctuation symbols (like `,` `[` `:`)  and the arrow `->`
 //Postfix and prefix ++ and -- are considered also 'PUNCT'.
 //They're not considered 'operators' since they do no introduce a new operand, ++ and -- are "modifiers" for a variable reference.
@@ -1745,13 +1893,15 @@
   //['PUNCT',/^(\+\+|--|->)/],
   //['PUNCT',/^[\(\)\[\]\;\,\.\{\}]/],
 
-            //if chunk.charAt(0) in "()[]{};,." 
+            //if chunk.charAt(0) in "()[]{};,."
             if ("()[]{};,.".indexOf(chunk.charAt(0))>=0) {
+            
                 //return new Token('PUNCT',chunk.slice(0,1))
                 return new Token('PUNCT', chunk.slice(0, 1));
             };
             //if chunk.slice(0,2) in ["++","--","->"]
             if (["++", "--", "->"].indexOf(chunk.slice(0, 2))>=0) {
+            
                 //return new Token('PUNCT',chunk.slice(0,2))
                 return new Token('PUNCT', chunk.slice(0, 2));
             };
@@ -1766,17 +1916,20 @@
 
             //if chunk.startsWith(" .")
             if (chunk.startsWith(" .")) {
+            
                 //return new Token('SPACE_DOT',chunk.slice(0,2))
                 return new Token('SPACE_DOT', chunk.slice(0, 2));
             };
             //if chunk.startsWith(" [")
             if (chunk.startsWith(" [")) {
+            
                 //return new Token('SPACE_BRACKET',chunk.slice(0,2))
                 return new Token('SPACE_BRACKET', chunk.slice(0, 2));
             };
             //if PMREX.whileRanges(chunk," \t\r") into var whiteSpace
             var whiteSpace=undefined;
             if ((whiteSpace=PMREX.whileRanges(chunk, " \t\r"))) {
+            
                 //if chunk.charAt(whiteSpace.length) in '.[', whiteSpace=whiteSpace.slice(0,-1) //allow recognition of SPACE_DOT and SPACE_BRACKET
                 if ('.['.indexOf(chunk.charAt(whiteSpace.length))>=0) {whiteSpace = whiteSpace.slice(0, -1)};
                 //return new Token('WHITESPACE',whiteSpace)
@@ -1790,10 +1943,11 @@
 
             //if chunk.startsWith("'") or chunk.startsWith('"')
             if (chunk.startsWith("'") || chunk.startsWith('"')) {
+            
                 //var quotedContent = PMREX.quotedContent(chunk)
                 var quotedContent = PMREX.quotedContent(chunk);
                 //return new Token('STRING',chunk.slice(0,1+quotedContent.length+1)) //include quotes
-                return new Token('STRING', chunk.slice(0, 1 + quotedContent.length + 1)); //include quotes
+                return new Token('STRING', chunk.slice(0, 1 + quotedContent.length + 1));
             };
 
 //ASSIGN are symbols triggering the assignment statements.
@@ -1804,11 +1958,13 @@
 
             //if chunk.startsWith("=")
             if (chunk.startsWith("=")) {
+            
                 //return new Token('ASSIGN',chunk.slice(0,1))
                 return new Token('ASSIGN', chunk.slice(0, 1));
             };
-            //if chunk.charAt(0) in "+-*/&" and chunk.charAt(1) is "=" 
+            //if chunk.charAt(0) in "+-*/&" and chunk.charAt(1) is "="
             if ("+-*/&".indexOf(chunk.charAt(0))>=0 && chunk.charAt(1) === "=") {
+            
                 //return new Token('ASSIGN',chunk.slice(0,2))
                 return new Token('ASSIGN', chunk.slice(0, 2));
             };
@@ -1819,10 +1975,11 @@
 
             //if chunk.startsWith('/') and chunk.indexOf('/',1) isnt -1
             if (chunk.startsWith('/') && chunk.indexOf('/', 1) !== -1) {
-                //var regexpContents = PMREX.quotedContent(chunk) 
+            
+                //var regexpContents = PMREX.quotedContent(chunk)
                 var regexpContents = PMREX.quotedContent(chunk);
                 //var regexpExpr:string = chunk.slice(0,regexpContents.length+2) //include quote-chars: / & /
-                var regexpExpr = chunk.slice(0, regexpContents.length + 2); //include quote-chars: / & /
+                var regexpExpr = chunk.slice(0, regexpContents.length + 2);
                 //var regexpFlags = PMREX.whileRanges(chunk.slice(regexpExpr.length),"gimy")
                 var regexpFlags = PMREX.whileRanges(chunk.slice(regexpExpr.length), "gimy");
                 //return new Token('REGEX', regexpExpr & regexpFlags)
@@ -1831,8 +1988,8 @@
 
 
 //A "Unary Operator" is a symbol that precedes and transform *one* operand.
-//A "Binary Operator" is a  symbol or a word (like `>=` or `+` or `and`), 
-//that sits between *two* operands in a `Expressions`. 
+//A "Binary Operator" is a  symbol or a word (like `>=` or `+` or `and`),
+//that sits between *two* operands in a `Expressions`.
 
   //['OPER', /^(\*|\/|\%|\+|-|<>|>=|<=|>>|<<|>|<|!==|\~|\^)/],
   //['OPER', /^[\?\:]/], //ternary if
@@ -1841,18 +1998,21 @@
 
             //if chunk.slice(0,3) is '!=='
             if (chunk.slice(0, 3) === '!==') {
+            
                 //return new Token('OPER',chunk.slice(0,3))
                 return new Token('OPER', chunk.slice(0, 3));
             };
 
             //if "|#{chunk.slice(0,2)}|" in "|<>|>=|<=|>>|<<|!=|"
             if ("|<>|>=|<=|>>|<<|!=|".indexOf("|" + (chunk.slice(0, 2)) + "|")>=0) {
+            
                 //return new Token('OPER',chunk.slice(0,2))
                 return new Token('OPER', chunk.slice(0, 2));
             };
 
-            //if chunk.charAt(0) in "><+-*/%&~^|?:" 
-            if ("><+-*/%&~^|?:".indexOf(chunk.charAt(0))>=0) {
+            //if chunk.charAt(0) in "><+-*/%&~^?:"
+            if ("><+-*/%&~^?:".indexOf(chunk.charAt(0))>=0) {
+            
                 //return new Token('OPER',chunk.slice(0,1))
                 return new Token('OPER', chunk.slice(0, 1));
             };
@@ -1865,10 +2025,11 @@
 
             //if chunk.startsWith('0x')
             if (chunk.startsWith('0x')) {
+            
                 //var hexContent=PMREX.whileRanges(chunk.slice(2),"a-fA-F0-9")
                 var hexContent = PMREX.whileRanges(chunk.slice(2), "a-fA-F0-9");
                 //return new Token('NUMBER',chunk.slice(0, hexContent.length+2)) //include 0x
-                return new Token('NUMBER', chunk.slice(0, hexContent.length + 2)); //include 0x
+                return new Token('NUMBER', chunk.slice(0, hexContent.length + 2));
             };
 
             //var numberDigits,decPoint="",decimalPart="",expE="",exponent=""
@@ -1878,15 +2039,17 @@
                , decimalPart = ""
                , expE = ""
                , exponent = ""
-           ;
+            ;
 
             //if PMREX.whileRanges(chunk,"0-9") into numberDigits
             if ((numberDigits=PMREX.whileRanges(chunk, "0-9"))) {
+            
                 //chunk=chunk.slice(numberDigits.length)
                 chunk = chunk.slice(numberDigits.length);
 
                 //if chunk.charAt(0) is '.'
                 if (chunk.charAt(0) === '.') {
+                
                     //decPoint = '.'
                     decPoint = '.';
                     //chunk=chunk.slice(1)
@@ -1902,6 +2065,7 @@
 
                 //if chunk.charAt(0) is 'e'
                 if (chunk.charAt(0) === 'e') {
+                
                     //expE = 'e'
                     expE = 'e';
                     //chunk=chunk.slice(1)
@@ -1931,9 +2095,11 @@
             //if PMREX.whileRanges(chunk,"A-Za-z0-9\x7F-\xFF$_") into var identifier
             var identifier=undefined;
             if ((identifier=PMREX.whileRanges(chunk, "A-Za-z0-9\x7F-\xFF$_"))) {
+            
 
                 //if "|#{identifier}|" in "|is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|bitxor|bitnot|"
                 if ("|is|isnt|not|and|but|into|like|or|in|into|instance|instanceof|has|hasnt|bitand|bitor|bitxor|bitnot|".indexOf("|" + identifier + "|")>=0) {
+                
                     //return new Token('OPER',identifier)
                     return new Token('OPER', identifier);
                 };
@@ -1948,15 +2114,12 @@
 
 //--------------------------
 
-//### helper class LexerPos
+    //    helper class LexerPos
     // constructor
     function LexerPos(lexer){
-
       //properties
         //lexer, lineInx,sourceLineNum
         //index,token,last
-
-      //constructor new LexerPos(lexer)
         //.lexer = lexer
         this.lexer = lexer;
         //.lineInx = lexer.lineInx
@@ -1983,34 +2146,32 @@
 
 //----------------------------------------------------------------------------------------------
 
-//### helper Class MultilineSection
+    //    helper class MultilineSection
     // constructor
     function MultilineSection(lexer, line, startCode, endCode){
-//This is a helper class the to get a section of text between start and end codes
-
       //properties
 
         //pre:string, section:string array, post:string
         //postIndent
 
-      //constructor (lexer, line:string, startCode:string, endCode:string)
-
-//check if startCode is in the line, if not found, exit 
+//check if startCode is in the line, if not found, exit
 
         //var startCol = line.indexOf(startCode)
         var startCol = line.indexOf(startCode);
-        //if startCol<0 
+        //if startCol<0
         if (startCol < 0) {
+        
             //#no start code found
-            //return 
+            //return
             return;
         };
 
         // get rid of quoted strings. Still there?
         //if String.replaceQuoted(line,"").indexOf(startCode)<0
         if (String.replaceQuoted(line, "").indexOf(startCode) < 0) {
-            //return #no 
-            return;// #no
+        
+            //return #no
+            return;
         };
 
 //ok, found startCode, initialize
@@ -2047,6 +2208,7 @@
             //#get next line
             //if no lexer.nextSourceLine()
             if (!lexer.nextSourceLine()) {
+            
                 //lexer.sayErr "EOF while processing multiline #{startCode} (started on #{lexer.filename}:#{startSourceLine}:#{startCol})"
                 lexer.sayErr("EOF while processing multiline " + startCode + " (started on " + lexer.filename + ":" + startSourceLine + ":" + startCol + ")");
                 //return
@@ -2057,8 +2219,6 @@
             line = lexer.line;
         };// end loop
 
-        //loop #until end of section
-
 //get text after endCode (is multilineSection.post)
 
         //this.post = line.slice(endCol+endCode.length)
@@ -2068,8 +2228,9 @@
 
         //line = line.slice(0, endCol)
         line = line.slice(0, endCol);
-        //if line 
+        //if line
         if (line) {
+        
           //this.section.push line
           this.section.push(line);
         };
@@ -2085,9 +2246,16 @@
 //Exported Module vars
 //------------------------
 
-//### Public namespace LineTypes 
+    //    public namespace LineTypes
     var LineTypes={};
-        //properties 
+        //properties
+            //CODE = 0
+            //COMMENT = 1
+            //BLANK = 2
+
+    //    public helper class OutCode
+        
+        //properties
             //CODE = 0
             //COMMENT = 1
             //BLANK = 2
@@ -2099,13 +2267,10 @@
     // export
     module.exports.LineTypes = LineTypes;
 
-//### Public Helper Class OutCode
+    //    public helper class OutCode
     // constructor
     function OutCode(){ // default constructor
-//This class contains helper methods for AST nodes's `produce()` methods
-//It also handles SourceMap generation for Chrome Developer Tools debugger and Firefox Firebug
-
-//#### Properties
+     //     properties
 
       //lineNum, column
       //currLine: array of string
@@ -2139,7 +2304,7 @@
     };
       //endif
 
-//#### Method start(options:GeneralOptions)
+     //     method start(options:GeneralOptions)
      OutCode.prototype.start = function(options){
 //Initialize output array
 
@@ -2153,9 +2318,7 @@
         this.lines = [[], [], []];
 
         //.lastOriginalCodeComment = 0
-        this.lastOriginalCodeComment = 0;
         //.lastOutCommentLine = 0
-        this.lastOutCommentLine = 0;
 
 //if sourceMap option is set, and we're generating .js
 
@@ -2167,7 +2330,7 @@
         //do nothing
         //end if
 
-//#### Method setHeader(num)
+     //     method setHeader(num)
      OutCode.prototype.setHeader = function(num){
 
         //.startNewLine
@@ -2176,12 +2339,13 @@
         this.header = num;
      };
 
-//#### Method put(text:string)
+     //     method put(text:string)
      OutCode.prototype.put = function(text){
 //put a string into produced code
 
-        //if text 
+        //if text
         if (text) {
+        
             //.currLine.push text
             this.currLine.push(text);
             //.column += text.length
@@ -2189,7 +2353,7 @@
         };
      };
 
-//#### Method getIndent()
+     //     method getIndent()
      OutCode.prototype.getIndent = function(){
         //if no .currLine.length, return 0
         if (!this.currLine.length) {return 0};
@@ -2197,7 +2361,7 @@
         return this.currLine[0].countSpaces();
      };
 
-//#### Method startNewLine()
+     //     method startNewLine()
      OutCode.prototype.startNewLine = function(){
 //Start New Line into produced code
 
@@ -2205,24 +2369,30 @@
 
           //if .currLine.length
           if (this.currLine.length) {
+          
 
               //if .fileMode
               if (this.fileMode) {
+              
 
                   //if no .fileIsOpen[.header]
                   if (!this.fileIsOpen[this.header]) {
+                  
                       // make sure output dir exists
-                      //var filename = .filenames[.header] 
+                      //var filename = .filenames[.header]
                       var filename = this.filenames[this.header];
                       //mkPath.toFile(filename);
                       mkPath.toFile(filename);
-                      //optn output file 
+                      //optn output file
                       //.fHandles[.header]=fs.openSync(filename,'w')
                       this.fHandles[this.header] = fs.openSync(filename, 'w');
                       //.fileIsOpen[.header] = true
                       this.fileIsOpen[this.header] = true;
                   };
-                  //end if 
+                  //end if
+
+                  //save each string to file
+                  //for each part in .currLine
                   
 
                   //save each string to file
@@ -2236,16 +2406,17 @@
                   //fs.writeSync .fHandles[.header], "\n"
                   fs.writeSync(this.fHandles[this.header], "\n");
               }
+              //if .fileMode
+              
               else {
-
-              //else
-                  //store in array 
+                  //store in array
                   //.lines[.header].push .currLine.join("")
                   this.lines[this.header].push(this.currLine.join(""));
               };
 
               //if .header is 0
               if (this.header === 0) {
+              
                   //.lineNum++
                   this.lineNum++;
               };
@@ -2262,7 +2433,7 @@
           this.column = 1;
      };
 
-//#### Method ensureNewLine()
+     //     method ensureNewLine()
      OutCode.prototype.ensureNewLine = function(){
 //if there's something on the line, start a new one
 
@@ -2270,7 +2441,7 @@
           if (this.currLine.length) {this.startNewLine()};
      };
 
-//#### Method blankLine()
+     //     method blankLine()
      OutCode.prototype.blankLine = function(){
 
           //.startNewLine
@@ -2282,9 +2453,9 @@
      };
 
 
-//#### method getResult(header:number) returns array of string
+     //     method getResult(header:number) returns array of string
      OutCode.prototype.getResult = function(header){
-//get result and clear memory      
+//get result and clear memory
 
         //default header = 0
         if(header===undefined) header=0;
@@ -2292,26 +2463,28 @@
         //.header = header
         this.header = header;
         //.startNewLine() #close last line
-        this.startNewLine();// #close last line
+        this.startNewLine();
         //return .lines[header]
         return this.lines[header];
      };
 
-//#### method close()
+     //     method close()
      OutCode.prototype.close = function(){
 
         //.startNewLine //save last pending line
-        this.startNewLine(); //save last pending line
+        this.startNewLine();
 
         //if .fileMode
         if (this.fileMode) {
+        
 
             //for header=0 to 2
-            var _end3=2;
-            for( var header=0; header<=_end3; header++) {
+            var _end4=2;
+            for( var header=0; header<=_end4; header++) {
 
                 //if .fileIsOpen[header]
                 if (this.fileIsOpen[header]) {
+                
 
                     //fs.closeSync .fHandles[header]
                     fs.closeSync(this.fHandles[header]);
@@ -2324,28 +2497,30 @@
      };
 
 
-//#### helper method markSourceMap(indent) returns SourceMapMark
+     //     helper method markSourceMap(indent) returns SourceMapMark
      OutCode.prototype.markSourceMap = function(indent){
 
-        //var col = .column 
+        //var col = .column
         var col = this.column;
         //if not .currLine.length, col += indent-1
         if (!(this.currLine.length)) {col += indent - 1};
         //return SourceMapMark.{
-                      //col:col        
+                      //col:col
                       //lin:.lineNum-1
+                //}
         return SourceMapMark.newFromObject({col: col, lin: this.lineNum - 1});
      };
-                //}
 
-//#### helper method addSourceMap(mark, sourceLin, sourceCol, indent)
+     //     helper method addSourceMap(mark, sourceLin, sourceCol, indent)
      OutCode.prototype.addSourceMap = function(mark, sourceLin, sourceCol, indent){
 
         //ifdef PROD_JS
         //if .sourceMap
         if (this.sourceMap) {
-            //declare on mark 
+        
+            //declare on mark
                 //lin,col
+            //.sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
             
             //.sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
             this.sourceMap.add((sourceLin || 1) - 1, 0, mark.lin, 0);
@@ -2360,17 +2535,17 @@
         //endif
 
 
-//### helper class SourceMapMark
+    //    helper class SourceMapMark
     // constructor
     function SourceMapMark(){ // default constructor
-      //properties 
+      //properties
         //col, lin
     };
     
     // end class SourceMapMark
 
 
-//### append to namespace String
+    //    append to namespace String
     
 
 //String.replaceQuoted(text,rep)
@@ -2383,7 +2558,7 @@
             var p = 0;
 
 //look for first quote (single or double?),
-//loop until no quotes found 
+//loop until no quotes found
 
             //var anyQuote = '"' & "'"
             var anyQuote = '"' + "'";
@@ -2391,9 +2566,10 @@
             //var resultText=""
             var resultText = "";
 
-            //do 
+            //do
             do{
-                //var preQuotes=PMREX.untilRanges(text,anyQuote) 
+            
+                //var preQuotes=PMREX.untilRanges(text,anyQuote)
                 var preQuotes = PMREX.untilRanges(text, anyQuote);
 
                 //resultText &= preQuotes
@@ -2404,14 +2580,16 @@
                 if (!text) {break};
 
                 //if text.slice(0,3) is '"""' //ignore triple quotes (valid token)
-                if (text.slice(0, 3) === '"""') { //ignore triple quotes (valid token)
+                if (text.slice(0, 3) === '"""') {
+                
                     //resultText &= text.slice(0,3)
                     resultText += text.slice(0, 3);
                     //text = text.slice(3)
                     text = text.slice(3);
                 }
+                //if text.slice(0,3) is '"""' //ignore triple quotes (valid token)
+                
                 else {
-                //else
 
                     //var quotedContent
                     var quotedContent = undefined;
@@ -2425,54 +2603,14 @@
                          text = text.slice(1 + quotedContent.length + 1);
                     
                     }catch(err){
-
-                    //catch err // if malformed - closing quote not found
                         //resultText &= text.slice(0,1) //keep quote
-                        resultText += text.slice(0, 1); //keep quote
+                        resultText += text.slice(0, 1);
                         //text = text.slice(1) //only remove quote
-                        text = text.slice(1); //only remove quote
+                        text = text.slice(1);
                     };
                 };
             } while (!!text);// end loop
 
-            //loop until no text
-
             //return resultText
             return resultText;
         };
-
-///*
-//### Class DynBuffer
-
-//Like node.js Buffer, but auto-extends if required
-
-        //properties
-            //used = 0
-            //buf :Buffer
-
-
-        //constructor new DynBuffer(size)
-            //.buf = new Buffer(size)
-
-
-        //method append(text:string)
-
-          //var byteLen = Buffer.byteLength(text)
-
-          //if .used + byteLen > .buf.length
-
-              //var nbuf = new Buffer(.used + byteLen + 32)
-              //.buf.copy nbuf
-              //.buf = nbuf //replace
-
-          //.used += .buf.write(text,.used)
-
-          //return byteLen
-
-
-        //method saveLine(fd)
-
-          //fs.writeSync fd, .buf,0,.used
-          //fs.writeSync fd, "\n"
-
-//*/

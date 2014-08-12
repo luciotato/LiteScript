@@ -135,7 +135,7 @@ validate var & property names
 
         if no project.options.skip
 
-            Validate.validate project
+            Validate.launch project
             if logger.errorCount is 0, logger.info "Validation OK"
 
 initialize out buffer & produce target code 
@@ -157,7 +157,7 @@ text compiled result can be obtained with: moduleNode.lexer.out.getResult() :str
         if options instance of GeneralOptions, return options
 
         var normalizedOptions = new GeneralOptions
-        for each property key,value in options
+        for each own property key,value in options
             normalizedOptions.setProperty key, value
 
         normalizedOptions.version = version

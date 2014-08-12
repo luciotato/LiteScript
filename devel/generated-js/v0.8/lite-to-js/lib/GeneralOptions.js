@@ -1,12 +1,10 @@
-
-//### class GeneralOptions
+    //    class GeneralOptions
     // constructor
     function GeneralOptions(){ // default constructor
-
       //properties
             //verboseLevel = 1
             //warningLevel = 1
-            //comments = 1
+            //comments = 1   // 0=>no comments, 1=>source line & source comments 2=>add "compiled by..."
 
             //ifdef PROD_C
             //target ="c"
@@ -34,7 +32,7 @@
             //storeMessages: boolean = false
 
             //literalMap: string // produce "new Class().fromObject({})" on "{}"" instead of a js object
-            // activate with: 'lexer options object literal is Foo'. A class is required to produce C-code 
+            // activate with: 'lexer options object literal is Foo'. A class is required to produce C-code
 
             //version: string
 
@@ -61,10 +59,8 @@
 
       //method toString
       GeneralOptions.prototype.toString = function(){
-            //return """
+            //return "outDir:" + .outDir + "\ndefines:" + (.defines.join())
             return "outDir:" + this.outDir + "\ndefines:" + (this.defines.join());
       };
     // end class GeneralOptions
-                //outDir:#{.outDir}
-                //defines:#{.defines.join()}
 module.exports=GeneralOptions;

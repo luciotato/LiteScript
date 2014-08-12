@@ -5,6 +5,7 @@
 #
 # (v0.8 self-compilation, generate (c-code) litec-to-c compiler
 
+cd ..
 OUT="../../litec/litec-to-c/generated-c"
 
 #create c code

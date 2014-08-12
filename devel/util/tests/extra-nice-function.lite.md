@@ -1,5 +1,5 @@
 
-    global import nicegen 
+    import nicegen 
 
     var failedCount=0
 

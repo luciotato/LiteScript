@@ -1524,7 +1524,7 @@ Helper method to get Precedence Index (lower number means higher precedende)
         .precedence = operatorsPrecedence.indexOf(.name)
         if .precedence is -1 
             debugger
-            fail with "OPER '#{.name}' not found in the operator precedence list"
+            .sayErr "OPER '#{.name}' not found in the operator precedence list"
 
 
 
@@ -2147,7 +2147,7 @@ This method is shared by functions, methods and constructors.
             .body = .req(Body)
 
             # get function exit point source line number (for SourceMap)
-            .EndFnLineNum = .lexer.maxSourceLineNum
+            .EndFnLineNum = .lexer.last.sourceLineNum
 
         end if
 
@@ -3009,9 +3009,9 @@ Then we require a AssignmentStatement or FunctionCall
         end if - statement parse tries
 
 If we reached here, we have parsed a valid statement. 
-remember where the full statment ends
+remember where the full statment ends (multiline statements)
 
-        .lastSourceLineNum = .lexer.maxSourceLineNum 
+        .lastSourceLineNum = .lexer.last.sourceLineNum 
         if .lastSourceLineNum<.sourceLineNum, .lastSourceLineNum = .sourceLineNum
 
 store keyword of specific statement

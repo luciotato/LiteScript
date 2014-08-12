@@ -1,6 +1,6 @@
 check-version.lite.md
 
-    global import fs, path
+    import fs, path
 
 read version fom package.json, compiler.js and from lib/out/lite -v 
 

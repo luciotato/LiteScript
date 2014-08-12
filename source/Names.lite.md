@@ -4,7 +4,7 @@ Dependencies
 
     import ASTBase,Grammar,logger
 
-    shim import Map
+    shim import LiteCore
 
 Module vars
 
@@ -17,13 +17,19 @@ Module vars
 
         name: string
         members: Map string to Declaration
-        nodeDeclared: ASTBase
         parent: Declaration
 
-        normalizeModeKeepFirstCase: boolean
-        isScope: boolean
-        
+        nodeDeclared: ASTBase
         nodeClass //VariableDecl(var&props)|MethodDeclaration|NamespaceDeclaration|ClassDeclaration
+
+        /*isFunction: boolean // true if nodeDeclared instanceof FunctionDeclaration or this is a global function
+        isClass: boolean // true if nodeDeclared.constructor is ClassDeclaration or this is a core Class
+        isNamespace: boolean // true if nodeDeclared.constructor is NamespaceDeclaration or Module
+        */
+
+        normalizeModeKeepFirstCase: boolean
+
+        isScope: boolean
         isPublicVar: boolean
 
         type, itemType
@@ -38,17 +44,33 @@ Module vars
 #### constructor new Declaration(name, options:NameDeclOptions, node:ASTBase)
       
       .name = name.toString()
-
       .members = new Map // string to Declaration //contained Declarations
 
-      .nodeDeclared = node
+try to determine nodeClass from node.nodeDeclared
 
+      .nodeDeclared = node
       if node 
           .nodeClass = node.constructor
-          if .nodeClass is Grammar.Module //module as namespace declaration
-              .nodeClass = Grammar.NamespaceDeclaration //treat as a namespace
+          case .nodeClass 
+              when 
+                Grammar.ImportStatementItem 
+                Grammar.DeclareStatement
+                Grammar.WithStatement
+                Grammar.ArrayLiteral
+                Grammar.ExceptionBlock:
+                    .nodeClass = Grammar.VariableDecl 
+
+              when
+                Grammar.ObjectLiteral, Grammar.FreeObjectLiteral:
+                    .nodeClass = Grammar.NameValuePair
+
+      end if
+
 
       if options 
+          
+          if options.nodeClass, .nodeClass = options.nodeClass
+
           if options.normalizeModeKeepFirstCase, .normalizeModeKeepFirstCase=true
 
 if it 'points' to another namedecl, it uses other nameDecl's '.members={}'
@@ -57,23 +79,57 @@ effectively working as a pointer
           if options.pointsTo 
               .members = options.pointsTo.members
           else 
-            if options.type, .setMember('**proto**',options.type)
-            if options.itemType, .setMember('**item type**',options.itemType)
-            if options.returnType, .setMember('**return type**',options.returnType)
-            if options.value, .setMember('**value**',options.value)
+              if options.type, .setMember('**proto**',options.type)
+              if options.itemType, .setMember('**item type**',options.itemType)
+              if options.returnType, .setMember('**return type**',options.returnType)
+              if options.value, .setMember('**value**',options.value)
               
           if options.isForward, .isForward = true
           if options.isDummy, .isDummy = true
+
+          if options.isForward or options.isDummy and no .nodeClass, .nodeClass = Grammar.VariableDecl
+
+          /*if options.isFunction, .isFunction = true
+          if options.isNamespace, .isNamespace = true
+          if options.isClass, .isClass = true
+          */
+
+Check for a valid nodeclass
+
+      if no .nodeClass 
+          or .nodeClass not in [  
+              Grammar.NamespaceDeclaration
+              Grammar.ClassDeclaration
+              Grammar.PropertiesDeclaration //first level properties
+              Grammar.NameValuePair //2nd level properties & ObjectLiteral members
+              Grammar.FunctionDeclaration
+              Grammar.MethodDeclaration
+              Grammar.VariableDecl
+              ]
+          
+            fail with "new Declaration, nodeClass is undefined or invalid: #{.nodeClass? .nodeClass.name:.nodeClass}"
+
+set .isFunction flag
+
+    /* if .nodeClass instanceof Grammar.FunctionDeclaration, .isFunction = true //fn, method & constructors
+
+      if .nodeClass instanceof Grammar.FunctionDeclaration, .isFunction = true //fn, method & constructors
+
+      case .nodeClass
+          when Grammar.NamespaceDeclaration: .isNamespace = true
+          when Grammar.ClassDeclaration: .isClass = true
+    */
 
 keep a list of all NameDeclarations
 
       allNameDeclarations.push this
 
+
 #### Helper method normalize(name)
         if .normalizeModeKeepFirstCase 
-            return normalizeKeepFirst(name)
+            return normalizeKeepFirst(name) //first letter keeps its case
         else
-            return normalizeToLower(name)
+            return normalizeToLower(name) //all lowercase
 
 
 #### Helper method setMember(name,value)
@@ -314,6 +370,11 @@ By keeping 1st char untouched, we allow "token" and "Token" to co-exists in the 
             pointsTo : Declaration
             type, itemType, returnType 
             value, isForward, isDummy
+            
+            nodeClass
+            //isFunction 
+            //isClass
+            //isNamespace
 
             informError: boolean
 

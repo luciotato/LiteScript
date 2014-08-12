@@ -461,11 +461,6 @@ add item to result
 
             result.push(item)
 
-record where the list ends - for accurate sorucemaps (function's end)
-and to add commented original litescript source at C-generation
-
-            if item.sourceLineNum>.lexer.maxSourceLineNum, .lexer.maxSourceLineNum=item.sourceLineNum
-
 newline after item (before comma or closer) is optional
 
             .opt('NEWLINE')
@@ -602,7 +597,6 @@ else, Object codes
 
                       if newLineIncluded # prettier generated code
                             rawOut.startNewLine
-                            rawOut.put String.spaces(actualIndent)
 
 {COMMENT:text} --> output text as a comment 
  
@@ -632,43 +626,45 @@ Last option, out item.toString()
         end loop, next item
 
 
-#### helper method outSourceLineAsComment(sourceLineNum)
+#### helper method outInfoLineAsComment(lineInx)
 
-Note: check if we can remove "outLineAsComment" and use this instead
+out line, using comment chars form the target lang (js & c: "//")
 
-        if .lexer.outCode.lastOutCommentLine < sourceLineNum
-            .lexer.outCode.lastOutCommentLine = sourceLineNum
+        .lexer.infoLines[lineInx].outAsComment .lexer.outCode
+
+
+#### helper method outPreviousComments()
+
+out previous lines with comments
+
+        if .sourceLineNum<=1, return 
+
+        //search CODE line, immediatly previous to this
+        var prevCODElineInx = .lexer.getPrevCODEInfoLineIndex(.sourceLineNum)
         
-        if sourceLineNum<1, return 
+        //search line previous to this (any type)
+        var endAtInx = .lexer.getInfoLineIndex(.sourceLineNum-1)
 
-        var line = .lexer.lines[sourceLineNum-1]
-        if typeof line is 'undefined', return
+        // print in-between lines (comments & blank lines)
+        for lineInx=prevCODElineInx+1 to endAtInx
+            .outInfoLineAsComment lineInx
 
-        .lexer.outCode.ensureNewLine
-
-        if line.trim() is ""
-            .lexer.outCode.blankLine
-        else
-            var indent = line.countSpaces()
-            .lexer.outCode.put line.slice(0,indent)
-            if line.substr(indent,2) isnt '//', .lexer.outCode.put "//"
-            .lexer.outCode.put line.slice(indent)
-
-        .lexer.outCode.startNewLine
 
 #### helper method outSourceLinesAsComment(upTo, fromLineNum)
 
         if no .lexer.options.comments, return 
 
-        if no upTo, upTo = .sourceLineNum-1 //all previous comments before this statement
+        default fromLineNum = .sourceLineNum // this statement
+        default upTo = .sourceLineNum // this statement
 
-        if no fromLineNum or fromLineNum<.lexer.outCode.lastOutCommentLine+1
-              fromLineNum = .lexer.outCode.lastOutCommentLine+1
+        var startAtInx = .lexer.getInfoLineIndex(fromLineNum)
+        var endAtInx = .lexer.getInfoLineIndex(upTo)
 
-        for i=fromLineNum to upTo
-            .outSourceLineAsComment i
+        for lineInx=startAtInx to endAtInx
+            .outInfoLineAsComment lineInx
 
 
+/*
 #### helper method getEOLComment() 
 getEOLComment: get the comment at the end of the line
 
@@ -684,6 +680,7 @@ such as `a = 1 #comment`. We want to try to add these at the end of the current 
             var lastToken = infoLine.tokens[infoLine.tokens.length-1]
             if lastToken.type is 'COMMENT'
                 return "#{lastToken.value.startsWith('//')? '' else '//'} #{lastToken.value}"
+*/
 
 #### helper method addSourceMap(mark)
 

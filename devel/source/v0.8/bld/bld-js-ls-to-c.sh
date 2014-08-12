@@ -5,6 +5,7 @@
 #
 # (v0.8-js self-compilation to v08-js lite-to-c compiler)
 
+cd ..
 OUT="../../generated-js/v0.8/lite-to-c"
 
 #create js code

@@ -22,7 +22,7 @@ methods to validate var & property names.
         Names, Environment
         logger, UniqueID
 
-    shim import LiteCore, Map
+    shim import LiteCore
 
     
 ---------
@@ -31,6 +31,7 @@ Module vars:
     var project
 
     var globalScope: Names.Declaration
+    var globalObjectProto: Names.Declaration
 
     var nameAffinity: Names.Declaration
 
@@ -154,7 +155,7 @@ Example:
 */
 
 
-### export function validate()
+### export function launch()
 
 We start this module once the entire multi-node AST tree has been parsed.
 
@@ -375,6 +376,7 @@ initialize NameAffinity
 
         var options = new Names.NameDeclOptions
         options.normalizeModeKeepFirstCase = true #nameAffinity members are stored: [0].Toupper()+slice(1).toLower()
+        options.nodeClass = Grammar.VariableDecl
         nameAffinity= new Names.Declaration('Name Affinity',options) # project-wide name affinity for classes
 
         //populateGlobalScope(aProject)
@@ -386,8 +388,9 @@ The "scope" of rootNode is the global scope.
 Initialize global scope
 a)non-instance values
 
-        globalScope.addMember 'undefined'
         var opt = new Names.NameDeclOptions
+        opt.nodeClass = Grammar.VariableDecl
+        globalScope.addMember 'undefined',opt
         opt.value = null
         globalScope.addMember 'null',opt
         opt.value = true
@@ -399,17 +402,36 @@ a)non-instance values
         opt.value = Infinity
         globalScope.addMember 'Infinity',opt
 
+        opt.value = undefined
+
 b) pre-create core classes, to allow the interface.md file to declare property types and return values
 
         AddGlobalClasses 
             'Object', 'Function', 'Array' 
             'String', 'Number', 'Boolean'
+
+In JS the global environment (global|window) is a *Object*, and as such it 
+*has* Object.prototype in its prototype chain, which means 
+*all properties in Object.prototype are also in the global scope*
+
+Get hold of Object.prototype since we're using it as "parent" (__proto__) of the global scope.
+
+        globalObjectProto = tryGetGlobalPrototype('Object')
+
+Allow use of "__proto__" getter/setter on any object
+
+        globalObjectProto.addMember '__proto__',opt
             
 note: 'Map' and 'NameValuePair' are declared at GlobalScopeX.interface.md
 
 b) create special types
 
-b.1) arguments:any*
+-"any" default type for vars
+
+        opt.nodeClass = Grammar.ClassDeclaration
+        globalScope.addMember 'any',opt // used for "map string to any" - Dictionaries
+
+-arguments:any*
 
 "arguments:any*" - arguments, type: pointer to any 
 
@@ -418,31 +440,35 @@ b.1) arguments:any*
 
 we declare here the type:"pointer to any" - "any*"
 
-        var argumentsType = globalScope.addMember('any*') //  any pointer, type for "arguments"
-        opt.value = undefined
+        var argumentsType = globalScope.addMember('any*',opt) //  any pointer, type for "arguments"
+
+-"arguments" have only one method: "toArray()"
+
+        opt.nodeClass = Grammar.FunctionDeclaration
         opt.type = globalPrototype('Function')
         opt.returnType=globalPrototype('Array')
+        opt.value = undefined
+
         argumentsType.addMember('toArray',opt) 
 
 b.2) Lite-C: the Lexer replaces string interpolation with calls to `_concatAny`
 
         opt.returnType=globalPrototype('String')
         globalScope.addMember '_concatAny',opt //used for string interpolation
-        
-        opt.returnType=undefined
+
+        opt.returnType=globalPrototype('Number')
         globalScope.addMember 'parseFloat',opt //used for string interpolation
         globalScope.addMember 'parseInt',opt //used for string interpolation
 
-        globalScope.addMember '__dirname' // current module dir (node.js)
+        opt.nodeClass = Grammar.VariableDecl
+        opt.type = globalPrototype('String')
+        opt.returnType = undefined
+        globalScope.addMember '__dirname',opt // current module dir (node.js)
 
         //var core = globalScope.addMember('LiteCore') //core supports
         //core.isNamespace = true
         //opt.returnType='Number'
         //core.addMember 'getSymbol',opt //to get a symbol (int) from a symbol name (string)
-
-b.3) "any" default type for vars
-
-        globalScope.addMember 'any' // used for "map string to any" - Dictionaries
 
 Process the global scope declarations interface file: GlobalScopeJS|C.interface.md
 
@@ -505,6 +531,8 @@ Add a built-in class to global scope, return class prototype
 
       var opt = new Names.NameDeclOptions
       //opt.isBuiltIn = true
+      opt.nodeClass = Grammar.ClassDeclaration
+
       var nameDecl = new Names.Declaration( name,opt,node )
       globalScope.addMember nameDecl
 
@@ -525,6 +553,8 @@ Add a built-in object to global scope, return object
 
       var opt = new Names.NameDeclOptions
       //opt.isBuiltIn = true
+      opt.nodeClass = Grammar.NamespaceDeclaration
+
       var nameDecl = new Names.Declaration(name, opt ,node)
       globalScope.addMember nameDecl
       nameDecl.getMembersFromObjProperties Environment.getGlobalObject(name)
@@ -568,8 +598,8 @@ We follow the chain to validate property names.
 
 As last option in the chain, we always use 'Object.prototype'
 
-            if no nextInChain and actual isnt globalPrototype('Object')
-              nextInChain = globalPrototype('Object')
+            if no nextInChain and actual isnt globalObjectProto
+              nextInChain = globalObjectProto
 
             actual = nextInChain
 
@@ -581,7 +611,7 @@ As last option in the chain, we always use 'Object.prototype'
 
 
 #### Helper method hasProto(name) returns boolean
-this method looks for a name in Names.Declaration members **proto**->prototpye->parent
+this method looks for a name in Names.Declaration members **proto**->prototype->parent
 it also follows the **proto** chain (same mechanism as js __proto__ chain)
 
         var actual = this
@@ -599,8 +629,8 @@ We follow the chain to validate property names.
 
 As last option in the chain, we always use 'Object.prototype'
 
-            if no nextInChain and actual isnt globalPrototype('Object')
-                nextInChain = globalPrototype('Object')
+            if no nextInChain and actual isnt globalObjectProto
+                nextInChain = globalObjectProto
 
             actual = nextInChain
 
@@ -857,7 +887,8 @@ It's used to validate variable references to be previously declared names
 
 Start at this node
 
-        var node = this
+        var node = this 
+        var found
 
 Look for the declaration in this scope
 
@@ -865,7 +896,7 @@ Look for the declaration in this scope
 
           if node.scope
 
-              if node.scope.findOwnMember(name) into var found
+              if node.scope.findOwnMember(name) into found
                   return found
 
 move up in scopes
@@ -873,6 +904,17 @@ move up in scopes
           node = node.parent
 
         #loop
+
+In JS the global environment (global|window) is a *Object*, and as such it 
+*has* Object.prototype in its prototype chain, which means 
+*all properties in Object.prototype are also in the global scope*
+
+**To emulate JS (quirky) behavior, if a name is not found in any scope up to global scope, 
+we must search also Object.prototype (since is __proto__ of global scope object).
+This help alleviating subtle bugs in js, if tou dare to add something to Object.prototype.
+
+        if globalObjectProto.findOwnMember(name) into found
+            return found
 
 
 #### method tryGetFromScope(name, options:Names.NameDeclOptions) returns Names.Declaration
@@ -973,10 +1015,11 @@ else, not found, add it to the scope
 initializes an empty scope in this node
 
         if no .scope 
-          var options=new Names.NameDeclOptions
-          options.normalizeModeKeepFirstCase = true
-          .scope = .declareName("[#{.constructor.name} Scope]", options)
-          .scope.isScope = true
+            var options=new Names.NameDeclOptions
+            options.normalizeModeKeepFirstCase = true
+            options.nodeClass = Grammar.VariableDecl
+            .scope = .declareName("[#{.constructor.name} #{.name} Scope]", options)
+            .scope.isScope = true
 
         return .scope
 
@@ -1018,6 +1061,13 @@ Append to class|namespace
             toNamespace = parent.constructor is Grammar.NamespaceDeclaration
 
             ownerDecl = parent.nameDecl
+            if no ownerDecl
+
+                if parent.hasAdjective('shim') // it was a shim class|namespace
+                    ownerDecl = .findInScope(parent.name) //get pre-existent
+
+                if no ownerDecl
+                    return .sayErr("cannot get parent name declaration")
 
         end if
 
@@ -1054,7 +1104,7 @@ This is instance has the method, call the method on the instance
 
       if excludeClass and this is instance of excludeClass, return #do not recurse on filtered's childs
 
-recurse on this properties and Arrays (exclude 'parent' and 'importedModule')
+recurse on all properties (exclude 'parent' and 'importedModule')
 
       for each property name,value in this
         where name not in ['constructor','parent','importedModule','requireCallNodes','exportDefault']
@@ -1100,17 +1150,20 @@ Check that:
 search for a export default object (a class/namespace named as the module)
 
       for each nameDecl in map .exports.members
-          if nameDecl.name is .fileInfo.base and (nameDecl.nodeClass in [Grammar.NamespaceDeclaration, Grammar.ClassDeclaration])
-              exportDefaultNameDecl = nameDecl
-              break
+          if nameDecl.name is .fileInfo.base 
+              and (nameDecl.nodeClass in [Grammar.NamespaceDeclaration, Grammar.ClassDeclaration])
+                  exportDefaultNameDecl = nameDecl
+                  break
 
       if exportDefaultNameDecl
 
           if .exports.getMemberCount() > 1
-              for each nameDecl in map .exports.members
-                  nameDecl.warn 'default export: cannot have "public functions/vars" and also a class/namespace named as the module (default export)'
+              //check *other* exports, all must be children of exportDefaultNameDecl
+              for each nameDecl in map .exports.members where nameDecl isnt exportDefaultNameDecl
+                  if nameDecl.parent isnt exportDefaultNameDecl
+                      nameDecl.warn 'default export: cannot have "public functions/vars" and also a class/namespace named as the module (default export)'
 
-          //replace
+          //set as namespace & replace module.exports
           .exports.makePointTo exportDefaultNameDecl
           .exportsReplaced = true
 
@@ -1206,10 +1259,12 @@ Examples:
 
       properties nameDecl
 
-      method declare #pass 1: declare name choosed for imported(required) contents as a scope var
+      method declare #pass 1: declare name choosen for imported(required) contents as a scope var
 
         if no .getParent(Grammar.DeclareStatement) #except for 'global declare'
+
             if .hasAdjective('shim') and .findInScope(.name), return // do not import if shim and already declared
+
             .nameDecl = .addToScope(.name)
 
 
@@ -1236,13 +1291,20 @@ also AppendToDeclaration and NamespaceDeclaration (child classes).
 #### method declare()
 
 AppendToDeclarations do not "declare" anything at this point. 
+
+        if this.constructor is Grammar.AppendToDeclaration, return
+
 AppendToDeclarations add to a existing classes or namespaces. 
-The adding is delayed until pass:"processAppendToExtends", where
-append-To var reference is searched in the scope 
+The adding is delayed until pass:"processAppendToExtends", 
+where append-To var reference is searched in the scope 
 and methods and properties are added. 
 This need to be done after all declarations.
 
-        if this.constructor is Grammar.AppendToDeclaration, return
+if is a class adjectivated "shim", do not declare if already exists
+    
+        if .hasAdjective('shim') 
+            if .tryGetFromScope(.name) 
+                return 
 
 Check if it is a class or a namespace
 
@@ -1253,15 +1315,11 @@ Check if it is a class or a namespace
 
         if isNamespace 
 
+declare the namespace
+
             .nameDecl = .declareName(.name)
 
         else 
-
-if is a class adjectivated "shim", do not declare if already exists
-    
-            if .hasAdjective('shim') 
-                if .tryGetFromScope(.name) 
-                    return 
 
 declare the class
 
@@ -1269,27 +1327,37 @@ declare the class
             .nameDecl = .declareName(.name,opt) //class
             opt.type = undefined
 
-get parent. We cover here class/namespaces directly declared inside namespaces (without AppendTo)
+        end if
 
-        var container = .getParent(Grammar.NamespaceDeclaration)
+if has adjective "global" add to global scope
+
+        if .hasAdjective('global')
+            globalScope.addMember .nameDecl
+
+get parent. We cover here class/namespaces directly declared inside namespaces (without AppendTo)
+        
+        else
+            var container = .getParent(Grammar.NamespaceDeclaration)
 
 if it is declared inside a namespace, it becomes a item of the namespace
 
-        if container
-            declare container: Grammar.NamespaceDeclaration
-            container.nameDecl.addMember .nameDecl
+            if container
+                declare container: Grammar.NamespaceDeclaration
+                container.nameDecl.addMember .nameDecl
 
 else, is a module-level class|namespace. Add to scope
 
-        else
-            .addToScope .nameDecl 
+            else
+                .addToScope .nameDecl
 
-if id the default export object, or interface file, or has adjective public/export, 
-add also to module.exports
+export:
 
-            var moduleNode:Grammar.Module = .getParent(Grammar.Module)
-            if moduleNode.fileInfo.base is .name or moduleNode.fileInfo.isInterface or .hasAdjective('export') 
-                moduleNode.addToExport .nameDecl 
+if it is the default export object, or this is a interface file, 
+or has adjective public/export, add also to: module.exports
+
+        var moduleNode:Grammar.Module = .getParent(Grammar.Module)
+        if moduleNode.fileInfo.base is .name or moduleNode.fileInfo.isInterface or .hasAdjective('export') 
+            moduleNode.addToExport .nameDecl 
 
 
 if it is a Class, we create 'Class.prototype' member
@@ -1301,7 +1369,7 @@ Class's properties & methods will be added to 'prototype' as valid member member
             if .varRefSuper 
                 prtypeNameDecl.setMember('**proto**',.varRefSuper)
             //else
-            //    prtypeNameDecl.setMember('**proto**',globalPrototype('Object'))
+            //    prtypeNameDecl.setMember('**proto**',globalObjectProto)
 
             opt.pointsTo = .nameDecl
             prtypeNameDecl.addMember('constructor',opt) 
@@ -1478,13 +1546,17 @@ Scope starts populated by 'this' and 'arguments'.
       var scope = .createScope()
 
       opt.type='any*'
-      .addMemberTo(scope,'arguments',opt)
+      opt.nodeClass = Grammar.ClassDeclaration
+      .addMemberTo scope,'arguments',opt
 
       if not isFunction
 
           var addThis = false
 
-          var containerClassDeclaration = .getParent(Grammar.ClassDeclaration) //also append-to & NamespaceDeclaration
+          if no .getParent(Grammar.ClassDeclaration) into var containerClassDeclaration //also append-to & NamespaceDeclaration
+              .sayErr "method outside class|namespace|apeend-to"
+              return
+
           if containerClassDeclaration.constructor is Grammar.ClassDeclaration
               addThis = true
           else if containerClassDeclaration.constructor is Grammar.AppendToDeclaration
@@ -1493,6 +1565,7 @@ Scope starts populated by 'this' and 'arguments'.
 
           if addThis 
               opt.type=ownerNameDecl
+              opt.nodeClass = Grammar.VariableDecl
               .addMemberTo(scope,'this',opt)
 
 Note: only class methods have 'this' as parameter
@@ -1502,7 +1575,6 @@ add parameters to function's scope
       if .paramsDeclarations
           for each varDecl in .paramsDeclarations
               varDecl.declareInScope
-
 
 
 #### helper method addMethodToOwnerNameDecl(owner:Names.Declaration)  ## methods
@@ -1532,17 +1604,18 @@ Define function's return type from parsed text
 
       if .itemType
 
-if there's a "itemType", it means type is: `TypeX Array`. 
-We create a intermediate type for `TypeX Array` 
+if there's a "itemType", it means type is: `array of [itemType]`
+We create a intermediate type for `Array of itemType` 
 and set this new nameDecl as function's **return type**
 
-          var composedName = '#{.itemType.toString()} Array'
+          var composedName = 'Array of #{.itemType.toString()}'
 
-check if it alerady exists, if not found, create one. Type is 'Array'
+check if it already exists, if not found, create one. Type is 'Array'
         
           if not globalScope.findMember(composedName) into var intermediateNameDecl
               var opt = new Names.NameDeclOptions
               opt.type = globalPrototype('Array')
+              opt.nodeClass = Grammar.ClassDeclaration
               intermediateNameDecl = globalScope.addMember(composedName,opt)
 
 item type, is each array member's type 
@@ -1564,8 +1637,6 @@ else, it's a simple type
 ### Append to class Grammar.AppendToDeclaration ###
 
 #### method processAppendToExtends() 
-when target is '.c' we do not allow treating classes as namespaces
-so an "append to namespace classX" should throw an error
     
 get referenced class/namespace
 
@@ -1688,7 +1759,7 @@ Add all properties as members of its owner object (normally: class.prototype)
 
 #### method declare()
 
-a ForStatement has a 'Scope', indexVar & mainVar belong to the scope
+a ForStatement has a 'Scope', keyIndexVar & valueVar belong to the scope
 
         .createScope
 
@@ -1696,38 +1767,40 @@ a ForStatement has a 'Scope', indexVar & mainVar belong to the scope
 
 #### method declare()
 
-        default .mainVar.type = .iterable.itemType
-        .mainVar.declareInScope
+        default .valueVar.type = .iterable.itemType
+        .valueVar.declareInScope
 
-        if .indexVar, .indexVar.declareInScope
+        if .keyIndexVar, .keyIndexVar.declareInScope
 
 #### method evaluateAssignments() 
 
 ForEachProperty: index is: string for js (property name) and number for C (symbol)
 
-        if .indexVar
+        if .keyIndexVar
         
             var indexType = project.options.target is 'js'? 'String':'Number'
-            .indexVar.nameDecl.setMember('**proto**',globalPrototype(indexType))
+            .keyIndexVar.nameDecl.setMember('**proto**',globalPrototype(indexType))
 
 ### Append to class Grammar.ForEachInArray ###
 
 #### method declare()
 
-        default .mainVar.type = .iterable.itemType
-        .mainVar.declareInScope
+        default .valueVar.type = .iterable.itemType
+        .valueVar.declareInScope
 
-        if .indexVar, .indexVar.declareInScope
+        if .keyIndexVar, .keyIndexVar.declareInScope
+        
+        if .intIndexVar, .intIndexVar.declareInScope
 
 #### method evaluateAssignments() 
 
 ForEachInArray:
-If no mainVar.type, guess type from iterable's itemType
+If no valueVar.type, guess type from iterable's itemType
 
-        if no .mainVar.nameDecl.findOwnMember('**proto**')
+        if no .valueVar.nameDecl.findOwnMember('**proto**')
             var iterableType:Names.Declaration = .iterable.getResultType()          
             if iterableType and iterableType.findOwnMember('**item type**')  into var itemType
-                .mainVar.nameDecl.setMember('**proto**',itemType)
+                .valueVar.nameDecl.setMember('**proto**',itemType)
 
 #### method validatePropertyAccess() 
 ForEachInArray: check if the iterable has a .length property.
@@ -1748,7 +1821,7 @@ ForEachInArray: check if the iterable has a .length property.
 
 #### method declare()
 
-        .indexVar.declareInScope
+        .keyIndexVar.declareInScope
 
 
 ### Append to class Grammar.ExceptionBlock
@@ -1783,6 +1856,7 @@ Start with main variable name, to check property names
         opt.informError=true
         opt.isForward=true
         opt.isDummy=true
+        opt.nodeClass = Grammar.VariableDecl
         var actualVar = .tryGetFromScope(.name, opt)
 
 now follow each accessor
@@ -2014,6 +2088,7 @@ for 'into var x' oper, we declare the var, and we deduce type
             
             var opt = new Names.NameDeclOptions
             opt.type = varRef.type
+            opt.nodeClass = Grammar.VariableDecl
             .addToScope .declareName(varRef.name,opt)
 
 #### method evaluateAssignments() 
@@ -2185,10 +2260,16 @@ declare members on the fly, with optional type
 ### helper function AddGlobalClasses()
   
         var nameDecl
-        
+        var opt=new Names.NameDeclOptions
+        opt.nodeClass = Grammar.ClassDeclaration
+
         for each name in arguments.toArray()
-            nameDecl = globalScope.addMember(name)
-            nameDecl.addMember 'prototype'
+
+            opt.nodeClass = Grammar.ClassDeclaration
+            nameDecl = globalScope.addMember(name,opt)
+
+            opt.nodeClass = Grammar.NameValuePair
+            nameDecl.addMember 'prototype',opt
 
             // add to name affinity
             if not nameAffinity.members.has(name)

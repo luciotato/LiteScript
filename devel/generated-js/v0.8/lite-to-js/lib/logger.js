@@ -1,4 +1,3 @@
-//Logger Utility
 //==============
 
 
@@ -10,16 +9,32 @@
     var ControlledError = require('./ControlledError.js');
     var GeneralOptions = require('./GeneralOptions.js');
 
-    //import fs, mkPath 
+    //import fs, mkPath
     var fs = require('fs');
     var mkPath = require('./mkPath.js');
 
 //## Main namespace
 
-//### Namespace logger
+    //    namespace logger
     var logger={};
 
-//#### properties 
+     //     properties
+
+        //options: GeneralOptions
+        //errorCount = 0
+        //warningCount = 0
+
+//if storeMessages, messages are pushed at messages[] instead of console.
+
+        //storeMessages: boolean
+        //messages: string Array = []
+
+//Implementation
+//---------------
+
+     //     method init(options:GeneralOptions)
+     
+     //     properties
 
         //options: GeneralOptions
         //errorCount = 0
@@ -36,7 +51,7 @@
 //Implementation
 //---------------
 
-//#### method init(options:GeneralOptions)
+     //     method init(options:GeneralOptions)
      logger.init = function(options){
 
         //logger.options = options
@@ -54,11 +69,12 @@
      };
 
 
-//#### method debug
+     //     method debug
      logger.debug = function(){
 
         //if logger.options.debugEnabled
         if (logger.options.debugEnabled) {
+        
             //var args = arguments.toArray()
             var args = Array.prototype.slice.call(arguments);
             //console.error.apply undefined,args
@@ -66,11 +82,12 @@
         };
      };
 
-//#### method debugGroup
+     //     method debugGroup
      logger.debugGroup = function(){
 
         //if logger.options.debugEnabled
         if (logger.options.debugEnabled) {
+        
             //console.error.apply undefined,arguments
             console.error.apply(undefined, Array.prototype.slice.call(arguments));
             //console.group.apply undefined,arguments
@@ -78,20 +95,21 @@
         };
      };
 
-//#### method debugGroupEnd
+     //     method debugGroupEnd
      logger.debugGroupEnd = function(){
 
         //if logger.options.debugEnabled
         if (logger.options.debugEnabled) {
+        
             //console.groupEnd
             console.groupEnd();
         };
      };
 
-//#### method error
+     //     method error
      logger.error = function(){
 
-//increment error count 
+//increment error count
 
         //logger.errorCount++
         logger.errorCount++;
@@ -109,14 +127,13 @@
 
         //if logger.storeMessages
         if (logger.storeMessages) {
+        
             //logger.messages.push args.join(" ")
             logger.messages.push(args.join(" "));
         }
+        //if logger.storeMessages
+        
         else {
-
-//else, add red color, send to stderr
-
-        //else
             //args.unshift(color.red)
             args.unshift(color.red);
             //args.push(color.normal)
@@ -127,7 +144,7 @@
      };
 
 
-//#### method warning
+     //     method warning
      logger.warning = function(){
 
         //logger.warningCount++
@@ -142,19 +159,19 @@
 
         //if logger.options.warningLevel > 0
         if (logger.options.warningLevel > 0) {
+        
 
 //if messages should be stored...
 
             //if logger.storeMessages
             if (logger.storeMessages) {
+            
                 //logger.messages.push args.join(" ")
                 logger.messages.push(args.join(" "));
             }
+            //if logger.storeMessages
+            
             else {
-
-//else, add yellow color, send to stderr
-
-            //else
                 //args.unshift(color.yellow);
                 args.unshift(color.yellow);
                 //args.push(color.normal);
@@ -165,7 +182,7 @@
         };
      };
 
-//#### method msg
+     //     method msg
      logger.msg = function(){
 
         //var args = arguments.toArray()
@@ -175,19 +192,19 @@
         logger.debug.apply(undefined, args);
         //if logger.options.verboseLevel >= 1
         if (logger.options.verboseLevel >= 1) {
+        
 
 //if messages should be stored...
 
             //if logger.storeMessages
             if (logger.storeMessages) {
+            
                 //logger.messages.push args.join(" ")
                 logger.messages.push(args.join(" "));
             }
+            //if logger.storeMessages
+            
             else {
-
-//else, send to console
-
-            //else 
                 //console.log.apply(undefined,args)
                 console.log.apply(undefined, args);
             };
@@ -195,32 +212,34 @@
      };
 
 
-//#### method info
+     //     method info
      logger.info = function(){
 
         //var args = arguments.toArray()
         var args = Array.prototype.slice.call(arguments);
         //if logger.options.verboseLevel >= 2
         if (logger.options.verboseLevel >= 2) {
+        
             //logger.msg.apply(undefined,args)
             logger.msg.apply(undefined, args);
         };
      };
 
-//#### method extra
+     //     method extra
      logger.extra = function(){
 
         //var args = arguments.toArray()
         var args = Array.prototype.slice.call(arguments);
         //if logger.options.verboseLevel >= 3
         if (logger.options.verboseLevel >= 3) {
+        
             //logger.msg.apply(undefined,args)
             logger.msg.apply(undefined, args);
         };
      };
 
 
-//#### method getMessages
+     //     method getMessages
      logger.getMessages = function(){
 //get & clear
 
@@ -233,9 +252,9 @@
      };
 
 
-//#### method throwControlled(msg)
+     //     method throwControlled(msg)
      logger.throwControlled = function(msg){
-//Throws Error, but with a "controlled" flag set, 
+//Throws Error, but with a "controlled" flag set,
 //to differentiate from unexpected compiler errors
 
         //logger.debug "Controlled ERROR:", msg
@@ -243,7 +262,4 @@
         //throw new ControlledError(msg)
         throw new ControlledError(msg);
      };
-
-
-
 module.exports=logger;

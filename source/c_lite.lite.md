@@ -4,7 +4,7 @@ when it is generated as C-code standalone executable
 
     #define C_LITE
 
-    global import fs, path
+    import fs, path
 
     import color, ControlledError
     import OptionsParser  
@@ -17,6 +17,8 @@ when it is generated as C-code standalone executable
 
 ## module vars
 
+    var options = new GeneralOptions()
+
     var usage = """
     
     LiteScript compiler v#{VERSION} #{BUILD_DATE} (standalone executable)
@@ -24,14 +26,16 @@ when it is generated as C-code standalone executable
     Usage: litec main.lite.md [options]
     
     options are:
-    -o dir           output dir. Default is './out'
-    -v, -verbose     verbose level, default is 0 (0-3)
-    -w, -warning     warning level, default is 1 (0-1)
-    -comments        comment level on generated files, default is 1 (0-2)
+    -o dir           output dir. Default is '#{options.outDir}'
+    -v, -verbose     verbose level, default is #{options.verboseLevel} (0-3)
+    -w, -warning     warning level, default is #{options.warningLevel} (0-1)
+    -c, -comment     comment level on generated files, default is #{options.comments} (0-2)
+
+    -h, -help        print this help
     -version         print LiteScript version & exit
 
     Advanced options:
-    -D FOO -D BAR    Defines preprocessor names (#ifdef FOO/#ifndef BAR)
+    -D FOO -D BAR    #define preprocessor names (#ifdef FOO/#ifndef BAR)
     -nm, -nomap      do not generate sourcemap
     -d, -debug       enable full compiler debug log file at 'out/debug.logger'
     -perf            0..2: show performance timers
@@ -41,8 +45,6 @@ when it is generated as C-code standalone executable
 Get & parse command line arguments
 
     var args = new OptionsParser(process.argv)
-
-    var options = new GeneralOptions()
 
 Check for -help
 
@@ -58,15 +60,22 @@ Check for -version
 
 Check for other options
 
+    var optValue
+
     with options
 
-        .outDir         = path.resolve(args.valueFor('o') or './out') //output dir
-        .verboseLevel   = parseInt(args.valueFor('v',"verbose") or 0) 
-        .warningLevel   = parseInt(args.valueFor('w',"warning") or 1)
-        .perf           = parseInt(args.valueFor('perf',"performance") or 0)
-        .comments       = parseInt(args.valueFor('comment',"comments") or 1) 
-        .debugEnabled   = args.option('d',"debug") 
-        .generateSourceMap = args.option('nm',"nomap")? false:true // do not generate sourcemap
+        if args.valueFor('o') into optValue,            .outDir = path.resolve(optValue) //output dir
+        if args.valueFor('v',"verbose") into optValue,  .verboseLevel = parseInt(optValue)
+        if args.valueFor('w',"warning") into optValue,  .warningLevel = parseInt(optValue)
+        if args.valueFor('c',"comment") into optValue,  .comments = parseInt(optValue)
+        if args.valueFor('perf') into optValue,         .perf = parseInt(optValue)
+
+        if args.option('d',"debug"),     .debugEnabled = true
+        if args.option('noval'),         .skip = true
+        if args.option('nm',"nomap"),    .generateSourceMap = false // do not generate sourcemap
+        if args.option('s',"single"),    .single = true // single file- do not follow imports
+        if args.option('b',"browser"),   .browser = true // single file- do not follow imports
+        if args.option('es6',"harmony"), .es6 = true // single file- do not follow imports
 
     if options.verboseLevel>1
         print JSON.stringify(process.argv)

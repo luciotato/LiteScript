@@ -91,7 +91,7 @@
     typedef struct _propertyInfoItem _propertyInfoArr[];
 
     // core methods, negative ints - (only instance (virtual) methods. namespace methods do not need symbols)
-    #define _CORE_METHODS_MAX 49 // means -1..-_CORE_METHODS_MAX are valid method symbols
+    #define _CORE_METHODS_MAX 50 // means -1..-_CORE_METHODS_MAX are valid method symbols
     // means 1.._CORE_METHODS_MAX are used jmpTable indexes, so initial TABLE_LENGTH(jmpTable)=_CORE_METHODS_MAX+1
     // 0 is a reserved jmpTable index (TABLE_LENGTH is stored there), but symbol:0 is PROPERTY constructor:Class
     enum _CORE_METHODS_ENUM {
@@ -149,7 +149,8 @@
         ,clear_
         ,keys_
 
-        ,iterableNext_
+        ,iterableNext_  // Iterable Interface
+        ,next_          //Iterable.Position.next()
         ,toString_
 
     ,_END_CORE_METHODS_ENUM //enum should reach 0 here.
@@ -165,6 +166,7 @@
         value_, //NameValuePair | Iterable_Position
         index_, // Iterable_Position
         size_, // Map | Iterable_Position
+        iterable_, // Iterable_Position
         extra_, // Iterable_Position
 
         message_, //error.message
@@ -391,6 +393,7 @@
     typedef struct Iterable_Position_s {
         any key,value,
             index,size,
+            iterable,
             extra;
         }
     Iterable_Position_s;
@@ -472,16 +475,34 @@
     extern any _newArrayFromCharPtrPtr(len_t argc, char** argv);
     extern any Array_clone(any this, len_t argc, any* arguments);
 
+    //OPTIMIZED __is(a,b) //js triple-equal, "==="
+    extern any __isA,__isB;
+    extern bool __is2();
+
+    #define __is(a,b) (((__isA=a).class!=(__isB=b).class)? FALSE \
+                        : __isA.class==String_inx ? __is2() \
+                        : __isA.value.uint64 == __isB.value.uint64 )
+
+    /* explained
+    # ((__isA=a).class!=(__isB=b).class)? FALSE \   //class differ? -> false
+      : __isA.class==String_inx ? __is2() \         //both strings? -> compare strings (slow)
+      : __isA.value.uint64 == __isA.value.uint64 )   //else, true if same number or points to same object
+    */
+
+
+    //OPTIMIZED _anyToBool(a)
+    extern any __atb;
+    extern int _anyToBool2(void);
+    #define _anyToBool(expr) ((__atb=expr).class==String_inx?_anyToBool2():__atb.value.uint64)
+
+
     extern int64_t _length(any this);
     extern any _typeof(any this);
     //extern any _typeof(any this);
     extern bool _instanceof(any this, any class);
-    extern bool __is(any a,any b);  //js triple-equal, "==="
     extern bool __inLiteralArray(any needle, len_t haystackLength, any* haystackItem);
     extern int64_t __byteIndex(any needle, any haystack);
     extern int __compareStrings(any strA, any strB);  //js triple-equal, "==="
-
-    extern int _anyToBool(any a);
 
     extern int64_t _anyToInt64(any a);
     extern double _anyToNumber(any a);
@@ -553,11 +574,9 @@
     any Map_iterableNext(DEFAULT_ARGUMENTS);
     any String_iterableNext(DEFAULT_ARGUMENTS);
 
-    // macro to call iterableNext_
-    #define _newIterPos() new(Iterable_Position,0,NULL)
-    #define ITER_NEXT(ITERABLE_VAR,ITER_POS) (METHOD(iterableNext_,ITERABLE_VAR)(ITERABLE_VAR,1,(any_arr){ITER_POS})).value.uint64
-    // since iterableNext(iter) returns true|false, we access .value.uint64 => 0=false 1=true
-    // note: use only with vars - no expressions- to avoid evaluating expression twice
+    // macro to call new(Iterable_Position...
+    #define _newIterPos(ITERABLE) new(Iterable_Position,1,(any_arr){ITERABLE})
+    extern int _iterNext(any iter, any* valueVar, any* keyVar, any* indexVar);
 
     // x_ToString
     extern any Object_toString(DEFAULT_ARGUMENTS);

@@ -25,7 +25,6 @@ extern "C" {
     #include <ctype.h>
     #include <time.h>
 
-
     typedef int bool;
     #define TRUE 1
     #define FALSE 0
@@ -34,6 +33,9 @@ extern "C" {
         #define MALLOC malloc
         #define REALLOC realloc
         //#define GET_BLOCK_SIZE malloc_usable_size
+    #elif G2
+        #define MALLOC smalloc
+        #define REALLOC srealloc
     #else
         #define MALLOC GC_malloc
         #define REALLOC GC_realloc

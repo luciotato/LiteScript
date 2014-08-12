@@ -22,11 +22,9 @@ then each CODE line is *Tokenized*, getting a `tokens[]` array
 
     import 
         ControlledError, GeneralOptions
-        logger
+        logger, fs, mkPath
 
-    global import fs
-
-    shim import Map, PMREX, mkPath
+    shim import LiteCore, PMREX
 
     #ifdef PROD_JS
     //if we're creating a compile-to-js compiler
@@ -63,7 +61,6 @@ The Lexer class turns the input lines into an array of "infoLines"
         stringInterpolationChar: string
 
         last:LexerPos
-        maxSourceLineNum=0 //max source line num in indented block
 
         hardError:Error, softError:Error
 
@@ -769,7 +766,7 @@ Save current pos, and get next token
         logger.debug '<< Returned:',.token.toString(),'line',.sourceLineNum 
 
 -----------------------------------------------------
-This method gets the next line CODE from infoLines
+This method gets the next CODE line from infoLines
 BLANK and COMMENT lines are skipped.
 return true if a CODE Line is found, false otherwise
 
@@ -803,6 +800,31 @@ if it is a CODE line, store in lexer.sourceLineNum, and return true (ok)
 
       #end method
 
+#### method getPrevCODEInfoLineIndex(baseSourceLineNum)
+
+        //search prev CODE line
+        var inx = baseSourceLineNum
+        if inx>=.infoLines.length, inx = .infoLines.length-1
+
+        do until inx <= 0
+            or ( .infoLines[inx].sourceLineNum < baseSourceLineNum 
+                  and .infoLines[inx].type is LineTypes.CODE )
+
+            inx--
+        loop
+
+        return inx
+
+#### method getInfoLineIndex(sourceLineNum)
+
+        //search InfoLine where the required source line resides
+        var inx = sourceLineNum //line index is always<sourceLineNum
+        if inx>=.infoLines.length, inx = .infoLines.length-1
+
+        while inx and .infoLines[inx].sourceLineNum > sourceLineNum
+            inx--
+
+        return inx
 
 #### method say()
 **say** emit error (but continue compiling)
@@ -881,6 +903,8 @@ split expressions
         pushAt items, s.slice(lastDelimiterPos),quotes
 
         return items
+
+
       
 ### end class Lexer
 
@@ -950,7 +974,22 @@ Each "infoLine" has:
       #end InfoLine constructor
 
              
-      method dump() # out debug info
+      helper method outAsComment(outCode)
+
+output this line as a comment      
+
+        if .type is LineTypes.BLANK 
+            outCode.blankLine
+        else
+            //text as comment
+            outCode.ensureNewLine
+            outCode.put String.spaces(.indent)
+            if .text.slice(0,2) isnt '//', outCode.put "//"
+            outCode.put .text
+            outCode.startNewLine
+
+
+      helper method dump() # out debug info
 
         if .type is LineTypes.BLANK
           logger.debug .sourceLineNum,"(BLANK)"
@@ -1105,10 +1144,11 @@ Special lexer options: string interpolation char
                 if no ch then fail with "missing string interpolation char"  #check
                 lexer.stringInterpolationChar = ch
             
-            else if words.slice(2,5).join(" ") is "object literal is" 
+            /*else if words.slice(2,5).join(" ") is "object literal is" 
                 if no words.tryGet(5) into lexer.options.literalMap
                     fail with "missing class to be used instead of object literals"  #check
-
+            */
+            
             else
                 fail with "Lexer options, expected: 'literal map'|'literal object'"
             
@@ -1204,7 +1244,7 @@ that sits between *two* operands in a `Expressions`.
             if "|#{chunk.slice(0,2)}|" in "|<>|>=|<=|>>|<<|!=|"
                 return new Token('OPER',chunk.slice(0,2))
 
-            if chunk.charAt(0) in "><+-*/%&~^|?:" 
+            if chunk.charAt(0) in "><+-*/%&~^?:" 
                 return new Token('OPER',chunk.slice(0,1))
 
 **Numbers** can be either in hex format (like `0xa5b`) or decimal/scientific format (`10`, `3.14159`, or `10.02e23`).
@@ -1377,8 +1417,8 @@ It also handles SourceMap generation for Chrome Developer Tools debugger and Fir
 
       lines:array  // array of array of string lines[header][0..n]
 
-      lastOriginalCodeComment
-      lastOutCommentLine
+      //lastOriginalCodeComment
+      //lastOutCommentLine
       browser:boolean
 
       exportNamespace
@@ -1397,8 +1437,8 @@ Initialize output array
         .currLine = []
         .lines=[[],[],[]]
         
-        .lastOriginalCodeComment = 0
-        .lastOutCommentLine = 0
+        //.lastOriginalCodeComment = 0
+        //.lastOutCommentLine = 0
 
 if sourceMap option is set, and we're generating .js
 
@@ -1419,6 +1459,10 @@ put a string into produced code
         if text 
             .currLine.push text
             .column += text.length
+
+#### Method getIndent()
+        if no .currLine.length, return 0
+        return .currLine[0].countSpaces()
 
 #### Method startNewLine()
 Start New Line into produced code
@@ -1519,6 +1563,49 @@ get result and clear memory
       properties 
         col, lin
 
+
+### append to namespace String
+
+String.replaceQuoted(text,rep)
+replace every quoted string inside text, by rep
+
+        method replaceQuoted(text:string, rep:string)
+
+            var p = 0
+
+look for first quote (single or double?),
+loop until no quotes found 
+
+            var anyQuote = '"' & "'"
+
+            var resultText=""
+
+            do 
+                var preQuotes=PMREX.untilRanges(text,anyQuote) 
+                
+                resultText &= preQuotes
+                text = text.slice(preQuotes.length)
+                if no text, break // all text processed|no quotes found
+
+                if text.slice(0,3) is '"""' //ignore triple quotes (valid token)
+                    resultText &= text.slice(0,3)
+                    text = text.slice(3)
+                else
+
+                    var quotedContent
+                    
+                    try // accept malformed quoted chunks (do not replace)
+
+                         quotedContent = PMREX.quotedContent(text)
+                         text = text.slice(1+quotedContent.length+1)
+
+                    catch err // if malformed - closing quote not found
+                        resultText &= text.slice(0,1) //keep quote
+                        text = text.slice(1) //only remove quote
+
+            loop until no text
+            
+            return resultText
 
 /*
 ### Class DynBuffer

@@ -13,6 +13,7 @@ global pre-created Classes are:
         method getSymbol(name:string) returns number
         method getSymbolName(symbol) returns string
 
+
 ## Append properties & methods to classes declared in the compiler 
 
 ### Append to class Function
@@ -31,43 +32,74 @@ global pre-created Classes are:
             constructor: Function
 
         method toString() returns string
+        method hasOwnProperty(name) returns boolean 
 
-        method tryGetMethod(methodSymbol) returns function // or undefined
+#### portability
 
-        method getProperty(propSymbol) returns any // or throws
+## portability: Objects used as Dictionaries
 
-        method getPropertyName(propIndex) returns string // or throws
-        
+when compiling-to-c, any Literal Object *{ ... }*
+will be coded as a new *Map*() instead of a *Object*.
+In Lite-C, the Object Class is the root of all classes, 
+but has no properties, and you cannot add or remove
+properties from Object or any other class except "Map" and derivates.
 
-## portability
+Also Maps will be created (instead of objects) when passing 
+literal objects {...} as function arguments.
 
-when compiling-to-c, Maps will be created (instead of objects) when passing 
-literal objects {} as function arguments.
+We add here a "tryGetProperty" method to access *BOTH* map keys *and* object properties.
+This allows you to write portable Litescript-to-js and Litescript-to-c code, by using:
 
-we add a "getProperty" method to access *BOTH* map keys *and* object properties.
-This allows to make portable to-js to-c code, by using:
-- hasOwnProperty
-- getProperty
-- setProperty
-- getObjectKeys
+- hasProperty       : js => "in" operator. true if property in this object or in proto chain
+- tryGetProperty    : js => normal property access, returns "undefined" on invalid key 
+- getProperty       : controlled property access, *throws* if invalid key
+- setProperty       : js => normal property set
+- allPropertyNames  : js =>  a=[];for(p in obj)a.push(p); return a //all props in proto chain
 
-Map and Object implement this methods, so by using this methods
-you can write code that work when it receives a Map (compile-to-c) or a Object (compile-to-js)
+Both *Map* and *Object* implement this methods, so by using this methods
+you can write code that will work when it receives 
+a Map (compile-to-c) or a Object (compile-to-js)
 
-
-        method hasProperty(key:string) returns boolean //use Map|Object interchangeably
-
-        method hasOwnProperty(name) returns boolean // idem hasProperty. "own" part ignored
+        method hasProperty(key:string) returns boolean [not enumerable]  //use Map|Object interchangeably
 
         method tryGetProperty(key) [not enumerable] //use Map|Object interchangeably
                                                     // do not throws, returns any or undefined
 
+        method getProperty(propSymbol) returns any // or throws
+
         method setProperty(key:string, value) //use Map|Object interchangeably
 
-        method getObjectKeys() returns array //use Map|Object interchangeably
+        method allPropertyNames() returns array //use Map|Object interchangeably
 
+
+Object as *Iterable*
+
+        method iterableNext(iter:Position) returns boolean
+
+Other Object methods - LiteC specific
+
+        method tryGetMethod(methodSymbol) returns function // or undefined
+
+        method getPropertyName(propIndex) returns string // or throws
         method getPropertyNameAtIndex(index:number) //LiteC-compatible
 
+
+## Iterable.Position as supported by core (see also: Iterable.lite.md)
+
+### Namespace Iterable
+    
+        class Position
+            properties 
+                key, value 
+                index // (=-1 set at constructor new Iterable.Position(iterable)
+                size 
+                iterable // iterable object
+                extra 
+
+            constructor new Position(iterable)
+
+            method next()
+            
 
 ### Append to class Array 
 
@@ -84,7 +116,7 @@ you can write code that work when it receives a Map (compile-to-c) or a Object (
         method unshift() 
         method slice() returns array
         method splice() returns array
-        //method sort() 
+        method sort() 
         //method filter() 
         //method forEach() 
         //method some() 
@@ -105,14 +137,18 @@ new methods not in js
         method clear
         method tryGetProperty(index:number)
         method set(index:number, value)
-
-# JS array access 
-
         method tryGet(index:Number) 
 
-## set array item value
+*Iterable* interface
 
-js also allows you to do: 
+        method iterableNext(iter:Position) returns boolean
+
+
+## JS array item access 
+
+#### set array item value
+
+js allows you to do: 
  `var a = []`
  `a[100]='foo'`
 
@@ -126,7 +162,7 @@ LiteC arrays do not behave like that, if you do:
 you'll get an "OUT OF BOUNDS" exception. You cannot set value for an
 array item out of current bounds.
 
-## get array item value
+#### get array item value
 
 LiteC arrays will also give an "OUT OF BOUNDS" exception, when accessing an unexisting array item.
 
@@ -143,6 +179,12 @@ LiteC:
  `console.log(a.tryGet(100));` => OK, undefined
 
 
+### Append to namespace Array
+
+        method isArray(x) // in js "x instanceof Array" do not work for all cases
+                          // in LiteC-core, this is equivalent to _instanceof(x,Array)
+
+
 ### Append to class String 
         
         properties
@@ -150,7 +192,7 @@ LiteC:
         
         //method valueOf() 
         method charAt() returns string
-        //method charCodeAt() 
+        method charCodeAt() 
         method concat() returns string
         method indexOf() 
         method lastIndexOf() 
@@ -190,17 +232,47 @@ LiteC:
         method strike() 
         method sub() 
         method sup() 
-        method repeat() 
         */
+        method repeat() 
 
         //method startsWith() 
         //method endsWith() 
 
         //method contains() 
 
+*Iterable* interface
+
+        method iterableNext(iter:Position) returns boolean
+
+        /**
+        * String_byteSubstr(byteStartIndex:number, charCount:number)
+        * similar to String_substr, but start position
+        * is the start index *in bytes* -not codepoints-
+        * from the beginning of the string.
+        *
+        * Since internal representation is UTF-8, this method is faster than Substr
+        * for large strings and large values of "start"
+        *
+        * Note: "count" is still in measuerd in *codepoints*, only *start* is measured in bytes
+        */
+        method byteSubstr(byteStartIndex:number, charCount:number) 
+
+        /** String_byteIndexOf(searched:string, fromByteIndex:number) 
+        * similar to String_indexOf, but start position
+        * is the start index *in bytes* -not codepoints-
+        * from the beginning of the string.
+        *
+        * @returns: *BYTE* index of the found string, or -1
+        */
+        method byteIndexOf(searched:string, fromByteIndex:number)
+
+        method byteSlice(startByteIndex,endByteIndex)
+        
 ### Append to namespace String 
 
-        method spaces(howMany) returns string
+        method spaces(howMany) returns string 
+        method fromCharCode() returns string
+
 
 /*
 ### Append to class Number
@@ -210,9 +282,11 @@ LiteC:
         method toFixed() 
         method toExponential() 
         method toPrecision() 
-    
+
+*/    
     append to namespace Number
-        properties
+
+/*        properties
             MAX_VALUE:number
             MIN_VALUE:number
             NaN:number
@@ -224,11 +298,11 @@ LiteC:
 
         method isFinite() 
         method isInteger() 
-        method isNaN() 
         method isSafeInteger() 
         method parseInt() 
         method parseFloat() 
 */
+        method isNaN() 
 
 
 ### public Class Date 
@@ -322,6 +396,10 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
         method keys() returns array
         method forEach(callb)
         method toString()
+
+*Iterable* interface
+
+        method iterableNext(iter:Position) returns boolean
 
 
 ### public class RegExp
@@ -449,10 +527,14 @@ API compatible with nodejs Buffers
         properties  
             length
 
+        method toString()
+
         method copy(dest:Buffer)
 
         method write(text:string, offset)
         
+        method append(text:string)
+
     append to namespace Buffer
 
         method byteLength(s:string)
@@ -467,7 +549,7 @@ API compatible with nodejs Buffers
         method exit(exitCode:number)
 
 
-#PMREX, poor's man RegEx - native implemented at core
+#PMREX, poor's man RegEx - native implemented at core -
 
 ### public namespace PMREX
 
@@ -494,4 +576,5 @@ helper internal method
 #### method quotedContent(chunk:string) returns string
 
 Note: chunk[0] MUST be the openinig quote
+
 

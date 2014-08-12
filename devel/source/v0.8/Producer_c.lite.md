@@ -57,7 +57,7 @@ Method get a trailing "_" if they're a C reserved word
     ]
 
     var coreSupportedProps = [
-        'name','value','key','size','message','stack','code','extra'
+        'name','index','key','value','iterable','extra','size','message','stack','code'
     ]
 
     public var dispatcherModule: Grammar.Module
@@ -792,7 +792,7 @@ produce body sustance: vars & other functions declarations
 #### method produceInitializationCode(prefix)
 
 Third: assign values for module vars.
-if there is var or properties with assigned values, produce those assignment.
+if there are vars or properties with assigned values, produce those assignment.
 also produce any other executable statement (non-declarations) in the body.
 User classes must be registered previously, in case the module vars use them as initial values.
 
@@ -801,6 +801,7 @@ User classes must be registered previously, in case the module vars use them as 
                 declare item.specific:Grammar.VarDeclList
                 for each variableDecl in item.specific.list
                     where variableDecl.assignedValue
+                        item.callOnSubTree LiteCore.getSymbol('declareIntoVar') //declare "into" and "__orx" vars
                         .out '    ',prefix,'_',variableDecl.name,' = ', variableDecl.assignedValue,";",NL
 
             else if item.specific instanceof Grammar.NamespaceDeclaration
@@ -832,11 +833,11 @@ after adding any comment lines preceding the statement
 
       method produce()
 
-add comment lines, in the same position as the source
+add preceeding comment lines, in the same position as the source
 
-        .outSourceLinesAsComment .sourceLineNum-1
+        .outPreviousComments
 
-To enhance compiled code readability, add original Lite line as comment 
+To enhance compiled code readability, add original Lite code line as comment 
 
         if .lexer.options.comments // and .lexer.outCode.lastOriginalCodeComment<.lineInx
                
@@ -850,7 +851,7 @@ To enhance compiled code readability, add original Lite line as comment
 
             .outSourceLinesAsComment commentTo
 
-            .lexer.outCode.lastOriginalCodeComment = commentTo
+            //.lexer.outCode.lastOriginalCodeComment = commentTo
 
 Each statement in its own line
 
@@ -875,8 +876,12 @@ then NEWLINE
         if not .specific.skipSemiColon
           .addSourceMap mark
           .out ";"
-          if not .specific has property "body"
-            .out .getEOLComment()
+
+          // comments: 0=>no comments, 1=>source line & source comments 2=>add compiled by
+          //if .lexer.options.comments is 1 and not .specific has property "body"
+          //      .out .getEOLComment()
+
+          .out NL
 
 helper function to determine if a statement is a declaration (can be outside a funcion in "C")
 or a "statement" (must be inside a funcion in "C")
@@ -1611,8 +1616,8 @@ convert .apply(x,arr[]) to:  __apply(Function,x,arr.length,arr.itemd)
 
                     //should be here after Class.prototype.xxx.call
                     // or foo.call(...) when foo:Function
-                    if no actualType or no actualType.findMember('apply')
-                        .throwError 'cannot use .apply on a non-Function. Use: Class.prototype.method.apply(this,args:Array)'
+                    //if no actualType or no actualType.findMember('apply')
+                    //    .throwError 'cannot use .apply on a non-Function. Use: Class.prototype.method.apply(this,args:Array)'
 
                     //let's make sure next accessor is FunctionAccess with at least one arg
                     isOk=false
@@ -1752,7 +1757,9 @@ if we're calling on the result of an IndexAccess
 or the result of a function 
 or a var type:function.
 
+                    
                     var callOnValue
+                    /*
                     if inx>0 and .accessors[inx-1].constructor isnt Grammar.PropertyAccess
                         callOnValue = true 
                         // calling on: "foo[x](...)"
@@ -1762,6 +1769,7 @@ or a var type:function.
                         // calling on: "foo.prop(a,b,c)" when "prop" is  property
                         // calling on: "avar(a,b,c)" when "avar" is a scope var
                         callOnValue = true
+                    */
 
                     if callOnValue
                         .throwError("'#{partial}: .call() or '.apply()' must be used to call a function from a 'value'")
@@ -2142,14 +2150,18 @@ variable name and optionally assign a value
         .conditional.produceType = 'Bool'
         .out "if (", .conditional,") "
 
-        if .body instanceof Grammar.SingleLineBody
+        /*if .body instanceof Grammar.SingleLineBody
             .out '{',.body,';}'
         else
-            .out " {", .getEOLComment()
+            .out " {",NL // .getEOLComment()
             .out .body, "}"
+        */
+
+        .out " {", NL // line separation helps placing breakpoints
+        .out .body, NL, "}"
 
         if .elseStatement
-            .outSourceLinesAsComment .elseStatement.sourceLineNum-1
+            .elseStatement.outSourceLinesAsComment
             .elseStatement.produce()
 
 
@@ -2157,7 +2169,7 @@ variable name and optionally assign a value
 
       method produce() 
 
-        .outSourceLineAsComment .sourceLineNum
+        .outSourceLinesAsComment
 
         .out NL,"else ", .nextIf
 
@@ -2165,7 +2177,7 @@ variable name and optionally assign a value
 
       method produce()
 
-        .outSourceLineAsComment .sourceLineNum
+        .outSourceLinesAsComment
 
         .out NL,"else {", .body, "}"
 
@@ -2254,14 +2266,15 @@ vars declaration code in a bracket block to contain scope
 
 Determine type for loop var indexNameVar
 
-        var nameIndexType, valueType
+/*        var nameIndexType, valueType
         if .iterable.root.name instanceof Grammar.ArrayLiteral
             or .iterable.root.name instanceof Grammar.StringLiteral
                 nameIndexType='**native number**'
+*/
 
 Check if we can use the iterable as it is, or we need to create a temp var
 
-        var listName
+/*        var listName
 
         if .iterable.operandCount>1 or .iterable.root.name.hasSideEffects or .iterable.root.name instanceof Grammar.Literal
             listName = UniqueID.getVarName('list')  #unique temp listName var name
@@ -2269,45 +2282,54 @@ Check if we can use the iterable as it is, or we need to create a temp var
         else
             //simple var
             listName = .iterable
-       
+*/       
 
 check if a intIndexVarName was specified: `for each inx,name,value in iterable`
 
-        var intIndexVarName
-        var startValue = "0"
+        //var intIndexVarName
+        //var startValue = "0"
         if .intIndexVar 
             .intIndexVar.nameDecl.setMember '**proto**','**native number**'
-            intIndexVarName = .intIndexVar.name
-            startValue = .intIndexVar.assignedValue or "0"
-        else
-            intIndexVarName = '#{.valueVar.name}__inx';
+            //intIndexVarName = .intIndexVar.name
+            //startValue = .intIndexVar.assignedValue or "0"
+        //else
+        //    intIndexVarName = '#{.valueVar.name}__inx';
 
 check if a nameIndexVarName was specified: `for each name,value in iterable`
 
-        var keyVarName
-        if .keyIndexVar
-            keyVarName = .keyIndexVar.name
+        //var keyVarName
+        //if .keyIndexVar
+        //    keyVarName = .keyIndexVar.name
+        //else
+        //    keyVarName = '#{.valueVar.name}__name';
+
+
+list of declared vars
+
+        var loopVars = []
+        if .intIndexVar, loopVars.push .intIndexVar.name
+        if .keyIndexVar, loopVars.push .keyIndexVar.name
+        loopVars.push .valueVar.name
+
+declare loop vars & Iterable.Position
+
+        .out "var ",{CSL:loopVars},", iter=_newIterPos(",.iterable,");",NL
+
+start loop, calling _iterNext() assigning values to loop vars (up to three)
+
+        .out "for(;_iterNext(iter, &",.valueVar.name
+
+        if .keyIndexVar 
+            .out ", &",.keyIndexVar.name
         else
-            keyVarName = '#{.valueVar.name}__name';
+            .out ", NULL"
 
-create Iterable.Position, start loop 
+        if .intIndexVar
+            .out ", &",.intIndexVar.name
+        else
+            .out ", NULL"
 
-        .out 
-            "var iter=_newIterPos(); int __inx=0;",NL
-            "for(int __inx=0; ITER_NEXT(",listName,",iter); __inx++ ){",NL
-
-declare loop variables (up to three), assign values from item
-
-        .out
-            "  var ",.valueVar.name,"=value__(iter)"
-
-        if keyVarName
-            .out ", ",keyVarName,"=key__(iter)"
-
-        if intIndexVarName
-            .out ", ",intIndexVarName,"=any_number(__inx)"
-
-        .out ";",NL
+        .out ");){",NL
 
 out filter and body
 
@@ -2457,7 +2479,7 @@ if no increment specified, the default is keyIndexVar++/--
       method produce()
 
         //.outLineAsComment .lineInx
-        .outSourceLineAsComment .sourceLineNum
+        .outSourceLinesAsComment
 
         .filterExpression.produceType='Bool'
         .out 'if(',.filterExpression,')'
@@ -2500,7 +2522,7 @@ Note: **WhileUntilLoop** extends **DoLoop**, so this *.produce()* method is used
 if we have a post-condition, for example: `do ... loop while x>0`, 
 
             .out 
-                "do{", .getEOLComment()
+                "do{", NL //, .getEOLComment()
                 .body
                 "} while ("
             
@@ -2806,12 +2828,14 @@ Marks the end of a block. It's just a comment for javascript
 
       method produce()
 
-        declare valid .lexer.outCode.lastOriginalCodeComment
-        declare valid .lexer.infoLines
+        //declare valid .lexer.outCode.lastOriginalCodeComment
+        //declare valid .lexer.infoLines
 
-        if .lexer.outCode.lastOriginalCodeComment<.lineInx
-          .out {COMMENT: .lexer.infoLines[.lineInx].text}
+        //if .lexer.outCode.lastOriginalCodeComment<.lineInx
+        //  .out {COMMENT: .lexer.infoLines[.lineInx].text}
         
+        .outSourceLinesAsComment
+
         .skipSemiColon = true
 
 /*
@@ -2940,7 +2964,7 @@ start "case-when", store expression in a tempVar
         for each index,whenSection in .cases
 
             //.outLineAsComment switchCase.lineInx
-            .outSourceLineAsComment whenSection.sourceLineNum
+            whenSection.outSourceLinesAsComment
 
             .out '    ',index>0? 'else ' : '' 
 
@@ -2971,7 +2995,7 @@ else body
         for each index,whenSection in .cases
 
             //.outLineAsComment switchCase.lineInx
-            .outSourceLineAsComment whenSection.sourceLineNum
+            whenSection.outSourceLinesAsComment 
 
             whenSection.out 
                 index>0? 'else ' : '' 

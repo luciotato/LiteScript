@@ -7,8 +7,7 @@ Dependencies:
 
     import color, ControlledError, GeneralOptions
 
-    global import fs
-    import mkPath 
+    import fs, mkPath 
 
 ## Main namespace
 

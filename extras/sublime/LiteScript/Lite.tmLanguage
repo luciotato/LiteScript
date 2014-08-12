@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>name</key>
-	<string>LiteScript</string>
+	<string>source.LiteScript</string>
 	<key>fileTypes</key>
 	<array>
 		<string>lite</string>
@@ -32,7 +32,7 @@
 			<array>
 				<dict>
 					<key>include</key>
-					<string>#LiteScript_Code</string>
+					<string>#LiteScript_Code</string> //anything indented 4 spaces is LS code
 				</dict>
 			</array>
 		</dict>
@@ -251,6 +251,7 @@
 			<string>meta.other.valid-bracket.markdown</string>
 		</dict>
 
+
 		<key>LiteScript_Code</key>
 		<dict>
 
@@ -272,7 +273,7 @@
 						<key>2</key>
 						<dict>
 							<key>name</key>
-							<string>entity.name.class.lite</string>
+							<string>entity.name.type.class.lite</string>
 						</dict>
 					</dict>
 				</dict>
@@ -285,6 +286,13 @@
 				</dict>
 
 				<dict>
+					<key>name</key>
+					<string>storage.type.modifier.lite</string>
+					<key>match</key>
+					<string>\b(global|public|shim|export|helper)\b</string>
+				</dict>
+
+				<dict>
 					<key>comment</key>
 					<string>"instance of" used</string>
 					<key>match</key>
@@ -294,12 +302,12 @@
 						<key>1</key>
 						<dict>
 							<key>name</key>
-							<string>entity.other.inherited-class</string>
+							<string>keyword.operator.lite</string> //
 						</dict>
 						<key>2</key>
 						<dict>
 							<key>name</key>
-							<string>entity.name.class.lite</string>
+							<string>entity.other.inherited-class</string>
 						</dict>
 					</dict>
 				</dict>
@@ -314,7 +322,7 @@
 						<key>1</key>
 						<dict>
 							<key>name</key>
-							<string>keyword.compiler.lite</string>
+							<string>keyword.other.compiler.lite</string>
 						</dict>
 						<key>2</key>
 						<dict>
@@ -326,14 +334,14 @@
 
 				<dict>
 					<key>name</key>
-					<string>keyword.compiler.lite</string>
+					<string>keyword.other.compiler.lite</string>
 					<key>match</key>
 					<string>\s+(compiler?|declare)\b</string>
 				</dict>
 
 				<dict>
 					<key>name</key>
-					<string>keyword.class</string>
+					<string>keyword.other.class</string>
 					<key>match</key>
 					<string>\bconstructor\b</string>
 				</dict>
@@ -348,12 +356,12 @@
 						<key>1</key>
 						<dict>
 							<key>name</key>
-							<string>keyword.class</string>
+							<string>keyword.other.class</string>
 						</dict>
 						<key>2</key>
 						<dict>
 							<key>name</key>
-							<string>entity.name.class</string>
+							<string>entity.name.type.class.lite</string>
 						</dict>
 					</dict>
 				</dict>
@@ -373,7 +381,7 @@
 						<key>2</key>
 						<dict>
 							<key>name</key>
-							<string>entity.name.class</string>
+							<string>entity.name.type.class.lite</string>
 						</dict>
 					</dict>
 				</dict>
@@ -509,7 +517,14 @@
 					<string>keyword.control.lite</string>
 					<key>match</key>
 					<string>\b(break|catch|continue|else|finally|for|if|where|return|switch|then|throw|
-raise|fail\s+with|try|print|when|when|while|wait\s+for|until)\b</string>
+raise|fail\s+with|try|print|case|end|while|wait\s+for|until)\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
+					<string>keyword.control.when.lite</string>
+					<key>match</key>
+					<string>\b(when)\b</string>
 				</dict>
 
 				<dict>
@@ -529,7 +544,7 @@ raise|fail\s+with|try|print|when|when|while|wait\s+for|until)\b</string>
 
 				<dict>
 					<key>name</key>
-					<string>keyword.class.lite</string>
+					<string>keyword.other.class.lite</string>
 					<key>match</key>
 					<string>\bclass\b</string>
 				</dict>
@@ -539,23 +554,30 @@ raise|fail\s+with|try|print|when|when|while|wait\s+for|until)\b</string>
 					<string>keyword.operator.lite</string>
 					<key>match</key>
 					<string>\^|\*|\/|\-|\+|!==|&lt;=|=&gt;||&gt;=|&lt;&lt;|&gt;&gt;|&lt;&gt;|&lt;|&gt;|&amp;|\?||\*=|\/=
-|\b(delete|type of|typeof|in|into|has|property|each|own|is|isnt)\b</string>
+|\b(no|type of|typeof|in|into|has|property|each|own|is|isnt)\b</string>
 				</dict>
 
 				<dict>
 					<key>name</key>
-					<string>keyword.boolean.lite</string>
+					<string>keyword.operator.boolean.lite</string>
 					<key>match</key>
 					<string>\b(and|or|not)\b</string>
 				</dict>
 
 				<dict>
 					<key>name</key>
-					<string>keyword.symbol.lite</string>
+					<string>keyword.other.assign.lite</string> 
 					<key>match</key>
 					<string>=</string>
-				</dict>
+					<key>comment</key>
+					<string>
+						DO NOT mix "=" , assignment, imperative, side-effect operator
+						with "and" "or" "+" "-", and other non-imperative, evaluation, non-side-effects
+						operators.
+						e.g.: "=" FUNDAMENTALLY DIFFERS from "==" and "===" even if they look similar
 
+					</string>
+				</dict>
 
 				<dict>
 					<key>name</key>
@@ -566,30 +588,23 @@ raise|fail\s+with|try|print|when|when|while|wait\s+for|until)\b</string>
 
 				<dict>
 					<key>name</key>
-					<string>constant.boolean.true.lite</string>
+					<string>constant.language.boolean.lite</string>
 					<key>match</key>
-					<string>\b(true|on)\b</string>
+					<string>\b(true|false)\b</string>
 				</dict>
 
 				<dict>
 					<key>name</key>
-					<string>constant.boolean.false.lite</string>
+					<string>constant.language.lite</string>
 					<key>match</key>
-					<string>\b(false|off|no)\b</string>
+					<string>\b(null|Infinity|NaN|undefined)\b</string>
 				</dict>
 
 				<dict>
 					<key>name</key>
-					<string>constant.null.lite</string>
+					<string>support.variable.this.lite</string>
 					<key>match</key>
-					<string>\b(null)\b</string>
-				</dict>
-
-				<dict>
-					<key>name</key>
-					<string>storage.this.lite</string>
-					<key>match</key>
-					<string>\b(super|this|me)\b</string>
+					<string>\b(super|this)\b</string>
 				</dict>
 
 				<dict>
@@ -597,13 +612,6 @@ raise|fail\s+with|try|print|when|when|while|wait\s+for|until)\b</string>
 					<string>keyword.other.lite</string>
 					<key>match</key>
 					<string>\b(debugger|\\)\b</string>
-				</dict>
-
-				<dict>
-					<key>name</key>
-					<string>constant.language.lite</string>
-					<key>match</key>
-					<string>\b(Infinity|NaN|undefined)\b</string>
 				</dict>
 
 				<dict>
@@ -791,7 +799,7 @@ raise|fail\s+with|try|print|when|when|while|wait\s+for|until)\b</string>
 				</dict>
 			</dict>
 			<key>contentName</key>
-			<string>entity.name.section.markdown</string>
+			<string>meta.name.section.markdown</string>
 			<key>end</key>
 			<string>\s*(#*)$\n?</string>
 			<key>patterns</key>
@@ -818,7 +826,7 @@ raise|fail\s+with|try|print|when|when|while|wait\s+for|until)\b</string>
 				</dict>
 			</dict>
 			<key>contentName</key>
-			<string>entity.name.section.markdown</string>
+			<string>meta.name.section.markdown</string>
 			<key>end</key>
 			<string>\s*(#*)$\n?</string>
 			<key>patterns</key>
@@ -845,7 +853,7 @@ raise|fail\s+with|try|print|when|when|while|wait\s+for|until)\b</string>
 				</dict>
 			</dict>
 			<key>contentName</key>
-			<string>entity.name.section.markdown</string>
+			<string>meta.name.section.markdown</string>
 			<key>end</key>
 			<string>\s*(#*)$\n?</string>
 			<key>patterns</key>
@@ -871,17 +879,8 @@ raise|fail\s+with|try|print|when|when|while|wait\s+for|until)\b</string>
 					<string>punctuation.definition.heading.markdown</string>
 				</dict>
 			</dict>
-			<key>contentName</key>
-			<string>entity.name.section.markdown</string>
 			<key>end</key>
 			<string>\s*(#*)$\n?</string>
-			<key>patterns</key>
-			<array>
-				<dict>
-					<key>include</key>
-					<string>#inline</string>
-				</dict>
-			</array>
 		</dict>
 
 

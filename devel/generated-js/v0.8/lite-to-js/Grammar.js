@@ -1,4 +1,3 @@
-//LiteScript Grammar
 //==================
 
 //The LiteScript Grammar is based on [Parsing Expression Grammars (PEGs)](http://en.wikipedia.org/wiki/Parsing_expression_grammar)
@@ -7,8 +6,8 @@
 //Grammar Meta-Syntax
 //-------------------
 
-//Each Grammar class, contains a 'grammar definition' as reference. 
-//The meta-syntax for the grammar definitions is an extended form of 
+//Each Grammar class, contains a 'grammar definition' as reference.
+//The meta-syntax for the grammar definitions is an extended form of
 //[Parsing Expression Grammars (PEGs)](http://en.wikipedia.org/wiki/Parsing_expression_grammar)
 
 //The differences with classic PEG are:
@@ -41,21 +40,21 @@
 
 //Let's analyze the example: `FunctionCall: IDENTIFIER '(' [Expression,] ')'`
 
-//`[Expression,]` means *optional* **comma "Separated List"** of Expressions. 
+//`[Expression,]` means *optional* **comma "Separated List"** of Expressions.
 //Since the comma is inside a **[ ]** group, it means the entire list is optional.
 
 //Another example:
 
 //`VariableDecl: IDENTIFIER ["=" Expression]`
 
-//`VarStatement: (VariableDecl,)`, where 
+//`VarStatement: (VariableDecl,)`, where
 
-//`(VariableDecl,)` means **comma "Separated List"** of `VariableDecl` 
+//`(VariableDecl,)` means **comma "Separated List"** of `VariableDecl`
 //Since the comma is inside a **( )** group, it means at least one VariableDecl is required.
 
 //###separated lists are flexible - "Free form"
 
-//Sseparated lists can be presented in "free-form" mode. 
+//Sseparated lists can be presented in "free-form" mode.
 //In "free-form", the list is indented, and commas(or semicolons) are optional.
 
 //Example:
@@ -65,16 +64,15 @@
 //This is a valid text: `console.log(1,2,3,"Foo")`
 
 //and the following is *also* a valid text:
-///*
-
-    //console.log (
-          //1
-          //2
-          //3
-          //"Foo"
-          //)
-
-//*/
+//
+//
+//    console.log (
+//          1
+//          2
+//          3
+//          "Foo"
+//          )
+//
 
 
 //Implementation
@@ -86,20 +84,20 @@
 //* If all tokens match, it will simply return after consuming the tokens. (success)
 //* On a token mismatch, it will raise a 'parse failed' exception.
 
-//When a 'parse failed' exception is raised, other classes can be tried. 
+//When a 'parse failed' exception is raised, other classes can be tried.
 //If no class parses ok, a compiler error is emitted and compilation is aborted.
 
 //if the error is *before* the class has determined this was the right language construction,
 //it is a soft-error and other grammars can be tried over the source code.
 
-//if the error is *after* the class has determined this was the right language construction 
+//if the error is *after* the class has determined this was the right language construction
 //(if the node was 'locked'), it is a hard-error and compilation is aborted.
 
 //The `ASTBase` module defines the base class for the grammar classes along with
 //utility methods to **req**uire tokens and allow **opt**ional ones.
 
 
-//### Dependencies 
+//### Dependencies
 
     //import ASTBase, logger, UniqueID
     var ASTBase = require('./ASTBase.js');
@@ -132,16 +130,16 @@
         //'export','compiler','compile','debugger'
         //-----------------
         // "compile-to-c" reserved words
-        //'char','short','long','int','unsigned','void','NULL','bool','assert' 
-    var RESERVED_WORDS = ['namespace', 'function', 'async', 'class', 'method', 'if', 'then', 'else', 'switch', 'when', 'case', 'end', 'null', 'true', 'false', 'undefined', 'and', 'or', 'but', 'no', 'not', 'has', 'hasnt', 'property', 'properties', 'new', 'is', 'isnt', 'prototype', 'do', 'loop', 'while', 'until', 'for', 'to', 'break', 'continue', 'return', 'try', 'catch', 'throw', 'raise', 'fail', 'exception', 'finally', 'with', 'arguments', 'in', 'instanceof', 'typeof', 'var', 'let', 'default', 'delete', 'interface', 'implements', 'yield', 'like', 'this', 'super', 'export', 'compiler', 'compile', 'debugger', 'char', 'short', 'long', 'int', 'unsigned', 'void', 'NULL', 'bool', 'assert'];
+        //'char','short','long','int','unsigned','void','NULL','bool','assert'
         //]
+    var RESERVED_WORDS = ['namespace', 'function', 'async', 'class', 'method', 'if', 'then', 'else', 'switch', 'when', 'case', 'end', 'null', 'true', 'false', 'undefined', 'and', 'or', 'but', 'no', 'not', 'has', 'hasnt', 'property', 'properties', 'new', 'is', 'isnt', 'prototype', 'do', 'loop', 'while', 'until', 'for', 'to', 'break', 'continue', 'return', 'try', 'catch', 'throw', 'raise', 'fail', 'exception', 'finally', 'with', 'arguments', 'in', 'instanceof', 'typeof', 'var', 'let', 'default', 'delete', 'interface', 'implements', 'yield', 'like', 'this', 'super', 'export', 'compiler', 'compile', 'debugger', 'char', 'short', 'long', 'int', 'unsigned', 'void', 'NULL', 'bool', 'assert'];
 
 //Operators precedence
 //--------------------
 
 //The order of symbols here determines operators precedence
 
-    //var operatorsPrecedence = [ 
+    //var operatorsPrecedence = [
       //'++','--', 'unary -', 'unary +', 'bitnot' ,'bitand', 'bitor', 'bitxor'
       //,'>>','<<'
       //,'new','type of','instance of','has property'
@@ -149,29 +147,24 @@
       //,'into','in'
       //,'>','<','>=','<=','is','<>','!==','like'
       //,'no','not','and','but','or'
-      //,'?',':' 
-    var operatorsPrecedence = ['++', '--', 'unary -', 'unary +', 'bitnot', 'bitand', 'bitor', 'bitxor', '>>', '<<', 'new', 'type of', 'instance of', 'has property', '*', '/', '%', '+', '-', '&', 'into', 'in', '>', '<', '>=', '<=', 'is', '<>', '!==', 'like', 'no', 'not', 'and', 'but', 'or', '?', ':'];
+      //,'?',':'
     //]
+    var operatorsPrecedence = ['++', '--', 'unary -', 'unary +', 'bitnot', 'bitand', 'bitor', 'bitxor', '>>', '<<', 'new', 'type of', 'instance of', 'has property', '*', '/', '%', '+', '-', '&', 'into', 'in', '>', '<', '>=', '<=', 'is', '<>', '!==', 'like', 'no', 'not', 'and', 'but', 'or', '?', ':'];
 
 //--------------------------
 
 //LiteScript Grammar - AST Classes
 //================================
-//This file is code and documentation, you'll find a class 
+//This file is code and documentation, you'll find a class
 //for each syntax construction the compiler accepts.
 
-//### export class PrintStatement extends ASTBase
+    //    export class PrintStatement extends ASTBase
     // constructor
     function PrintStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`PrintStatement: 'print' [Expression,]`
-
-//This handles `print` followed by an optional comma separated list of expressions
-
       //properties
-        //args: array of Expression 
+        //args: array of Expression
     };
     // PrintStatement (extends|proto is) ASTBase
     PrintStatement.prototype.__proto__ = ASTBase.prototype;
@@ -181,7 +174,7 @@
         //.req 'print'
         this.req('print');
 
-//At this point we lock because it is definitely a `print` statement. Failure to parse the expression 
+//At this point we lock because it is definitely a `print` statement. Failure to parse the expression
 //from this point is a syntax error.
 
         //.lock()
@@ -194,14 +187,13 @@
     
     // end class PrintStatement
 
-//### export helper class VarDeclList extends ASTBase
+    //    export helper class VarDeclList extends ASTBase
     // constructor
     function VarDeclList(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-      //properties 
-        //list: array of VariableDecl 
+      //properties
+        //list: array of VariableDecl
     };
     // VarDeclList (extends|proto is) ASTBase
     VarDeclList.prototype.__proto__ = ASTBase.prototype;
@@ -216,7 +208,7 @@
     
     // end class VarDeclList
 
-//### export class VarStatement extends VarDeclList
+    //    export class VarStatement extends VarDeclList
     // constructor
     function VarStatement(){ // default constructor
     // default constructor: call super.constructor
@@ -245,25 +237,11 @@
 
 
 
-//### export class VariableDecl extends ASTBase
+    //    export class VariableDecl extends ASTBase
     // constructor
     function VariableDecl(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`VariableDecl: IDENTIFIER [':' dataType-VariableRef] ['=' assignedValue-Expression]`
-
-//(variable name, optional type anotation and optionally assign a value)
-
-//Note: If no value is assigned, `= undefined` is assumed
-
-//VariableDecls are used in `var` statement, in function parameter declaration
-//and in class properties declaration
-
-//Example:  
-  //`var a : string = 'some text'` <br> 
-  //`function x ( a : string = 'some text', b, c=0)`
-
       //properties
         //aliasVarRef: VariableRef
         //assignedValue: Expression
@@ -273,6 +251,7 @@
 
       //declare name affinity varDecl, paramDecl
       
+      //declare name affinity varDecl, paramDecl
 
       //method parse()
       VariableDecl.prototype.parse = function(){
@@ -284,30 +263,34 @@
         //if .name in RESERVED_WORDS, .sayErr '"#{.name}" is a reserved word'
         if (RESERVED_WORDS.indexOf(this.name)>=0) {this.sayErr('"' + this.name + '" is a reserved word')};
 
-//optional type annotation & 
-//optional assigned value 
+//optional type annotation &
+//optional assigned value
 
         //var parseFreeForm
         var parseFreeForm = undefined;
 
-        //if .opt(':') 
+        //if .opt(':')
         if (this.opt(':')) {
+        
             //.parseType
             this.parseType();
         };
             //Note: parseType if parses "Map", stores type as a VarRef->Map and also sets .isMap=true
 
-        //if .opt('=') 
+        //if .opt('=')
         if (this.opt('=')) {
+        
 
             //if .lexer.token.type is 'NEWLINE' #dangling assignment "="[NEWLINE]
-            if (this.lexer.token.type === 'NEWLINE') {// #dangling assignment "="[NEWLINE]
+            if (this.lexer.token.type === 'NEWLINE') {
+            
                 //parseFreeForm=true
                 parseFreeForm = true;
             }
-            else if (this.lexer.token.value === 'map') {// #literal map creation "x = map"[NEWLINE]name:value[NEWLINE]name=value...
-
-            //else if .lexer.token.value is 'map' #literal map creation "x = map"[NEWLINE]name:value[NEWLINE]name=value...
+            //if .lexer.token.type is 'NEWLINE' #dangling assignment "="[NEWLINE]
+            
+            else if (this.lexer.token.value === 'map') {
+            
                 //.req 'map'
                 this.req('map');
                 //.type='Map'
@@ -317,16 +300,18 @@
                 //parseFreeForm=true
                 parseFreeForm = true;
             }
+            //else if .lexer.token.value is 'map' #literal map creation "x = map"[NEWLINE]name:value[NEWLINE]name=value...
+            
             else {
-
-            //else // just assignment on the same line
                 //if .lexer.interfaceMode //assignment in interfaces => declare var alias. as in: `var $=jQuery`
-                if (this.lexer.interfaceMode) { //assignment in interfaces => declare var alias. as in: `var $=jQuery`
+                if (this.lexer.interfaceMode) {
+                
                     //.aliasVarRef = .req(VariableRef)
                     this.aliasVarRef = this.req(VariableRef);
                 }
+                //if .lexer.interfaceMode //assignment in interfaces => declare var alias. as in: `var $=jQuery`
+                
                 else {
-                //else
                     //.assignedValue = .req(Expression)
                     this.assignedValue = this.req(Expression);
                 };
@@ -334,17 +319,19 @@
         };
 
         //if parseFreeForm #dangling assignment, parse a free-form object literal as assigned value
-        if (parseFreeForm) {// #dangling assignment, parse a free-form object literal as assigned value
+        if (parseFreeForm) {
+        
             //.assignedValue   = .req(FreeObjectLiteral)
             this.assignedValue = this.req(FreeObjectLiteral);
         };
 
 //if was declared with type Map, (freeform or not) initialization literal is also map.
-//e.g: `var myMap: map string to any = {}`. Because of type:Map, 
+//e.g: `var myMap: map string to any = {}`. Because of type:Map,
 //the expression `{}` gets compiled as `new Map().fromObject({})`
 
         //if .isMap and .assignedValue
         if (this.isMap && this.assignedValue) {
+        
             //.assignedValue.type='Map'
             this.assignedValue.type = 'Map';
             //.assignedValue.isMap = true
@@ -365,32 +352,32 @@
 //For example, given the previous example: **VarStatement: (IDENTIFIER ["=" Expression] ,)**,
 //all the following constructions are equivalent and valid in LiteScript:
 
-//Examples: /*
-
-    //standard js
-    //var a = {prop1:30 prop2: { prop2_1:19, prop2_2:71} arr:["Jan","Feb","Mar"]}
-
-    //LiteScript: mixed freeForm and comma separated
-    //var a =
-        //prop1: 30
-        //prop2:
-          //prop2_1: 19, prop2_2: 71
-        //arr: [ "Jan",
-              //"Feb", "Mar"]
-
-    //LiteScript: in freeForm, commas are optional
-    //var a = 
-        //prop1: 30
-        //prop2:
-          //prop2_1: 19,
-          //prop2_2: 71,
-        //arr: [
-            //"Jan",
-            //"Feb"
-            //"Mar"
-            //]
-
-//*/
+//Examples:
+//
+//
+//    //standard js
+//    var a = {prop1:30 prop2: { prop2_1:19, prop2_2:71} arr:["Jan","Feb","Mar"]}
+//
+//    //LiteScript: mixed freeForm and comma separated
+//    var a =
+//        prop1: 30
+//        prop2:
+//          prop2_1: 19, prop2_2: 71
+//        arr: [ "Jan",
+//              "Feb", "Mar"]
+//
+//    //LiteScript: in freeForm, commas are optional
+//    var a =
+//        prop1: 30
+//        prop2:
+//          prop2_1: 19,
+//          prop2_2: 71,
+//        arr: [
+//            "Jan",
+//            "Feb"
+//            "Mar"
+//            ]
+//
 
 //##More about comma separated lists
 
@@ -421,57 +408,57 @@
   //because variables declaration is:<br>
   //'var' + a comma separated list of: IDENTIFIER ["=" Expression]
 
-//Examples: /*
+//Examples:
+//
+//
+//  js:
+//
+//    Console.log(title,subtitle,line1,line2,value,recommendation)
+//
+//  LiteScript available variations:
+//
+//    print title,subtitle,
+//          line1,line2,
+//          value,recommendation
+//
+//    print
+//      title
+//      subtitle
+//      line1
+//      line2
+//      value
+//      recommendation
+//
+//  js:
+//
+//    var a=10, b=20, c=30,
+//        d=40;
+//
+//    function complexFn( 10, 4, 'sample'
+//       'see 1',
+//       2+2,
+//       null ){
+//      ...function body...
+//    };
+//
+//  LiteScript:
+//
+//    var
+//      a=10,b=20
+//      c=30,d=40
+//
+//    function complexFn(
+//      10       # determines something important to this function
+//      4        # do not pass nulll to this
+//      'sample' # this is original data
+//      'see 1'  # note param
+//      2+2      # useful tip
+//      null     # reserved for extensions ;)
+//      )
+//      ...function body...
 
-  //js:
 
-    //Console.log(title,subtitle,line1,line2,value,recommendation)
-
-  //LiteScript available variations:
-
-    //print title,subtitle,
-          //line1,line2,
-          //value,recommendation
-
-    //print
-      //title
-      //subtitle
-      //line1
-      //line2
-      //value
-      //recommendation
-
-  //js:
-
-    //var a=10, b=20, c=30,
-        //d=40;
-
-    //function complexFn( 10, 4, 'sample'
-       //'see 1', 
-       //2+2, 
-       //null ){
-      //...function body...
-    //};
-
-  //LiteScript:
-
-    //var
-      //a=10,b=20
-      //c=30,d=40
-
-    //function complexFn(
-      //10       # determines something important to this function
-      //4        # do not pass nulll to this
-      //'sample' # this is original data
-      //'see 1'  # note param
-      //2+2      # useful tip
-      //null     # reserved for extensions ;)
-      //)
-      //...function body...
-//*/
-
-
-//### export class PropertiesDeclaration extends VarDeclList
+    //    export class PropertiesDeclaration extends VarDeclList
     // constructor
     function PropertiesDeclaration(){ // default constructor
     // default constructor: call super.constructor
@@ -486,6 +473,7 @@
 
       //declare name affinity propDecl
       
+      //declare name affinity propDecl
 
       //method parse()
       PropertiesDeclaration.prototype.parse = function(){
@@ -502,25 +490,11 @@
     // end class PropertiesDeclaration
 
 
-//### export class WithStatement extends ASTBase
+    //    export class WithStatement extends ASTBase
     // constructor
     function WithStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`WithStatement: with VariableRef Body`
-
-//The WithStatement simplifies calling several methods of the same object:
-//Example:
-//```    
-//with frontDoor
-    //.show
-    //.open
-    //.show
-    //.close
-    //.show
-//```
-
       //properties
         //varRef, body
     };
@@ -534,7 +508,7 @@
         //.lock()
         this.lock();
         //.name = UniqueID.getVarName('with')  #unique 'with' storage var name
-        this.name = UniqueID.getVarName('with');// #unique 'with' storage var name
+        this.name = UniqueID.getVarName('with');
         //.varRef = .req(VariableRef)
         this.varRef = this.req(VariableRef);
         //.body = .req(Body)
@@ -546,16 +520,11 @@
     // end class WithStatement
 
 
-//### export class TryCatch extends ASTBase
+    //    export class TryCatch extends ASTBase
     // constructor
     function TryCatch(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`TryCatch: 'try' Body ExceptionBlock`
-
-//Defines a `try` block for trapping exceptions and handling them. 
-
       //properties body,exceptionBlock
     };
     // TryCatch (extends|proto is) ASTBase
@@ -575,6 +544,7 @@
 
         //if .exceptionBlock.indent isnt .indent
         if (this.exceptionBlock.indent !== this.indent) {
+        
             //.sayErr "try: misaligned try-catch indent"
             this.sayErr("try: misaligned try-catch indent");
             //.exceptionBlock.sayErr "catch: misaligned try-catch indent"
@@ -586,19 +556,12 @@
     
     // end class TryCatch
 
-//### export class ExceptionBlock extends ASTBase
+    //    export class ExceptionBlock extends ASTBase
     // constructor
     function ExceptionBlock(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`ExceptionBlock: (exception|catch) IDENTIFIER Body [finally Body]`
-
-//Defines a `catch` block for trapping exceptions and handling them. 
-//`try` should precede this construction for 'catch' keyword.
-//`try{` will be auto-inserted for the 'Exception' keyword.
-
-      //properties 
+      //properties
         //catchVar:string
         //body,finallyBody
     };
@@ -619,6 +582,7 @@
 
         //if .keyword is 'catch' and .parent.constructor isnt TryCatch
         if (this.keyword === 'catch' && this.parent.constructor !== TryCatch) {
+        
             //.throwError "internal error, expected 'try' as 'catch' previous block"
             this.throwError("internal error, expected 'try' as 'catch' previous block");
         };
@@ -628,7 +592,7 @@
         //.catchVar = .req('IDENTIFIER')
         this.catchVar = this.req('IDENTIFIER');
 
-//get body 
+//get body
 
         //.body = .req(Body)
         this.body = this.req(Body);
@@ -640,18 +604,18 @@
 
 //validate grammar: try=>catch / function=>exception
 
-        //if .keyword is 'exception' 
+        //if .keyword is 'exception'
         if (this.keyword === 'exception') {
+        
 
-            //if .parent.constructor isnt Statement 
+            //if .parent.constructor isnt Statement
             if (this.parent.constructor !== Statement || !(this.parent.parent instanceof Body) || !(this.parent.parent.parent instanceof FunctionDeclaration)) {
-              //or .parent.parent isnt instance of Body
-              //or .parent.parent.parent isnt instance of FunctionDeclaration
+            
                   //.sayErr '"Exception" block should be the part of function/method/constructor body - use "catch" to match a "try" block'
                   this.sayErr('"Exception" block should be the part of function/method/constructor body - use "catch" to match a "try" block');
             };
 
-//here, it is a "exception" block in a FunctionDeclaration. 
+//here, it is a "exception" block in a FunctionDeclaration.
 //Mark the function as having an ExceptionBlock in order to
 //insert "try{" at function start and also handle C-exceptions unwinding
 
@@ -667,16 +631,11 @@
     // end class ExceptionBlock
 
 
-//### export class ThrowStatement extends ASTBase
+    //    export class ThrowStatement extends ASTBase
     // constructor
     function ThrowStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`ThrowStatement: (throw|raise|fail with) Expression`
-
-//This handles `throw` and its synonyms followed by an expression 
-
       //properties specifier, expr
     };
     // ThrowStatement (extends|proto is) ASTBase
@@ -694,7 +653,7 @@
         //if .specifier is 'fail', .req 'with'
         if (this.specifier === 'fail') {this.req('with')};
         //.expr = .req(Expression) #trow expression
-        this.expr = this.req(Expression);// #trow expression
+        this.expr = this.req(Expression);
       };
     // export
     module.exports.ThrowStatement = ThrowStatement;
@@ -702,14 +661,11 @@
     // end class ThrowStatement
 
 
-//### export class ReturnStatement extends ASTBase
+    //    export class ReturnStatement extends ASTBase
     // constructor
     function ReturnStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`ReturnStatement: return Expression`
-
       //properties expr:Expression
     };
     // ReturnStatement (extends|proto is) ASTBase
@@ -730,18 +686,12 @@
     // end class ReturnStatement
 
 
-//### export class IfStatement extends ASTBase
+    //    export class IfStatement extends ASTBase
     // constructor
     function IfStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`IfStatement: (if|when) Expression (then|',') SingleLineBody [ElseIfStatement|ElseStatement]*`
-//`IfStatement: (if|when) Expression Body [ElseIfStatement|ElseStatement]*`
-
-//Parses `if` statments and any attached `else` or chained `else if` 
-
-      //properties 
+      //properties
         //conditional: Expression
         //body
         //elseStatement
@@ -759,7 +709,7 @@
         //.conditional = .req(Expression)
         this.conditional = this.req(Expression);
 
-//after `,` or `then`, a statement on the same line is required 
+//after `,` or `then`, a statement on the same line is required
 //if we're processing all single-line if's, ',|then' is *required*
 
 //choose same body class as parent:
@@ -767,31 +717,39 @@
 
         //if .opt(',','then')
         if (this.opt(',', 'then')) {
+        
             //.body = .req(SingleLineBody)
             this.body = this.req(SingleLineBody);
         }
+        //if .opt(',','then')
+        
         else {
-
-        //else # an indented block
             //.body = .req(Body)
             this.body = this.req(Body);
         };
         //end if
+
+//control: "if"-"else" are related by having the same indent
+
+        //if .lexer.token.value is 'else'
         
 
 //control: "if"-"else" are related by having the same indent
 
         //if .lexer.token.value is 'else'
         if (this.lexer.token.value === 'else') {
+        
 
-            //if .lexer.index isnt 0 
+            //if .lexer.index isnt 0
             if (this.lexer.index !== 0) {
+            
                 //.throwError 'expected "else" to start on a new line'
                 this.throwError('expected "else" to start on a new line');
             };
 
             //if .lexer.indent < .indent
             if (this.lexer.indent < this.indent) {
+            
                 //#token is 'else' **BUT IS LESS-INDENTED**. It is not the "else" to this "if"
                 //return
                 return;
@@ -799,12 +757,17 @@
 
             //if .lexer.indent > .indent
             if (this.lexer.indent > this.indent) {
+            
                 //.throwError "'else' statement is over-indented"
                 this.throwError("'else' statement is over-indented");
             };
         };
 
         //end if
+
+//Now get optional `[ElseIfStatement|ElseStatement]`
+
+        //.elseStatement = .opt(ElseIfStatement, ElseStatement)
         
 
 //Now get optional `[ElseIfStatement|ElseStatement]`
@@ -818,17 +781,12 @@
     // end class IfStatement
 
 
-//### export class ElseIfStatement extends ASTBase
+    //    export class ElseIfStatement extends ASTBase
     // constructor
     function ElseIfStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`ElseIfStatement: (else|otherwise) if Expression Body`
-
-//This class handles chained else-if statements
-
-      //properties 
+      //properties
         //nextIf
     };
     // ElseIfStatement (extends|proto is) ASTBase
@@ -856,16 +814,11 @@
     // end class ElseIfStatement
 
 
-//### export class ElseStatement extends ASTBase
+    //    export class ElseStatement extends ASTBase
     // constructor
     function ElseStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`ElseStatement: else (Statement | Body) `
-
-//This class handles closing "else" statements
-
       //properties body
     };
     // ElseStatement (extends|proto is) ASTBase
@@ -905,7 +858,7 @@
 
 //a do-loop without any condition is an *infinite loop* (usually with a `break` statement inside)
 
-//Example: 
+//Example:
 //```
 //var x=1
 //do:
@@ -930,9 +883,9 @@
 
 //##### Case 3) do-loop with post-condition
 
-//A do-loop with post-condition, execute the block, at least once, and after each iteration, 
+//A do-loop with post-condition, execute the block, at least once, and after each iteration,
 //checks the post-condition, and loops `while` the expression is true
-//*or* `until` the expression is true 
+//*or* `until` the expression is true
 
 //Example:
 //```
@@ -950,8 +903,7 @@
     function DoLoop(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-      //properties 
+      //properties
         //preWhileUntilExpression
         //body
         //postWhileUntilExpression
@@ -965,6 +917,7 @@
         this.req('do');
         //if .opt('nothing')
         if (this.opt('nothing')) {
+        
           //.throwParseFailed('is do nothing')
           this.throwParseFailed('is do nothing');
         };
@@ -988,6 +941,7 @@
         this.postWhileUntilExpression = this.opt(WhileUntilExpression);
         //if .preWhileUntilExpression and .postWhileUntilExpression
         if (this.preWhileUntilExpression && this.postWhileUntilExpression) {
+        
           //.sayErr "Loop: cannot have a pre-condition a and post-condition at the same time"
           this.sayErr("Loop: cannot have a pre-condition a and post-condition at the same time");
         };
@@ -998,7 +952,7 @@
     // end class DoLoop
 
 
-//### export class WhileUntilLoop extends DoLoop
+    //    export class WhileUntilLoop extends DoLoop
     // constructor
     function WhileUntilLoop(){ // default constructor
     // default constructor: call super.constructor
@@ -1028,17 +982,11 @@
     // end class WhileUntilLoop
 
 
-//### export helper class WhileUntilExpression extends ASTBase
+    //    export helper class WhileUntilExpression extends ASTBase
     // constructor
     function WhileUntilExpression(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//common symbol for loops conditions. Is the word 'while' or 'until' 
-//followed by a boolean-Expression
-
-//`WhileUntilExpression: ('while'|'until') boolean-Expression`
-
       //properties expr:Expression
     };
     // WhileUntilExpression (extends|proto is) ASTBase
@@ -1059,17 +1007,11 @@
     // end class WhileUntilExpression
 
 
-//### export class LoopControlStatement extends ASTBase
+    //    export class LoopControlStatement extends ASTBase
     // constructor
     function LoopControlStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`LoopControlStatement: (break|continue) [loop]`
-
-//This handles the `break` and `continue` keywords.
-//'continue' jumps to the start of the loop (as C & Js: 'continue')
-
       //properties control
     };
     // LoopControlStatement (extends|proto is) ASTBase
@@ -1087,7 +1029,7 @@
     
     // end class LoopControlStatement
 
-//### export class DoNothingStatement extends ASTBase
+    //    export class DoNothingStatement extends ASTBase
     // constructor
     function DoNothingStatement(){ // default constructor
     // default constructor: call super.constructor
@@ -1113,17 +1055,12 @@
 
 //## For Statement
 
-//### export class ForStatement extends ASTBase
+    //    export class ForStatement extends ASTBase
     // constructor
     function ForStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`ForStatement: (ForEachProperty|ForEachInArray|ForIndexNumeric)`
-
-//There are 3 variants of `ForStatement` in LiteScript
-
-      //properties 
+      //properties
         //variant: ASTBase
     };
     // ForStatement (extends|proto is) ASTBase
@@ -1133,6 +1070,7 @@
       ForStatement.prototype.parse = function(){
         //declare valid .createScope
         
+        //declare valid .createScope
 
 //We start with commonn `for` keyword
 
@@ -1151,24 +1089,23 @@
     
     // end class ForStatement
 
-//##Variant 1) **for each [own] property** 
+//##Variant 1) **for each [own] property**
 //###Loop over **object property names**
 
 //Grammar:
 //`ForEachProperty: for each [own] property name-VariableDecl ["," value-VariableDecl] in object-VariableRef [where Expression]`
 
 //where `name-VariableDecl` is a variable declared on the spot to store each property name,
-//and `object-VariableRef` is the object having the properties 
+//and `object-VariableRef` is the object having the properties
 
-//### export class ForEachProperty extends ASTBase
+    //    export class ForEachProperty extends ASTBase
     // constructor
     function ForEachProperty(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-      //properties 
+      //properties
         //keyIndexVar:VariableDecl, valueVar:VariableDecl
-        //iterable:Expression 
+        //iterable:Expression
         //where:ForWhereFilter
         //body
         //ownKey
@@ -1185,13 +1122,14 @@
 
         //if .opt("own") into .ownKey
         if ((this.ownKey=this.opt("own"))) {
+        
           //.lock()
           this.lock();
         };
 
 //next we require: 'property', and lock.
 
-        //.req('property')  
+        //.req('property')
         this.req('property');
         //.lock()
         this.lock();
@@ -1205,6 +1143,7 @@
 
         //if .opt(",")
         if (this.opt(",")) {
+        
           //.keyIndexVar = .valueVar
           this.keyIndexVar = this.valueVar;
           //.valueVar = .req(VariableDecl)
@@ -1234,7 +1173,7 @@
     // end class ForEachProperty
 
 
-//##Variant 2) **for each in** 
+//##Variant 2) **for each in**
 //### loop over **Arrays**
 
 //Grammar:
@@ -1245,14 +1184,13 @@
 //* `item-VariableDecl` is a variable declared on the spot to store each array item (array[index])
 //and `array-VariableRef` is the array to iterate over
 
-//### export class ForEachInArray extends ASTBase
+    //    export class ForEachInArray extends ASTBase
     // constructor
     function ForEachInArray(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-      //properties 
-        //intIndexVar:VariableDecl, keyIndexVar:VariableDecl, valueVar:VariableDecl 
+      //properties
+        //intIndexVar:VariableDecl, keyIndexVar:VariableDecl, valueVar:VariableDecl
         //iterable:Expression
         //where:ForWhereFilter
         //body
@@ -1278,6 +1216,7 @@
 
         //if .opt(',')
         if (this.opt(',')) {
+        
           //.keyIndexVar = .valueVar
           this.keyIndexVar = this.valueVar;
           //.valueVar = .req(VariableDecl)
@@ -1289,6 +1228,7 @@
 
         //if .opt(',')
         if (this.opt(',')) {
+        
           //.intIndexVar = .keyIndexVar
           this.intIndexVar = this.keyIndexVar;
           //.keyIndexVar = .valueVar
@@ -1324,7 +1264,7 @@
     // end class ForEachInArray
 
 
-//##Variant 3) **for index=...** 
+//##Variant 3) **for index=...**
 //### to do **numeric loops**
 
 //This `for` variant is just a verbose expressions of the standard C (and js) `for(;;)` loop
@@ -1336,18 +1276,17 @@
 //`start-Expression` is the start value for the index (ussually 0)
 //`end-Expression` is:
 //- the end value (`to`)
-//- the condition to keep looping (`while`) 
+//- the condition to keep looping (`while`)
 //- the condition to end looping (`until`)
-//<br>and `increment-SingleLineBody` is the statement(s) used to advance the loop index. 
+//<br>and `increment-SingleLineBody` is the statement(s) used to advance the loop index.
 //If omitted the default is `index++`
 
-//### export class ForIndexNumeric extends ASTBase
+    //    export class ForIndexNumeric extends ASTBase
     // constructor
     function ForIndexNumeric(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-      //properties 
+      //properties
         //keyIndexVar:VariableDecl
         //conditionPrefix, endExpression
         //increment: SingleLineBody
@@ -1381,10 +1320,11 @@
 
         //if .opt(',')
         if (this.opt(',')) {
+        
           //.increment = .req(SingleLineBody)
           this.increment = this.req(SingleLineBody);
           //.lexer.returnToken //return closing NEWLINE, for the indented body
-          this.lexer.returnToken(); //return closing NEWLINE, for the indented body
+          this.lexer.returnToken();
         };
 
 //Now, get the loop body
@@ -1399,16 +1339,11 @@
 
 
 
-//### public helper class ForWhereFilter extends ASTBase
+    //    public helper class ForWhereFilter extends ASTBase
     // constructor
     function ForWhereFilter(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-//`ForWhereFilter: [NEWLINE] where Expression`
-
-//This is a helper symbol denoting optional filter for the ForLoop variants.
-//is: optional NEWLINE, then 'where' then filter-Expression
-
       //properties
         //filterExpression
     };
@@ -1422,14 +1357,15 @@
 
         //if .opt('where')
         if (this.opt('where')) {
+        
           //.lock()
           this.lock();
           //.filterExpression = .req(Expression)
           this.filterExpression = this.req(Expression);
         }
+        //if .opt('where')
+        
         else {
-
-        //else
           //if optNewLine, .lexer.returnToken # return NEWLINE
           if (optNewLine) {this.lexer.returnToken()};
           //.throwParseFailed "expected '[NEWLINE] where'"
@@ -1443,13 +1379,11 @@
 
 //--------------------------------
 
-//### public class DeleteStatement extends ASTBase
+    //    public class DeleteStatement extends ASTBase
     // constructor
     function DeleteStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-//`DeleteStatement: delete VariableRef`
-
       //properties
         //varRef
     };
@@ -1471,15 +1405,11 @@
     // end class DeleteStatement
 
 
-//### export class AssignmentStatement extends ASTBase
+    //    export class AssignmentStatement extends ASTBase
     // constructor
     function AssignmentStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`AssignmentStatement: VariableRef ASSIGN Expression`
-//<br>`ASSIGN: ("="|"+="|"-="|"*="|"/=")`
-
       //properties lvalue:VariableRef, rvalue:Expression
     };
     // AssignmentStatement (extends|proto is) ASTBase
@@ -1490,14 +1420,17 @@
 
         //declare valid .parent.preParsedVarRef
         
+        //declare valid .parent.preParsedVarRef
 
         //if .parent instanceof Statement and .parent.preParsedVarRef
         if (this.parent instanceof Statement && this.parent.preParsedVarRef) {
-          //.lvalue  = .parent.preParsedVarRef # get already parsed VariableRef 
-          this.lvalue = this.parent.preParsedVarRef;// # get already parsed VariableRef
+        
+          //.lvalue  = .parent.preParsedVarRef # get already parsed VariableRef
+          this.lvalue = this.parent.preParsedVarRef;
         }
+        //if .parent instanceof Statement and .parent.preParsedVarRef
+        
         else {
-        //else
           //.lvalue  = .req(VariableRef)
           this.lvalue = this.req(VariableRef);
         };
@@ -1510,25 +1443,27 @@
         this.lock();
 
         //if .lexer.token.value is 'map' #dangling assignment - Literal map
-        if (this.lexer.token.value === 'map') {// #dangling assignment - Literal map
+        if (this.lexer.token.value === 'map') {
+        
           //.req 'map'
           this.req('map');
           //.rvalue  = .req(FreeObjectLiteral) #assume Object Expression in freeForm mode
-          this.rvalue = this.req(FreeObjectLiteral);// #assume Object Expression in freeForm mode
+          this.rvalue = this.req(FreeObjectLiteral);
           //.rvalue.type = 'Map'
           this.rvalue.type = 'Map';
           //.rvalue.isMap = true
           this.rvalue.isMap = true;
         }
-        else if (this.lexer.token.type === 'NEWLINE') {// #dangling assignment
-
-        //else if .lexer.token.type is 'NEWLINE' #dangling assignment
+        //if .lexer.token.value is 'map' #dangling assignment - Literal map
+        
+        else if (this.lexer.token.type === 'NEWLINE') {
+        
           //.rvalue  = .req(FreeObjectLiteral) #assume Object Expression in freeForm mode
-          this.rvalue = this.req(FreeObjectLiteral);// #assume Object Expression in freeForm mode
+          this.rvalue = this.req(FreeObjectLiteral);
         }
+        //else if .lexer.token.type is 'NEWLINE' #dangling assignment
+        
         else {
-
-        //else
           //.rvalue  = .req(Expression)
           this.rvalue = this.req(Expression);
         };
@@ -1541,22 +1476,12 @@
 
 //-----------------------
 
-//### export class VariableRef extends ASTBase
+    //    export class VariableRef extends ASTBase
     // constructor
     function VariableRef(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`VariableRef: ('--'|'++') IDENTIFIER [Accessors] ('--'|'++')`
-
-//`VariableRef` is a Variable Reference
-
-//a VariableRef can include chained 'Accessors', which do:
-//- access a property of the object : `.`-> **PropertyAccess** and `[...]`->**IndexAccess**
-//- assume the variable is a function and perform a function call :  `(...)`->**FunctionAccess**
-
-
-      //properties 
+      //properties
         //preIncDec
         //postIncDec
     };
@@ -1565,6 +1490,7 @@
 
       //declare name affinity varRef
       
+      //declare name affinity varRef
 
       //method parse()
       VariableRef.prototype.parse = function(){
@@ -1578,22 +1504,25 @@
 //get var name
 
         //if .opt('.','SPACE_DOT') # note: DOT has SPACES in front when .property used as parameter
-        if (this.opt('.', 'SPACE_DOT')) {// # note: DOT has SPACES in front when .property used as parameter
+        if (this.opt('.', 'SPACE_DOT')) {
+        
 
             //#'.name' -> 'x.name'
             //.lock()
             this.lock();
 
-            //if .getParent(WithStatement) into var withStatement 
+            //if .getParent(WithStatement) into var withStatement
             var withStatement=undefined;
             if ((withStatement=this.getParent(WithStatement))) {
+            
                 //.name = withStatement.name
                 this.name = withStatement.name;
             }
+            //if .getParent(WithStatement) into var withStatement
+            
             else {
-            //else
                 //.name = 'this' #default replacement for '.x'
-                this.name = 'this';// #default replacement for '.x'
+                this.name = 'this';
             };
 
             //var member: string
@@ -1602,11 +1531,13 @@
             //#They're classsified as "Opers", but they're valid identifiers in this context
             //if .lexer.token.value in ['not','has']
             if (['not', 'has'].indexOf(this.lexer.token.value)>=0) {
+            
                 //member = .lexer.nextToken() //get not|has as identifier
-                member = this.lexer.nextToken(); //get not|has as identifier
+                member = this.lexer.nextToken();
             }
+            //if .lexer.token.value in ['not','has']
+            
             else {
-            //else
                 //member = .req('IDENTIFIER')
                 member = this.req('IDENTIFIER');
             };
@@ -1614,9 +1545,9 @@
             //.addAccessor new PropertyAccess(this,member)
             this.addAccessor(new PropertyAccess(this, member));
         }
+        //if .opt('.','SPACE_DOT') # note: DOT has SPACES in front when .property used as parameter
+        
         else {
-
-        //else
 
             //.name = .req('IDENTIFIER')
             this.name = this.req('IDENTIFIER');
@@ -1625,9 +1556,9 @@
         //.lock()
         this.lock();
 
-//Now we check for accessors: 
-//<br>`.`->**PropertyAccess** 
-//<br>`[...]`->**IndexAccess** 
+//Now we check for accessors:
+//<br>`.`->**PropertyAccess**
+//<br>`[...]`->**IndexAccess**
 //<br>`(...)`->**FunctionAccess**
 
 //Note: **.paserAccessors()** will:
@@ -1641,35 +1572,44 @@
 
         //if .name is 'super'
         if (this.name === 'super') {
+        
 
             //var classDecl = .getParent(ClassDeclaration)
             var classDecl = this.getParent(ClassDeclaration);
             //if no classDecl
             if (!classDecl) {
+            
               //.throwError "use of 'super' outside a class method"
               this.throwError("use of 'super' outside a class method");
             };
 
             //if classDecl.varRefSuper
             if (classDecl.varRefSuper) {
+            
                 //#replace name='super' by name = #{SuperClass name}
                 //.name = classDecl.varRefSuper.toString()
                 this.name = classDecl.varRefSuper.toString();
             }
+            //if classDecl.varRefSuper
+            
             else {
-            //else
                 //.name ='Object' # no superclass means 'Object' is super class
-                this.name = 'Object';// # no superclass means 'Object' is super class
+                this.name = 'Object';
             };
         };
 
         //end if super
+
+//Hack: after 'into var', allow :type
+
+        //if .getParent(Statement).intoVars and .opt(":")
         
 
-//Hack: after 'into var', allow :type 
+//Hack: after 'into var', allow :type
 
         //if .getParent(Statement).intoVars and .opt(":")
         if (this.getParent(Statement).intoVars && this.opt(":")) {
+        
             //.parseType
             this.parseType();
         };
@@ -1679,12 +1619,13 @@
         //.postIncDec = .opt('--','++')
         this.postIncDec = this.opt('--', '++');
 
-//If this variable ref has ++ or --, IT IS CONSIDERED a "call to execution" in itself, 
-//a "imperative statement", because it has side effects. 
+//If this variable ref has ++ or --, IT IS CONSIDERED a "call to execution" in itself,
+//a "imperative statement", because it has side effects.
 //(`i++` has a "imperative" part, It means: "give me the value of i, and then increment it!")
 
-        //if .preIncDec or .postIncDec 
+        //if .preIncDec or .postIncDec
         if (this.preIncDec || this.postIncDec) {
+        
           //.executes = true
           this.executes = true;
           //.hasSideEffects = true
@@ -1692,10 +1633,10 @@
         };
       };
 
-//Note: In LiteScript, *any VariableRef standing on its own line*, it's considered 
+//Note: In LiteScript, *any VariableRef standing on its own line*, it's considered
 //a function call. A VariableRef on its own line means "execute this!",
 //so, when translating to js, it'll be translated as a function call, and `()` will be added.
-//If the VariableRef is marked as 'executes' then it's assumed it is alread a functioncall, 
+//If the VariableRef is marked as 'executes' then it's assumed it is alread a functioncall,
 //so `()` will NOT be added.
 
 //Examples:
@@ -1711,10 +1652,10 @@
 //Keep track of 'require' calls, to import modules (recursive)
 //Note: commented 2014-6-11
 //        if .name is 'require'
-//            .getParent(Module).requireCallNodes.push this            
+//            .getParent(Module).requireCallNodes.push this
 
 //---------------------------------
-//##### helper method toString()
+      //      helper method toString()
       VariableRef.prototype.toString = function(){
 //This method is only valid to be used in error reporting.
 //function accessors will be output as "(...)", and index accessors as [...]
@@ -1723,6 +1664,7 @@
         var result = '' + (this.preIncDec || '') + this.name;
         //if .accessors
         if (this.accessors) {
+        
           //for each ac in .accessors
           for( var ac__inx=0,ac ; ac__inx<this.accessors.length ; ac__inx++){ac=this.accessors[ac__inx];
           
@@ -1745,14 +1687,14 @@
 
 //`Accessors: (PropertyAccess|FunctionAccess|IndexAccess)`
 
-//Accessors: 
+//Accessors:
   //`PropertyAccess: '.' IDENTIFIER`
   //`IndexAccess:    '[' Expression ']'`
   //`FunctionAccess: '(' [Expression,]* ')'`
 
 //Accessors can appear after a VariableRef (most common case)
 //but also after a String constant, a Regex Constant,
-//a ObjectLiteral and a ArrayLiteral 
+//a ObjectLiteral and a ArrayLiteral
 
 //Examples:
 //- `myObj.item.fn(call)`  <-- 3 accesors, two PropertyAccess and a FunctionAccess
@@ -1767,13 +1709,13 @@
 
 //`[...]` -> IndexAccess: Same as PropertyAccess
 
-//`(...)` -> FunctionAccess: The object is assumed to be a function, and the code executed. 
+//`(...)` -> FunctionAccess: The object is assumed to be a function, and the code executed.
                       //It resolves to the function return value.
 
 //## Implementation
 //We provide a class Accessor to be super class for the three accessors types.
 
-//### export class Accessor extends ASTBase
+    //    export class Accessor extends ASTBase
     // constructor
     function Accessor(){ // default constructor
     // default constructor: call super.constructor
@@ -1798,7 +1740,7 @@
     // end class Accessor
 
 
-//### export class PropertyAccess extends Accessor
+    //    export class PropertyAccess extends Accessor
     // constructor
     function PropertyAccess(){ // default constructor
     // default constructor: call super.constructor
@@ -1807,7 +1749,7 @@
     // PropertyAccess (extends|proto is) Accessor
     PropertyAccess.prototype.__proto__ = Accessor.prototype;
 
-//`.` -> PropertyAccess: get the property named "n" 
+//`.` -> PropertyAccess: get the property named "n"
 
 //`PropertyAccess: '.' IDENTIFIER`
 //`PropertyAccess: '.' ObjectLiteral` : short-form for  `.newFromObject({a:1,b:2})`
@@ -1819,22 +1761,23 @@
         //.lock()
         this.lock();
         //if .lexer.token.value is '{' // ObjectLiteral, short-form for  `.initFromObject({a:1,b:2})`
-        if (this.lexer.token.value === '{') { // ObjectLiteral, short-form for  `.initFromObject({a:1,b:2})`
+        if (this.lexer.token.value === '{') {
+        
             //.name='newFromObject' // fixed property access "initFromObject" (call-to)
-            this.name = 'newFromObject'; // fixed property access "initFromObject" (call-to)
+            this.name = 'newFromObject';
         }
+        //if .lexer.token.value is '{' // ObjectLiteral, short-form for  `.initFromObject({a:1,b:2})`
+        
         else if (['not', 'has'].indexOf(this.lexer.token.value)>=0) {
-
-        //#we must allow 'not' and 'has' as method names, (jQuery uses "not", Map uses "has").
-        //#They're classsified as "Opers", but they're valid identifiers in this context
-        //else if .lexer.token.value in ['not','has']
+        
             //.name = .lexer.token.value //get "not"|"has" as identifier
-            this.name = this.lexer.token.value; //get "not"|"has" as identifier
+            this.name = this.lexer.token.value;
             //.lexer.nextToken() //advance
-            this.lexer.nextToken(); //advance
+            this.lexer.nextToken();
         }
+        //else if .lexer.token.value in ['not','has']
+        
         else {
-        //else
             //.name = .req('IDENTIFIER')
             this.name = this.req('IDENTIFIER');
         };
@@ -1851,7 +1794,7 @@
     // end class PropertyAccess
 
 
-//### export class IndexAccess extends Accessor
+    //    export class IndexAccess extends Accessor
     // constructor
     function IndexAccess(){ // default constructor
     // default constructor: call super.constructor
@@ -1875,7 +1818,7 @@
         //.name = .req( Expression )
         this.name = this.req(Expression);
         //.req "]" #closer ]
-        this.req("]");// #closer ]
+        this.req("]");
       };
 
       //method toString()
@@ -1889,15 +1832,12 @@
     // end class IndexAccess
 
 
-//### export class FunctionArgument extends ASTBase
+    //    export class FunctionArgument extends ASTBase
     // constructor
     function FunctionArgument(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`FunctionArgument: [param-IDENTIFIER=]Expression`
-
-      //properties 
+      //properties
         //expression
     };
     // FunctionArgument (extends|proto is) ASTBase
@@ -1911,13 +1851,16 @@
 
         //if .opt('IDENTIFIER') into .name
         if ((this.name=this.opt('IDENTIFIER'))) {
-            //if .lexer.token.value is '=' 
+        
+            //if .lexer.token.value is '='
             if (this.lexer.token.value === '=') {
+            
                 //.req '='
                 this.req('=');
             }
+            //if .lexer.token.value is '='
+            
             else {
-            //else
                 //.lexer.returnToken
                 this.lexer.returnToken();
                 //.name = undefined
@@ -1934,17 +1877,12 @@
     // end class FunctionArgument
 
 
-//### export class FunctionAccess extends Accessor
+    //    export class FunctionAccess extends Accessor
     // constructor
     function FunctionAccess(){ // default constructor
     // default constructor: call super.constructor
         Accessor.prototype.constructor.apply(this,arguments)
-//`(...)` -> FunctionAccess: The object is assumed to be a function, and the code executed. 
-                           //It resolves to the function return value.
-
-//`FunctionAccess: '(' [FunctionArgument,]* ')'`
-
-      //properties 
+      //properties
         //args:array of FunctionArgument
     };
     // FunctionAccess (extends|proto is) Accessor
@@ -1957,7 +1895,7 @@
         //.lock()
         this.lock();
         //.args = .optSeparatedList( FunctionArgument, ",", ")" ) #comma-separated list of FunctionArgument, closed by ")"
-        this.args = this.optSeparatedList(FunctionArgument, ",", ")");// #comma-separated list of FunctionArgument, closed by ")"
+        this.args = this.optSeparatedList(FunctionArgument, ",", ")");
       };
 
       //method toString()
@@ -1972,14 +1910,19 @@
 
 //## Functions appended to ASTBase, to help parse accessors on any node
 
-//### Append to class ASTBase
+    //    append to class ASTBase
     
-      //properties 
-        //accessors: Accessor array      
+      //properties
+        //accessors: Accessor array
         //executes, hasSideEffects
-      
 
-//##### helper method parseAccessors
+      //      helper method parseAccessors
+      
+      //properties
+        //accessors: Accessor array
+        //executes, hasSideEffects
+
+      //      helper method parseAccessors
       ASTBase.prototype.parseAccessors = function(){
 
 //We store the accessors in the property: .accessors
@@ -1998,7 +1941,7 @@
                 //when '.': //property acceess
               if (
                  (this.lexer.token.value=='.')
-             ){
+              ){
 
                     //ac = new PropertyAccess(this)
                     ac = new PropertyAccess(this);
@@ -2006,24 +1949,26 @@
                     ac.parse();
 
                     //if .lexer.token.value is '{' // ObjectLiteral, short-form for  `.newFromObject({a:1,b:2})`
-                    if (this.lexer.token.value === '{') { // ObjectLiteral, short-form for  `.newFromObject({a:1,b:2})`
+                    if (this.lexer.token.value === '{') {
+                    
                         //.addAccessor ac //add the PropertyAccess to method ".newFromObject"
-                        this.addAccessor(ac); //add the PropertyAccess to method ".newFromObject"
+                        this.addAccessor(ac);
                         //ac = new FunctionAccess(this) //create FunctionAccess
-                        ac = new FunctionAccess(this); //create FunctionAccess
+                        ac = new FunctionAccess(this);
                         //declare ac:FunctionAccess
                         
+                        //declare ac:FunctionAccess
                         //ac.args = []
                         ac.args = [];
                         //ac.args.push .req(ObjectLiteral) //.newFromObject() argument is the object literal
-                        ac.args.push(this.req(ObjectLiteral)); //.newFromObject() argument is the object literal
+                        ac.args.push(this.req(ObjectLiteral));
                     };
               
               }
                 //when "(": //function access
               else if (
                  (this.lexer.token.value=="(")
-             ){
+              ){
 
                     //ac = new FunctionAccess(this)
                     ac = new FunctionAccess(this);
@@ -2034,7 +1979,7 @@
                 //when "[": //index access
               else if (
                  (this.lexer.token.value=="[")
-             ){
+              ){
 
                     //ac = new IndexAccess(this)
                     ac = new IndexAccess(this);
@@ -2043,27 +1988,26 @@
               
               }
               else {
-
-                //else 
                     //break //no more accessors
-                    break; //no more accessors
+                    break;
               };
 
               //end case
+
+              //add parsed accessor
+              //.addAccessor ac
               
 
               //add parsed accessor
-              //.addAccessor ac 
+              //.addAccessor ac
               this.addAccessor(ac);
           };// end loop
-
-          //loop #continue parsing accesors
 
           //return
           return;
       };
 
-//##### helper method addAccessor(item)
+      //      helper method addAccessor(item)
       ASTBase.prototype.addAccessor = function(item){
 
             //#create accessors list, if there was none
@@ -2094,7 +2038,7 @@
 //Operand: (
   //(NumberLiteral|StringLiteral|RegExpLiteral|ArrayLiteral|ObjectLiteral
                     //|ParenExpression|FunctionDeclaration)[Accessors])
-  //|VariableRef) 
+  //|VariableRef)
 //```
 
 //Examples:
@@ -2113,13 +2057,16 @@
           //'STRING': StringLiteral
           //'NUMBER': NumberLiteral
           //'REGEX': RegExpLiteral
-          //'SPACE_BRACKET':ArrayLiteral # one or more spaces + "[" 
+          //'SPACE_BRACKET':ArrayLiteral # one or more spaces + "["
+
+
+    //var OPERAND_DIRECT_TOKEN = map
     var OPERAND_DIRECT_TYPE = new Map().fromObject({
        'STRING': StringLiteral
        , 'NUMBER': NumberLiteral
        , 'REGEX': RegExpLiteral
        , 'SPACE_BRACKET': ArrayLiteral
-   });
+          });
 
 
     //var OPERAND_DIRECT_TOKEN = map
@@ -2130,6 +2077,9 @@
           //'function': FunctionDeclaration
           //'->': FunctionDeclaration
           //'yield': YieldExpression
+
+
+    //    public class Operand extends ASTBase
     var OPERAND_DIRECT_TOKEN = new Map().fromObject({
        '(': ParenExpression
        , '[': ArrayLiteral
@@ -2137,10 +2087,10 @@
        , 'function': FunctionDeclaration
        , '->': FunctionDeclaration
        , 'yield': YieldExpression
-   });
+          });
 
 
-//### public class Operand extends ASTBase
+    //    public class Operand extends ASTBase
     // constructor
     function Operand(){ // default constructor
     // default constructor: call super.constructor
@@ -2155,29 +2105,29 @@
 
       //method parse()
       Operand.prototype.parse = function(){
-        //.name = .parseDirect(.lexer.token.type, OPERAND_DIRECT_TYPE) 
-        this.name = this.parseDirect(this.lexer.token.type, OPERAND_DIRECT_TYPE) || this.parseDirect(this.lexer.token.value, OPERAND_DIRECT_TOKEN);
+        //.name = .parseDirect(.lexer.token.type, OPERAND_DIRECT_TYPE)
           //or .parseDirect(.lexer.token.value, OPERAND_DIRECT_TOKEN)
+        this.name = this.parseDirect(this.lexer.token.type, OPERAND_DIRECT_TYPE) || this.parseDirect(this.lexer.token.value, OPERAND_DIRECT_TOKEN);
 
 //if it was a Literal, ParenExpression or FunctionDeclaration
 //besides base value, this operands can have accessors. For example: `"string".length` , `myObj.fn(10)`
 
         //if .name
         if (this.name) {
+        
             //.parseAccessors
             this.parseAccessors();
         }
+        //if .name
+        
         else {
-
-//else, (if not Literal, ParenExpression or FunctionDeclaration)
-//it must be a variable ref 
-
-        //else
             //.name = .req(VariableRef)
             this.name = this.req(VariableRef);
         };
 
         //end if
+
+    //end Operand
         
       };
     // export
@@ -2186,6 +2136,37 @@
     // end class Operand
 
     //end Operand
+
+
+//## Oper
+
+//```
+//Oper: ('~'|'&'|'^'|'|'|'>>'|'<<'
+        //|'*'|'/'|'+'|'-'|mod
+        //|instance of|instanceof
+        //|'>'|'<'|'>='|'<='
+        //|is|'==='|isnt|is not|'!=='
+        //|and|but|or
+        //|[not] in
+        //|(has|hasnt) property
+        //|? true-Expression : false-Expression)`
+//```
+
+//An Oper sits between two Operands ("Oper" is a "Binary Operator",
+//different from *UnaryOperators* which optionally precede a Operand)
+
+//If an Oper is found after an Operand, a second Operand is expected.
+
+//Operators can include:
+//* arithmetic operations "*"|"/"|"+"|"-"
+//* boolean operations "and"|"or"
+//* `in` collection check.  (js: `indexOx()>=0`)
+//* instance class checks   (js: instanceof)
+//* short-if ternary expressions ? :
+//* bit operations (|&)
+//* `has property` object property check (js: 'propName in object')
+
+    //    public class Oper extends ASTBase
     
 
 
@@ -2203,7 +2184,7 @@
         //|? true-Expression : false-Expression)`
 //```
 
-//An Oper sits between two Operands ("Oper" is a "Binary Operator", 
+//An Oper sits between two Operands ("Oper" is a "Binary Operator",
 //different from *UnaryOperators* which optionally precede a Operand)
 
 //If an Oper is found after an Operand, a second Operand is expected.
@@ -2217,13 +2198,12 @@
 //* bit operations (|&)
 //* `has property` object property check (js: 'propName in object')
 
-//### public class Oper extends ASTBase
+    //    public class Oper extends ASTBase
     // constructor
     function Oper(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-      //properties 
+      //properties
         //negated
         //left:Operand, right:Operand
         //pushed, precedence
@@ -2239,20 +2219,24 @@
       Oper.prototype.parse = function(){
         //declare valid .getPrecedence
         
+        //declare valid .getPrecedence
         //declare valid .parent.ternaryCount
         
+        //declare valid .parent.ternaryCount
         //if .parent.ternaryCount and .opt('else')
         if (this.parent.ternaryCount && this.opt('else')) {
+        
             //.name=':' # if there's a open ternaryCount, 'else' is converted to ":"
-            this.name = ':';// # if there's a open ternaryCount, 'else' is converted to ":"
+            this.name = ':';
         }
+        //if .parent.ternaryCount and .opt('else')
+        
         else {
-        //else
             //.name = .req('OPER')
             this.name = this.req('OPER');
         };
 
-        //.lock() 
+        //.lock()
         this.lock();
 
 //A) validate double-word opers
@@ -2261,126 +2245,137 @@
 
         //if .name is 'instance'
         if (this.name === 'instance') {
+        
             //.req('of')
             this.req('of');
             //.name = "instance of"
             this.name = "instance of";
         }
+        //if .name is 'instance'
+        
         else if (this.name === 'has') {
-
-//A.2) validate `has|hasnt property`
-
-        //else if .name is 'has'
+        
             //.negated = .opt('not')? true:false # set the 'negated' flag
-            this.negated = this.opt('not') ? true : false;// # set the 'negated' flag
+            this.negated = this.opt('not') ? true : false;
             //.req('property')
             this.req('property');
             //.name = "has property"
             this.name = "has property";
         }
+        //else if .name is 'has'
+        
         else if (this.name === 'hasnt') {
-
-        //else if .name is 'hasnt'
+        
             //.req('property')
             this.req('property');
             //.negated = true # set the 'negated' flag
-            this.negated = true;// # set the 'negated' flag
+            this.negated = true;
             //.name = "has property"
             this.name = "has property";
         }
+        //else if .name is 'hasnt'
+        
         else if (this.name === 'not') {
-
-//A.3) also, check if we got a `not` token.
-//In this case we require the next token to be `in|like` 
-//`not in|like` is the only valid (not-unary) *Oper* starting with `not`
-
-        //else if .name is 'not'
+        
             //.negated = true # set the 'negated' flag
-            this.negated = true;// # set the 'negated' flag
+            this.negated = true;
             //.name = .req('in','like') # require 'not in'|'not like'
-            this.name = this.req('in', 'like');// # require 'not in'|'not like'
+            this.name = this.req('in', 'like');
         };
 
 //A.4) handle 'into [var] x', assignment-Expression
 
         //if .name is 'into' and .opt('var')
         if (this.name === 'into' && this.opt('var')) {
+        
             //.intoVar = '*r' //.right operand is "into" var
-            this.intoVar = '*r'; //.right operand is "into" var
+            this.intoVar = '*r';
             //.getParent(Statement).intoVars = true #mark owner statement
-            this.getParent(Statement).intoVars = true;// #mark owner statement
+            this.getParent(Statement).intoVars = true;
         }
+        //if .name is 'into' and .opt('var')
+        
         else if (this.name === 'or') {
-
-//A.4) mark 'or' operations, since for c-generation a temp var is required
-
-        //else if .name is 'or'
+        
             //if .lexer.options.target is 'c'
             if (this.lexer.options.target === 'c') {
+            
                 //.intoVar = UniqueID.getVarName('__or')
                 this.intoVar = UniqueID.getVarName('__or');
             };
         }
+        //else if .name is 'or'
+        
         else if (this.name === 'isnt') {
-
-//B) Synonyms 
-
-//else, check for `isnt`, which we treat as `!==`, `negated is` 
-
-        //else if .name is 'isnt'
+        
           //.negated = true # set the 'negated' flag
-          this.negated = true;// # set the 'negated' flag
+          this.negated = true;
           //.name = 'is' # treat as 'Negated is'
-          this.name = 'is';// # treat as 'Negated is'
+          this.name = 'is';
         }
+        //else if .name is 'isnt'
+        
         else if (this.name === 'instanceof') {
-
-//else check for `instanceof`, (old habits die hard)
-
-        //else if .name is 'instanceof'
+        
           //.name = 'instance of'
           this.name = 'instance of';
         };
 
         //end if
+
+//C) Variants on 'is/isnt...'
+
+        //if .name is 'is' # note: 'isnt' was converted to 'is {negated:true}' above
         
 
 //C) Variants on 'is/isnt...'
 
         //if .name is 'is' # note: 'isnt' was converted to 'is {negated:true}' above
-        if (this.name === 'is') {// # note: 'isnt' was converted to 'is {negated:true}' above
+        if (this.name === 'is') {
+        
 
   //C.1) is not<br>
   //Check for `is not`, which we treat as `isnt` rather than `is ( not`.
 
             //if .opt('not') # --> is not/has not...
-            if (this.opt('not')) {// # --> is not/has not...
+            if (this.opt('not')) {
+            
                 //if .negated, .throwError '"isnt not" is invalid'
                 if (this.negated) {this.throwError('"isnt not" is invalid')};
                 //.negated = true # set the 'negated' flag
-                this.negated = true;// # set the 'negated' flag
+                this.negated = true;
             };
 
             //end if
+
+  //C.2) accept 'is/isnt instance of' and 'is/isnt instanceof'
+
+            //if .opt('instance')
             
 
   //C.2) accept 'is/isnt instance of' and 'is/isnt instanceof'
 
             //if .opt('instance')
             if (this.opt('instance')) {
+            
                 //.req('of')
                 this.req('of');
                 //.name = 'instance of'
                 this.name = 'instance of';
             }
+            //if .opt('instance')
+            
             else if (this.opt('instanceof')) {
-
-            //else if .opt('instanceof')
+            
                 //.name = 'instance of'
                 this.name = 'instance of';
             };
 
             //end if
+
+//Get operator precedence index
+
+        //.getPrecedence
             
         };
 
@@ -2391,6 +2386,12 @@
       };
 
       //end Oper parse
+
+
+//###getPrecedence:
+//Helper method to get Precedence Index (lower number means higher precedende)
+
+      //helper method getPrecedence()
       
 
 
@@ -2402,12 +2403,13 @@
 
         //.precedence = operatorsPrecedence.indexOf(.name)
         this.precedence = operatorsPrecedence.indexOf(this.name);
-        //if .precedence is -1 
+        //if .precedence is -1
         if (this.precedence === -1) {
+        
             //debugger
             debugger;
-            //fail with "OPER '#{.name}' not found in the operator precedence list"
-            throw new Error("OPER '" + this.name + "' not found in the operator precedence list");
+            //.sayErr "OPER '#{.name}' not found in the operator precedence list"
+            this.sayErr("OPER '" + this.name + "' not found in the operator precedence list");
         };
       };
     // export
@@ -2421,12 +2423,12 @@
 
 //####Notes for the javascript programmer
 
-//In LiteScript, *the boolean negation* `not`, 
+//In LiteScript, *the boolean negation* `not`,
 //has LOWER PRECEDENCE than the arithmetic and logical operators.
 
 //In LiteScript:  `if not a + 2 is 5` means `if not (a+2 is 5)`
 
-//In javascript: `if ( ! a + 2 === 5 )` means `if ( (!a)+2 === 5 )` 
+//In javascript: `if ( ! a + 2 === 5 )` means `if ( (!a)+2 === 5 )`
 
 //so remember **not to** mentally translate `not` to js `!`
 
@@ -2445,8 +2447,8 @@
 //2. `-`       *numeric unary minus*  `-(4+3)`
 //2. `+`       *numeric unary plus*   `+4` (can be ignored)
 //3. `new`     *instantiation*        `x = new classes[2]()`
-//4. `type of` *type name access*     `type of x is 'string'` 
-//5. `no`      *'falsey' check*       `if no options then options={}` 
+//4. `type of` *type name access*     `type of x is 'string'`
+//5. `no`      *'falsey' check*       `if no options then options={}`
 //6. `~`       *bit-unary-negation*   `a = ~xC0 + 5`
 
     //var unaryOperators = ['new','-','no','not','type','typeof','bitnot','+']
@@ -2472,13 +2474,16 @@
 
           //if .name is 'type'
           if (this.name === 'type') {
+          
               //if .opt('of')
               if (this.opt('of')) {
+              
                 //.name = 'type of'
                 this.name = 'type of';
               }
+              //if .opt('of')
+              
               else {
-              //else
                 //.throwParseFailed 'expected "of" after "type"'
                 this.throwParseFailed('expected "of" after "type"');
               };
@@ -2489,28 +2494,35 @@
           //.lock()
           this.lock();
 
-//Rename - and + to 'unary -' and 'unary +', 
+//Rename - and + to 'unary -' and 'unary +',
 //'typeof' to 'type of'
 
           //if .name is '-'
           if (this.name === '-') {
+          
               //.name = 'unary -'
               this.name = 'unary -';
           }
+          //if .name is '-'
+          
           else if (this.name === '+') {
-
-          //else if .name is '+'
+          
               //.name = 'unary +'
               this.name = 'unary +';
           }
+          //else if .name is '+'
+          
           else if (this.name === 'typeof') {
-
-          //else if .name is 'typeof'
+          
               //.name = 'type of'
               this.name = 'type of';
           };
 
           //end if
+
+//calculate precedence - Oper.getPrecedence()
+
+          //.getPrecedence()
           
 
 //calculate precedence - Oper.getPrecedence()
@@ -2519,7 +2531,18 @@
           this.getPrecedence();
       };
 
-      //end parse 
+      //end parse
+
+
+//-----------
+//## Expression
+
+//`Expression: [UnaryOper] Operand [Oper [UnaryOper] Operand]*`
+
+//The expression class parses intially a *flat* array of nodes.
+//After the expression is parsed, a *Expression Tree* is created based on operator precedence.
+
+    //public class Expression extends ASTBase
       
     // export
     module.exports.UnaryOper = UnaryOper;
@@ -2540,7 +2563,6 @@
     function Expression(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
       //properties operandCount, root, ternaryCount
     };
     // Expression (extends|proto is) ASTBase
@@ -2551,12 +2573,14 @@
 
         //declare valid .growExpressionTree
         
+        //declare valid .growExpressionTree
         //declare valid .root.name.type
         
+        //declare valid .root.name.type
 
         //var arr = []
         var arr = [];
-        //.operandCount = 0 
+        //.operandCount = 0
         this.operandCount = 0;
         //.ternaryCount = 0
         this.ternaryCount = 0;
@@ -2569,10 +2593,12 @@
 
             //if .lexer.token.value in unaryOperators
             if (unaryOperators.indexOf(this.lexer.token.value)>=0) {
+            
                 //var unaryOper = .opt(UnaryOper)
                 var unaryOper = this.opt(UnaryOper);
                 //if unaryOper
                 if (unaryOper) {
+                
                     //arr.push unaryOper
                     arr.push(unaryOper);
                     //.lock()
@@ -2582,7 +2608,7 @@
 
 //Get operand
 
-            //arr.push .req(Operand) 
+            //arr.push .req(Operand)
             arr.push(this.req(Operand));
             //.operandCount++
             this.operandCount++;
@@ -2591,8 +2617,9 @@
 
 //(performance) Fast exit for common tokens: `= , ] )` -> end of expression.
 
-            //if .lexer.token.type is 'ASSIGN' or .lexer.token.value in ',)]' 
+            //if .lexer.token.type is 'ASSIGN' or .lexer.token.value in ',)]'
             if (this.lexer.token.type === 'ASSIGN' || ',)]'.indexOf(this.lexer.token.value)>=0) {
+            
                 //break
                 break;
             };
@@ -2600,20 +2627,22 @@
 //optional newline **before** `Oper`
 //to allow a expressions to continue on the next line.
 //We look ahead, and if the first token in the next line is OPER
-//we consume the NEWLINE, allowing multiline expressions. 
+//we consume the NEWLINE, allowing multiline expressions.
 //The exception is ArrayLiteral, because in free-form mode
 //the next item in the array on the next line, can start with a unary operator
 
             //if .lexer.token.type is 'NEWLINE' and not (.parent instanceof ArrayLiteral)
             if (this.lexer.token.type === 'NEWLINE' && !((this.parent instanceof ArrayLiteral))) {
+            
               //.opt 'NEWLINE' #consume newline
-              this.opt('NEWLINE');// #consume newline
+              this.opt('NEWLINE');
               //if .lexer.token.type isnt 'OPER' # the first token in the next line isnt OPER (+,and,or,...)
-              if (this.lexer.token.type !== 'OPER') {// # the first token in the next line isnt OPER (+,and,or,...)
+              if (this.lexer.token.type !== 'OPER') {
+              
                   //.lexer.returnToken() # return NEWLINE
-                  this.lexer.returnToken();// # return NEWLINE
+                  this.lexer.returnToken();
                   //break #end Expression
-                  break;// #end Expression
+                  break;
               };
             };
 
@@ -2628,24 +2657,32 @@
 
             //if oper.name is '?'
             if (oper.name === '?') {
+            
                 //.ternaryCount++
                 this.ternaryCount++;
             }
+            //if oper.name is '?'
+            
             else if (oper.name === ':') {
-
-            //else if oper.name is ':'
+            
                 //if no .ternaryCount //":" without '?'. It can be 'case' expression ending ":"
-                if (!this.ternaryCount) { //":" without '?'. It can be 'case' expression ending ":"
+                if (!this.ternaryCount) {
+                
                     //.lexer.returnToken
                     this.lexer.returnToken();
                     //break //end of expression
-                    break; //end of expression
+                    break;
                 };
                 //.ternaryCount--
                 this.ternaryCount--;
             };
 
             //end if
+
+//If it was an operator, store, and continue because we expect another operand.
+//(operators sits between two operands)
+
+            //arr.push(oper)
             
 
 //If it was an operator, store, and continue because we expect another operand.
@@ -2654,14 +2691,12 @@
             //arr.push(oper)
             arr.push(oper);
 
-//allow dangling expression. If the line ends with OPER, 
+//allow dangling expression. If the line ends with OPER,
 //we consume the NEWLINE and continue parsing the expression on the next line
 
             //.opt 'NEWLINE' #consume optional newline after Oper
-            this.opt('NEWLINE');// #consume optional newline after Oper
+            this.opt('NEWLINE');
         };// end loop
-
-        //loop
 
 //Control: complete all ternary operators
 
@@ -2674,14 +2709,17 @@
         //for each index,item in arr
         for( var index=0,item ; index<arr.length ; index++){item=arr[index];
         
-          //declare item:UnaryOper         
+          //declare item:UnaryOper
           
+          //declare item:UnaryOper
           //if item instanceof UnaryOper and item.name is 'new'
           if (item instanceof UnaryOper && item.name === 'new') {
+          
             //var operand = arr[index+1]
             var operand = arr[index + 1];
             //if operand.name instanceof VariableRef
             if (operand.name instanceof VariableRef) {
+            
                 //var varRef = operand.name
                 var varRef = operand.name;
                 //if no varRef.executes, varRef.addAccessor new FunctionAccess(this)
@@ -2698,6 +2736,83 @@
 
 
       //end method Expression.parse()
+
+
+//Grow The Expression Tree
+//========================
+
+//Growing the expression AST
+//--------------------------
+
+//By default, for every expression, the parser creates a *flat array*
+//of UnaryOper, Operands and Operators.
+
+//`Expression: [UnaryOper] Operand [Oper [UnaryOper] Operand]*`
+
+//For example, `not 1 + 2 * 3 is 5`, turns into:
+
+//.arr =  ['not','1','+','2','*','3','is','5']
+
+//In this method we create the tree, by pushing down operands,
+//according to operator precedence.
+
+//The process is repeated until there is only one operator left in the root node
+//(the one with lower precedence)
+
+//For example, `not 1 + 2 * 3 is 5`, turns into:
+
+//```
+   //not
+      //\
+      //is
+     ///  \
+   //+     5
+  /// \
+ //1   *
+    /// \
+    //2  3
+//```
+
+
+//`3 in a and not 4 in b`
+//```
+      //and
+     ///  \
+   //in    not
+  /// \     |
+ //3   a    in
+         ///  \
+        //4   b
+//```
+
+//`3 in a and 4 not in b`
+//```
+      //and
+     ///  \
+   //in   not-in
+  /// \    / \
+ //3   a  4   b
+
+//```
+
+
+//`-(4+3)*2`
+//```
+   //*
+  /// \
+ //-   2
+  //\
+   //+
+  /// \
+ //4   3
+//```
+
+//Expression.growExpressionTree()
+//-------------------------------
+
+//while there is more than one operator in the root node...
+
+      //method growExpressionTree(arr:ASTBase array)
       
 
 
@@ -2716,10 +2831,10 @@
 
 //.arr =  ['not','1','+','2','*','3','is','5']
 
-//In this method we create the tree, by pushing down operands, 
+//In this method we create the tree, by pushing down operands,
 //according to operator precedence.
 
-//The process is repeated until there is only one operator left in the root node 
+//The process is repeated until there is only one operator left in the root node
 //(the one with lower precedence)
 
 //For example, `not 1 + 2 * 3 is 5`, turns into:
@@ -2730,9 +2845,9 @@
       //is
      ///  \
    //+     5
-  /// \   
- //1   *  
-    /// \ 
+  /// \
+ //1   *
+    /// \
     //2  3
 //```
 
@@ -2796,10 +2911,13 @@
 
               //if item instanceof Oper
               if (item instanceof Oper) {
+              
                   //declare item:Oper
                   
+                  //declare item:Oper
                   //if not item.pushed and item.precedence < minPrecedenceInx
                   if (!(item.pushed) && item.precedence < minPrecedenceInx) {
+                  
                       //pos = inx
                       pos = inx;
                       //minPrecedenceInx = item.precedence
@@ -2809,6 +2927,9 @@
           };// end for each in arr
 
           //end for
+
+          //#control
+          //if pos<0, .throwError("can't find highest precedence operator")
           
 
           //#control
@@ -2825,11 +2946,13 @@
 
           //if oper instanceof UnaryOper
           if (oper instanceof UnaryOper) {
+          
 
               //#control
               //if pos is arr.length
               if (pos === arr.length) {
-                  //.throwError("can't get RIGHT operand for unary operator '#{oper}'") 
+              
+                  //.throwError("can't get RIGHT operand for unary operator '#{oper}'")
                   this.throwError("can't get RIGHT operand for unary operator '" + oper + "'");
               };
 
@@ -2837,18 +2960,20 @@
               //oper.right = arr.splice(pos+1,1)[0]
               oper.right = arr.splice(pos + 1, 1)[0];
           }
+          //if oper instanceof UnaryOper
+          
           else {
-
-          //else
 
               //#control
               //if pos is arr.length
               if (pos === arr.length) {
+              
                 //.throwError("can't get RIGHT operand for binary operator '#{oper}'")
                 this.throwError("can't get RIGHT operand for binary operator '" + oper + "'");
               };
               //if pos is 0
               if (pos === 0) {
+              
                 //.throwError("can't get LEFT operand for binary operator '#{oper}'")
                 this.throwError("can't get LEFT operand for binary operator '" + oper + "'");
               };
@@ -2861,10 +2986,10 @@
           };
 
           //end if
-          
-        };// end loop
 
         //loop #until there's only one operator
+          
+        };// end loop
 
 //Store the root operator
 
@@ -2873,6 +2998,14 @@
       };
 
       //end method
+
+//-----------------------
+
+//## Literal
+
+//This class groups: NumberLiteral, StringLiteral, RegExpLiteral, ArrayLiteral and ObjectLiteral
+
+    //public class Literal extends ASTBase
       
     // export
     module.exports.Expression = Expression;
@@ -2920,10 +3053,9 @@
 
     //public class NumberLiteral extends Literal
     // constructor
-    function NumberLiteral(){// default constructor: call super.constructor
+    function NumberLiteral(){
+    // default constructor: call super.constructor
         Literal.prototype.constructor.apply(this,arguments)
-
-      //constructor 
         //.type = 'Number'
         this.type = 'Number';
       };
@@ -2945,15 +3077,14 @@
 
 //`StringLiteral: STRING`
 
-//A string constant token. Can be anything the lexer supports, including single or double-quoted strings. 
+//A string constant token. Can be anything the lexer supports, including single or double-quoted strings.
 //The token include the enclosing quotes
 
     //public class StringLiteral extends Literal
     // constructor
-    function StringLiteral(){// default constructor: call super.constructor
+    function StringLiteral(){
+    // default constructor: call super.constructor
         Literal.prototype.constructor.apply(this,arguments)
-
-      //constructor 
         //.type = 'String'
         this.type = 'String';
       };
@@ -2969,7 +3100,7 @@
       //method getValue()
       StringLiteral.prototype.getValue = function(){
         //return .name.slice(1,-1) #remove quotes
-        return this.name.slice(1, -1);// #remove quotes
+        return this.name.slice(1, -1);
       };
     // export
     module.exports.StringLiteral = StringLiteral;
@@ -2984,10 +3115,9 @@
 
     //public class RegExpLiteral extends Literal
     // constructor
-    function RegExpLiteral(){// default constructor: call super.constructor
+    function RegExpLiteral(){
+    // default constructor: call super.constructor
         Literal.prototype.constructor.apply(this,arguments)
-
-      //constructor 
         //.type = 'RegExp'
         this.type = 'RegExp';
       };
@@ -3010,7 +3140,7 @@
 //`ArrayLiteral: '[' (Expression,)* ']'`
 
 //An array definition, such as `a = [1,2,3]`
-//or 
+//or
 
 //```
 //a = [
@@ -3022,13 +3152,11 @@
 
     //public class ArrayLiteral extends Literal
     // constructor
-    function ArrayLiteral(){// default constructor: call super.constructor
+    function ArrayLiteral(){
+    // default constructor: call super.constructor
         Literal.prototype.constructor.apply(this,arguments)
-
-      //properties 
+      //properties
         //items: array of Expression
-
-      //constructor 
         //.type = 'Array'
         this.type = 'Array';
       };
@@ -3042,7 +3170,7 @@
         //.lock()
         this.lock();
         //.items = .optSeparatedList(Expression,',',']') # closer "]" required
-        this.items = this.optSeparatedList(Expression, ',', ']');// # closer "]" required
+        this.items = this.optSeparatedList(Expression, ',', ']');
       };
     // export
     module.exports.ArrayLiteral = ArrayLiteral;
@@ -3064,8 +3192,7 @@
     function ObjectLiteral(){ // default constructor
     // default constructor: call super.constructor
         Literal.prototype.constructor.apply(this,arguments)
-
-      //properties 
+      //properties
         //items: NameValuePair array
         //produceType: string
     };
@@ -3079,13 +3206,13 @@
         //.lock()
         this.lock();
         //.items = .optSeparatedList(NameValuePair,',','}') # closer "}" required
-        this.items = this.optSeparatedList(NameValuePair, ',', '}');// # closer "}" required
+        this.items = this.optSeparatedList(NameValuePair, ',', '}');
       };
 
 //####helper Functions
 
       //#recursive duet 1 (see NameValuePair)
-      //helper method forEach(callback) 
+      //helper method forEach(callback)
       ObjectLiteral.prototype.forEach = function(callback){
           //for each nameValue in .items
           for( var nameValue__inx=0,nameValue ; nameValue__inx<this.items.length ; nameValue__inx++){nameValue=this.items[nameValue__inx];
@@ -3105,7 +3232,7 @@
 
 //`NameValuePair: (IDENTIFIER|StringLiteral|NumberLiteral) ':' Expression`
 
-//A single definition in a `ObjectLiteral` 
+//A single definition in a `ObjectLiteral`
 //a `property-name: value` pair.
 
     //public class NameValuePair extends ASTBase
@@ -3113,7 +3240,6 @@
     function NameValuePair(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
       //properties value: Expression
     };
     // NameValuePair (extends|proto is) ASTBase
@@ -3134,19 +3260,22 @@
 
         //if .lexer.token.type is 'NEWLINE'
         if (this.lexer.token.type === 'NEWLINE') {
+        
           //.value = .req(FreeObjectLiteral)
           this.value = this.req(FreeObjectLiteral);
         }
+        //if .lexer.token.type is 'NEWLINE'
+        
         else {
-
-        //else
           //if .lexer.interfaceMode
           if (this.lexer.interfaceMode) {
+          
               //.parseType
               this.parseType();
           }
+          //if .lexer.interfaceMode
+          
           else {
-          //else
               //.value = .req(Expression)
               this.value = this.req(Expression);
           };
@@ -3158,19 +3287,60 @@
       //helper method forEach(callback:Function)
       NameValuePair.prototype.forEach = function(callback){
 
-          //callback.call(this) 
+          //callback.call(this)
           callback.call(this);
 
           //if .value.root.name instanceof ObjectLiteral
           if (this.value.root.name instanceof ObjectLiteral) {
+          
             //declare .value.root.name:ObjectLiteral
             
+            //declare .value.root.name:ObjectLiteral
             //.value.root.name.forEach callback # recurse
-            this.value.root.name.forEach(callback);// # recurse
+            this.value.root.name.forEach(callback);
           };
       };
 
       //end helper recursive functions
+
+
+//## FreeObjectLiteral
+
+//Defines an object with a list of key value pairs.
+//Each pair can be in it's own line. A indent denotes a new level deep.
+//FreeObjectLiterals are triggered by a "dangling assignment"
+
+//Examples:
+//
+//
+//    var x =            // <- dangling assignment
+//          a: 1
+//          b:           // <- dangling assignment
+//            b1:"some"
+//            b2:"latte"
+//
+//    var x =
+//     a:1
+//     b:2
+//     c:
+//      d:1
+//     months: ["J","F",
+//      "M","A","M","J",
+//      "J","A","S","O",
+//      "N","D" ]
+//
+//
+//    var y =
+//     c:{d:1}
+//     trimester:[
+//       "January"
+//       "February"
+//       "March"
+//     ]
+//     getValue: function(i)
+//       return y.trimester[i]
+
+    //    public class FreeObjectLiteral extends ObjectLiteral
       
     // export
     module.exports.NameValuePair = NameValuePair;
@@ -3180,42 +3350,41 @@
 
 //## FreeObjectLiteral
 
-//Defines an object with a list of key value pairs. 
+//Defines an object with a list of key value pairs.
 //Each pair can be in it's own line. A indent denotes a new level deep.
 //FreeObjectLiterals are triggered by a "dangling assignment"
 
-//Examples: 
-///*
+//Examples:
+//
+//
+//    var x =            // <- dangling assignment
+//          a: 1
+//          b:           // <- dangling assignment
+//            b1:"some"
+//            b2:"latte"
+//
+//    var x =
+//     a:1
+//     b:2
+//     c:
+//      d:1
+//     months: ["J","F",
+//      "M","A","M","J",
+//      "J","A","S","O",
+//      "N","D" ]
+//
+//
+//    var y =
+//     c:{d:1}
+//     trimester:[
+//       "January"
+//       "February"
+//       "March"
+//     ]
+//     getValue: function(i)
+//       return y.trimester[i]
 
-    //var x =            // <- dangling assignment
-          //a: 1 
-          //b:           // <- dangling assignment
-            //b1:"some"
-            //b2:"latte"
-
-    //var x =
-     //a:1
-     //b:2
-     //c:
-      //d:1
-     //months: ["J","F",
-      //"M","A","M","J",
-      //"J","A","S","O",
-      //"N","D" ]
-
-
-    //var y =
-     //c:{d:1}
-     //trimester:[
-       //"January"
-       //"February"
-       //"March"
-     //]
-     //getValue: function(i)
-       //return y.trimester[i]
-//*/
-
-//### public class FreeObjectLiteral extends ObjectLiteral
+    //    public class FreeObjectLiteral extends ObjectLiteral
     // constructor
     function FreeObjectLiteral(){ // default constructor
     // default constructor: call super.constructor
@@ -3231,7 +3400,7 @@
 
         //.lock()
         this.lock();
-        //.items = .reqSeparatedList(NameValuePair,',') 
+        //.items = .reqSeparatedList(NameValuePair,',')
         this.items = this.reqSeparatedList(NameValuePair, ',');
       };
     // export
@@ -3251,7 +3420,6 @@
     function ParenExpression(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
       //properties expr:Expression
     };
     // ParenExpression (extends|proto is) ASTBase
@@ -3287,8 +3455,7 @@
     function FunctionDeclaration(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-      //properties 
+      //properties
         //specifier
         //paramsDeclarations: VariableDecl array
         //definePropItems: DefinePropertyItem array
@@ -3309,6 +3476,7 @@
 
         //if .specifier isnt 'method' and .parent.parent instance of ClassDeclaration
         if (this.specifier !== 'method' && this.parent.parent instanceof ClassDeclaration) {
+        
             //.throwError "unexpected 'function' in 'class/namespace' body. You should use 'method'"
             this.throwError("unexpected 'function' in 'class/namespace' body. You should use 'method'");
         };
@@ -3317,12 +3485,14 @@
 
         //if .specifier is '->'
         if (this.specifier === '->') {
+        
             //.name = ""
             this.name = "";
         }
+        //if .specifier is '->'
+        
         else {
-        //else
-            //.name = .opt('IDENTIFIER') 
+            //.name = .opt('IDENTIFIER')
             this.name = this.opt('IDENTIFIER');
             //if .name in ['__init','new'], .sayErr '"#{.name}" is a reserved function name'
             if (['__init', 'new'].indexOf(this.name)>=0) {this.sayErr('"' + this.name + '" is a reserved function name')};
@@ -3336,25 +3506,27 @@
 
       //#end parse
 
-//##### helper method parseParametersAndBody()
+      //      helper method parseParametersAndBody()
       FunctionDeclaration.prototype.parseParametersAndBody = function(){
 
-//This method is shared by functions, methods and constructors. 
+//This method is shared by functions, methods and constructors.
 //`()` after `function` are optional. It parses: `['(' [VariableDecl,] ')'] [returns VariableRef] '['DefinePropertyItem']'`
 
         //.EndFnLineNum = .sourceLineNum+1 //default value - store to generate accurate SourceMaps (js)
-        this.EndFnLineNum = this.sourceLineNum + 1; //default value - store to generate accurate SourceMaps (js)
+        this.EndFnLineNum = this.sourceLineNum + 1;
 
         //if .opt("(")
         if (this.opt("(")) {
+        
             //.paramsDeclarations = .optSeparatedList(VariableDecl,',',')')
             this.paramsDeclarations = this.optSeparatedList(VariableDecl, ',', ')');
         }
-        else if (this.specifier === '->') {// #we arrived here by: FnCall-param-Expression-Operand-'->'
-
-        //else if .specifier is '->' #we arrived here by: FnCall-param-Expression-Operand-'->'
+        //if .opt("(")
+        
+        else if (this.specifier === '->') {
+        
             //# after '->' we accept function params w/o parentheses.
-            //# get parameter names (name:type only), up to [NEWLINE] or '=' 
+            //# get parameter names (name:type only), up to [NEWLINE] or '='
             //.paramsDeclarations=[]
             this.paramsDeclarations = [];
             //until .lexer.token.type is 'NEWLINE' or .lexer.token.value is '='
@@ -3372,20 +3544,22 @@
         };
 
         //if .opt('=') #one line function. Body is a Expression
-        if (this.opt('=')) {// #one line function. Body is a Expression
+        if (this.opt('=')) {
+        
 
             //.body = .req(Expression)
             this.body = this.req(Expression);
         }
+        //if .opt('=') #one line function. Body is a Expression
+        
         else {
-
-        //else # full body function
 
             //if .opt('returns'), .parseType  #function return type
             if (this.opt('returns')) {this.parseType()};
 
             //if .opt('[','SPACE_BRACKET') # property attributes (non-enumerable, writable, etc - Object.defineProperty)
-            if (this.opt('[', 'SPACE_BRACKET')) {// # property attributes (non-enumerable, writable, etc - Object.defineProperty)
+            if (this.opt('[', 'SPACE_BRACKET')) {
+            
                 //.definePropItems = .optSeparatedList(DefinePropertyItem,',',']')
                 this.definePropItems = this.optSeparatedList(DefinePropertyItem, ',', ']');
             };
@@ -3395,11 +3569,14 @@
             this.body = this.req(Body);
 
             //# get function exit point source line number (for SourceMap)
-            //.EndFnLineNum = .lexer.maxSourceLineNum
-            this.EndFnLineNum = this.lexer.maxSourceLineNum;
+            //.EndFnLineNum = .lexer.last.sourceLineNum
+            this.EndFnLineNum = this.lexer.last.sourceLineNum;
         };
 
         //end if
+
+
+    //    public class DefinePropertyItem extends ASTBase
         
       };
     // export
@@ -3408,21 +3585,21 @@
     // end class FunctionDeclaration
 
 
-//### public class DefinePropertyItem extends ASTBase
+    //    public class DefinePropertyItem extends ASTBase
     // constructor
     function DefinePropertyItem(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-//This Symbol handles property attributes, the same used at js's **Object.DefineProperty()**
-
-      //declare name affinity definePropItem
-
       //properties
         //negated:boolean
     };
     // DefinePropertyItem (extends|proto is) ASTBase
     DefinePropertyItem.prototype.__proto__ = ASTBase.prototype;
+//This Symbol handles property attributes, the same used at js's **Object.DefineProperty()**
+
+      //declare name affinity definePropItem
       
+      //declare name affinity definePropItem
 
       //method parse()
       DefinePropertyItem.prototype.parse = function(){
@@ -3440,11 +3617,11 @@
 
 
 
-//## MethodDeclaration 
+//## MethodDeclaration
 
 //`MethodDeclaration: 'method [name] ["(" [VariableDecl,] ")"] [returns type-VariableRef] ["["DefinePropertyItem,"]"] Body`
 
-//A `method` is a function defined in the prototype of a class. 
+//A `method` is a function defined in the prototype of a class.
 //A `method` has an implicit var `this` pointing to the specific instance the method is called on.
 
 //MethodDeclaration derives from FunctionDeclaration, so both are instance of FunctionDeclaration
@@ -3470,20 +3647,22 @@
         //.lock()
         this.lock();
 
-//require method name. Note: jQuery uses 'not' and 'has' as method names, so here we 
+//require method name. Note: jQuery uses 'not' and 'has' as method names, so here we
 //take any token, and then check if it's a valid identifier
 
-        //.name = .req('IDENTIFIER') 
-        //var name = .lexer.token.value 
+        //.name = .req('IDENTIFIER')
+        //var name = .lexer.token.value
         var name = this.lexer.token.value;
 
-        //if no PMREX.whileRanges(name,"0-9") and name is PMREX.whileRanges(name,"a-zA-Z0-9$_") 
+        //if no PMREX.whileRanges(name,"0-9") and name is PMREX.whileRanges(name,"a-zA-Z0-9$_")
         if (!PMREX.whileRanges(name, "0-9") && name === PMREX.whileRanges(name, "a-zA-Z0-9$_")) {
+        
             //do nothing //if do no start with a number and it's composed by "a-zA-Z0-9$_", is valid
-            null; //if do no start with a number and it's composed by "a-zA-Z0-9$_", is valid
+            null;
         }
+        //if no PMREX.whileRanges(name,"0-9") and name is PMREX.whileRanges(name,"a-zA-Z0-9$_")
+        
         else {
-        //else 
             //.throwError 'invalid method name: "#{name}"'
             this.throwError('invalid method name: "' + name + '"');
         };
@@ -3515,7 +3694,6 @@
     function ClassDeclaration(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
       //properties
         //varRefSuper:VariableRef
         //body
@@ -3525,6 +3703,7 @@
 
       //declare name affinity classDecl
       
+      //declare name affinity classDecl
 
       //method parse()
       ClassDeclaration.prototype.parse = function(){
@@ -3539,17 +3718,19 @@
 
         //if not .lexer.interfaceMode and not String.isCapitalized(.name)
         if (!(this.lexer.interfaceMode) && !(String.isCapitalized(this.name))) {
+        
             //.lexer.sayErr "class names should be Capitalized: class #{.name}"
             this.lexer.sayErr("class names should be Capitalized: class " + this.name);
         };
 
 //Now parse optional `,(extend|proto is|inherits from)` setting the super class
 
-        //.opt(',') 
+        //.opt(',')
         this.opt(',');
-        //if .opt('extends','inherits','proto') 
+        //if .opt('extends','inherits','proto')
         if (this.opt('extends', 'inherits', 'proto')) {
-          //.opt('from','is') 
+        
+          //.opt('from','is')
           this.opt('from', 'is');
           //.varRefSuper = .req(VariableRef)
           this.varRefSuper = this.req(VariableRef);
@@ -3559,9 +3740,22 @@
 
         //.body = .req(Body)
         this.body = this.req(Body);
-        //.body.validate 
-            //PropertiesDeclaration, ConstructorDeclaration 
+        //.body.validate
+            //PropertiesDeclaration, ConstructorDeclaration
             //MethodDeclaration, DeclareStatement, DoNothingStatement
+
+
+//## ConstructorDeclaration
+
+//`ConstructorDeclaration : 'constructor [new className-IDENTIFIER] ["(" [VariableDecl,]* ")"] [returns type-VariableRef] Body`
+
+//A `constructor` is the main function of the class. In js is the function-class body  (js: `function Class(...){... `)
+//The `constructor` method is called upon creation of the object, by the `new` operator.
+//The return value is the value returned by `new` operator, that is: the new instance of the class.
+
+//ConstructorDeclaration derives from MethodDeclaration, so it is also a instance of FunctionDeclaration
+
+    //public class ConstructorDeclaration extends MethodDeclaration
         this.body.validate(PropertiesDeclaration, ConstructorDeclaration, MethodDeclaration, DeclareStatement, DoNothingStatement);
       };
     // export
@@ -3570,7 +3764,7 @@
     // end class ClassDeclaration
 
 
-//## ConstructorDeclaration 
+//## ConstructorDeclaration
 
 //`ConstructorDeclaration : 'constructor [new className-IDENTIFIER] ["(" [VariableDecl,]* ")"] [returns type-VariableRef] Body`
 
@@ -3601,7 +3795,8 @@
         this.name = '__init';
 
         //if .opt('new') # optional: constructor new Person(name:string)
-        if (this.opt('new')) {// # optional: constructor new Person(name:string)
+        if (this.opt('new')) {
+        
           //# to ease reading, and to find also the constructor when searching for "new Person"
           //var className = .req('IDENTIFIER')
           var className = this.req('IDENTIFIER');
@@ -3609,6 +3804,7 @@
           var classDeclaration = this.getParent(ClassDeclaration);
           //if classDeclaration and classDeclaration.name isnt className
           if (classDeclaration && classDeclaration.name !== className) {
+          
               //.sayErr "Class Name mismatch #{className}/#{classDeclaration.name}"
               this.sayErr("Class Name mismatch " + className + "/" + classDeclaration.name);
           };
@@ -3639,8 +3835,7 @@
     function AppendToDeclaration(){ // default constructor
     // default constructor: call super.constructor
         ClassDeclaration.prototype.constructor.apply(this,arguments)
-
-      //properties 
+      //properties
         //toNamespace
         //varRef:VariableRef
     };
@@ -3673,10 +3868,21 @@
         //.body = .req(Body)
         this.body = this.req(Body);
 
-        //.body.validate 
+        //.body.validate
             //PropertiesDeclaration
             //MethodDeclaration
             //ClassDeclaration
+
+
+//## NamespaceDeclaration
+
+//`NamespaceDeclaration: namespace IDENTIFIER Body`
+
+//Declares a namespace.
+//for js: creates a object with methods and properties
+//for LiteC, just declare a namespace. All classes created inside will have the namespace prepended with "_"
+
+    //public class NamespaceDeclaration extends ClassDeclaration // NamespaceDeclaration is instance of ClassDeclaration
         this.body.validate(PropertiesDeclaration, MethodDeclaration, ClassDeclaration);
       };
     // export
@@ -3689,7 +3895,7 @@
 
 //`NamespaceDeclaration: namespace IDENTIFIER Body`
 
-//Declares a namespace. 
+//Declares a namespace.
 //for js: creates a object with methods and properties
 //for LiteC, just declare a namespace. All classes created inside will have the namespace prepended with "_"
 
@@ -3718,11 +3924,20 @@
         //.body = .req(Body)
         this.body = this.req(Body);
 
-        //.body.validate 
+        //.body.validate
             //PropertiesDeclaration
             //MethodDeclaration
             //ClassDeclaration
             //NamespaceDeclaration
+
+
+//## DebuggerStatement
+
+//`DebuggerStatement: debugger`
+
+//When a debugger is attached, break at this point.
+
+    //public class DebuggerStatement extends ASTBase
         this.body.validate(PropertiesDeclaration, MethodDeclaration, ClassDeclaration, NamespaceDeclaration);
       };
     // export
@@ -3762,7 +3977,7 @@
 
 //`compiler` is a generic entry point to alter LiteScript compiler from source code.
 //It allows conditional complilation, setting compiler options, and execute macros
-//to generate code on the fly. 
+//to generate code on the fly.
 //Future: allow the programmer to hook transformations on the compiler process itself.
 //<br>`CompilerStatement: (compiler|compile) (set|if|debugger|option) Body`
 //<br>`set-CompilerStatement: compiler set (VariableDecl,)`
@@ -3773,7 +3988,6 @@
     function CompilerStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
       //properties
         //kind, conditional:string
         //list, body
@@ -3797,35 +4011,20 @@
 
         //if .kind is 'set'
         if (this.kind === 'set') {
+        
             //.list = .reqSeparatedList(VariableDecl,',')
             this.list = this.reqSeparatedList(VariableDecl, ',');
         }
-        else if (this.kind === 'debugger') {// #debug-pause the compiler itself, to debug compiling process
-
-//### compiler if conditional compilation
-
-///*        else if .kind is 'if'
-
-          //.conditional = .req('IDENTIFIER')
-
-          //if .compilerVar(.conditional)
-              //.body = .req(Body)
-          //else
-            //skip block
-            //do 
-              //.lexer.nextToken
-            //loop until .lexer.indent <= .indent
-//*/
-
-//### other compile options
-
-        //else if .kind is 'debugger' #debug-pause the compiler itself, to debug compiling process
+        //if .kind is 'set'
+        
+        else if (this.kind === 'debugger') {
+        
           //debugger
           debugger;
         }
+        //else if .kind is 'debugger' #debug-pause the compiler itself, to debug compiling process
+        
         else {
-
-        //else
           //.sayErr 'invalid compiler command'
           this.sayErr('invalid compiler command');
         };
@@ -3849,8 +4048,7 @@
     function ImportStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-      //properties 
+      //properties
         //global:boolean
         //list: ImportStatementItem array
     };
@@ -3888,15 +4086,12 @@
     // end class ImportStatement
 
 
-//### export class ImportStatementItem extends ASTBase
+    //    export class ImportStatementItem extends ASTBase
     // constructor
     function ImportStatementItem(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-//`ImportStatementItem: IDENTIFIER [from STRING]`
-
-      //properties 
+      //properties
         //importParameter:StringLiteral
     };
     // ImportStatementItem (extends|proto is) ASTBase
@@ -3908,6 +4103,7 @@
         this.name = this.req('IDENTIFIER');
         //if .opt('from')
         if (this.opt('from')) {
+        
             //.lock()
             this.lock();
             //.importParameter = .req(StringLiteral)
@@ -3922,11 +4118,11 @@
 
 //## DeclareStatement
 
-//Declare allows you to define a variable and/or its type 
+//Declare allows you to define a variable and/or its type
 //*for the type-checker (at compile-time)*
 
 //#####Declare variable:type
-//`DeclareStatement: declare VariableRef:type-VariableRef` 
+//`DeclareStatement: declare VariableRef:type-VariableRef`
 
 //Declare a variable type on the fly, from declaration point onward
 
@@ -3935,7 +4131,7 @@
 
 //#####Global Declare
 //`global declare (ImportStatementItem+)`
-//Browser-mode: Import a *.interface.md* file to declare a global pre-existent complex objects 
+//Browser-mode: Import a *.interface.md* file to declare a global pre-existent complex objects
 //Example: `global declare jQuery,Document,Window`
 
 //#####Declare [global] var
@@ -3949,14 +4145,14 @@
 //Allows you to set the type on a existing variable
 //globally for the entire compilation.
 
-//Example: 
+//Example:
 //`declare global type for LocalData.user: Models.userData` #set type globally for the entire compilation
 
 
 //#####Declare name affinity
-//`DeclareStatement: name affinity (IDENTIFIER,)+` 
+//`DeclareStatement: name affinity (IDENTIFIER,)+`
 
-//To be used inside a class declaration, declare var names 
+//To be used inside a class declaration, declare var names
 //that will default to Class as type
 
 //Example
@@ -3967,7 +4163,7 @@
       //declare name affinity varDecl
 //```
 
-//Given the above declaration, any `var` named (or ending in) **"varDecl"** or **"VariableDecl"** 
+//Given the above declaration, any `var` named (or ending in) **"varDecl"** or **"VariableDecl"**
 //will assume `:VariableDecl` as type. (Class name is automatically included in 'name affinity')
 
 //Example:
@@ -3976,33 +4172,31 @@
 //all three vars will assume `:VariableDecl` as type.
 
 //#####Declare valid
-//`DeclareStatement: declare valid IDENTIFIER("."(IDENTIFIER|"()"|"[]"))* [:type-VariableRef]` 
+//`DeclareStatement: declare valid IDENTIFIER("."(IDENTIFIER|"()"|"[]"))* [:type-VariableRef]`
 
 //To declare, on the fly, known-valid property chains for local variables.
-//Example: 
+//Example:
   //`declare valid data.user.name`
   //`declare valid node.parent.parent.text:string`
   //`declare valid node.parent.items[].name:string`
 
-//#####Declare on 
-//`DeclareStatement: declare on IDENTIFIER (VariableDecl,)+` 
+//#####Declare on
+//`DeclareStatement: declare on IDENTIFIER (VariableDecl,)+`
 
-//To declare valid members on scope vars. 
+//To declare valid members on scope vars.
 //Allows you to declare the valid properties for a local variable or parameter
-//Example: 
-///*
-    //function startServer(options)
-        //declare on options 
-            //name:string, useHeaders:boolean, port:number
-//*/
+//Example:
+//
+//    function startServer(options)
+//        declare on options
+//            name:string, useHeaders:boolean, port:number
 
 
-//### export class DeclareStatement extends ASTBase
+    //    export class DeclareStatement extends ASTBase
     // constructor
     function DeclareStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
       //properties
         //varRef: VariableRef
         //names: VariableDecl array
@@ -4025,6 +4219,7 @@
 
         //if .hasAdjective('global')
         if (this.hasAdjective('global')) {
+        
               //.list = .reqSeparatedList(ImportStatementItem,",")
               this.list = this.reqSeparatedList(ImportStatementItem, ",");
               //keep track of `import/require` calls
@@ -4040,6 +4235,10 @@
               return;
         };
         //end if
+
+//get specifier 'on|valid|name|all'
+
+        //.specifier = .opt('on','valid','name','global','var')
         
 
 //get specifier 'on|valid|name|all'
@@ -4047,37 +4246,48 @@
         //.specifier = .opt('on','valid','name','global','var')
         this.specifier = this.opt('on', 'valid', 'name', 'global', 'var');
         //if .lexer.token.value is ':' #it was used as a var name
-        if (this.lexer.token.value === ':') {// #it was used as a var name
+        if (this.lexer.token.value === ':') {
+        
             //.specifier='on-the-fly'
             this.specifier = 'on-the-fly';
             //.lexer.returnToken
             this.lexer.returnToken();
         }
+        //if .lexer.token.value is ':' #it was used as a var name
+        
         else if (!this.specifier) {
-        //else if no .specifier
+        
             //.specifier='on-the-fly' #no specifier => assume on-the-fly type assignment
-            this.specifier = 'on-the-fly';// #no specifier => assume on-the-fly type assignment
+            this.specifier = 'on-the-fly';
         };
         //end if
+
+        //#handle '...global var..' & '...global type for..'
+        //if .specifier is 'global' #declare global (var|type for)...
         
 
         //#handle '...global var..' & '...global type for..'
-        //if .specifier is 'global' #declare global (var|type for)... 
-        if (this.specifier === 'global') {// #declare global (var|type for)...
+        //if .specifier is 'global' #declare global (var|type for)...
+        if (this.specifier === 'global') {
+        
             //.specifier = .req('var','type') #require 'var|type'
-            this.specifier = this.req('var', 'type');// #require 'var|type'
+            this.specifier = this.req('var', 'type');
             //if .specifier is 'var'
             if (this.specifier === 'var') {
+            
                   //.globVar = true
                   this.globVar = true;
             }
+            //if .specifier is 'var'
+            
             else {
-            //else # .specifier is 'type' require 'for'
                   //.req('for')
                   this.req('for');
             };
         };
         //end if
+
+        //case .specifier
         
 
         //case .specifier
@@ -4086,35 +4296,36 @@
         if (
            (this.specifier=='on-the-fly')
            ||(this.specifier=='type')
-       ){
+        ){
             //#declare VarRef:Type
             //.varRef = .req(VariableRef)
             this.varRef = this.req(VariableRef);
             //.req(':') //type expected
-            this.req(':'); //type expected
-            //.parseType 
+            this.req(':');
+            //.parseType
             this.parseType();
         
         }
           //when 'valid':
         else if (
            (this.specifier=='valid')
-       ){
+        ){
             //.varRef = .req(VariableRef)
             this.varRef = this.req(VariableRef);
             //if no .varRef.accessors, .sayErr "declare valid: expected accesor chain. Example: 'declare valid name.member.member'"
             if (!this.varRef.accessors) {this.sayErr("declare valid: expected accesor chain. Example: 'declare valid name.member.member'")};
-            //if .opt(':') 
+            //if .opt(':')
             if (this.opt(':')) {
+            
                 //.parseType //optional type
-                this.parseType(); //optional type
+                this.parseType();
             };
         
         }
           //when 'name':
         else if (
            (this.specifier=='name')
-       ){
+        ){
             //.specifier = .req('affinity')
             this.specifier = this.req('affinity');
             //.names = .reqSeparatedList(VariableDecl,',')
@@ -4124,6 +4335,7 @@
             
                //if (varDecl.type and varDecl.type isnt 'any') or varDecl.assignedValue
                if ((varDecl.type && varDecl.type !== 'any') || varDecl.assignedValue) {
+               
                   //.sayErr "declare name affinity: expected 'name,name,...'"
                   this.sayErr("declare name affinity: expected 'name,name,...'");
                };
@@ -4134,7 +4346,7 @@
           //when 'var':
         else if (
            (this.specifier=='var')
-       ){
+        ){
             //.names = .reqSeparatedList(VariableDecl,',')
             this.names = this.reqSeparatedList(VariableDecl, ',');
             //for each varDecl in .names
@@ -4142,6 +4354,7 @@
             
                //if varDecl.assignedValue
                if (varDecl.assignedValue) {
+               
                   //.sayErr "declare var. Cannot assign value in .interface.md file."
                   this.sayErr("declare var. Cannot assign value in .interface.md file.");
                };
@@ -4152,7 +4365,7 @@
           //when 'on':
         else if (
            (this.specifier=='on')
-       ){
+        ){
             //.name = .req('IDENTIFIER')
             this.name = this.req('IDENTIFIER');
             //.names = .reqSeparatedList(VariableDecl,',')
@@ -4162,11 +4375,61 @@
 
         //end cases
 
-        //return 
+        //return
         return;
       };
 
       //end method parse
+
+
+//## DefaultAssignment
+
+//`DefaultAssignment: default AssignmentStatement`
+
+//It is a common pattern in javascript to use a object parameters (named "options")
+//to pass misc options to functions.
+
+//Litescript provide a 'default' construct as syntax sugar for this common pattern
+
+//The 'default' construct is formed as an ObjectLiteral assignment,
+//but only the 'undfined' properties of the object will be assigned.
+
+
+//Example:
+//
+//
+//    function theApi(object,options,callback)
+//
+//      default options =
+//        logger: console.log
+//        encoding: 'utf-8'
+//        throwErrors: true
+//        debug:
+//          enabled: false
+//          level: 2
+//      end default
+//
+//      ...function body...
+//
+//    end function
+//is equivalent to js's:
+//
+//
+//    function theApi(object,options,callback) {
+//
+//        //defaults
+//        if (!options) options = {};
+//        if (options.logger===undefined) options.logger = console.log;
+//        if (options.encoding===undefined) options.encoding = 'utf-8';
+//        if (options.throwErrors===undefined) options.throwErrors=true;
+//        if (!options.debug) options.debug = {};
+//        if (options.debug.enabled===undefined) options.debug.enabled=false;
+//        if (options.debug.level===undefined) options.debug.level=2;
+//
+//        ...function body...
+//    }
+
+    //    public class DefaultAssignment extends ASTBase
       
     // export
     module.exports.DeclareStatement = DeclareStatement;
@@ -4183,51 +4446,49 @@
 
 //Litescript provide a 'default' construct as syntax sugar for this common pattern
 
-//The 'default' construct is formed as an ObjectLiteral assignment, 
+//The 'default' construct is formed as an ObjectLiteral assignment,
 //but only the 'undfined' properties of the object will be assigned.
 
 
-//Example: /*
-
-    //function theApi(object,options,callback)
-
-      //default options =
-        //logger: console.log
-        //encoding: 'utf-8'
-        //throwErrors: true
-        //debug:
-          //enabled: false
-          //level: 2
-      //end default
-
-      //...function body...
-
-    //end function
-//*/
+//Example:
+//
+//
+//    function theApi(object,options,callback)
+//
+//      default options =
+//        logger: console.log
+//        encoding: 'utf-8'
+//        throwErrors: true
+//        debug:
+//          enabled: false
+//          level: 2
+//      end default
+//
+//      ...function body...
+//
+//    end function
 //is equivalent to js's:
-///*
+//
+//
+//    function theApi(object,options,callback) {
+//
+//        //defaults
+//        if (!options) options = {};
+//        if (options.logger===undefined) options.logger = console.log;
+//        if (options.encoding===undefined) options.encoding = 'utf-8';
+//        if (options.throwErrors===undefined) options.throwErrors=true;
+//        if (!options.debug) options.debug = {};
+//        if (options.debug.enabled===undefined) options.debug.enabled=false;
+//        if (options.debug.level===undefined) options.debug.level=2;
+//
+//        ...function body...
+//    }
 
-    //function theApi(object,options,callback) {
-
-        //defaults
-        //if (!options) options = {};
-        //if (options.logger===undefined) options.logger = console.log;
-        //if (options.encoding===undefined) options.encoding = 'utf-8';
-        //if (options.throwErrors===undefined) options.throwErrors=true;
-        //if (!options.debug) options.debug = {};
-        //if (options.debug.enabled===undefined) options.debug.enabled=false;
-        //if (options.debug.level===undefined) options.debug.level=2;
-
-        //...function body...
-    //}
-//*/
-
-//### public class DefaultAssignment extends ASTBase
+    //    public class DefaultAssignment extends ASTBase
     // constructor
     function DefaultAssignment(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
       //properties
         //assignment: AssignmentStatement
     };
@@ -4265,26 +4526,24 @@
 
 //Example: `end if` , `end loop`, `end for each item`
 
-//Usage Examples:  
-///*
+//Usage Examples:
+//
+//
+//    if a is 3 and b is 5
+//      print "a is 3"
+//      print "b is 5"
+//    end if
+//
+//    loop while a < 10
+//      a++
+//      b++
+//    end loop
 
-    //if a is 3 and b is 5
-      //print "a is 3"
-      //print "b is 5"
-    //end if
-
-    //loop while a < 10
-      //a++
-      //b++
-    //end loop
-//*/
-
-//### public class EndStatement extends ASTBase
+    //    public class EndStatement extends ASTBase
     // constructor
     function EndStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
       //properties
         //references:string array
     };
@@ -4306,11 +4565,13 @@
         var block = undefined;
         //if .parent.parent is instanceof Body or .parent.parent is instanceof Module
         if (this.parent.parent instanceof Body || this.parent.parent instanceof Module) {
+        
             //block = .parent.parent
             block = this.parent.parent;
         };
         //if no block
         if (!block) {
+        
             //.lexer.throwErr "'end' statement found outside a block"
             this.lexer.throwErr("'end' statement found outside a block");
         };
@@ -4318,6 +4579,7 @@
         var expectedIndent = block.indent || 4;
         //if .indent isnt expectedIndent
         if (this.indent !== expectedIndent) {
+        
             //.lexer.throwErr "'end' statement misaligned indent: #{.indent}. Expected #{expectedIndent} to close block started at line #{block.sourceLineNum}"
             this.lexer.throwErr("'end' statement misaligned indent: " + this.indent + ". Expected " + expectedIndent + " to close block started at line " + block.sourceLineNum);
         };
@@ -4335,6 +4597,7 @@
 
             //if .lexer.token.type is 'IDENTIFIER'
             if (this.lexer.token.type === 'IDENTIFIER') {
+            
               //.references.push(.lexer.token.value)
               this.references.push(this.lexer.token.value);
             };
@@ -4360,7 +4623,7 @@
 //`yield until` expression calls a 'standard node.js async function'
 //and `yield` execution to the caller function until the async completes (callback).
 
-//A 'standard node.js async function' is an async function 
+//A 'standard node.js async function' is an async function
 //with the last parameter = callback(err,data)
 
 //The yield-wait is implemented by exisiting lib 'nicegen'.
@@ -4372,7 +4635,6 @@
     function YieldExpression(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
       //properties
         //specifier
         //fnCall
@@ -4394,13 +4656,14 @@
 
         //if .specifier is 'until'
         if (this.specifier === 'until') {
+        
 
             //.fnCall = .req(FunctionCall)
             this.fnCall = this.req(FunctionCall);
         }
+        //if .specifier is 'until'
+        
         else {
-
-        //else
 
             //.req 'map'
             this.req('map');
@@ -4426,30 +4689,33 @@
     function FunctionCall(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
-      //declare name affinity fnCall
-
       //properties
           //varRef: VariableRef
     };
     // FunctionCall (extends|proto is) ASTBase
     FunctionCall.prototype.__proto__ = ASTBase.prototype;
+
+      //declare name affinity fnCall
       
+      //declare name affinity fnCall
 
       //method parse(options)
       FunctionCall.prototype.parse = function(options){
         //declare valid .parent.preParsedVarRef
         
+        //declare valid .parent.preParsedVarRef
 
 //Check for VariableRef. - can include (...) FunctionAccess
 
         //if .parent.preParsedVarRef #VariableRef already parsed
-        if (this.parent.preParsedVarRef) {// #VariableRef already parsed
+        if (this.parent.preParsedVarRef) {
+        
           //.varRef = .parent.preParsedVarRef #use it
-          this.varRef = this.parent.preParsedVarRef;// #use it
+          this.varRef = this.parent.preParsedVarRef;
         }
+        //if .parent.preParsedVarRef #VariableRef already parsed
+        
         else {
-        //else  
           //.varRef = .req(VariableRef)
           this.varRef = this.req(VariableRef);
         };
@@ -4460,27 +4726,31 @@
 
         //if .varRef.executes
         if (this.varRef.executes) {
+        
             //return #already a function call
-            return;// #already a function call
+            return;
         };
 
         //if .lexer.token.type is 'EOF'
         if (this.lexer.token.type === 'EOF') {
-            //return // no more tokens 
-            return; // no more tokens
+        
+            //return // no more tokens
+            return;
         };
 
 //alllow a indented block to be parsed as fn call arguments
 
         //if .opt('NEWLINE') // if end of line, check next line
-        if (this.opt('NEWLINE')) { // if end of line, check next line
+        if (this.opt('NEWLINE')) {
+        
             //var nextLineIndent = .lexer.indent //save indent
-            var nextLineIndent = this.lexer.indent; //save indent
+            var nextLineIndent = this.lexer.indent;
             //.lexer.returnToken() //return NEWLINE
-            this.lexer.returnToken(); //return NEWLINE
+            this.lexer.returnToken();
             // check if next line is indented (with respect to Statement (parent))
-            //if nextLineIndent <= .parent.indent // next line is not indented 
-            if (nextLineIndent <= this.parent.indent) { // next line is not indented
+            //if nextLineIndent <= .parent.indent // next line is not indented
+            if (nextLineIndent <= this.parent.indent) {
+            
                   // assume this is just a fn call w/o parameters
                   //return
                   return;
@@ -4494,7 +4764,8 @@
         //functionAccess.args = functionAccess.reqSeparatedList(FunctionArgument,",")
         functionAccess.args = functionAccess.reqSeparatedList(FunctionArgument, ",");
         //if .lexer.token.value is '->' #add last parameter: callback function
-        if (this.lexer.token.value === '->') {// #add last parameter: callback function
+        if (this.lexer.token.value === '->') {
+        
             //functionAccess.args.push .req(FunctionDeclaration)
             functionAccess.args.push(this.req(FunctionDeclaration));
         };
@@ -4515,60 +4786,59 @@
 //Similar syntax to ANSI-SQL 'CASE', and ruby's 'case'
 //but it is a "statement" not a expression
 
-//Examples: /*
+//Examples:
+//
+//
+//    case b
+//      when 2,4,6:
+//        print 'even'
+//      when 1,3,5:
+//        print 'odd'
+//      else
+//        print 'idk'
+//    end
+//
+//    // case instance of
+//    case b instance of
+//
+//      when VarStatement:
+//        print 'variables #{b.list}'
+//
+//      when AppendToDeclaration:
+//        print 'it is append to #{b.varRef}'
+//
+//      when NamespaceDeclaration:
+//        print 'namespace #{b.name}'
+//
+//      when ClassDeclaration:
+//        print 'a class, extends #{b.varRefSuper}'
+//
+//      else
+//        print 'unexpected class'
+//
+//    end
+//
+//    // case when TRUE
+//    var result
+//    case
+//        when a is 3 or b < 10:
+//            result = 'option 1'
+//        when b >= 10 or a<0 or c is 5:
+//            result= 'option 2'
+//        else
+//            result = 'other'
+//    end
+//
 
-    //case b 
-      //when 2,4,6:
-        //print 'even' 
-      //when 1,3,5:
-        //print 'odd'
-      //else 
-        //print 'idk' 
-    //end
-
-    // case instance of
-    //case b instance of
-
-      //when VarStatement:
-        //print 'variables #{b.list}' 
-
-      //when AppendToDeclaration:
-        //print 'it is append to #{b.varRef}'
-
-      //when NamespaceDeclaration:
-        //print 'namespace #{b.name}'
-
-      //when ClassDeclaration:
-        //print 'a class, extends #{b.varRefSuper}'
-
-      //else 
-        //print 'unexpected class' 
-
-    //end
-
-    // case when TRUE
-    //var result
-    //case 
-        //when a is 3 or b < 10:
-            //result = 'option 1'
-        //when b >= 10 or a<0 or c is 5:
-            //result= 'option 2'
-        //else 
-            //result = 'other' 
-    //end
-
-//*/
-
-//### public class CaseStatement extends ASTBase
+    //    public class CaseStatement extends ASTBase
     // constructor
     function CaseStatement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
       //properties
         //varRef: VariableRef
         //isInstanceof: boolean
-        //cases: array of WhenSection 
+        //cases: array of WhenSection
         //elseBody: Body
     };
     // CaseStatement (extends|proto is) ASTBase
@@ -4586,7 +4856,7 @@
         this.varRef = this.opt(VariableRef);
 
         //.isInstanceof = .opt('instance','instanceof') //case foo instance of
-        this.isInstanceof = this.opt('instance', 'instanceof'); //case foo instance of
+        this.isInstanceof = this.opt('instance', 'instanceof');
         //if .isInstanceof is 'instance', .opt('of')
         if (this.isInstanceof === 'instance') {this.opt('of')};
 
@@ -4607,6 +4877,7 @@
 
         //if .opt('else')
         if (this.opt('else')) {
+        
             //.elseBody = .req(Body)
             this.elseBody = this.req(Body);
         };
@@ -4616,13 +4887,11 @@
     
     // end class CaseStatement
 
-//### public helper class WhenSection extends ASTBase
+    //    public helper class WhenSection extends ASTBase
     // constructor
     function WhenSection(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-//Helper class to parse each case
-
         //properties
             //expressions: Expression array
             //body
@@ -4644,11 +4913,13 @@
 
             //if .lexer.token.type is 'NEWLINE'
             if (this.lexer.token.type === 'NEWLINE') {
+            
                 //.body = .req(Body) //indented body block
-                this.body = this.req(Body); //indented body block
+                this.body = this.req(Body);
             }
+            //if .lexer.token.type is 'NEWLINE'
+            
             else {
-            //else
                 //.body = .req(SingleLineBody)
                 this.body = this.req(SingleLineBody);
             };
@@ -4664,13 +4935,13 @@
 
 //A `Statement` is an imperative statment (command) or a control construct.
 
-//The `Statement` node is a generic container for all previously defined statements. 
+//The `Statement` node is a generic container for all previously defined statements.
 
 
 //The generic `Statement` is used to define `Body: (Statement;)`, that is,
 //**Body** is a list of semicolon (or NEWLINE) separated **Statements**.
 
-//Grammar: 
+//Grammar:
 //```
 //Statement: [Adjective]* (ClassDeclaration|FunctionDeclaration
  //|IfStatement|ForStatement|WhileUntilLoop|DoLoop
@@ -4687,7 +4958,6 @@
     function Statement(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
       //properties
         //adjectives: string array = []
         //specific: ASTBase //specific statement, e.g.: :VarDeclaration, :PropertiesDeclaration, :FunctionDeclaration
@@ -4722,9 +4992,10 @@
 
         //if no .specific
         if (!this.specific) {
+        
 
-//If it was not found, try optional adjectives (zero or more). 
-//Adjectives are: `(export|public|generator|shim|helper)`. 
+//If it was not found, try optional adjectives (zero or more).
+//Adjectives are: `(export|public|generator|shim|helper)`.
 
             //while .opt('public','export','nice','generator','shim','helper','global') into var adj
             var adj=undefined;
@@ -4750,6 +5021,7 @@
 
             //if no .specific
             if (!this.specific) {
+            
 
                 //key = 'varref'
                 key = 'varref';
@@ -4758,19 +5030,24 @@
                 //.specific = .req(AssignmentStatement,FunctionCall)
                 this.specific = this.req(AssignmentStatement, FunctionCall);
                 //.preParsedVarRef = undefined #clear
-                this.preParsedVarRef = undefined;// #clear
+                this.preParsedVarRef = undefined;
             };
         };
 
 
         //end if - statement parse tries
+
+//If we reached here, we have parsed a valid statement.
+//remember where the full statment ends (multiline statements)
+
+        //.lastSourceLineNum = .lexer.last.sourceLineNum
         
 
-//If we reached here, we have parsed a valid statement. 
-//remember where the full statment ends
+//If we reached here, we have parsed a valid statement.
+//remember where the full statment ends (multiline statements)
 
-        //.lastSourceLineNum = .lexer.maxSourceLineNum 
-        this.lastSourceLineNum = this.lexer.maxSourceLineNum;
+        //.lastSourceLineNum = .lexer.last.sourceLineNum
+        this.lastSourceLineNum = this.lexer.last.sourceLineNum;
         //if .lastSourceLineNum<.sourceLineNum, .lastSourceLineNum = .sourceLineNum
         if (this.lastSourceLineNum < this.sourceLineNum) {this.lastSourceLineNum = this.sourceLineNum};
 
@@ -4781,15 +5058,17 @@
         //.keyword = key
         this.keyword = key;
 
-//Check validity of adjective-statement combination 
+//Check validity of adjective-statement combination
 
         //var validCombinations = map
-              //export: ['class','namespace','function','var'] 
-              //generator: ['function','method'] 
-              //nice: ['function','method'] 
-              //shim: ['function','method','import'] 
+              //export: ['class','namespace','function','var']
+              //generator: ['function','method']
+              //nice: ['function','method']
+              //shim: ['function','method','import']
               //helper:  ['function','method','class','namespace']
               //global: ['declare','class','namespace']
+
+        //for each adjective in .adjectives
         var validCombinations = new Map().fromObject({
            export: ['class', 'namespace', 'function', 'var']
            , generator: ['function', 'method']
@@ -4797,7 +5076,7 @@
            , shim: ['function', 'method', 'import']
            , helper: ['function', 'method', 'class', 'namespace']
            , global: ['declare', 'class', 'namespace']
-       });
+              });
 
         //for each adjective in .adjectives
         for( var adjective__inx=0,adjective ; adjective__inx<this.adjectives.length ; adjective__inx++){adjective=this.adjectives[adjective__inx];
@@ -4810,6 +5089,8 @@
         };// end for each in this.adjectives
 
         //end for
+
+    //    append to class ASTBase
         
       };
     // export
@@ -4817,10 +5098,10 @@
     
     // end class Statement
 
-//### Append to class ASTBase
+    //    append to class ASTBase
     
 
-//##### helper method hasAdjective(name) returns boolean
+      //      helper method hasAdjective(name) returns boolean
       ASTBase.prototype.hasAdjective = function(name){
 //To check if a statement has an adjective. We assume .parent is Grammar.Statement
 
@@ -4848,7 +5129,6 @@
     function Body(){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-
       //properties
         //statements: Statement array
     };
@@ -4860,20 +5140,23 @@
 
         //if .lexer.interfaceMode
         if (this.lexer.interfaceMode) {
+        
             //if .parent isnt instance of ClassDeclaration
             if (!(this.parent instanceof ClassDeclaration)) {
+            
                 //return //"no 'Bodys' expected on interface.md file except for: class, append to and namespace
-                return; //"no 'Bodys' expected on interface.md file except for: class, append to and namespace
+                return;
             };
         };
 
         //if .lexer.token.type isnt 'NEWLINE'
         if (this.lexer.token.type !== 'NEWLINE') {
+        
             //.lexer.sayErr "found #{.lexer.token} but expected NEWLINE and indented body"
             this.lexer.sayErr("found " + this.lexer.token + " but expected NEWLINE and indented body");
         };
 
-//We use the generic ***ASTBase.reqSeparatedList*** to get a list of **Statement** symbols, 
+//We use the generic ***ASTBase.reqSeparatedList*** to get a list of **Statement** symbols,
 //*semicolon* separated or in freeForm mode: one statement per line, closed when indent changes.
 
         //.statements = .reqSeparatedList(Statement,";")
@@ -4885,18 +5168,18 @@
       //method validate
       Body.prototype.validate = function(){
 
-//this method check all the body statements againts a valid-list (arguments)      
+//this method check all the body statements againts a valid-list (arguments)
 
         //var validArray = arguments.toArray()
         var validArray = Array.prototype.slice.call(arguments);
 
-        //for each stm in .statements 
+        //for each stm in .statements
         for( var stm__inx=0,stm ; stm__inx<this.statements.length ; stm__inx++){stm=this.statements[stm__inx];
           if([EndStatement, CompilerStatement].indexOf(stm.specific.constructor)===-1){
-            //where stm.specific.constructor not in [EndStatement,CompilerStatement] //always Valid
 
                 //if stm.specific.constructor not in validArray
                 if (validArray.indexOf(stm.specific.constructor)===-1) {
+                
                     //stm.sayErr "a [#{stm.specific.constructor.name}] is not valid in the body of a [#{.parent.constructor.name}]"
                     stm.sayErr("a [" + stm.specific.constructor.name + "] is not valid in the body of a [" + this.parent.constructor.name + "]");
                 };
@@ -4939,14 +5222,13 @@
 
 //## Module
 
-//The `Module` represents a complete source file. 
+//The `Module` represents a complete source file.
 
     //public class Module extends Body
     // constructor
     function Module(){ // default constructor
     // default constructor: call super.constructor
         Body.prototype.constructor.apply(this,arguments)
-
       //properties
         //isMain: boolean
         //exportDefault: ASTBase
@@ -4985,10 +5267,10 @@
 //------------------------------------
 
 //This a extension to PEGs.
-//To make the compiler faster and easier to debug, we define an 
-//object with name-value pairs: `"keyword" : AST node class` 
+//To make the compiler faster and easier to debug, we define an
+//object with name-value pairs: `"keyword" : AST node class`
 
-//We look here for fast-statement parsing, selecting the right AST node to call `parse()` on 
+//We look here for fast-statement parsing, selecting the right AST node to call `parse()` on
 //based on `token.value`. (instead of parsing by ordered trial & error)
 
 //This table makes a direct parsing of almost all statements, thanks to a core definition of LiteScript:
@@ -5026,13 +5308,18 @@
       //'try':TryCatch
       //'exception':ExceptionBlock
       //'Exception':ExceptionBlock
-      //'debugger':DebuggerStatement 
+      //'debugger':DebuggerStatement
       //'declare':DeclareStatement
       //'import':ImportStatement
       //'delete':DeleteStatement
       //'compile':CompilerStatement
       //'compiler':CompilerStatement
       //'yield':YieldExpression
+
+
+//##### Helpers
+
+    //export helper function autoCapitalizeCoreClasses(name:string) returns String
     var StatementsDirect = new Map().fromObject({
        'class': ClassDeclaration
        , 'Class': ClassDeclaration
@@ -5072,7 +5359,7 @@
        , 'compile': CompilerStatement
        , 'compiler': CompilerStatement
        , 'yield': YieldExpression
-   });
+      });
 
 
 //##### Helpers
@@ -5082,6 +5369,7 @@
       //#auto-capitalize core classes when used as type annotations
       //if name in ['string','array','number','object','function','boolean','map']
       if (['string', 'array', 'number', 'object', 'function', 'boolean', 'map'].indexOf(name)>=0) {
+      
         //return "#{name.slice(0,1).toUpperCase()}#{name.slice(1)}"
         return '' + (name.slice(0, 1).toUpperCase()) + (name.slice(1));
       };
@@ -5092,25 +5380,30 @@
     module.exports.autoCapitalizeCoreClasses = autoCapitalizeCoreClasses;
 
 
-//### append to class ASTBase
+    //    append to class ASTBase
     
       //properties
             //isMap: boolean
-      
 
-//##### helper method parseType
+      //      helper method parseType
+      
+      //properties
+            //isMap: boolean
+
+      //      helper method parseType
       ASTBase.prototype.parseType = function(){
 
-//parse type declaration: 
+//parse type declaration:
 
   //function [(VariableDecl,)]
   //type-IDENTIFIER [array]
-  //[array of] type-IDENTIFIER 
+  //[array of] type-IDENTIFIER
   //map type-IDENTIFIER to type-IDENTIFIER
 
 
-        //if .opt('function','Function') #function as type 
-        if (this.opt('function', 'Function')) {// #function as type
+        //if .opt('function','Function') #function as type
+        if (this.opt('function', 'Function')) {
+        
             //.type= new VariableRef(this, 'Function')
             this.type = new VariableRef(this, 'Function');
             //if .lexer.token.value is '(', .parseAccessors
@@ -5123,19 +5416,23 @@
 
         //if .opt('array','Array')
         if (this.opt('array', 'Array')) {
+        
             //.type = 'Array'
             this.type = 'Array';
             //if .opt('of')
             if (this.opt('of')) {
+            
                 //.itemType = .req(VariableRef) #reference to an existing class
-                this.itemType = this.req(VariableRef);// #reference to an existing class
+                this.itemType = this.req(VariableRef);
                 //auto-capitalize core classes
                 //declare .itemType:VariableRef
                 
+                //declare .itemType:VariableRef
                 //.itemType.name = autoCapitalizeCoreClasses(.itemType.name)
                 this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
             };
             //end if
+            //return
             
             //return
             return;
@@ -5144,45 +5441,51 @@
 //Check for 'map', e.g.: `var list : map string to Statement`
 
         //.type = .req(VariableRef) #reference to an existing class
-        this.type = this.req(VariableRef);// #reference to an existing class
+        this.type = this.req(VariableRef);
         //auto-capitalize core classes
         //declare .type:VariableRef
         
+        //declare .type:VariableRef
         //.type.name = autoCapitalizeCoreClasses(.type.name)
         this.type.name = autoCapitalizeCoreClasses(this.type.name);
 
         //if .type.name is 'Map'
         if (this.type.name === 'Map') {
+        
             //.isMap = true
             this.isMap = true;
             //.extraInfo = 'map [type] to [type]' //extra info to show on parse fail
-            this.extraInfo = 'map [type] to [type]'; //extra info to show on parse fail
+            this.extraInfo = 'map [type] to [type]';
             //.keyType = .req(VariableRef) #type for KEYS: reference to an existing class
-            this.keyType = this.req(VariableRef);// #type for KEYS: reference to an existing class
+            this.keyType = this.req(VariableRef);
             //auto-capitalize core classes
             //declare .keyType:VariableRef
             
+            //declare .keyType:VariableRef
             //.keyType.name = autoCapitalizeCoreClasses(.keyType.name)
             this.keyType.name = autoCapitalizeCoreClasses(this.keyType.name);
             //.req('to')
             this.req('to');
             //.itemType = .req(VariableRef) #type for values: reference to an existing class
-            this.itemType = this.req(VariableRef);// #type for values: reference to an existing class
+            this.itemType = this.req(VariableRef);
             //#auto-capitalize core classes
             //declare .itemType:VariableRef
             
+            //declare .itemType:VariableRef
             //.itemType.name = autoCapitalizeCoreClasses(.itemType.name)
             this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
         }
+        //if .type.name is 'Map'
+        
         else {
-        //else
             //#check for 'type array', e.g.: `var list : string array`
             //if .opt('Array','array')
             if (this.opt('Array', 'array')) {
+            
                 //.itemType = .type #assign read type as sub-type
-                this.itemType = this.type;// #assign read type as sub-type
+                this.itemType = this.type;
                 //.type = 'Array' #real type
-                this.type = 'Array';// #real type
+                this.type = 'Array';
             };
         };
       };

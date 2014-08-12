@@ -1,11 +1,8 @@
-# shims - appends to core namespaces
+# shims 
+## utility methods appended to core classes & namespaces
 
 Helper methods to class String. 
 Also add 'remove' & 'clear' to class Array
-
-Dependencies:
-
-    shim import PMREX
 
 ### Append to class String
 
@@ -99,46 +96,6 @@ Note: text[start] MUST be the opener char
 
             return -1
             
-String.replaceQuoted(text,rep)
-replace every quoted string inside text, by rep
-
-        method replaceQuoted(text:string, rep:string)
-
-            var p = 0
-
-look for first quote (single or double?),
-loop until no quotes found 
-
-            var anyQuote = '"' & "'"
-
-            var resultText=""
-
-            do 
-                var preQuotes=PMREX.untilRanges(text,anyQuote) 
-                
-                resultText &= preQuotes
-                text = text.slice(preQuotes.length)
-                if no text, break // all text processed|no quotes found
-
-                if text.slice(0,3) is '"""' //ignore triple quotes (valid token)
-                    resultText &= text.slice(0,3)
-                    text = text.slice(3)
-                else
-
-                    var quotedContent
-                    
-                    try // accept malformed quoted chunks (do not replace)
-
-                         quotedContent = PMREX.quotedContent(text)
-                         text = text.slice(1+quotedContent.length+1)
-
-                    catch err // if malformed - closing quote not found
-                        resultText &= text.slice(0,1) //keep quote
-                        text = text.slice(1) //only remove quote
-
-            loop until no text
-            
-            return resultText
 
 
 ### Append to class Array
@@ -155,4 +112,22 @@ method .remove(element)
             //empty the array
             for n=1 to .length
                 .pop
+
+
+##Console group
+
+### append to namespace console
+
+Note: Today, Node.js "console" object do not have `group` & `groupEnd` methods
+neither do older browsers
+
+        properties indentLevel
+
+        shim method group() 
+            console.log.apply undefined,arguments
+            console.indentLevel = console.indentLevel or 0 + 1
+
+        shim method groupEnd() 
+            if console.indentLevel 
+                console.indentLevel--
 

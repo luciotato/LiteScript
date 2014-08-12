@@ -75,7 +75,7 @@ Check for other options
         if args.option('nm',"nomap"),    .generateSourceMap = false // do not generate sourcemap
         if args.option('s',"single"),    .single = true // single file- do not follow imports
         if args.option('b',"browser"),   .browser = true // single file- do not follow imports
-        if args.option('es6',"harmony"), .browser = true // single file- do not follow imports
+        if args.option('es6',"harmony"), .es6 = true // single file- do not follow imports
 
     if options.verboseLevel>1
         print JSON.stringify(process.argv)
