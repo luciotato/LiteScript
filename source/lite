@@ -1,3 +1,0 @@
-#!/usr/bin/env node
-//run LiteScript Command Line Interface
-require('./js_lite');

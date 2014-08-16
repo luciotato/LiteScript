@@ -35,17 +35,17 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/_ext/761097586/ImmutArray.o \
 	${OBJECTDIR}/_ext/761097586/LiteC-core.o \
 	${OBJECTDIR}/_ext/761097586/PMREX-native.o \
 	${OBJECTDIR}/_ext/761097586/any.o \
 	${OBJECTDIR}/_ext/761097586/exceptions.o \
 	${OBJECTDIR}/_ext/761097586/fs-native.o \
+	${OBJECTDIR}/_ext/761097586/keytree.o \
+	${OBJECTDIR}/_ext/761097586/simplemalloc.o \
 	${OBJECTDIR}/_ext/761097586/utf8strings.o \
 	${OBJECTDIR}/_ext/761097586/util.o \
 	${OBJECTDIR}/generated-c/ASTBase.o \
 	${OBJECTDIR}/generated-c/Compiler.o \
-	${OBJECTDIR}/generated-c/ENV_C_global_import/path.o \
 	${OBJECTDIR}/generated-c/Grammar.o \
 	${OBJECTDIR}/generated-c/Names.o \
 	${OBJECTDIR}/generated-c/Parser.o \
@@ -54,7 +54,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/generated-c/Validate.o \
 	${OBJECTDIR}/generated-c/_dispatcher.o \
 	${OBJECTDIR}/generated-c/c_lite.o \
-	${OBJECTDIR}/generated-c/interfaces/fs.o \
+	${OBJECTDIR}/generated-c/interfaces/C_standalone/fs.o \
+	${OBJECTDIR}/generated-c/interfaces/C_standalone/path.o \
+	${OBJECTDIR}/generated-c/interfaces/shims.o \
 	${OBJECTDIR}/generated-c/lib/ControlledError.o \
 	${OBJECTDIR}/generated-c/lib/Environment.o \
 	${OBJECTDIR}/generated-c/lib/GeneralOptions.o \
@@ -62,8 +64,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/generated-c/lib/UniqueID.o \
 	${OBJECTDIR}/generated-c/lib/color.o \
 	${OBJECTDIR}/generated-c/lib/logger.o \
-	${OBJECTDIR}/generated-c/lib/mkPath.o \
-	${OBJECTDIR}/generated-c/lib/shims.o
+	${OBJECTDIR}/generated-c/lib/mkPath.o
 
 
 # C Compiler Flags
@@ -92,11 +93,6 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/litec-to-c: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/litec-to-c ${OBJECTFILES} ${LDLIBSOPTIONS}
 
-${OBJECTDIR}/_ext/761097586/ImmutArray.o: ../core/ImmutArray.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/761097586
-	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -I../core -I../include -Igenerated-c/interfaces -Igenerated-c/ENV_C_global_import -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/761097586/ImmutArray.o ../core/ImmutArray.c
-
 ${OBJECTDIR}/_ext/761097586/LiteC-core.o: ../core/LiteC-core.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/761097586
 	${RM} "$@.d"
@@ -122,6 +118,16 @@ ${OBJECTDIR}/_ext/761097586/fs-native.o: ../core/fs-native.c
 	${RM} "$@.d"
 	$(COMPILE.c) -O3 -DNDEBUG -I../core -I../include -Igenerated-c/interfaces -Igenerated-c/ENV_C_global_import -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/761097586/fs-native.o ../core/fs-native.c
 
+${OBJECTDIR}/_ext/761097586/keytree.o: ../core/keytree.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/761097586
+	${RM} "$@.d"
+	$(COMPILE.c) -O3 -DNDEBUG -I../core -I../include -Igenerated-c/interfaces -Igenerated-c/ENV_C_global_import -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/761097586/keytree.o ../core/keytree.c
+
+${OBJECTDIR}/_ext/761097586/simplemalloc.o: ../core/simplemalloc.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/761097586
+	${RM} "$@.d"
+	$(COMPILE.c) -O3 -DNDEBUG -I../core -I../include -Igenerated-c/interfaces -Igenerated-c/ENV_C_global_import -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/761097586/simplemalloc.o ../core/simplemalloc.c
+
 ${OBJECTDIR}/_ext/761097586/utf8strings.o: ../core/utf8strings.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/761097586
 	${RM} "$@.d"
@@ -141,11 +147,6 @@ ${OBJECTDIR}/generated-c/Compiler.o: generated-c/Compiler.c
 	${MKDIR} -p ${OBJECTDIR}/generated-c
 	${RM} "$@.d"
 	$(COMPILE.c) -O3 -DNDEBUG -I../core -I../include -Igenerated-c/interfaces -Igenerated-c/ENV_C_global_import -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/Compiler.o generated-c/Compiler.c
-
-${OBJECTDIR}/generated-c/ENV_C_global_import/path.o: generated-c/ENV_C_global_import/path.c 
-	${MKDIR} -p ${OBJECTDIR}/generated-c/ENV_C_global_import
-	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -I../core -I../include -Igenerated-c/interfaces -Igenerated-c/ENV_C_global_import -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/ENV_C_global_import/path.o generated-c/ENV_C_global_import/path.c
 
 ${OBJECTDIR}/generated-c/Grammar.o: generated-c/Grammar.c 
 	${MKDIR} -p ${OBJECTDIR}/generated-c
@@ -187,10 +188,20 @@ ${OBJECTDIR}/generated-c/c_lite.o: generated-c/c_lite.c
 	${RM} "$@.d"
 	$(COMPILE.c) -O3 -DNDEBUG -I../core -I../include -Igenerated-c/interfaces -Igenerated-c/ENV_C_global_import -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/c_lite.o generated-c/c_lite.c
 
-${OBJECTDIR}/generated-c/interfaces/fs.o: generated-c/interfaces/fs.c 
+${OBJECTDIR}/generated-c/interfaces/C_standalone/fs.o: generated-c/interfaces/C_standalone/fs.c 
+	${MKDIR} -p ${OBJECTDIR}/generated-c/interfaces/C_standalone
+	${RM} "$@.d"
+	$(COMPILE.c) -O3 -DNDEBUG -I../core -I../include -Igenerated-c/interfaces -Igenerated-c/ENV_C_global_import -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/interfaces/C_standalone/fs.o generated-c/interfaces/C_standalone/fs.c
+
+${OBJECTDIR}/generated-c/interfaces/C_standalone/path.o: generated-c/interfaces/C_standalone/path.c 
+	${MKDIR} -p ${OBJECTDIR}/generated-c/interfaces/C_standalone
+	${RM} "$@.d"
+	$(COMPILE.c) -O3 -DNDEBUG -I../core -I../include -Igenerated-c/interfaces -Igenerated-c/ENV_C_global_import -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/interfaces/C_standalone/path.o generated-c/interfaces/C_standalone/path.c
+
+${OBJECTDIR}/generated-c/interfaces/shims.o: generated-c/interfaces/shims.c 
 	${MKDIR} -p ${OBJECTDIR}/generated-c/interfaces
 	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -I../core -I../include -Igenerated-c/interfaces -Igenerated-c/ENV_C_global_import -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/interfaces/fs.o generated-c/interfaces/fs.c
+	$(COMPILE.c) -O3 -DNDEBUG -I../core -I../include -Igenerated-c/interfaces -Igenerated-c/ENV_C_global_import -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/interfaces/shims.o generated-c/interfaces/shims.c
 
 ${OBJECTDIR}/generated-c/lib/ControlledError.o: generated-c/lib/ControlledError.c 
 	${MKDIR} -p ${OBJECTDIR}/generated-c/lib
@@ -231,11 +242,6 @@ ${OBJECTDIR}/generated-c/lib/mkPath.o: generated-c/lib/mkPath.c
 	${MKDIR} -p ${OBJECTDIR}/generated-c/lib
 	${RM} "$@.d"
 	$(COMPILE.c) -O3 -DNDEBUG -I../core -I../include -Igenerated-c/interfaces -Igenerated-c/ENV_C_global_import -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/lib/mkPath.o generated-c/lib/mkPath.c
-
-${OBJECTDIR}/generated-c/lib/shims.o: generated-c/lib/shims.c 
-	${MKDIR} -p ${OBJECTDIR}/generated-c/lib
-	${RM} "$@.d"
-	$(COMPILE.c) -O3 -DNDEBUG -I../core -I../include -Igenerated-c/interfaces -Igenerated-c/ENV_C_global_import -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/lib/shims.o generated-c/lib/shims.c
 
 # Subprojects
 .build-subprojects:

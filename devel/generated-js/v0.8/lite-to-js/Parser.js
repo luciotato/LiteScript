@@ -99,9 +99,9 @@
 
           //.stringInterpolationChar = "#"
           preprocessor_replaces = new Map().fromObject({
-             DATE: this.options.now.toDateString()
-             , TIME: this.options.now.toTimeString()
-             , TIMESTAMP: this.options.now.toISOString()
+              DATE: this.options.now.toDateString()
+              , TIME: this.options.now.toTimeString()
+              , TIMESTAMP: this.options.now.toISOString()
               });
 
 //stringInterpolationChar starts for every file the same: "#"
@@ -396,10 +396,10 @@
 
         //var inx=1, countAdj=0, countSust=0, sustLeft=1
         var 
-           inx = 1
-           , countAdj = 0
-           , countSust = 0
-           , sustLeft = 1
+            inx = 1
+            , countAdj = 0
+            , countSust = 0
+            , sustLeft = 1
         ;
 
         //while inx<words.length
@@ -724,8 +724,8 @@
 
 //Now we should escape internal d-quotes, but only *outside* string interpolation expressions
 
-          //var parsed = .splitExpressions(line,.stringInterpolationChar)
-          var parsed = this.splitExpressions(line, this.stringInterpolationChar);
+          //var parsed = .splitExpressions(line)
+          var parsed = this.splitExpressions(line);
           //for each inx,item:string in parsed
           for( var inx=0,item ; inx<parsed.length ; inx++){item=parsed[inx];
           
@@ -799,6 +799,8 @@
         
           //line = "#{result.pre} #{result.post}//#{result.section[0]}"
           line = '' + result.pre + " " + result.post + "//" + (result.section[0]);
+          //if no result.pre and no result.post, lineType=LineTypes.COMMENT
+          if (!result.pre && !result.post) {lineType = LineTypes.COMMENT};
           //infoLines.push(new InfoLine(this, lineType, startLineIndent, line, startSourceLine))
           infoLines.push(new InfoLine(this, lineType, startLineIndent, line, startSourceLine));
         }
@@ -937,7 +939,7 @@
                     
                         //when '#else':
                     if (
-                       (words.tryGet(0)=='#else')
+                        (words.tryGet(0)=='#else')
                     ){
                             //.replaceSourceLine .line.replaceAll("#else","//else")
                             this.replaceSourceLine(this.line.replaceAll("#else", "//else"));
@@ -947,7 +949,7 @@
                     }
                         //when "#end":
                     else if (
-                       (words.tryGet(0)=="#end")
+                        (words.tryGet(0)=="#end")
                     ){
                             //if words.tryGet(1) isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
                             if (words.tryGet(1) !== 'if') {this.throwErr("expected '#end if', read '" + line + "' " + startRef)};
@@ -957,7 +959,7 @@
                     }
                         //when "#endif":
                     else if (
-                       (words.tryGet(0)=="#endif")
+                        (words.tryGet(0)=="#endif")
                     ){
                             //endFound = true
                             endFound = true;
@@ -1401,10 +1403,10 @@
 
         //var delimiterPos, closerPos, itemPos, item:string;
         var 
-           delimiterPos = undefined
-           , closerPos = undefined
-           , itemPos = undefined
-           , item = undefined
+            delimiterPos = undefined
+            , closerPos = undefined
+            , itemPos = undefined
+            , item = undefined
         ;
         //var items=[];
         var items = [];
@@ -1728,7 +1730,6 @@
 
                     //declare parsed:Array
                     
-                    //declare parsed:Array
 
                     //#parse the quoted string, splitting at #{...}, return array
                     //var parsed = lexer.splitExpressions(token.value)
@@ -1886,24 +1887,30 @@
             };
 
 //Punctuation:
-//We include also here punctuation symbols (like `,` `[` `:`)  and the arrow `->`
+//We include also here punctuation symbols (like `,` `[` `:`) , the arrow `->` and the ellipsis `...`
 //Postfix and prefix ++ and -- are considered also 'PUNCT'.
 //They're not considered 'operators' since they do no introduce a new operand, ++ and -- are "modifiers" for a variable reference.
 
-  //['PUNCT',/^(\+\+|--|->)/],
+  //['PUNCT',/^(\+\+|--|->|\.\.\.)/],
   //['PUNCT',/^[\(\)\[\]\;\,\.\{\}]/],
 
-            //if chunk.charAt(0) in "()[]{};,."
-            if ("()[]{};,.".indexOf(chunk.charAt(0))>=0) {
+            //if chunk.slice(0,3) is '...'
+            if (chunk.slice(0, 3) === '...') {
             
-                //return new Token('PUNCT',chunk.slice(0,1))
-                return new Token('PUNCT', chunk.slice(0, 1));
+                //return new Token('PUNCT',chunk.slice(0,3))
+                return new Token('PUNCT', chunk.slice(0, 3));
             };
             //if chunk.slice(0,2) in ["++","--","->"]
             if (["++", "--", "->"].indexOf(chunk.slice(0, 2))>=0) {
             
                 //return new Token('PUNCT',chunk.slice(0,2))
                 return new Token('PUNCT', chunk.slice(0, 2));
+            };
+            //if chunk.charAt(0) in "()[]{};,."
+            if ("()[]{};,.".indexOf(chunk.charAt(0))>=0) {
+            
+                //return new Token('PUNCT',chunk.slice(0,1))
+                return new Token('PUNCT', chunk.slice(0, 1));
             };
 
 //Whitespace is discarded by the lexer, but needs to exist to break up other tokens.
@@ -2034,11 +2041,11 @@
 
             //var numberDigits,decPoint="",decimalPart="",expE="",exponent=""
             var 
-               numberDigits = undefined
-               , decPoint = ""
-               , decimalPart = ""
-               , expE = ""
-               , exponent = ""
+                numberDigits = undefined
+                , decPoint = ""
+                , decimalPart = ""
+                , expE = ""
+                , exponent = ""
             ;
 
             //if PMREX.whileRanges(chunk,"0-9") into numberDigits
@@ -2504,11 +2511,11 @@
         var col = this.column;
         //if not .currLine.length, col += indent-1
         if (!(this.currLine.length)) {col += indent - 1};
-        //return SourceMapMark.{
-                      //col:col
-                      //lin:.lineNum-1
-                //}
-        return SourceMapMark.newFromObject({col: col, lin: this.lineNum - 1});
+        //return new SourceMapMark({
+                      //col :col
+                      //lin :.lineNum-1
+                //})
+        return new SourceMapMark({col: col, lin: this.lineNum - 1});
      };
 
      //     helper method addSourceMap(mark, sourceLin, sourceCol, indent)

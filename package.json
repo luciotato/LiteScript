@@ -1,7 +1,7 @@
 {
   "name": "litescript",
-  "version": "0.8.5",
-  "description": "LiteScript is a highly readable language that compiles to javascript and C",
+  "version": "0.8.6",
+  "description": "LiteScript is a literate, highly readable, compile-to-js and compile-to-c language",
   "keywords": ["alt-js", "language", "simple", "PEG", "compiler", "fast", "compile-to-js", "compile-to-C"],
   "author": {
     "name": "Lucio M. Tato",

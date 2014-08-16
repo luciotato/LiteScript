@@ -6,8 +6,8 @@
     // export
     module.exports.version = version;
 
-    //public var buildDate = "Tue Aug 12 2014 05:04:58 GMT-0300 (ART)"
-    var buildDate = "Tue Aug 12 2014 05:04:58 GMT-0300 (ART)";
+    //public var buildDate = "Sat Aug 16 2014 06:11:10 GMT-0300 (ART)"
+    var buildDate = "Sat Aug 16 2014 06:11:10 GMT-0300 (ART)";
     // export
     module.exports.buildDate = buildDate;
 
@@ -277,7 +277,6 @@
         var content = compile(filename, Environment.loadFile(filename), options);
         //declare valid requiringModule._compile
         
-        //declare valid requiringModule._compile
         //requiringModule._compile(content, filename)
         requiringModule._compile(content, filename);
     };
@@ -290,7 +289,6 @@
 
         //declare valid require.extensions :array
         
-        //declare valid require.extensions :array
 
         //if require.extensions
         if (require.extensions) {

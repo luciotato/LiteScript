@@ -141,8 +141,8 @@
         //if args.option('wa','watch')
         if (args.option('wa', 'watch')) {
         
-            //watchDir Compiler,options
-            watchDir(Compiler, options);
+            //watchDir options
+            watchDir(options);
             //return //EXIT
             return;
         };
@@ -154,7 +154,7 @@
         
             //when 0:
         if (
-           (args.items.length==0)
+            (args.items.length==0)
         ){
                 //if no options.mainModuleName
                 if (!options.mainModuleName) {
@@ -168,7 +168,7 @@
         }
             //when 1:
         else if (
-           (args.items.length==1)
+            (args.items.length==1)
         ){
                 //options.mainModuleName = args.items[0]
                 options.mainModuleName = args.items[0];
@@ -323,7 +323,6 @@
                         
                             //declare valid error.errno
                             
-                            //declare valid error.errno
                             //print "ERROR",error.code
                             console.log("ERROR", error.code);
                             //print error.message
@@ -347,7 +346,6 @@
 
             //declare valid Compiler.registerRequireExtensions
             
-            //declare valid Compiler.registerRequireExtensions
             //Compiler.registerRequireExtensions
             Compiler.registerRequireExtensions();
 
@@ -356,10 +354,8 @@
 
             //declare on module paths:string array
             
-            //declare on module paths:string array
             //declare valid module.constructor._nodeModulePaths
             
-            //declare valid module.constructor._nodeModulePaths
             //module.filename = path.resolve(filename)
             module.filename = path.resolve(filename);
             //module.paths = module.constructor._nodeModulePaths(path.dirname(module.filename))
@@ -399,10 +395,8 @@
 
         //declare valid watcher.on
         
-        //declare valid watcher.on
         //declare valid watcher.close
         
-        //declare valid watcher.close
 
         //watcher.on 'error' -> err
           //watcher.close
@@ -423,7 +417,7 @@
                     //compileOnChange(file, mainDir, options)
                 //,250)
 
-    //    function compileOnChange(file, dir, options)
+    //    function compileOnChange(file, dir, options:GeneralOptions)
         watcher.on('change', function (event, file){
           //clearTimeout readdirTimeout
           clearTimeout(readdirTimeout);
@@ -439,7 +433,7 @@
         });
     };
 
-    //    function compileOnChange(file, dir, options)
+    //    function compileOnChange(file, dir, options:GeneralOptions)
     function compileOnChange(file, dir, options){
      try{
 
@@ -449,8 +443,10 @@
             //if file like /\.(lite|lite\.md)$/
             if (/\.(lite|lite\.md)$/.test(file)) {
             
-                //Compiler.compileProject file, options
-                Compiler.compileProject(file, options);
+                //options.mainModuleName = file
+                options.mainModuleName = file;
+                //Compiler.compileProject options
+                Compiler.compileProject(options);
             };
         }
         //if file # we have specific file information
@@ -462,8 +458,10 @@
             //for each dirFile in files where dirFile like /\.(lite|lite\.md)$/
             for( var dirFile__inx=0,dirFile ; dirFile__inx<files.length ; dirFile__inx++){dirFile=files[dirFile__inx];
               if(/\.(lite|lite\.md)$/.test(dirFile)){
-                //Compiler.compileProject dirFile, options
-                Compiler.compileProject(dirFile, options);
+                //options.mainModuleName = dirFile
+                options.mainModuleName = dirFile;
+                //Compiler.compileProject options
+                Compiler.compileProject(options);
             }};// end for each in files
             
         };

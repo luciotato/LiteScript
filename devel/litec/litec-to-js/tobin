@@ -1,0 +1,2 @@
+sudo rm /usr/bin/litec
+sudo ln dist/Release/GNU-Linux-x86/litec-to-js /usr/bin/litec

@@ -12,6 +12,8 @@
 #include "exceptions.h"
 #include "PMREX-native.h"
 
+    extern any LiteCore_version, LiteCore_buildDate;
+
     //type for symbols. Symbols are negative (methods) and positive(properties). Must be intX.
     typedef int16_t symbol_t; // max 32768 methods & 32768 props. Elevate to int32_t if needed
     typedef uint16_t propIndex_t;
@@ -188,7 +190,7 @@
     #define key__(this) PROP(key_,this)
     #define value__(this) PROP(value_,this)
     #define index__(this) PROP(index_,this)
-
+    #define iterable__(this) PROP(iterable_,this)
     #define size__(this) PROP(size_,this)
     #define extra__(this) PROP(extra_,this)
     #define message__(this) PROP(message_,this)
@@ -264,6 +266,7 @@
 
     _LAST_CORE_CLASS //end mark
     };
+
 
 // core classes array: CLASSES-------------------
 
@@ -404,7 +407,6 @@
 // bound-checked access for debug mode
 
     #ifdef NDEBUG
-        #define _AT_ ,
         #define METHOD(symbol,this) (CLASSES[this.class].method[-symbol])
         #define PROP(symbol,this) this.value.prop[CLASSES[this.class].pos[symbol]]
         #define stack_PROP(this) PROP(stack_,this)
@@ -415,11 +417,13 @@
         //#define ITEM_PROP(index,symbol,this) this.value.prop[this.class.pos[symbol]].value.arr[index]
         #define MAP_NVP_PTR(index,this) (this.value.map->nvpArr.base.nvp+index)
 
+        #define _anyToNumber(x) _convertAnyToNumber(x)
         #define int64_from_Number(ANY) (ANY.res? ANY.value.int64 : (int64_t)ANY.value.number)
         #define double_from_Number(ANY) (ANY.res? (double)ANY.value.int64:ANY.value.number)
 
     #else
 
+        #define _anyToNumber(x) _anyToNumber_DEBUG(x,__FILE__, __LINE__, __func__, #x)
         #define int64_from_Number(ANY) (assert(ANY.class==Number_inx),(ANY.res? ANY.value.int64:(int64_t)ANY.value.number))
         #define double_from_Number(ANY) (assert(ANY.class==Number_inx),(ANY.res? (double)ANY.value.int64:ANY.value.number))
 
@@ -449,8 +453,12 @@
     #define MAPSIZE(ANYMAP) PROP(size_,ANYMAP).value.number
 
     extern any __call(symbol_t symbol, DEFAULT_ARGUMENTS);
-    extern any __apply(any anyFunc, DEFAULT_ARGUMENTS);
-    extern any __applyArr(any anyFunc, any this, any anyArr);
+
+    //__apply(func,n,{this,arg1,arg2,...})
+    extern any __apply(any anyFunc, len_t argc, any* arguments);
+
+    //__applyArr(func,2,{this,arrArguments})
+    extern any __applyArr(any anyFunc, len_t argc, any* arguments);
 
     #define CALL(symbol,this) __call(symbol,this,0,NULL)
     #define CALL0(symbol,this) __call(symbol,this,0,NULL)
@@ -505,7 +513,8 @@
     extern int __compareStrings(any strA, any strB);  //js triple-equal, "==="
 
     extern int64_t _anyToInt64(any a);
-    extern double _anyToNumber(any a);
+    extern double _convertAnyToNumber(any a);
+    extern double _anyToNumber_DEBUG(any this, str file, int line, str func,str argument);
 
     extern any parseFloat(DEFAULT_ARGUMENTS);
     extern any parseInt(DEFAULT_ARGUMENTS);
@@ -651,7 +660,7 @@
     extern any Array_isArray(DEFAULT_ARGUMENTS);
 
     extern void _clearArrayItems(any* start, len_t count);
-    extern void _array_pushSlice(any this, any slice);
+    extern void _array_pushString(any this, any slice);
 
     //handling routines for: dynamic array with variable item-size
     extern Array_ptr _initArrayStruct(Array_ptr arrPtr, uint16_t itemSize, len_t initialAlloc);

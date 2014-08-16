@@ -4,7 +4,7 @@
         <activeConfTypeElem>1</activeConfTypeElem>
         <activeConfIndexElem>1</activeConfIndexElem>
     </data>
-    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="21">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="23">
         <file>
             <url>core/LiteC-core.h</url>
             <bookmark id="1">
@@ -18,6 +18,19 @@
             <bookmark id="2">
                 <name/>
                 <line>21</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>file:/home/ltato/LiteScript/devel/litec/core/LiteC-core.c</url>
+            <bookmark id="23">
+                <name/>
+                <line>1732</line>
+                <key/>
+            </bookmark>
+            <bookmark id="22">
+                <name/>
+                <line>2575</line>
                 <key/>
             </bookmark>
         </file>
@@ -66,8 +79,8 @@
     </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/Grammar.c</file>
-            <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/ASTBase.c</file>
+            <file>file:/home/ltato/LiteScript/devel/litec/core/LiteC-core.c</file>
+            <file>file:/home/ltato/LiteScript/devel/litec/core/LiteC-core.h</file>
         </group>
     </open-files>
 </project-private>

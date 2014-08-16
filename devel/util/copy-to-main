@@ -10,18 +10,18 @@ fi
 
 CWD=$(pwd)
 
-#get main source folder: /source
+#get main source folder: ~/LiteScript
 cd "../.."
 MAIN=$(pwd)
 cd -
 
-#get devel source folder /devel/source-v${VERSION} 
+#get devel source folder /devel/source/v${VERSION} 
 cd ../source/v${VERSION} 
 SRCVRS=$(pwd)
 cd -
 
 echo ---------------
-echo UPDATE MAIN DIR: /source /lib
+echo UPDATE MAIN DIR: /reference /lib
 echo ---------------
 echo "MAIN ${MAIN}"
 echo "SRC VERSION ${SRCVRS}"
@@ -32,20 +32,25 @@ rm -rf ${MAIN}/lib/
 mkdir -p ${MAIN}/lib
 cp -r out/lib/* ${MAIN}/lib/
 
-echo "COPY ${SRCVRS} to main dir /source (snapshot)"
+echo "COPY ${SRCVRS} to main dir /reference (snapshot/documentation)"
 # update sources snapshot
-rm -rf ${MAIN}/source
-mkdir -p ${MAIN}/source
-cp -r ${SRCVRS}/* ${MAIN}/source/
-rm -f ${MAIN}/source/*.sh
-rm -f ${MAIN}/source/*.json
-cat >${MAIN}/source/README.md <<end_of_README
+rm -rf ${MAIN}/reference
+mkdir -p ${MAIN}/reference
+cp  ${SRCVRS}/*.md ${MAIN}/reference/
+
+mkdir -p ${MAIN}/reference/interfaces
+cp  ${SRCVRS}/interfaces/*.md ${MAIN}/reference/interfaces
+
+mkdir -p ${MAIN}/reference/lib
+cp  ${SRCVRS}/lib/*.md ${MAIN}/reference/lib
+
+cat >${MAIN}/reference/README.md <<end_of_README
 LiteScript Compiler Source SNAPSHOT
 ===================================
 
 ###IMPORTANT: development is made at /devel/source/${VERSION}
 
-This dir, /source, it's just a ***snapshot** of the last released source code: v${VERSION}
+This dir, /reference, it's just a ***snapshot** of the last released source code: v${VERSION}
 
 Do NOT work on *this dir*, work on [/devel/source/v${VERSION}](/devel/source/v${VERSION})
 end_of_README

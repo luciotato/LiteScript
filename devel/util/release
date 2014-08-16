@@ -4,7 +4,7 @@
 #make the litescript compiler stable package for the npm repository
 
 echo release $1 $2 $3
-set -e
+set -ex
 
 VERSION=$1
 using=$2
@@ -51,13 +51,14 @@ cp ../source/v${VERSION}/package.json ../..
 
 #check version consistency
 
+echo ${out}/lib/lite -run tests/extra-check-version -o out -i ../../source/v0.8/interfaces
 ${out}/lib/lite -run tests/extra-check-version -o out -i ../../source/v0.8/interfaces
 
 #test nice functionss
 
 ${out}/lib/lite -v 2 -nomap tests/extra-nice-function 
-node --harmony tests/out/extra-nice-function
-rm -r tests/out
+node --harmony generated/js/extra-nice-function
+rm -r generated/js
 
 #test compiler at ${out}/lib
 node test -use $VERSION

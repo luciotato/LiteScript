@@ -1035,7 +1035,7 @@ while compiling.
 
 generates js: Object.defineProperty(...
 
-see: /source/string-shims for an example of use.
+see: /reference/interfaces/shims.lite.md for an example of use.
 
 ### New syntax, 'nice function' 'yield until' 'yield parallel map'
 

@@ -63,11 +63,11 @@
           
               //when
           if (
-             (this.nodeClass==Grammar.ImportStatementItem)
-             ||(this.nodeClass==Grammar.DeclareStatement)
-             ||(this.nodeClass==Grammar.WithStatement)
-             ||(this.nodeClass==Grammar.ArrayLiteral)
-             ||(this.nodeClass==Grammar.ExceptionBlock)
+              (this.nodeClass==Grammar.ImportStatementItem)
+              ||(this.nodeClass==Grammar.DeclareStatement)
+              ||(this.nodeClass==Grammar.WithStatement)
+              ||(this.nodeClass==Grammar.ArrayLiteral)
+              ||(this.nodeClass==Grammar.ExceptionBlock)
           ){
                     //.nodeClass = Grammar.VariableDecl
                     this.nodeClass = Grammar.VariableDecl;
@@ -75,8 +75,8 @@
           }
               //when
           else if (
-             (this.nodeClass==Grammar.ObjectLiteral)
-             ||(this.nodeClass==Grammar.FreeObjectLiteral)
+              (this.nodeClass==Grammar.ObjectLiteral)
+              ||(this.nodeClass==Grammar.FreeObjectLiteral)
           ){
                     //.nodeClass = Grammar.NameValuePair
                     this.nodeClass = Grammar.NameValuePair;
@@ -132,10 +132,6 @@
           if (options.isForward || options.isDummy && !this.nodeClass) {this.nodeClass = Grammar.VariableDecl};
       };
 
-//if options.isFunction, .isFunction = true
-//          if options.isNamespace, .isNamespace = true
-//          if options.isClass, .isClass = true
-//          
 
 //Check for a valid nodeclass
 
@@ -167,7 +163,6 @@
 
      //declare name affinity nameDecl
      
-     //declare name affinity nameDecl
 
 
      //     helper method normalize(name)
@@ -273,7 +268,6 @@
           {
           //declare member:Declaration
           
-          //declare member:Declaration
           //member.parent = this
           member.parent = this;
           //.members.set key,member
@@ -639,15 +633,14 @@
             //normalizeModeKeepFirstCase: boolean
 
             //pointsTo : Declaration
+
             //type, itemType, returnType
-            //value, isForward, isDummy
 
-            //nodeClass
-            //isFunction
-            //isClass
-            //isNamespace
+            //nodeClass: ASTBase
 
+            //isForward, isDummy
             //informError: boolean
+            //value
     };
     
     // export

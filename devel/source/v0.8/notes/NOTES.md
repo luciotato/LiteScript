@@ -1,6 +1,8 @@
-# validate required and optional parameters
-#+1 AGAIN
-#+1 AGAIN
+# validate required and optional parameters - ON CALL TO new
+see: 
+  var args = new OptionsParser(process.argv,'invalid argument')
+
+# DONE: validate required and optional parameters
 
   caso: estaba llamando a 
     lexer.out.put x, "bar", "important"
@@ -11,6 +13,7 @@
 
   caso 2: estaba llamando compileProject(name,options) 
   pero compileProject now is compileProject(options)
+
 
 # When Compile-to-C ORDER of execution on ObjectLiteal *IS NOT GUARANTEED*
 
@@ -47,7 +50,7 @@ example:
 
     /* -----[ Tokenizer ]----- */
 
-# fix comments - posible SUBTLE bug
+#DONE:  fix comments - posible SUBTLE bug
     
     process.exit 0 //------
 =>
@@ -59,10 +62,12 @@ example:
       , Test3_toplevel
   });
 
+
 #separate Map (ES6) from DynObject (LiteScript)
 
 when compile-to-c, a ObjectLiteral declares a "DynObject"
 DynObject extends Map, it's basically a "Map String to any"
+
 
 # no se trasnfiere la propiedad "nodeClass" - COMPILE-TO-C
 

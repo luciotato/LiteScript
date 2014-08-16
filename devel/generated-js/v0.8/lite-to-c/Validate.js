@@ -234,7 +234,6 @@
 
               //declare valid parent.nameDecl
               
-              //declare valid parent.nameDecl
 
 //1st, more common: if node is Grammar.ImportStatementItem
 
@@ -243,7 +242,6 @@
               
                   //declare node:Grammar.ImportStatementItem
                   
-                  //declare node:Grammar.ImportStatementItem
                   //referenceNameDecl = node.nameDecl
                   referenceNameDecl = node.nameDecl;
 
@@ -465,10 +463,8 @@
                 
                   //declare container:Grammar.ClassDeclaration
                   
-                  //declare container:Grammar.ClassDeclaration
                   //declare valid container.varRef.toString
                   
-                  //declare valid container.varRef.toString
                   //if container.varRef, logger.warning "#{container.positionText()} more info: '#{nameDecl.name}' of '#{container.varRef.toString()}'"
                   if (container.varRef) {logger.warning('' + (container.positionText()) + " more info: '" + nameDecl.name + "' of '" + (container.varRef.toString()) + "'")};
                 };
@@ -704,12 +700,12 @@
 
 //Process the global scope declarations interface file: GlobalScope(JS|C|NODE).interface.md
 
-        //logger.msg "Declare global scope using #{globalInterfaceFile}.interface.md"
-        logger.msg("Declare global scope using " + globalInterfaceFile + ".interface.md");
+        //logger.info 'Declare global scope using #{globalInterfaceFile}.interface.md'
+        logger.info('Declare global scope using ' + globalInterfaceFile + '.interface.md');
         //var globalInterfaceModule = project.compileFile(globalInterfaceFile)
         var globalInterfaceModule = project.compileFile(globalInterfaceFile);
-        //if project.options.verboseLevel is 1, print 'from:',globalInterfaceModule.fileInfo.relFilename
-        if (project.options.verboseLevel === 1) {console.log('from:', globalInterfaceModule.fileInfo.relFilename)};
+        //logger.info '    from:',globalInterfaceModule.fileInfo.relFilename
+        logger.info('    from:', globalInterfaceModule.fileInfo.relFilename);
 
 //call "declare" on each item of the GlobalScope interface file, to create the NameDeclarations
 
@@ -989,7 +985,6 @@
         
             //declare obj:array //to allow js's property access []
             
-            //declare obj:array //to allow js's property access []
             //for each prop in Object.getOwnPropertyNames(obj) #even not enumerables
             var _list3=Object.getOwnPropertyNames(obj);
             for( var prop__inx=0,prop ; prop__inx<_list3.length ; prop__inx++){prop=_list3[prop__inx];
@@ -1010,7 +1005,6 @@
 
                     //declare valid Object.hasOwnProperty.call
                     
-                    //declare valid Object.hasOwnProperty.call
                     //if prop isnt 'constructor'
                     if (prop !== 'constructor') {
                     
@@ -1112,7 +1106,6 @@
         
             //declare typeRef:Grammar.VariableRef
             
-            //declare typeRef:Grammar.VariableRef
             //converted = typeRef.tryGetReference()
             converted = typeRef.tryGetReference();
         }
@@ -1143,7 +1136,6 @@
         else {
             //declare valid typeRef.constructor.name
             
-            //declare valid typeRef.constructor.name
             //.sayErr "INTERNAL ERROR: convertType UNRECOGNIZED type of:'#{typeof typeRef}' on #{internalName}: '#{typeRef}' [#{typeRef.constructor.name}]"
             this.sayErr("INTERNAL ERROR: convertType UNRECOGNIZED type of:'" + (typeof typeRef) + "' on " + internalName + ": '" + typeRef + "' [" + typeRef.constructor.name + "]");
             //return
@@ -1198,7 +1190,6 @@
 
       //declare valid value.getResultType
       
-      //declare valid value.getResultType
       //var valueNameDecl = value.getResultType()
       var valueNameDecl = value.getResultType();
 
@@ -1561,7 +1552,6 @@
 
         //declare valid item.name
         
-        //declare valid item.name
         //var name = type of item is 'string'? item : item.name
         var name = typeof item === 'string' ? item : item.name;
 
@@ -1696,7 +1686,6 @@
             //#get varRefOwner from AppendToDeclaration
             //declare parent:Grammar.AppendToDeclaration
             
-            //declare parent:Grammar.AppendToDeclaration
 
             //toNamespace = parent.toNamespace #if it was 'append to namespace'
             toNamespace = parent.toNamespace;
@@ -1824,7 +1813,6 @@
             
                 //declare value:ASTBase
                 
-                //declare value:ASTBase
                 //value.callOnSubTree methodSymbol,excludeClass #recurse
                 value.callOnSubTree(methodSymbol, excludeClass);
             }
@@ -1834,14 +1822,12 @@
             
                 //declare value:array
                 
-                //declare value:array
                 //logger.debug "callOnSubArray #{.constructor.name}.#{name}[]"
                 //for each item in value where item instance of ASTBase
                 for( var item__inx=0,item ; item__inx<value.length ; item__inx++){item=value[item__inx];
                   if(item instanceof ASTBase){
                     //declare item:ASTBase
                     
-                    //declare item:ASTBase
                     //item.callOnSubTree methodSymbol,excludeClass
                     item.callOnSubTree(methodSymbol, excludeClass);
                 }};// end for each in value
@@ -2241,7 +2227,6 @@
             
                 //declare container: Grammar.NamespaceDeclaration
                 
-                //declare container: Grammar.NamespaceDeclaration
                 //container.nameDecl.addMember .nameDecl
                 container.nameDecl.addMember(this.nameDecl);
             }
@@ -2442,7 +2427,6 @@
 
         //declare .parent: Grammar.ObjectLiteral
         
-        //declare .parent: Grammar.ObjectLiteral
         //.nameDecl = .addMemberTo(.parent.nameDecl, .name)
         this.nameDecl = this.addMemberTo(this.parent.nameDecl, this.name);
 
@@ -2588,7 +2572,6 @@
           
               //declare containerClassDeclaration:Grammar.AppendToDeclaration
               
-              //declare containerClassDeclaration:Grammar.AppendToDeclaration
               //addThis = not containerClassDeclaration.toNamespace
               addThis = !(containerClassDeclaration.toNamespace);
           };
@@ -2612,12 +2595,12 @@
       //if .paramsDeclarations
       if (this.paramsDeclarations) {
       
-          //for each varDecl in .paramsDeclarations
-          for( var varDecl__inx=0,varDecl ; varDecl__inx<this.paramsDeclarations.length ; varDecl__inx++){varDecl=this.paramsDeclarations[varDecl__inx];
+          //for each varDecl in .paramsDeclarations.list
+          for( var varDecl__inx=0,varDecl ; varDecl__inx<this.paramsDeclarations.list.length ; varDecl__inx++){varDecl=this.paramsDeclarations.list[varDecl__inx];
           
               //varDecl.declareInScope
               varDecl.declareInScope();
-          };// end for each in this.paramsDeclarations
+          };// end for each in this.paramsDeclarations.list
           
       };
      };
@@ -2760,7 +2743,6 @@
           ){
                   //declare item.specific:Grammar.PropertiesDeclaration
                   
-                  //declare item.specific:Grammar.PropertiesDeclaration
                   //if not item.specific.declared, item.specific.declare(informError=true)
                   if (!(item.specific.declared)) {item.specific.declare(true)};
           
@@ -2798,7 +2780,6 @@
           ){
                   //declare item.specific:Grammar.ClassDeclaration
                   
-                  //declare item.specific:Grammar.ClassDeclaration
                   //ownerDecl.addMember item.specific.nameDecl
                   ownerDecl.addMember(item.specific.nameDecl);
           
@@ -3099,7 +3080,6 @@
         
             //declare valid .parent.specifier
             
-            //declare valid .parent.specifier
             //if .parent.specifier is 'valid'
             if (this.parent.specifier === 'valid') {
             
@@ -3133,7 +3113,6 @@
         
             //declare valid ac.name
             
-            //declare valid ac.name
 
 //for PropertyAccess, check if the property name is valid
 
@@ -3156,6 +3135,8 @@
             
             else if (ac instanceof Grammar.FunctionAccess) {
             
+                //declare ac:Grammar.FunctionAccess
+                
 
                 //if actualVar.findOwnMember('**proto**') into var prt
                 var prt=undefined;
@@ -3171,16 +3152,28 @@
                     };
                 };
 
+//Validate arguments against function parameters declaration
+
+                //if actualVar.nodeDeclared instanceof Grammar.FunctionDeclaration
+                if (actualVar.nodeDeclared instanceof Grammar.FunctionDeclaration) {
+                
+                    //ac.validateArguments actualVar.nodeDeclared
+                    ac.validateArguments(actualVar.nodeDeclared);
+                };
+
                 //actualVar = actualVar.findMember('**return type**')
                 actualVar = actualVar.findMember('**return type**');
             };
 
+//if actualVar is a VarRef, find type in scope
+
             //if actualVar instanceof Grammar.VariableRef
             if (actualVar instanceof Grammar.VariableRef) {
             
+                //.sayErr  "actualVar instanceof Grammar.VariableRef: #{actualVar.toString()}"
+                this.sayErr("actualVar instanceof Grammar.VariableRef: " + (actualVar.toString()));
                 //declare actualVar:Grammar.VariableRef
                 
-                //declare actualVar:Grammar.VariableRef
                 //opt.isForward=true
                 opt.isForward = true;
                 //actualVar = actualVar.tryGetReference(opt)
@@ -3199,6 +3192,7 @@
         //return actualVar
         return actualVar;
      };
+
 
      //     helper method tryGetReference(options:Names.NameDeclOptions) returns Names.Declaration
      Grammar.VariableRef.prototype.tryGetReference = function(options){
@@ -3231,7 +3225,6 @@
         
             //declare valid ac.name
             
-            //declare valid ac.name
 
 //for PropertyAccess
 
@@ -3295,6 +3288,73 @@
 
       //return .tryGetReference()
       return this.tryGetReference();
+     };
+
+
+    //    append to class Grammar.FunctionAccess
+    
+
+     //     method validateArguments(funcDecl:Grammar.FunctionDeclaration)
+     Grammar.FunctionAccess.prototype.validateArguments = function(funcDecl){
+
+        //var definedArgs= funcDecl.paramsDeclarations? funcDecl.paramsDeclarations.list.length else 0
+        var definedArgs = funcDecl.paramsDeclarations ? funcDecl.paramsDeclarations.list.length : 0;
+
+        //if no definedArgs, return
+        if (!definedArgs) {return};
+
+        //var varDecl
+        var varDecl = undefined;
+        //for each inx,functionArgument in .args
+        for( var inx=0,functionArgument ; inx<this.args.length ; inx++){functionArgument=this.args[inx];
+        
+
+            //if inx<definedArgs
+            if (inx < definedArgs) {
+            
+                //varDecl = funcDecl.paramsDeclarations.list[inx]
+                varDecl = funcDecl.paramsDeclarations.list[inx];
+            }
+            //if inx<definedArgs
+            
+            else {
+                //varDecl = undefined
+                varDecl = undefined;
+                //if no funcDecl.paramsDeclarations.variadic
+                if (!funcDecl.paramsDeclarations.variadic) {
+                
+                    //.sayErr "#{funcDecl.specifier} #{funcDecl.nameDecl} accepts only #{definedArgs} arguments"
+                    this.sayErr('' + funcDecl.specifier + " " + funcDecl.nameDecl + " accepts only " + definedArgs + " arguments");
+                    //funcDecl.sayErr "function declaration is here"
+                    funcDecl.sayErr("function declaration is here");
+                };
+            };
+
+            //if varDecl and varDecl.nameDecl
+            if (varDecl && varDecl.nameDecl) {
+            
+                //var defined = varDecl.nameDecl.findMember("**proto**")
+                var defined = varDecl.nameDecl.findMember("**proto**");
+                //if defined and defined.name is 'prototype', defined = defined.parent
+                if (defined && defined.name === 'prototype') {defined = defined.parent};
+                //var passed = functionArgument.expression.getResultType()
+                var passed = functionArgument.expression.getResultType();
+                //if defined isnt passed
+                if (defined !== passed) {
+                
+                    //do nothing
+                    null;
+                };
+            };
+        };// end for each in this.args
+                    //.sayErr "#{funcDecl.nameDecl} argument ##{inx+1} is type:#{defined} and a type:#{passed} was passed"
+
+        //end for
+
+//-------
+
+    //    append to class Grammar.AssignmentStatement ###
+        
      };
 
 //-------
@@ -3423,7 +3483,6 @@
 
         //declare valid .root.getResultType
         
-        //declare valid .root.getResultType
         //return .root.getResultType() # .root is Grammar.Oper or Grammar.Operand
         return this.root.getResultType();
      };
@@ -3485,7 +3544,6 @@
 
               //declare valid .right.name.tryGetReference
               
-              //declare valid .right.name.tryGetReference
               //var nameDecl = .right.name.tryGetReference()
               var nameDecl = this.right.name.tryGetReference();
 
@@ -3510,7 +3568,6 @@
 
         //declare valid .right.getResultType
         
-        //declare valid .right.getResultType
 
         //if .name is 'new'
         if (this.name === 'new') {
@@ -3530,13 +3587,10 @@
 
         //declare valid .name.type
         
-        //declare valid .name.type
         //declare valid .name.getResultType
         
-        //declare valid .name.getResultType
         //declare valid .name.tryGetReference
         
-        //declare valid .name.tryGetReference
 
         //if .name instance of Grammar.ObjectLiteral
         if (this.name instanceof Grammar.ObjectLiteral) {
@@ -3647,7 +3701,6 @@
                 varDecl.nameDecl.nodeDeclared = classDecl;
                 //declare varDecl.name:string
                 
-                //declare varDecl.name:string
                 //nameAffinity.members.set varDecl.name.capitalized(), classDecl.nameDecl
                 nameAffinity.members.set(varDecl.name.capitalized(), classDecl.nameDecl);
             };
@@ -3741,7 +3794,6 @@
             
                 //declare valid ac.name
                 
-                //declare valid ac.name
 
                 //if ac isnt instance of Grammar.PropertyAccess
                 if (!(ac instanceof Grammar.PropertyAccess)) {

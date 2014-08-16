@@ -10,6 +10,9 @@ global pre-created Classes are:
 
 ### Namespace LiteCore
 
+        properties
+            version,buildDate
+
         method getSymbol(name:string) returns number
         method getSymbolName(symbol) returns string
 
@@ -107,28 +110,28 @@ Other Object methods - LiteC specific
             length:number
         
         //method toLocaleString() 
-        method join() returns string
-        method pop() 
-        method push() 
-        method concat() returns array
+        method join returns string
+        method pop()
+        method push 
+        method concat returns array
         //method reverse() 
-        method shift() 
-        method unshift() 
-        method slice() returns array
-        method splice() returns array
-        method sort() 
+        method shift()
+        method unshift
+        method slice returns array
+        method splice returns array
+        method sort 
         //method filter() 
         //method forEach() 
         //method some() 
         //method every() 
         //method map() 
-        method indexOf() 
-        method lastIndexOf() 
+        method indexOf(needle,startIndex=undefined) 
+        method lastIndexOf(needle,startIndex=undefined) 
         //method reduce() 
         //method reduceRight() 
         //method entries() 
-        method values() 
-        method keys() 
+        method values() returns array
+        method keys() returns array
         //method find() 
         //method findIndex() 
 

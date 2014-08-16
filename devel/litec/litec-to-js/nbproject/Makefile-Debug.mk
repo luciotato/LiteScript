@@ -41,6 +41,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/761097586/any.o \
 	${OBJECTDIR}/_ext/761097586/exceptions.o \
 	${OBJECTDIR}/_ext/761097586/fs-native.o \
+	${OBJECTDIR}/_ext/761097586/keytree.o \
 	${OBJECTDIR}/_ext/761097586/utf8strings.o \
 	${OBJECTDIR}/_ext/761097586/util.o \
 	${OBJECTDIR}/generated-c/ASTBase.o \
@@ -55,6 +56,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/generated-c/c_lite.o \
 	${OBJECTDIR}/generated-c/interfaces/C_standalone/fs.o \
 	${OBJECTDIR}/generated-c/interfaces/C_standalone/path.o \
+	${OBJECTDIR}/generated-c/interfaces/shims.o \
 	${OBJECTDIR}/generated-c/lib/ControlledError.o \
 	${OBJECTDIR}/generated-c/lib/Environment.o \
 	${OBJECTDIR}/generated-c/lib/GeneralOptions.o \
@@ -63,8 +65,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/generated-c/lib/UniqueID.o \
 	${OBJECTDIR}/generated-c/lib/color.o \
 	${OBJECTDIR}/generated-c/lib/logger.o \
-	${OBJECTDIR}/generated-c/lib/mkPath.o \
-	${OBJECTDIR}/generated-c/lib/shims.o
+	${OBJECTDIR}/generated-c/lib/mkPath.o
 
 # Test Directory
 TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
@@ -126,6 +127,11 @@ ${OBJECTDIR}/_ext/761097586/fs-native.o: ../core/fs-native.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/761097586
 	${RM} "$@.d"
 	$(COMPILE.c) -g -I../core -Igenerated-c/interfaces -Igenerated-c/interfaces/C_standalone -I. -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/761097586/fs-native.o ../core/fs-native.c
+
+${OBJECTDIR}/_ext/761097586/keytree.o: ../core/keytree.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/761097586
+	${RM} "$@.d"
+	$(COMPILE.c) -g -I../core -Igenerated-c/interfaces -Igenerated-c/interfaces/C_standalone -I. -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/761097586/keytree.o ../core/keytree.c
 
 ${OBJECTDIR}/_ext/761097586/utf8strings.o: ../core/utf8strings.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/761097586
@@ -197,6 +203,11 @@ ${OBJECTDIR}/generated-c/interfaces/C_standalone/path.o: generated-c/interfaces/
 	${RM} "$@.d"
 	$(COMPILE.c) -g -I../core -Igenerated-c/interfaces -Igenerated-c/interfaces/C_standalone -I. -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/interfaces/C_standalone/path.o generated-c/interfaces/C_standalone/path.c
 
+${OBJECTDIR}/generated-c/interfaces/shims.o: generated-c/interfaces/shims.c 
+	${MKDIR} -p ${OBJECTDIR}/generated-c/interfaces
+	${RM} "$@.d"
+	$(COMPILE.c) -g -I../core -Igenerated-c/interfaces -Igenerated-c/interfaces/C_standalone -I. -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/interfaces/shims.o generated-c/interfaces/shims.c
+
 ${OBJECTDIR}/generated-c/lib/ControlledError.o: generated-c/lib/ControlledError.c 
 	${MKDIR} -p ${OBJECTDIR}/generated-c/lib
 	${RM} "$@.d"
@@ -241,11 +252,6 @@ ${OBJECTDIR}/generated-c/lib/mkPath.o: generated-c/lib/mkPath.c
 	${MKDIR} -p ${OBJECTDIR}/generated-c/lib
 	${RM} "$@.d"
 	$(COMPILE.c) -g -I../core -Igenerated-c/interfaces -Igenerated-c/interfaces/C_standalone -I. -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/lib/mkPath.o generated-c/lib/mkPath.c
-
-${OBJECTDIR}/generated-c/lib/shims.o: generated-c/lib/shims.c 
-	${MKDIR} -p ${OBJECTDIR}/generated-c/lib
-	${RM} "$@.d"
-	$(COMPILE.c) -g -I../core -Igenerated-c/interfaces -Igenerated-c/interfaces/C_standalone -I. -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/lib/shims.o generated-c/lib/shims.c
 
 # Subprojects
 .build-subprojects:
@@ -339,6 +345,19 @@ ${OBJECTDIR}/_ext/761097586/fs-native_nomain.o: ${OBJECTDIR}/_ext/761097586/fs-n
 	    $(COMPILE.c) -g -I../core -Igenerated-c/interfaces -Igenerated-c/interfaces/C_standalone -I. -std=c99 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/761097586/fs-native_nomain.o ../core/fs-native.c;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/761097586/fs-native.o ${OBJECTDIR}/_ext/761097586/fs-native_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/761097586/keytree_nomain.o: ${OBJECTDIR}/_ext/761097586/keytree.o ../core/keytree.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/761097586
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/761097586/keytree.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.c) -g -I../core -Igenerated-c/interfaces -Igenerated-c/interfaces/C_standalone -I. -std=c99 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/761097586/keytree_nomain.o ../core/keytree.c;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/761097586/keytree.o ${OBJECTDIR}/_ext/761097586/keytree_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/761097586/utf8strings_nomain.o: ${OBJECTDIR}/_ext/761097586/utf8strings.o ../core/utf8strings.c 
@@ -523,6 +542,19 @@ ${OBJECTDIR}/generated-c/interfaces/C_standalone/path_nomain.o: ${OBJECTDIR}/gen
 	    ${CP} ${OBJECTDIR}/generated-c/interfaces/C_standalone/path.o ${OBJECTDIR}/generated-c/interfaces/C_standalone/path_nomain.o;\
 	fi
 
+${OBJECTDIR}/generated-c/interfaces/shims_nomain.o: ${OBJECTDIR}/generated-c/interfaces/shims.o generated-c/interfaces/shims.c 
+	${MKDIR} -p ${OBJECTDIR}/generated-c/interfaces
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/generated-c/interfaces/shims.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.c) -g -I../core -Igenerated-c/interfaces -Igenerated-c/interfaces/C_standalone -I. -std=c99 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/interfaces/shims_nomain.o generated-c/interfaces/shims.c;\
+	else  \
+	    ${CP} ${OBJECTDIR}/generated-c/interfaces/shims.o ${OBJECTDIR}/generated-c/interfaces/shims_nomain.o;\
+	fi
+
 ${OBJECTDIR}/generated-c/lib/ControlledError_nomain.o: ${OBJECTDIR}/generated-c/lib/ControlledError.o generated-c/lib/ControlledError.c 
 	${MKDIR} -p ${OBJECTDIR}/generated-c/lib
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/generated-c/lib/ControlledError.o`; \
@@ -638,19 +670,6 @@ ${OBJECTDIR}/generated-c/lib/mkPath_nomain.o: ${OBJECTDIR}/generated-c/lib/mkPat
 	    $(COMPILE.c) -g -I../core -Igenerated-c/interfaces -Igenerated-c/interfaces/C_standalone -I. -std=c99 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/lib/mkPath_nomain.o generated-c/lib/mkPath.c;\
 	else  \
 	    ${CP} ${OBJECTDIR}/generated-c/lib/mkPath.o ${OBJECTDIR}/generated-c/lib/mkPath_nomain.o;\
-	fi
-
-${OBJECTDIR}/generated-c/lib/shims_nomain.o: ${OBJECTDIR}/generated-c/lib/shims.o generated-c/lib/shims.c 
-	${MKDIR} -p ${OBJECTDIR}/generated-c/lib
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/generated-c/lib/shims.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.c) -g -I../core -Igenerated-c/interfaces -Igenerated-c/interfaces/C_standalone -I. -std=c99 -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/generated-c/lib/shims_nomain.o generated-c/lib/shims.c;\
-	else  \
-	    ${CP} ${OBJECTDIR}/generated-c/lib/shims.o ${OBJECTDIR}/generated-c/lib/shims_nomain.o;\
 	fi
 
 # Run Test Targets

@@ -45,16 +45,16 @@
 
 //Another example:
 
-//`VariableDecl: IDENTIFIER ["=" Expression]`
+//given: `VariableDecl: IDENTIFIER ["=" Expression]`
 
-//`VarStatement: (VariableDecl,)`, where
+//in the grammar: `VarStatement: var (VariableDecl,)`
 
 //`(VariableDecl,)` means **comma "Separated List"** of `VariableDecl`
 //Since the comma is inside a **( )** group, it means at least one VariableDecl is required.
 
-//###separated lists are flexible - "Free form"
+//###"Free form": separated lists are flexible
 
-//Sseparated lists can be presented in "free-form" mode.
+//Separated lists can be presented in "free-form" mode.
 //In "free-form", the list is indented, and commas(or semicolons) are optional.
 
 //Example:
@@ -66,12 +66,11 @@
 //and the following is *also* a valid text:
 //
 //
-//    console.log (
-//          1
-//          2
-//          3
-//          "Foo"
-//          )
+//    console.log
+//        1
+//        2
+//        3
+//        "Foo"
 //
 
 
@@ -187,55 +186,6 @@
     
     // end class PrintStatement
 
-    //    export helper class VarDeclList extends ASTBase
-    // constructor
-    function VarDeclList(){ // default constructor
-    // default constructor: call super.constructor
-        ASTBase.prototype.constructor.apply(this,arguments)
-      //properties
-        //list: array of VariableDecl
-    };
-    // VarDeclList (extends|proto is) ASTBase
-    VarDeclList.prototype.__proto__ = ASTBase.prototype;
-
-      //method parseList
-      VarDeclList.prototype.parseList = function(){
-        //.list = .reqSeparatedList(VariableDecl,",")
-        this.list = this.reqSeparatedList(VariableDecl, ",");
-      };
-    // export
-    module.exports.VarDeclList = VarDeclList;
-    
-    // end class VarDeclList
-
-    //    export class VarStatement extends VarDeclList
-    // constructor
-    function VarStatement(){ // default constructor
-    // default constructor: call super.constructor
-        VarDeclList.prototype.constructor.apply(this,arguments)
-    };
-    // VarStatement (extends|proto is) VarDeclList
-    VarStatement.prototype.__proto__ = VarDeclList.prototype;
-
-//`VarStatement: (var|let) (VariableDecl,)+ `
-
-//`var` followed by a comma separated list of VariableDecl (one or more)
-
-      //method parse()
-      VarStatement.prototype.parse = function(){
-        //.req 'var','let'
-        this.req('var', 'let');
-        //.lock
-        this.lock();
-        //.parseList
-        this.parseList();
-      };
-    // export
-    module.exports.VarStatement = VarStatement;
-    
-    // end class VarStatement
-
-
 
     //    export class VariableDecl extends ASTBase
     // constructor
@@ -251,10 +201,20 @@
 
       //declare name affinity varDecl, paramDecl
       
-      //declare name affinity varDecl, paramDecl
 
       //method parse()
       VariableDecl.prototype.parse = function(){
+
+        // accept '...' as if it was a parameter declaration inside FunctionParameters
+        //if .lexer.token.value is '...' and .parent is FunctionParameters
+        if (this.lexer.token.value === '...' && this.parent === FunctionParameters) {
+        
+            //.name = .req('...')
+            this.name = this.req('...');
+            //return
+            return;
+        };
+
         //.name = .req('IDENTIFIER')
         this.name = this.req('IDENTIFIER');
         //.lock()
@@ -381,7 +341,9 @@
 
 //##More about comma separated lists
 
-//The examples above only show Object and List Expressions, but *you can use free-form mode (multiple lines with the same indent), everywhere a comma separated list of items apply.*
+//The examples above only show Object and List Expressions,
+//but *you can use free-form mode (multiple lines with the same indent)*,
+//*everywhere a comma separated list of items apply.*
 
 //The previous examples were for:
 
@@ -457,6 +419,149 @@
 //      )
 //      ...function body...
 
+    //    export helper class VarDeclList extends ASTBase
+    // constructor
+    function VarDeclList(){ // default constructor
+    // default constructor: call super.constructor
+        ASTBase.prototype.constructor.apply(this,arguments)
+      //properties
+        //list: array of VariableDecl
+    };
+    // VarDeclList (extends|proto is) ASTBase
+    VarDeclList.prototype.__proto__ = ASTBase.prototype;
+
+      //method parseList
+      VarDeclList.prototype.parseList = function(){
+        //.list = .reqSeparatedList(VariableDecl,",")
+        this.list = this.reqSeparatedList(VariableDecl, ",");
+      };
+
+      //method getNames returns array of string
+      VarDeclList.prototype.getNames = function(){
+        //var result=[]
+        var result = [];
+        //for each varDecl in .list
+        for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
+        
+            //result.push varDecl.name
+            result.push(varDecl.name);
+        };// end for each in this.list
+        //return result
+        return result;
+      };
+    // export
+    module.exports.VarDeclList = VarDeclList;
+    
+    // end class VarDeclList
+
+
+    //    export class VarStatement extends VarDeclList
+    // constructor
+    function VarStatement(){ // default constructor
+    // default constructor: call super.constructor
+        VarDeclList.prototype.constructor.apply(this,arguments)
+    };
+    // VarStatement (extends|proto is) VarDeclList
+    VarStatement.prototype.__proto__ = VarDeclList.prototype;
+
+//`VarStatement: (var|let) (VariableDecl,)+ `
+
+//`var` followed by a comma separated list of VariableDecl (one or more)
+
+      //method parse()
+      VarStatement.prototype.parse = function(){
+        //.req 'var','let'
+        this.req('var', 'let');
+        //.lock
+        this.lock();
+        //.parseList
+        this.parseList();
+      };
+    // export
+    module.exports.VarStatement = VarStatement;
+    
+    // end class VarStatement
+
+
+    //    export class FunctionParameters extends VarDeclList
+    // constructor
+    function FunctionParameters(){ // default constructor
+    // default constructor: call super.constructor
+        VarDeclList.prototype.constructor.apply(this,arguments)
+      //properties
+        //variadic:boolean = true // like in js, by default all fns are variadic
+          this.variadic=true;
+    };
+    // FunctionParameters (extends|proto is) VarDeclList
+    FunctionParameters.prototype.__proto__ = VarDeclList.prototype;
+
+      //method parse()
+      FunctionParameters.prototype.parse = function(){
+
+        //.list=[]
+        this.list = [];
+
+        //if .lexer.token.value is "returns"
+        if (this.lexer.token.value === "returns" || ["NEWLINE", "EOF", "SPACE_BRACKET"].indexOf(this.lexer.token.type)>=0) {
+        
+                //return // assume no specific parameters definitions
+                return;
+        };
+
+//if we define a list of specific parameters, fuction is no longer variadic
+
+        //.lock
+        this.lock();
+        //.variadic = false
+        this.variadic = false;
+
+        //if .opt("(") into var starterParen // list of parameters ()-enclosed
+        var starterParen=undefined;
+        if ((starterParen=this.opt("("))) {
+        
+            //.list = .optSeparatedList(VariableDecl,",",")")
+            this.list = this.optSeparatedList(VariableDecl, ",", ")");
+        }
+        //if .opt("(") into var starterParen // list of parameters ()-enclosed
+        
+        else {
+            //.list = .reqSeparatedList(VariableDecl,",") //require at least one
+            this.list = this.reqSeparatedList(VariableDecl, ",");
+        };
+
+//check if we've parsed "..." ellipsis in the parameters list.
+//ellipsis are valid as "last parameter", and restores the "variadic" flag
+
+        //for each inx,item in .list
+        for( var inx=0,item ; inx<this.list.length ; inx++){item=this.list[inx];
+        
+            //if item.name is '...'
+            if (item.name === '...') {
+            
+                //if inx<.list.length-1
+                if (inx < this.list.length - 1) {
+                
+                    //.sayErr "variadic indicator: '...' is valid only as last parameter"
+                    this.sayErr("variadic indicator: '...' is valid only as last parameter");
+                }
+                //if inx<.list.length-1
+                
+                else {
+                  //.list.pop //remove "..."
+                  this.list.pop();
+                  //.variadic = true
+                  this.variadic = true;
+                  //break
+                  break;
+                };
+            };
+        };// end for each in this.list
+        
+      };
+    // export
+    module.exports.FunctionParameters = FunctionParameters;
+    
+    // end class FunctionParameters
 
     //    export class PropertiesDeclaration extends VarDeclList
     // constructor
@@ -473,7 +578,6 @@
 
       //declare name affinity propDecl
       
-      //declare name affinity propDecl
 
       //method parse()
       PropertiesDeclaration.prototype.parse = function(){
@@ -1070,7 +1174,6 @@
       ForStatement.prototype.parse = function(){
         //declare valid .createScope
         
-        //declare valid .createScope
 
 //We start with commonn `for` keyword
 
@@ -1420,7 +1523,6 @@
 
         //declare valid .parent.preParsedVarRef
         
-        //declare valid .parent.preParsedVarRef
 
         //if .parent instanceof Statement and .parent.preParsedVarRef
         if (this.parent instanceof Statement && this.parent.preParsedVarRef) {
@@ -1490,7 +1592,6 @@
 
       //declare name affinity varRef
       
-      //declare name affinity varRef
 
       //method parse()
       VariableRef.prototype.parse = function(){
@@ -1940,34 +2041,18 @@
               
                 //when '.': //property acceess
               if (
-                 (this.lexer.token.value=='.')
+                  (this.lexer.token.value=='.')
               ){
 
                     //ac = new PropertyAccess(this)
                     ac = new PropertyAccess(this);
                     //ac.parse
                     ac.parse();
-
-                    //if .lexer.token.value is '{' // ObjectLiteral, short-form for  `.newFromObject({a:1,b:2})`
-                    if (this.lexer.token.value === '{') {
-                    
-                        //.addAccessor ac //add the PropertyAccess to method ".newFromObject"
-                        this.addAccessor(ac);
-                        //ac = new FunctionAccess(this) //create FunctionAccess
-                        ac = new FunctionAccess(this);
-                        //declare ac:FunctionAccess
-                        
-                        //declare ac:FunctionAccess
-                        //ac.args = []
-                        ac.args = [];
-                        //ac.args.push .req(ObjectLiteral) //.newFromObject() argument is the object literal
-                        ac.args.push(this.req(ObjectLiteral));
-                    };
               
               }
                 //when "(": //function access
               else if (
-                 (this.lexer.token.value=="(")
+                  (this.lexer.token.value=="(")
               ){
 
                     //ac = new FunctionAccess(this)
@@ -1978,7 +2063,7 @@
               }
                 //when "[": //index access
               else if (
-                 (this.lexer.token.value=="[")
+                  (this.lexer.token.value=="[")
               ){
 
                     //ac = new IndexAccess(this)
@@ -2062,10 +2147,10 @@
 
     //var OPERAND_DIRECT_TOKEN = map
     var OPERAND_DIRECT_TYPE = new Map().fromObject({
-       'STRING': StringLiteral
-       , 'NUMBER': NumberLiteral
-       , 'REGEX': RegExpLiteral
-       , 'SPACE_BRACKET': ArrayLiteral
+        'STRING': StringLiteral
+        , 'NUMBER': NumberLiteral
+        , 'REGEX': RegExpLiteral
+        , 'SPACE_BRACKET': ArrayLiteral
           });
 
 
@@ -2081,12 +2166,12 @@
 
     //    public class Operand extends ASTBase
     var OPERAND_DIRECT_TOKEN = new Map().fromObject({
-       '(': ParenExpression
-       , '[': ArrayLiteral
-       , '{': ObjectLiteral
-       , 'function': FunctionDeclaration
-       , '->': FunctionDeclaration
-       , 'yield': YieldExpression
+        '(': ParenExpression
+        , '[': ArrayLiteral
+        , '{': ObjectLiteral
+        , 'function': FunctionDeclaration
+        , '->': FunctionDeclaration
+        , 'yield': YieldExpression
           });
 
 
@@ -2219,10 +2304,8 @@
       Oper.prototype.parse = function(){
         //declare valid .getPrecedence
         
-        //declare valid .getPrecedence
         //declare valid .parent.ternaryCount
         
-        //declare valid .parent.ternaryCount
         //if .parent.ternaryCount and .opt('else')
         if (this.parent.ternaryCount && this.opt('else')) {
         
@@ -2573,10 +2656,8 @@
 
         //declare valid .growExpressionTree
         
-        //declare valid .growExpressionTree
         //declare valid .root.name.type
         
-        //declare valid .root.name.type
 
         //var arr = []
         var arr = [];
@@ -2711,7 +2792,6 @@
         
           //declare item:UnaryOper
           
-          //declare item:UnaryOper
           //if item instanceof UnaryOper and item.name is 'new'
           if (item instanceof UnaryOper && item.name === 'new') {
           
@@ -2914,7 +2994,6 @@
               
                   //declare item:Oper
                   
-                  //declare item:Oper
                   //if not item.pushed and item.precedence < minPrecedenceInx
                   if (!(item.pushed) && item.precedence < minPrecedenceInx) {
                   
@@ -3295,7 +3374,6 @@
           
             //declare .value.root.name:ObjectLiteral
             
-            //declare .value.root.name:ObjectLiteral
             //.value.root.name.forEach callback # recurse
             this.value.root.name.forEach(callback);
           };
@@ -3457,7 +3535,7 @@
         ASTBase.prototype.constructor.apply(this,arguments)
       //properties
         //specifier
-        //paramsDeclarations: VariableDecl array
+        //paramsDeclarations: FunctionParameters
         //definePropItems: DefinePropertyItem array
         //body
         //hasExceptionBlock: boolean
@@ -3515,38 +3593,16 @@
         //.EndFnLineNum = .sourceLineNum+1 //default value - store to generate accurate SourceMaps (js)
         this.EndFnLineNum = this.sourceLineNum + 1;
 
-        //if .opt("(")
-        if (this.opt("(")) {
-        
-            //.paramsDeclarations = .optSeparatedList(VariableDecl,',',')')
-            this.paramsDeclarations = this.optSeparatedList(VariableDecl, ',', ')');
-        }
-        //if .opt("(")
-        
-        else if (this.specifier === '->') {
-        
-            //# after '->' we accept function params w/o parentheses.
-            //# get parameter names (name:type only), up to [NEWLINE] or '='
-            //.paramsDeclarations=[]
-            this.paramsDeclarations = [];
-            //until .lexer.token.type is 'NEWLINE' or .lexer.token.value is '='
-            while(!(this.lexer.token.type === 'NEWLINE' || this.lexer.token.value === '=')){
-                //if .paramsDeclarations.length, .req ','
-                if (this.paramsDeclarations.length) {this.req(',')};
-                //var varDecl = new VariableDecl(this, .req('IDENTIFIER'))
-                var varDecl = new VariableDecl(this, this.req('IDENTIFIER'));
-                //if .opt(":"), varDecl.parseType
-                if (this.opt(":")) {varDecl.parseType()};
-                //.paramsDeclarations.push varDecl
-                this.paramsDeclarations.push(varDecl);
-            };// end loop
-            
-        };
+//get parameters declarations
+
+        //.paramsDeclarations = .opt(FunctionParameters)
+        this.paramsDeclarations = this.opt(FunctionParameters);
+
+//now parse body
 
         //if .opt('=') #one line function. Body is a Expression
         if (this.opt('=')) {
         
-
             //.body = .req(Expression)
             this.body = this.req(Expression);
         }
@@ -3599,7 +3655,6 @@
 
       //declare name affinity definePropItem
       
-      //declare name affinity definePropItem
 
       //method parse()
       DefinePropertyItem.prototype.parse = function(){
@@ -3703,7 +3758,6 @@
 
       //declare name affinity classDecl
       
-      //declare name affinity classDecl
 
       //method parse()
       ClassDeclaration.prototype.parse = function(){
@@ -4294,8 +4348,8 @@
         
           //when  'on-the-fly','type':
         if (
-           (this.specifier=='on-the-fly')
-           ||(this.specifier=='type')
+            (this.specifier=='on-the-fly')
+            ||(this.specifier=='type')
         ){
             //#declare VarRef:Type
             //.varRef = .req(VariableRef)
@@ -4308,7 +4362,7 @@
         }
           //when 'valid':
         else if (
-           (this.specifier=='valid')
+            (this.specifier=='valid')
         ){
             //.varRef = .req(VariableRef)
             this.varRef = this.req(VariableRef);
@@ -4324,7 +4378,7 @@
         }
           //when 'name':
         else if (
-           (this.specifier=='name')
+            (this.specifier=='name')
         ){
             //.specifier = .req('affinity')
             this.specifier = this.req('affinity');
@@ -4345,7 +4399,7 @@
         }
           //when 'var':
         else if (
-           (this.specifier=='var')
+            (this.specifier=='var')
         ){
             //.names = .reqSeparatedList(VariableDecl,',')
             this.names = this.reqSeparatedList(VariableDecl, ',');
@@ -4364,7 +4418,7 @@
         }
           //when 'on':
         else if (
-           (this.specifier=='on')
+            (this.specifier=='on')
         ){
             //.name = .req('IDENTIFIER')
             this.name = this.req('IDENTIFIER');
@@ -4697,13 +4751,11 @@
 
       //declare name affinity fnCall
       
-      //declare name affinity fnCall
 
       //method parse(options)
       FunctionCall.prototype.parse = function(options){
         //declare valid .parent.preParsedVarRef
         
-        //declare valid .parent.preParsedVarRef
 
 //Check for VariableRef. - can include (...) FunctionAccess
 
@@ -5070,12 +5122,12 @@
 
         //for each adjective in .adjectives
         var validCombinations = new Map().fromObject({
-           export: ['class', 'namespace', 'function', 'var']
-           , generator: ['function', 'method']
-           , nice: ['function', 'method']
-           , shim: ['function', 'method', 'import']
-           , helper: ['function', 'method', 'class', 'namespace']
-           , global: ['declare', 'class', 'namespace']
+            export: ['class', 'namespace', 'function', 'var']
+            , generator: ['function', 'method']
+            , nice: ['function', 'method']
+            , shim: ['function', 'method', 'import']
+            , helper: ['function', 'method', 'class', 'namespace']
+            , global: ['declare', 'class', 'namespace']
               });
 
         //for each adjective in .adjectives
@@ -5230,10 +5282,17 @@
     // default constructor: call super.constructor
         Body.prototype.constructor.apply(this,arguments)
       //properties
+
         //isMain: boolean
         //exportDefault: ASTBase
+
+        //numbers determinin initialization order
         //dependencyTreeLevel = 0
+        //dependencyTreeLevelOrder = 0
+        //importOrder=0
           this.dependencyTreeLevel=0;
+          this.dependencyTreeLevelOrder=0;
+          this.importOrder=0;
     };
     // Module (extends|proto is) Body
     Module.prototype.__proto__ = Body.prototype;
@@ -5257,6 +5316,7 @@
     module.exports.Module = Module;
     
     // end class Module
+
 
       //#end Module parse
 
@@ -5321,44 +5381,44 @@
 
     //export helper function autoCapitalizeCoreClasses(name:string) returns String
     var StatementsDirect = new Map().fromObject({
-       'class': ClassDeclaration
-       , 'Class': ClassDeclaration
-       , 'append': AppendToDeclaration
-       , 'Append': AppendToDeclaration
-       , 'function': FunctionDeclaration
-       , 'constructor': ConstructorDeclaration
-       , 'properties': PropertiesDeclaration
-       , 'namespace': NamespaceDeclaration
-       , 'method': MethodDeclaration
-       , 'var': VarStatement
-       , 'let': VarStatement
-       , 'default': DefaultAssignment
-       , 'if': IfStatement
-       , 'when': IfStatement
-       , 'case': CaseStatement
-       , 'for': ForStatement
-       , 'while': WhileUntilLoop
-       , 'until': WhileUntilLoop
-       , 'do': [DoNothingStatement, DoLoop]
-       , 'break': LoopControlStatement
-       , 'continue': LoopControlStatement
-       , 'end': EndStatement
-       , 'return': ReturnStatement
-       , 'with': WithStatement
-       , 'print': PrintStatement
-       , 'throw': ThrowStatement
-       , 'raise': ThrowStatement
-       , 'fail': ThrowStatement
-       , 'try': TryCatch
-       , 'exception': ExceptionBlock
-       , 'Exception': ExceptionBlock
-       , 'debugger': DebuggerStatement
-       , 'declare': DeclareStatement
-       , 'import': ImportStatement
-       , 'delete': DeleteStatement
-       , 'compile': CompilerStatement
-       , 'compiler': CompilerStatement
-       , 'yield': YieldExpression
+        'class': ClassDeclaration
+        , 'Class': ClassDeclaration
+        , 'append': AppendToDeclaration
+        , 'Append': AppendToDeclaration
+        , 'function': FunctionDeclaration
+        , 'constructor': ConstructorDeclaration
+        , 'properties': PropertiesDeclaration
+        , 'namespace': NamespaceDeclaration
+        , 'method': MethodDeclaration
+        , 'var': VarStatement
+        , 'let': VarStatement
+        , 'default': DefaultAssignment
+        , 'if': IfStatement
+        , 'when': IfStatement
+        , 'case': CaseStatement
+        , 'for': ForStatement
+        , 'while': WhileUntilLoop
+        , 'until': WhileUntilLoop
+        , 'do': [DoNothingStatement, DoLoop]
+        , 'break': LoopControlStatement
+        , 'continue': LoopControlStatement
+        , 'end': EndStatement
+        , 'return': ReturnStatement
+        , 'with': WithStatement
+        , 'print': PrintStatement
+        , 'throw': ThrowStatement
+        , 'raise': ThrowStatement
+        , 'fail': ThrowStatement
+        , 'try': TryCatch
+        , 'exception': ExceptionBlock
+        , 'Exception': ExceptionBlock
+        , 'debugger': DebuggerStatement
+        , 'declare': DeclareStatement
+        , 'import': ImportStatement
+        , 'delete': DeleteStatement
+        , 'compile': CompilerStatement
+        , 'compiler': CompilerStatement
+        , 'yield': YieldExpression
       });
 
 
@@ -5427,7 +5487,6 @@
                 //auto-capitalize core classes
                 //declare .itemType:VariableRef
                 
-                //declare .itemType:VariableRef
                 //.itemType.name = autoCapitalizeCoreClasses(.itemType.name)
                 this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
             };
@@ -5445,7 +5504,6 @@
         //auto-capitalize core classes
         //declare .type:VariableRef
         
-        //declare .type:VariableRef
         //.type.name = autoCapitalizeCoreClasses(.type.name)
         this.type.name = autoCapitalizeCoreClasses(this.type.name);
 
@@ -5461,7 +5519,6 @@
             //auto-capitalize core classes
             //declare .keyType:VariableRef
             
-            //declare .keyType:VariableRef
             //.keyType.name = autoCapitalizeCoreClasses(.keyType.name)
             this.keyType.name = autoCapitalizeCoreClasses(this.keyType.name);
             //.req('to')
@@ -5471,7 +5528,6 @@
             //#auto-capitalize core classes
             //declare .itemType:VariableRef
             
-            //declare .itemType:VariableRef
             //.itemType.name = autoCapitalizeCoreClasses(.itemType.name)
             this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
         }

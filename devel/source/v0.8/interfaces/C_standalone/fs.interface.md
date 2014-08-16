@@ -6,7 +6,7 @@ fs as supported in LiteC-core
         method existsSync(filename:string)
 
         method readFileSync(filename) returns string
-        method writeFileSync(filename) 
+        method writeFileSync(filename, contents) 
 
         method statSync(filename:string)
         method unlinkSync(filename:string)

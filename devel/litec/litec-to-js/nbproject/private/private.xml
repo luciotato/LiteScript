@@ -2,43 +2,14 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <data xmlns="http://www.netbeans.org/ns/make-project-private/1">
         <activeConfTypeElem>1</activeConfTypeElem>
-        <activeConfIndexElem>0</activeConfIndexElem>
+        <activeConfIndexElem>1</activeConfIndexElem>
     </data>
-    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="23">
-        <file>
-            <url>core/LiteC-core.h</url>
-            <bookmark id="1">
-                <name/>
-                <line>202</line>
-                <key/>
-            </bookmark>
-        </file>
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="28">
         <file>
             <url>core/fs.c</url>
             <bookmark id="2">
                 <name/>
                 <line>21</line>
-                <key/>
-            </bookmark>
-        </file>
-        <file>
-            <url>core/any.h</url>
-            <bookmark id="8">
-                <name/>
-                <line>55</line>
-                <key/>
-            </bookmark>
-        </file>
-        <file>
-            <url>file:/home/ltato/LiteScript/devel/litec/core/LiteC-core.c</url>
-            <bookmark id="22">
-                <name/>
-                <line>258</line>
-                <key/>
-            </bookmark>
-            <bookmark id="23">
-                <name/>
-                <line>1701</line>
                 <key/>
             </bookmark>
         </file>
@@ -76,8 +47,45 @@
                 <key/>
             </bookmark>
         </file>
+        <file>
+            <url>core/LiteC-core.h</url>
+            <bookmark id="1">
+                <name/>
+                <line>202</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>core/any.h</url>
+            <bookmark id="8">
+                <name/>
+                <line>55</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
+            <url>file:/home/ltato/LiteScript/devel/litec/core/LiteC-core.c</url>
+            <bookmark id="26">
+                <name/>
+                <line>201</line>
+                <key/>
+            </bookmark>
+            <bookmark id="28">
+                <name/>
+                <line>367</line>
+                <key/>
+            </bookmark>
+            <bookmark id="25">
+                <name/>
+                <line>2921</line>
+                <key/>
+            </bookmark>
+        </file>
     </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group/>
+        <group>
+            <file>file:/home/ltato/LiteScript/devel/litec/litec-to-js/generated-c/ASTBase.c</file>
+            <file>file:/home/ltato/LiteScript/devel/litec/core/LiteC-core.c</file>
+        </group>
     </open-files>
 </project-private>

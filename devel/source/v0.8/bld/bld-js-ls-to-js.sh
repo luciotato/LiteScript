@@ -26,16 +26,26 @@ LITE_TO=$(echo $targetTarget | tr '[:lower:]' '[:upper:]')
 echo "----------------------"
 echo "using v0.8-to-$targetLang to generate ($targetLang code) v0.8 lite-to-$targetTarget compiler"
 echo "----------------------"
+
 if node $DBRK ../../util/liteVersion -use v0.8/lite-to-$targetLang $targetLang$_lite -perf 1 -v 1 -D PROD_$LITE_TO -o $OUT; then 
+#echo "(fast compiler)"
+#if litec $targetLang$_lite -perf 1 -v 1 -D PROD_$LITE_TO -o $OUT; then 
+
     echo "generated OK ($targetLang code) lite-to-$targetTarget v0.8"
     echo "at $OUT"
     
-    echo COPY ALSO: interfaces
+    echo ADD /interfaces COPY to the out result
     cp -r interfaces/ ${OUT}
+
+    OTHER="../../out/by-js-v08/js/lite-to-js-compiler"
+    mkdir -p $OTHER
+    echo "ALSO COPY TO $OTHER for output comparision"
+    #echo "cp -r $OUT/* $OTHER/*"
+    cp -r $OUT/* $OTHER
 
     OTHER="../../util/out/lib"
     mkdir -p $OTHER
-    echo "ALSO COPY TO $OTHER for tests"
+    echo "ALSO COPY TO $OTHER to run tests"
     #echo "cp -r $OUT/* $OTHER/*"
     cp -r $OUT/* $OTHER
 

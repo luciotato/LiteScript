@@ -19,6 +19,7 @@ DBRK="$3"
 
 _lite="_lite"
 LITE_TO=$(echo $targetTarget | tr '[:lower:]' '[:upper:]')
+
 echo "----------------------"
 echo "using v0.8-to-$targetLang to generate ($targetLang code) v0.8 lite-to-$targetTarget compiler"
 echo "----------------------"

@@ -85,8 +85,8 @@
 
 //add end of file comments
 
-        //.outSourceLinesAsComment .lexer.infoLines.length
-        this.outSourceLinesAsComment(this.lexer.infoLines.length);
+        //.outPreviousComments .lexer.infoLines.length
+        this.outPreviousComments(this.lexer.infoLines.length);
 
 //export 'export default' namespace, if it was set.
 
@@ -712,7 +712,6 @@
                 //#append to class prototype or object
                 //declare parent:Grammar.AppendToDeclaration
                 
-                //declare parent:Grammar.AppendToDeclaration
                 //toPrototype = not parent.toNamespace
                 toPrototype = !(parent.toNamespace);
                 //ownerName = parent.varRef
@@ -807,6 +806,19 @@
 
 
 //---
+
+    //    append to class Grammar.VarDeclList ###
+    
+
+//default "produce" for VarDeclList is to out only names, comma separated
+
+      //method produce
+      Grammar.VarDeclList.prototype.produce = function(){
+        //.out {CSL:.getNames()}
+        this.out({CSL: this.getNames()});
+      };
+
+
     //    append to class Grammar.PropertiesDeclaration ###
     
 
@@ -848,10 +860,8 @@
 
         //declare valid .compilerVar
         
-        //declare valid .compilerVar
         //declare valid .export
         
-        //declare valid .export
 
         //if .keyword is 'let' and .compilerVar('ES6')
         if (this.keyword === 'let' && this.compilerVar('ES6')) {
@@ -892,7 +902,6 @@
             };
         };
       };
-
 
 
     //    append to class Grammar.ImportStatementItem ###
@@ -979,7 +988,6 @@
 
           //declare valid .keyword
           
-          //declare valid .keyword
 
 //If this VariableDecl come from a 'var' statement, we force assignment (to avoid subtle bugs,
 //in LiteScript, 'var' declaration assigns 'undefined')
@@ -1030,7 +1038,6 @@
 
         //declare valid .elseStatement.produce
         
-        //declare valid .elseStatement.produce
 
         //if .body instanceof Grammar.SingleLineBody
         if (this.body instanceof Grammar.SingleLineBody) {
@@ -1108,7 +1115,6 @@
 
         //declare .root.name: Grammar.VariableRef
         
-        //declare .root.name: Grammar.VariableRef
 
         //if .operandCount>1 or .root.name.hasSideEffects or .root.name instanceof Grammar.Literal
         if (this.operandCount > 1 || this.root.name.hasSideEffects || this.root.name instanceof Grammar.Literal) {
@@ -1615,7 +1621,7 @@
     //    append to class Grammar.FunctionDeclaration ###
     
 
-//`FunctionDeclaration: '[export][generator] (function|method|constructor) [name] '(' FunctionParameterDecl* ')' Block`
+//`FunctionDeclaration: '[export][generator] (function|method|constructor) [name] FunctionParameters (["=" Expression]|Body)`
 
 //`FunctionDeclaration`s are function definitions.
 
@@ -1685,12 +1691,12 @@
       //if isNice
       if (isNice) {
       
-          //var argsArray:array = .paramsDeclarations or []
-          var argsArray = this.paramsDeclarations || [];
-          //argsArray.push "__callback"
-          argsArray.push("__callback");
-          //.out "(", {CSL:argsArray},"){", NL // .getEOLComment(),NL
-          this.out("(", {CSL: argsArray}, "){", NL);
+          //.out "("
+          this.out("(");
+          //if .paramsDeclarations.list.length, .out .paramsDeclarations,","
+          if (this.paramsDeclarations.list.length) {this.out(this.paramsDeclarations, ",")};
+          //.out "__callback){", NL
+          this.out("__callback){", NL);
           //.out '  nicegen.run(this, ',prefix,.name,"_generator, arguments);",NL
           this.out('  nicegen.run(this, ', prefix, this.name, "_generator, arguments);", NL);
           //.out "};",NL
@@ -1702,13 +1708,13 @@
 
 //Produce function parameters declaration
 
-      //.out "(", {CSL:.paramsDeclarations}, "){", NL //.getEOLComment()
+      //.out "(", .paramsDeclarations, "){", NL //.getEOLComment()
       
 
 //Produce function parameters declaration
 
-      //.out "(", {CSL:.paramsDeclarations}, "){", NL //.getEOLComment()
-      this.out("(", {CSL: this.paramsDeclarations}, "){", NL);
+      //.out "(", .paramsDeclarations, "){", NL //.getEOLComment()
+      this.out("(", this.paramsDeclarations, "){", NL);
 
 //now produce function body
 
@@ -1780,21 +1786,20 @@
           };// end for each in this.body.statements
 
 //if params defaults where included, we assign default values to arguments
-//(if ES6 enabled, they were included abobve in ParamsDeclarations production )
 
-          //if .paramsDeclarations and not .lexer.project.compilerVar('ES6')
-          if (this.paramsDeclarations && !(this.lexer.project.compilerVar('ES6'))) {
+          //if .paramsDeclarations
+          if (this.paramsDeclarations) {
           
-              //for each paramDecl in .paramsDeclarations
-              for( var paramDecl__inx=0,paramDecl ; paramDecl__inx<this.paramsDeclarations.length ; paramDecl__inx++){paramDecl=this.paramsDeclarations[paramDecl__inx];
+              //for each varDecl in .paramsDeclarations.list
+              for( var varDecl__inx=0,varDecl ; varDecl__inx<this.paramsDeclarations.list.length ; varDecl__inx++){varDecl=this.paramsDeclarations.list[varDecl__inx];
               
-                //if paramDecl.assignedValue
-                if (paramDecl.assignedValue) {
+                //if varDecl.assignedValue
+                if (varDecl.assignedValue) {
                 
-                    //.body.assignIfUndefined paramDecl.name, paramDecl.assignedValue
-                    this.body.assignIfUndefined(paramDecl.name, paramDecl.assignedValue);
+                    //.body.assignIfUndefined varDecl.name, varDecl.assignedValue
+                    this.body.assignIfUndefined(varDecl.name, varDecl.assignedValue);
                 };
-              };// end for each in this.paramsDeclarations
+              };// end for each in this.paramsDeclarations.list
               
           };
               //#end for
@@ -1845,21 +1850,6 @@
 
       //method produce()
       Grammar.EndStatement.prototype.produce = function(){
-
-        //declare valid .lexer.outCode.lastOriginalCodeComment
-        
-        //declare valid .lexer.outCode.lastOriginalCodeComment
-        //declare valid .lexer.infoLines
-        
-        //declare valid .lexer.infoLines
-
-        //if .lexer.outCode.lastOriginalCodeComment<.lineInx
-        if (this.lexer.outCode.lastOriginalCodeComment < this.lineInx) {
-        
-          //.out {COMMENT: .lexer.infoLines[.lineInx].text}
-          this.out({COMMENT: this.lexer.infoLines[this.lineInx].text});
-        };
-
         //.skipSemiColon = true
         this.skipSemiColon = true;
       };
@@ -1870,11 +1860,6 @@
 
       //method produce()
       Grammar.CompilerStatement.prototype.produce = function(){
-
-//out this line as comment
-
-        //.outSourceLinesAsComment
-        this.outSourceLinesAsComment();
         //.skipSemiColon = true
         this.skipSemiColon = true;
       };
@@ -1888,9 +1873,6 @@
 
       //method produce()
       Grammar.DeclareStatement.prototype.produce = function(){
-
-        //.outSourceLinesAsComment .sourceLineNum, .names? .lastLineOf(.names) : .sourceLineNum
-        this.outSourceLinesAsComment(this.sourceLineNum, this.names ? this.lastLineOf(this.names) : this.sourceLineNum);
         //.skipSemiColon = true
         this.skipSemiColon = true;
       };
@@ -1969,8 +1951,8 @@
         //if theConstructorDeclaration //there was a constructor body, add specified params
         if (theConstructorDeclaration) {
         
-            //.out "(", {CSL:theConstructorDeclaration.paramsDeclarations}, "){", NL // .getEOLComment()
-            this.out("(", {CSL: theConstructorDeclaration.paramsDeclarations}, "){", NL);
+            //.out "(", theConstructorDeclaration.paramsDeclarations, "){", NL // .getEOLComment()
+            this.out("(", theConstructorDeclaration.paramsDeclarations, "){", NL);
         }
         //if theConstructorDeclaration //there was a constructor body, add specified params
         
@@ -2044,8 +2026,8 @@
         //for each itemMethodDeclaration in theMethods
         for( var itemMethodDeclaration__inx=0,itemMethodDeclaration ; itemMethodDeclaration__inx<theMethods.length ; itemMethodDeclaration__inx++){itemMethodDeclaration=theMethods[itemMethodDeclaration__inx];
         
-            //itemMethodDeclaration.produce undefined, prefix
-            itemMethodDeclaration.produce(undefined, prefix);
+            //itemMethodDeclaration.produce prefix
+            itemMethodDeclaration.produce(prefix);
         };// end for each in theMethods
 
 //If the class was adjectivated 'export', add to module.exports
@@ -2175,8 +2157,10 @@
         //if .isInstanceof
         if (this.isInstanceof) {
         
-            //return .produceInstanceOfLoop
-            return this.produceInstanceOfLoop;
+            //.produceInstanceOfLoop
+            this.produceInstanceOfLoop();
+            //return
+            return;
         };
 
         //for each index,whenSection in .cases
@@ -2390,25 +2374,25 @@
 
     //function operTranslate(name:string)
     var OPER_TRANSLATION_map = new Map().fromObject({
-       'no': '!'
-       , 'not': '!'
-       , 'unary -': '-'
-       , 'unary +': '+'
-       , '&': '+'
-       , '&=': '+='
-       , 'bitand': '&'
-       , 'bitor': '|'
-       , 'bitxor': '^'
-       , 'bitnot': '~'
-       , 'type of': 'typeof'
-       , 'instance of': 'instanceof'
-       , 'is': '==='
-       , 'isnt': '!=='
-       , '<>': '!=='
-       , 'and': '&&'
-       , 'but': '&&'
-       , 'or': '||'
-       , 'has property': 'in'
+        'no': '!'
+        , 'not': '!'
+        , 'unary -': '-'
+        , 'unary +': '+'
+        , '&': '+'
+        , '&=': '+='
+        , 'bitand': '&'
+        , 'bitor': '|'
+        , 'bitxor': '^'
+        , 'bitnot': '~'
+        , 'type of': 'typeof'
+        , 'instance of': 'instanceof'
+        , 'is': '==='
+        , 'isnt': '!=='
+        , '<>': '!=='
+        , 'and': '&&'
+        , 'but': '&&'
+        , 'or': '||'
+        , 'has property': 'in'
       });
 
     //function operTranslate(name:string)
@@ -2433,7 +2417,6 @@
 
           //declare valid value.root.name.name
           
-          //declare valid value.root.name.name
           //#do nothing if value is 'undefined'
 
           //#Expression->Operand->VariableRef->name

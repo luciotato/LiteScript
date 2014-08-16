@@ -15,12 +15,10 @@
 
 //Module vars
 
-    //var
-        //options: GeneralOptions
-
-
-    //    export class FileInfo
+    //public var options: GeneralOptions
     var options = undefined;
+    // export
+    module.exports.options = options;
 
 
     //    export class FileInfo
@@ -72,8 +70,8 @@
         this.hasPath = [path.sep, '.'].indexOf(name.charAt(0))>=0;
         //this.sourcename = path.basename(name)
         this.sourcename = path.basename(name);
-        //this.isInterface = this.sourcename.indexOf('.interface.') isnt -1
-        this.isInterface = this.sourcename.indexOf('.interface.') !== -1;
+        //this.isInterface = '.interface.' in this.sourcename
+        this.isInterface = this.sourcename.indexOf('.interface.')>=0;
         //this.extension = path.extname(name)
         this.extension = path.extname(name);
         //this.base = path.basename(name,this.extension)
@@ -105,7 +103,7 @@
 
         //ifndef TARGET_C //"require() hack" not possible in .c
         //if .importInfo.globalImport and options.target is 'js'
-        if (this.importInfo.globalImport && options.target === 'js') {
+        if (this.importInfo.globalImport && module.exports.options.target === 'js') {
         
             // if running on node.js and global import ASSSUME core node module / installed node_modules
             //this.isCore = isBuiltInModule(this.base) #core module like 'fs' or 'path'
@@ -120,19 +118,19 @@
 //if parameter has no extension or extension is [.lite].md
 //we search the module
 
-        //var full, found, foundIndex, includeDirsIndex
+        //var full, found, foundIndex=-1, includeDirsIndex=1
         var 
-           full = undefined
-           , found = undefined
-           , foundIndex = undefined
-           , includeDirsIndex = undefined
+            full = undefined
+            , found = undefined
+            , foundIndex = -1
+            , includeDirsIndex = 1
         ;
 
         //if this.importInfo.createFile
         if (this.importInfo.createFile) {
         
             //full = path.join(options.projectDir, this.importInfo.name)
-            full = path.join(options.projectDir, this.importInfo.name);
+            full = path.join(module.exports.options.projectDir, this.importInfo.name);
         }
         //if this.importInfo.createFile
         
@@ -160,13 +158,13 @@
 //gets redirected to dir `ENV_C_global_import` or `../ENV_C_global_import`
 
                 //if options.target is 'c'
-                search.push(path.join(options.projectDir, '/lib'), path.join(options.projectDir, '/interfaces'), path.join(options.projectDir, '../lib'), path.join(options.projectDir, '../interfaces'));
+                search.push(path.join(module.exports.options.projectDir, '/lib'), path.join(module.exports.options.projectDir, '/interfaces'), path.join(module.exports.options.projectDir, '../lib'), path.join(module.exports.options.projectDir, '../interfaces'));
 
 //if we're generating c-code a "global import" of core modules like "path" and "fs",
 //gets redirected to dir `ENV_C_global_import` or `../ENV_C_global_import`
 
                 //if options.target is 'c'
-                if (options.target === 'c') {
+                if (module.exports.options.target === 'c') {
                 
                     // prepend interfaces/C_standalone to found "path" "fs" and other
                     // core node-js modules (migrated to Litescript and/or native-c)
@@ -174,7 +172,7 @@
                         //path.join(options.projectDir,'/interfaces/C_standalone')
                         //path.join(options.projectDir,'../interfaces/C_standalone')
                 //end if
-                    search.unshift(path.join(options.projectDir, '/interfaces/C_standalone'), path.join(options.projectDir, '../interfaces/C_standalone'));
+                    search.unshift(path.join(module.exports.options.projectDir, '/interfaces/C_standalone'), path.join(module.exports.options.projectDir, '../interfaces/C_standalone'));
                 };
                 //end if
 
@@ -186,11 +184,11 @@
 //include command-line (-i foo/bar) specified dirs
 
                 //for each extra in options.includeDirs
-                for( var extra__inx=0,extra ; extra__inx<options.includeDirs.length ; extra__inx++){extra=options.includeDirs[extra__inx];
+                for( var extra__inx=0,extra ; extra__inx<module.exports.options.includeDirs.length ; extra__inx++){extra=module.exports.options.includeDirs[extra__inx];
                 
                     //search.push path.resolve(options.projectDir,extra)
-                    search.push(path.resolve(options.projectDir, extra));
-                };// end for each in options.includeDirs
+                    search.push(path.resolve(module.exports.options.projectDir, extra));
+                };// end for each in module.exports.options.includeDirs
 
 //add compiler directory to "include dirs" so GlobalScopeX.interface.md can be found
 
@@ -201,7 +199,7 @@
                 
 
                     //if options.target is 'c' //include first: /interfaces/C_standalone'
-                    if (options.target === 'c') {
+                    if (module.exports.options.target === 'c') {
                     
                         //search.push path.resolve('#{__dirname}/../interfaces/C_standalone')
                         search.push(path.resolve('' + __dirname + '/../interfaces/C_standalone'));
@@ -303,39 +301,32 @@
         this.sourcename = path.basename(this.filename);
         //this.isInterface = this.sourcename.indexOf('.interface.') isnt -1
         this.isInterface = this.sourcename.indexOf('.interface.') !== -1;
-        //this.relFilename = path.relative(options.projectDir, this.filename); //relative to basePath
-        this.relFilename = path.relative(options.projectDir, this.filename);
-
-        //if foundIndex >= includeDirsIndex //the "extra" dir are normally outside project dir subdirs
-        if (foundIndex >= includeDirsIndex) {
-        
-            //this.relPath = path.relative(options.projectDir, path.basename(this.dir)); // use only one subdir
-            this.relPath = path.relative(options.projectDir, path.basename(this.dir));
-        }
-        //if foundIndex >= includeDirsIndex //the "extra" dir are normally outside project dir subdirs
-        
-        else {
-            //this.relPath = path.relative(options.projectDir, this.dir); //relative to basePath
-            this.relPath = path.relative(options.projectDir, this.dir);
-        };
-        //end if
-
-        // based on result extension
-        //this.isLite = this.extension in ['.md','.lite']
-        
+        //this.relFilename = path.relative(options.projectDir, this.filename); //relative project path
+        this.relFilename = path.relative(module.exports.options.projectDir, this.filename);
+        //this.relPath = path.relative(options.projectDir, this.dir); //relative to project path
+        this.relPath = path.relative(module.exports.options.projectDir, this.dir);
 
         // based on result extension
         //this.isLite = this.extension in ['.md','.lite']
         this.isLite = ['.md', '.lite'].indexOf(this.extension)>=0;
         //this.outExtension = not this.isLite and this.extension? this.extension else ".#{options.target}"
-        this.outExtension = !(this.isLite) && this.extension ? this.extension : "." + options.target;
+        this.outExtension = !(this.isLite) && this.extension ? this.extension : "." + module.exports.options.target;
 
         //this.outDir = path.join(options.outDir, this.relPath)
-        this.outDir = path.join(options.outDir, this.relPath);
+        this.outDir = path.join(module.exports.options.outDir, this.relPath);
+        //if this.outDir.slice(0,options.outDir.length) isnt options.outDir // the out path is outside inicated path
+        if (this.outDir.slice(0, module.exports.options.outDir.length) !== module.exports.options.outDir) {
+        
+            //mainly because .. on the found file.
+            // fix it to be inside options.outDir
+            //this.outDir = path.join(options.outDir, path.basename(this.dir)) // use only one last dir
+            this.outDir = path.join(module.exports.options.outDir, path.basename(this.dir));
+        };
+
         //this.outFilename = path.join(this.outDir, "#{this.base}#{this.outExtension}");
         this.outFilename = path.join(this.outDir, '' + this.base + this.outExtension);
         //this.outRelFilename = path.relative(options.outDir, this.outFilename); //relative to options.outDir
-        this.outRelFilename = path.relative(options.outDir, this.outFilename);
+        this.outRelFilename = path.relative(module.exports.options.outDir, this.outFilename);
 
         //print JSON.stringify(this,null,2)
 
@@ -349,7 +340,6 @@
         var sourceStat = fs.statSync(this.filename);
         //declare on sourceStat mtime
         
-        //declare on sourceStat mtime
 
         //if fs.existsSync(this.outFilename)
         if (fs.existsSync(this.outFilename)) {
@@ -359,7 +349,6 @@
             var statGenerated = fs.statSync(this.outFilename);
             //declare on statGenerated mtime
             
-            //declare on statGenerated mtime
             //if source is older
             //this.outFileIsNewer = (statGenerated.mtime > sourceStat.mtime );
             this.outFileIsNewer = (statGenerated.mtime > sourceStat.mtime);
@@ -411,7 +400,6 @@
             var statInterface = fs.statSync(this.interfaceFile);
             //declare on statInterface mtime
             
-            //declare on statInterface mtime
             //cache exists if source is older
             //this.interfaceFileExists = (statInterface.mtime > sourceStat.mtime );
             this.interfaceFileExists = (statInterface.mtime > sourceStat.mtime);
@@ -437,7 +425,7 @@
 
         //set module vars
         //options = projectOptions
-        options = projectOptions;
+        module.exports.options = projectOptions;
     }
     // export
     module.exports.setBaseInfo = setBaseInfo;
@@ -520,7 +508,6 @@
             
                 //declare fileLines:Array
                 
-                //declare fileLines:Array
                 //fileLines=fileLines.join("\n")
                 fileLines = fileLines.join("\n");
             };
@@ -591,7 +578,7 @@
     function getGlobalObject(name){
 
         //if options.target is 'c'
-        if (options.target === 'c') {
+        if (module.exports.options.target === 'c') {
         
             //return
             return;

@@ -16,6 +16,9 @@
 
 #include "LiteC-core.h"
 
+    any
+        LiteCore_version, LiteCore_buildDate;
+
 // _symbol names
     any * _symbolTable;
     symbol_t _symbolTableLength, _symbolTableCenter; //need to be int, beacuse symbols are positive and negative
@@ -347,17 +350,19 @@
     }
 
     /** js function.apply - call a function with specific values for: this, argc, arguments
-     */
-    any __apply(any anyFunc, DEFAULT_ARGUMENTS){
+    */
+    any __apply(any anyFunc, len_t argc, any* arguments){
+        assert(argc>=1);
         assert(anyFunc.class==Function_inx);
         assert(anyFunc.value.ptr);
-        return ((function_ptr)anyFunc.value.ptr)(this,argc,arguments);
+        return ((function_ptr)anyFunc.value.ptr)(arguments[0],argc-1,&arguments[1]);
     }
 
-    any __applyArr(any anyFunc, any this, any argsArray){
+    any __applyArr(any anyFunc, len_t argc, any* arguments){
         assert(anyFunc.class==Function_inx);
-        assert(argsArray.class==Array_inx); //must be array to convert to argc,any* arguments
-        return __apply(anyFunc, this, argsArray.value.arr->length, argsArray.value.arr->base.anyPtr);
+        assert(argc=2);
+        assert(arguments[1].class==Array_inx); //must be array to convert to argc,any* arguments
+        return ((function_ptr)anyFunc.value.ptr)(arguments[0],arguments[1].value.arr->length, arguments[1].value.arr->base.anyPtr);
     }
 
     void _default(any* variable,any value){
@@ -644,7 +649,7 @@
         //---------
         // sanity checks
         // super class should be initialized before creating this classs
-        if (super.value.classPtr->classInx>=CLASSES_len) fatal("super index > CLASSES_len");
+        if (!super.value.classPtr) fatal("super.value.classPtr is NULL");
         if (!_anyToBool(super.value.classPtr->name)) fatal("super not initalized");
         // instance size should at least super's instance size
         if (instanceSize < super.value.classPtr->instanceSize) fatal("instanceSize cannot be smaller than super");
@@ -1377,7 +1382,7 @@
     }
 
     any Array_toString(DEFAULT_ARGUMENTS) {
-       return JSON_stringify(undefined,1,(any_arr){this});
+       return Array_join(this,1,(any_arr){any_COMMA});
     }
 
     any String_toString(DEFAULT_ARGUMENTS) {
@@ -1876,7 +1881,7 @@
             //MDN-JS: If separator is an empty string, str is converted to an array of characters.
             var iter=_newIterPos();
             for(;limit-- && String_iterableNext(this,1,&iter).value.uint64;){
-                _array_pushSlice(result,iter.value.iterPos->value);
+                _array_pushString(result,iter.value.iterPos->value);
             }
             return result;
         }
@@ -1892,12 +1897,12 @@
             if (!(foundPtr=utf8Find(slice,sep,NULL))){
                 //separator not found,
                 // push remainder slice & exit
-                _array_pushSlice(result,slice);
+                _array_pushString(result,slice);
                 break;
             };
             //separator found, make slice with prev to sep & push
             slice.len=foundPtr-slice.value.str;
-            _array_pushSlice(result,slice);
+            _array_pushString(result,slice);
             if (pushed++>=limit) break;
 
             //make slice with after-sep
@@ -2005,7 +2010,7 @@
      * @param this array
      * @param slice String slice
      */
-    void _array_pushSlice(any this, any slice){
+    void _array_pushString(any this, any slice){
         assert(slice.class==String_inx);
         if (!slice.len) slice = any_EMPTY_STR;
         _concatToArrayOfAny(this.value.arr,1,(any_arr){slice});
@@ -2369,10 +2374,8 @@
         len_t len = this.value.map->nvpArr.length;
         var result = _newArray(len,NULL);
         any* resItem = result.value.arr->base.anyPtr;
-        for( any* item = this.value.map->nvpArr.base.anyPtr; len--; item++){
-            assert(item->class == NameValuePair_inx);
-            NameValuePair_ptr nvp = item->value.ptr;
-            *resItem++ = nvp->name;
+        for( NameValuePair_ptr nvp = this.value.map->nvpArr.base.nvp; len--; nvp++){
+            _array_pushString(result, nvp->name);
         }
         return result;
     }
@@ -2448,7 +2451,7 @@
 
     void _json_stringify(any what, any* c) {
 
-        if (_json_indent_count>40){
+        if (_json_indent_count>5){
             _pushToConcatd(c,any_LTR("[circular|too deep]"));
         }
         else if (what.class==Array_inx){
@@ -2457,29 +2460,30 @@
             any* item = what.value.arr->base.anyPtr;
             len_t count=what.value.arr->length;
             for(int n=0; count--; n++,item++){
-                if (n==0) _json_newLine(c); else _json_comma(c);
+                if (n) _json_comma(c);
                 _json_stringify(*item, c); //recurse
             }
-            if(what.value.arr->length)_json_newLine(c);
+            //if(what.value.arr->length)_json_newLine(c);
             _json_close(c,any_CLOSE_BRACKET);
         }
         else if (_instanceof(what,Map)){
-            // Map, (js Object)
+            // Map
             _json_open(c,any_OPEN_CURLY);
-            _json_newLine(c);
-            any* item = what.value.map->nvpArr.base.anyPtr;
+            NameValuePair_ptr nvp = what.value.map->nvpArr.base.nvp;
             len_t count = what.value.map->nvpArr.length;
-            for(int n=0; count--; n++,item++){
-                NameValuePair_ptr nv = item->value.ptr;
-                if (n) _json_comma(c);
+            if (count) {
+                for(;;nvp++){
+                    _json_newLine(c);
+                    _pushToConcatd(c, any_QUOTE);
+                    _pushToConcatd(c, nvp->name);
+                    _pushToConcatd(c, any_QUOTE);
+                    _pushToConcatd(c, any_COLON);
+                    _json_stringify(nvp->value, c); //recurse
+                    if (!--count) break;
+                     _json_comma(c);
+                }
                 _json_newLine(c);
-                _pushToConcatd(c, any_QUOTE);
-                _pushToConcatd(c, nv->name);
-                _pushToConcatd(c, any_QUOTE);
-                _pushToConcatd(c, any_COLON);
-                _json_stringify(nv->value, c); //recurse
             }
-            _json_newLine(c);
             _json_close(c,any_CLOSE_CURLY);
         }
         else if (CLASSES[what.class].instanceSize){
@@ -2556,6 +2560,7 @@
 
     void _outNewLineFile(FILE* file){
         fwrite(&"\n",1,1,file);
+        fflush(file);
     }
 
     void _out(any s) { _outFile(s,stdout); };
@@ -2567,8 +2572,55 @@
     #ifndef NDEBUG
     void _outDebug(str msg, any s) {
         fprintf(stderr,"%s: ",msg);
-        if (s.class!=String_inx) s= JSON_stringify(undefined,1,&s);
-        _outErr(s);
+        len_t len;
+        if (s.class==Array_inx) {
+            len=s.value.arr->length;
+            fprintf(stderr,"Array[0..%d]=[",len);
+            for(int n=0;n<s.value.arr->length;n++){
+                if(n) _outErr(any_COMMA);
+                fprintf(stderr,"%d:",n);
+                if (n==10){
+                    _outErr(any_LTR(",..."));
+                    break;
+                }
+                _outErr(ITEM(s,n));
+            }
+            fprintf(stderr,"]\n");
+        }
+        else if (s.class==Map_inx) {
+            len=s.value.arr->length;
+            fprintf(stderr,"[Map]={",len);
+            for(int n=0;n<len;n++){
+                if(n) {
+                    _outErr(any_COMMA);
+                    if (n==10){
+                        _outErr(any_LTR("..."));
+                        break;
+                    }
+                }
+                NameValuePair_s nvp = _unifiedGetNVPAtIndex(s,n);
+                _outErr(nvp.name);
+                _outErr(any_COLON);
+                _outErr(nvp.value);
+            }
+            fprintf(stderr,"}\n");
+        }
+        else if (len=CLASSES[s.class].propertyCount) {
+            _outErr(_concatAny(3,any_LTR("["),CLASSES[s.class].name,any_LTR("]={")));
+            for(int n=0;n<len;n++){
+                if(n) _outErr(any_COMMA);
+                _outErr(_object_getPropertyNameAtIndex(s,n));
+                _outErr(any_COLON);
+                _outErr(s.value.prop[n]);
+                if (n==30){
+                    _outErr(any_LTR(",..."));
+                    break;
+                }
+            }
+            fprintf(stderr,"}\n");
+        }
+        else _outErr(s);
+
         _outErrNewLine();
     };
     #endif
@@ -2881,7 +2933,7 @@
                 ;
     }
 
-    double _anyToNumber(any this){
+    double _convertAnyToNumber(any this){
         //NOTE: _anyToNumber(String) RETURNS ASCII CODE OF FIRST CHAR
         // on producer_C a single char StringLiteral is produced as a C unsigned char/byte
         //so expressions like:  `x > "A"` are converted to C's `_anyToNumber(x) > 'A'`
@@ -2890,9 +2942,32 @@
         // use parseFloat to convert strings with number representations.
         //
         if (this.class==String_inx) return (double)this.value.str[0];
-        if (this.class==Number_inx && this.res) return (double)this.value.uint64;
-        else return this.value.number;
+        if (this.class==Number_inx){
+            if (this.res) return (double)this.value.uint64;
+            return this.value.number;
+        }
+        if (this.class==Date_inx){
+            return this.value.time;
+        }
+        return 0; //anything else: 0
     }
+
+    double _anyToNumber_DEBUG(any this, str file, int line, str func,str argument){
+        if (this.class!=String_inx
+            && this.class!=Number_inx
+            && this.class!=Date_inx
+            ) {
+            debug_abort(file,line,func,_concatAny(5
+                ,any_LTR("converting: ")
+                ,any_CStr(argument)
+                ,any_LTR(". Cannot convert a instance of '")
+                ,CLASSES[this.class].name
+                ,any_LTR("' to Number")));
+        }
+        else
+        return _convertAnyToNumber(this);
+    }
+
 
     static char parseNumberTempBuffer[256];
 
@@ -3389,6 +3464,9 @@
         any_OPEN_CURLY, any_CLOSE_CURLY;
 
     void LiteC_init(int classesCount, int argc, char** CharPtrPtrargv){
+
+        LiteCore_version = any_LTR("8.0.5");
+        LiteCore_buildDate = any_LTR(__DATE__ " " __TIME__);
 
         //sanity checks
         assert(sizeof(symbol_t)==sizeof(propIndex_t));

@@ -1,5 +1,5 @@
 <p align=right><img src="https://travis-ci.org/luciotato/LiteScript.png?branch=master" /></p>
-###LiteScript is a highly-readable language that compiles to javascript
+###LiteScript is a highly-readable, literate, compile-to-js and compile-to-c language.
 ##Design considerations
 - More hours are expended *reading* and *debugging* code, than *writing* it.
 - Code should be [easy to read and follow](http://luciotato.svbtle.com/keep-your-mind-at-full-speed-avoid-branch-mispredictions).
@@ -7,8 +7,6 @@
 - Code flow should be straightforward, top-down, left-right, then:
   - Condition evaluation should precede conditionally executed statements
   - Deviations from expected program flow, should be handled as "exceptions" (try-catch-finally)
-  - Sequential programming with exceptions should be available.
-  - Async callbacks and closures should be available to be used when required
   - Async callbacks and closures *should not* break the exception handling logic.
   - Hidden side-effects and global variables should be avoided whenever possible.  
 
@@ -16,8 +14,8 @@
 
 - Make code as readable and easy to follow as possible.
 - Favor clear, readable code, over terse, hard to read code.
-- Genereate readable javascript code.
-- Catch typos in object members **in the compilation phase**. Is too time-expensive to debug subtle bugs caused by mistyped member names in javascript.
+- Catch typos in object members **in the compilation phase**. 
+Is too time-expensive to debug subtle bugs caused by mistyped property member names in javascript.
 - Allow an easy context-switch in the coder's mind between programming languages.
   - Try to use the same meaning for the same symbols when the symbol is used in javascript, CoffeScript, Python, C, C#, JAVA, SQL.
   - Use js and EcmaScript 6 syntax when available.
@@ -99,7 +97,7 @@ OK, now you can:
 1. Go cowboy-style, get hands-on and try it online, 
 go to [LiteScript Online Playground](http://luciotato.github.io/LiteScript_online_playground/playground/)
 
-2. Be more academic, and read the [LiteScript Grammar](/source/Grammar.lite.md) (it is also the code)
+2. Be more academic, and read the [LiteScript Grammar](/reference/Grammar.lite.md) (it is also the code)
 
 3. Continue reading the highlights at [/doc](/doc)
 
@@ -112,7 +110,7 @@ LiteScript can also be compiled-to-c  (beta in version 0.8.5)
 
 when compiled-to-C, the LiteScript compiler itself runs 5x-7x faster.
 
-See: devel/litec 
+See: [Self-Compiling LiteScript, 7x performance gain] (doc/self-compiling-LiteScript.md)
 
 ### UgilfyLS - proof of concept
 
@@ -132,10 +130,10 @@ LiteScript code           | compile-to-c       | 150 ms | 2.5 times faster !!
 ####Conclusion: 
 >Uglify2.JS parser "translated" to LiteScript and compiled-to-c, runs 2.5 times faster
 
-
+See: https://github.com/luciotato/UglifyLS
 
 ----
-##Installation
+##LiteScript Installation
 
 ```
 sudo npm install -g litescript
@@ -143,11 +141,11 @@ sudo npm install -g litescript
 See ***Development Environment*** below for tools installation.
 
 ##Usage
-Primary usage is from the command line, to compile a project, a single file or to run a script:
+Primary usage is from the command line, to compile a project or to run a script:
 
 To compile a project: `lite mainModule.lite.md`
 
-To run a script: `lite -run mainModule.lite.md`
+To run a script: `lite -run script.lite.md`
 
 ###Options:
 ```
@@ -181,7 +179,7 @@ It's very useful to have syntax coloring to try a new language. This is what I u
 ```
 {
   "working_dir": "$project_path",
-  "cmd": ["sh","build.sh"],
+  "cmd": ["sh","build-lite.sh"],
   "file_regex": "([\\w./_-]+?):([0-9]+):?([0-9]+)?(.*)?"
 }
 ```
@@ -220,6 +218,8 @@ text processing, class based program written in LiteScript.
 
 Now (v0.8.5) LiteScript compiler can compile itelf to C, creating
 a c-based LiteScript compiler which runs 5x-7x times faster than its .js counterpart.
+
+See: [Self-Compiling LiteScript, 7x performance gain] (doc/self-compiling-LiteScript.md)
 
 ###### UglifyLS - alpha
 
@@ -278,8 +278,4 @@ Check the /devel/ dir.
 Once the new liteCompiler version passes all tests and ***can compile itself***,
 it's ready for release.
 
-You can also clone the other repositories: 
-[litescript_reception_demo](https://github.com/luciotato/LiteScript-reception-demo) 
-and [LiteScript_online_playground](https://github.com/luciotato/LiteScript_online_playground), 
-to see a web project using LiteScript.
-
+See also: [Self-Compiling LiteScript] (doc/self-compiling-LiteScript.md)

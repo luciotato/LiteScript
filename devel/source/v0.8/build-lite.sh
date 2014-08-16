@@ -25,8 +25,5 @@ elif [ $basename = "Producer_c.lite.md" ]; then
 #    . ./bld-js-ls-to-js.sh
 
 else
-    echo bld/bld-js-ls-to-js.sh
-    pwd
-    . ./bld-js-ls-to-js.sh
-    #echo "select a file bld-*.sh to determine compilation options" 
+    echo "select a file from bld/*.sh to determine compilation options" 
 fi

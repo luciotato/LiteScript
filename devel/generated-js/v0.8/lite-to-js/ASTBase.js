@@ -27,6 +27,7 @@
         //name:string, keyword:string
 
         //type, keyType, itemType
+        //indent = 0
 
         //lexer: Parser.Lexer
 
@@ -34,12 +35,12 @@
 
         //lineInx
         //sourceLineNum, column
-        //indent
 
 //wile-parsing info
 
         //locked: boolean
         //extraInfo // if parse failed, extra information
+         this.indent=0;
 
         //.parent = parent
         this.parent = parent;
@@ -257,7 +258,6 @@
 
             //declare searched:string
             
-            //declare searched:string
 
             //#debug spaces, .constructor.name,'TRY',searched, 'on', .lexer.token.toString()
 
@@ -310,7 +310,6 @@
 
             //declare searched:Function //class
             
-            //declare searched:Function //class
 
             //logger.debug spaces, .constructor.name,'TRY',searched.name, 'on', .lexer.token.toString()
             logger.debug(spaces, this.constructor.name, 'TRY', searched.name, 'on', this.lexer.token.toString());
@@ -338,7 +337,6 @@
                 if (!(err instanceof ControlledError)) {throw err};
                 //declare err:ControlledError
                 
-                //declare err:ControlledError
 
 //If parsing fail, but the AST node were not 'locked' on target, (a soft-error),
 //we will try other AST nodes.
@@ -606,8 +604,8 @@
         var lastItemSourceLine = -1;
         //var separatorAfterItem
         var separatorAfterItem = undefined;
-        //var parentIndent = .parent.indent
-        var parentIndent = this.parent.indent;
+        //var parentIndent = .parent.indent or 0
+        var parentIndent = this.parent.indent || 0;
 
 //FreeFormList should start with NEWLINE
 //First line sets indent level
@@ -751,7 +749,6 @@
 
             //declare valid i.name
             
-            //declare valid i.name
 
             //if typeof i is 'string'
             if (typeof i === 'string') {
@@ -793,7 +790,7 @@
 //Helper functions for code generation
 //=====================================
 
-     //     helper method out( )
+     //     helper method out
      ASTBase.prototype.out = function(){
 
 //*out* is a helper function for code generation
@@ -828,7 +825,6 @@
           
               //declare item:ASTBase
               
-              //declare item:ASTBase
               //item.produce()
               item.produce();
           }
@@ -892,7 +888,6 @@
 
                             //declare valid listItem.out
                             
-                            //declare valid listItem.out
 
                             //if freeFormMode
                             if (freeFormMode) {
@@ -996,8 +991,8 @@
 
 //out previous lines with comments
 
-        //if .sourceLineNum<=1, return
-        if (this.sourceLineNum <= 1) {return};
+        //if no .sourceLineNum, return // if undefined or 0
+        if (!this.sourceLineNum) {return};
 
         //search CODE line, immediatly previous to this
         //var prevCODElineInx = .lexer.getPrevCODEInfoLineIndex(.sourceLineNum)

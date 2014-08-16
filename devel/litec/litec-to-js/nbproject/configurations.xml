@@ -13,6 +13,7 @@
       <itemPath>../core/exceptions.h</itemPath>
       <itemPath>../core/fs-native.c</itemPath>
       <itemPath>../core/fs-native.h</itemPath>
+      <itemPath>../core/keytree.c</itemPath>
       <itemPath>../core/utf8strings.c</itemPath>
       <itemPath>../core/utf8strings.h</itemPath>
       <itemPath>../core/util.c</itemPath>
@@ -28,38 +29,28 @@
           <itemPath>generated-c/interfaces/C_standalone/path.c</itemPath>
           <itemPath>generated-c/interfaces/C_standalone/path.h</itemPath>
         </logicalFolder>
+        <itemPath>generated-c/interfaces/shims.c</itemPath>
+        <itemPath>generated-c/interfaces/shims.h</itemPath>
       </logicalFolder>
       <logicalFolder name="lib" displayName="lib" projectFiles="true">
         <itemPath>generated-c/lib/ControlledError.c</itemPath>
-        <itemPath>generated-c/lib/ControlledError.c.extra</itemPath>
         <itemPath>generated-c/lib/ControlledError.h</itemPath>
         <itemPath>generated-c/lib/Environment.c</itemPath>
-        <itemPath>generated-c/lib/Environment.c.extra</itemPath>
         <itemPath>generated-c/lib/Environment.h</itemPath>
         <itemPath>generated-c/lib/GeneralOptions.c</itemPath>
-        <itemPath>generated-c/lib/GeneralOptions.c.extra</itemPath>
         <itemPath>generated-c/lib/GeneralOptions.h</itemPath>
         <itemPath>generated-c/lib/OptionsParser.c</itemPath>
-        <itemPath>generated-c/lib/OptionsParser.c.extra</itemPath>
         <itemPath>generated-c/lib/OptionsParser.h</itemPath>
         <itemPath>generated-c/lib/SourceMap.c</itemPath>
-        <itemPath>generated-c/lib/SourceMap.c.extra</itemPath>
         <itemPath>generated-c/lib/SourceMap.h</itemPath>
         <itemPath>generated-c/lib/UniqueID.c</itemPath>
-        <itemPath>generated-c/lib/UniqueID.c.extra</itemPath>
         <itemPath>generated-c/lib/UniqueID.h</itemPath>
         <itemPath>generated-c/lib/color.c</itemPath>
-        <itemPath>generated-c/lib/color.c.extra</itemPath>
         <itemPath>generated-c/lib/color.h</itemPath>
         <itemPath>generated-c/lib/logger.c</itemPath>
-        <itemPath>generated-c/lib/logger.c.extra</itemPath>
         <itemPath>generated-c/lib/logger.h</itemPath>
         <itemPath>generated-c/lib/mkPath.c</itemPath>
-        <itemPath>generated-c/lib/mkPath.c.extra</itemPath>
         <itemPath>generated-c/lib/mkPath.h</itemPath>
-        <itemPath>generated-c/lib/shims.c</itemPath>
-        <itemPath>generated-c/lib/shims.c.extra</itemPath>
-        <itemPath>generated-c/lib/shims.h</itemPath>
       </logicalFolder>
       <itemPath>generated-c/ASTBase.c</itemPath>
       <itemPath>generated-c/ASTBase.h</itemPath>
@@ -170,6 +161,8 @@
       </item>
       <item path="../core/fs-native.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../core/keytree.c" ex="false" tool="0" flavor2="0">
+      </item>
       <item path="../core/tests/String_charCodeAt.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../core/utf8strings.c" ex="false" tool="0" flavor2="0">
@@ -262,77 +255,45 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="generated-c/lib/ControlledError.c" ex="false" tool="0" flavor2="0">
+      <item path="generated-c/interfaces/shims.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/lib/ControlledError.c.extra"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="generated-c/interfaces/shims.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="generated-c/lib/ControlledError.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="generated-c/lib/ControlledError.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/Environment.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/lib/Environment.c.extra"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="generated-c/lib/Environment.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/GeneralOptions.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/lib/GeneralOptions.c.extra"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="generated-c/lib/GeneralOptions.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/OptionsParser.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/lib/OptionsParser.c.extra"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="generated-c/lib/OptionsParser.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/SourceMap.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/lib/SourceMap.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/SourceMap.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/UniqueID.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/lib/UniqueID.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/lib/UniqueID.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/color.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/lib/color.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/color.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/logger.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/lib/logger.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/lib/logger.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/mkPath.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/lib/mkPath.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/lib/mkPath.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="generated-c/lib/shims.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/lib/shims.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="generated-c/lib/shims.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
     <conf name="Release" type="1">
@@ -343,7 +304,7 @@
       </toolsSet>
       <compileType>
         <cTool>
-          <developmentMode>6</developmentMode>
+          <developmentMode>5</developmentMode>
           <standard>3</standard>
           <incDir>
             <pElem>../core</pElem>
@@ -391,6 +352,8 @@
       <item path="../core/fs-native.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../core/fs-native.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../core/keytree.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../core/tests/String_charCodeAt.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -477,77 +440,45 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="generated-c/lib/ControlledError.c" ex="false" tool="0" flavor2="0">
+      <item path="generated-c/interfaces/shims.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/lib/ControlledError.c.extra"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="generated-c/interfaces/shims.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="generated-c/lib/ControlledError.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="generated-c/lib/ControlledError.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/Environment.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/lib/Environment.c.extra"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="generated-c/lib/Environment.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/GeneralOptions.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/lib/GeneralOptions.c.extra"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="generated-c/lib/GeneralOptions.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/OptionsParser.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/lib/OptionsParser.c.extra"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="generated-c/lib/OptionsParser.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/SourceMap.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/lib/SourceMap.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/SourceMap.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/UniqueID.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/lib/UniqueID.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/lib/UniqueID.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/color.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/lib/color.c.extra" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/color.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/logger.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/lib/logger.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/lib/logger.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="generated-c/lib/mkPath.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="generated-c/lib/mkPath.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="generated-c/lib/mkPath.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="generated-c/lib/shims.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="generated-c/lib/shims.c.extra" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="generated-c/lib/shims.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

@@ -87,7 +87,6 @@
 
         assert(key.class==String_inx);
         assert(key.len > 0 );
-        assert(key.len <= keyTreeRoot->allocd);
 
         len_t kpartStart=0;
         int kpartCount=key.len; //key char count

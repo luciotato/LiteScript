@@ -83,14 +83,15 @@
         //logger.init options
         logger.init(options);
 
-//set basePath from main module path
+//calculate project dir from main module
 
         //var tempFileInfo = new Environment.FileInfo(options.mainModuleName)
         var tempFileInfo = new Environment.FileInfo(options.mainModuleName);
         //options.projectDir = tempFileInfo.dir
         options.projectDir = tempFileInfo.dir;
-        //options.mainModuleName = './#{tempFileInfo.base}'
-        options.mainModuleName = './' + tempFileInfo.base;
+        //options.mainModuleName = '#{tempFileInfo.base}'
+        options.mainModuleName = '' + tempFileInfo.base;
+
         //options.outDir = Environment.resolvePath(options.outDir or '.')
         options.outDir = Environment.resolvePath(options.outDir || '.');
 
@@ -128,7 +129,6 @@
 
         //declare var window
         
-        //declare var window
         //var inNode = type of window is 'undefined'
         var inNode = typeof window === 'undefined';
         //.setCompilerVar inNode? 'ENV_NODE' else 'ENV_BROWSER'
@@ -186,7 +186,7 @@
      Project.prototype.compile = function(){
 
 //Import & compile the main module. The main module will, in turn, 'import' and 'compile'
-//-if not cached-, all dependent modules.
+//all dependent modules.
 
         //logger.msg "Compiling",.options.mainModuleName
         logger.msg("Compiling", this.options.mainModuleName);
@@ -608,7 +608,6 @@
             
                 //declare node:Grammar.ImportStatementItem
                 
-                //declare node:Grammar.ImportStatementItem
                 //if node.importParameter
                 if (node.importParameter) {
                 
@@ -671,7 +670,6 @@
 
         //declare valid .recurseLevel
         
-        //declare valid .recurseLevel
 
         //.recurseLevel++
         this.recurseLevel++;
@@ -691,6 +689,9 @@
         //fileInfo.searchModule importingModule.fileInfo.dir
         fileInfo.searchModule(importingModule.fileInfo.dir);
 
+        //var moduleNode
+        var moduleNode = undefined;
+
 //Before compiling the module, check internal, and external cache
 
 //Check Internal Cache: if it is already compiled, return cached Module node
@@ -700,16 +701,26 @@
         
             //logger.info indent,'cached: ',fileInfo.filename
             logger.info(indent, 'cached: ', fileInfo.filename);
+            //moduleNode =  .moduleCache.get(fileInfo.filename)
+            moduleNode = this.moduleCache.get(fileInfo.filename);
+            //moduleNode.dependencyTreeLevelOrder++
+            moduleNode.dependencyTreeLevelOrder++;
+            //if moduleNode.dependencyTreeLevel<=importingModule.dependencyTreeLevel
+            if (moduleNode.dependencyTreeLevel <= importingModule.dependencyTreeLevel) {
+            
+                //moduleNode.dependencyTreeLevel=importingModule.dependencyTreeLevel+1
+                moduleNode.dependencyTreeLevel = importingModule.dependencyTreeLevel + 1;
+            };
             //.recurseLevel--
             this.recurseLevel--;
-            //return .moduleCache.get(fileInfo.filename)
-            return this.moduleCache.get(fileInfo.filename);
+            //return moduleNode
+            return moduleNode;
         };
 
 //It isn't on internal cache, then create a **new Module**.
 
-        //var moduleNode = .createNewModule(fileInfo)
-        var moduleNode = this.createNewModule(fileInfo);
+        //moduleNode = .createNewModule(fileInfo)
+        moduleNode = this.createNewModule(fileInfo);
         //moduleNode.dependencyTreeLevel = .recurseLevel
         moduleNode.dependencyTreeLevel = this.recurseLevel;
 
@@ -717,6 +728,8 @@
 
         //.moduleCache.set fileInfo.filename, moduleNode
         this.moduleCache.set(fileInfo.filename, moduleNode);
+        //moduleNode.importOrder = .moduleCache.size
+        moduleNode.importOrder = this.moduleCache.size;
 
 //Check if we can get exports from a "interface.md" file
 
@@ -832,10 +845,8 @@
 
                 //declare on module paths:string array
                 
-                //declare on module paths:string array
                 //declare valid module.constructor._nodeModulePaths
                 
-                //declare valid module.constructor._nodeModulePaths
 
                 //var savePaths = module.paths, saveFilename = module.filename
                 var savePaths = module.paths, saveFilename = module.filename;
