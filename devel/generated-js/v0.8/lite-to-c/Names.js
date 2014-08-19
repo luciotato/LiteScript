@@ -393,7 +393,7 @@
         };
      };
 
-     //     helper method addMember(nameDecl:Declaration, options:NameDeclOptions, nodeDeclared) returns Declaration
+     //     helper method addMember(nameDecl:Declaration, options:DeclarationOptions, nodeDeclared) returns Declaration
      Declaration.prototype.addMember = function(nameDecl, options, nodeDeclared){
 //Adds passed Declaration to .members
 //Reports duplicated.
@@ -625,9 +625,9 @@
     };
 
 
-    //    export class NameDeclOptions
+    //    export class DeclarationOptions
     // constructor
-    function NameDeclOptions(){ // default constructor
+    function DeclarationOptions(){ // default constructor
         //properties
 
             //normalizeModeKeepFirstCase: boolean
@@ -644,6 +644,6 @@
     };
     
     // export
-    module.exports.NameDeclOptions = NameDeclOptions;
+    module.exports.DeclarationOptions = DeclarationOptions;
     
-    // end class NameDeclOptions
+    // end class DeclarationOptions

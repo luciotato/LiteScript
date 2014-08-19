@@ -1,3 +1,4 @@
 dir=${1:-Release}
 sudo rm /usr/bin/litecc
 sudo ln dist/$dir/GNU-Linux-x86/litec-to-c /usr/bin/litecc
+echo "/usr/bin/litecc -> dist/$dir/GNU-Linux-x86/litec-to-c"

@@ -3752,6 +3752,7 @@
       //properties
         //varRefSuper:VariableRef
         //body
+        //constructorDeclaration
     };
     // ClassDeclaration (extends|proto is) ASTBase
     ClassDeclaration.prototype.__proto__ = ASTBase.prototype;
@@ -3868,6 +3869,28 @@
 
         //.parseParametersAndBody
         this.parseParametersAndBody();
+
+//Check we're in a class, set class property:constructorDeclaration
+
+        //var bodyParent =  .parent.parent.parent // =>Statement=>Body=>Body's parent
+        var bodyParent = this.parent.parent.parent;
+        //if bodyParent.constructor isnt ClassDeclaration
+        if (bodyParent.constructor !== ClassDeclaration) {
+        
+            //.sayErr "constructor outside class. Container is: #{bodyParent}"
+            this.sayErr("constructor outside class. Container is: " + bodyParent);
+        };
+
+        //declare bodyParent:ClassDeclaration
+        
+        //if bodyParent.constructorDeclaration
+        if (bodyParent.constructorDeclaration) {
+        
+            //.sayErr "this class already has a constructor"
+            this.sayErr("this class already has a constructor");
+        };
+        //bodyParent.constructorDeclaration = this
+        bodyParent.constructorDeclaration = this;
       };
     // export
     module.exports.ConstructorDeclaration = ConstructorDeclaration;

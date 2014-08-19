@@ -41,7 +41,7 @@ Module vars
 
      declare name affinity nameDecl
 
-#### constructor new Declaration(name, options:NameDeclOptions, node:ASTBase)
+#### constructor new Declaration(name, options:DeclarationOptions, node:ASTBase)
       
       .name = name.toString()
       .members = new Map // string to Declaration //contained Declarations
@@ -234,7 +234,7 @@ If this item has a different case than the name we're adding, emit error
             logger.error .originalDeclarationPosition() #add original declaration line info
             return true
 
-#### helper method addMember(nameDecl:Declaration, options:NameDeclOptions, nodeDeclared) returns Declaration
+#### helper method addMember(nameDecl:Declaration, options:DeclarationOptions, nodeDeclared) returns Declaration
 Adds passed Declaration to .members
 Reports duplicated.
 returns: Identifier
@@ -358,7 +358,7 @@ By keeping 1st char untouched, we allow "token" and "Token" to co-exists in the 
       return false
 
 
-### export class NameDeclOptions
+### export class DeclarationOptions
         properties
 
             normalizeModeKeepFirstCase: boolean

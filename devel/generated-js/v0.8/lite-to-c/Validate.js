@@ -412,15 +412,11 @@
         //if sumFailures #there was failures, inform al errors
         if (sumFailures) {
         
-            //var opt = new Names.NameDeclOptions
-            var opt = new Names.NameDeclOptions();
-            //opt.informError = true
-            opt.informError = true;
             //for each nameDecl in Names.allNameDeclarations
             for( var nameDecl__inx=0,nameDecl ; nameDecl__inx<Names.allNameDeclarations.length ; nameDecl__inx++){nameDecl=Names.allNameDeclarations[nameDecl__inx];
             
-                //nameDecl.processConvertTypes(opt)
-                nameDecl.processConvertTypes(opt);
+                //nameDecl.processConvertTypes({informError:true})
+                nameDecl.processConvertTypes({informError: true});
             };// end for each in Names.allNameDeclarations
             
         };
@@ -525,14 +521,12 @@
 
 //initialize NameAffinity
 
-        //var options = new Names.NameDeclOptions
-        var options = new Names.NameDeclOptions();
-        //options.normalizeModeKeepFirstCase = true #nameAffinity members are stored: [0].Toupper()+slice(1).toLower()
-        options.normalizeModeKeepFirstCase = true;
-        //options.nodeClass = Grammar.VariableDecl
-        options.nodeClass = Grammar.VariableDecl;
-        //nameAffinity= new Names.Declaration('Name Affinity',options) # project-wide name affinity for classes
-        nameAffinity = new Names.Declaration('Name Affinity', options);
+        //# project-wide name affinity for classes
+        //nameAffinity = new Names.Declaration('Name Affinity',{
+            //normalizeModeKeepFirstCase:true #nameAffinity members are stored: [0].Toupper()+slice(1).toLower()
+            //nodeClass: Grammar.VariableDecl
+            //});
+        nameAffinity = new Names.Declaration('Name Affinity', {normalizeModeKeepFirstCase: true, nodeClass: Grammar.VariableDecl});
 
         //populateGlobalScope(aProject)
 
@@ -544,10 +538,11 @@
 //Initialize global scope
 //a)non-instance values
 
-        //var opt = new Names.NameDeclOptions
-        var opt = new Names.NameDeclOptions();
+        //var opt = new Names.DeclarationOptions
+        var opt = new Names.DeclarationOptions();
         //opt.nodeClass = Grammar.VariableDecl
         opt.nodeClass = Grammar.VariableDecl;
+
         //globalScope.addMember 'undefined',opt
         globalScope.addMember('undefined', opt);
         //opt.value = null
@@ -570,9 +565,6 @@
         opt.value = Infinity;
         //globalScope.addMember 'Infinity',opt
         globalScope.addMember('Infinity', opt);
-
-        //opt.value = undefined
-        opt.value = undefined;
 
 //b) pre-create core classes, to allow the interface.md file to declare property types and return values
 
@@ -600,8 +592,8 @@
 
 //Allow use of "__proto__" getter/setter on any object
 
-        //globalObjectProto.addMember '__proto__',opt
-        globalObjectProto.addMember('__proto__', opt);
+        //globalObjectProto.addMember '__proto__',{nodeClass:Grammar.VariableDecl}
+        globalObjectProto.addMember('__proto__', {nodeClass: Grammar.VariableDecl});
 
 //note: 'Map' and 'NameValuePair' are declared at GlobalScopeX.interface.md
 
@@ -609,10 +601,8 @@
 
 //-"any" default type for vars
 
-        //opt.nodeClass = Grammar.ClassDeclaration
-        opt.nodeClass = Grammar.ClassDeclaration;
-        //globalScope.addMember 'any',opt // used for "map string to any" - Dictionaries
-        globalScope.addMember('any', opt);
+        //globalScope.addMember 'any',{nodeClass:Grammar.ClassDeclaration} // used for "map string to any" - Dictionaries
+        globalScope.addMember('any', {nodeClass: Grammar.ClassDeclaration});
 
 //-arguments:any*
 
@@ -623,50 +613,46 @@
 
 //we declare here the type:"pointer to any" - "any*"
 
-        //var argumentsType = globalScope.addMember('any*',opt) //  any pointer, type for "arguments"
-        var argumentsType = globalScope.addMember('any*', opt);
+        //var argumentsType = globalScope.addMember('any*',{nodeClass:Grammar.ClassDeclaration}) //  any pointer, type for "arguments"
+        var argumentsType = globalScope.addMember('any*', {nodeClass: Grammar.ClassDeclaration});
 
 //-"arguments" have only one method: "toArray()"
 
-        //opt.nodeClass = Grammar.FunctionDeclaration
-        opt.nodeClass = Grammar.FunctionDeclaration;
-        //opt.type = globalPrototype('Function')
-        opt.type = globalPrototype('Function');
-        //opt.returnType=globalPrototype('Array')
-        opt.returnType = globalPrototype('Array');
-        //opt.value = undefined
-        opt.value = undefined;
-
-        //argumentsType.addMember('toArray',opt)
-        argumentsType.addMember('toArray', opt);
+        //argumentsType.addMember('toArray',{
+              //type:       globalPrototype('Function')
+              //returnType: globalPrototype('Array')
+              //nodeClass:  Grammar.FunctionDeclaration
+          //})
+        argumentsType.addMember('toArray', {type: globalPrototype('Function'), returnType: globalPrototype('Array'), nodeClass: Grammar.FunctionDeclaration});
 
 //b.2) Lite-C: the Lexer replaces string interpolation with calls to `_concatAny`
 
-        //opt.returnType=globalPrototype('String')
-        opt.returnType = globalPrototype('String');
-        //globalScope.addMember '_concatAny',opt //used for string interpolation
-        globalScope.addMember('_concatAny', opt);
+        //globalScope.addMember '_concatAny',{ //used for string interpolation
+              //type:       globalPrototype('Function')
+              //returnType: globalPrototype('String')
+              //nodeClass:  Grammar.FunctionDeclaration
+        //}
+        globalScope.addMember('_concatAny', {type: globalPrototype('Function'), returnType: globalPrototype('String'), nodeClass: Grammar.FunctionDeclaration});
 
-        //opt.returnType=globalPrototype('Number')
-        opt.returnType = globalPrototype('Number');
-        //globalScope.addMember 'parseFloat',opt //used for string interpolation
-        globalScope.addMember('parseFloat', opt);
-        //globalScope.addMember 'parseInt',opt //used for string interpolation
-        globalScope.addMember('parseInt', opt);
+        //globalScope.addMember 'parseFloat',{
+              //type:       globalPrototype('Function')
+              //returnType: globalPrototype('Number')
+              //nodeClass:  Grammar.FunctionDeclaration
+              //}
+        globalScope.addMember('parseFloat', {type: globalPrototype('Function'), returnType: globalPrototype('Number'), nodeClass: Grammar.FunctionDeclaration});
 
-        //opt.nodeClass = Grammar.VariableDecl
-        opt.nodeClass = Grammar.VariableDecl;
-        //opt.type = globalPrototype('String')
-        opt.type = globalPrototype('String');
-        //opt.returnType = undefined
-        opt.returnType = undefined;
-        //globalScope.addMember '__dirname',opt // current module dir (node.js)
-        globalScope.addMember('__dirname', opt);
+        //globalScope.addMember 'parseInt',{
+              //type:       globalPrototype('Function')
+              //returnType: globalPrototype('Number')
+              //nodeClass:  Grammar.FunctionDeclaration
+              //}
+        globalScope.addMember('parseInt', {type: globalPrototype('Function'), returnType: globalPrototype('Number'), nodeClass: Grammar.FunctionDeclaration});
 
-        //var core = globalScope.addMember('LiteCore') //core supports
-        //core.isNamespace = true
-        //opt.returnType='Number'
-        //core.addMember 'getSymbol',opt //to get a symbol (int) from a symbol name (string)
+        //globalScope.addMember '__dirname',{ // current module dir (node.js)
+              //type:       globalPrototype('String')
+              //nodeClass:  Grammar.VariableDecl
+              //}
+        globalScope.addMember('__dirname', {type: globalPrototype('String'), nodeClass: Grammar.VariableDecl});
 
 //Process the global scope declarations interface file: GlobalScopeJS|C.interface.md
 
@@ -779,14 +765,8 @@
     function addBuiltInClass(name, node){
 //Add a built-in class to global scope, return class prototype
 
-      //var opt = new Names.NameDeclOptions
-      var opt = new Names.NameDeclOptions();
-      //opt.isBuiltIn = true
-      //opt.nodeClass = Grammar.ClassDeclaration
-      opt.nodeClass = Grammar.ClassDeclaration;
-
-      //var nameDecl = new Names.Declaration( name,opt,node )
-      var nameDecl = new Names.Declaration(name, opt, node);
+      //var nameDecl = new Names.Declaration( name, {nodeClass:Grammar.ClassDeclaration} ,node )
+      var nameDecl = new Names.Declaration(name, {nodeClass: Grammar.ClassDeclaration}, node);
       //globalScope.addMember nameDecl
       globalScope.addMember(nameDecl);
 
@@ -815,14 +795,8 @@
     function addBuiltInObject(name, node){
 //Add a built-in object to global scope, return object
 
-      //var opt = new Names.NameDeclOptions
-      var opt = new Names.NameDeclOptions();
-      //opt.isBuiltIn = true
-      //opt.nodeClass = Grammar.NamespaceDeclaration
-      opt.nodeClass = Grammar.NamespaceDeclaration;
-
-      //var nameDecl = new Names.Declaration(name, opt ,node)
-      var nameDecl = new Names.Declaration(name, opt, node);
+      //var nameDecl = new Names.Declaration(name, {nodeClass:Grammar.NamespaceDeclaration}, node)
+      var nameDecl = new Names.Declaration(name, {nodeClass: Grammar.NamespaceDeclaration}, node);
       //globalScope.addMember nameDecl
       globalScope.addMember(nameDecl);
       //nameDecl.getMembersFromObjProperties Environment.getGlobalObject(name)
@@ -1055,7 +1029,7 @@
      };
 
 
-     //     helper method processConvertTypes(options) returns Names.ConvertResult
+     //     helper method processConvertTypes(options:Names.DeclarationOptions) returns Names.ConvertResult
      Names.Declaration.prototype.processConvertTypes = function(options){
 //convert possible types stored in Names.Declaration,
 //from string/varRef to other NameDeclarations in the scope
@@ -1075,7 +1049,7 @@
      };
 
 
-     //     helper method convertType(internalName, result: Names.ConvertResult, options: Names.NameDeclOptions)
+     //     helper method convertType(internalName, result: Names.ConvertResult, options: Names.DeclarationOptions)
      Names.Declaration.prototype.convertType = function(internalName, result, options){
 //convert type from string to NameDeclarations in the scope.
 //returns 'true' if converted, 'false' if it has to be tried later
@@ -1313,12 +1287,12 @@
      //     properties
         //scope: Names.Declaration //for nodes with scope
 
-     //     helper method declareName(name, options)
+     //     helper method declareName(name, options:Names.DeclarationOptions)
      
      //     properties
         //scope: Names.Declaration //for nodes with scope
 
-     //     helper method declareName(name, options)
+     //     helper method declareName(name, options:Names.DeclarationOptions)
      ASTBase.prototype.declareName = function(name, options){
 //declareName creates a new Names.Declaration, *referecing source as nodeDeclared (AST node)*
 
@@ -1326,7 +1300,7 @@
         return new Names.Declaration(name, options, this);
      };
 
-     //     method addMemberTo(nameDecl, memberName, options)  returns Names.Declaration
+     //     method addMemberTo(nameDecl, memberName, options:Names.DeclarationOptions)  returns Names.Declaration
      ASTBase.prototype.addMemberTo = function(nameDecl, memberName, options){
 //a Helper method ASTBase.*addMemberTo*
 //Adds a member to a NameDecl, referencing this node as nodeDeclared
@@ -1335,13 +1309,13 @@
         return nameDecl.addMember(memberName, options, this);
      };
 
-     //     helper method tryGetMember(nameDecl, name:string, options:Names.NameDeclOptions)
+     //     helper method tryGetMember(nameDecl, name:string, options:Names.DeclarationOptions)
      ASTBase.prototype.tryGetMember = function(nameDecl, name, options){
 //this method looks for a specific member, optionally declare as forward
 //or inform error. We need this AST node, to correctly report error.
 
-        //default options = new Names.NameDeclOptions
-        if(options===undefined) options=new Names.NameDeclOptions();
+        //default options = new Names.DeclarationOptions
+        if(options===undefined) options=new Names.DeclarationOptions();
 
         //var found = nameDecl.findMember(name)
         var found = nameDecl.findMember(name);
@@ -1460,7 +1434,7 @@
      };
 
 
-     //     method tryGetFromScope(name, options:Names.NameDeclOptions) returns Names.Declaration
+     //     method tryGetFromScope(name, options:Names.DeclarationOptions) returns Names.Declaration
      ASTBase.prototype.tryGetFromScope = function(name, options){
 //a Helper method: *ASTBase.tryGetFromScope(name)*, this method looks for the original declaration
 //in the scope. if the declaration is not found, an error is emmited and a -pseudo- var is created
@@ -1527,7 +1501,7 @@
      };
 
 
-     //     method addToScope(item, options:Names.NameDeclOptions) returns Names.Declaration
+     //     method addToScope(item, options:Names.DeclarationOptions) returns Names.Declaration
      ASTBase.prototype.addToScope = function(item, options){
 //a Helper method ASTBase.*addToScope*
 //Search for parent Scope, adds passed name to scope.members
@@ -1547,7 +1521,7 @@
 //First search it to report duplicates, if found in the scope.
 //If the found item has a different case than the name we're adding, emit error & return
 
-     //     method addToSpecificScope(scope:Names.Declaration, item, options:Names.NameDeclOptions) returns Names.Declaration
+     //     method addToSpecificScope(scope:Names.Declaration, item, options:Names.DeclarationOptions) returns Names.Declaration
      ASTBase.prototype.addToSpecificScope = function(scope, item, options){
 
         //declare valid item.name
@@ -1634,14 +1608,13 @@
         //if no .scope
         if (!this.scope) {
         
-            //var options=new Names.NameDeclOptions
-            var options = new Names.NameDeclOptions();
-            //options.normalizeModeKeepFirstCase = true
-            options.normalizeModeKeepFirstCase = true;
-            //options.nodeClass = Grammar.VariableDecl
-            options.nodeClass = Grammar.VariableDecl;
-            //.scope = .declareName("[#{.constructor.name} #{.name} Scope]", options)
-            this.scope = this.declareName("[" + this.constructor.name + " " + this.name + " Scope]", options);
+
+            //.scope = .declareName("[#{.constructor.name} #{.name} Scope]", {
+                  //normalizeModeKeepFirstCase:true
+                  //nodeClass: Grammar.VariableDecl
+                  //})
+            this.scope = this.declareName("[" + this.constructor.name + " " + this.name + " Scope]", {normalizeModeKeepFirstCase: true, nodeClass: Grammar.VariableDecl});
+
             //.scope.isScope = true
             this.scope.isScope = true;
         };
@@ -1801,12 +1774,12 @@
       //if excludeClass and this is instance of excludeClass, return #do not recurse on filtered's childs
       if (excludeClass && this instanceof excludeClass) {return};
 
-//recurse on all properties (exclude 'parent' and 'importedModule')
+//recurse on all properties (exclude 'parent' and 'importedModule' and others, shortcut-references)
 
       //for each property name,value in this
       var value=undefined;
       for ( var name in this){value=this[name];
-      if(['constructor', 'parent', 'importedModule', 'requireCallNodes', 'exportDefault'].indexOf(name)===-1){
+      if(['constructor', 'parent', 'importedModule', 'requireCallNodes', 'exportDefault', 'constructorDeclaration'].indexOf(name)===-1){
 
             //if value instance of ASTBase
             if (value instanceof ASTBase) {
@@ -1957,16 +1930,8 @@
 
       //helper method createNameDeclaration()
       Grammar.VariableDecl.prototype.createNameDeclaration = function(){
-
-        //var options = new Names.NameDeclOptions
-        var options = new Names.NameDeclOptions();
-        //options.type = .type
-        options.type = this.type;
-        //options.itemType = .itemType
-        options.itemType = this.itemType;
-
-        //return .declareName(.name,options)
-        return this.declareName(this.name, options);
+        //return .declareName(.name,{type:.type, itemType:.itemType})
+        return this.declareName(this.name, {type: this.type, itemType: this.itemType});
       };
 
       //helper method declareInScope()
@@ -2039,13 +2004,9 @@
             if (varDecl.aliasVarRef) {
             
                 //Example: "public var $ = jQuery" => declare alias $ for jQuery
-                //var opt = new Names.NameDeclOptions
-                var opt = new Names.NameDeclOptions();
-                //opt.informError= true
-                opt.informError = true;
-                //if varDecl.aliasVarRef.tryGetReference(opt) into var ref
+                //if varDecl.aliasVarRef.tryGetReference({informError:true}) into var ref
                 var ref=undefined;
-                if ((ref=varDecl.aliasVarRef.tryGetReference(opt))) {
+                if ((ref=varDecl.aliasVarRef.tryGetReference({informError: true}))) {
                 
                     //# aliases share .members
                     //varDecl.nameDecl.members = ref.members
@@ -2130,14 +2091,12 @@
      //     properties
 
       //nameDecl
-      //container: Grammar.NamespaceDeclaration // in which namespace this class/namespace is declared
 
      //     method declare()
      
      //     properties
 
       //nameDecl
-      //container: Grammar.NamespaceDeclaration // in which namespace this class/namespace is declared
 
      //     method declare()
      Grammar.ClassDeclaration.prototype.declare = function(){
@@ -2173,9 +2132,6 @@
         //var isClass = this.constructor is Grammar.ClassDeclaration
         var isClass = this.constructor === Grammar.ClassDeclaration;
 
-        //var opt = new Names.NameDeclOptions
-        var opt = new Names.NameDeclOptions();
-
         //if isNamespace
         if (isNamespace) {
         
@@ -2191,12 +2147,8 @@
 
 //declare the class
 
-            //opt.type = globalPrototype('Function')
-            opt.type = globalPrototype('Function');
-            //.nameDecl = .declareName(.name,opt) //class
-            this.nameDecl = this.declareName(this.name, opt);
-            //opt.type = undefined
-            opt.type = undefined;
+            //.nameDecl = .declareName(.name, {type:globalPrototype('Function')} ) //class
+            this.nameDecl = this.declareName(this.name, {type: globalPrototype('Function')});
         };
 
         //end if
@@ -2271,10 +2223,8 @@
             //else
             //    prtypeNameDecl.setMember('**proto**',globalObjectProto)
 
-            //opt.pointsTo = .nameDecl
-            opt.pointsTo = this.nameDecl;
-            //prtypeNameDecl.addMember('constructor',opt)
-            prtypeNameDecl.addMember('constructor', opt);
+            //prtypeNameDecl.addMember('constructor',{pointsTo:.nameDecl})
+            prtypeNameDecl.addMember('constructor', {pointsTo: this.nameDecl});
 
 //return type of the class-function, is the prototype
 
@@ -2471,9 +2421,6 @@
       //var isFunction = .constructor is Grammar.FunctionDeclaration
       var isFunction = this.constructor === Grammar.FunctionDeclaration;
 
-      //var opt = new Names.NameDeclOptions
-      var opt = new Names.NameDeclOptions();
-
 //1st: Grammar.FunctionDeclaration
 
 //if it is not anonymous, add function name to parent scope,
@@ -2483,10 +2430,8 @@
       if (isFunction) {
       
 
-          //opt.type = globalPrototype('Function')
-          opt.type = globalPrototype('Function');
-          //.nameDecl = .addToScope(.name,opt)
-          this.nameDecl = this.addToScope(this.name, opt);
+          //.nameDecl = .addToScope(.name, {type:globalPrototype('Function')})
+          this.nameDecl = this.addToScope(this.name, {type: globalPrototype('Function')});
 
           //var moduleNode:Grammar.Module=.getParent(Grammar.Module)
           var moduleNode = this.getParent(Grammar.Module);
@@ -2536,12 +2481,8 @@
       //var scope = .createScope()
       var scope = this.createScope();
 
-      //opt.type='any*'
-      opt.type = 'any*';
-      //opt.nodeClass = Grammar.ClassDeclaration
-      opt.nodeClass = Grammar.ClassDeclaration;
-      //.addMemberTo scope,'arguments',opt
-      this.addMemberTo(scope, 'arguments', opt);
+      //.addMemberTo scope,'arguments', {type:'any*',nodeClass:Grammar.VariableDecl}
+      this.addMemberTo(scope, 'arguments', {type: 'any*', nodeClass: Grammar.VariableDecl});
 
       //if not isFunction
       if (!(isFunction)) {
@@ -2579,12 +2520,8 @@
           //if addThis
           if (addThis) {
           
-              //opt.type=ownerNameDecl
-              opt.type = ownerNameDecl;
-              //opt.nodeClass = Grammar.VariableDecl
-              opt.nodeClass = Grammar.VariableDecl;
-              //.addMemberTo(scope,'this',opt)
-              this.addMemberTo(scope, 'this', opt);
+              //.addMemberTo(scope,'this',{type:ownerNameDecl,nodeClass:Grammar.VariableDecl})
+              this.addMemberTo(scope, 'this', {type: ownerNameDecl, nodeClass: Grammar.VariableDecl});
           };
       };
 
@@ -2624,12 +2561,8 @@
       //if no .nameDecl
       if (!this.nameDecl) {
       
-          //var opt = new Names.NameDeclOptions
-          var opt = new Names.NameDeclOptions();
-          //opt.type=globalPrototype('Function')
-          opt.type = globalPrototype('Function');
-          //.nameDecl = .declareName(.name,opt)
-          this.nameDecl = this.declareName(this.name, opt);
+          //.nameDecl = .declareName(.name,{type:globalPrototype('Function')})
+          this.nameDecl = this.declareName(this.name, {type: globalPrototype('Function')});
       };
 
       //.declared = true
@@ -2665,14 +2598,11 @@
           var intermediateNameDecl=undefined;
           if (!((intermediateNameDecl=globalScope.findMember(composedName)))) {
           
-              //var opt = new Names.NameDeclOptions
-              var opt = new Names.NameDeclOptions();
-              //opt.type = globalPrototype('Array')
-              opt.type = globalPrototype('Array');
-              //opt.nodeClass = Grammar.ClassDeclaration
-              opt.nodeClass = Grammar.ClassDeclaration;
-              //intermediateNameDecl = globalScope.addMember(composedName,opt)
-              intermediateNameDecl = globalScope.addMember(composedName, opt);
+              //intermediateNameDecl = globalScope.addMember(composedName, {
+                    //type:globalPrototype('Array')
+                    //nodeClass:Grammar.ClassDeclaration
+                    //})
+              intermediateNameDecl = globalScope.addMember(composedName, {type: globalPrototype('Array'), nodeClass: Grammar.ClassDeclaration});
           };
 
 //item type, is each array member's type
@@ -2887,8 +2817,6 @@
      Grammar.PropertiesDeclaration.prototype.declare = function(informError){
 //Add all properties as members of its owner object (normally: class.prototype)
 
-        //var opt= new Names.NameDeclOptions
-        var opt = new Names.NameDeclOptions();
         //if .tryGetOwnerNameDecl(informError) into var ownerNameDecl
         var ownerNameDecl=undefined;
         if ((ownerNameDecl=this.tryGetOwnerNameDecl(informError))) {
@@ -2897,13 +2825,16 @@
             //for each varDecl in .list
             for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
             
-                //opt.type = varDecl.type
-                opt.type = varDecl.type;
-                //opt.itemType = varDecl.itemType
-                opt.itemType = varDecl.itemType;
-                //varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl,varDecl.name,opt)
-                varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl, varDecl.name, opt);
+                //varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl,varDecl.name,{
+                                            //type:varDecl.type
+                                            //itemType:varDecl.itemType
+                                            //})
+                varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl, varDecl.name, {type: varDecl.type, itemType: varDecl.itemType});
             };// end for each in this.list
+            //end for
+
+            //.declared = true
+            
 
             //.declared = true
             this.declared = true;
@@ -3056,12 +2987,8 @@
 
         //.createScope
         this.createScope();
-        //var opt=new Names.NameDeclOptions
-        var opt = new Names.NameDeclOptions();
-        //opt.type= globalPrototype('Error')
-        opt.type = globalPrototype('Error');
-        //.addToScope .catchVar,opt
-        this.addToScope(this.catchVar, opt);
+        //.addToScope .catchVar,{type:globalPrototype('Error')}
+        this.addToScope(this.catchVar, {type: globalPrototype('Error')});
       };
 
 
@@ -3090,18 +3017,13 @@
 
 //Start with main variable name, to check property names
 
-        //var opt = new Names.NameDeclOptions
-        var opt = new Names.NameDeclOptions();
-        //opt.informError=true
-        opt.informError = true;
-        //opt.isForward=true
-        opt.isForward = true;
-        //opt.isDummy=true
-        opt.isDummy = true;
-        //opt.nodeClass = Grammar.VariableDecl
-        opt.nodeClass = Grammar.VariableDecl;
-        //var actualVar = .tryGetFromScope(.name, opt)
-        var actualVar = this.tryGetFromScope(this.name, opt);
+        //var actualVar = .tryGetFromScope(.name, {
+                                //informError:true
+                                //isForward:true
+                                //isDummy:true
+                                //nodeClass: Grammar.VariableDecl
+                          //})
+        var actualVar = this.tryGetFromScope(this.name, {informError: true, isForward: true, isDummy: true, nodeClass: Grammar.VariableDecl});
 
 //now follow each accessor
 
@@ -3119,10 +3041,12 @@
             //if ac instanceof Grammar.PropertyAccess
             if (ac instanceof Grammar.PropertyAccess) {
             
-                //opt.isForward=false
-                opt.isForward = false;
-                //actualVar = .tryGetMember(actualVar, ac.name,opt)
-                actualVar = this.tryGetMember(actualVar, ac.name, opt);
+                //actualVar = .tryGetMember(actualVar, ac.name, {
+                                //informError:true
+                                //isDummy:true
+                                //nodeClass: Grammar.VariableDecl
+                          //})
+                actualVar = this.tryGetMember(actualVar, ac.name, {informError: true, isDummy: true, nodeClass: Grammar.VariableDecl});
             }
             //if ac instanceof Grammar.PropertyAccess
             
@@ -3174,10 +3098,13 @@
                 this.sayErr("actualVar instanceof Grammar.VariableRef: " + (actualVar.toString()));
                 //declare actualVar:Grammar.VariableRef
                 
-                //opt.isForward=true
-                opt.isForward = true;
-                //actualVar = actualVar.tryGetReference(opt)
-                actualVar = actualVar.tryGetReference(opt);
+                //actualVar = actualVar.tryGetReference({
+                                //informError:true
+                                //isForward:true
+                                //isDummy:true
+                                //nodeClass: Grammar.VariableDecl
+                          //})
+                actualVar = actualVar.tryGetReference({informError: true, isForward: true, isDummy: true, nodeClass: Grammar.VariableDecl});
             };
 
             //if no actualVar, break
@@ -3194,7 +3121,7 @@
      };
 
 
-     //     helper method tryGetReference(options:Names.NameDeclOptions) returns Names.Declaration
+     //     helper method tryGetReference(options:Names.DeclarationOptions) returns Names.Declaration
      Grammar.VariableRef.prototype.tryGetReference = function(options){
 
 //evaluate this VariableRef.
@@ -3202,8 +3129,8 @@
 //if we can reach a reference, return reference.
 //For classes, return ClassDeclaration.nameDecl (not ClassDeclaration.nameDecl.prototype)
 
-        //default options= new Names.NameDeclOptions
-        if(options===undefined) options=new Names.NameDeclOptions();
+        //default options= new Names.DeclarationOptions
+        if(options===undefined) options=new Names.DeclarationOptions();
 
 //Start with main variable name
 
@@ -3516,14 +3443,11 @@
                 this.throwError("Expected 'simple variable name' after 'into var'");
             };
 
-            //var opt = new Names.NameDeclOptions
-            var opt = new Names.NameDeclOptions();
-            //opt.type = varRef.type
-            opt.type = varRef.type;
-            //opt.nodeClass = Grammar.VariableDecl
-            opt.nodeClass = Grammar.VariableDecl;
-            //.addToScope .declareName(varRef.name,opt)
-            this.addToScope(this.declareName(varRef.name, opt));
+            //.addToScope .declareName(varRef.name,{
+                                        //type:varRef.type
+                                        //nodeClass:Grammar.VariableDecl
+                                      //})
+            this.addToScope(this.declareName(varRef.name, {type: varRef.type, nodeClass: Grammar.VariableDecl}));
         };
      };
 
@@ -3630,12 +3554,8 @@
       if (this.specifier === 'on') {
       
 
-          //var opt=new Names.NameDeclOptions
-          var opt = new Names.NameDeclOptions();
-          //opt.isForward = true
-          opt.isForward = true;
-          //var reference = .tryGetFromScope(.name,opt)
-          var reference = this.tryGetFromScope(this.name, opt);
+          //var reference = .tryGetFromScope(.name,{isForward:true})
+          var reference = this.tryGetFromScope(this.name, {isForward: true});
 
           //if String.isCapitalized(reference.name) //let's assume is a Class
           if (String.isCapitalized(reference.name)) {
@@ -3720,13 +3640,9 @@
       //if .specifier is 'type'
       if (this.specifier === 'type') {
       
-          //var opt = new Names.NameDeclOptions
-          var opt = new Names.NameDeclOptions();
-          //opt.informError=true
-          opt.informError = true;
-          //if .varRef.tryGetReference(opt) into var actualVar
+          //if .varRef.tryGetReference({informError:true}) into var actualVar
           var actualVar=undefined;
-          if ((actualVar=this.varRef.tryGetReference(opt))) {
+          if ((actualVar=this.varRef.tryGetReference({informError: true}))) {
           
               //.setTypes actualVar
               this.setTypes(actualVar);
@@ -3772,11 +3688,6 @@
       //var actualVar:Names.Declaration
       var actualVar = undefined;
 
-      //var opt=new Names.NameDeclOptions
-      var opt = new Names.NameDeclOptions();
-      //opt.informError = true
-      opt.informError = true;
-
       //case .specifier
       
         //when 'valid':
@@ -3784,8 +3695,8 @@
          (this.specifier=='valid')
       ){
 
-            //actualVar = .tryGetFromScope(.varRef.name,opt)
-            actualVar = this.tryGetFromScope(this.varRef.name, opt);
+            //actualVar = .tryGetFromScope(.varRef.name,{informError:true})
+            actualVar = this.tryGetFromScope(this.varRef.name, {informError: true});
             //if no actualVar, return
             if (!actualVar) {return};
 
@@ -3833,8 +3744,8 @@
       ){
             //#set type on-the-fly, from here until next type-assignment
             //#we allow more than one "declare x:type" on the same block
-            //if .varRef.tryGetReference(opt) into actualVar
-            if ((actualVar=this.varRef.tryGetReference(opt))) {
+            //if .varRef.tryGetReference({informError:true}) into actualVar
+            if ((actualVar=this.varRef.tryGetReference({informError: true}))) {
             
                 //.setTypes actualVar
                 this.setTypes(actualVar);
@@ -3849,25 +3760,17 @@
 
         //var nameDecl
         var nameDecl = undefined;
-        //var opt=new Names.NameDeclOptions
-        var opt = new Names.NameDeclOptions();
-        //opt.nodeClass = Grammar.ClassDeclaration
-        opt.nodeClass = Grammar.ClassDeclaration;
 
         //for each name in arguments.toArray()
         var _list4=Array.prototype.slice.call(arguments);
         for( var name__inx=0,name ; name__inx<_list4.length ; name__inx++){name=_list4[name__inx];
         
 
-            //opt.nodeClass = Grammar.ClassDeclaration
-            opt.nodeClass = Grammar.ClassDeclaration;
-            //nameDecl = globalScope.addMember(name,opt)
-            nameDecl = globalScope.addMember(name, opt);
+            //nameDecl = globalScope.addMember(name,{nodeClass:Grammar.ClassDeclaration})
+            nameDecl = globalScope.addMember(name, {nodeClass: Grammar.ClassDeclaration});
 
-            //opt.nodeClass = Grammar.NameValuePair
-            opt.nodeClass = Grammar.NameValuePair;
-            //nameDecl.addMember 'prototype',opt
-            nameDecl.addMember('prototype', opt);
+            //nameDecl.addMember 'prototype',{nodeClass:Grammar.VariableDecl}
+            nameDecl.addMember('prototype', {nodeClass: Grammar.VariableDecl});
 
             // add to name affinity
             //if not nameAffinity.members.has(name)

@@ -1,13 +1,13 @@
 //==============================
 //LiteScript is a highly readable language that compiles to JavaScript.
 
-    //public var version = '0.8.5'
-    var version = '0.8.5';
+    //public var version = '0.8.6'
+    var version = '0.8.6';
     // export
     module.exports.version = version;
 
-    //public var buildDate = "Sat Aug 16 2014 06:11:10 GMT-0300 (ART)"
-    var buildDate = "Sat Aug 16 2014 06:11:10 GMT-0300 (ART)";
+    //public var buildDate = "Mon Aug 18 2014 05:30:52 GMT-0300 (ART)"
+    var buildDate = "Mon Aug 18 2014 05:30:52 GMT-0300 (ART)";
     // export
     module.exports.buildDate = buildDate;
 

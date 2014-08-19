@@ -510,17 +510,13 @@
 
         //moduleNode.createScope()
         moduleNode.createScope();
-        //var opt = new Names.NameDeclOptions
-        var opt = new Names.NameDeclOptions();
-        //opt.nodeClass = Grammar.NamespaceDeclaration // each "Module" is a Namespace
-        opt.nodeClass = Grammar.NamespaceDeclaration;
-        //moduleNode.exports = new Names.Declaration(fileInfo.base,opt,moduleNode)
-        moduleNode.exports = new Names.Declaration(fileInfo.base, opt, moduleNode);
+        //moduleNode.exports = new Names.Declaration(fileInfo.base, {nodeClass:Grammar.NamespaceDeclaration},moduleNode)
+        moduleNode.exports = new Names.Declaration(fileInfo.base, {nodeClass: Grammar.NamespaceDeclaration}, moduleNode);
         //moduleNode.exportsReplaced = false
         moduleNode.exportsReplaced = false;
 
-        //var moduleVar = moduleNode.addToScope('module',opt)
-        var moduleVar = moduleNode.addToScope('module', opt);
+        //var moduleVar = moduleNode.addToScope('module',{nodeClass:Grammar.NamespaceDeclaration})
+        var moduleVar = moduleNode.addToScope('module', {nodeClass: Grammar.NamespaceDeclaration});
         //moduleNode.exports = moduleVar.addMember('exports') #add as member of 'module'
         //var opt = new Names.NameDeclOptions
         //opt.pointsTo = moduleNode.exports
@@ -528,14 +524,8 @@
 
 //add other common built-in members of var 'module'. http://nodejs.org/api/modules.html#modules_module_id
 
-        //var fnameOpt = new Names.NameDeclOptions
-        var fnameOpt = new Names.NameDeclOptions();
-        //fnameOpt.value = fileInfo.filename
-        fnameOpt.value = fileInfo.filename;
-        //fnameOpt.nodeClass = Grammar.VariableDecl
-        fnameOpt.nodeClass = Grammar.VariableDecl;
-        //moduleVar.addMember moduleNode.declareName('filename',fnameOpt)
-        moduleVar.addMember(moduleNode.declareName('filename', fnameOpt));
+        //moduleVar.addMember moduleNode.declareName('filename',{value:fileInfo.filename, nodeClass:Grammar.VariableDecl})
+        moduleVar.addMember(moduleNode.declareName('filename', {value: fileInfo.filename, nodeClass: Grammar.VariableDecl}));
 
 //Also, register every `import|require` in this module body, to track modules dependencies.
 //We create a empty a empty `.requireCallNodes[]`, to hold:
@@ -898,12 +888,8 @@
         var nameDecl=undefined;
         if (!((nameDecl=this.compilerVars.get(name)))) {
         
-            //var opt = new Names.NameDeclOptions
-            var opt = new Names.NameDeclOptions();
-            //opt.nodeClass = Grammar.VariableDecl
-            opt.nodeClass = Grammar.VariableDecl;
-            //nameDecl = new Names.Declaration(name,opt)
-            nameDecl = new Names.Declaration(name, opt);
+            //nameDecl = new Names.Declaration(name,{nodeClass:Grammar.VariableDecl})
+            nameDecl = new Names.Declaration(name, {nodeClass: Grammar.VariableDecl});
             //.compilerVars.set name, nameDecl
             this.compilerVars.set(name, nameDecl);
         };

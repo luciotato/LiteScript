@@ -1840,7 +1840,6 @@
 //produce a call to `_fastNew(X,n,prop,value,prop,value)... `
 
 //conditions: when you call: new Foo({bar:1,baz:2})
-//and constructor new Foo() has no parameters
 
             //var fastNewProduced = false;
             var fastNewProduced = false;
@@ -3353,15 +3352,45 @@
             //var objLit:Grammar.ObjectLiteral = expr.root.name
             var objLit = expr.root.name;
 
+//find the FunctionDeclaration for the function we're calling
+
+            //var funcDecl: Grammar.FunctionDeclaration = actualVar.nodeDeclared
+            var funcDecl = actualVar.nodeDeclared;
+
+
 //check if the function defines a "class" for this parameter,
 //so we produce a _fastNew() call creating a instance on-the-fly
 //as function argument, thus emulating js common usage pattern of options:Object as parameter
 
-            //if actualVar and actualVar.nodeDeclared instanceof Grammar.FunctionDeclaration
-            if (actualVar && actualVar.nodeDeclared instanceof Grammar.FunctionDeclaration) {
+            //if actualVar
+            if (actualVar) {
             
-                //var funcDecl: Grammar.FunctionDeclaration = actualVar.nodeDeclared
-                var funcDecl = actualVar.nodeDeclared;
+
+                //if actualVar.nodeDeclared instanceof Grammar.FunctionDeclaration
+                if (actualVar.nodeDeclared instanceof Grammar.FunctionDeclaration) {
+                
+                    //funcDecl = actualVar.nodeDeclared
+                    funcDecl = actualVar.nodeDeclared;
+                }
+                //if actualVar.nodeDeclared instanceof Grammar.FunctionDeclaration
+                
+                else if (actualVar.nodeDeclared.constructor === Grammar.ClassDeclaration) {
+                
+                    // we're calling the constructor of a class
+                    //declare actualVar.nodeDeclared:Grammar.ClassDeclaration
+                    
+                    //funcDecl = actualVar.nodeDeclared.constructorDeclaration
+                    funcDecl = actualVar.nodeDeclared.constructorDeclaration;
+                    //if no funcDecl //if there's no explicit constructor
+                    if (!funcDecl) {
+                    
+                        // the default constructor accepts a initialization object
+                        //return objLit.calcFastNew(actualVar.getComposedName())
+                        return objLit.calcFastNew(actualVar.getComposedName());
+                    };
+                };
+
+//Here funcDecl is: function or method
 
                 //if no funcDecl.paramsDeclarations or no funcDecl.paramsDeclarations.list.length
                 if (!funcDecl.paramsDeclarations || !funcDecl.paramsDeclarations.list.length) {
@@ -4674,6 +4703,8 @@
         //if isInterface, return // just method declaration (interface)
         if (isInterface) {return};
 
+        //.out {COMMENT:"---------------------------------"},NL
+        this.out({COMMENT: "---------------------------------"}, NL);
         //.out "any ",name,"(DEFAULT_ARGUMENTS){"
         this.out("any ", name, "(DEFAULT_ARGUMENTS){");
 

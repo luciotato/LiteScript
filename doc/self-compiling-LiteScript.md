@@ -71,7 +71,7 @@ if ***(js)output1-B*** == ***(js)output1***, then the v0.8(js-code) compiler can
 
 ## Phase 3 - generating compile-to-C
 
-To be able generate C-code we need first to obtain the 'compile-to-c'
+To be able to generate C-code we need first to obtain the 'compile-to-c'
 variant of the 0.8 compiler.
 
 We feed **input0** (v0.8 sources) to **(js)output1** (v0.8 js-code compiler) with the instruction to
@@ -101,7 +101,7 @@ import the "produce_c" module (#define PROD_C)
     COPY ALSO: interfaces
     [Finished in 13s]
 
-The v0.8(js-code-compiler) took 13 seconds in compilig it's compile-to-c version (js code)
+The v0.8(js-code-compiler) took 13 seconds in compilig it's own "compile-to-c" version (js code)
 
 We'll call the output of this phase ***(js)output2(-to-c)***: a js-executable version of v0.8 *compile-to-c* compiler
 
@@ -175,7 +175,7 @@ We feed **input0** (v0.8 sources) to *litec* (v0.8 native-exe compiler)
 
     RUN FINISHED; exit value 0; real time: 1s; user: 240ms; system: 1s
 
-The v0.8(native-exe) took 1.6 seconds to compile itself
+The v0.8(native-exe) took ***1.6*** seconds to compile itself
 
 The output of this phase is ***(js)output1-B***: a js-executable version of v0.8 compiler by itself
 *and should be equal to* ***(js)output1***
@@ -185,6 +185,6 @@ if ***(js)output1-B*** == ***(js)output1***, then the v0.8(native-exe) compiler 
 Now here's the important performance comparision, the js-version of the v0.8 compiler, took 
 11.5 seconds to generate ***(js)output1-B***, and the native-exe took 1.6 seconds to do the same.
 
-Here we have a 7x performance difference ***The native-exe runs 7 times faster than the js-version*** 
-of the same source LitesScript code.
+Here we have a 7x performance difference.
+***The native-exe runs 7 times faster than the js-version*** of the same source LiteScript code.
 

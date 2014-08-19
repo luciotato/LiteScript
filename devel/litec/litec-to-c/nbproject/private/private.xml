@@ -22,6 +22,14 @@
             </bookmark>
         </file>
         <file>
+            <url>core/any.h</url>
+            <bookmark id="8">
+                <name/>
+                <line>55</line>
+                <key/>
+            </bookmark>
+        </file>
+        <file>
             <url>file:/home/ltato/LiteScript/devel/litec/core/LiteC-core.c</url>
             <bookmark id="23">
                 <name/>
@@ -31,14 +39,6 @@
             <bookmark id="22">
                 <name/>
                 <line>2575</line>
-                <key/>
-            </bookmark>
-        </file>
-        <file>
-            <url>core/any.h</url>
-            <bookmark id="8">
-                <name/>
-                <line>55</line>
                 <key/>
             </bookmark>
         </file>
@@ -79,8 +79,9 @@
     </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/Project.c</file>
             <file>file:/home/ltato/LiteScript/devel/litec/core/LiteC-core.c</file>
-            <file>file:/home/ltato/LiteScript/devel/litec/core/LiteC-core.h</file>
+            <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/Producer_c.c</file>
         </group>
     </open-files>
 </project-private>

@@ -81,14 +81,11 @@
         //if this.base.endsWith('.lite'), this.base=this.base.slice(0,-5)
         if (this.base.endsWith('.lite')) {this.base = this.base.slice(0, -5)};
      };
-
-     //     method outWithExtension(ext)
+     // ---------------------------
      FileInfo.prototype.outWithExtension = function(ext){
         //return path.join(.outDir,"#{.base}#{ext}")
         return path.join(this.outDir, '' + this.base + ext);
-     };
-
-     //     method searchModule(importingModuleDir:string)
+     }// ---------------------------
      FileInfo.prototype.searchModule = function(importingModuleDir){
 
 //------------------
@@ -409,7 +406,7 @@
 
         //return
         return;
-     };
+     }
     // export
     module.exports.FileInfo = FileInfo;
     
@@ -421,6 +418,7 @@
     
 
     //    export helper function setBaseInfo(projectOptions)
+    // ---------------------------
     function setBaseInfo(projectOptions){
 
         //set module vars
@@ -432,6 +430,7 @@
 
 
     //    export helper function relativeFrom(actualPath, destFilename) returns string
+    // ---------------------------
     function relativeFrom(actualPath, destFilename){
 
         //relative to fromFileinfo.outFilename
@@ -447,6 +446,7 @@
 
 
     //    export helper function resolvePath(text)
+    // ---------------------------
     function resolvePath(text){
         //return path.resolve(text)
         return path.resolve(text);
@@ -455,6 +455,7 @@
     module.exports.resolvePath = resolvePath;
 
     //    export helper function getDir(filename)
+    // ---------------------------
     function getDir(filename){
         //dir name
         //return path.dirname(filename)
@@ -466,6 +467,7 @@
 //----------
 
     //    export helper function loadFile(filename)
+    // ---------------------------
     function loadFile(filename){
     //------------------
     //provide a loadFile function to the LiteScript environment.
@@ -479,6 +481,7 @@
 
 
     //    export helper function externalCacheSave(filename, fileLines)
+    // ---------------------------
     function externalCacheSave(filename, fileLines){
     //------------------
     //provide a externalCacheSave (disk) function to the LiteScript environment
@@ -523,6 +526,7 @@
 
 
     //    export helper function isBuiltInModule (name,prop)
+    // ---------------------------
     function isBuiltInModule(name, prop){
 
 //Check for built in and global names
@@ -558,6 +562,7 @@
         //endif
 
     //    export helper function isBuiltInObject(name)
+    // ---------------------------
     function isBuiltInObject(name){
     //
     // return true if 'name' is a javascript built-in object
@@ -575,6 +580,7 @@
 
 
     //    export helper function getGlobalObject(name)
+    // ---------------------------
     function getGlobalObject(name){
 
         //if options.target is 'c'
@@ -616,6 +622,7 @@
     module.exports.getGlobalObject = getGlobalObject;
 
     //    export helper function fileInfoNewFile(name) returns FileInfo
+    // ---------------------------
     function fileInfoNewFile(name){
 
 //create a fileInfo with paths and data for a file to be created
@@ -643,7 +650,7 @@
 
     //    export class ImportParameterInfo
     // constructor
-    function ImportParameterInfo(){ // default constructor
+    function ImportParameterInfo(initializer){ // default constructor
         //properties
 
             //name: string
@@ -653,7 +660,7 @@
             //isGlobalDeclare: boolean
             //globalImport: boolean
             //createFile: boolean
-    };
+        for(prop in initializer) if (initializer.hasOwnProperty(prop)) this[prop]=initializer[prop];};
     
     // export
     module.exports.ImportParameterInfo = ImportParameterInfo;

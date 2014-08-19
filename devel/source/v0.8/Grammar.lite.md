@@ -2263,6 +2263,7 @@ Defines a new class with an optional parent class. properties and methods go ins
       properties
         varRefSuper:VariableRef
         body
+        constructorDeclaration
 
       declare name affinity classDecl
 
@@ -2320,6 +2321,17 @@ ConstructorDeclaration derives from MethodDeclaration, so it is also a instance 
 now get parameters and body (as with any function)
 
         .parseParametersAndBody
+
+Check we're in a class, set class property:constructorDeclaration
+
+        var bodyParent =  .parent.parent.parent // =>Statement=>Body=>Body's parent
+        if bodyParent.constructor isnt ClassDeclaration
+            .sayErr "constructor outside class. Container is: #{bodyParent}"
+        
+        declare bodyParent:ClassDeclaration
+        if bodyParent.constructorDeclaration
+            .sayErr "this class already has a constructor"
+        bodyParent.constructorDeclaration = this
 
       #end parse
 

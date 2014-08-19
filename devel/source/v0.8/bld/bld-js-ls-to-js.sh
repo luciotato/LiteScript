@@ -10,6 +10,7 @@
 cd ..
 pwd
 OUT="../../generated-js/v0.8/lite-to-js"
+#OUT="../../out/by-js-v08/js/lite-to-js-compiler"
 
 #create js code
 targetLang="js"
@@ -27,9 +28,9 @@ echo "----------------------"
 echo "using v0.8-to-$targetLang to generate ($targetLang code) v0.8 lite-to-$targetTarget compiler"
 echo "----------------------"
 
-if node $DBRK ../../util/liteVersion -use v0.8/lite-to-$targetLang $targetLang$_lite -perf 1 -v 1 -D PROD_$LITE_TO -o $OUT; then 
-#echo "(fast compiler)"
-#if litec $targetLang$_lite -perf 1 -v 1 -D PROD_$LITE_TO -o $OUT; then 
+#if node $DBRK ../../util/liteVersion -use v0.8/lite-to-$targetLang $targetLang$_lite -perf 1 -v 1 -D PROD_$LITE_TO -o $OUT; then 
+echo "(fast compiler)"
+if litec $targetLang$_lite -perf 1 -v 1 -D PROD_$LITE_TO -o $OUT; then 
 
     echo "generated OK ($targetLang code) lite-to-$targetTarget v0.8"
     echo "at $OUT"

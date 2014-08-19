@@ -1,2 +1,4 @@
+dir=${1:-Release}
 sudo rm /usr/bin/litec
-sudo ln dist/Release/GNU-Linux-x86/litec-to-js /usr/bin/litec
+sudo ln dist/$dir/GNU-Linux-x86/litec-to-js /usr/bin/litec
+echo "/usr/bin/litec -> dist/$dir/GNU-Linux-x86/litec-to-js"

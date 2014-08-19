@@ -315,10 +315,8 @@ Repeat until no conversions can be made.
 Inform unconverted types as errors
 
         if sumFailures #there was failures, inform al errors
-            var opt = new Names.NameDeclOptions
-            opt.informError = true
             for each nameDecl in Names.allNameDeclarations
-                nameDecl.processConvertTypes(opt)
+                nameDecl.processConvertTypes({informError:true})
 
 #### Pass 3 Evaluate Assignments
 Walk the scope tree, and for each assignment, 
@@ -374,10 +372,11 @@ Initialize module vars
 
 initialize NameAffinity
 
-        var options = new Names.NameDeclOptions
-        options.normalizeModeKeepFirstCase = true #nameAffinity members are stored: [0].Toupper()+slice(1).toLower()
-        options.nodeClass = Grammar.VariableDecl
-        nameAffinity= new Names.Declaration('Name Affinity',options) # project-wide name affinity for classes
+        # project-wide name affinity for classes
+        nameAffinity = new Names.Declaration('Name Affinity',{
+            normalizeModeKeepFirstCase:true #nameAffinity members are stored: [0].Toupper()+slice(1).toLower()
+            nodeClass: Grammar.VariableDecl
+            });
 
         //populateGlobalScope(aProject)
 
@@ -388,8 +387,9 @@ The "scope" of rootNode is the global scope.
 Initialize global scope
 a)non-instance values
 
-        var opt = new Names.NameDeclOptions
+        var opt = new Names.DeclarationOptions
         opt.nodeClass = Grammar.VariableDecl
+
         globalScope.addMember 'undefined',opt
         opt.value = null
         globalScope.addMember 'null',opt
@@ -401,8 +401,6 @@ a)non-instance values
         globalScope.addMember 'NaN',opt
         opt.value = Infinity
         globalScope.addMember 'Infinity',opt
-
-        opt.value = undefined
 
 b) pre-create core classes, to allow the interface.md file to declare property types and return values
 
@@ -420,7 +418,7 @@ Get hold of Object.prototype since we're using it as "parent" (__proto__) of the
 
 Allow use of "__proto__" getter/setter on any object
 
-        globalObjectProto.addMember '__proto__',opt
+        globalObjectProto.addMember '__proto__',{nodeClass:Grammar.VariableDecl}
             
 note: 'Map' and 'NameValuePair' are declared at GlobalScopeX.interface.md
 
@@ -428,8 +426,7 @@ b) create special types
 
 -"any" default type for vars
 
-        opt.nodeClass = Grammar.ClassDeclaration
-        globalScope.addMember 'any',opt // used for "map string to any" - Dictionaries
+        globalScope.addMember 'any',{nodeClass:Grammar.ClassDeclaration} // used for "map string to any" - Dictionaries
 
 -arguments:any*
 
@@ -440,35 +437,40 @@ b) create special types
 
 we declare here the type:"pointer to any" - "any*"
 
-        var argumentsType = globalScope.addMember('any*',opt) //  any pointer, type for "arguments"
+        var argumentsType = globalScope.addMember('any*',{nodeClass:Grammar.ClassDeclaration}) //  any pointer, type for "arguments"
 
 -"arguments" have only one method: "toArray()"
 
-        opt.nodeClass = Grammar.FunctionDeclaration
-        opt.type = globalPrototype('Function')
-        opt.returnType=globalPrototype('Array')
-        opt.value = undefined
-
-        argumentsType.addMember('toArray',opt) 
+        argumentsType.addMember('toArray',{
+              type:       globalPrototype('Function')
+              returnType: globalPrototype('Array')
+              nodeClass:  Grammar.FunctionDeclaration
+          }) 
 
 b.2) Lite-C: the Lexer replaces string interpolation with calls to `_concatAny`
 
-        opt.returnType=globalPrototype('String')
-        globalScope.addMember '_concatAny',opt //used for string interpolation
+        globalScope.addMember '_concatAny',{ //used for string interpolation
+              type:       globalPrototype('Function')
+              returnType: globalPrototype('String')
+              nodeClass:  Grammar.FunctionDeclaration
+        } 
 
-        opt.returnType=globalPrototype('Number')
-        globalScope.addMember 'parseFloat',opt //used for string interpolation
-        globalScope.addMember 'parseInt',opt //used for string interpolation
+        globalScope.addMember 'parseFloat',{
+              type:       globalPrototype('Function')
+              returnType: globalPrototype('Number')
+              nodeClass:  Grammar.FunctionDeclaration
+              }
 
-        opt.nodeClass = Grammar.VariableDecl
-        opt.type = globalPrototype('String')
-        opt.returnType = undefined
-        globalScope.addMember '__dirname',opt // current module dir (node.js)
+        globalScope.addMember 'parseInt',{
+              type:       globalPrototype('Function')
+              returnType: globalPrototype('Number')
+              nodeClass:  Grammar.FunctionDeclaration
+              }
 
-        //var core = globalScope.addMember('LiteCore') //core supports
-        //core.isNamespace = true
-        //opt.returnType='Number'
-        //core.addMember 'getSymbol',opt //to get a symbol (int) from a symbol name (string)
+        globalScope.addMember '__dirname',{ // current module dir (node.js)
+              type:       globalPrototype('String')
+              nodeClass:  Grammar.VariableDecl
+              } 
 
 Process the global scope declarations interface file: GlobalScopeJS|C.interface.md
 
@@ -529,11 +531,7 @@ gets a var from global scope
 ### helper function addBuiltInClass(name,node) returns Names.Declaration
 Add a built-in class to global scope, return class prototype
 
-      var opt = new Names.NameDeclOptions
-      //opt.isBuiltIn = true
-      opt.nodeClass = Grammar.ClassDeclaration
-
-      var nameDecl = new Names.Declaration( name,opt,node )
+      var nameDecl = new Names.Declaration( name, {nodeClass:Grammar.ClassDeclaration} ,node )
       globalScope.addMember nameDecl
 
       nameDecl.getMembersFromObjProperties Environment.getGlobalObject(name)
@@ -551,11 +549,7 @@ Add a built-in class to global scope, return class prototype
 ### helper function addBuiltInObject(name,node) returns Names.Declaration
 Add a built-in object to global scope, return object
 
-      var opt = new Names.NameDeclOptions
-      //opt.isBuiltIn = true
-      opt.nodeClass = Grammar.NamespaceDeclaration
-
-      var nameDecl = new Names.Declaration(name, opt ,node)
+      var nameDecl = new Names.Declaration(name, {nodeClass:Grammar.NamespaceDeclaration}, node)
       globalScope.addMember nameDecl
       nameDecl.getMembersFromObjProperties Environment.getGlobalObject(name)
 
@@ -695,7 +689,7 @@ Used to avoid recursing circular properties
           nameDecl = nameDecl.parent
 
 
-#### Helper method processConvertTypes(options) returns Names.ConvertResult
+#### Helper method processConvertTypes(options:Names.DeclarationOptions) returns Names.ConvertResult
 convert possible types stored in Names.Declaration, 
 from string/varRef to other NameDeclarations in the scope
 
@@ -708,7 +702,7 @@ from string/varRef to other NameDeclarations in the scope
         return result
 
 
-#### Helper method convertType(internalName, result: Names.ConvertResult, options: Names.NameDeclOptions) 
+#### Helper method convertType(internalName, result: Names.ConvertResult, options: Names.DeclarationOptions) 
 convert type from string to NameDeclarations in the scope.
 returns 'true' if converted, 'false' if it has to be tried later
 
@@ -826,22 +820,22 @@ If no type specified, check project.nameAffinity
 #### properties
         scope: Names.Declaration //for nodes with scope
 
-#### helper method declareName(name, options) 
+#### helper method declareName(name, options:Names.DeclarationOptions) 
 declareName creates a new Names.Declaration, *referecing source as nodeDeclared (AST node)*
 
         return new Names.Declaration(name, options, this)
 
-#### method addMemberTo(nameDecl, memberName, options)  returns Names.Declaration
+#### method addMemberTo(nameDecl, memberName, options:Names.DeclarationOptions)  returns Names.Declaration
 a Helper method ASTBase.*addMemberTo*
 Adds a member to a NameDecl, referencing this node as nodeDeclared
         
         return nameDecl.addMember(memberName, options, this)
 
-#### Helper method tryGetMember(nameDecl, name:string, options:Names.NameDeclOptions)
+#### Helper method tryGetMember(nameDecl, name:string, options:Names.DeclarationOptions)
 this method looks for a specific member, optionally declare as forward
 or inform error. We need this AST node, to correctly report error.
         
-        default options = new Names.NameDeclOptions
+        default options = new Names.DeclarationOptions
   
         var found = nameDecl.findMember(name)
         
@@ -917,7 +911,7 @@ This help alleviating subtle bugs in js, if tou dare to add something to Object.
             return found
 
 
-#### method tryGetFromScope(name, options:Names.NameDeclOptions) returns Names.Declaration
+#### method tryGetFromScope(name, options:Names.DeclarationOptions) returns Names.Declaration
 a Helper method: *ASTBase.tryGetFromScope(name)*, this method looks for the original declaration
 in the scope. if the declaration is not found, an error is emmited and a -pseudo- var is created 
 in the scope in order to continue compilation
@@ -955,7 +949,7 @@ if it is not found,check options: a) inform error. b) declare foward.
         return found
 
 
-#### method addToScope(item, options:Names.NameDeclOptions) returns Names.Declaration 
+#### method addToScope(item, options:Names.DeclarationOptions) returns Names.Declaration 
 a Helper method ASTBase.*addToScope*
 Search for parent Scope, adds passed name to scope.members
 Reports duplicated.
@@ -970,7 +964,7 @@ return: Names.Declaration
 First search it to report duplicates, if found in the scope.
 If the found item has a different case than the name we're adding, emit error & return
 
-#### method addToSpecificScope(scope:Names.Declaration, item, options:Names.NameDeclOptions) returns Names.Declaration 
+#### method addToSpecificScope(scope:Names.Declaration, item, options:Names.DeclarationOptions) returns Names.Declaration 
 
         declare valid item.name
         var name = type of item is 'string'? item : item.name
@@ -1015,10 +1009,12 @@ else, not found, add it to the scope
 initializes an empty scope in this node
 
         if no .scope 
-            var options=new Names.NameDeclOptions
-            options.normalizeModeKeepFirstCase = true
-            options.nodeClass = Grammar.VariableDecl
-            .scope = .declareName("[#{.constructor.name} #{.name} Scope]", options)
+
+            .scope = .declareName("[#{.constructor.name} #{.name} Scope]", {
+                  normalizeModeKeepFirstCase:true
+                  nodeClass: Grammar.VariableDecl
+                  })
+
             .scope.isScope = true
 
         return .scope
@@ -1104,10 +1100,10 @@ This is instance has the method, call the method on the instance
 
       if excludeClass and this is instance of excludeClass, return #do not recurse on filtered's childs
 
-recurse on all properties (exclude 'parent' and 'importedModule')
+recurse on all properties (exclude 'parent' and 'importedModule' and others, shortcut-references)
 
       for each property name,value in this
-        where name not in ['constructor','parent','importedModule','requireCallNodes','exportDefault']
+        where name not in ['constructor','parent','importedModule','requireCallNodes','exportDefault','constructorDeclaration']
 
             if value instance of ASTBase 
                 declare value:ASTBase
@@ -1189,12 +1185,7 @@ Examples:
       properties nameDecl
 
       helper method createNameDeclaration()  
-
-        var options = new Names.NameDeclOptions
-        options.type = .type
-        options.itemType = .itemType
-
-        return .declareName(.name,options)
+        return .declareName(.name,{type:.type, itemType:.itemType})
 
       helper method declareInScope()  
           .nameDecl = .addToScope(.createNameDeclaration())
@@ -1232,9 +1223,7 @@ Examples:
 
             if varDecl.aliasVarRef
                 //Example: "public var $ = jQuery" => declare alias $ for jQuery
-                var opt = new Names.NameDeclOptions
-                opt.informError= true
-                if varDecl.aliasVarRef.tryGetReference(opt) into var ref
+                if varDecl.aliasVarRef.tryGetReference({informError:true}) into var ref
                     # aliases share .members
                     varDecl.nameDecl.members = ref.members
                      
@@ -1286,7 +1275,6 @@ also AppendToDeclaration and NamespaceDeclaration (child classes).
 #### properties
 
       nameDecl
-      //container: Grammar.NamespaceDeclaration // in which namespace this class/namespace is declared
 
 #### method declare()
 
@@ -1311,8 +1299,6 @@ Check if it is a class or a namespace
         var isNamespace = this.constructor is Grammar.NamespaceDeclaration
         var isClass = this.constructor is Grammar.ClassDeclaration
 
-        var opt = new Names.NameDeclOptions
-
         if isNamespace 
 
 declare the namespace
@@ -1323,9 +1309,7 @@ declare the namespace
 
 declare the class
 
-            opt.type = globalPrototype('Function')
-            .nameDecl = .declareName(.name,opt) //class
-            opt.type = undefined
+            .nameDecl = .declareName(.name, {type:globalPrototype('Function')} ) //class
 
         end if
 
@@ -1371,8 +1355,7 @@ Class's properties & methods will be added to 'prototype' as valid member member
             //else
             //    prtypeNameDecl.setMember('**proto**',globalObjectProto)
 
-            opt.pointsTo = .nameDecl
-            prtypeNameDecl.addMember('constructor',opt) 
+            prtypeNameDecl.addMember('constructor',{pointsTo:.nameDecl}) 
 
 return type of the class-function, is the prototype
 
@@ -1486,8 +1469,6 @@ check if we can determine type from value
       var isMethod = .constructor is Grammar.MethodDeclaration
       var isFunction = .constructor is Grammar.FunctionDeclaration
 
-      var opt = new Names.NameDeclOptions
-
 1st: Grammar.FunctionDeclaration
 
 if it is not anonymous, add function name to parent scope,
@@ -1495,8 +1476,7 @@ if its 'public/export' (or we're processing an "interface" file), add to exports
 
       if isFunction
 
-          opt.type = globalPrototype('Function')
-          .nameDecl = .addToScope(.name,opt)
+          .nameDecl = .addToScope(.name, {type:globalPrototype('Function')})
 
           var moduleNode:Grammar.Module=.getParent(Grammar.Module)
           if .hasAdjective('export') or moduleNode.fileInfo.isInterface
@@ -1545,9 +1525,7 @@ Scope starts populated by 'this' and 'arguments'.
 
       var scope = .createScope()
 
-      opt.type='any*'
-      opt.nodeClass = Grammar.ClassDeclaration
-      .addMemberTo scope,'arguments',opt
+      .addMemberTo scope,'arguments', {type:'any*',nodeClass:Grammar.VariableDecl}
 
       if not isFunction
 
@@ -1564,9 +1542,7 @@ Scope starts populated by 'this' and 'arguments'.
               addThis = not containerClassDeclaration.toNamespace
 
           if addThis 
-              opt.type=ownerNameDecl
-              opt.nodeClass = Grammar.VariableDecl
-              .addMemberTo(scope,'this',opt)
+              .addMemberTo(scope,'this',{type:ownerNameDecl,nodeClass:Grammar.VariableDecl})
 
 Note: only class methods have 'this' as parameter
 
@@ -1587,9 +1563,7 @@ add parameters to function's scope
 Add to owner, type is 'Function'
 
       if no .nameDecl 
-          var opt = new Names.NameDeclOptions
-          opt.type=globalPrototype('Function')
-          .nameDecl = .declareName(.name,opt)
+          .nameDecl = .declareName(.name,{type:globalPrototype('Function')})
       
       .declared = true
 
@@ -1613,10 +1587,10 @@ and set this new nameDecl as function's **return type**
 check if it already exists, if not found, create one. Type is 'Array'
         
           if not globalScope.findMember(composedName) into var intermediateNameDecl
-              var opt = new Names.NameDeclOptions
-              opt.type = globalPrototype('Array')
-              opt.nodeClass = Grammar.ClassDeclaration
-              intermediateNameDecl = globalScope.addMember(composedName,opt)
+              intermediateNameDecl = globalScope.addMember(composedName, {
+                    type:globalPrototype('Array')
+                    nodeClass:Grammar.ClassDeclaration
+                    })
 
 item type, is each array member's type 
 
@@ -1738,13 +1712,14 @@ get referenced super class
 #### method declare(informError) 
 Add all properties as members of its owner object (normally: class.prototype)
 
-        var opt= new Names.NameDeclOptions
         if .tryGetOwnerNameDecl(informError) into var ownerNameDecl 
 
             for each varDecl in .list
-                opt.type = varDecl.type
-                opt.itemType = varDecl.itemType
-                varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl,varDecl.name,opt)
+                varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl,varDecl.name,{
+                                            type:varDecl.type
+                                            itemType:varDecl.itemType
+                                            })
+            end for
 
             .declared = true
 
@@ -1832,9 +1807,7 @@ ForEachInArray: check if the iterable has a .length property.
 Exception blocks have a scope
 
         .createScope
-        var opt=new Names.NameDeclOptions
-        opt.type= globalPrototype('Error')
-        .addToScope .catchVar,opt
+        .addToScope .catchVar,{type:globalPrototype('Error')}
 
 
 ### Append to class Grammar.VariableRef ### Helper methods
@@ -1852,12 +1825,12 @@ Exception blocks have a scope
 
 Start with main variable name, to check property names
 
-        var opt = new Names.NameDeclOptions
-        opt.informError=true
-        opt.isForward=true
-        opt.isDummy=true
-        opt.nodeClass = Grammar.VariableDecl
-        var actualVar = .tryGetFromScope(.name, opt)
+        var actualVar = .tryGetFromScope(.name, {
+                                informError:true
+                                isForward:true
+                                isDummy:true
+                                nodeClass: Grammar.VariableDecl
+                          })
 
 now follow each accessor
 
@@ -1869,8 +1842,11 @@ now follow each accessor
 for PropertyAccess, check if the property name is valid 
 
             if ac instanceof Grammar.PropertyAccess
-                opt.isForward=false
-                actualVar = .tryGetMember(actualVar, ac.name,opt)
+                actualVar = .tryGetMember(actualVar, ac.name, {
+                                informError:true
+                                isDummy:true
+                                nodeClass: Grammar.VariableDecl
+                          })
 
 else, for IndexAccess, the varRef type is now 'itemType'
 and next property access should be on defined members of the type
@@ -1901,8 +1877,12 @@ if actualVar is a VarRef, find type in scope
             if actualVar instanceof Grammar.VariableRef
                 .sayErr  "actualVar instanceof Grammar.VariableRef: #{actualVar.toString()}"
                 declare actualVar:Grammar.VariableRef
-                opt.isForward=true
-                actualVar = actualVar.tryGetReference(opt)
+                actualVar = actualVar.tryGetReference({
+                                informError:true
+                                isForward:true
+                                isDummy:true
+                                nodeClass: Grammar.VariableDecl
+                          })
 
             if no actualVar, break
 
@@ -1911,14 +1891,14 @@ if actualVar is a VarRef, find type in scope
         return actualVar
 
 
-#### helper method tryGetReference(options:Names.NameDeclOptions) returns Names.Declaration
+#### helper method tryGetReference(options:Names.DeclarationOptions) returns Names.Declaration
 
 evaluate this VariableRef. 
 Try to determine referenced NameDecl.
 if we can reach a reference, return reference.
 For classes, return ClassDeclaration.nameDecl (not ClassDeclaration.nameDecl.prototype)
 
-        default options= new Names.NameDeclOptions
+        default options= new Names.DeclarationOptions
 
 Start with main variable name
 
@@ -2126,10 +2106,10 @@ for 'into var x' oper, we declare the var, and we deduce type
             if varRef.accessors 
                 .throwError "Expected 'simple variable name' after 'into var'"
             
-            var opt = new Names.NameDeclOptions
-            opt.type = varRef.type
-            opt.nodeClass = Grammar.VariableDecl
-            .addToScope .declareName(varRef.name,opt)
+            .addToScope .declareName(varRef.name,{
+                                        type:varRef.type
+                                        nodeClass:Grammar.VariableDecl
+                                      })
 
 #### method evaluateAssignments() 
     
@@ -2192,9 +2172,7 @@ declare valid x.y.z
 
       if .specifier is 'on'
 
-          var opt=new Names.NameDeclOptions
-          opt.isForward = true
-          var reference = .tryGetFromScope(.name,opt)
+          var reference = .tryGetFromScope(.name,{isForward:true})
 
           if String.isCapitalized(reference.name) //let's assume is a Class
               if no reference.findOwnMember('prototype'), reference.addMember('prototype')
@@ -2235,9 +2213,7 @@ while checking property access.
 Assign specific type to varRef - for the entire compilation
 
       if .specifier is 'type'
-          var opt = new Names.NameDeclOptions
-          opt.informError=true
-          if .varRef.tryGetReference(opt) into var actualVar
+          if .varRef.tryGetReference({informError:true}) into var actualVar
               .setTypes actualVar
 
 #### helper method setTypes(actualVar:Names.Declaration) # Grammar.DeclareStatement ###
@@ -2264,14 +2240,11 @@ declare members on the fly, with optional type
 
       var actualVar:Names.Declaration
 
-      var opt=new Names.NameDeclOptions
-      opt.informError = true
-
       case .specifier 
 
         when 'valid':
 
-            actualVar = .tryGetFromScope(.varRef.name,opt)
+            actualVar = .tryGetFromScope(.varRef.name,{informError:true})
             if no actualVar, return
 
             for each ac in .varRef.accessors
@@ -2293,23 +2266,19 @@ declare members on the fly, with optional type
         when 'on-the-fly':
             #set type on-the-fly, from here until next type-assignment
             #we allow more than one "declare x:type" on the same block
-            if .varRef.tryGetReference(opt) into actualVar
+            if .varRef.tryGetReference({informError:true}) into actualVar
                 .setTypes actualVar
 
 
 ### helper function AddGlobalClasses()
   
         var nameDecl
-        var opt=new Names.NameDeclOptions
-        opt.nodeClass = Grammar.ClassDeclaration
 
         for each name in arguments.toArray()
 
-            opt.nodeClass = Grammar.ClassDeclaration
-            nameDecl = globalScope.addMember(name,opt)
+            nameDecl = globalScope.addMember(name,{nodeClass:Grammar.ClassDeclaration})
 
-            opt.nodeClass = Grammar.NameValuePair
-            nameDecl.addMember 'prototype',opt
+            nameDecl.addMember 'prototype',{nodeClass:Grammar.VariableDecl}
 
             // add to name affinity
             if not nameAffinity.members.has(name)

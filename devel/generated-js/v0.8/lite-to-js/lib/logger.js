@@ -52,6 +52,7 @@
 //---------------
 
      //     method init(options:GeneralOptions)
+     // ---------------------------
      logger.init = function(options){
 
         //logger.options = options
@@ -70,6 +71,7 @@
 
 
      //     method debug
+     // ---------------------------
      logger.debug = function(){
 
         //if logger.options.debugEnabled
@@ -83,6 +85,7 @@
      };
 
      //     method debugGroup
+     // ---------------------------
      logger.debugGroup = function(){
 
         //if logger.options.debugEnabled
@@ -96,6 +99,7 @@
      };
 
      //     method debugGroupEnd
+     // ---------------------------
      logger.debugGroupEnd = function(){
 
         //if logger.options.debugEnabled
@@ -107,6 +111,7 @@
      };
 
      //     method error
+     // ---------------------------
      logger.error = function(){
 
 //increment error count
@@ -145,6 +150,7 @@
 
 
      //     method warning
+     // ---------------------------
      logger.warning = function(){
 
         //logger.warningCount++
@@ -183,6 +189,7 @@
      };
 
      //     method msg
+     // ---------------------------
      logger.msg = function(){
 
         //var args = arguments.toArray()
@@ -213,6 +220,7 @@
 
 
      //     method info
+     // ---------------------------
      logger.info = function(){
 
         //var args = arguments.toArray()
@@ -226,6 +234,7 @@
      };
 
      //     method extra
+     // ---------------------------
      logger.extra = function(){
 
         //var args = arguments.toArray()
@@ -240,6 +249,7 @@
 
 
      //     method getMessages
+     // ---------------------------
      logger.getMessages = function(){
 //get & clear
 
@@ -253,6 +263,7 @@
 
 
      //     method throwControlled(msg)
+     // ---------------------------
      logger.throwControlled = function(msg){
 //Throws Error, but with a "controlled" flag set,
 //to differentiate from unexpected compiler errors

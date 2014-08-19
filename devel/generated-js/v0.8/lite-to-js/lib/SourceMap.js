@@ -28,12 +28,7 @@
           //.lines = []
           this.lines = [];
       };
-
-//Adds a mapping to this SourceMap.
-//If `options.noReplace` is true, then if there is already a mapping
-//for the specified `line` and `column`, this will have no effect.
-
-      //method add(sourceLine, sourceCol, line, column, noReplace)
+      // ---------------------------
       SourceMap.prototype.add = function(sourceLine, sourceCol, line, column, noReplace){
 
           //logger.debug "gen #{line},#{column} -> src #{sourceLine},#{sourceCol}"
@@ -52,9 +47,7 @@
 
           //lineMap.add column, new Location(sourceLine, sourceCol), noReplace
           lineMap.add(column, new Location(sourceLine, sourceCol), noReplace);
-      };
-
-      //method sourceLocation(line, column)
+      }// ---------------------------
       SourceMap.prototype.sourceLocation = function(line, column){
 
 //Look up the original position of a given
@@ -69,17 +62,7 @@
               if ((lineMap=this.lines[line])) {return lineMap.sourceLocation(column)};
           };// end for lin
           
-      };
-
-//V3 SourceMap Generation
-//-----------------------
-
-//Builds up a V3 source map, returning the generated JSON as a string.
-//`options.sourceRoot` may be used to specify the sourceRoot written to the source
-//map.  Also, `options.sourceFiles` and `options.generatedFile` may be passed to
-//set "sources" and "file", respectively.
-
-      //method generate(generatedFile:string, sourceFiles:array)
+      }// ---------------------------
       SourceMap.prototype.generate = function(generatedFile, sourceFiles){
 
         //default options =
@@ -234,7 +217,7 @@
 
         //return JSON.stringify(v3, null, 2)
         return JSON.stringify(v3, null, 2);
-      };
+      }
     // end class SourceMap
 
 
@@ -269,8 +252,7 @@
         //.columns = []
         this.columns = [];
       };
-
-      //method add(column, source:Location, noReplace)
+      // ---------------------------
       LineMap.prototype.add = function(column, source, noReplace){
 
         //var colInfo= .columns.tryGet(column)
@@ -280,9 +262,7 @@
 
         //.columns.set column,source
         this.columns.set(column, source);
-      };
-
-      //method sourceLocation(column)
+      }// ---------------------------
       LineMap.prototype.sourceLocation = function(column){
 
 //returns closest source location, for a js column in this line
@@ -294,7 +274,7 @@
             if ((foundLocation=this.columns.tryGet(col))) {return foundLocation};
         };// end for col
         
-      };
+      }
     // end class LineMap
 
 
@@ -322,6 +302,7 @@
     ;
 
     //helper function encodeVlq(value)
+    // ---------------------------
     function encodeVlq(value){
 
         //var answer = ''
@@ -360,6 +341,7 @@
     var BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
     //helper function encodeBase64(value)
+    // ---------------------------
     function encodeBase64(value){
       //if no BASE64_CHARS.charAt(value) into var encoded
       var encoded=undefined;

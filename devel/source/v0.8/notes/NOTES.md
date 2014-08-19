@@ -15,6 +15,26 @@ see:
   pero compileProject now is compileProject(options)
 
 
+
+#DONE - multicoment on same line fails:
+
+example:
+
+    /* -----[ Tokenizer ]----- */
+
+#DONE:  fix comments - posible SUBTLE bug
+    
+    process.exit 0 //------
+=>
+    //process.exit 0 //------
+    process_exit(undefined,1,(any_arr){
+       any_number(0)
+   }); //------    Test3_sortedResult = TestOut_mkSorted(undefined,2,(any_arr){
+      any_LTR("toplevel")
+      , Test3_toplevel
+  });
+
+
 # When Compile-to-C ORDER of execution on ObjectLiteal *IS NOT GUARANTEED*
 
 e.g.: UglifyLS 
@@ -42,25 +62,6 @@ Solution: Do not code a ObjectLiteral where order of evaluation determines resul
                 alternative : func1Result,
                 end         : prev()
             });
-
-
-#multicoment on same line fails:
-
-example:
-
-    /* -----[ Tokenizer ]----- */
-
-#DONE:  fix comments - posible SUBTLE bug
-    
-    process.exit 0 //------
-=>
-    //process.exit 0 //------
-    process_exit(undefined,1,(any_arr){
-       any_number(0)
-   }); //------    Test3_sortedResult = TestOut_mkSorted(undefined,2,(any_arr){
-      any_LTR("toplevel")
-      , Test3_toplevel
-  });
 
 
 #separate Map (ES6) from DynObject (LiteScript)
@@ -118,14 +119,17 @@ accept, e.g:
     =>
     array of (map-string-to-(array-of-(Names.Declaration))
 
-# named-params
+# named-params - recognize in different position
 
-auto-declare class with "default options"
+Today name in functionCall is parsed but ignored.
+TO DO: recognize, validate, reposition argument.
 
-Use instead of: 
-  - Names.NameDeclOptions 
-  - ImportParameterInfo
-remove those explicit classes
+#allow "this" on namespaces
+
+"this.x" or ".x" maps to "namespace.x"
+when used alone, "this" maps to "undefined"
+
+also allow "constructor" (but no .opt "new xxx") to declare initialization code
 
 
 # el SCOPE es diferente en C - eso crea diferencias importantes
@@ -145,6 +149,7 @@ and the "for each property" will loop ok
 Then we can make extensible the "dangling assignment" 
 and call new Class().fromObject(x) and expect that to work on js and C
 
+
 # declare property parent:CaseStatement
 to declare the type of a property in a child class. El ejemplo viene de WhenSection
 donde el parent (property de ASTBase) es siempre CaseStatement y facilita que en
@@ -153,13 +158,6 @@ todos los metodos de la clase se considere asi
 Agregar un seteo de type en el .Scope, asi el tipo de una var o prop puede estar determinado
 solo para el scope puntual. Esto soluciona el problema del declare de vars globales tambien.
 
-
-#allow "this" on namespaces
-
-"this.x" or ".x" maps to "namespace.x"
-when used alone, "this" maps to "undefined"
-
-also allow "constructor" (but no .opt "new xxx") to declare initialization code
 
 # validate opers - to avoid missing () bugs
 
@@ -179,7 +177,8 @@ to do: validate OPER to avoid such bugs
 do AppendToDeclaration & NamespaceDeclaration really need to extend ClassDeclaration
 can they be separated?
 
-##Switch
+
+##DONE: Switch
 
 LiteScript switch is "similar" to js switch, but:
 
@@ -1592,7 +1591,7 @@ Compiler Hooks, Inception Style
 *BAD* *BAD* *BAD* *BAD* *BAD* 
 Se necesita alter de varias lines para convertir -> en function
 ya que CofeeScript hace la truchada de agregar 'return' a la ultima linea
-de la funcionm que debe ser una expresion
+de la funcion que debe ser una expresion
 *BAD* *BAD* *BAD* *BAD* *BAD* 
 
 When the LiteScript parser finds 'compiler hook|macro', a new compiler is created

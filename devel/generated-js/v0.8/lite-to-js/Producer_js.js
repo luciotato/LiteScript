@@ -24,6 +24,7 @@
     
 
      //     method produce()
+     // ---------------------------
      Grammar.Module.prototype.produce = function(){
 
 //if a 'export default' was declared, set the referenced namespace
@@ -113,6 +114,7 @@
 //"Body"s are used for example, to parse an `if` statement body and `else` body, `for` loops, etc.
 
       //method produce()
+      // ---------------------------
       Grammar.Body.prototype.produce = function(){
 
         //for each statement in .statements
@@ -135,6 +137,7 @@
 //after adding any comment lines preceding the statement
 
       //method produce()
+      // ---------------------------
       Grammar.Statement.prototype.produce = function(){
 
 //add preceeding comment lines, in the same position as the source
@@ -206,6 +209,7 @@
     //append to class Grammar.Oper
     
       //method declareIntoVar()
+      // ---------------------------
       Grammar.Oper.prototype.declareIntoVar = function(){
           //if .intoVar
           if (this.intoVar) {
@@ -221,6 +225,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.ThrowStatement.prototype.produce = function(){
           //if .specifier is 'fail'
           if (this.specifier === 'fail') {
@@ -241,6 +246,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.ReturnStatement.prototype.produce = function(){
         //.out "return"
         this.out("return");
@@ -257,6 +263,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.FunctionCall.prototype.produce = function(){
 
         //.varRef.produce()
@@ -281,6 +288,7 @@
 //or the only Operand of a unary oper.
 
       //method produce()
+      // ---------------------------
       Grammar.Operand.prototype.produce = function(){
 
         //.out .name, .accessors
@@ -307,6 +315,7 @@
 //6) `bitnot`  *bit-unary-negation*   `a = bitnot xC0 + 5`
 
       //method produce()
+      // ---------------------------
       Grammar.UnaryOper.prototype.produce = function(){
 
         //var translated = operTranslate(.name)
@@ -346,6 +355,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.Oper.prototype.produce = function(){
 
         //var oper = .name
@@ -426,6 +436,7 @@
     
 
       //method produce(negated:boolean)
+      // ---------------------------
       Grammar.Expression.prototype.produce = function(negated){
 
 //Produce the expression body, negated if options={negated:true}
@@ -481,6 +492,7 @@
  //*assume the variable is a function and perform a function call :  `(`-> FunctionAccess
 
       //method produce()
+      // ---------------------------
       Grammar.VariableRef.prototype.produce = function(){
 
         //var preIfExported
@@ -547,6 +559,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.AssignmentStatement.prototype.produce = function(){
 
         //.out .lvalue, ' ', operTranslate(.name), ' ', .rvalue
@@ -559,6 +572,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.DefaultAssignment.prototype.produce = function(){
 
         //.process(.assignment.lvalue, .assignment.rvalue)
@@ -572,6 +586,7 @@
 
       //#recursive duet 1
       //helper method process(name,value)
+      // ---------------------------
       Grammar.DefaultAssignment.prototype.process = function(name, value){
 
 //if it is ObjectLiteral: recurse levels, else, a simple 'if undefined, assignment'
@@ -595,6 +610,7 @@
 
       //#recursive duet 2
       //helper method processItems(main, objectLiteral)
+      // ---------------------------
       Grammar.DefaultAssignment.prototype.processItems = function(main, objectLiteral){
 
           //.out "if(!",main,') ',main,"={};",NL
@@ -622,6 +638,7 @@
     //    append to class Grammar.PropertyAccess ##
     
       //method produce()
+      // ---------------------------
       Grammar.PropertyAccess.prototype.produce = function(){
         //if .name is 'initInstance'
         if (this.name === 'initInstance') {
@@ -640,6 +657,7 @@
     //    append to class Grammar.IndexAccess
     
       //method produce()
+      // ---------------------------
       Grammar.IndexAccess.prototype.produce = function(){
         //.out "[",.name,"]"
         this.out("[", this.name, "]");
@@ -648,6 +666,7 @@
     //    append to class Grammar.FunctionArgument
     
       //method produce()
+      // ---------------------------
       Grammar.FunctionArgument.prototype.produce = function(){
         //.out .expression
         this.out(this.expression);
@@ -656,6 +675,7 @@
     //    append to class Grammar.FunctionAccess
     
       //method produce()
+      // ---------------------------
       Grammar.FunctionAccess.prototype.produce = function(){
         //.out "(",{CSL:.args},")"
         this.out("(", {CSL: this.args}, ")");
@@ -666,6 +686,7 @@
     //    append to class ASTBase
     
      //     helper method lastLineOf(list:ASTBase array)
+     // ---------------------------
      ASTBase.prototype.lastLineOf = function(list){
 
 //More Helper methods, get max line of list
@@ -689,6 +710,7 @@
 
 
      //     method getOwnerPrefix() returns array
+     // ---------------------------
      ASTBase.prototype.getOwnerPrefix = function(){
 
 //check if we're inside a ClassDeclaration or AppendToDeclaration.
@@ -791,6 +813,7 @@
 //```
 
       //method produce()
+      // ---------------------------
       Grammar.WithStatement.prototype.produce = function(){
 
         //.out "var ",.name,'=',.varRef,";"
@@ -813,6 +836,7 @@
 //default "produce" for VarDeclList is to out only names, comma separated
 
       //method produce
+      // ---------------------------
       Grammar.VarDeclList.prototype.produce = function(){
         //.out {CSL:.getNames()}
         this.out({CSL: this.getNames()});
@@ -825,6 +849,7 @@
 //'var' followed by a list of comma separated: var names and optional assignment
 
       //method produce(prefix)
+      // ---------------------------
       Grammar.PropertiesDeclaration.prototype.produce = function(prefix){
 
         //.outSourceLinesAsComment .lastLineOf(.list)
@@ -856,6 +881,7 @@
 //'var' followed by a list of comma separated: var names and optional assignment
 
       //method produce()
+      // ---------------------------
       Grammar.VarStatement.prototype.produce = function(){
 
         //declare valid .compilerVar
@@ -908,6 +934,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.ImportStatementItem.prototype.produce = function(){
         //.out "var ",.name," = require('", .getNodeJSRequireFileRef(),"');", NL
         this.out("var ", this.name, " = require('", this.getNodeJSRequireFileRef(), "');", NL);
@@ -915,6 +942,7 @@
 
 
       //method getNodeJSRequireFileRef()
+      // ---------------------------
       Grammar.ImportStatementItem.prototype.getNodeJSRequireFileRef = function(){
 
 //node.js require() use "./" to denote a local module to load.
@@ -964,6 +992,7 @@
 //'import' followed by a list of comma separated: var names and optional assignment
 
       //method produce()
+      // ---------------------------
       Grammar.ImportStatement.prototype.produce = function(){
         //.out .list //see:Grammar.ImportStatementItem
         this.out(this.list);
@@ -978,6 +1007,7 @@
 //variable name and optionally assign a value
 
       //method produce()
+      // ---------------------------
       Grammar.VariableDecl.prototype.produce = function(){
 
 //It's a `var` keyword or we're declaring function parameters.
@@ -1017,6 +1047,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.SingleLineBody.prototype.produce = function(){
         //var bare=[]
         var bare = [];
@@ -1034,6 +1065,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.IfStatement.prototype.produce = function(){
 
         //declare valid .elseStatement.produce
@@ -1069,6 +1101,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.ElseIfStatement.prototype.produce = function(){
 
         //.out NL,"else ", .nextIf
@@ -1079,6 +1112,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.ElseStatement.prototype.produce = function(){
 
         //.out NL,"else {", .body, "}"
@@ -1091,6 +1125,7 @@
 //There are 3 variants of `ForStatement` in LiteScript
 
       //method produce()
+      // ---------------------------
       Grammar.ForStatement.prototype.produce = function(){
 
         //.variant.produce()
@@ -1111,6 +1146,7 @@
     
 
       //method prepareTempVar() returns string
+      // ---------------------------
       Grammar.Expression.prototype.prepareTempVar = function(){
 
         //declare .root.name: Grammar.VariableRef
@@ -1139,6 +1175,7 @@
 //`ForEachProperty: for each [own] property name-VariableDecl in object-VariableRef`
 
       //method produce()
+      // ---------------------------
       Grammar.ForEachProperty.prototype.produce = function(){
 
           //var iterable = .iterable.prepareTempVar()
@@ -1188,6 +1225,7 @@
 //`ForEachInArray: for each [index-VariableDecl,]item-VariableDecl in array-VariableRef`
 
       //method produce()
+      // ---------------------------
       Grammar.ForEachInArray.prototype.produce = function(){
 
         //var iterable = .iterable.prepareTempVar()
@@ -1253,6 +1291,7 @@
 //When Map is implemented using js "Object"
 
       //method produceInMap(iterable)
+      // ---------------------------
       Grammar.ForEachInArray.prototype.produceInMap = function(iterable){
 
           //var indexVarName:string
@@ -1311,6 +1350,7 @@
 //Handle by using a js/C standard for(;;){} loop
 
       //method produce()
+      // ---------------------------
       Grammar.ForIndexNumeric.prototype.produce = function(){
 
         //var isToDownTo: boolean
@@ -1398,6 +1438,7 @@
 //`ForWhereFilter: [where Expression]`
 
       //method produce()
+      // ---------------------------
       Grammar.ForWhereFilter.prototype.produce = function(){
         //.out 'if(',.filterExpression,')'
         this.out('if(', this.filterExpression, ')');
@@ -1408,6 +1449,7 @@
 //`DeleteStatement: delete VariableRef`
 
       //method produce()
+      // ---------------------------
       Grammar.DeleteStatement.prototype.produce = function(){
         //.out 'delete ',.varRef
         this.out('delete ', this.varRef);
@@ -1417,6 +1459,7 @@
     
 
       //method produce(askFor:string, negated:boolean)
+      // ---------------------------
       Grammar.WhileUntilExpression.prototype.produce = function(askFor, negated){
 
 //If the parent ask for a 'while' condition, but this is a 'until' condition,
@@ -1445,6 +1488,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.DoLoop.prototype.produce = function(){
 
 //Note: **WhileUntilLoop** symbol has **DoLoop** as *prototype*, so this *.produce()* method
@@ -1505,6 +1549,7 @@
 //This is a very simple produce() to allow us to use the `break` and `continue` keywords.
 
       //method produce()
+      // ---------------------------
       Grammar.LoopControlStatement.prototype.produce = function(){
 
 //validate usage inside a for/while
@@ -1548,6 +1593,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.DoNothingStatement.prototype.produce = function(){
         //.out "null"
         this.out("null");
@@ -1559,6 +1605,7 @@
 //A `ParenExpression` is just a normal expression surrounded by parentheses.
 
       //method produce()
+      // ---------------------------
       Grammar.ParenExpression.prototype.produce = function(){
         //.out "(",.expr,")"
         this.out("(", this.expr, ")");
@@ -1570,6 +1617,7 @@
 //A `ArrayLiteral` is a definition of a list like `[1, a, 2+3]`. We just pass this through to JavaScript.
 
       //method produce()
+      // ---------------------------
       Grammar.ArrayLiteral.prototype.produce = function(){
         //.out "[",{CSL:.items},"]"
         this.out("[", {CSL: this.items}, "]");
@@ -1581,6 +1629,7 @@
 //A `NameValuePair` is a single item in an object definition. Since we copy js for this, we pass this straight through
 
       //method produce()
+      // ---------------------------
       Grammar.NameValuePair.prototype.produce = function(){
         //.out .name,": ",.value
         this.out(this.name, ": ", this.value);
@@ -1596,6 +1645,7 @@
 //(one NameValuePair per line, indented, comma is optional)
 
       //method produce()
+      // ---------------------------
       Grammar.ObjectLiteral.prototype.produce = function(){
 
           //if .parent.constructor is Grammar.Operand
@@ -1629,6 +1679,7 @@
 //`generator` prefix marks a 'generator' function that can be paused by `yield` (js/ES6 function*)
 
      //method produce(prefix:array)
+     // ---------------------------
      Grammar.FunctionDeclaration.prototype.produce = function(prefix){
 
       //var isConstructor = this instance of Grammar.ConstructorDeclaration
@@ -1637,6 +1688,9 @@
       //Generators are implemented in ES6 with the "function*" keyword (note the asterisk)
       //var generatorMark = .hasAdjective("generator") and .lexer.project.compilerVar('ES6')? "*" else ""
       var generatorMark = this.hasAdjective("generator") && this.lexer.project.compilerVar('ES6') ? "*" : "";
+
+      //.out {COMMENT:"---------------------------"},NL //function start separator
+      this.out({COMMENT: "---------------------------"}, NL);
 
       //if this instance of Grammar.MethodDeclaration
       if (this instanceof Grammar.MethodDeclaration) {
@@ -1747,6 +1801,7 @@
 
 
      //     method produceBody()
+     // ---------------------------
      Grammar.FunctionDeclaration.prototype.produceBody = function(){
 
 //if the function has a exception block, insert 'try{'
@@ -1836,6 +1891,7 @@
 //`print` is an alias for console.log
 
       //method produce()
+      // ---------------------------
       Grammar.PrintStatement.prototype.produce = function(){
         //.out "console.log(",{"CSL":.args},")"
         this.out("console.log(", {"CSL": this.args}, ")");
@@ -1849,6 +1905,7 @@
 //Marks the end of a block. It's just a comment for javascript
 
       //method produce()
+      // ---------------------------
       Grammar.EndStatement.prototype.produce = function(){
         //.skipSemiColon = true
         this.skipSemiColon = true;
@@ -1859,6 +1916,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.CompilerStatement.prototype.produce = function(){
         //.skipSemiColon = true
         this.skipSemiColon = true;
@@ -1872,6 +1930,7 @@
 //Out as comments
 
       //method produce()
+      // ---------------------------
       Grammar.DeclareStatement.prototype.produce = function(){
         //.skipSemiColon = true
         this.skipSemiColon = true;
@@ -1885,6 +1944,7 @@
 //Classes contain a code block with properties and methods definitions.
 
       //method produce()
+      // ---------------------------
       Grammar.ClassDeclaration.prototype.produce = function(){
 
         //.out {COMMENT:"constructor"},NL
@@ -1892,53 +1952,6 @@
 
 //First, since in JS we have a object-class-function-constructor all-in-one
 //we need to get the class constructor, and separate other class items.
-
-        //var theConstructorDeclaration = null
-        var theConstructorDeclaration = null;
-        //var theMethods = []
-        var theMethods = [];
-        //var theProperties = []
-        var theProperties = [];
-
-        //if .body
-        if (this.body) {
-        
-          //for each index,item in .body.statements
-          for( var index=0,item ; index<this.body.statements.length ; index++){item=this.body.statements[index];
-          
-
-            //if item.specific instanceof Grammar.ConstructorDeclaration
-            if (item.specific instanceof Grammar.ConstructorDeclaration) {
-            
-
-              //if theConstructorDeclaration # what? more than one?
-              if (theConstructorDeclaration) {
-              
-                //.throwError('Two constructors declared for class #{.name}')
-                this.throwError('Two constructors declared for class ' + this.name);
-              };
-
-              //theConstructorDeclaration = item.specific
-              theConstructorDeclaration = item.specific;
-            }
-            //if item.specific instanceof Grammar.ConstructorDeclaration
-            
-            else if (item.specific instanceof Grammar.PropertiesDeclaration) {
-            
-              //theProperties.push item.specific
-              theProperties.push(item.specific);
-            }
-            //else if item.specific instanceof Grammar.PropertiesDeclaration
-            
-            else {
-              //theMethods.push item
-              theMethods.push(item);
-            };
-          };// end for each in this.body.statements
-          
-        };
-
-        //#end if body
 
         //var prefix = .getOwnerPrefix()
         var prefix = this.getOwnerPrefix();
@@ -1948,17 +1961,17 @@
         //.out "function ",.name
         this.out("function ", this.name);
 
-        //if theConstructorDeclaration //there was a constructor body, add specified params
-        if (theConstructorDeclaration) {
+        //if .constructorDeclaration //there was a constructor body, add specified params
+        if (this.constructorDeclaration) {
         
-            //.out "(", theConstructorDeclaration.paramsDeclarations, "){", NL // .getEOLComment()
-            this.out("(", theConstructorDeclaration.paramsDeclarations, "){", NL);
+            //.out "(", .constructorDeclaration.paramsDeclarations, "){", NL // .getEOLComment()
+            this.out("(", this.constructorDeclaration.paramsDeclarations, "){", NL);
         }
-        //if theConstructorDeclaration //there was a constructor body, add specified params
+        //if .constructorDeclaration //there was a constructor body, add specified params
         
         else {
-            //.out "(){ // default constructor",NL
-            this.out("(){ // default constructor", NL);
+            //.out "(initializer){ // default constructor",NL
+            this.out("(initializer){ // default constructor", NL);
         };
 
 //call super-class __init
@@ -1968,24 +1981,33 @@
 
 //initialize own properties
 
-        //for each propDecl in theProperties
-        for( var propDecl__inx=0,propDecl ; propDecl__inx<theProperties.length ; propDecl__inx++){propDecl=theProperties[propDecl__inx];
-        
-            //propDecl.produce('this.') //property assignments
-            propDecl.produce('this.');
-        };// end for each in theProperties
+        //for each item in .body.statements
+        for( var item__inx=0,item ; item__inx<this.body.statements.length ; item__inx++){item=this.body.statements[item__inx];
+          if(item.specific.constructor === Grammar.PropertiesDeclaration){
+            //item.specific.produce('this.') //produce property assignments
+            item.specific.produce('this.');
+        }};// end for each in this.body.statements
 
-        //if theConstructorDeclaration //there was a body
-        if (theConstructorDeclaration) {
+        //if .constructorDeclaration //there was a body
+        if (this.constructorDeclaration) {
         
-            //theConstructorDeclaration.produceBody
-            theConstructorDeclaration.produceBody();
+            //.constructorDeclaration.produceBody
+            this.constructorDeclaration.produceBody();
             //.out ";",NL
             this.out(";", NL);
         }
-        //if theConstructorDeclaration //there was a body
+        //if .constructorDeclaration //there was a body
         
         else {
+
+            // default constructor - if no super, accept a object-initializer
+            //if no .varRefSuper or .varRefSuper.name is 'Object'
+            if (!this.varRefSuper || this.varRefSuper.name === 'Object') {
+            
+                //.out "    for(prop in initializer) if (initializer.hasOwnProperty(prop)) this[prop]=initializer[prop];"
+                this.out("    for(prop in initializer) if (initializer.hasOwnProperty(prop)) this[prop]=initializer[prop];");
+            };
+
             //.out "};",NL
             this.out("};", NL);
         };
@@ -2023,12 +2045,12 @@
 
 //now out methods, meaning: create properties in the object-function-class prototype
 
-        //for each itemMethodDeclaration in theMethods
-        for( var itemMethodDeclaration__inx=0,itemMethodDeclaration ; itemMethodDeclaration__inx<theMethods.length ; itemMethodDeclaration__inx++){itemMethodDeclaration=theMethods[itemMethodDeclaration__inx];
-        
-            //itemMethodDeclaration.produce prefix
-            itemMethodDeclaration.produce(prefix);
-        };// end for each in theMethods
+        //for each item in .body.statements
+        for( var item__inx=0,item ; item__inx<this.body.statements.length ; item__inx++){item=this.body.statements[item__inx];
+          if([Grammar.PropertiesDeclaration, Grammar.ConstructorDeclaration].indexOf(item.specific.constructor)===-1){
+            //item.specific.produce //produce methods
+            item.specific.produce();
+        }};// end for each in this.body.statements
 
 //If the class was adjectivated 'export', add to module.exports
 
@@ -2042,7 +2064,9 @@
       };
 
 
+
       //method addCallToSuperClassInit
+      // ---------------------------
       Grammar.ClassDeclaration.prototype.addCallToSuperClassInit = function(){
 
         //if .varRefSuper
@@ -2081,6 +2105,7 @@
 //Append-to body contains properties and methods definitions.
 
       //method produce()
+      // ---------------------------
       Grammar.AppendToDeclaration.prototype.produce = function(){
         //.out .body
         this.out(this.body);
@@ -2096,6 +2121,7 @@
 //Append-to body contains properties and methods definitions.
 
       //method produce()
+      // ---------------------------
       Grammar.NamespaceDeclaration.prototype.produce = function(){
         //.out 'var ',.name,'={};'
         this.out('var ', this.name, '={};');
@@ -2122,6 +2148,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.TryCatch.prototype.produce = function(){
 
         //.out "try{", .body, .exceptionBlock
@@ -2132,6 +2159,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.ExceptionBlock.prototype.produce = function(){
 
         //.out NL,"}catch(",.catchVar,"){", .body, "}"
@@ -2150,6 +2178,7 @@
     
 
       //      method produce()
+      // ---------------------------
       Grammar.CaseStatement.prototype.produce = function(){
 
 //if we have a varRef, is a case over a value
@@ -2202,6 +2231,7 @@
 
 
       //      method produceInstanceOfLoop
+      // ---------------------------
       Grammar.CaseStatement.prototype.produceInstanceOfLoop = function(){
 
         //var tmpVar=UniqueID.getVarName('class')
@@ -2247,6 +2277,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.YieldExpression.prototype.produce = function(){
 
 //Check location
@@ -2396,6 +2427,7 @@
       });
 
     //function operTranslate(name:string)
+    // ---------------------------
     function operTranslate(name){
       //return OPER_TRANSLATION_map.get(name) or name
       return OPER_TRANSLATION_map.get(name) || name;
@@ -2413,6 +2445,7 @@
      //     properties skipSemiColon
 
      //     helper method assignIfUndefined(name, value: Grammar.Expression)
+     // ---------------------------
      ASTBase.prototype.assignIfUndefined = function(name, value){
 
           //declare valid value.root.name.name
@@ -2440,6 +2473,7 @@
      };
 
      //     helper method produceExport(name:string)
+     // ---------------------------
      ASTBase.prototype.produceExport = function(name){
 
 //"module.export" not valid for browser modules
