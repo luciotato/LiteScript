@@ -3649,7 +3649,7 @@
     // method parse()
     Adjective.prototype.parse = function(){
 
-       this.name = this.req('public', 'export', 'default', 'nice', 'generator', 'shim', 'helper', 'global');
+       this.name = this.req('public', 'export', 'default', 'only', 'nice', 'generator', 'shim', 'helper', 'global');
         // #'public' is just alias for 'export'
        // if .name is 'public', .name='export'
        if (this.name === 'public') {this.name = 'export'};
@@ -4067,6 +4067,7 @@
              var validCombinations = {
                    export: CFVN, 
                    default: CFVN, 
+                   only: CFVN, 
                    generator: ['function', 'method'], 
                    nice: ['function', 'method'], 
                    shim: ['function', 'method', 'class', 'namespace', 'import'], 

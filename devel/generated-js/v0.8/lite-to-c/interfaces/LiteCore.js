@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //#Shim for Lite-C core support
 
 //Import this file if you want to create LiteScript code
@@ -14,6 +17,7 @@
     var LiteCore={};
 
         //method getSymbol(name)
+        // ---------------------------
         LiteCore.getSymbol = function(name){
             //return name
             return name;
@@ -22,6 +26,7 @@
             // in LiteC, every object property is accessed by a "symbol" (a integer)
 
         //method getSymbolName(symbol)
+        // ---------------------------
         LiteCore.getSymbolName = function(symbol){
             //return symbol
             return symbol;
@@ -60,6 +65,7 @@
     
 
         //shim method hasProperty(key:string) [not enumerable] //use Map|Object interchangeably
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'hasProperty'))
         Object.defineProperty(
         Object.prototype,'hasProperty',{value:function(key){
@@ -70,6 +76,7 @@
         });
 
         //shim method tryGetProperty(key) [not enumerable] //use Map|Object interchangeably
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'tryGetProperty'))
         Object.defineProperty(
         Object.prototype,'tryGetProperty',{value:function(key){
@@ -80,6 +87,7 @@
         });
 
         //shim method getProperty(key) [not enumerable] //use Map|Object interchangeably
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'getProperty'))
         Object.defineProperty(
         Object.prototype,'getProperty',{value:function(key){
@@ -92,6 +100,7 @@
         });
 
         //shim method setProperty(key:string, value) [not enumerable] //use Map|Object interchangeably
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'setProperty'))
         Object.defineProperty(
         Object.prototype,'setProperty',{value:function(key, value){
@@ -104,6 +113,7 @@
 //portable code -to-js & -to-c
 
         //shim method tryGetMethod(methodSymbol) returns function [not enumerable]
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'tryGetMethod'))
         Object.defineProperty(
         Object.prototype,'tryGetMethod',{value:function(methodSymbol){
@@ -114,6 +124,7 @@
         });
 
         //shim method allPropertyNames() returns array [not enumerable] //use Map|Object interchangeably
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'allPropertyNames'))
         Object.defineProperty(
         Object.prototype,'allPropertyNames',{value:function(){
@@ -135,6 +146,7 @@
         });
 
         //shim method getPropertyNameAtIndex(index:number) [not enumerable] //LiteC-compatible
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(Object.prototype,'getPropertyNameAtIndex'))
         Object.defineProperty(
         Object.prototype,'getPropertyNameAtIndex',{value:function(index){
@@ -167,6 +179,7 @@
     
 
         //shim method newFromObject(model) [not enumerable] //LiteC-compatible
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(Function.prototype,'newFromObject'))
         Object.defineProperty(
         Function.prototype,'newFromObject',{value:function(model){
@@ -194,6 +207,7 @@
     
 
         //shim method tryGet(index:Number) [not enumerable]
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(Array.prototype,'tryGet'))
         Object.defineProperty(
         Array.prototype,'tryGet',{value:function(index){
@@ -204,6 +218,7 @@
         });
 
         //shim method set(index:Number, value) [not enumerable]
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(Array.prototype,'set'))
         Object.defineProperty(
         Array.prototype,'set',{value:function(index, value){
@@ -267,6 +282,7 @@
 //        * Note: "count" is still in measuerd in *codepoints*, only *start* is measured in bytes
 //        
         //method byteSubstr(byteStartIndex:number, charCount:number)
+        // ---------------------------
         String.prototype.byteSubstr = function(byteStartIndex, charCount){
             //return this.substr(byteStartIndex,charCount)
             return this.substr(byteStartIndex, charCount);
@@ -280,14 +296,20 @@
 //        * @returns: *BYTE* index of the found string, or -1
 //        
         //method byteIndexOf(searched:string, fromByteIndex:number)
+        // ---------------------------
         String.prototype.byteIndexOf = function(searched, fromByteIndex){
             //return this.indexOf(searched,fromByteIndex)
             return this.indexOf(searched, fromByteIndex);
         };
 
         //method byteSlice(startByteIndex,endByteIndex)
+        // ---------------------------
         String.prototype.byteSlice = function(startByteIndex, endByteIndex){
             //return this.slice(startByteIndex,endByteIndex)
             return this.slice(startByteIndex, endByteIndex);
         };
+// -----------
+// Module code
+// -----------
+// end of module
 module.exports=LiteCore;

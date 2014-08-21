@@ -1,5 +1,5 @@
 
-    class ControlledError extends Error
+    only export class ControlledError extends Error
         properties 
             soft: boolean
 

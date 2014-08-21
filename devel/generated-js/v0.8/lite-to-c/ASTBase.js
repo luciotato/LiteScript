@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //-----------------------------------------
 
 //This module defines the base abstract syntax tree class used by the grammar.
@@ -26,7 +29,8 @@
 
         //name:string, keyword:string
 
-        //type, keyType, itemType
+        //type
+
         //indent = 0
 
         //lexer: Parser.Lexer
@@ -72,11 +76,7 @@
             };
         };
      };
-
-        //#debug "created [#.constructor.name] indent #.indent col:#.column #{.lexer? .lexer.token:''}"
-
-//------------------------------------------------------------------------
-     //     method lock()
+     // ---------------------------
      ASTBase.prototype.lock = function(){
 //**lock** marks this node as "locked", meaning we are certain this is the right class
 //for the given syntax. For example, if the `FunctionDeclaration` class see the token `function`,
@@ -85,9 +85,7 @@
 
         //.locked = true
         this.locked = true;
-     };
-
-     //     helper method getParent(searchedClass)
+     }// ---------------------------
      ASTBase.prototype.getParent = function(searchedClass){
 //**getParent** method searchs up the AST tree until a specfied node class is found
 
@@ -100,41 +98,29 @@
         };// end loop
         //return node
         return node;
-     };
-
-
-     //     helper method positionText()
+     }// ---------------------------
      ASTBase.prototype.positionText = function(){
 
         //if not .lexer or no .sourceLineNum, return "(compiler-defined)"
         if (!(this.lexer) || !this.sourceLineNum) {return "(compiler-defined)"};
         //return "#{.lexer.filename}:#{.sourceLineNum}:#{.column or 0}"
         return '' + this.lexer.filename + ":" + this.sourceLineNum + ":" + (this.column || 0);
-     };
-
-     //     helper method toString()
+     }// ---------------------------
      ASTBase.prototype.toString = function(){
 
         //return "[#{.constructor.name}]"
         return "[" + this.constructor.name + "]";
-     };
-
-
-     //     helper method sayErr(msg)
+     }// ---------------------------
      ASTBase.prototype.sayErr = function(msg){
 
         //logger.error .positionText(), msg
         logger.error(this.positionText(), msg);
-     };
-
-     //     helper method warn(msg)
+     }// ---------------------------
      ASTBase.prototype.warn = function(msg){
 
         //logger.warning .positionText(), msg
         logger.warning(this.positionText(), msg);
-     };
-
-     //     method throwError(msg)
+     }// ---------------------------
      ASTBase.prototype.throwError = function(msg){
 //**throwError** add node position info and throws a 'controlled' error.
 
@@ -145,9 +131,7 @@
 
         //logger.throwControlled "#{.positionText()}. #{msg}"
         logger.throwControlled('' + (this.positionText()) + ". " + msg);
-     };
-
-     //     method throwParseFailed(msg)
+     }// ---------------------------
      ASTBase.prototype.throwParseFailed = function(msg){
 //throws a parseFailed-error
 
@@ -165,27 +149,21 @@
         cErr.soft = !(this.locked);
         //throw cErr
         throw cErr;
-     };
-
-     //     method parse()
+     }// ---------------------------
      ASTBase.prototype.parse = function(){
 //abstract method representing the TRY-Parse of the node.
 //Child classes _must_ override this method
 
         //.throwError 'Parser Not Implemented'
         this.throwError('Parser Not Implemented');
-     };
-
-     //     method produce()
+     }// ---------------------------
      ASTBase.prototype.produce = function(){
 //**produce()** is the method to produce target code
 //Target code produces should override this, if the default production isnt: `.out .name`
 
         //.out .name
         this.out(this.name);
-     };
-
-     //     method parseDirect(key, directMap)
+     }// ---------------------------
      ASTBase.prototype.parseDirect = function(key, directMap){
 
 //We use a DIRECT associative array to pick the exact AST node to parse
@@ -211,11 +189,7 @@
             //return statement
             return statement;
         };
-     };
-
-
-
-     //     method opt() returns ASTBase
+     }// ---------------------------
      ASTBase.prototype.opt = function(){
 //**opt** (optional) is for optional parts of a grammar. It attempts to parse
 //the token stream using one of the classes or token types specified.
@@ -404,16 +378,7 @@
 
         //return undefined
         return undefined;
-     };
-
-     //end method opt
-
-
-     //     method req() returns ASTBase
-     
-
-
-     //     method req() returns ASTBase
+     }// ---------------------------
      ASTBase.prototype.req = function(){
 
 //**req** (required) if for required symbols of the grammar. It works the same way as `opt`
@@ -436,10 +401,7 @@
 
         //return result
         return result;
-     };
-
-
-     //     method reqOneOf(arr)
+     }// ---------------------------
      ASTBase.prototype.reqOneOf = function(arr){
 //(performance) call req only if next token (value) in list
 
@@ -455,10 +417,7 @@
             //.throwParseFailed "not in list"
             this.throwParseFailed("not in list");
         };
-     };
-
-
-     //     method optList()
+     }// ---------------------------
      ASTBase.prototype.optList = function(){
 //this generic method will look for zero or more of the requested classes,
 
@@ -479,10 +438,7 @@
 
         //return list.length? list : undefined
         return list.length ? list : undefined;
-     };
-
-
-     //     method optSeparatedList(astClass:ASTBase, separator, closer) #[Separated Lists]
+     }// ---------------------------
      ASTBase.prototype.optSeparatedList = function(astClass, separator, closer){
 
 //Start optSeparatedList
@@ -590,9 +546,7 @@
 
         //return result
         return result;
-     };
-
-     //     method optFreeFormList(astClass:ASTBase, separator, closer)
+     }// ---------------------------
      ASTBase.prototype.optFreeFormList = function(astClass, separator, closer){
 
 //In "freeForm Mode", each item stands in its own line, and commas (separators) are optional.
@@ -716,10 +670,7 @@
 
         //return result
         return result;
-     };
-
-
-     //     method reqSeparatedList(astClass:ASTBase, separator, closer)
+     }// ---------------------------
      ASTBase.prototype.reqSeparatedList = function(astClass, separator, closer){
 //**reqSeparatedList** is the same as `optSeparatedList` except that it throws an error
 //if the list is empty
@@ -733,10 +684,7 @@
 
         //return result
         return result;
-     };
-
-
-     //     helper method listArgs(args:Object array)
+     }// ---------------------------
      ASTBase.prototype.listArgs = function(args){
 //listArgs list arguments (from opt or req). used for debugging
 //and syntax error reporting
@@ -783,14 +731,7 @@
 
         //return msg.join('|')
         return msg.join('|');
-     };
-
-
-
-//Helper functions for code generation
-//=====================================
-
-     //     helper method out
+     }// ---------------------------
      ASTBase.prototype.out = function(){
 
 //*out* is a helper function for code generation
@@ -973,20 +914,14 @@
 
      //     helper method outInfoLineAsComment(lineInx)
         
-     };
-
-
-     //     helper method outInfoLineAsComment(lineInx)
+     }// ---------------------------
      ASTBase.prototype.outInfoLineAsComment = function(lineInx){
 
 //out line, using comment chars form the target lang (js & c: "//")
 
         //.lexer.infoLines[lineInx].outAsComment .lexer.outCode
         this.lexer.infoLines[lineInx].outAsComment(this.lexer.outCode);
-     };
-
-
-     //     helper method outPreviousComments()
+     }// ---------------------------
      ASTBase.prototype.outPreviousComments = function(){
 
 //out previous lines with comments
@@ -1010,10 +945,7 @@
             this.outInfoLineAsComment(lineInx);
         };// end for lineInx
         
-     };
-
-
-     //     helper method outSourceLinesAsComment(upTo, fromLineNum)
+     }// ---------------------------
      ASTBase.prototype.outSourceLinesAsComment = function(upTo, fromLineNum){
 
         //if no .lexer.options.comments, return
@@ -1036,35 +968,12 @@
             this.outInfoLineAsComment(lineInx);
         };// end for lineInx
         
-     };
-
-
-//
-//#### helper method getEOLComment()
-//getEOLComment: get the comment at the end of the line
-//
-//Check for "postfix" comments. These are comments that occur at the end of the line,
-//such as `a = 1 #comment`. We want to try to add these at the end of the current JavaScript line.
-//
-//        if no .lexer.options.comments, return
-//
-//        var inx = .lineInx
-//        var infoLine = .lexer.infoLines[inx]
-//
-//        if infoLine.tokens and infoLine.tokens.length
-//            var lastToken = infoLine.tokens[infoLine.tokens.length-1]
-//            if lastToken.type is 'COMMENT'
-//                return "#{lastToken.value.startsWith('//')? '' else '//'} #{lastToken.value}"
-
-     //     helper method addSourceMap(mark)
+     }// ---------------------------
      ASTBase.prototype.addSourceMap = function(mark){
 
         //.lexer.outCode.addSourceMap mark, .sourceLineNum, .column, .indent
         this.lexer.outCode.addSourceMap(mark, this.sourceLineNum, this.column, this.indent);
-     };
-
-
-     //     helper method levelIndent()
+     }// ---------------------------
      ASTBase.prototype.levelIndent = function(){
 //show indented messaged for debugging
 
@@ -1080,9 +989,14 @@
 
         //return String.spaces(indent)
         return String.spaces(indent);
-     };
+     }
     // end class ASTBase
+// -----------
+// Module code
+// -----------
 
 
     //end class ASTBase
-    module.exports=ASTBase;
+    
+// end of module
+module.exports=ASTBase;

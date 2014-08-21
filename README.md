@@ -23,8 +23,10 @@ Is too time-expensive to debug subtle bugs caused by mistyped property member na
 
 ##Why?
 
+####a) JavaScript & Large Projects 
+
 I've reached a point, in pure js projects, at which refactoring code gets too risky. 
-It's far too easy to introduce subtle bugs in pure js, just with a typo.
+It's far too easy to introduce subtle bugs in pure js code, just with a typo.
 After hours lost debugging js code. You end up fearing to alter code that's already tested.
 ***I needed a tool to ease up javascript production for large projects, catching common 
 errors in the compilation phase, to avoid long debugging hours.***
@@ -32,6 +34,12 @@ errors in the compilation phase, to avoid long debugging hours.***
 **Good Start**: By migrating a few projects to LiteScript I've found bugs lurking in js code I thought was bug-free. 
 Also with LiteScript I found myself coding faster, fearless, trusting LiteScript compiler to catch typos 
 and object misuse.
+
+####b) Easy to hack-on compiler
+
+I wanted to have a "easy-to-hack-on" *compiler* to be able to alter and adjust the language itself, 
+and also to be able to add several "compile-to" backends.
+Parsing by PEGs makes the compiler "easy to hack on".
 
 ------
 

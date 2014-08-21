@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //## utility methods appended to core classes & namespaces
 
 //Helper methods to class String.
@@ -84,8 +87,8 @@
         String.prototype.countSpaces = function(){
             //var inx=0
             var inx = 0;
-            //while inx<this.length-1
-            while(inx < this.length - 1){
+            //while inx<this.length
+            while(inx < this.length){
                 //if this.charAt(inx) isnt ' ', break
                 if (this.charAt(inx) !== ' ') {break};
                 //inx++
@@ -276,3 +279,7 @@
                 console.indentLevel--;
             };
         };
+// -----------
+// Module code
+// -----------
+// end of module

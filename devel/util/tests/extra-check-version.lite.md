@@ -16,7 +16,7 @@ read version fom package.json, compiler.js and from lib/out/lite -v
         print "VERSION MISMATCH!"
         process.exit 1
 
-    var exec = require('child_process').exec;
+    var exec:function = require('child_process').exec;
 
     var cmd = path.join(__dirname,'../../../devel/util/out/lib/lite') + ' -version'
 

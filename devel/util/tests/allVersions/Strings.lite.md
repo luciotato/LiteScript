@@ -1,7 +1,7 @@
 Strings
 -------
 
-    declare var expect #provided by test framework
+    declare var expect:function #provided by test framework
 
 Triple Quoted Strings
 

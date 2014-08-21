@@ -17,7 +17,7 @@ mkInterface - creates a name.interface.md from a "require(name)"
             print """ 
                 usage: mkInterface name [-noreq]
 
-                where "name" is the name of a module to "require()"
+                where "name" is the name of the module to "require()"
 
                 if -noreq, no module is required, "name" is assumed a global object, e.g.: process
 
@@ -69,7 +69,7 @@ mkInterface - creates a name.interface.md from a "require(name)"
 
             if s
                 for inx=0 while inx<.pendingHeaders
-                    .text.push .headers[inx]
+                    if .headers[inx], .text.push .headers[inx]
                     .headers[inx]=undefined
                 end for
                 .pendingHeaders=0
@@ -106,6 +106,7 @@ mkInterface - creates a name.interface.md from a "require(name)"
             if .type is 'function'
                 var source= obj.toString()
                 .params = source.slice(source.indexOf('('),source.indexOf('{'))
+                if .params.trim() is "()", .params = ""
 
             declare valid obj.prototype
             if .type is 'function' and obj.prototype and Object.getOwnPropertyNames(obj.prototype).length>4
@@ -205,7 +206,7 @@ mkInterface - creates a name.interface.md from a "require(name)"
 
 recursively writes a object declaration
 
-            if .name not like /^[a-zA-Z$_]+$/, return # exclude strange/private names
+            if .name not like /^[a-zA-Z0-9$_]+$/, return # exclude strange/private names
 
             if .type is 'object' and .members
 
@@ -221,7 +222,11 @@ recursively writes a object declaration
                 //out.push '#{.name}:#{"function"}#{.params or ""} #CLASS'
 
             else                
-                out.push '#{.name}:#{.type}#{.params or ""}'
+                if .pointer and typeof .pointer is "string" 
+                    out.push '#{.name}="#{.pointer}"'
+                else
+                    out.push '#{.name}:#{.type}#{.params or ""}'
+                
             end if
 
 
@@ -370,6 +375,7 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
         method forEach(callb)
             for each property propName,value in .dict
                 callb(propName,value)
+
 
 ### append to class String
     

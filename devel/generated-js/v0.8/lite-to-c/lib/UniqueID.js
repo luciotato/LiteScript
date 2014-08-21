@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 
 //### dependencies
 
@@ -10,6 +13,7 @@
     var uniqueIds = new Map();
 
     //    public function set(prefix, value)
+    // ---------------------------
     function set(prefix, value){
 //Generate unique numbers, starting at 1
 
@@ -20,6 +24,7 @@
     module.exports.set = set;
 
     //    public function get(prefix) returns number
+    // ---------------------------
     function get(prefix){
 //Generate unique numbers, starting at 1
 
@@ -39,6 +44,7 @@
     module.exports.get = get;
 
     //    public function getVarName(prefix) returns string
+    // ---------------------------
     function getVarName(prefix){
 //Generate unique variable names
 
@@ -47,3 +53,7 @@
     }
     // export
     module.exports.getVarName = getVarName;
+// -----------
+// Module code
+// -----------
+// end of module

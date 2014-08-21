@@ -26,16 +26,18 @@ as the new 'export default' (instead of 'module.exports')
         .lexer.outCode.exportNamespace = 'module.exports'
 
 
-/* COMMENTED - reordering statementes in js is destructive
-
-Literate programming should allow to reference a function definde later.
+Literate programming should allow to reference a function defined later.
 Leave loose module imperative statements for the last. 
 Produce all vars & functions definitions first.
 
         var looseStatements=[]
 
+        .out
+            {COMMENT: "-----------"},NL
+            {COMMENT:"Module Init"},NL
+            {COMMENT: "-----------"},NL 
+
         for each statement in .statements
-//            statement.produce
 
             case statement.specific.constructor
   
@@ -52,26 +54,21 @@ Produce all vars & functions definitions first.
                 else
                     looseStatements.push statement
 
-        var separ = "-"
         .out
-            {COMMENT: separ.repeat(20)},NL
+            {COMMENT: "-----------"},NL
             {COMMENT:"Module code"},NL
-            {COMMENT: separ.repeat(20)},NL 
+            {COMMENT: "-----------"},NL 
 
         for each statement in looseStatements
             statement.produce
-
-        //for each statement in produceThird
-        //    statement.produce
 
         .out 
             NL
             {COMMENT:'end of module'},NL
             NL
-*/
 
-        for each statement in .statements
-            statement.produce
+//        for each statement in .statements
+//            statement.produce
 
 add end of file comments
 
@@ -574,7 +571,7 @@ default "produce" for VarDeclList is to out only names, comma separated
 
       method produce() 
 
-        declare valid .compilerVar
+        declare valid .compilerVar:function
         declare valid .export
 
         if .keyword is 'let' and .compilerVar('ES6')
@@ -762,7 +759,7 @@ We create a temp var to assign the iterable expression to
 
           .body.out "{", .valueVar.name,"=",iterable,"[",index,"];",NL
 
-          .out .where
+          .body.out .where
 
           .body.out "{", .body, "}",NL
 
@@ -1501,15 +1498,7 @@ Helper methods and properties, valid for all nodes
 
         if .lexer.options.browser, return
 
-if the class/namespace has the same name as the file, it's the export object
-        
-        var moduleNode:Grammar.Module = .getParent(Grammar.Module)
-
-        if moduleNode.fileInfo.base is .name  
-
-            do nothing //is the default export
-
-        else if .hasAdjective("export") 
+        if .hasAdjective("export") and not .hasAdjective("default") 
             .out NL,{COMMENT:'export'},NL
             .out 'module.exports.',name,' = ', name,";",NL
             .skipSemiColon = true

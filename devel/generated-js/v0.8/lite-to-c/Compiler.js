@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //==============================
 //LiteScript is a highly readable language that compiles to JavaScript.
 
@@ -6,8 +9,8 @@
     // export
     module.exports.version = version;
 
-    //public var buildDate = "Mon Aug 18 2014 05:30:52 GMT-0300 (ART)"
-    var buildDate = "Mon Aug 18 2014 05:30:52 GMT-0300 (ART)";
+    //public var buildDate = "Wed Aug 20 2014 12:35:18 GMT-0300 (ART)"
+    var buildDate = "Wed Aug 20 2014 12:35:18 GMT-0300 (ART)";
     // export
     module.exports.buildDate = buildDate;
 
@@ -51,6 +54,7 @@
 //## Main API functions: LiteScript.compileProject & LiteScript.compile
 
     //    export function compileProject (options:GeneralOptions) returns Project
+    // ---------------------------
     function compileProject(options){
 
 //The 'compileProject' function will load and compile the main Module of a project.
@@ -102,6 +106,7 @@
 //mainModuleName and all its dependencies will be compiled in the output dir
 
     //    export function compile (filename, sourceLines, options: GeneralOptions) returns array of string
+    // ---------------------------
     function compile(filename, sourceLines, options){
 
 //Used to compile source code loaded in memory (instead of loading a file)
@@ -141,6 +146,7 @@
 //## Secondary Function: compileModule, returns Grammar.Module
 
     //    export function compileModule (filename, sourceLines, options:GeneralOptions) returns Grammar.Module
+    // ---------------------------
     function compileModule(filename, sourceLines, options){
 //Compile a module from source in memory
 //input:
@@ -224,6 +230,7 @@
     module.exports.compileModule = compileModule;
 
     //    helper function normalizeOptions(options) returns GeneralOptions
+    // ---------------------------
     function normalizeOptions(options){
 
 
@@ -262,6 +269,7 @@
 //without having to compile it ahead of time
 
     //helper function extension_LoadLS(requiringModule, filename)
+    // ---------------------------
     function extension_LoadLS(requiringModule, filename){
 
 //Read the file, then compile using the `compile` function above.
@@ -283,6 +291,7 @@
 
 
     //export helper function registerRequireExtensions
+    // ---------------------------
     function registerRequireExtensions(){
 
 //Add the extension for all appropriate file types. Don't overwrite `.md` in case CoffeeScript or something else is already using it.
@@ -310,6 +319,7 @@
 //##Helper module functions
 
     //    public function getMessages() returns string array
+    // ---------------------------
     function getMessages(){
 //if compile() throws, call getMessages() to retrieve compiler messages
 
@@ -318,3 +328,7 @@
     }
     // export
     module.exports.getMessages = getMessages;
+// -----------
+// Module code
+// -----------
+// end of module

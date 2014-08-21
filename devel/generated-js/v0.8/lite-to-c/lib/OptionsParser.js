@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
     //    class OptionsParser
     // constructor
     function OptionsParser(argv){
@@ -15,8 +18,7 @@
         //.items = argv.slice(1) //remove this script/exe 'lite' from command line arguments
         this.items = argv.slice(1);
      };
-
-     //     method option(shortOption,argName)
+     // ---------------------------
      OptionsParser.prototype.option = function(shortOption, argName){
 
         //if .getPos(shortOption,argName) into var pos >= 0
@@ -31,9 +33,7 @@
 
         //return false
         return false;
-     };
-
-     //     method valueFor(shortOption,argName) returns string
+     }// ---------------------------
      OptionsParser.prototype.valueFor = function(shortOption, argName){
 
         //if .getPos(shortOption,argName) into var pos >= 0
@@ -50,9 +50,7 @@
 
         //return undefined
         return undefined;
-     };
-
-     //     helper method getPos(shortOption,argName)
+     }// ---------------------------
      OptionsParser.prototype.getPos = function(shortOption, argName){
 
 //search several possible forms of the option, e.g. -o --o -outdir --outdir
@@ -64,9 +62,7 @@
 
         //return .search(forms) into .lastIndex
         return (this.lastIndex=this.search(forms));
-     };
-
-     //     helper method search(list:array)
+     }// ---------------------------
      OptionsParser.prototype.search = function(list){
         //for each item in list
         for( var item__inx=0,item ; item__inx<list.length ; item__inx++){item=list[item__inx];
@@ -78,6 +74,10 @@
         };// end for each in list
         //return -1
         return -1;
-     };
+     }
     // end class OptionsParser
+// -----------
+// Module code
+// -----------
+// end of module
 module.exports=OptionsParser;

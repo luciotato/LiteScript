@@ -1,7 +1,7 @@
 Ternary Expression test
 -----------------------
 
-    declare var expect
+    declare var expect:function
 
     var Tests = 
 

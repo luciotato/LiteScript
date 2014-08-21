@@ -1,7 +1,7 @@
 Shims Tests
 -----------
 
-    declare var expect  
+    declare var expect:function
     
     var Tests = 
 

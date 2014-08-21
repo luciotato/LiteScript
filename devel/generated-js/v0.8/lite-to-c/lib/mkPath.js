@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //=============
 
     //import fs, path
@@ -5,6 +8,7 @@
     var path = require('path');
 
     //    export function toFile(filename, mode)
+    // ---------------------------
     function toFile(filename, mode){
 //Create a path to a file
 
@@ -16,6 +20,7 @@
 
 
     //    export function create (dirPath, mode)
+    // ---------------------------
     function create(dirPath, mode){
 //Make sure a path exists - Recursive
 
@@ -43,6 +48,7 @@
 
 
     //    helper function dirExists(dirPath)
+    // ---------------------------
     function dirExists(dirPath){
      try{
 
@@ -69,4 +75,7 @@
             //throw err //another error
             throw err;
         };
-    };
+    };// -----------
+// Module code
+// -----------
+// end of module

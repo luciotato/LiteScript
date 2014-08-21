@@ -1,5 +1,5 @@
 
-### class OptionsParser
+### export only class OptionsParser
 parse command line parameters
 
 #### properties

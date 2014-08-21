@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //==============================
 //LiteScript is a highly readable language that compiles to JavaScript.
 
@@ -180,9 +183,7 @@
         //if options.perf>1, console.timeEnd 'Init Project'
         if (options.perf > 1) {console.timeEnd('Init Project')};
      };
-
-
-     //     method compile()
+     // ---------------------------
      Project.prototype.compile = function(){
 
 //Import & compile the main module. The main module will, in turn, 'import' and 'compile'
@@ -359,9 +360,7 @@
 
         //if .options.perf>1, console.timeEnd 'Produce'
         if (this.options.perf > 1) {console.timeEnd('Produce')};
-     };
-
-     //     method compileFile(filename) returns Grammar.Module
+     }// ---------------------------
      Project.prototype.compileFile = function(filename){
 
 //Called to compile GlobalScopeX.interface.md, from Validate module
@@ -387,10 +386,7 @@
 
         //return newModule
         return newModule;
-     };
-
-
-     //     method compileFileOnModule(filename, moduleNode:Grammar.Module)
+     }// ---------------------------
      Project.prototype.compileFileOnModule = function(filename, moduleNode){
 
 //Compilation:
@@ -412,10 +408,7 @@
             //.importDependencies moduleNode
             this.importDependencies(moduleNode);
         };
-     };
-
-
-     //     method parseOnModule(moduleNode:Grammar.Module, filename, sourceLines)
+     }// ---------------------------
      Project.prototype.parseOnModule = function(moduleNode, filename, sourceLines){
       try{
 //This method will initialize lexer & parse  source lines into ModuleNode scope
@@ -478,9 +471,7 @@
             //throw err
             throw err;
         };
-     };
-
-     //     method createNewModule(fileInfo, parent) returns Grammar.Module
+     }// ---------------------------
      Project.prototype.createNewModule = function(fileInfo, parent){
 
 //create a **new Module** and then create a **new lexer** for the Module
@@ -537,10 +528,7 @@
 
         //return moduleNode
         return moduleNode;
-     };
-
-
-     //     method produceModule(moduleNode:Grammar.Module)
+     }// ---------------------------
      Project.prototype.produceModule = function(moduleNode){
 
         //moduleNode.lexer.outCode.browser = .options.browser
@@ -567,10 +555,7 @@
             //moduleNode.lexer.outCode.put "//# sourceMappingURL=#{moduleNode.fileInfo.base}#{moduleNode.fileInfo.outExtension}.map"
             moduleNode.lexer.outCode.put("//# sourceMappingURL=" + moduleNode.fileInfo.base + moduleNode.fileInfo.outExtension + ".map");
         };
-     };
-
-
-     //     method importDependencies(moduleNode:Grammar.Module)
+     }// ---------------------------
      Project.prototype.importDependencies = function(moduleNode){
 
 //Check if this module 'imported other modules'. Process Imports (recursive)
@@ -646,12 +631,7 @@
             };
         };// end for each in moduleNode.requireCallNodes
         
-     };
-
-        //#loop
-
-
-     //     method importModule(importingModule:Grammar.Module, importInfo: Environment.ImportParameterInfo)
+     }// ---------------------------
      Project.prototype.importModule = function(importingModule, importInfo){
 
 //importParameter is the raw string passed to `import/require` statements,
@@ -760,13 +740,7 @@
         this.recurseLevel -= 1;
         //return moduleNode
         return moduleNode;
-     };
-
-    //#end importModule
-
-
-
-     //     method getInterface(importingModule,fileInfo, moduleNode:Grammar.Module )
+     }// ---------------------------
      Project.prototype.getInterface = function(importingModule, fileInfo, moduleNode){
 //If a 'interface' file exists, compile interface declarations instead of file
 //return true if interface (exports) obtained
@@ -865,21 +839,14 @@
             //return true
             return true;
         };
-     };
-
-        //endif // skip node-js code if we're generatice the compile-to-C compiler
-
-
-     //     helper method compilerVar(name) returns Names.Declaration // or undefined
+     }// ---------------------------
      Project.prototype.compilerVar = function(name){
 //helper compilerVar(name)
 //return rootModule.compilerVars.members[name].value
 
         //return .compilerVars.get(name)
         return this.compilerVars.get(name);
-     };
-
-     //     helper method setCompilerVar(name,value)
+     }// ---------------------------
      Project.prototype.setCompilerVar = function(name, value){
 //helper compilerVar(name)
 //rootModule.compilerVars.members.set(name,value)
@@ -896,9 +863,7 @@
 
         //nameDecl.setMember "**value**",value
         nameDecl.setMember("**value**", value);
-     };
-
-     //     helper method redirectOutput(newOut)
+     }// ---------------------------
      Project.prototype.redirectOutput = function(newOut){
 
         //for each moduleNode:Grammar.Module in map .moduleCache
@@ -912,15 +877,8 @@
               
               }// end for each property
         
-     };
+     }
     // end class Project
-
-    //end class Project
-
-//##Add helper properties and methods to AST node class Module
-
-    //    append to class Grammar.Module
-    
 
 //##Add helper properties and methods to AST node class Module
 
@@ -943,12 +901,14 @@
         //referenceCount
 
      //     method getCompiledLines returns string array
+     // ---------------------------
      Grammar.Module.prototype.getCompiledLines = function(){
         //return .lexer.outCode.getResult()
         return this.lexer.outCode.getResult();
      };
 
      //     method getCompiledText returns string
+     // ---------------------------
      Grammar.Module.prototype.getCompiledText = function(){
         //return .lexer.outCode.getResult().join('\n')
         return this.lexer.outCode.getResult().join('\n');
@@ -967,4 +927,15 @@
      //     properties
         //importedModule: Grammar.Module
      
+// -----------
+// Module code
+// -----------
+
+    //end class Project
+
+//##Add helper properties and methods to AST node class Module
+
+    //    append to class Grammar.Module
+    
+// end of module
 module.exports=Project;

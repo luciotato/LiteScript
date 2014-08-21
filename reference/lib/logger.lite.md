@@ -11,7 +11,7 @@ Dependencies:
 
 ## Main namespace
 
-### Namespace logger
+    export only namespace logger
 
 #### properties 
 

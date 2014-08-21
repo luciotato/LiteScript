@@ -118,7 +118,7 @@ prepares a processed infoLines result array
 
 Regexp to match class/method markdown titles, they're considered CODE
 
-        var titleKeyRegexp = /^(#)+ *(?:(?:public|export|default|helper|namespace)\s*)*(class|namespace|append to|function|method|constructor|properties)\b/i
+        var titleKeyRegexp = /^(#)+ *(?:(?:public|export|default|only|helper|namespace)\s*)*(class|namespace|append to|function|method|constructor|properties)\b/i
 
 Loop processing source code lines 
 

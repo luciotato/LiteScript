@@ -11,7 +11,7 @@ When compiled-to-c, native, fast methods from Lite-C core
 will be used. See file: "GlobalScopeC.interface.md"
 
 
-    namespace LiteCore
+    only export namespace LiteCore
 
         method getSymbol(name)
             return name

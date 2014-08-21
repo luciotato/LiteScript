@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //==============
 
 
@@ -15,7 +18,7 @@
 
 //## Main namespace
 
-    //    namespace logger
+    //export only namespace logger
     var logger={};
 
      //     properties
@@ -273,4 +276,11 @@
         //throw new ControlledError(msg)
         throw new ControlledError(msg);
      };
+    
+    // export
+    module.exports.logger = logger;
+// -----------
+// Module code
+// -----------
+// end of module
 module.exports=logger;

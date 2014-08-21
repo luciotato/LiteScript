@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //===============
 
 //This module contains helper functions to manage variable,
@@ -167,6 +170,7 @@
 
 
     //    export function launch()
+    // ---------------------------
     function launch(){
 
 //We start this module once the entire multi-node AST tree has been parsed.
@@ -471,12 +475,8 @@
     // export
     module.exports.launch = launch;
 
-    //end function validate
-
     //    export function walkAllNodesCalling(methodName:string)
-    
-
-    //    export function walkAllNodesCalling(methodName:string)
+    // ---------------------------
     function walkAllNodesCalling(methodName){
 
         //var methodSymbol = LiteCore.getSymbol(methodName)
@@ -508,6 +508,7 @@
 
 
     //    export function initialize(aProject)
+    // ---------------------------
     function initialize(aProject){
 
 //Initialize module vars
@@ -682,6 +683,7 @@
     module.exports.initialize = initialize;
 
     //    helper function processInterfaceFile(globalInterfaceFile)
+    // ---------------------------
     function processInterfaceFile(globalInterfaceFile){
 
 //Process the global scope declarations interface file: GlobalScope(JS|C|NODE).interface.md
@@ -719,6 +721,7 @@
 //## Module Helper Functions
 
     //    helper function tryGetGlobalPrototype(name)
+    // ---------------------------
     function tryGetGlobalPrototype(name){
 //gets a var from global scope
 
@@ -732,6 +735,7 @@
     };
 
     //    public helper function globalPrototype(name)
+    // ---------------------------
     function globalPrototype(name){
 //gets a var from global scope
 
@@ -762,6 +766,7 @@
 
 
     //    helper function addBuiltInClass(name,node) returns Names.Declaration
+    // ---------------------------
     function addBuiltInClass(name, node){
 //Add a built-in class to global scope, return class prototype
 
@@ -792,6 +797,7 @@
 
 
     //    helper function addBuiltInObject(name,node) returns Names.Declaration
+    // ---------------------------
     function addBuiltInObject(name, node){
 //Add a built-in object to global scope, return object
 
@@ -822,13 +828,13 @@
 
       //class ConvertResult
       // constructor
-      function ConvertResult(){ // default constructor
+      function ConvertResult(initializer){ // default constructor
         //properties
           //converted:number=0
           //failures:number=0
             this.converted=0;
             this.failures=0;
-      };
+          for(prop in initializer) if (initializer.hasOwnProperty(prop)) this[prop]=initializer[prop];};
       Names.ConvertResult=ConvertResult;
       
       // end class ConvertResult
@@ -840,6 +846,7 @@
     
 
      //     helper method findMember(name) returns Names.Declaration
+     // ---------------------------
      Names.Declaration.prototype.findMember = function(name){
 //this method looks for a name in Names.Declaration members,
 //it also follows the **proto** chain (same mechanism as js __proto__ chain)
@@ -892,6 +899,7 @@
 
 
      //     helper method hasProto(name) returns boolean
+     // ---------------------------
      Names.Declaration.prototype.hasProto = function(name){
 //this method looks for a name in Names.Declaration members **proto**->prototype->parent
 //it also follows the **proto** chain (same mechanism as js __proto__ chain)
@@ -942,6 +950,7 @@
      };
 
      //     helper method getMembersFromObjProperties(obj) #Recursive
+     // ---------------------------
      Names.Declaration.prototype.getMembersFromObjProperties = function(obj){
 //Recursively converts a obj properties in NameDeclarations.
 //it's used when a pure.js module is imported by 'require'
@@ -1012,6 +1021,7 @@
 
 
      //     helper method isInParents(name)
+     // ---------------------------
      Names.Declaration.prototype.isInParents = function(name){
 //return true if a property name is in the parent chain.
 //Used to avoid recursing circular properties
@@ -1030,6 +1040,7 @@
 
 
      //     helper method processConvertTypes(options:Names.DeclarationOptions) returns Names.ConvertResult
+     // ---------------------------
      Names.Declaration.prototype.processConvertTypes = function(options){
 //convert possible types stored in Names.Declaration,
 //from string/varRef to other NameDeclarations in the scope
@@ -1050,6 +1061,7 @@
 
 
      //     helper method convertType(internalName, result: Names.ConvertResult, options: Names.DeclarationOptions)
+     // ---------------------------
      Names.Declaration.prototype.convertType = function(internalName, result, options){
 //convert type from string to NameDeclarations in the scope.
 //returns 'true' if converted, 'false' if it has to be tried later
@@ -1069,6 +1081,15 @@
             //#already converted, nothing to do
             //return
             return;
+        };
+
+        //if typeRef instance of Grammar.TypeDeclaration
+        if (typeRef instanceof Grammar.TypeDeclaration) {
+        
+            //declare valid typeRef.mainType
+            
+            //typeRef = typeRef.mainType
+            typeRef = typeRef.mainType;
         };
 
         //var converted:Names.Declaration
@@ -1159,6 +1180,7 @@
 
 
      //     helper method assignTypeFromValue(value)
+     // ---------------------------
      Names.Declaration.prototype.assignTypeFromValue = function(value){
 //if we can determine assigned value type, set var type
 
@@ -1204,6 +1226,7 @@
 
 
      //     helper method assignTypebyNameAffinity()
+     // ---------------------------
      Names.Declaration.prototype.assignTypebyNameAffinity = function(){
 //Auto-assign type by name affinity.
 //If no type specified, check project.nameAffinity
@@ -1293,6 +1316,7 @@
         //scope: Names.Declaration //for nodes with scope
 
      //     helper method declareName(name, options:Names.DeclarationOptions)
+     // ---------------------------
      ASTBase.prototype.declareName = function(name, options){
 //declareName creates a new Names.Declaration, *referecing source as nodeDeclared (AST node)*
 
@@ -1301,6 +1325,7 @@
      };
 
      //     method addMemberTo(nameDecl, memberName, options:Names.DeclarationOptions)  returns Names.Declaration
+     // ---------------------------
      ASTBase.prototype.addMemberTo = function(nameDecl, memberName, options){
 //a Helper method ASTBase.*addMemberTo*
 //Adds a member to a NameDecl, referencing this node as nodeDeclared
@@ -1310,6 +1335,7 @@
      };
 
      //     helper method tryGetMember(nameDecl, name:string, options:Names.DeclarationOptions)
+     // ---------------------------
      ASTBase.prototype.tryGetMember = function(nameDecl, name, options){
 //this method looks for a specific member, optionally declare as forward
 //or inform error. We need this AST node, to correctly report error.
@@ -1347,6 +1373,7 @@
 
 
      //     helper method getScopeNode()
+     // ---------------------------
      ASTBase.prototype.getScopeNode = function(){
 
 //**getScopeNode** method return the parent 'scoped' node in the hierarchy.
@@ -1379,6 +1406,7 @@
 
 
      //     method findInScope(name) returns Names.Declaration
+     // ---------------------------
      ASTBase.prototype.findInScope = function(name){
 //this method looks for the original place
 //where a name was defined (function,method,var)
@@ -1435,6 +1463,7 @@
 
 
      //     method tryGetFromScope(name, options:Names.DeclarationOptions) returns Names.Declaration
+     // ---------------------------
      ASTBase.prototype.tryGetFromScope = function(name, options){
 //a Helper method: *ASTBase.tryGetFromScope(name)*, this method looks for the original declaration
 //in the scope. if the declaration is not found, an error is emmited and a -pseudo- var is created
@@ -1502,6 +1531,7 @@
 
 
      //     method addToScope(item, options:Names.DeclarationOptions) returns Names.Declaration
+     // ---------------------------
      ASTBase.prototype.addToScope = function(item, options){
 //a Helper method ASTBase.*addToScope*
 //Search for parent Scope, adds passed name to scope.members
@@ -1522,6 +1552,7 @@
 //If the found item has a different case than the name we're adding, emit error & return
 
      //     method addToSpecificScope(scope:Names.Declaration, item, options:Names.DeclarationOptions) returns Names.Declaration
+     // ---------------------------
      ASTBase.prototype.addToSpecificScope = function(scope, item, options){
 
         //declare valid item.name
@@ -1602,6 +1633,7 @@
 
 
      //     helper method createScope()
+     // ---------------------------
      ASTBase.prototype.createScope = function(){
 //initializes an empty scope in this node
 
@@ -1624,6 +1656,7 @@
      };
 
      //     helper method tryGetOwnerNameDecl( informError ) returns Names.Declaration
+     // ---------------------------
      ASTBase.prototype.tryGetOwnerNameDecl = function(informError){
 
 //Returns namedeclaration where this node should be.
@@ -1755,6 +1788,7 @@
 
 
      //     helper method callOnSubTree(methodSymbol,excludeClass) # recursive
+     // ---------------------------
      ASTBase.prototype.callOnSubTree = function(methodSymbol, excludeClass){
 
 //This is instance has the method, call the method on the instance
@@ -1779,7 +1813,7 @@
       //for each property name,value in this
       var value=undefined;
       for ( var name in this){value=this[name];
-      if(['constructor', 'parent', 'importedModule', 'requireCallNodes', 'exportDefault', 'constructorDeclaration'].indexOf(name)===-1){
+            if(['constructor', 'parent', 'importedModule', 'requireCallNodes', 'exportDefault', 'constructorDeclaration'].indexOf(name)===-1){
 
             //if value instance of ASTBase
             if (value instanceof ASTBase) {
@@ -1825,6 +1859,7 @@
     
 
      //     helper method addToExport(exportedNameDecl)
+     // ---------------------------
      Grammar.Module.prototype.addToExport = function(exportedNameDecl){
 
 //Add to parentModule.exports, but *preserve parent*
@@ -1842,6 +1877,7 @@
 
 
      //     helper method confirmExports()
+     // ---------------------------
      Grammar.Module.prototype.confirmExports = function(){
 
 //Check that:
@@ -1929,18 +1965,23 @@
       //properties nameDecl
 
       //helper method createNameDeclaration()
+      // ---------------------------
       Grammar.VariableDecl.prototype.createNameDeclaration = function(){
-        //return .declareName(.name,{type:.type, itemType:.itemType})
-        return this.declareName(this.name, {type: this.type, itemType: this.itemType});
+        //declare .type: Grammar.TypeDeclaration
+        
+        //return .declareName(.name,{type:.type})
+        return this.declareName(this.name, {type: this.type});
       };
 
       //helper method declareInScope()
+      // ---------------------------
       Grammar.VariableDecl.prototype.declareInScope = function(){
           //.nameDecl = .addToScope(.createNameDeclaration())
           this.nameDecl = this.addToScope(this.createNameDeclaration());
       };
 
       //helper method getTypeFromAssignedValue()
+      // ---------------------------
       Grammar.VariableDecl.prototype.getTypeFromAssignedValue = function(){
 
           // if it has an assigned value
@@ -1978,6 +2019,7 @@
     
 
      //method declare()  # pass 1
+     // ---------------------------
      Grammar.VarStatement.prototype.declare = function(){
 
         //var moduleNode:Grammar.Module = .getParent(Grammar.Module)
@@ -2019,6 +2061,7 @@
 
 
      //method evaluateAssignments() # pass 4, determine type from assigned value
+     // ---------------------------
      Grammar.VarStatement.prototype.evaluateAssignments = function(){
         //for each varDecl in .list
         for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
@@ -2038,12 +2081,14 @@
       //properties nameDecl
 
       //method declare()  # pass 1
+      // ---------------------------
       Grammar.WithStatement.prototype.declare = function(){
          //.nameDecl = .addToScope(.declareName(.name))
          this.nameDecl = this.addToScope(this.declareName(this.name));
       };
 
       //method evaluateAssignments() # pass 4, determine type from assigned value
+      // ---------------------------
       Grammar.WithStatement.prototype.evaluateAssignments = function(){
         //.nameDecl.assignTypeFromValue .varRef
         this.nameDecl.assignTypeFromValue(this.varRef);
@@ -2058,6 +2103,7 @@
       //properties nameDecl
 
       //method declare #pass 1: declare name choosen for imported(required) contents as a scope var
+      // ---------------------------
       Grammar.ImportStatementItem.prototype.declare = function(){
 
         //if no .getParent(Grammar.DeclareStatement) #except for 'global declare'
@@ -2099,6 +2145,7 @@
       //nameDecl
 
      //     method declare()
+     // ---------------------------
      Grammar.ClassDeclaration.prototype.declare = function(){
 
 //AppendToDeclarations do not "declare" anything at this point.
@@ -2244,6 +2291,7 @@
 
 
      //     method validatePropertyAccess()
+     // ---------------------------
      Grammar.ClassDeclaration.prototype.validatePropertyAccess = function(){
 
 //in the pass "Validating Property Access", for a "ClassDeclaration"
@@ -2278,6 +2326,7 @@
      //properties nameDecl
 
      //method declare
+     // ---------------------------
      Grammar.ArrayLiteral.prototype.declare = function(){
 
 //When producing C-code, an ArrayLiteral creates a "new(Array" at module level
@@ -2293,6 +2342,7 @@
      };
 
      //method getResultType
+     // ---------------------------
      Grammar.ArrayLiteral.prototype.getResultType = function(){
           //return tryGetGlobalPrototype('Array')
           return tryGetGlobalPrototype('Array');
@@ -2307,6 +2357,7 @@
      //properties nameDecl
 
      //method declare
+     // ---------------------------
      Grammar.ObjectLiteral.prototype.declare = function(){
 
 //When producing js-code, an ObjectLiteral declares a new ad-hoc "type".
@@ -2340,6 +2391,7 @@
 //When producing js-code is the ad-hoc type created for the ObjectLiteral
 
      //method getResultType
+     // ---------------------------
      Grammar.ObjectLiteral.prototype.getResultType = function(){
 
         //if project.options.target is 'c'
@@ -2365,6 +2417,7 @@
      //properties nameDecl
 
      //method declare
+     // ---------------------------
      Grammar.NameValuePair.prototype.declare = function(){
 
 //When producing C-code, a ObjectLiteral creates a "Map string to any" on the fly,
@@ -2412,6 +2465,7 @@
         //declared:boolean
 
      //     method declare() ## function, methods and constructors
+     // ---------------------------
      Grammar.FunctionDeclaration.prototype.declare = function(){
 
       //var ownerNameDecl
@@ -2430,8 +2484,8 @@
       if (isFunction) {
       
 
-          //.nameDecl = .addToScope(.name, {type:globalPrototype('Function')})
-          this.nameDecl = this.addToScope(this.name, {type: globalPrototype('Function')});
+          //.nameDecl = .addToScope(.name)
+          this.nameDecl = this.addToScope(this.name);
 
           //var moduleNode:Grammar.Module=.getParent(Grammar.Module)
           var moduleNode = this.getParent(Grammar.Module);
@@ -2481,7 +2535,7 @@
       //var scope = .createScope()
       var scope = this.createScope();
 
-      //.addMemberTo scope,'arguments', {type:'any*',nodeClass:Grammar.VariableDecl}
+      //.addMemberTo scope,'arguments', {type:'any*', nodeClass:Grammar.VariableDecl}
       this.addMemberTo(scope, 'arguments', {type: 'any*', nodeClass: Grammar.VariableDecl});
 
       //if not isFunction
@@ -2544,6 +2598,7 @@
 
 
      //     helper method addMethodToOwnerNameDecl(owner:Names.Declaration)  ## methods
+     // ---------------------------
      Grammar.FunctionDeclaration.prototype.addMethodToOwnerNameDecl = function(owner){
 
       //var actual = owner.findOwnMember(.name)
@@ -2573,24 +2628,28 @@
      };
 
 
-     //     method createReturnType() returns string ## functions & methods
+     //     method createReturnType() ## functions & methods
+     // ---------------------------
      Grammar.FunctionDeclaration.prototype.createReturnType = function(){
 
       //if no .nameDecl, return #nowhere to put definitions
       if (!this.nameDecl) {return};
 
+      //.nameDecl.setMember "**proto**", globalPrototype('Function')
+      this.nameDecl.setMember("**proto**", globalPrototype('Function'));
+
 //Define function's return type from parsed text
 
-      //if .itemType
-      if (this.itemType) {
+      //if .type and .type.itemType
+      if (this.type && this.type.itemType) {
       
 
 //if there's a "itemType", it means type is: `array of [itemType]`
 //We create a intermediate type for `Array of itemType`
 //and set this new nameDecl as function's **return type**
 
-          //var composedName = 'Array of #{.itemType.toString()}'
-          var composedName = 'Array of ' + (this.itemType.toString());
+          //var composedName = 'Array of #{.type.itemType.toString()}'
+          var composedName = 'Array of ' + (this.type.itemType.toString());
 
 //check if it already exists, if not found, create one. Type is 'Array'
 
@@ -2607,23 +2666,18 @@
 
 //item type, is each array member's type
 
-          //intermediateNameDecl.setMember "**item type**", .itemType
-          intermediateNameDecl.setMember("**item type**", this.itemType);
+          //intermediateNameDecl.setMember "**item type**", .type.itemType
+          intermediateNameDecl.setMember("**item type**", this.type.itemType);
 
           //.nameDecl.setMember '**return type**', intermediateNameDecl
           this.nameDecl.setMember('**return type**', intermediateNameDecl);
-
-          //return intermediateNameDecl
-          return intermediateNameDecl;
       }
-      //if .itemType
+      //if .type and .type.itemType
       
       else {
 
-          //if .type then .nameDecl.setMember('**return type**', .type)
+          //if .type, .nameDecl.setMember('**return type**', .type)
           if (this.type) {this.nameDecl.setMember('**return type**', this.type)};
-          //return .type
-          return this.type;
       };
      };
 
@@ -2632,6 +2686,7 @@
     
 
      //     method processAppendToExtends()
+     // ---------------------------
      Grammar.AppendToDeclaration.prototype.processAppendToExtends = function(){
 
 //get referenced class/namespace
@@ -2742,6 +2797,7 @@
       //superDecl : Names.Declaration //nameDecl of the super class
 
      //     method checkSuperChainProperties(superClassNameDecl)
+     // ---------------------------
      Names.Declaration.prototype.checkSuperChainProperties = function(superClassNameDecl){
 
         //if no superClassNameDecl, return
@@ -2776,6 +2832,7 @@
     
 
      //     method processAppendToExtends()
+     // ---------------------------
      Grammar.ClassDeclaration.prototype.processAppendToExtends = function(){
 //In Class's processAppendToExtends we try to get a reference to the superclass
 //and then store the superclass nameDecl in the class nameDecl
@@ -2814,6 +2871,7 @@
         //declared:boolean
 
      //     method declare(informError)
+     // ---------------------------
      Grammar.PropertiesDeclaration.prototype.declare = function(informError){
 //Add all properties as members of its owner object (normally: class.prototype)
 
@@ -2825,11 +2883,8 @@
             //for each varDecl in .list
             for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
             
-                //varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl,varDecl.name,{
-                                            //type:varDecl.type
-                                            //itemType:varDecl.itemType
-                                            //})
-                varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl, varDecl.name, {type: varDecl.type, itemType: varDecl.itemType});
+                //varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl,varDecl.name,{type:varDecl.type})
+                varDecl.nameDecl = varDecl.addMemberTo(ownerNameDecl, varDecl.name, {type: varDecl.type});
             };// end for each in this.list
             //end for
 
@@ -2842,6 +2897,7 @@
      };
 
      //     method evaluateAssignments() # determine type from assigned value on properties declaration
+     // ---------------------------
      Grammar.PropertiesDeclaration.prototype.evaluateAssignments = function(){
 
         //for each varDecl in .list
@@ -2859,6 +2915,7 @@
     
 
      //     method declare()
+     // ---------------------------
      Grammar.ForStatement.prototype.declare = function(){
 
 //a ForStatement has a 'Scope', keyIndexVar & valueVar belong to the scope
@@ -2871,10 +2928,17 @@
     
 
      //     method declare()
+     // ---------------------------
      Grammar.ForEachProperty.prototype.declare = function(){
 
-        //default .valueVar.type = .iterable.itemType
-        if(this.valueVar.type===undefined) this.valueVar.type=this.iterable.itemType;
+        //if .iterable.type
+        if (this.iterable.type) {
+        
+            //default .valueVar.type = .iterable.type.itemType
+            if(this.valueVar.type===undefined) this.valueVar.type=this.iterable.type.itemType;
+            
+        };
+
         //.valueVar.declareInScope
         this.valueVar.declareInScope();
 
@@ -2883,6 +2947,7 @@
      };
 
      //     method evaluateAssignments()
+     // ---------------------------
      Grammar.ForEachProperty.prototype.evaluateAssignments = function(){
 
 //ForEachProperty: index is: string for js (property name) and number for C (symbol)
@@ -2902,10 +2967,17 @@
     
 
      //     method declare()
+     // ---------------------------
      Grammar.ForEachInArray.prototype.declare = function(){
 
-        //default .valueVar.type = .iterable.itemType
-        if(this.valueVar.type===undefined) this.valueVar.type=this.iterable.itemType;
+        //if .iterable.type
+        if (this.iterable.type) {
+        
+            //default .valueVar.type = .iterable.type.itemType
+            if(this.valueVar.type===undefined) this.valueVar.type=this.iterable.type.itemType;
+            
+        };
+
         //.valueVar.declareInScope
         this.valueVar.declareInScope();
 
@@ -2917,6 +2989,7 @@
      };
 
      //     method evaluateAssignments()
+     // ---------------------------
      Grammar.ForEachInArray.prototype.evaluateAssignments = function(){
 
 //ForEachInArray:
@@ -2938,6 +3011,7 @@
      };
 
      //     method validatePropertyAccess()
+     // ---------------------------
      Grammar.ForEachInArray.prototype.validatePropertyAccess = function(){
 //ForEachInArray: check if the iterable has a .length property.
 
@@ -2969,6 +3043,7 @@
     
 
      //     method declare()
+     // ---------------------------
      Grammar.ForIndexNumeric.prototype.declare = function(){
 
         //.keyIndexVar.declareInScope
@@ -2981,6 +3056,7 @@
 //`ExceptionBlock: (exception|catch) catchVar-IDENTIFIER Body [finally Body]`
 
       //method declare()
+      // ---------------------------
       Grammar.ExceptionBlock.prototype.declare = function(){
 
 //Exception blocks have a scope
@@ -3000,6 +3076,7 @@
 //`VariableRef` is a Variable Reference.
 
      //     method validatePropertyAccess()
+     // ---------------------------
      Grammar.VariableRef.prototype.validatePropertyAccess = function(){
 
         //if .parent is instance of Grammar.DeclareStatement
@@ -3122,6 +3199,7 @@
 
 
      //     helper method tryGetReference(options:Names.DeclarationOptions) returns Names.Declaration
+     // ---------------------------
      Grammar.VariableRef.prototype.tryGetReference = function(options){
 
 //evaluate this VariableRef.
@@ -3211,6 +3289,7 @@
      };
 
      //     helper method getResultType() returns Names.Declaration
+     // ---------------------------
      Grammar.VariableRef.prototype.getResultType = function(){
 
       //return .tryGetReference()
@@ -3222,6 +3301,7 @@
     
 
      //     method validateArguments(funcDecl:Grammar.FunctionDeclaration)
+     // ---------------------------
      Grammar.FunctionAccess.prototype.validateArguments = function(funcDecl){
 
         //var definedArgs= funcDecl.paramsDeclarations? funcDecl.paramsDeclarations.list.length else 0
@@ -3291,6 +3371,7 @@
 
 
      //     method evaluateAssignments() ## Grammar.AssignmentStatement
+     // ---------------------------
      Grammar.AssignmentStatement.prototype.evaluateAssignments = function(){
 
 //check if we've got a a clear reference.
@@ -3405,6 +3486,7 @@
     
 
      //     helper method getResultType() returns Names.Declaration
+     // ---------------------------
      Grammar.Expression.prototype.getResultType = function(){
 //Try to get return type from a simple Expression
 
@@ -3421,6 +3503,7 @@
 //for 'into var x' oper, we declare the var, and we deduce type
 
      //     method declare()
+     // ---------------------------
      Grammar.Oper.prototype.declare = function(){
 
         //if .intoVar is '*r' # is a into-assignment operator with 'var' declaration
@@ -3452,6 +3535,7 @@
      };
 
      //     method evaluateAssignments()
+     // ---------------------------
      Grammar.Oper.prototype.evaluateAssignments = function(){
 
 //for into-assignment operator
@@ -3487,6 +3571,7 @@
 
 
      //     helper method getResultType() returns Names.Declaration
+     // ---------------------------
      Grammar.Oper.prototype.getResultType = function(){
 //Try to get return type from this Oper (only for 'new' unary oper)
 
@@ -3506,6 +3591,7 @@
     
 
      //     helper method getResultType() returns Names.Declaration
+     // ---------------------------
      Grammar.Operand.prototype.getResultType = function(){
 //Try to get return type from this Operand
 
@@ -3542,6 +3628,7 @@
     //    append to class Grammar.DeclareStatement
     
      //     method declare() # pass 1, declare as props
+     // ---------------------------
      Grammar.DeclareStatement.prototype.declare = function(){
 
 //declare [all] x:type
@@ -3634,6 +3721,7 @@
 //while checking property access.
 
      //     method evaluateAssignments() # Grammar.DeclareStatement ###
+     // ---------------------------
      Grammar.DeclareStatement.prototype.evaluateAssignments = function(){
 //Assign specific type to varRef - for the entire compilation
 
@@ -3651,18 +3739,24 @@
      };
 
      //     helper method setTypes(actualVar:Names.Declaration) # Grammar.DeclareStatement ###
+     // ---------------------------
      Grammar.DeclareStatement.prototype.setTypes = function(actualVar){
 //Assign types if it was declared
 
       //#create type on the fly, overwrite existing type
 
-      //.setSubType actualVar,.type,'**proto**'
-      this.setSubType(actualVar, this.type, '**proto**');
-      //.setSubType actualVar,.itemType,'**item type**'
-      this.setSubType(actualVar, this.itemType, '**item type**');
+      //if .type
+      if (this.type) {
+      
+        //.setSubType actualVar,.type.mainType,'**proto**'
+        this.setSubType(actualVar, this.type.mainType, '**proto**');
+        //.setSubType actualVar,.type.itemType,'**item type**'
+        this.setSubType(actualVar, this.type.itemType, '**item type**');
+      };
      };
 
      //     helper method setSubType(actualVar:Names.Declaration, toSet, propName )
+     // ---------------------------
      Grammar.DeclareStatement.prototype.setSubType = function(actualVar, toSet, propName){
 //Assign type if it was declared
 
@@ -3681,6 +3775,7 @@
      };
 
      //     method validatePropertyAccess() # Grammar.DeclareStatement ###
+     // ---------------------------
      Grammar.DeclareStatement.prototype.validatePropertyAccess = function(){
 
 //declare members on the fly, with optional type
@@ -3756,6 +3851,7 @@
 
 
     //    helper function AddGlobalClasses()
+    // ---------------------------
     function AddGlobalClasses(){
 
         //var nameDecl
@@ -3781,4 +3877,12 @@
             };
         };// end for each in Array.prototype.slice.call(arguments)
         
-    };
+    };// -----------
+// Module code
+// -----------
+
+    //end function validate
+
+    //    export function walkAllNodesCalling(methodName:string)
+    
+// end of module

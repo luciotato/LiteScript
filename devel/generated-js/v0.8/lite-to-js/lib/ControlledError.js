@@ -1,4 +1,7 @@
-    //class ControlledError extends Error
+// -----------
+// Module Init
+// -----------
+    //only export class ControlledError extends Error
     // constructor
     function ControlledError(msg){
     //Sadly, the Error Class in javascript is not easily subclassed.
@@ -17,5 +20,12 @@ this.__proto__.__proto__=Error.apply(null,arguments);
     // ControlledError (extends|proto is) Error
     ControlledError.prototype.__proto__ = Error.prototype;
     
+    // export
+    module.exports.ControlledError = ControlledError;
+    
     // end class ControlledError
+// -----------
+// Module code
+// -----------
+// end of module
 module.exports=ControlledError;

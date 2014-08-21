@@ -1,7 +1,7 @@
 String Interpolation
 --------------------
 
-	declare var expect
+	declare var expect:function
 
 	var Tests = 
 

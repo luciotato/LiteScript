@@ -289,11 +289,11 @@ global Classes pre-created are:
 
 ### global functions
 
-    function setTimeout
-    function clearTimeout
-    function setInterval
-    function clearInterval
-    function eval
+    public function setTimeout
+    public function clearTimeout
+    public function setInterval
+    public function clearInterval
+    public function eval
 
 ## Global Namespaces
 

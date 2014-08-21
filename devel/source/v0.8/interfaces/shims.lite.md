@@ -40,7 +40,7 @@ Also add 'remove' & 'clear' to class Array
 
         shim method countSpaces()
             var inx=0
-            while inx<this.length-1
+            while inx<this.length
                 if this.charAt(inx) isnt ' ', break
                 inx++
 

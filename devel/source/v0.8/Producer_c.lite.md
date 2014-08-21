@@ -317,21 +317,21 @@ OLD include __or temp vars
 */
 
 
-Check if there's a explicit namespace/class with the same name as the module (default export)
+Check if there's a "only export"
 
-        var explicitModuleNamespace 
+        var defaultExportNamespace 
         for each statement in .statements    
-            if statement.specific.constructor is Grammar.NamespaceDeclaration
-                and statement.specific.name is .fileInfo.base
-                    explicitModuleNamespace=statement
-                    explicitModuleNamespace.produce //produce main namespace
+            if statement.specific.constructor is Grammar.NamespaceDeclaration 
+                and statement.hasAdjective('only export')
+                    defaultExportNamespace=statement
+                    defaultExportNamespace.produce //produce main namespace
                     break
 
 
 if there's no explicit namespace declaration, 
 produce this module body as a namespace (using module name as namespace)
 
-        if no explicitModuleNamespace 
+        if no defaultExportNamespace 
             .produceAsNamespace prefix
 
 __moduleInit: module main function 
@@ -2951,11 +2951,14 @@ composing the name. e.g. a property x in module Foo, namespace Bar => `Foo_Bar_x
             var result = []
             var node = this
             while node and not node.isScope
-                if node.name isnt 'prototype', result.unshift node.name
+
                 if node.nodeDeclared instanceof Grammar.ImportStatementItem
                     //stop here, imported modules create a local var, but act as global var
                     //since all others import of the same name, return the same content 
+                    result.unshift node.name
                     return result.join('_')
+
+                if node.name isnt 'prototype', result.unshift node.name
 
                 node = node.parent
 

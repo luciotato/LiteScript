@@ -1,7 +1,7 @@
 Default Assignment Tests
 ------------------------
 
-    declare var expect 
+    declare var expect:function
 
     function aFn(x,y, options)
 

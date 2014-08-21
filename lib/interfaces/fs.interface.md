@@ -1,5 +1,5 @@
     
-    public namespace fs
+    export only namespace fs
         
         method exists(path, callback) 
         method existsSync(path) 

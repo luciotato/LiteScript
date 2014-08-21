@@ -1,4 +1,7 @@
-    //    class GeneralOptions
+// -----------
+// Module Init
+// -----------
+    //    export only class GeneralOptions
     // constructor
     function GeneralOptions(initializer){ // default constructor
       //properties
@@ -61,5 +64,12 @@
             //return "outDir:" + .outDir + "\ndefines:" + (.defines.join())
             return "outDir:" + this.outDir + "\ndefines:" + (this.defines.join());
       }
+    // export
+    module.exports.GeneralOptions = GeneralOptions;
+    
     // end class GeneralOptions
+// -----------
+// Module code
+// -----------
+// end of module
 module.exports=GeneralOptions;

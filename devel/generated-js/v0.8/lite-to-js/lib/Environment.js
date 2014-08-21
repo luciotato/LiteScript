@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //search modules in external cache, load and save from external cache (disk).
 
 //The `Environment` abstraction helps us to support compile on server (nodejs) or the browser.
@@ -412,11 +415,6 @@
     
     // end class FileInfo
 
-    //end class FileInfo
-
-    //    export helper function setBaseInfo(projectOptions)
-    
-
     //    export helper function setBaseInfo(projectOptions)
     // ---------------------------
     function setBaseInfo(projectOptions){
@@ -666,3 +664,12 @@
     module.exports.ImportParameterInfo = ImportParameterInfo;
     
     // end class ImportParameterInfo
+// -----------
+// Module code
+// -----------
+
+    //end class FileInfo
+
+    //    export helper function setBaseInfo(projectOptions)
+    
+// end of module

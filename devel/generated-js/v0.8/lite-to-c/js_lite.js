@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //This is the command line interface to LiteScript-to-js Compiler
 //when the LiteScript compiler is generated as js-code
 //to run on node.js or the browser
@@ -15,13 +18,9 @@
     //import Compiler
     var Compiler = require('./Compiler.js');
 
-//execute commands
-
-    //execute process.argv
-    execute(process.argv);
-
 
     //    function execute(params:array)
+    // ---------------------------
     function execute(params){
      try{
 
@@ -175,8 +174,10 @@
         
         }
         else {
-                //console.error "Invalid (" + args.items.length + ") arguments:\", args.items.join(' ')\nlite -h for help"
-                console.error("Invalid (" + args.items.length + ") arguments:\", args.items.join(' ')\nlite -h for help");
+                //console.error "Invalid arguments:", args.items.join(' ')
+                console.error("Invalid arguments:", args.items.join(' '));
+                //console.error "lite -h for help"
+                console.error("lite -h for help");
                 //process.exit 2
                 process.exit(2);
         };
@@ -247,14 +248,9 @@
         };
     };
 
-    //end function execute
-
 
     //    function compileAndRun(compileAndRunParams:array, options:GeneralOptions)
-    
-
-
-    //    function compileAndRun(compileAndRunParams:array, options:GeneralOptions)
+    // ---------------------------
     function compileAndRun(compileAndRunParams, options){
 
         //var nodeArgs = options.es6?" --harmony":""
@@ -304,7 +300,8 @@
 //else, run here (eval)
 
         //else
-            exec(cmd, function (error, stdout, stderr){
+            exec(cmd, // ---------------------------
+            function (error, stdout, stderr){
                         //print stdout
                         console.log(stdout);
                         //print stderr
@@ -377,6 +374,7 @@
 
 
     //    function watchDir(options:GeneralOptions)
+    // ---------------------------
     function watchDir(options){
 
 //Watch a directory and compile when files change
@@ -403,7 +401,8 @@
           //throw err
 
         //watcher.on 'change' -> event,file
-        watcher.on('error', function (err){
+        watcher.on('error', // ---------------------------
+        function (err){
           //watcher.close
           watcher.close();
           //throw err
@@ -418,14 +417,16 @@
                 //,250)
 
     //    function compileOnChange(file, dir, options:GeneralOptions)
-        watcher.on('change', function (event, file){
+        watcher.on('change', // ---------------------------
+        function (event, file){
           //clearTimeout readdirTimeout
           clearTimeout(readdirTimeout);
           //readdirTimeout = setTimeout( ->
                     //console.log "DIR CHANGE"
                     //compileOnChange(file, mainDir, options)
                 //,250)
-          readdirTimeout = setTimeout(function (){
+          readdirTimeout = setTimeout(// ---------------------------
+          function (){
                     //console.log "DIR CHANGE"
                     //compileOnChange(file, mainDir, options)
                     compileOnChange(file, mainDir, options);
@@ -434,6 +435,7 @@
     };
 
     //    function compileOnChange(file, dir, options:GeneralOptions)
+    // ---------------------------
     function compileOnChange(file, dir, options){
      try{
 
@@ -472,4 +474,18 @@
             //console.log err.message
             console.log(err.message);
         };
-    };
+    };// -----------
+// Module code
+// -----------
+
+//execute commands
+
+    //execute process.argv
+    execute(process.argv);
+
+    //end function execute
+
+
+    //    function compileAndRun(compileAndRunParams:array, options:GeneralOptions)
+    
+// end of module

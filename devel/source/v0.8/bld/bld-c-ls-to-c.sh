@@ -25,7 +25,7 @@ echo "----------------------"
 echo "using v0.8-ls-to-$targetLang to generate ($targetLang code) v0.8 lite-to-$targetTarget compiler"
 echo "----------------------"
 
-if node $DBRK ../../util/liteVersion -use v0.8/lite-to-$targetLang $targetLang$_lite -comment 2 -v 1 -D PROD_$up3 -o $OUT; then 
+if node $DBRK ../../util/liteVersion -use v0.8/lite-to-$targetLang $targetLang$_lite -v 1 -D PROD_$up3 -o $OUT; then 
 #if litecc $targetLang$_lite -v 1 -D PROD_$up3 -o $OUT; then     
 
     echo "generated OK ($targetLang code) lite-to-$targetTarget v0.8"

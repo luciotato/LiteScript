@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //==============================
 //LiteScript is a highly readable language that compiles to JavaScript.
 
@@ -46,7 +49,7 @@
     //endif
 
 //----------------
-    //    public class Project
+    //    export only class Project
     // constructor
     function Project(options){
      //     properties
@@ -122,17 +125,8 @@
         //ifdef TARGET_JS
         //.setCompilerVar 'ENV_JS'
         this.setCompilerVar('ENV_JS');
-
-//add 'ENV_NODE' or 'ENV_JS' as compiler vars.
-//ENV_NODE: this compiler is JS code & we're running on node
-//ENV_NODE: this compiler is JS code & we're running on the browser
-
-        //declare var window
-        
-        //var inNode = type of window is 'undefined'
-        var inNode = typeof window === 'undefined';
-        //.setCompilerVar inNode? 'ENV_NODE' else 'ENV_BROWSER'
-        this.setCompilerVar(inNode ? 'ENV_NODE' : 'ENV_BROWSER');
+        //.setCompilerVar options.browser? 'ENV_BROWSER' else 'ENV_NODE'
+        this.setCompilerVar(options.browser ? 'ENV_BROWSER' : 'ENV_NODE');
         //endif
 
 //add 'ENV_C' => this compiler is C-code (*native exe*)
@@ -501,8 +495,12 @@
 
         //moduleNode.createScope()
         moduleNode.createScope();
-        //moduleNode.exports = new Names.Declaration(fileInfo.base, {nodeClass:Grammar.NamespaceDeclaration},moduleNode)
-        moduleNode.exports = new Names.Declaration(fileInfo.base, {nodeClass: Grammar.NamespaceDeclaration}, moduleNode);
+        //moduleNode.exports = new Names.Declaration('exports', {
+                //nodeClass:Grammar.NamespaceDeclaration
+                //normalizeModeKeepFirstCase:true
+                //}
+                //, moduleNode)
+        moduleNode.exports = new Names.Declaration('exports', {nodeClass: Grammar.NamespaceDeclaration, normalizeModeKeepFirstCase: true}, moduleNode);
         //moduleNode.exportsReplaced = false
         moduleNode.exportsReplaced = false;
 
@@ -878,34 +876,34 @@
               }// end for each property
         
      }
-    // end class Project
-
-    //end class Project
-
-//##Add helper properties and methods to AST node class Module
-
-    //    append to class Grammar.Module
+    // export
+    module.exports.Project = Project;
     
+    // end class Project
 
 //##Add helper properties and methods to AST node class Module
 
     //    append to class Grammar.Module
     
      //     properties
+        //isMain: boolean
         //fileInfo #module file info
         //exports: Names.Declaration # holds module.exports as members
-        //exportsReplaced: boolean # if exports was replaced by a ClassDeclaration with the module name
+        //exportsReplaced: boolean # if exports was replaced by a item with 'export only'
         //requireCallNodes: Grammar.ImportStatementItem array #list of `import` item nodes or `require()` function calls (varRef)
         //referenceCount
+        //movedToGlobal: boolean
 
      //     method getCompiledLines returns string array
      
      //     properties
+        //isMain: boolean
         //fileInfo #module file info
         //exports: Names.Declaration # holds module.exports as members
-        //exportsReplaced: boolean # if exports was replaced by a ClassDeclaration with the module name
+        //exportsReplaced: boolean # if exports was replaced by a item with 'export only'
         //requireCallNodes: Grammar.ImportStatementItem array #list of `import` item nodes or `require()` function calls (varRef)
         //referenceCount
+        //movedToGlobal: boolean
 
      //     method getCompiledLines returns string array
      // ---------------------------
@@ -934,4 +932,15 @@
      //     properties
         //importedModule: Grammar.Module
      
+// -----------
+// Module code
+// -----------
+
+    //end class Project
+
+//##Add helper properties and methods to AST node class Module
+
+    //    append to class Grammar.Module
+    
+// end of module
 module.exports=Project;

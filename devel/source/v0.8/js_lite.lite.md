@@ -136,10 +136,8 @@ get mainModuleName
                 options.mainModuleName = args.items[0]
 
             else
-                console.error  """
-                    Invalid (#{args.items.length}) arguments:", args.items.join(' ')
-                    lite -h for help
-                    """
+                console.error "Invalid arguments:", args.items.join(' ')
+                console.error "lite -h for help"
                 process.exit 2
 
 show options
@@ -203,7 +201,7 @@ if options.es6, save compiled file, run with node --harmony
         if options.es6
             var outFile = path.join(options.outDir,options.mainModuleName+'.js')
             fs.writeFileSync outFile,compiledLines.join("\n")
-            var exec = require('child_process').exec;
+            var exec:function = require('child_process').exec;
             var cmd = 'node #{nodeArgs} #{outFile} #{compileAndRunParams.join(" ")}'
             print cmd
             exec cmd, function(error:Error, stdout, stderr) 
@@ -236,7 +234,7 @@ hack for require(). Simulate we're at the run module dir,
 for require() to look at the same dirs as at runtime
 
             declare on module paths:string array
-            declare valid module.constructor._nodeModulePaths
+            declare valid module.constructor._nodeModulePaths:function
             module.filename = path.resolve(filename)
             module.paths = module.constructor._nodeModulePaths(path.dirname(module.filename))
             __dirname = path.dirname(module.filename)
@@ -261,8 +259,8 @@ Watch a directory and compile when files change
         var watcher = fs.watch(mainDir)
         var readdirTimeout
 
-        declare valid watcher.on
-        declare valid watcher.close
+        declare valid watcher.on:function
+        declare valid watcher.close:function
 
         watcher.on 'error' -> err
           watcher.close

@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //=============
 
     //import fs, path
@@ -72,4 +75,7 @@
             //throw err //another error
             throw err;
         };
-    };
+    };// -----------
+// Module code
+// -----------
+// end of module

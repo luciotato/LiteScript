@@ -1,0 +1,16 @@
+    
+    namespace url
+        
+        method parse(url, parseQueryString, slashesDenoteHost) 
+        method resolve(source, relative) 
+        method resolveObject(source, relative) 
+        method format(obj) 
+    
+    
+    public class Url
+        
+        method parse(url, parseQueryString, slashesDenoteHost) 
+        method format
+        method resolve(relative) 
+        method resolveObject(relative) 
+        method parseHost

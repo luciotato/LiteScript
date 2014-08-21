@@ -2,7 +2,7 @@ The LiteScript Compiler Module
 ==============================
 LiteScript is a highly readable language that compiles to JavaScript.
 
-    public var version = '0.8.6'
+    public var version = '0.8.7'
 
     public var buildDate = "__DATE__ __TIME__"
 
@@ -185,7 +185,7 @@ Then use node's built-in compile function to compile the generated JavaScript.
         options.verboseLevel = 0
         options.warningLevel = 0 
         var content = compile(filename, Environment.loadFile(filename),options)
-        declare valid requiringModule._compile
+        declare valid requiringModule._compile:function
         requiringModule._compile(content, filename)
 
 

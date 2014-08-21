@@ -2,7 +2,7 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <data xmlns="http://www.netbeans.org/ns/make-project-private/1">
         <activeConfTypeElem>1</activeConfTypeElem>
-        <activeConfIndexElem>1</activeConfIndexElem>
+        <activeConfIndexElem>0</activeConfIndexElem>
     </data>
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="23">
         <file>
@@ -82,6 +82,8 @@
             <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/Project.c</file>
             <file>file:/home/ltato/LiteScript/devel/litec/core/LiteC-core.c</file>
             <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/Producer_c.c</file>
+            <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/ASTBase.c</file>
+            <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/Parser.c</file>
         </group>
     </open-files>
 </project-private>

@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 
 
     //    public function whileRanges(chunk:string, rangesStr:string) returns string
@@ -209,3 +212,7 @@
     }
     // export
     module.exports.quotedContent = quotedContent;
+// -----------
+// Module code
+// -----------
+// end of module

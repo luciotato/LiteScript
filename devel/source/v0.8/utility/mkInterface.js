@@ -1,53 +1,64 @@
-//mkInterface - creates a name.interface.md from a "require(name)"
+// -----------
+// Module Init
+// -----------
+
     //var mainOut = new Output
     var mainOut = new Output();
     //var foundClasses = [] //clear
-    var foundClasses = []; //clear
+    var foundClasses = [];
+
     //var indent=0
     var indent = 0;
-    //main()
-    
+
 //##Main
-    //function main 
+
+    //function main
+    // ---------------------------
     function main(){
+
         //var name = process.argv[2]
         var name = process.argv[2];
+
         //if no name
         if (!name) {
-            //print """ 
-            console.log("                usage: mkInterface name [-noreq]\n\n                where \"name\" is the name of a module to \"require()\"\n\n                if -noreq, no module is required, \"name\" is assumed a global object, e.g.: process\n\n                a .interface.md file will be generated for the loaded module\n");
-                //usage: mkInterface name [-noreq]
-                //where "name" is the name of a module to "require()"
-                //if -noreq, no module is required, "name" is assumed a global object, e.g.: process
-                //a .interface.md file will be generated for the loaded module
-            //"""
+        
+            //print "                usage: mkInterface name [-noreq]\n\n                where \"name\" is the name of the module to \"require()\"\n\n                if -noreq, no module is required, \"name\" is assumed a global object, e.g.: process\n\n                a .interface.md file will be generated for the loaded module\n"
+            console.log("                usage: mkInterface name [-noreq]\n\n                where \"name\" is the name of the module to \"require()\"\n\n                if -noreq, no module is required, \"name\" is assumed a global object, e.g.: process\n\n                a .interface.md file will be generated for the loaded module\n");
             //process.exit 1
             process.exit(1);
         };
+
         //var requiredModule
         var requiredModule = undefined;
         //if process.argv[3] is '-noreq'
         if (process.argv[3] === '-noreq') {
+        
             //requiredModule = global[name]
             requiredModule = global[name];
         }
+        //if process.argv[3] is '-noreq'
+        
         else {
-        //else
             //requiredModule = require(name)
             requiredModule = require(name);
         };
+
         //var mainNameDecl = new NameDeclaration(name, requiredModule)
         var mainNameDecl = new NameDeclaration(name, requiredModule);
+
         //mainNameDecl.processMain mainOut
         mainNameDecl.processMain(mainOut);
+
         //mainOut.printAll
         mainOut.printAll();
     };
-//### class Output
+
+
+    //    class Output
     // constructor
-    function Output(){ // default constructor
-        //declare name affinity out
+    function Output(initializer){ // default constructor
         //properties
+
             //text: string array = []
             //indentSpace = '    '
             //headers: string array = []
@@ -55,54 +66,52 @@
             this.text=[];
             this.indentSpace='    ';
             this.headers=[];
-    };
-        
-        //method indent
+        for(prop in initializer) if (initializer.hasOwnProperty(prop)) this[prop]=initializer[prop];};
+        // ---------------------------
         Output.prototype.indent = function(){
             //.indentSpace += '    '
             this.indentSpace += '    ';
-        };
-        //method deindent
+        }// ---------------------------
         Output.prototype.deindent = function(){
             //.indentSpace = .indentSpace.slice(4)
             this.indentSpace = this.indentSpace.slice(4);
-        };
-        
-        //method setHeader(s:string)
+        }// ---------------------------
         Output.prototype.setHeader = function(s){
             //.headers.push .indentSpace + s
             this.headers.push(this.indentSpace + s);
             //.pendingHeaders = .headers.length
             this.pendingHeaders = this.headers.length;
-        };
-        //method clearHeader
+        }// ---------------------------
         Output.prototype.clearHeader = function(){
             //.headers.pop
             this.headers.pop();
             //.pendingHeaders = .headers.length
             this.pendingHeaders = this.headers.length;
-        };
-        //method push(s:string)
+        }// ---------------------------
         Output.prototype.push = function(s){
+
             //if s
             if (s) {
+            
                 //for inx=0 while inx<.pendingHeaders
                 for( var inx=0; inx < this.pendingHeaders; inx++) {
-                    //.text.push .headers[inx]
-                    this.text.push(this.headers[inx]);
+                    //if .headers[inx], .text.push .headers[inx]
+                    if (this.headers[inx]) {this.text.push(this.headers[inx])};
                     //.headers[inx]=undefined
                     this.headers[inx] = undefined;
                 };// end for inx
                 //end for
+                //.pendingHeaders=0
                 
                 //.pendingHeaders=0
                 this.pendingHeaders = 0;
             };
+
             //.text.push .indentSpace + s
             this.text.push(this.indentSpace + s);
-        };
-        //method printAll
+        }// ---------------------------
         Output.prototype.printAll = function(){
+
             //for each string in .text
             for( var string__inx=0,string ; string__inx<this.text.length ; string__inx++){string=this.text[string__inx];
             
@@ -110,9 +119,12 @@
                 console.log(string);
             };// end for each in this.text
             
-        };
+        }
     // end class Output
-//### class NameDeclaration
+
+
+
+    //    class NameDeclaration
     // constructor
     function NameDeclaration(name, obj, parent){
         //properties
@@ -122,7 +134,6 @@
             //params: string
             //members: map string to NameDeclaration
             //pointer
-        //constructor new NameDeclaration(name, obj, parent)
             //.name = name
             this.name = name;
             //.pointer = obj
@@ -131,19 +142,26 @@
             this.parent = parent;
             //.members = new Map
             this.members = new Map();
+
             //.type = typeof obj
             this.type = typeof obj;
+
             //if .type is 'function'
             if (this.type === 'function') {
+            
                 //var source= obj.toString()
                 var source = obj.toString();
                 //.params = source.slice(source.indexOf('('),source.indexOf('{'))
                 this.params = source.slice(source.indexOf('('), source.indexOf('{'));
+                //if .params.trim() is "()", .params = ""
+                if (this.params.trim() === "()") {this.params = ""};
             };
+
             //declare valid obj.prototype
             
             //if .type is 'function' and obj.prototype and Object.getOwnPropertyNames(obj.prototype).length>4
             if (this.type === 'function' && obj.prototype && Object.getOwnPropertyNames(obj.prototype).length > 4) {
+            
                 //.type='class'
                 this.type = 'class';
                 //for each nameDecl in foundClasses
@@ -156,13 +174,15 @@
                 foundClasses.push(this);
             };
         };
-//---------
-        //method processMain(out, comment)
+        // ---------------------------
         NameDeclaration.prototype.processMain = function(out, comment){
+
                 //.getMembersFromObjProperties
                 this.getMembersFromObjProperties();
+
                 //if .type isnt 'class'
                 if (this.type !== 'class') {
+                
                     //out.indentSpace = '    '
                     out.indentSpace = '    ';
                     //out.push ""
@@ -172,7 +192,8 @@
                     //.pushMethodsAndProperties out
                     this.pushMethodsAndProperties(out);
                 };
-                ////while found classes
+
+                //while found classes
                 //while foundClasses.length
                 while(foundClasses.length){
                     //var nameDecl = foundClasses[0]
@@ -183,11 +204,12 @@
                     foundClasses.shift();
                 };// end loop
                 
-        };
-        //method processClass(out, comment)
+        }// ---------------------------
         NameDeclaration.prototype.processClass = function(out, comment){
+
                 //.getMembersFromObjProperties
                 this.getMembersFromObjProperties();
+
                 //out.indentSpace = '    '
                 out.indentSpace = '    ';
                 //out.push ""
@@ -196,9 +218,11 @@
                 out.push("");
                 //out.push 'public '+.type+' '+.name
                 out.push('public ' + this.type + ' ' + this.name);
-                //// constructor
-                //if .params 
+
+                // constructor
+                //if .params
                 if (this.params) {
+                
                     //out.indent
                     out.indent();
                     //out.push 'constructor new '+.name+' '+.params
@@ -206,17 +230,19 @@
                     //out.deindent
                     out.deindent();
                 };
-                //// out props from prototype
+
+                // out props from prototype
                 //var ptrNameDecl = .members.get("_prototype")
                 var ptrNameDecl = this.members.get("_prototype");
                 //if ptrNameDecl, ptrNameDecl.pushMethodsAndProperties out
                 if (ptrNameDecl) {ptrNameDecl.pushMethodsAndProperties(out)};
-                ////now as namespace 
+
+                //now as namespace
                 //.processAppendToNamespace out
                 this.processAppendToNamespace(out);
-        };
-        //method processAppendToNamespace(out)
+        }// ---------------------------
         NameDeclaration.prototype.processAppendToNamespace = function(out){
+
                 //out.indentSpace = '    '
                 out.indentSpace = '    ';
                 //out.setHeader ""
@@ -229,10 +255,10 @@
                 out.clearHeader();
                 //out.clearHeader
                 out.clearHeader();
-        };
-        //method pushMethodsAndProperties(out, comment)
+        }// ---------------------------
         NameDeclaration.prototype.pushMethodsAndProperties = function(out, comment){
-                ////properties 
+
+                //properties
                 //out.indent
                 out.indent();
                 //out.setHeader 'properties'
@@ -242,62 +268,63 @@
                 //for each key,nameDecl in map .members
                 var nameDecl=undefined;
                 if(!this.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-                for ( var key in this.members.dict) if (this.members.dict.hasOwnProperty(key)){nameDecl=this.members.dict[key];
+                for ( var key in this.members.dict){nameDecl=this.members.dict[key];
                 if(nameDecl.type !== 'function' && nameDecl.type !== 'class' && nameDecl.name !== 'prototype'){
-                    //where nameDecl.type isnt 'function' 
-                        //and nameDecl.type isnt 'class'
-                        //and nameDecl.name isnt 'prototype'
-                        
+
                         //nameDecl.pushMembers out
                         nameDecl.pushMembers(out);
                         }
                         
                         }// end for each property
-                        ////out.push indent+'#{protoypeMember.name}:#{protoypeMember.type}'
+                        //out.push indent+'#{protoypeMember.name}:#{protoypeMember.type}'
+
                 //out.clearHeader
                 out.clearHeader();
                 //out.deindent
                 out.deindent();
-                ////out.setHeader ""
-                ////out.setHeader "//methods"
+
+                //out.setHeader ""
+                //out.setHeader "//methods"
                 //out.setHeader ""
                 out.setHeader("");
-                
+
                 //for each key,methodNameDecl in map .members
                 var methodNameDecl=undefined;
                 if(!this.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-                for ( var key in this.members.dict) if (this.members.dict.hasOwnProperty(key)){methodNameDecl=this.members.dict[key];
+                for ( var key in this.members.dict){methodNameDecl=this.members.dict[key];
                 if(methodNameDecl.type === 'function'){
-                    //where methodNameDecl.type is 'function'
                         //out.push "method #{methodNameDecl.name}#{methodNameDecl.params or ''}"
                         out.push("method " + methodNameDecl.name + (methodNameDecl.params || ''));
                         }
                         
                         }// end for each property
-                
+
                 //out.clearHeader
                 out.clearHeader();
-                ////out.clearHeader
-                ////out.clearHeader
-                ////out.push ""
+                //out.clearHeader
+                //out.clearHeader
+                //out.push ""
+
                 //out.deindent
                 out.deindent();
-        };
-        //declare name affinity nameDecl
-        
-        //helper method pushMembers(out) #recursive
-        NameDeclaration.prototype.pushMembers = function(out){// #recursive
+        }// ---------------------------
+        NameDeclaration.prototype.pushMembers = function(out){
+
 //recursively writes a object declaration
-            //if .name not like /^[a-zA-Z$_]+$/, return # exclude strange/private names
-            if (!(/^[a-zA-Z$_]+$/.test(this.name))) {return};
+
+            //if .name not like /^[a-zA-Z0-9$_]+$/, return # exclude strange/private names
+            if (!(/^[a-zA-Z0-9$_]+$/.test(this.name))) {return};
+
             //if .type is 'object' and .members
             if (this.type === 'object' && this.members) {
+            
+
                 //out.setHeader '#{.name}:'
                 out.setHeader('' + this.name + ':');
                 //for each key,nameDecl in map .members
                 var nameDecl=undefined;
                 if(!this.members.dict) throw(new Error("for each in map: not a Map, no .dict property"));
-                for ( var key in this.members.dict) if (this.members.dict.hasOwnProperty(key)){nameDecl=this.members.dict[key];
+                for ( var key in this.members.dict){nameDecl=this.members.dict[key];
                     {
                     //out.indent
                     out.indent();
@@ -311,81 +338,99 @@
                 //out.clearHeader
                 out.clearHeader();
             }
+            //if .type is 'object' and .members
+            
             else if (this.type === 'class') {
             
-            //else if .type is 'class'
                 //do nothing
                 null;
             }
-            else {
-                ////out.push '#{.name}:#{"function"}#{.params or ""} #CLASS'
-            //else                
-                //out.push '#{.name}:#{.type}#{.params or ""}'
-                out.push('' + this.name + ':' + this.type + (this.params || ""));
-            };
-            //end if
+            //else if .type is 'class'
             
-        };
+            else {
+                //if .pointer and typeof .pointer is "string"
+                if (this.pointer && typeof this.pointer === "string") {
+                
+                    //out.push '#{.name}="#{.pointer}"'
+                    out.push('' + this.name + '="' + this.pointer + '"');
+                }
+                //if .pointer and typeof .pointer is "string"
+                
+                else {
+                    //out.push '#{.name}:#{.type}#{.params or ""}'
+                    out.push('' + this.name + ':' + this.type + (this.params || ""));
+                };
+            };
+
+            //end if
+
+
 //----
+
         //helper method getMembersFromObjProperties() returns array #Recursive
-        NameDeclaration.prototype.getMembersFromObjProperties = function(){// #Recursive
+            
+        }// ---------------------------
+        NameDeclaration.prototype.getMembersFromObjProperties = function(){
+
 //Recursively converts a obj properties in NameDeclarations.
 //it's used when a pure.js module is imported by 'require'
 //to convert required 'exports' to LiteScript compiler usable NameDeclarations
 //Also to load the global scope with built-in objects
+
             //if .pointer isnt instance of Object, return //or obj is Object.prototype
             if (!(this.pointer instanceof Object)) {return};
+
             //if no .members, .members = new Map
             if (!this.members) {this.members = new Map()};
-            ////if .pointer instanceof Array 
-            ////    .type="Array"
-            ////    return
+
+            //if .pointer instanceof Array
+            //    .type="Array"
+            //    return
+
             //var list:array =  Object.getOwnPropertyNames(.pointer)
             var list = Object.getOwnPropertyNames(this.pointer);
             //##print " ".repeat(indent*4),.name,'has',list.length,'properties'
-              
+
             //for each prop:string in list #even not enumerables
             for( var prop__inx=0,prop ; prop__inx<list.length ; prop__inx++){prop=list[prop__inx];
               if(prop.charAt(0) !== '_' && prop !== 'super_' && prop !== 'constructor' && !((typeof this.pointer === 'function' && ['caller', 'arguments', 'length', 'name'].indexOf(prop)>=0))){
-                //where prop.charAt(0) isnt '_' # exclude __proto__ 
-                    //and prop isnt 'super_' # exclude 
-                    //and prop isnt 'constructor' # exclude 
-                    //# and exclude 'function' core props
-                    //and not (typeof .pointer is 'function' and prop in ['caller','arguments','length','name'])
+
                     //var value = .pointer[prop]
                     var value = this.pointer[prop];
-                    ////create
+
+                    //create
                     //##print " ".repeat(indent*4),"#{.name}.#{prop}"
                     //var newMember = new NameDeclaration(prop,value,this)
                     var newMember = new NameDeclaration(prop, value, this);
-                    ////print newMember.toString()
+
+                    //print newMember.toString()
                     //if no .members, .members = new Map
                     if (!this.members) {this.members = new Map()};
                     //.members.set NameDeclaration.normalize(prop), newMember
                     this.members.set(NameDeclaration.normalize(prop), newMember);
+
                     //if newMember.type isnt 'function' and  .name isnt prop
                     if (newMember.type !== 'function' && this.name !== prop) {
-                        //if value instanceof Object 
+                    
+
+                        //if value instanceof Object
                         if (value instanceof Object && !(this.isInParents(value)) && this.countDepth() < 2) {
-                            //and not .isInParents(value)
-                            //and .countDepth()<2
+                        
+
                             //##print 'entering',prop
                             //indent++
                             indent++;
                             //newMember.getMembersFromObjProperties #recursive
-                            newMember.getMembersFromObjProperties();// #recursive
+                            newMember.getMembersFromObjProperties();
                             //indent--
                             indent--;
                         };
                     };
             }};// end for each in list
             
-        };
-        //end method
-        
-        //helper method countDepth()
+        }// ---------------------------
         NameDeclaration.prototype.countDepth = function(){
-            //var result = 0        
+            //var result = 0
             var result = 0;
             //var nameDecl = this.parent
             var nameDecl = this.parent;
@@ -398,12 +443,12 @@
             };// end loop
             //return result
             return result;
-        };
-        //helper method isInParents(value)
+        }// ---------------------------
         NameDeclaration.prototype.isInParents = function(value){
+
 //return true if a property name is in the parent chain.
 //Used to avoid recursing circular properties
-        
+
             //var nameDecl = this.parent
             var nameDecl = this.parent;
             //while nameDecl
@@ -414,12 +459,10 @@
               nameDecl = nameDecl.parent;
             };// end loop
             
-        };
-        //end helper method
-        
-        //helper method toString
+        }// ---------------------------
         NameDeclaration.prototype.toString = function(){
-            //var result=.name 
+
+            //var result=.name
             var result = this.name;
             //var a=.parent
             var a = this.parent;
@@ -430,39 +473,40 @@
                 //a=a.parent
                 a = a.parent;
             };// end loop
+
             //return "#{result}"
             return '' + result;
-        };
+        }
     // end class NameDeclaration
+
+
     //Append to namespace NameDeclaration
     
         //method normalize(name)
+        // ---------------------------
         NameDeclaration.normalize = function(name){
             //return "_"+name;
             return "_" + name;
         };
-//### helper class Map
+
+
+
+    //    helper class Map
     // constructor
     function Map(){
         //properties
             //dict:Object
             //size
-        //method clear()
-            //.dict= new Object
-            //.size=0
-        //constructor new Map
             //.clear
             this.clear();
         };
+        // ---------------------------
         Map.prototype.clear = function(){
+            //.dict= new Object
             this.dict = new Object();
+            //.size=0
             this.size = 0;
-        };
-            
-//To keep compatibility with ES6, we have a special "Map.fromObject()"
-//used to create a Map from a Literal Object. 
-//We can't use default Map constructor, since ES6 Map constructor is: new Map([iterator])
-        //method fromObject(object)
+        }// ---------------------------
         Map.prototype.fromObject = function(object){
             //.dict = object
             this.dict = object;
@@ -470,66 +514,55 @@
             this.size = Object.keys(this.dict).length;
             //return this
             return this;
-        };
-        //method set(key:string, value)
+        }// ---------------------------
         Map.prototype.set = function(key, value){
             //if no .dict.hasOwnProperty(key), .size++
             if (!this.dict.hasOwnProperty(key)) {this.size++};
             //.dict[key]=value
             this.dict[key] = value;
-        };
-        //method setProperty(name:string, value) //use Map|Object interchangeably
-        Map.prototype.setProperty = function(name, value){ //use Map|Object interchangeably
+        }// ---------------------------
+        Map.prototype.setProperty = function(name, value){
             //.dict[name] = value
             this.dict[name] = value;
-        };
-        //method delete(key:string)
+        }// ---------------------------
         Map.prototype.delete = function(key){
             //if .dict.hasOwnProperty(key), .size--
             if (this.dict.hasOwnProperty(key)) {this.size--};
             //delete .dict[key]
             delete this.dict[key];
-        };
-        //method get(key:string)
+        }// ---------------------------
         Map.prototype.get = function(key){
             //return .dict[key]
             return this.dict[key];
-        };
-        //method tryGetProperty(key:string) //use Map|Object interchangeably
-        Map.prototype.tryGetProperty = function(key){ //use Map|Object interchangeably
+        }// ---------------------------
+        Map.prototype.tryGetProperty = function(key){
             //return .dict[key]
             return this.dict[key];
-        };
-        //method has(key:string)
+        }// ---------------------------
         Map.prototype.has = function(key){
             //return .dict has property key
             return key in this.dict;
-        };
-        //method hasProperty(key:string) //use Map|Object interchangeably
-        Map.prototype.hasProperty = function(key){ //use Map|Object interchangeably
+        }// ---------------------------
+        Map.prototype.hasProperty = function(key){
             //return .dict has property key
             return key in this.dict;
-        };
-        //method hasOwnProperty(key:string) //use Map|Object interchangeably
-        Map.prototype.hasOwnProperty = function(key){ //use Map|Object interchangeably
+        }// ---------------------------
+        Map.prototype.hasOwnProperty = function(key){
             //return .dict has property key
             return key in this.dict;
-        };
-        //method keys() returns array
+        }// ---------------------------
         Map.prototype.keys = function(){
             //return Object.keys(.dict)
             return Object.keys(this.dict);
-        };
-        //method allPropertyNames() returns array  //use Map|Object interchangeably
-        Map.prototype.allPropertyNames = function(){ //use Map|Object interchangeably
+        }// ---------------------------
+        Map.prototype.allPropertyNames = function(){
             //return Object.keys(.dict)
             return Object.keys(this.dict);
-        };
-        //method forEach(callb)
+        }// ---------------------------
         Map.prototype.forEach = function(callb){
             //for each property propName,value in .dict
             var value=undefined;
-            for ( var propName in this.dict)if (this.dict.hasOwnProperty(propName)){value=this.dict[propName];
+            for ( var propName in this.dict){value=this.dict[propName];
                 {
                 //callb(propName,value)
                 callb(propName, value);
@@ -537,13 +570,16 @@
                 
                 }// end for each property
             
-        };
+        }
     // end class Map
-//### append to class String
+
+
+    //    append to class String
     
-    
+
         //shim method repeat(howMany)
-        if (!String.prototype.repeat)
+        // ---------------------------
+        if (!Object.prototype.hasOwnProperty.call(String.prototype,'repeat'))
         String.prototype.repeat = function(howMany){
             //var a =''
             var a = '';
@@ -554,11 +590,14 @@
                 //a &= this
                 a += this;
             };// end loop
+
             //return a
             return a;
         };
-// --------------------
+// -----------
 // Module code
-// --------------------
+// -----------
+
+    //main()
     main();
 // end of module

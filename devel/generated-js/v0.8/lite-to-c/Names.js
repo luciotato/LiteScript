@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //Dependencies
 //------------
 
@@ -113,12 +116,30 @@
           //if options.pointsTo
           
           else {
-              //if options.type, .setMember('**proto**',options.type)
-              if (options.type) {this.setMember('**proto**', options.type)};
-              //if options.itemType, .setMember('**item type**',options.itemType)
-              if (options.itemType) {this.setMember('**item type**', options.itemType)};
-              //if options.returnType, .setMember('**return type**',options.returnType)
-              if (options.returnType) {this.setMember('**return type**', options.returnType)};
+
+              //if options.type instanceof Grammar.TypeDeclaration
+              if (options.type instanceof Grammar.TypeDeclaration) {
+              
+                  //.setMember('**proto**',options.type.mainType)
+                  this.setMember('**proto**', options.type.mainType);
+                  //if options.type.itemType, .setMember('**item type**',options.type.itemType)
+                  if (options.type.itemType) {this.setMember('**item type**', options.type.itemType)};
+              }
+              //if options.type instanceof Grammar.TypeDeclaration
+              
+              else if (options.type) {
+              
+                  //.setMember('**proto**',options.type)
+                  this.setMember('**proto**', options.type);
+              };
+
+              //if options.returnType
+              if (options.returnType) {
+              
+                  //.setMember('**return type**',options.returnType)
+                  this.setMember('**return type**', options.returnType);
+              };
+
               //if options.value, .setMember('**value**',options.value)
               if (options.value) {this.setMember('**value**', options.value)};
           };
@@ -159,13 +180,7 @@
       //allNameDeclarations.push this
       module.exports.allNameDeclarations.push(this);
      };
-
-
-     //declare name affinity nameDecl
-     
-
-
-     //     helper method normalize(name)
+     // ---------------------------
      Declaration.prototype.normalize = function(name){
         //if .normalizeModeKeepFirstCase
         if (this.normalizeModeKeepFirstCase) {
@@ -179,10 +194,7 @@
             //return normalizeToLower(name) //all lowercase
             return normalizeToLower(name);
         };
-     };
-
-
-     //     helper method setMember(name,value)
+     }// ---------------------------
      Declaration.prototype.setMember = function(name, value){
 //force set a member
 
@@ -212,17 +224,13 @@
         //#set member
         //.members.set .normalize(name), value
         this.members.set(this.normalize(name), value);
-     };
-
-     //     helper method findOwnMember(name) returns Declaration
+     }// ---------------------------
      Declaration.prototype.findOwnMember = function(name){
 //this method looks for 'name' in Declaration members
 
         //return .members.get(.normalize(name))
         return this.members.get(this.normalize(name));
-     };
-
-     //     helper method ownMember(name) returns Declaration
+     }// ---------------------------
      Declaration.prototype.ownMember = function(name){
 //this method looks for a specific member, throws if not found
 
@@ -236,15 +244,11 @@
 
         //return result
         return result;
-     };
-
-     //     helper method getMemberCount
+     }// ---------------------------
      Declaration.prototype.getMemberCount = function(){
         //return .members.size
         return this.members.size;
-     };
-
-     //     helper method replaceForward ( realNameDecl: Declaration )
+     }// ---------------------------
      Declaration.prototype.replaceForward = function(realNameDecl){
 //This method is called on a 'forward' Declaration
 //when the real declaration is found.
@@ -288,9 +292,7 @@
 
         //return true
         return true;
-     };
-
-     //     helper method makePointTo(nameDecl:Declaration)
+     }// ---------------------------
      Declaration.prototype.makePointTo = function(nameDecl){
 
         //if nameDecl isnt instance of Declaration, fail with "makePointTo: not a Declaration"
@@ -337,9 +339,7 @@
             };
         };// end for each in module.exports.allNameDeclarations
         
-     };
-
-     //     helper method positionText
+     }// ---------------------------
      Declaration.prototype.positionText = function(){
 
         //if .nodeDeclared
@@ -354,29 +354,19 @@
           //return "(compiler-defined)"
           return "(compiler-defined)";
         };
-     };
-
-
-     //     helper method originalDeclarationPosition
+     }// ---------------------------
      Declaration.prototype.originalDeclarationPosition = function(){
         //return "#{.positionText()} for reference: original declaration of '#{.name}'"
         return '' + (this.positionText()) + " for reference: original declaration of '" + this.name + "'";
-     };
-
-
-     //     helper method sayErr(msg)
+     }// ---------------------------
      Declaration.prototype.sayErr = function(msg){
         //logger.error "#{.positionText()} #{.info()} #{msg}"
         logger.error('' + (this.positionText()) + " " + (this.info()) + " " + msg);
-     };
-
-     //     helper method warn(msg)
+     }// ---------------------------
      Declaration.prototype.warn = function(msg){
         //logger.warning "#{.positionText()} #{.info()} #{msg}"
         logger.warning('' + (this.positionText()) + " " + (this.info()) + " " + msg);
-     };
-
-     //     helper method caseMismatch(text, actualNode:ASTBase)
+     }// ---------------------------
      Declaration.prototype.caseMismatch = function(text, actualNode){
 //If this item has a different case than the name we're adding, emit error
 
@@ -391,9 +381,7 @@
             //return true
             return true;
         };
-     };
-
-     //     helper method addMember(nameDecl:Declaration, options:DeclarationOptions, nodeDeclared) returns Declaration
+     }// ---------------------------
      Declaration.prototype.addMember = function(nameDecl, options, nodeDeclared){
 //Adds passed Declaration to .members
 //Reports duplicated.
@@ -470,17 +458,12 @@
 
         //return nameDecl
         return nameDecl;
-     };
-
-
-     //     helper method toString()
+     }// ---------------------------
      Declaration.prototype.toString = function(){
         //#note: parent may point to a different node than the original declaration, if makePointTo() was used
         //return .name
         return this.name;
-     };
-
-     //     helper method composedName()
+     }// ---------------------------
      Declaration.prototype.composedName = function(){
         //var name = .name
         var name = this.name;
@@ -492,9 +475,7 @@
         };
         //return name
         return name;
-     };
-
-     //     helper method info()
+     }// ---------------------------
      Declaration.prototype.info = function(){
 
         //var type = ""
@@ -557,7 +538,7 @@
 
         //return "'#{.composedName()}#{type}'"
         return "'" + (this.composedName()) + type + "'";
-     };
+     }
     // export
     module.exports.Declaration = Declaration;
     
@@ -568,6 +549,7 @@
 //exported as members of export default class Declaration
 
     //    helper function fixSpecialNames(text:string)
+    // ---------------------------
     function fixSpecialNames(text){
 
       //if text in ['__proto__','NaN','Infinity','undefined','null','false','true','constructor'] # not good names
@@ -585,6 +567,7 @@
     };
 
     //    helper function normalizeToLower(text:string) returns string
+    // ---------------------------
     function normalizeToLower(text){
 //we do not allow two names differing only in upper/lower case letters
 
@@ -600,6 +583,7 @@
     };
 
     //    helper function normalizeKeepFirst(text:string) returns String
+    // ---------------------------
     function normalizeKeepFirst(text){
 //Normalization for vars means: 1st char untouched, rest to to lower case.
 
@@ -611,6 +595,7 @@
     };
 
     //    helper function isCapitalized(text:string) returns boolean
+    // ---------------------------
     function isCapitalized(text){
 
       //if text and text.charAt(0) is text.charAt(0).toUpperCase()  and
@@ -627,23 +612,29 @@
 
     //    export class DeclarationOptions
     // constructor
-    function DeclarationOptions(){ // default constructor
+    function DeclarationOptions(initializer){ // default constructor
         //properties
 
             //normalizeModeKeepFirstCase: boolean
 
             //pointsTo : Declaration
 
-            //type, itemType, returnType
+            //type: Grammar.TypeDeclaration
+
+            //returnType
 
             //nodeClass: ASTBase
 
             //isForward, isDummy
             //informError: boolean
             //value
-    };
+        for(prop in initializer) if (initializer.hasOwnProperty(prop)) this[prop]=initializer[prop];};
     
     // export
     module.exports.DeclarationOptions = DeclarationOptions;
     
     // end class DeclarationOptions
+// -----------
+// Module code
+// -----------
+// end of module

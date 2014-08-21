@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //## utility methods appended to core classes & namespaces
 
 //Helper methods to class String.
@@ -7,6 +10,7 @@
     
 
         //shim method startsWith(text:string)
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(String.prototype,'startsWith'))
         String.prototype.startsWith = function(text){
             //return this.slice(0, text.length) is text
@@ -14,6 +18,7 @@
         };
 
         //shim method endsWith(text:string)
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(String.prototype,'endsWith'))
         String.prototype.endsWith = function(text){
             //return this.slice(-text.length) is text
@@ -21,6 +26,7 @@
         };
 
         //shim method trimRight()
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(String.prototype,'trimRight'))
         String.prototype.trimRight = function(){
             //if no this.length into var inx, return this //empty str
@@ -37,6 +43,7 @@
         };
 
         //shim method trimLeft()
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(String.prototype,'trimLeft'))
         String.prototype.trimLeft = function(){
             //if no this.length into var len, return this
@@ -56,6 +63,7 @@
 //.capitalized
 
         //method capitalized returns string
+        // ---------------------------
         String.prototype.capitalized = function(){
            //if this, return "#{this.charAt(0).toUpperCase()}#{this.slice(1)}"
            if (this) {return '' + (this.charAt(0).toUpperCase()) + (this.slice(1))};
@@ -64,6 +72,7 @@
 //.replaceAll, equiv. to .replace(/./g, newStr)
 
         //shim method replaceAll(searched,newStr)
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(String.prototype,'replaceAll'))
         String.prototype.replaceAll = function(searched, newStr){
            //return this.replace(new RegExp(searched,"g"), newStr)
@@ -73,12 +82,13 @@
 //.countSpaces()
 
         //shim method countSpaces()
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(String.prototype,'countSpaces'))
         String.prototype.countSpaces = function(){
             //var inx=0
             var inx = 0;
-            //while inx<this.length-1
-            while(inx < this.length - 1){
+            //while inx<this.length
+            while(inx < this.length){
                 //if this.charAt(inx) isnt ' ', break
                 if (this.charAt(inx) !== ' ') {break};
                 //inx++
@@ -92,12 +102,14 @@
 //.quoted(quotechar)
 
         //method quoted(quoteChar)
+        // ---------------------------
         String.prototype.quoted = function(quoteChar){
             //return '#{quoteChar}#{this}#{quoteChar}'
             return '' + quoteChar + this + quoteChar;
         };
 
         //shim method rpad(howMany)
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(String.prototype,'rpad'))
         String.prototype.rpad = function(howMany){
             //return .concat(String.spaces(howMany-.length))
@@ -107,6 +119,7 @@
 //repeat(howMany)
 
         //shim method repeat(howMany)
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(String.prototype,'repeat'))
         String.prototype.repeat = function(howMany){
             //if howMany<=0, return ''
@@ -128,6 +141,7 @@
     
 
         //shim method spaces(howMany)
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(String,'spaces'))
         String.spaces = function(howMany){
             //return " ".repeat(howMany)
@@ -138,6 +152,7 @@
 //capitalized is like: /^[A-Z]+[$_a-z0-9]+$/ ,but unicode aware.
 
         //method isCapitalized(text:string) returns boolean
+        // ---------------------------
         String.isCapitalized = function(text){
             //if text and text.charAt(0) is text.charAt(0).toUpperCase()
             if (text && text.charAt(0) === text.charAt(0).toUpperCase()) {
@@ -161,6 +176,7 @@
 //Note: text[start] MUST be the opener char
 
         //method findMatchingPair(text:string, start, closer)
+        // ---------------------------
         String.findMatchingPair = function(text, start, closer){
             //var opener=text.charAt(start);
             var opener = text.charAt(start);
@@ -195,6 +211,7 @@
 //method .remove(element)
 
         //shim method remove(element)  [not enumerable]
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(Array.prototype,'remove'))
         Object.defineProperty(
         Array.prototype,'remove',{value:function(element){
@@ -212,6 +229,7 @@
 
 
         //shim method clear       [not enumerable]
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(Array.prototype,'clear'))
         Object.defineProperty(
         Array.prototype,'clear',{value:function(){
@@ -241,6 +259,7 @@
         //properties indentLevel
 
         //shim method group()
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(console,'group'))
         console.group = function(){
             //console.log.apply undefined,arguments
@@ -250,6 +269,7 @@
         };
 
         //shim method groupEnd()
+        // ---------------------------
         if (!Object.prototype.hasOwnProperty.call(console,'groupEnd'))
         console.groupEnd = function(){
             //if console.indentLevel
@@ -259,3 +279,7 @@
                 console.indentLevel--;
             };
         };
+// -----------
+// Module code
+// -----------
+// end of module

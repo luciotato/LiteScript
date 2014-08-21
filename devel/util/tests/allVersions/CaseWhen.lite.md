@@ -1,7 +1,7 @@
 case Statement Test
 -----------------------
 
-    declare var expect
+    declare var expect:function
 
     var Tests = 
 

@@ -25,5 +25,17 @@ elif [ $basename = "Producer_c.lite.md" ]; then
 #    . ./bld-js-ls-to-js.sh
 
 else
-    echo "select a file from bld/*.sh to determine compilation options" 
+    #default: use litec-to-js
+    #. ./bld-c-ls-to-js.sh
+
+    #default: instruct to select a bld/
+    #echo "select a file from bld/*.sh to determine compilation options" 
+
+    #other: use recently compiled (js)v0.8-ls-to-js
+    cd ..
+    if node $DBRK ../../util/liteVersion -use v0.8/lite-to-js js_lite -perf 1 -v 2 -D PROD_JS -o ../../generated-js/v0.8/lite-to-js; then 
+        echo "COPY /interfaces to out dir"
+        cp -r interfaces/ ${OUT}
+    fi
+
 fi

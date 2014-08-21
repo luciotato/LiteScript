@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
     //class ControlledError extends Error
     // constructor
     function ControlledError(msg){
@@ -18,4 +21,8 @@ this.__proto__.__proto__=Error.apply(null,arguments);
     ControlledError.prototype.__proto__ = Error.prototype;
     
     // end class ControlledError
+// -----------
+// Module code
+// -----------
+// end of module
 module.exports=ControlledError;

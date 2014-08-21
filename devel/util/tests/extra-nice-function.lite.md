@@ -27,7 +27,7 @@
             this.pong = pong;
     
 
-        method think (callback)
+        method think (callback:function)
 
             //console.log('thinking...');
             
@@ -38,7 +38,7 @@
                 function = callback(null, 'the answer is: '+self.value)
                 , Math.floor(Math.random()*400)+200
 
-        method pingPong (ping,callback)
+        method pingPong (ping,callback:function)
             // callback before return
             callback(null, ping+'...'+this.pong);
 

@@ -13,7 +13,7 @@ Dependencies
     
     shim import LiteCore
 
-### public Class ASTBase 
+### only export Class ASTBase 
 
 This class serves as a base class on top of which Grammar classes are defined.
 It contains basic functions to parse a token stream.
@@ -24,8 +24,9 @@ It contains basic functions to parse a token stream.
         childs: array of ASTBase
 
         name:string, keyword:string
+        
+        type
 
-        type, keyType, itemType
         indent = 0
 
         lexer: Parser.Lexer 

@@ -75,20 +75,23 @@ var splitPathRe = /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$
         var result: string array = []
 
         var parts = filename.split('/')
+        var relStartAt = 0
 
-        if no parts[0] # starts with "/"
-            result.push "/"  # result[0] is root
+        if no parts[0] # string started with "/"
+            result.push "/"  # result[0] is "/" root
+            relStartAt = 1 //skip parts[0]
         else
-            # do not start with "/"
-            result.push "" # result[0] is root = ""
+            # string did do not start with "/"
+            result.push "" # result[0] = ""
 
-        var dir = parts.slice(1,-1).join("/") #rejoin 2nd to last-1 to make "dir"
+        var dir = parts.slice(relStartAt,-1).join("/") #rejoin to last-1 to make (rel) "dir"
         if dir, dir = "#{dir}/"
-        result.push dir
+        
+        result.push dir // result[1] is (rel) dir with ending /
 
         // now basename
         var basename:string = parts.slice(-1)[0] //last part
-        result.push basename
+        result.push basename // result[2] is basename
 
 now the extension.
 split on ".", last is extension

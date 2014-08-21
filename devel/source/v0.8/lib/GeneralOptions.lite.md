@@ -1,5 +1,5 @@
 
-### class GeneralOptions
+### export only class GeneralOptions
 
       properties
             verboseLevel = 1

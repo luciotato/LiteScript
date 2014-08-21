@@ -9,10 +9,10 @@ node.js gobals compatible
 
 ## global functions
 
-    function require
+    public function require
+
 
 ## global namespaces / singletons
-
 
 ### public class Buffer
 

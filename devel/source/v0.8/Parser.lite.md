@@ -160,7 +160,7 @@ To be considered "code", a block of lines must be indented at least four spaces.
 The exception are: MARKDOWN TITLES (###) introducing classes, methods and functions.
 
 * MarkDown level 3 title plus a space '### ' is considered CODE indented 4 spaces if
-  the line starts with: `[public|export|default|helper|namespace] [class|function|append to]`
+  the line starts with: `[public|export|only|helper|namespace] [class|function|append to]`
 
 * MarkDown level 4 title plus one space '#### ' is considered CODE indented 5 spaces if:
   * the line starts with: `[constructor|method|properties`]
@@ -261,7 +261,7 @@ for reference at produced .c or .js, clear source lines from memory
 
 check for title-keywords: e.g.: `### Class MyClass`, `### export Function compile(sourceLines:string array)`
 
-        //var titleKeyRegexp = /^(#)+ *(?:(?:public|export|default|helper)\s*)*(class|namespace|append to|function|method|constructor|properties)\b/i
+        //var titleKeyRegexp = /^(#)+ *(?:(?:public|export|only|helper)\s*)*(class|namespace|append to|function|method|constructor|properties)\b/i
 
         var words = line.split(" ")
 
@@ -278,7 +278,7 @@ check for title-keywords: e.g.: `### Class MyClass`, `### export Function compil
 
             if words[inx] //skip empty items
 
-                if words[inx].toLowerCase() in ["public","export","default","helper"]
+                if words[inx].toLowerCase() in ["public","export","only","helper"]
                     countAdj++ //valid
                 else
                   break //invalid word

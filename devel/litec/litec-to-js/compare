@@ -1,0 +1,9 @@
+#!/bin/bash
+cd ~/LiteScript/devel
+
+#self-compile with litec-native-exe
+litec source/v0.8/js_lite -o out/by-c-v08/js/lite-to-js-compiler -v 1 -D PROD_JS
+
+#compare to self-compilation with js-code-compiler
+diff -x '*.map' -r generated-js/v0.8/lite-to-js out/by-c-v08/js/lite-to-js-compiler
+

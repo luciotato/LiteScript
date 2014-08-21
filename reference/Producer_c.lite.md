@@ -317,21 +317,21 @@ OLD include __or temp vars
 */
 
 
-Check if there's a explicit namespace/class with the same name as the module (default export)
+Check if there's a "only export"
 
-        var explicitModuleNamespace 
+        var defaultExportNamespace 
         for each statement in .statements    
-            if statement.specific.constructor is Grammar.NamespaceDeclaration
-                and statement.specific.name is .fileInfo.base
-                    explicitModuleNamespace=statement
-                    explicitModuleNamespace.produce //produce main namespace
+            if statement.specific.constructor is Grammar.NamespaceDeclaration 
+                and statement.hasAdjective('only export')
+                    defaultExportNamespace=statement
+                    defaultExportNamespace.produce //produce main namespace
                     break
 
 
 if there's no explicit namespace declaration, 
 produce this module body as a namespace (using module name as namespace)
 
-        if no explicitModuleNamespace 
+        if no defaultExportNamespace 
             .produceAsNamespace prefix
 
 __moduleInit: module main function 
@@ -1093,7 +1093,6 @@ instead of producing: `new(X,1,new(map(new(nvp... ` wich is slow (calls to getSy
 produce a call to `_fastNew(X,n,prop,value,prop,value)... `
 
 conditions: when you call: new Foo({bar:1,baz:2})
-and constructor new Foo() has no parameters
 
             var fastNewProduced = false;
 
@@ -1993,14 +1992,31 @@ decl contains the parameter declaration from the Function Declaration, to valida
             //Here we have a ObjectLiteral argument
             var objLit:Grammar.ObjectLiteral = expr.root.name
 
+find the FunctionDeclaration for the function we're calling
+
+            var funcDecl: Grammar.FunctionDeclaration = actualVar.nodeDeclared
+
+
 check if the function defines a "class" for this parameter, 
 so we produce a _fastNew() call creating a instance on-the-fly 
 as function argument, thus emulating js common usage pattern of options:Object as parameter 
 
-            if actualVar and actualVar.nodeDeclared instanceof Grammar.FunctionDeclaration
-                var funcDecl: Grammar.FunctionDeclaration = actualVar.nodeDeclared
-                
-                if no funcDecl.paramsDeclarations or no funcDecl.paramsDeclarations.list.length 
+            if actualVar 
+
+                if actualVar.nodeDeclared instanceof Grammar.FunctionDeclaration
+                    funcDecl = actualVar.nodeDeclared
+
+                else if actualVar.nodeDeclared.constructor is Grammar.ClassDeclaration
+                    // we're calling the constructor of a class 
+                    declare actualVar.nodeDeclared:Grammar.ClassDeclaration
+                    funcDecl = actualVar.nodeDeclared.constructorDeclaration
+                    if no funcDecl //if there's no explicit constructor
+                        // the default constructor accepts a initialization object
+                        return objLit.calcFastNew(actualVar.getComposedName())
+
+Here funcDecl is: function or method
+
+                if no funcDecl.paramsDeclarations or no funcDecl.paramsDeclarations.list.length
                     if no funcDecl.paramsDeclarations.variadic
                         .sayErr "#{funcDecl.specifier} #{funcDecl.nameDecl} accepts no parameters"
                         funcDecl.sayErr "function declaration is here"
@@ -2801,6 +2817,7 @@ being a function, the only possible parent is a Module
         var isInterface = no .body.statements
         if isInterface, return // just method declaration (interface)
         
+        .out {COMMENT:"---------------------------------"},NL
         .out "any ",name,"(DEFAULT_ARGUMENTS){"
 
         .produceFunctionBody prefix
@@ -2934,11 +2951,14 @@ composing the name. e.g. a property x in module Foo, namespace Bar => `Foo_Bar_x
             var result = []
             var node = this
             while node and not node.isScope
-                if node.name isnt 'prototype', result.unshift node.name
+
                 if node.nodeDeclared instanceof Grammar.ImportStatementItem
                     //stop here, imported modules create a local var, but act as global var
                     //since all others import of the same name, return the same content 
+                    result.unshift node.name
                     return result.join('_')
+
+                if node.name isnt 'prototype', result.unshift node.name
 
                 node = node.parent
 

@@ -26,16 +26,18 @@ as the new 'export default' (instead of 'module.exports')
         .lexer.outCode.exportNamespace = 'module.exports'
 
 
-/* COMMENTED - reordering statementes in js is destructive
-
-Literate programming should allow to reference a function definde later.
+Literate programming should allow to reference a function defined later.
 Leave loose module imperative statements for the last. 
 Produce all vars & functions definitions first.
 
         var looseStatements=[]
 
+        .out
+            {COMMENT: "-----------"},NL
+            {COMMENT:"Module Init"},NL
+            {COMMENT: "-----------"},NL 
+
         for each statement in .statements
-//            statement.produce
 
             case statement.specific.constructor
   
@@ -52,26 +54,21 @@ Produce all vars & functions definitions first.
                 else
                     looseStatements.push statement
 
-        var separ = "-"
         .out
-            {COMMENT: separ.repeat(20)},NL
+            {COMMENT: "-----------"},NL
             {COMMENT:"Module code"},NL
-            {COMMENT: separ.repeat(20)},NL 
+            {COMMENT: "-----------"},NL 
 
         for each statement in looseStatements
             statement.produce
-
-        //for each statement in produceThird
-        //    statement.produce
 
         .out 
             NL
             {COMMENT:'end of module'},NL
             NL
-*/
 
-        for each statement in .statements
-            statement.produce
+//        for each statement in .statements
+//            statement.produce
 
 add end of file comments
 
@@ -574,7 +571,7 @@ default "produce" for VarDeclList is to out only names, comma separated
 
       method produce() 
 
-        declare valid .compilerVar
+        declare valid .compilerVar:function
         declare valid .export
 
         if .keyword is 'let' and .compilerVar('ES6')
@@ -762,7 +759,7 @@ We create a temp var to assign the iterable expression to
 
           .body.out "{", .valueVar.name,"=",iterable,"[",index,"];",NL
 
-          .out .where
+          .body.out .where
 
           .body.out "{", .body, "}",NL
 
@@ -1048,6 +1045,8 @@ A `FreeObjectLiteral` is an object definition using key/value pairs, but in free
       //Generators are implemented in ES6 with the "function*" keyword (note the asterisk)
       var generatorMark = .hasAdjective("generator") and .lexer.project.compilerVar('ES6')? "*" else ""
 
+      .out {COMMENT:"---------------------------"},NL //function start separator
+
       if this instance of Grammar.MethodDeclaration
 
           #get owner where this method belongs to
@@ -1191,38 +1190,16 @@ Classes contain a code block with properties and methods definitions.
 First, since in JS we have a object-class-function-constructor all-in-one
 we need to get the class constructor, and separate other class items.
 
-        var theConstructorDeclaration = null
-        var theMethods = []
-        var theProperties = []
-
-        if .body
-          for each index,item in .body.statements
-
-            if item.specific instanceof Grammar.ConstructorDeclaration 
-
-              if theConstructorDeclaration # what? more than one?
-                .throwError('Two constructors declared for class #{.name}')
-
-              theConstructorDeclaration = item.specific
-
-            else if item.specific instanceof Grammar.PropertiesDeclaration
-              theProperties.push item.specific
-
-            else 
-              theMethods.push item
-
-        #end if body
-
         var prefix = .getOwnerPrefix()
 
 js: function-constructor-class-namespace-object (All-in-one)
 
         .out "function ",.name
 
-        if theConstructorDeclaration //there was a constructor body, add specified params
-            .out "(", theConstructorDeclaration.paramsDeclarations, "){", NL // .getEOLComment()
+        if .constructorDeclaration //there was a constructor body, add specified params
+            .out "(", .constructorDeclaration.paramsDeclarations, "){", NL // .getEOLComment()
         else
-            .out "(){ // default constructor",NL
+            .out "(initializer){ // default constructor",NL
 
 call super-class __init
 
@@ -1230,13 +1207,20 @@ call super-class __init
 
 initialize own properties
 
-        for each propDecl in theProperties
-            propDecl.produce('this.') //property assignments
+        for each item in .body.statements 
+          where item.specific.constructor is Grammar.PropertiesDeclaration
+            item.specific.produce('this.') //produce property assignments
         
-        if theConstructorDeclaration //there was a body
-            theConstructorDeclaration.produceBody
+        if .constructorDeclaration //there was a body
+            .constructorDeclaration.produceBody
             .out ";",NL
+
         else
+
+            // default constructor - if no super, accept a object-initializer
+            if no .varRefSuper or .varRefSuper.name is 'Object'
+                .out "    for(prop in initializer) if (initializer.hasOwnProperty(prop)) this[prop]=initializer[prop];"
+
             .out "};",NL
 
 if the class is global...
@@ -1258,8 +1242,9 @@ Set super-class if we have one indicated
 
 now out methods, meaning: create properties in the object-function-class prototype
 
-        for each itemMethodDeclaration in theMethods
-            itemMethodDeclaration.produce prefix
+        for each item in .body.statements 
+          where item.specific.constructor not in [Grammar.PropertiesDeclaration,Grammar.ConstructorDeclaration]
+            item.specific.produce //produce methods
 
 If the class was adjectivated 'export', add to module.exports
 
@@ -1267,6 +1252,7 @@ If the class was adjectivated 'export', add to module.exports
 
         .out NL,{COMMENT:"end class "},.name,NL
         .skipSemiColon = true
+
 
 
       method addCallToSuperClassInit
@@ -1512,15 +1498,7 @@ Helper methods and properties, valid for all nodes
 
         if .lexer.options.browser, return
 
-if the class/namespace has the same name as the file, it's the export object
-        
-        var moduleNode:Grammar.Module = .getParent(Grammar.Module)
-
-        if moduleNode.fileInfo.base is .name  
-
-            do nothing //is the default export
-
-        else if .hasAdjective("export") 
+        if .hasAdjective("export") and not .hasAdjective("default") 
             .out NL,{COMMENT:'export'},NL
             .out 'module.exports.',name,' = ', name,";",NL
             .skipSemiColon = true

@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //=================
 
 //The main class in this module is the Lexer.
@@ -124,10 +127,7 @@
           //.token = new Token()
           this.token = new Token();
      };
-
-      //#end constructor
-
-     //     method reset()
+     // ---------------------------
      Lexer.prototype.reset = function(){
 
         //.sourceLineNum = 0
@@ -138,10 +138,7 @@
         this.lines = [];
         //.setPos .last
         this.setPos(this.last);
-     };
-
-
-     //     method initSource(filename:string, source)
+     }// ---------------------------
      Lexer.prototype.initSource = function(filename, source){
 //Load filename and source code in the lexer.
 //First, remember filename (for error reporting)
@@ -174,10 +171,7 @@
             //.lines.push "" # add extra empty line
             this.lines.push("");
           };
-     };
-
-
-     //     method preParseSource() returns InfoLine array
+     }// ---------------------------
      Lexer.prototype.preParseSource = function(){
 //read from .sourceLines and
 //prepares a processed infoLines result array
@@ -370,10 +364,7 @@
 
         //return infoLines
         return infoLines;
-     };
-
-
-     //     method checkTitleCode(line:string) returns string // or undefined
+     }// ---------------------------
      Lexer.prototype.checkTitleCode = function(line){
 
 //check for title-keywords: e.g.: `### Class MyClass`, `### export Function compile(sourceLines:string array)`
@@ -501,11 +492,7 @@
             //return words.join(' ') // re-join
             return words.join(' ');
         };
-     };
-
-
-
-     //     method tokenize
+     }// ---------------------------
      Lexer.prototype.tokenize = function(){
 
 //*Tokenize CODE lines
@@ -566,15 +553,7 @@
 
         //.nextToken()
         this.nextToken();
-     };
-
-    //#end Lexer tokenize
-
-
-//Pre-Processor
-//-------------
-
-     //     method preprocessor(line:string)
+     }// ---------------------------
      Lexer.prototype.preprocessor = function(line){
 
 //This is a ver crude preprocessor.
@@ -593,11 +572,7 @@
 
         //return line
         return line;
-     };
-
-
-
-     //     method process()
+     }// ---------------------------
      Lexer.prototype.process = function(){
 
 //Analyze generated lines. preParseSource() set line type, calculates indent,
@@ -610,12 +585,7 @@
 
       //.tokenize
       this.tokenize();
-     };
-
-//Next Source Line
-//----------------
-
-     //     method nextSourceLine()
+     }// ---------------------------
      Lexer.prototype.nextSourceLine = function(){
 
 //returns false is there are no more lines
@@ -636,20 +606,11 @@
 
         //return true
         return true;
-     };
-
-     //     method replaceSourceLine(newLine)
+     }// ---------------------------
      Lexer.prototype.replaceSourceLine = function(newLine){
         //.lines[.sourceLineNum-1] = newLine
         this.lines[this.sourceLineNum - 1] = newLine;
-     };
-
-
-//----------------------------
-//Multiline strings
-//-----------------
-
-     //     method parseTripleQuotes(line:string)
+     }// ---------------------------
      Lexer.prototype.parseTripleQuotes = function(line){
 
 //This method handles `"""` triple quotes multiline strings
@@ -767,12 +728,7 @@
 
         //return line
         return line;
-     };
-
-      //#end parse triple quotes
-
-//----------------------------
-     //     method checkMultilineComment(infoLines:InfoLine array, lineType, startLineIndent, line)
+     }// ---------------------------
      Lexer.prototype.checkMultilineComment = function(infoLines, lineType, startLineIndent, line){
 
 //This method handles multiline comments: ` `//` `
@@ -828,10 +784,7 @@
 
         //return true #OK, lines processed
         return true;
-     };
-
-//----------------------------
-     //     method checkConditionalCompilation(line:string)
+     }// ---------------------------
      Lexer.prototype.checkConditionalCompilation = function(line){
 
 //This method handles "#ifdef/#else/#endif" as multiline comments
@@ -993,23 +946,12 @@
         this.sourceLineNum = startSourceLine - 1;
         //return true #OK, lines processed
         return true;
-     };
-
-
-//----------------------------
-//Methods getPos() and setPos() are used to save and restore a specific lexer position in code
-//When a AST node parse() fails, the lexer position is rewound to try another AST class
-
-     //     method getPos() returns LexerPos
+     }// ---------------------------
      Lexer.prototype.getPos = function(){
         //#return {lineInx:.lineInx, index:.index, sourceLineNum:.sourceLineNum, token:.token, last:.last}
         //return new LexerPos(this)
         return new LexerPos(this);
-     };
-
-//----------------------------
-
-     //     method setPos(pos:LexerPos)
+     }// ---------------------------
      Lexer.prototype.setPos = function(pos){
 
         //.lineInx = pos.lineInx
@@ -1040,10 +982,7 @@
         this.token = pos.token;
         //.last = pos.last
         this.last = pos.last;
-     };
-
-
-     //     helper method posToString()
+     }// ---------------------------
      Lexer.prototype.posToString = function(){
 //Create a full string with last position. Useful to inform errors
 
@@ -1051,24 +990,7 @@
         if (this.last) {return this.last.toString()};
         //return .getPos().toString()
         return this.getPos().toString();
-     };
-
-
-//
-//        if no .last.token
-//            .last.token = {column:0}
-//
-//        var col = (.last.token.column or .infoLine.indent or 0 )
-//
-//        return "#{.filename}:#{.last.sourceLineNum}:#{col+1}"
-//        
-
-//----------------------------
-//getPrevIndent() method returns the indent of the previous code line
-//is used in 'Parser.lite' when processing an indented block of code,
-//to validate the line indents and give meaningful compiler error messages
-
-     //     method getPrevIndent()
+     }// ---------------------------
      Lexer.prototype.getPrevIndent = function(){
         //var inx = .lineInx-1
         var inx = this.lineInx - 1;
@@ -1086,16 +1008,7 @@
 
         //return 0
         return 0;
-     };
-
-//----------------------------------------------------
-//This functions allows the parser to navigate lines and tokens
-//of the lexer. It returns the next token, advancing the position variables.
-//This method returns CODE tokens, "NEWLINE" tokens (on each new line) or the "EOF" token.
-//All other tokens (COMMENT and WHITESPACE) are discarded.
-
-
-     //     method consumeToken()
+     }// ---------------------------
      Lexer.prototype.consumeToken = function(){
 
 //loop until a CODE token is found
@@ -1202,15 +1115,7 @@
             };
         };// end loop
         
-     };
-
-        //#loop #try to get another
-
-      //#end method consumeToken
-
-//---------------------------------------------------------
-
-     //     method nextToken()
+     }// ---------------------------
      Lexer.prototype.nextToken = function(){
 
 //Save current pos, and get next token
@@ -1227,12 +1132,7 @@
 
         //return true
         return true;
-     };
-
-
-//-----------------------------------------------------
-
-     //     method returnToken()
+     }// ---------------------------
      Lexer.prototype.returnToken = function(){
         //#restore last saved pos (rewind)
 
@@ -1240,14 +1140,7 @@
         this.setPos(this.last);
         //logger.debug '<< Returned:',.token.toString(),'line',.sourceLineNum
         logger.debug('<< Returned:', this.token.toString(), 'line', this.sourceLineNum);
-     };
-
-//-----------------------------------------------------
-//This method gets the next CODE line from infoLines
-//BLANK and COMMENT lines are skipped.
-//return true if a CODE Line is found, false otherwise
-
-     //     method nextCODELine()
+     }// ---------------------------
      Lexer.prototype.nextCODELine = function(){
 
         //if .lineInx >= .infoLines.length
@@ -1293,13 +1186,7 @@
             };
         };// end loop
         
-     };
-
-        //#end while
-
-      //#end method
-
-     //     method getPrevCODEInfoLineIndex(baseSourceLineNum)
+     }// ---------------------------
      Lexer.prototype.getPrevCODEInfoLineIndex = function(baseSourceLineNum){
 
         //search prev CODE line
@@ -1317,9 +1204,7 @@
 
         //return inx
         return inx;
-     };
-
-     //     method getInfoLineIndex(sourceLineNum)
+     }// ---------------------------
      Lexer.prototype.getInfoLineIndex = function(sourceLineNum){
 
         //search InfoLine where the required source line resides
@@ -1336,44 +1221,31 @@
 
         //return inx
         return inx;
-     };
-
-     //     method say()
+     }// ---------------------------
      Lexer.prototype.say = function(){
 //**say** emit error (but continue compiling)
 
         //logger.error.apply this,arguments
         logger.error.apply(this, Array.prototype.slice.call(arguments));
-     };
-
-
-     //     method throwErr(msg)
+     }// ---------------------------
      Lexer.prototype.throwErr = function(msg){
 //**throwErr** add lexer position and emit error (abort compilation)
 
         //logger.throwControlled "#{.posToString()} #{msg}"
         logger.throwControlled('' + (this.posToString()) + " " + msg);
-     };
-
-     //     method sayErr(msg)
+     }// ---------------------------
      Lexer.prototype.sayErr = function(msg){
 //**sayErr** add lexer position and emit error (but continue compiling)
 
         //logger.error .posToString(),msg
         logger.error(this.posToString(), msg);
-     };
-
-
-     //     method warn(msg)
+     }// ---------------------------
      Lexer.prototype.warn = function(msg){
 //**warn** add lexer position and emit warning (continue compiling)
 
         //logger.warning .posToString(),msg
         logger.warning(this.posToString(), msg);
-     };
-
-
-     //     method splitExpressions(text:string) returns array of string
+     }// ---------------------------
      Lexer.prototype.splitExpressions = function(text){
 //split on #{expresion} using lexer.stringInterpolationChar
 
@@ -1460,7 +1332,7 @@
 
         //return items
         return items;
-     };
+     }
     // export
     module.exports.Lexer = Lexer;
     
@@ -1472,6 +1344,7 @@
 
     // helper internal function
     //helper function pushAt(arr:array, content:string, useQuotes)
+    // ---------------------------
     function pushAt(arr, content, useQuotes){
         //if content
         if (content) {
@@ -1508,12 +1381,11 @@
             //.column = column
             this.column = column;
         };
-
-        //method toString()
+        // ---------------------------
         Token.prototype.toString = function(){
             //return "'#{.value}'(#{.type})"
             return "'" + this.value + "'(" + this.type + ")";
-        };
+        }
     // end class Token
 
 
@@ -1548,13 +1420,7 @@
         //.sourceLineNum = sourceLineNum
         this.sourceLineNum = sourceLineNum;
       };
-
-        //#.dump() #debug info
-
-      //#end InfoLine constructor
-
-
-      //helper method outAsComment(outCode)
+      // ---------------------------
       InfoLine.prototype.outAsComment = function(outCode){
 
 //output this line as a comment
@@ -1580,10 +1446,7 @@
             //outCode.startNewLine
             outCode.startNewLine();
         };
-      };
-
-
-      //helper method dump() # out debug info
+      }// ---------------------------
       InfoLine.prototype.dump = function(){
 
         //if .type is LineTypes.BLANK
@@ -1621,16 +1484,7 @@
             //logger.debug()
             logger.debug();
         };
-      };
-
-
-//The Tokenize Line method
-//------------------------
-
-//The Infoline.tokenizeLine() method, creates the 'tokens' array by parsing the .text
-//It also replaces *Embdeded Expressions* #{} in string constants, storing the expression tokens
-
-      //method tokenizeLine(lexer)
+      }// ---------------------------
       InfoLine.prototype.tokenizeLine = function(lexer){
 
         //var code = .text
@@ -1843,26 +1697,7 @@
                 throw new Error("Lexer options, expected: 'literal map'|'literal object'");
             };
         };
-      };
-
-      //end tokenizeLine
-
-//The recognize method
-//--------------------
-
-//The Infoline.recognize() method matches the current position in the text stream
-//with the known tokens, returning a new Token or undefined
-
-      //method recognizeToken(chunk:string) returns Token // or undefined
-      
-
-//The recognize method
-//--------------------
-
-//The Infoline.recognize() method matches the current position in the text stream
-//with the known tokens, returning a new Token or undefined
-
-      //method recognizeToken(chunk:string) returns Token // or undefined
+      }// ---------------------------
       InfoLine.prototype.recognizeToken = function(chunk){
 
             //var remainder
@@ -2105,7 +1940,7 @@
                 //return new Token('IDENTIFIER',identifier)
                 return new Token('IDENTIFIER', identifier);
             };
-      };
+      }
     // end class InfoLine
 
 
@@ -2131,14 +1966,13 @@
         //.last = lexer.last
         this.last = lexer.last;
       };
-
-      //method toString()
+      // ---------------------------
       LexerPos.prototype.toString = function(){
         //if no .token, .token = new Token(type='',tokenText='',column=0)
         if (!this.token) {this.token = new Token('', '', 0)};
         //return "#{.lexer.filename}:#{.sourceLineNum}:#{(.token.column or 0)+1}"
         return '' + this.lexer.filename + ":" + this.sourceLineNum + ":" + ((this.token.column || 0) + 1);
-      };
+      }
     // end class LexerPos
 
 
@@ -2267,7 +2101,7 @@
 
     //    public helper class OutCode
     // constructor
-    function OutCode(){ // default constructor
+    function OutCode(initializer){ // default constructor
      //     properties
 
       //lineNum, column
@@ -2296,13 +2130,8 @@
          this.fileIsOpen=[false, false, false];
          this.fHandles=[null, null, null];
          this.orTempVarCount=0;
-    };
-
-      //ifdef PROD_JS //only if it is a compiler-to-js
-      //sourceMap
-      //endif
-
-     //     method start(options:GeneralOptions)
+        for(prop in initializer) if (initializer.hasOwnProperty(prop)) this[prop]=initializer[prop];};
+     // ---------------------------
      OutCode.prototype.start = function(options){
 //Initialize output array
 
@@ -2325,19 +2154,14 @@
         //else
         //do nothing
         null;
-     };
-        //end if
-
-     //     method setHeader(num)
+     }// ---------------------------
      OutCode.prototype.setHeader = function(num){
 
         //.startNewLine
         this.startNewLine();
         //.header = num
         this.header = num;
-     };
-
-     //     method put(text:string)
+     }// ---------------------------
      OutCode.prototype.put = function(text){
 //put a string into produced code
 
@@ -2349,17 +2173,13 @@
             //.column += text.length
             this.column += text.length;
         };
-     };
-
-     //     method getIndent()
+     }// ---------------------------
      OutCode.prototype.getIndent = function(){
         //if no .currLine.length, return 0
         if (!this.currLine.length) {return 0};
         //return .currLine[0].countSpaces()
         return this.currLine[0].countSpaces();
-     };
-
-     //     method startNewLine()
+     }// ---------------------------
      OutCode.prototype.startNewLine = function(){
 //Start New Line into produced code
 
@@ -2429,17 +2249,13 @@
           this.currLine.clear();
           //.column = 1
           this.column = 1;
-     };
-
-     //     method ensureNewLine()
+     }// ---------------------------
      OutCode.prototype.ensureNewLine = function(){
 //if there's something on the line, start a new one
 
           //if .currLine.length, .startNewLine
           if (this.currLine.length) {this.startNewLine()};
-     };
-
-     //     method blankLine()
+     }// ---------------------------
      OutCode.prototype.blankLine = function(){
 
           //.startNewLine
@@ -2448,10 +2264,7 @@
           this.currLine.push("");
           //.startNewLine
           this.startNewLine();
-     };
-
-
-     //     method getResult(header:number) returns array of string
+     }// ---------------------------
      OutCode.prototype.getResult = function(header){
 //get result and clear memory
 
@@ -2464,9 +2277,7 @@
         this.startNewLine();
         //return .lines[header]
         return this.lines[header];
-     };
-
-     //     method close()
+     }// ---------------------------
      OutCode.prototype.close = function(){
 
         //.startNewLine //save last pending line
@@ -2492,10 +2303,7 @@
             };// end for header
             
         };
-     };
-
-
-     //     helper method markSourceMap(indent) returns SourceMapMark
+     }// ---------------------------
      OutCode.prototype.markSourceMap = function(indent){
 
         //var col = .column
@@ -2507,9 +2315,7 @@
                       //lin :.lineNum-1
                 //})
         return new SourceMapMark({col: col, lin: this.lineNum - 1});
-     };
-
-     //     helper method addSourceMap(mark, sourceLin, sourceCol, indent)
+     }// ---------------------------
      OutCode.prototype.addSourceMap = function(mark, sourceLin, sourceCol, indent){
 
         //ifdef PROD_JS
@@ -2520,7 +2326,7 @@
         //else
         //do nothing
         null;
-     };
+     }
     // export
     module.exports.OutCode = OutCode;
     
@@ -2530,10 +2336,10 @@
 
     //    helper class SourceMapMark
     // constructor
-    function SourceMapMark(){ // default constructor
+    function SourceMapMark(initializer){ // default constructor
       //properties
         //col, lin
-    };
+        for(prop in initializer) if (initializer.hasOwnProperty(prop)) this[prop]=initializer[prop];};
     
     // end class SourceMapMark
 
@@ -2545,6 +2351,7 @@
 //replace every quoted string inside text, by rep
 
         //method replaceQuoted(text:string, rep:string)
+        // ---------------------------
         String.replaceQuoted = function(text, rep){
 
             //var p = 0
@@ -2607,3 +2414,7 @@
             //return resultText
             return resultText;
         };
+// -----------
+// Module code
+// -----------
+// end of module

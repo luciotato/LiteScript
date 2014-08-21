@@ -1,4 +1,7 @@
-    //    class OptionsParser
+// -----------
+// Module Init
+// -----------
+    //    export only class OptionsParser
     // constructor
     function OptionsParser(argv){
      //     properties
@@ -72,5 +75,12 @@
         //return -1
         return -1;
      }
+    // export
+    module.exports.OptionsParser = OptionsParser;
+    
     // end class OptionsParser
+// -----------
+// Module code
+// -----------
+// end of module
 module.exports=OptionsParser;

@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //==================
 
 //The LiteScript Grammar is based on [Parsing Expression Grammars (PEGs)](http://en.wikipedia.org/wiki/Parsing_expression_grammar)
@@ -126,12 +129,12 @@
         //'with','arguments','in','instanceof','typeof'
         //'var','let','default','delete','interface','implements','yield'
         //'like','this','super'
-        //'export','compiler','compile','debugger'
+        //'export','only','compiler','compile','debugger'
         //-----------------
         // "compile-to-c" reserved words
         //'char','short','long','int','unsigned','void','NULL','bool','assert'
         //]
-    var RESERVED_WORDS = ['namespace', 'function', 'async', 'class', 'method', 'if', 'then', 'else', 'switch', 'when', 'case', 'end', 'null', 'true', 'false', 'undefined', 'and', 'or', 'but', 'no', 'not', 'has', 'hasnt', 'property', 'properties', 'new', 'is', 'isnt', 'prototype', 'do', 'loop', 'while', 'until', 'for', 'to', 'break', 'continue', 'return', 'try', 'catch', 'throw', 'raise', 'fail', 'exception', 'finally', 'with', 'arguments', 'in', 'instanceof', 'typeof', 'var', 'let', 'default', 'delete', 'interface', 'implements', 'yield', 'like', 'this', 'super', 'export', 'compiler', 'compile', 'debugger', 'char', 'short', 'long', 'int', 'unsigned', 'void', 'NULL', 'bool', 'assert'];
+    var RESERVED_WORDS = ['namespace', 'function', 'async', 'class', 'method', 'if', 'then', 'else', 'switch', 'when', 'case', 'end', 'null', 'true', 'false', 'undefined', 'and', 'or', 'but', 'no', 'not', 'has', 'hasnt', 'property', 'properties', 'new', 'is', 'isnt', 'prototype', 'do', 'loop', 'while', 'until', 'for', 'to', 'break', 'continue', 'return', 'try', 'catch', 'throw', 'raise', 'fail', 'exception', 'finally', 'with', 'arguments', 'in', 'instanceof', 'typeof', 'var', 'let', 'default', 'delete', 'interface', 'implements', 'yield', 'like', 'this', 'super', 'export', 'only', 'compiler', 'compile', 'debugger', 'char', 'short', 'long', 'int', 'unsigned', 'void', 'NULL', 'bool', 'assert'];
 
 //Operators precedence
 //--------------------
@@ -215,8 +218,12 @@
         //.lock()
         this.lock();
 
-        //if .name in RESERVED_WORDS, .sayErr '"#{.name}" is a reserved word'
-        if (RESERVED_WORDS.indexOf(this.name)>=0) {this.sayErr('"' + this.name + '" is a reserved word')};
+        //if .parent instance of VarStatement
+        if (this.parent instanceof VarStatement && RESERVED_WORDS.indexOf(this.name)>=0) {
+        
+                //.sayErr '"#{.name}" is a reserved word'
+                this.sayErr('"' + this.name + '" is a reserved word');
+        };
 
 //optional type annotation &
 //optional assigned value
@@ -227,10 +234,10 @@
         //if .opt(':')
         if (this.opt(':')) {
         
-            //.parseType
-            this.parseType();
+            //.type = .req(TypeDeclaration)
+            this.type = this.req(TypeDeclaration);
         };
-            //Note: parseType if parses "Map", stores type as a VarRef->Map and also sets .isMap=true
+            //Note: TypeDeclaration if parses "Map", stores type as a VarRef->Map and also sets .isMap=true
 
         //if .opt('=')
         if (this.opt('=')) {
@@ -1655,8 +1662,8 @@
         //if .getParent(Statement).intoVars and .opt(":")
         if (this.getParent(Statement).intoVars && this.opt(":")) {
         
-            //.parseType
-            this.parseType();
+            //.type = .req(TypeDeclaration)
+            this.type = this.req(TypeDeclaration);
         };
 
 //check for post-fix increment/decrement
@@ -2115,40 +2122,6 @@
     
     // end class Operand
 
-    //end Operand
-
-
-//## Oper
-
-//```
-//Oper: ('~'|'&'|'^'|'|'|'>>'|'<<'
-        //|'*'|'/'|'+'|'-'|mod
-        //|instance of|instanceof
-        //|'>'|'<'|'>='|'<='
-        //|is|'==='|isnt|is not|'!=='
-        //|and|but|or
-        //|[not] in
-        //|(has|hasnt) property
-        //|? true-Expression : false-Expression)`
-//```
-
-//An Oper sits between two Operands ("Oper" is a "Binary Operator",
-//different from *UnaryOperators* which optionally precede a Operand)
-
-//If an Oper is found after an Operand, a second Operand is expected.
-
-//Operators can include:
-//* arithmetic operations "*"|"/"|"+"|"-"
-//* boolean operations "and"|"or"
-//* `in` collection check.  (js: `indexOx()>=0`)
-//* instance class checks   (js: instanceof)
-//* short-if ternary expressions ? :
-//* bit operations (|&)
-//* `has property` object property check (js: 'propName in object')
-
-    //    public class Oper extends ASTBase
-    
-
 
 //## Oper
 
@@ -2505,7 +2478,9 @@
     function Expression(initializer){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-      //properties operandCount, root, ternaryCount
+      //properties
+          //operandCount, root
+          //ternaryCount
     };
     // Expression (extends|proto is) ASTBase
     Expression.prototype.__proto__ = ASTBase.prototype;
@@ -2993,7 +2968,8 @@
     function NameValuePair(initializer){ // default constructor
     // default constructor: call super.constructor
         ASTBase.prototype.constructor.apply(this,arguments)
-      //properties value: Expression
+      //properties
+          //value: Expression
     };
     // NameValuePair (extends|proto is) ASTBase
     NameValuePair.prototype.__proto__ = ASTBase.prototype;
@@ -3022,8 +2998,8 @@
           //if .lexer.interfaceMode
           if (this.lexer.interfaceMode) {
           
-              //.parseType
-              this.parseType();
+              //.type = .req(TypeDeclaration)
+              this.type = this.req(TypeDeclaration);
           }
           //if .lexer.interfaceMode
           
@@ -3228,8 +3204,8 @@
         
         else {
 
-            //if .opt('returns'), .parseType  #function return type
-            if (this.opt('returns')) {this.parseType()};
+            //if .opt('returns'), .type = .req(TypeDeclaration)  #function return type
+            if (this.opt('returns')) {this.type = this.req(TypeDeclaration)};
 
             //if .opt('[','SPACE_BRACKET') # property attributes (non-enumerable, writable, etc - Object.defineProperty)
             if (this.opt('[', 'SPACE_BRACKET')) {
@@ -3980,8 +3956,8 @@
             this.varRef = this.req(VariableRef);
             //.req(':') //type expected
             this.req(':');
-            //.parseType
-            this.parseType();
+            //.type = .req(TypeDeclaration)
+            this.type = this.req(TypeDeclaration);
         
         }
           //when 'valid':
@@ -3995,8 +3971,8 @@
             //if .opt(':')
             if (this.opt(':')) {
             
-                //.parseType //optional type
-                this.parseType();
+                //.type = .req(TypeDeclaration) //optional type
+                this.type = this.req(TypeDeclaration);
             };
         
         }
@@ -4542,6 +4518,125 @@
     // end class WhenSection
 
 
+    //    public helper class TypeDeclaration extends ASTBase
+    // constructor
+    function TypeDeclaration(initializer){ // default constructor
+    // default constructor: call super.constructor
+        ASTBase.prototype.constructor.apply(this,arguments)
+      //properties
+        //mainType
+        //keyType
+        //itemType
+    };
+    // TypeDeclaration (extends|proto is) ASTBase
+    TypeDeclaration.prototype.__proto__ = ASTBase.prototype;
+      // ---------------------------
+      TypeDeclaration.prototype.parse = function(){
+
+//parse type declaration:
+
+  //function [(VariableDecl,)]
+  //type-IDENTIFIER [array]
+  //[array of] type-IDENTIFIER
+  //map type-IDENTIFIER to type-IDENTIFIER
+
+        //if .opt('function','Function') #function as type
+        if (this.opt('function', 'Function')) {
+        
+            //.lock
+            this.lock();
+            //.mainType= new VariableRef(this, 'Function')
+            this.mainType = new VariableRef(this, 'Function');
+            //if .lexer.token.value is '(', .parseAccessors
+            if (this.lexer.token.value === '(') {this.parseAccessors()};
+            //return
+            return;
+        };
+
+//check for 'array', e.g.: `var list : array of String`
+
+        //if .opt('array','Array')
+        if (this.opt('array', 'Array')) {
+        
+            //.lock
+            this.lock();
+            //.mainType = 'Array'
+            this.mainType = 'Array';
+            //if .opt('of')
+            if (this.opt('of')) {
+            
+                //.itemType = .req(VariableRef) #reference to an existing class
+                this.itemType = this.req(VariableRef);
+                //auto-capitalize core classes
+                //declare .itemType:VariableRef
+                
+                //.itemType.name = autoCapitalizeCoreClasses(.itemType.name)
+                this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
+            };
+            //end if
+            //return
+            
+            //return
+            return;
+        };
+
+//Check for 'map', e.g.: `var list : map string to Statement`
+
+        //.mainType = .req(VariableRef) #reference to an existing class
+        this.mainType = this.req(VariableRef);
+        //.lock
+        this.lock();
+        //auto-capitalize core classes
+        //declare .mainType:VariableRef
+        
+        //.mainType.name = autoCapitalizeCoreClasses(.mainType.name)
+        this.mainType.name = autoCapitalizeCoreClasses(this.mainType.name);
+
+        //if .mainType.name is 'Map'
+        if (this.mainType.name === 'Map') {
+        
+            //.parent.isMap = true
+            this.parent.isMap = true;
+            //.extraInfo = 'map [type] to [type]' //extra info to show on parse fail
+            this.extraInfo = 'map [type] to [type]';
+            //.keyType = .req(VariableRef) #type for KEYS: reference to an existing class
+            this.keyType = this.req(VariableRef);
+            //auto-capitalize core classes
+            //declare .keyType:VariableRef
+            
+            //.keyType.name = autoCapitalizeCoreClasses(.keyType.name)
+            this.keyType.name = autoCapitalizeCoreClasses(this.keyType.name);
+            //.req('to')
+            this.req('to');
+            //.itemType = .req(VariableRef) #type for values: reference to an existing class
+            this.itemType = this.req(VariableRef);
+            //#auto-capitalize core classes
+            //declare .itemType:VariableRef
+            
+            //.itemType.name = autoCapitalizeCoreClasses(.itemType.name)
+            this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
+        }
+        //if .mainType.name is 'Map'
+        
+        else {
+            //#check for 'type array', e.g.: `var list : string array`
+            //if .opt('Array','array')
+            if (this.opt('Array', 'array')) {
+            
+                //.itemType = .mainType #assign read mainType as sub-mainType
+                this.itemType = this.mainType;
+                //.mainType = 'Array' #real type
+                this.mainType = 'Array';
+            };
+        };
+      }
+    // export
+    module.exports.TypeDeclaration = TypeDeclaration;
+    
+    // end class TypeDeclaration
+
+
+
 
 //##Statement
 
@@ -4606,11 +4701,11 @@
         
 
 //If it was not found, try optional adjectives (zero or more).
-//Adjectives are: `(export|public|generator|shim|helper)`.
+//Adjectives are: `(export|default|public|generator|shim|helper)`.
 
-            //while .opt('public','export','nice','generator','shim','helper','global') into var adj
+            //while .opt('public','export','only','nice','generator','shim','helper','global') into var adj
             var adj=undefined;
-            while((adj=this.opt('public', 'export', 'nice', 'generator', 'shim', 'helper', 'global'))){
+            while((adj=this.opt('public', 'export', 'only', 'nice', 'generator', 'shim', 'helper', 'global'))){
                 //if adj is 'public', adj='export' #'public' is alias for 'export'
                 if (adj === 'public') {adj = 'export'};
                 //.adjectives.push adj
@@ -4669,10 +4764,11 @@
         //.keyword = key
         this.keyword = key;
 
-//Check validity of adjective-statement combination
+//Check valid adjective-statement combination
 
         //var validCombinations = map
               //export: ['class','namespace','function','var']
+              //only: ['class','namespace']
               //generator: ['function','method']
               //nice: ['function','method']
               //shim: ['function','method','import']
@@ -4682,6 +4778,7 @@
         //for each adjective in .adjectives
         var validCombinations = new Map().fromObject({
             export: ['class', 'namespace', 'function', 'var']
+            , only: ['class', 'namespace']
             , generator: ['function', 'method']
             , nice: ['function', 'method']
             , shim: ['function', 'method', 'import']
@@ -4712,17 +4809,28 @@
     //    append to class ASTBase
     
 
-      //      helper method hasAdjective(name) returns boolean
+      //      helper method hasAdjective(names:string) returns boolean
       // ---------------------------
-      ASTBase.prototype.hasAdjective = function(name){
-//To check if a statement has an adjective. We assume .parent is Grammar.Statement
+      ASTBase.prototype.hasAdjective = function(names){
+//To check if a statement has one or more adjectives.
+//We assume .parent is Grammar.Statement
 
         //var stat:Statement = this.constructor is Statement? this else .getParent(Statement)
         var stat = this.constructor === Statement ? this : this.getParent(Statement);
-        //if no stat, .throwError "[#{.constructor.name}].hasAdjective('#{name}'): can't find a parent Statement"
-        if (!stat) {this.throwError("[" + this.constructor.name + "].hasAdjective('" + name + "'): can't find a parent Statement")};
-        //return name in stat.adjectives
-        return stat.adjectives.indexOf(name)>=0;
+        //if no stat, .throwError "[#{.constructor.name}].hasAdjective('#{names}'): can't find a parent Statement"
+        if (!stat) {this.throwError("[" + this.constructor.name + "].hasAdjective('" + names + "'): can't find a parent Statement")};
+
+        //var allToSearch = names.split(" ")
+        var allToSearch = names.split(" ");
+        //for each name in allToSearch
+        for( var name__inx=0,name ; name__inx<allToSearch.length ; name__inx++){name=allToSearch[name__inx];
+        
+            //if no name in stat.adjectives, return false
+            if (!(stat.adjectives.indexOf(name)>=0)) {return false};
+        };// end for each in allToSearch
+
+        //return true //if all requested are adjectives
+        return true;
       };
 
 //## Body
@@ -4836,11 +4944,7 @@
     // default constructor: call super.constructor
         Body.prototype.constructor.apply(this,arguments)
       //properties
-
-        //isMain: boolean
-        //exportDefault: ASTBase
-
-        //numbers determinin initialization order
+        //numbers determining initialization order
         //dependencyTreeLevel = 0
         //dependencyTreeLevelOrder = 0
         //importOrder=0
@@ -4997,105 +5101,45 @@
     
       //properties
             //isMap: boolean
-
-      //      helper method parseType
       
       //properties
             //isMap: boolean
+      
+// -----------
+// Module code
+// -----------
 
-      //      helper method parseType
-      // ---------------------------
-      ASTBase.prototype.parseType = function(){
-
-//parse type declaration:
-
-  //function [(VariableDecl,)]
-  //type-IDENTIFIER [array]
-  //[array of] type-IDENTIFIER
-  //map type-IDENTIFIER to type-IDENTIFIER
+    //end Operand
 
 
-        //if .opt('function','Function') #function as type
-        if (this.opt('function', 'Function')) {
-        
-            //.type= new VariableRef(this, 'Function')
-            this.type = new VariableRef(this, 'Function');
-            //if .lexer.token.value is '(', .parseAccessors
-            if (this.lexer.token.value === '(') {this.parseAccessors()};
-            //return
-            return;
-        };
+//## Oper
 
-//check for 'array', e.g.: `var list : array of String`
+//```
+//Oper: ('~'|'&'|'^'|'|'|'>>'|'<<'
+        //|'*'|'/'|'+'|'-'|mod
+        //|instance of|instanceof
+        //|'>'|'<'|'>='|'<='
+        //|is|'==='|isnt|is not|'!=='
+        //|and|but|or
+        //|[not] in
+        //|(has|hasnt) property
+        //|? true-Expression : false-Expression)`
+//```
 
-        //if .opt('array','Array')
-        if (this.opt('array', 'Array')) {
-        
-            //.type = 'Array'
-            this.type = 'Array';
-            //if .opt('of')
-            if (this.opt('of')) {
-            
-                //.itemType = .req(VariableRef) #reference to an existing class
-                this.itemType = this.req(VariableRef);
-                //auto-capitalize core classes
-                //declare .itemType:VariableRef
-                
-                //.itemType.name = autoCapitalizeCoreClasses(.itemType.name)
-                this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
-            };
-            //end if
-            //return
-            
-            //return
-            return;
-        };
+//An Oper sits between two Operands ("Oper" is a "Binary Operator",
+//different from *UnaryOperators* which optionally precede a Operand)
 
-//Check for 'map', e.g.: `var list : map string to Statement`
+//If an Oper is found after an Operand, a second Operand is expected.
 
-        //.type = .req(VariableRef) #reference to an existing class
-        this.type = this.req(VariableRef);
-        //auto-capitalize core classes
-        //declare .type:VariableRef
-        
-        //.type.name = autoCapitalizeCoreClasses(.type.name)
-        this.type.name = autoCapitalizeCoreClasses(this.type.name);
+//Operators can include:
+//* arithmetic operations "*"|"/"|"+"|"-"
+//* boolean operations "and"|"or"
+//* `in` collection check.  (js: `indexOx()>=0`)
+//* instance class checks   (js: instanceof)
+//* short-if ternary expressions ? :
+//* bit operations (|&)
+//* `has property` object property check (js: 'propName in object')
 
-        //if .type.name is 'Map'
-        if (this.type.name === 'Map') {
-        
-            //.isMap = true
-            this.isMap = true;
-            //.extraInfo = 'map [type] to [type]' //extra info to show on parse fail
-            this.extraInfo = 'map [type] to [type]';
-            //.keyType = .req(VariableRef) #type for KEYS: reference to an existing class
-            this.keyType = this.req(VariableRef);
-            //auto-capitalize core classes
-            //declare .keyType:VariableRef
-            
-            //.keyType.name = autoCapitalizeCoreClasses(.keyType.name)
-            this.keyType.name = autoCapitalizeCoreClasses(this.keyType.name);
-            //.req('to')
-            this.req('to');
-            //.itemType = .req(VariableRef) #type for values: reference to an existing class
-            this.itemType = this.req(VariableRef);
-            //#auto-capitalize core classes
-            //declare .itemType:VariableRef
-            
-            //.itemType.name = autoCapitalizeCoreClasses(.itemType.name)
-            this.itemType.name = autoCapitalizeCoreClasses(this.itemType.name);
-        }
-        //if .type.name is 'Map'
-        
-        else {
-            //#check for 'type array', e.g.: `var list : string array`
-            //if .opt('Array','array')
-            if (this.opt('Array', 'array')) {
-            
-                //.itemType = .type #assign read type as sub-type
-                this.itemType = this.type;
-                //.type = 'Array' #real type
-                this.type = 'Array';
-            };
-        };
-      };
+    //    public class Oper extends ASTBase
+    
+// end of module

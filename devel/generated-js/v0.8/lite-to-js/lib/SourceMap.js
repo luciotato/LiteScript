@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 
 //Source maps allow JavaScript runtimes to match running JavaScript back to
 //the original source code that corresponds to it. This can be minified
@@ -20,7 +23,7 @@
     //import logger
     var logger = require('./logger.js');
 
-    //    public class SourceMap
+    //    export only class SourceMap
     // constructor
     function SourceMap(){
       //properties
@@ -218,6 +221,9 @@
         //return JSON.stringify(v3, null, 2)
         return JSON.stringify(v3, null, 2);
       }
+    // export
+    module.exports.SourceMap = SourceMap;
+    
     // end class SourceMap
 
 
@@ -352,4 +358,8 @@
       };
       //return encoded
       return encoded;
-    };module.exports=SourceMap;
+    };// -----------
+// Module code
+// -----------
+// end of module
+module.exports=SourceMap;

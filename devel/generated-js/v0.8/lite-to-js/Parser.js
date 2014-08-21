@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //=================
 
 //The main class in this module is the Lexer.
@@ -205,7 +208,7 @@
 //The exception are: MARKDOWN TITLES (###) introducing classes, methods and functions.
 
 //* MarkDown level 3 title plus a space '### ' is considered CODE indented 4 spaces if
-  //the line starts with: `[public|export|default|helper|namespace] [class|function|append to]`
+  //the line starts with: `[public|export|only|helper|namespace] [class|function|append to]`
 
 //* MarkDown level 4 title plus one space '#### ' is considered CODE indented 5 spaces if:
   //* the line starts with: `[constructor|method|properties`]
@@ -367,7 +370,7 @@
 
 //check for title-keywords: e.g.: `### Class MyClass`, `### export Function compile(sourceLines:string array)`
 
-        //var titleKeyRegexp = /^(#)+ *(?:(?:public|export|default|helper)\s*)*(class|namespace|append to|function|method|constructor|properties)\b/i
+        //var titleKeyRegexp = /^(#)+ *(?:(?:public|export|only|helper)\s*)*(class|namespace|append to|function|method|constructor|properties)\b/i
 
         //var words = line.split(" ")
         var words = line.split(" ");
@@ -397,13 +400,13 @@
             if (words[inx]) {
             
 
-                //if words[inx].toLowerCase() in ["public","export","default","helper"]
-                if (["public", "export", "default", "helper"].indexOf(words[inx].toLowerCase())>=0) {
+                //if words[inx].toLowerCase() in ["public","export","only","helper"]
+                if (["public", "export", "only", "helper"].indexOf(words[inx].toLowerCase())>=0) {
                 
                     //countAdj++ //valid
                     countAdj++;
                 }
-                //if words[inx].toLowerCase() in ["public","export","default","helper"]
+                //if words[inx].toLowerCase() in ["public","export","only","helper"]
                 
                 else {
                   //break //invalid word
@@ -2426,3 +2429,7 @@
             //return resultText
             return resultText;
         };
+// -----------
+// Module code
+// -----------
+// end of module

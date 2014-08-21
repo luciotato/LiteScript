@@ -282,7 +282,7 @@
 					<key>name</key>
 					<string>storage.type.lite</string>
 					<key>match</key>
-					<string>\b(array|string|boolean|returns)\b</string>
+					<string>\b(array|string|boolean|returns|:function)\b</string>
 				</dict>
 
 				<dict>
@@ -531,14 +531,14 @@ raise|fail\s+with|try|print|case|end|while|wait\s+for|until)\b</string>
 					<key>name</key>
 					<string>keyword.declaration.lite</string>
 					<key>match</key>
-					<string>\b(var|let|function|default)\b</string>
+					<string>\b(var|function|let|default)\b</string>
 				</dict>
 
 				<dict>
 					<key>name</key>
 					<string>storage.modifier.lite</string>
 					<key>match</key>
-					<string>\b(export|helper|global)\s+</string>
+					<string>\b(export|helper|global|public|only|nice)\s+</string>
 				</dict>
 
 

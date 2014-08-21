@@ -30,7 +30,7 @@ and also pass the --harmony flag when executing node.
         
 
         var lastArg = args.length-1;
-        var finalCallback = args[lastArg];
+        var finalCallback:function = args[lastArg];
 
         if typeof finalCallback isnt 'function'
 
@@ -54,9 +54,9 @@ and also pass the --harmony flag when executing node.
         // this callback will RESUME the generator, returning 'data' 
         // as the result of the 'yield' keyword
 
-        declare valid thisIterator.defaultCallback
-        declare valid thisIterator.next
-        declare valid thisIterator.throw
+        declare valid thisIterator.defaultCallback:function
+        declare valid thisIterator.next:function
+        declare valid thisIterator.throw:function
 
         thisIterator.defaultCallback = function(err,data)
             // thisIterator.defaultCallback

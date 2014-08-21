@@ -79,9 +79,17 @@ effectively working as a pointer
           if options.pointsTo 
               .members = options.pointsTo.members
           else 
-              if options.type, .setMember('**proto**',options.type)
-              if options.itemType, .setMember('**item type**',options.itemType)
-              if options.returnType, .setMember('**return type**',options.returnType)
+
+              if options.type instanceof Grammar.TypeDeclaration
+                  .setMember('**proto**',options.type.mainType)
+                  if options.type.itemType, .setMember('**item type**',options.type.itemType)
+
+              else if options.type 
+                  .setMember('**proto**',options.type)
+
+              if options.returnType 
+                  .setMember('**return type**',options.returnType)
+
               if options.value, .setMember('**value**',options.value)
               
           if options.isForward, .isForward = true
@@ -365,7 +373,9 @@ By keeping 1st char untouched, we allow "token" and "Token" to co-exists in the 
 
             pointsTo : Declaration
 
-            type, itemType, returnType 
+            type: Grammar.TypeDeclaration
+
+            returnType
             
             nodeClass: ASTBase
 

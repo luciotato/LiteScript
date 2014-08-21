@@ -31,7 +31,7 @@ Require the Producer (to include it in the dependency tree)
     #endif
     
 ----------------
-### Public Class Project
+### export only Class Project
 
 A **Project** object acts as the rootModule for a complex AST spanning several related **Modules**
 
@@ -101,14 +101,7 @@ add 'ENV_JS' => this compiler is JS code
 
         #ifdef TARGET_JS
         .setCompilerVar 'ENV_JS'
-
-add 'ENV_NODE' or 'ENV_JS' as compiler vars.
-ENV_NODE: this compiler is JS code & we're running on node
-ENV_NODE: this compiler is JS code & we're running on the browser
-
-        declare var window
-        var inNode = type of window is 'undefined'
-        .setCompilerVar inNode? 'ENV_NODE' else 'ENV_BROWSER'
+        .setCompilerVar options.browser? 'ENV_BROWSER' else 'ENV_NODE' 
         #endif
 
 add 'ENV_C' => this compiler is C-code (*native exe*)
@@ -347,7 +340,11 @@ Now create the module scope, with two local scope vars:
 'module' and 'exports = module.exports'. 'exports' will hold all exported members.
 
         moduleNode.createScope()
-        moduleNode.exports = new Names.Declaration(fileInfo.base, {nodeClass:Grammar.NamespaceDeclaration},moduleNode)
+        moduleNode.exports = new Names.Declaration('exports', {
+                nodeClass:Grammar.NamespaceDeclaration
+                normalizeModeKeepFirstCase:true
+                }
+                , moduleNode)
         moduleNode.exportsReplaced = false
         
         var moduleVar = moduleNode.addToScope('module',{nodeClass:Grammar.NamespaceDeclaration})
@@ -595,11 +592,13 @@ rootModule.compilerVars.members.set(name,value)
 
 ### Append to class Grammar.Module
 #### Properties
+        isMain: boolean
         fileInfo #module file info
         exports: Names.Declaration # holds module.exports as members
-        exportsReplaced: boolean # if exports was replaced by a ClassDeclaration with the module name
+        exportsReplaced: boolean # if exports was replaced by a item with 'export only'
         requireCallNodes: Grammar.ImportStatementItem array #list of `import` item nodes or `require()` function calls (varRef)
         referenceCount
+        movedToGlobal: boolean 
         
 #### method getCompiledLines returns string array 
         return .lexer.outCode.getResult()

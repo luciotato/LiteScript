@@ -123,7 +123,7 @@ Words that are reserved in LiteScript and cannot be used as variable or function
         'with','arguments','in','instanceof','typeof'
         'var','let','default','delete','interface','implements','yield'
         'like','this','super'
-        'export','compiler','compile','debugger'
+        'export','only','compiler','compile','debugger'
         //-----------------
         // "compile-to-c" reserved words
         'char','short','long','int','unsigned','void','NULL','bool','assert' 
@@ -202,7 +202,9 @@ Example:
         .name = .req('IDENTIFIER')
         .lock()
 
-        if .name in RESERVED_WORDS, .sayErr '"#{.name}" is a reserved word'
+        if .parent instance of VarStatement
+            and .name in RESERVED_WORDS 
+                .sayErr '"#{.name}" is a reserved word'
 
 optional type annotation & 
 optional assigned value 
@@ -210,8 +212,8 @@ optional assigned value
         var parseFreeForm
 
         if .opt(':') 
-            .parseType
-            //Note: parseType if parses "Map", stores type as a VarRef->Map and also sets .isMap=true
+            .type = .req(TypeDeclaration)
+            //Note: TypeDeclaration if parses "Map", stores type as a VarRef->Map and also sets .isMap=true
 
         if .opt('=') 
 
@@ -1136,7 +1138,7 @@ Replace lexical `super` by `#{SuperClass name}.prototype`
 Hack: after 'into var', allow :type 
 
         if .getParent(Statement).intoVars and .opt(":")
-            .parseType
+            .type = .req(TypeDeclaration)
 
 check for post-fix increment/decrement
 
@@ -1666,7 +1668,9 @@ After the expression is parsed, a *Expression Tree* is created based on operator
 
     public class Expression extends ASTBase
       
-      properties operandCount, root, ternaryCount
+      properties 
+          operandCount, root 
+          ternaryCount
  
       method parse()
       
@@ -2030,7 +2034,8 @@ a `property-name: value` pair.
 
     public class NameValuePair extends ASTBase
 
-      properties value: Expression
+      properties 
+          value: Expression
 
       method parse()
 
@@ -2046,7 +2051,7 @@ if it's a "dangling assignment", we assume FreeObjectLiteral
 
         else
           if .lexer.interfaceMode
-              .parseType
+              .type = .req(TypeDeclaration)
           else
               .value = .req(Expression)
 
@@ -2184,7 +2189,7 @@ now parse body
 
         else # full body function
 
-            if .opt('returns'), .parseType  #function return type
+            if .opt('returns'), .type = .req(TypeDeclaration)  #function return type
 
             if .opt('[','SPACE_BRACKET') # property attributes (non-enumerable, writable, etc - Object.defineProperty)
                 .definePropItems = .optSeparatedList(DefinePropertyItem,',',']')
@@ -2636,13 +2641,13 @@ get specifier 'on|valid|name|all'
             #declare VarRef:Type
             .varRef = .req(VariableRef)
             .req(':') //type expected
-            .parseType 
+            .type = .req(TypeDeclaration)
 
           when 'valid':
             .varRef = .req(VariableRef)
             if no .varRef.accessors, .sayErr "declare valid: expected accesor chain. Example: 'declare valid name.member.member'"
             if .opt(':') 
-                .parseType //optional type
+                .type = .req(TypeDeclaration) //optional type
 
           when 'name':
             .specifier = .req('affinity')
@@ -2989,6 +2994,69 @@ we allow a list of comma separated expressions to compare to and a body
                 .body = .req(SingleLineBody)
 
 
+### public helper class TypeDeclaration extends ASTBase
+
+      properties
+        mainType
+        keyType
+        itemType
+
+      method parse
+
+parse type declaration: 
+
+  function [(VariableDecl,)]
+  type-IDENTIFIER [array]
+  [array of] type-IDENTIFIER 
+  map type-IDENTIFIER to type-IDENTIFIER
+
+        if .opt('function','Function') #function as type 
+            .lock
+            .mainType= new VariableRef(this, 'Function')
+            if .lexer.token.value is '(', .parseAccessors
+            return
+
+check for 'array', e.g.: `var list : array of String`
+
+        if .opt('array','Array')
+            .lock
+            .mainType = 'Array'
+            if .opt('of')
+                .itemType = .req(VariableRef) #reference to an existing class
+                //auto-capitalize core classes
+                declare .itemType:VariableRef
+                .itemType.name = autoCapitalizeCoreClasses(.itemType.name)
+            end if
+            return
+
+Check for 'map', e.g.: `var list : map string to Statement`
+
+        .mainType = .req(VariableRef) #reference to an existing class
+        .lock
+        //auto-capitalize core classes
+        declare .mainType:VariableRef
+        .mainType.name = autoCapitalizeCoreClasses(.mainType.name)
+        
+        if .mainType.name is 'Map'
+            .parent.isMap = true
+            .extraInfo = 'map [type] to [type]' //extra info to show on parse fail
+            .keyType = .req(VariableRef) #type for KEYS: reference to an existing class
+            //auto-capitalize core classes
+            declare .keyType:VariableRef
+            .keyType.name = autoCapitalizeCoreClasses(.keyType.name)
+            .req('to')
+            .itemType = .req(VariableRef) #type for values: reference to an existing class
+            #auto-capitalize core classes
+            declare .itemType:VariableRef
+            .itemType.name = autoCapitalizeCoreClasses(.itemType.name)
+        else
+            #check for 'type array', e.g.: `var list : string array`
+            if .opt('Array','array')
+                .itemType = .mainType #assign read mainType as sub-mainType
+                .mainType = 'Array' #real type
+
+
+
 
 ##Statement
 
@@ -3039,9 +3107,9 @@ We look up the token (keyword) in **StatementsDirect** table, and parse the spec
         if no .specific
 
 If it was not found, try optional adjectives (zero or more). 
-Adjectives are: `(export|public|generator|shim|helper)`. 
+Adjectives are: `(export|default|public|generator|shim|helper)`. 
 
-            while .opt('public','export','nice','generator','shim','helper','global') into var adj
+            while .opt('public','export','only','nice','generator','shim','helper','global') into var adj
                 if adj is 'public', adj='export' #'public' is alias for 'export'
                 .adjectives.push adj
 
@@ -3077,10 +3145,11 @@ store keyword of specific statement
         key = key.toLowerCase()
         .keyword = key
         
-Check validity of adjective-statement combination 
+Check valid adjective-statement combination 
 
         var validCombinations = map
               export: ['class','namespace','function','var'] 
+              only: ['class','namespace'] 
               generator: ['function','method'] 
               nice: ['function','method'] 
               shim: ['function','method','import'] 
@@ -3096,12 +3165,18 @@ Check validity of adjective-statement combination
 
 ### Append to class ASTBase
 
-##### helper method hasAdjective(name) returns boolean
-To check if a statement has an adjective. We assume .parent is Grammar.Statement
+##### helper method hasAdjective(names:string) returns boolean
+To check if a statement has one or more adjectives. 
+We assume .parent is Grammar.Statement
 
         var stat:Statement = this.constructor is Statement? this else .getParent(Statement)
-        if no stat, .throwError "[#{.constructor.name}].hasAdjective('#{name}'): can't find a parent Statement"
-        return name in stat.adjectives
+        if no stat, .throwError "[#{.constructor.name}].hasAdjective('#{names}'): can't find a parent Statement"
+
+        var allToSearch = names.split(" ")
+        for each name in allToSearch
+            if no name in stat.adjectives, return false
+
+        return true //if all requested are adjectives
 
 ## Body
 
@@ -3169,15 +3244,10 @@ The `Module` represents a complete source file.
     public class Module extends Body
 
       properties
-        
-        isMain: boolean
-        exportDefault: ASTBase
-
-        //numbers determinin initialization order
+        //numbers determining initialization order
         dependencyTreeLevel = 0
         dependencyTreeLevelOrder = 0
         importOrder=0
-
 
       method parse()
 
@@ -3262,57 +3332,3 @@ Anything standing alone in it's own line, its an imperative statement (it does s
 ### append to class ASTBase
       properties
             isMap: boolean
-
-##### helper method parseType
-
-parse type declaration: 
-
-  function [(VariableDecl,)]
-  type-IDENTIFIER [array]
-  [array of] type-IDENTIFIER 
-  map type-IDENTIFIER to type-IDENTIFIER
-
-
-        if .opt('function','Function') #function as type 
-            .type= new VariableRef(this, 'Function')
-            if .lexer.token.value is '(', .parseAccessors
-            return
-
-check for 'array', e.g.: `var list : array of String`
-
-        if .opt('array','Array')
-            .type = 'Array'
-            if .opt('of')
-                .itemType = .req(VariableRef) #reference to an existing class
-                //auto-capitalize core classes
-                declare .itemType:VariableRef
-                .itemType.name = autoCapitalizeCoreClasses(.itemType.name)
-            end if
-            return
-
-Check for 'map', e.g.: `var list : map string to Statement`
-
-        .type = .req(VariableRef) #reference to an existing class
-        //auto-capitalize core classes
-        declare .type:VariableRef
-        .type.name = autoCapitalizeCoreClasses(.type.name)
-        
-        if .type.name is 'Map'
-            .isMap = true
-            .extraInfo = 'map [type] to [type]' //extra info to show on parse fail
-            .keyType = .req(VariableRef) #type for KEYS: reference to an existing class
-            //auto-capitalize core classes
-            declare .keyType:VariableRef
-            .keyType.name = autoCapitalizeCoreClasses(.keyType.name)
-            .req('to')
-            .itemType = .req(VariableRef) #type for values: reference to an existing class
-            #auto-capitalize core classes
-            declare .itemType:VariableRef
-            .itemType.name = autoCapitalizeCoreClasses(.itemType.name)
-        else
-            #check for 'type array', e.g.: `var list : string array`
-            if .opt('Array','array')
-                .itemType = .type #assign read type as sub-type
-                .type = 'Array' #real type
-
-

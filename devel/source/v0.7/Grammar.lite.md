@@ -2944,7 +2944,7 @@ Adjectives can precede several statement.
 
 #### method parse()
 
-        .name = .req('public','export','default','nice','generator','shim','helper','global')
+        .name = .req('public','export','default','only','nice','generator','shim','helper','global')
         #'public' is just alias for 'export'
         if .name is 'public', .name='export'
 
@@ -3274,7 +3274,7 @@ Check validity of adjective-statement combination
               var CFVN = ['class','function','var','namespace'] 
 
               var validCombinations =  
-                    export: CFVN, default: CFVN
+                    export:CFVN, default:CFVN, only:CFVN
                     generator: ['function','method'] 
                     nice: ['function','method'] 
                     shim: ['function','method','class','namespace','import'] 

@@ -1,3 +1,6 @@
+// -----------
+// Module Init
+// -----------
 //===========
 
 //The `producer` module extends Grammar classes, adding a `produce()` method
@@ -89,6 +92,7 @@
 
 
     //    public function postProduction(project)
+    // ---------------------------
     function postProduction(project){
 
 //create _dispatcher.c & .h
@@ -135,12 +139,8 @@
     // export
     module.exports.postProduction = postProduction;
 
-    //end function
-
     //helper function normalizeDefine(name:string)
-    
-
-    //helper function normalizeDefine(name:string)
+    // ---------------------------
     function normalizeDefine(name){
         //var chr, result=""
         var chr = undefined, result = "";
@@ -164,6 +164,7 @@
     
 
      //     method produceDispatcher(project)
+     // ---------------------------
      Grammar.Module.prototype.produceDispatcher = function(project){
 
         //var requiredHeaders: Grammar.Module array = []
@@ -426,6 +427,7 @@
 
 
      //     method produce() # Module
+     // ---------------------------
      Grammar.Module.prototype.produce = function(){
 
 //default #includes:
@@ -584,6 +586,7 @@
 
 
     //    function sortByRecurseLevel(moduleA:Grammar.Module, moduleB:Grammar.Module)
+    // ---------------------------
     function sortByRecurseLevel(moduleA, moduleB){
 //deeper level goes first
 //but on everything equal, import order wins
@@ -606,6 +609,7 @@
 //Append-to body contains properties and methods definitions.
 
       //method produceHeader()
+      // ---------------------------
       Grammar.AppendToDeclaration.prototype.produceHeader = function(){
 
         //var nameDeclClass = .varRef.tryGetReference() // get class being append to
@@ -662,6 +666,7 @@
 
 
       //method produce()
+      // ---------------------------
       Grammar.AppendToDeclaration.prototype.produce = function(){
 
         //if .toNamespace, return //nothing to do if it's "append to namespace"
@@ -678,6 +683,7 @@
 
 
      //     method produceHeader
+     // ---------------------------
      Grammar.NamespaceDeclaration.prototype.produceHeader = function(){
 
         //var prefix= .nameDecl.getComposedName()
@@ -735,6 +741,7 @@
 
 
      //     method produce # namespace
+     // ---------------------------
      Grammar.NamespaceDeclaration.prototype.produce = function(){
 
         //var prefix= .nameDecl.getComposedName()
@@ -752,6 +759,7 @@
     
 
      //     method produceHeader()
+     // ---------------------------
      Grammar.ClassDeclaration.prototype.produceHeader = function(){
 
         //if no .nameDecl, return //shim class
@@ -857,6 +865,7 @@
      };
 
      //     method produce()
+     // ---------------------------
      Grammar.ClassDeclaration.prototype.produce = function(){
 
         //if no .nameDecl, return //shim class
@@ -975,6 +984,7 @@
 
 //-------------------------------------
      //     helper method outClassTitleComment(c:string)
+     // ---------------------------
      Grammar.ClassDeclaration.prototype.outClassTitleComment = function(c){
 
         //.out
@@ -992,6 +1002,7 @@
 
 //-------------------------------------
      //     method produceStaticListMethodsAndProps
+     // ---------------------------
      Grammar.ClassDeclaration.prototype.produceStaticListMethodsAndProps = function(){
 
 //static definition info for each class: list of _METHODS and _PROPS
@@ -1050,6 +1061,7 @@
      };
 
      //     method produceClassRegistration
+     // ---------------------------
      Grammar.ClassDeclaration.prototype.produceClassRegistration = function(){
 
         //skip NamespaceDeclaration & AppendToDeclaration (both derived from ClassDeclaration)
@@ -1076,6 +1088,7 @@
     //    append to class Names.Declaration
     
      //     method outSuperChainProps(node:Grammar.ClassDeclaration) #recursive
+     // ---------------------------
      Names.Declaration.prototype.outSuperChainProps = function(node){
 
 //out all properties of a class, including those of the super's-chain
@@ -1119,6 +1132,7 @@
 //"Body"s are used for example, to parse an `if` statement body and `else` body, `for` loops, etc.
 
      //     method produce()
+     // ---------------------------
      Grammar.Body.prototype.produce = function(){
 
         //for each statement in .statements
@@ -1134,6 +1148,7 @@
 
 
      //     method produceAsNamespace(prefix) # namespace
+     // ---------------------------
      Grammar.Body.prototype.produceAsNamespace = function(prefix){
 
 //Now on the .c file,
@@ -1182,6 +1197,7 @@
 
 
      //     method produceDeclaredExternProps(parentName,forcePublic)
+     // ---------------------------
      Grammar.Body.prototype.produceDeclaredExternProps = function(parentName, forcePublic){
 
         //if no .statements, return //interface only
@@ -1251,6 +1267,7 @@
 
 
      //     method produceInternalDeclarations(prefix)
+     // ---------------------------
      Grammar.Body.prototype.produceInternalDeclarations = function(prefix){
 
 //before main function,
@@ -1350,6 +1367,7 @@
 
 
      //     method produceInitializationCode(prefix)
+     // ---------------------------
      Grammar.Body.prototype.produceInitializationCode = function(prefix){
 
 //Third: assign values for module vars.
@@ -1398,6 +1416,7 @@
 
 
      //     method producePropertiesInitialValueAssignments(fullPrefix)
+     // ---------------------------
      Grammar.Body.prototype.producePropertiesInitialValueAssignments = function(fullPrefix){
 
 //if there is var or properties with assigned values, produce those assignment
@@ -1427,6 +1446,7 @@
 //after adding any comment lines preceding the statement
 
       //method produce()
+      // ---------------------------
       Grammar.Statement.prototype.produce = function(){
 
 //add preceeding comment lines, in the same position as the source
@@ -1503,6 +1523,7 @@
 //or a "statement" (must be inside a funcion in "C")
 
       //helper method isDeclaration returns boolean
+      // ---------------------------
       Grammar.Statement.prototype.isDeclaration = function(){
 
         //return .specific is instance of Grammar.ClassDeclaration
@@ -1517,6 +1538,7 @@
       };
 
       //helper method isExecutableStatement returns boolean
+      // ---------------------------
       Grammar.Statement.prototype.isExecutableStatement = function(){
 
         //return not .isDeclaration()
@@ -1527,6 +1549,7 @@
     
 
       //method declareIntoVar()
+      // ---------------------------
       Grammar.Oper.prototype.declareIntoVar = function(){
 
 //called above, pre-declare vars from 'into var x' assignment-expression
@@ -1555,6 +1578,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.ThrowStatement.prototype.produce = function(){
           //if .specifier is 'fail'
           if (this.specifier === 'fail') {
@@ -1575,6 +1599,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.ReturnStatement.prototype.produce = function(){
         //var defaultReturn = .getParent(Grammar.ConstructorDeclaration)? '' else 'undefined'
         var defaultReturn = this.getParent(Grammar.ConstructorDeclaration) ? '' : 'undefined';
@@ -1634,6 +1659,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.FunctionCall.prototype.produce = function(){
 
 //Check if varRef "executes"
@@ -1673,6 +1699,7 @@
         //produceType: string
 
       //method produce()
+      // ---------------------------
       Grammar.Operand.prototype.produce = function(){
 
         //if .accessors and .name isnt instance of Grammar.NumberLiteral
@@ -1800,6 +1827,7 @@
 //6) `~`       *bit-unary-negation*   `a = ~xC0 + 5`
 
       //method produce()
+      // ---------------------------
       Grammar.UnaryOper.prototype.produce = function(){
 
         //var translated = operTranslate(.name)
@@ -1952,6 +1980,7 @@
           //produceType: string
 
       //method produce()
+      // ---------------------------
       Grammar.Oper.prototype.produce = function(){
 
         //var oper = .name
@@ -2276,6 +2305,7 @@
           //produceType: string
 
       //method produce(negated)
+      // ---------------------------
       Grammar.Expression.prototype.produce = function(negated){
 
 //Produce the expression body, optionally negated
@@ -2328,6 +2358,7 @@
 
 
     //    helper function makeSymbolName(symbol)
+    // ---------------------------
     function makeSymbolName(symbol){
         // hack: make "symbols" avoid interference with C's reserved words
         // and also common variable names
@@ -2357,6 +2388,7 @@
           //calcType: string // 'any','Number','Bool','**native number**'
 
       //method produce()
+      // ---------------------------
       Grammar.VariableRef.prototype.produce = function(){
 
 //Prefix ++/--, varName, Accessors and postfix ++/--
@@ -2423,6 +2455,7 @@
       };
 
       //      helper method calcReference(callNew) returns array of array
+      // ---------------------------
       Grammar.VariableRef.prototype.calcReference = function(callNew){
 
         //var result = .calcReferenceArr(callNew)
@@ -2479,6 +2512,7 @@
       };
 
       //      helper method calcReferenceArr(callNew) returns array of array
+      // ---------------------------
       Grammar.VariableRef.prototype.calcReferenceArr = function(callNew){
 
 //Start with main variable name, to check property names
@@ -3223,6 +3257,7 @@
 
 
       //      helper method calcPropAccessOnly() returns array
+      // ---------------------------
       Grammar.VariableRef.prototype.calcPropAccessOnly = function(){
 
 //Start with main variable name, upto functionAccess or indexAccess
@@ -3302,6 +3337,7 @@
     
 
       //      helper method pushArgumentsTo(callParams:array, actualVar:Names.Declaration, skipAnyArr:boolean)
+      // ---------------------------
       Grammar.FunctionAccess.prototype.pushArgumentsTo = function(callParams, actualVar, skipAnyArr){
 
         //if no .args or .args.length is 0
@@ -3337,6 +3373,7 @@
     
 
       //      helper method calcParam(inx, actualVar:Names.Declaration) returns array
+      // ---------------------------
       Grammar.FunctionArgument.prototype.calcParam = function(inx, actualVar){
 
 //decl contains the parameter declaration from the Function Declaration, to validate type
@@ -3472,6 +3509,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.AssignmentStatement.prototype.produce = function(){
 
         //var extraLvalue='.value.number'
@@ -3538,6 +3576,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.DefaultAssignment.prototype.produce = function(){
 
         //.process(.assignment.lvalue, .assignment.rvalue)
@@ -3551,6 +3590,7 @@
 
       //#recursive duet 1
       //helper method process(name,value)
+      // ---------------------------
       Grammar.DefaultAssignment.prototype.process = function(name, value){
 
 //if it is ObjectLiteral: recurse levels, else, a simple 'if undefined, assignment'
@@ -3574,6 +3614,7 @@
 
       //#recursive duet 2
       //helper method processItems(main, objectLiteral)
+      // ---------------------------
       Grammar.DefaultAssignment.prototype.processItems = function(main, objectLiteral){
 
           //.throwError "default for objects not supported on C-generation"
@@ -3617,6 +3658,7 @@
 //```
 
       //method produce()
+      // ---------------------------
       Grammar.WithStatement.prototype.produce = function(){
 
         //.out "var ",.nameDecl.getComposedName(),'=',.varRef,";"
@@ -3633,6 +3675,7 @@
     
 
       //method addToAllProperties
+      // ---------------------------
       Names.Declaration.prototype.addToAllProperties = function(){
 
         //var name = .name
@@ -3668,6 +3711,7 @@
     
 
       //method addToAllProperties
+      // ---------------------------
       Grammar.VarDeclList.prototype.addToAllProperties = function(){
         //for each varDecl in .list
         for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
@@ -3684,6 +3728,7 @@
 //'var' followed by a list of comma separated: var names and optional assignment
 
       //method produce
+      // ---------------------------
       Grammar.VarStatement.prototype.produce = function(){
         //.out 'var ',{CSL:.list, freeForm:1}
         this.out('var ', {CSL: this.list, freeForm: 1});
@@ -3695,6 +3740,7 @@
 //variable name and optionally assign a value
 
       //method produce
+      // ---------------------------
       Grammar.VariableDecl.prototype.produce = function(){
         //.out .name,' = ', .assignedValue or 'undefined'
         this.out(this.name, ' = ', this.assignedValue || 'undefined');
@@ -3706,6 +3752,7 @@
 //'import' followed by a list of comma separated: var names and optional assignment
 
       //method produce()
+      // ---------------------------
       Grammar.ImportStatement.prototype.produce = function(){
 
         //for each item in .list
@@ -3720,6 +3767,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.SingleLineBody.prototype.produce = function(){
 
         //var bare=[]
@@ -3740,6 +3788,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.IfStatement.prototype.produce = function(){
 
         //declare valid .elseStatement.produce
@@ -3780,6 +3829,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.ElseIfStatement.prototype.produce = function(){
 
         //.outSourceLinesAsComment
@@ -3793,6 +3843,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.ElseStatement.prototype.produce = function(){
 
         //.outSourceLinesAsComment
@@ -3808,6 +3859,7 @@
 //There are 3 variants of `ForStatement` in LiteScript
 
       //method produce()
+      // ---------------------------
       Grammar.ForStatement.prototype.produce = function(){
 
         //declare valid .variant.produce
@@ -3829,6 +3881,7 @@
 //`ForEachProperty: for each property [name-IDENTIFIER,]value-IDENTIFIER in this-VariableRef`
 
       //method produce()
+      // ---------------------------
       Grammar.ForEachProperty.prototype.produce = function(){
 
 //=> C:  for(inx=0;inx<obj.getPropertyCount();inx++){
@@ -3928,6 +3981,7 @@
 //`ForEachInArray: for each [index-VariableDecl,]item-VariableDecl in array-VariableRef`
 
       //      method produce()
+      // ---------------------------
       Grammar.ForEachInArray.prototype.produce = function(){
 
 //Create a default index var name if none was provided
@@ -4147,6 +4201,7 @@
 //Handle by using a js/C standard for(;;){} loop
 
       //method produce(iterable)
+      // ---------------------------
       Grammar.ForIndexNumeric.prototype.produce = function(iterable){
 
         //var isToDownTo: boolean
@@ -4253,6 +4308,7 @@
 //`ForWhereFilter: [where Expression]`
 
       //method produce()
+      // ---------------------------
       Grammar.ForWhereFilter.prototype.produce = function(){
 
         //.outLineAsComment .lineInx
@@ -4270,6 +4326,7 @@
 //`DeleteStatement: delete VariableRef`
 
       //method produce()
+      // ---------------------------
       Grammar.DeleteStatement.prototype.produce = function(){
         //.out 'delete ',.varRef
         this.out('delete ', this.varRef);
@@ -4279,6 +4336,7 @@
     
 
       //method produce(askFor:string, negated:boolean)
+      // ---------------------------
       Grammar.WhileUntilExpression.prototype.produce = function(askFor, negated){
 
 //If the parent ask for a 'while' condition, but this is a 'until' condition,
@@ -4309,6 +4367,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.DoLoop.prototype.produce = function(){
 
 //Note: **WhileUntilLoop** extends **DoLoop**, so this *.produce()* method is used by both symbols.
@@ -4372,6 +4431,7 @@
 //This is a very simple produce() to allow us to use the `break` and `continue` keywords.
 
       //method produce()
+      // ---------------------------
       Grammar.LoopControlStatement.prototype.produce = function(){
 
 //validate usage inside a for/while
@@ -4416,6 +4476,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.DoNothingStatement.prototype.produce = function(){
         //.out "//do nothing",NL
         this.out("//do nothing", NL);
@@ -4434,6 +4495,7 @@
         //produceType
 
       //method produce()
+      // ---------------------------
       Grammar.ParenExpression.prototype.produce = function(){
         //.expr.produceType = .produceType
         this.expr.produceType = this.produceType;
@@ -4448,6 +4510,7 @@
 //On js we just pass this through, on C we create the array on the fly
 
       //method produce()
+      // ---------------------------
       Grammar.ArrayLiteral.prototype.produce = function(){
 
         //.out "new(Array,"
@@ -4478,6 +4541,7 @@
 //we call _newPair to create a new NameValuePair
 
       //method produce()
+      // ---------------------------
       Grammar.NameValuePair.prototype.produce = function(){
         //var strName = .name
         var strName = this.name;
@@ -4503,6 +4567,7 @@
 //C99 does only support "static" initializers for structs.
 
       //method produce()
+      // ---------------------------
       Grammar.ObjectLiteral.prototype.produce = function(){
 
         //.out "new(Map,"
@@ -4532,6 +4597,7 @@
 
 
       //method calcFastNew(className) returns array
+      // ---------------------------
       Grammar.ObjectLiteral.prototype.calcFastNew = function(className){
 
         //var resultArray = ["_fastNew(", className ,",", .items.length]
@@ -4555,6 +4621,7 @@
 
 
       //method produce()
+      // ---------------------------
       Grammar.RegExpLiteral.prototype.produce = function(){
 
         //.throwError "generating C-code for RegExp Literals not supported yet. Use PMREX paliatives"
@@ -4568,6 +4635,7 @@
 //Produce a Constructor
 
       //method produce()
+      // ---------------------------
       Grammar.ConstructorDeclaration.prototype.produce = function(){
 
         //if no .body.statements
@@ -4626,6 +4694,7 @@
 //Produce a Method
 
       //method produce()
+      // ---------------------------
       Grammar.MethodDeclaration.prototype.produce = function(){
 
         //if no .body.statements
@@ -4682,6 +4751,7 @@
 //`FunctionDeclaration: '[export] function [name] '(' FunctionParameterDecl* ')' Block`
 
       //method produce()
+      // ---------------------------
       Grammar.FunctionDeclaration.prototype.produce = function(){
 
 //exit if it is a *shim* method which never got declared (method exists, shim not required)
@@ -4714,6 +4784,7 @@
 
 
       //      helper method produceFunctionBody(prefix:string)
+      // ---------------------------
       Grammar.FunctionDeclaration.prototype.produceFunctionBody = function(prefix){
 
 //common code
@@ -4798,6 +4869,7 @@
 //`print` is an alias for console.log
 
       //method produce()
+      // ---------------------------
       Grammar.PrintStatement.prototype.produce = function(){
 
         //if .args.length
@@ -4821,6 +4893,7 @@
 //Marks the end of a block. It's just a comment for javascript
 
       //method produce()
+      // ---------------------------
       Grammar.EndStatement.prototype.produce = function(){
 
         //declare valid .lexer.outCode.lastOriginalCodeComment
@@ -4861,6 +4934,7 @@
     
 
         //method getRefFilename(ext)
+        // ---------------------------
         Grammar.ImportStatementItem.prototype.getRefFilename = function(ext){
 
             //var thisModule = .getParent(Grammar.Module)
@@ -4878,6 +4952,7 @@
 //Out as comments
 
       //method produce()
+      // ---------------------------
       Grammar.DeclareStatement.prototype.produce = function(){
         //.skipSemiColon = true
         this.skipSemiColon = true;
@@ -4889,6 +4964,7 @@
     
 
      //     method getComposedName
+     // ---------------------------
      Names.Declaration.prototype.getComposedName = function(){
 
 //if this nameDecl is member of a namespace, goes up the parent chain
@@ -4944,6 +5020,7 @@
 
 
      //     method addToAllMethodNames()
+     // ---------------------------
      Names.Declaration.prototype.addToAllMethodNames = function(){
 
 //For C production, we're declaring each distinct method name (verbs)
@@ -4984,6 +5061,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.TryCatch.prototype.produce = function(){
 
         //.out 'try{', .body, .exceptionBlock
@@ -4994,6 +5072,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.ExceptionBlock.prototype.produce = function(){
 
         //.out NL,'}catch(',.catchVar,'){', .body, '}'
@@ -5012,6 +5091,7 @@
     
 
       //      method produce()
+      // ---------------------------
       Grammar.CaseStatement.prototype.produce = function(){
 
 //if it was "case foo instance of"... we produce
@@ -5083,6 +5163,7 @@
 
 
       //      method produceCaseInstanceOfLoop
+      // ---------------------------
       Grammar.CaseStatement.prototype.produceCaseInstanceOfLoop = function(){
 
         //var tmpVar=UniqueID.getVarName('class')
@@ -5158,6 +5239,7 @@
     //    append to class Grammar.DebuggerStatement ###
     
       //method produce
+      // ---------------------------
       Grammar.DebuggerStatement.prototype.produce = function(){
         //.out "assert(0)"
         this.out("assert(0)");
@@ -5167,6 +5249,7 @@
     
 
       //method produce()
+      // ---------------------------
       Grammar.YieldExpression.prototype.produce = function(){
 
 //Check location
@@ -5312,6 +5395,7 @@
 
 
     //function operTranslate(name:string)
+    // ---------------------------
     function operTranslate(name){
       //return OPER_TRANSLATION.tryGetProperty(name) or name
       return OPER_TRANSLATION.tryGetProperty(name) || name;
@@ -5328,9 +5412,19 @@
      //properties skipSemiColon
 
      //     helper method assignIfUndefined(name,expression)
+     // ---------------------------
      ASTBase.prototype.assignIfUndefined = function(name, expression){
 
           //.out "if(",name,'.class==&Undefined_CLASSINFO) ',name,"=",expression,";",NL
           //.out "_default(&",name,",",expression,");",NL
           this.out("_default(&", name, ",", expression, ");", NL);
      };
+// -----------
+// Module code
+// -----------
+
+    //end function
+
+    //helper function normalizeDefine(name:string)
+    
+// end of module

@@ -1,0 +1,9 @@
+#!/bin/bash
+cd ~/LiteScript/devel
+
+#self-compile with litec-native-exe
+litecc source/v0.8/c_lite -o out/by-c-v08/c/lite-to-c-compiler -v 1 -D PROD_C
+
+#compare to generated-c with js-code-compiler
+diff -r litec/litec-to-c/generated-c out/by-c-v08/c/lite-to-c-compiler
+

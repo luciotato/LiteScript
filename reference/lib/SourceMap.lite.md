@@ -20,7 +20,7 @@ https://github.com/jashkenas/coffee-script/blob/master/src/sourcemap.litcoffee
 
     import logger
 
-### Public Class SourceMap
+### export only Class SourceMap
 
 Maps locations in a single generated JavaScript file back to locations in
 the original source file.

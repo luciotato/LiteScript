@@ -41,7 +41,7 @@ Module vars
 
      declare name affinity nameDecl
 
-#### constructor new Declaration(name, options:NameDeclOptions, node:ASTBase)
+#### constructor new Declaration(name, options:DeclarationOptions, node:ASTBase)
       
       .name = name.toString()
       .members = new Map // string to Declaration //contained Declarations
@@ -79,9 +79,17 @@ effectively working as a pointer
           if options.pointsTo 
               .members = options.pointsTo.members
           else 
-              if options.type, .setMember('**proto**',options.type)
-              if options.itemType, .setMember('**item type**',options.itemType)
-              if options.returnType, .setMember('**return type**',options.returnType)
+
+              if options.type instanceof Grammar.TypeDeclaration
+                  .setMember('**proto**',options.type.mainType)
+                  if options.type.itemType, .setMember('**item type**',options.type.itemType)
+
+              else if options.type 
+                  .setMember('**proto**',options.type)
+
+              if options.returnType 
+                  .setMember('**return type**',options.returnType)
+
               if options.value, .setMember('**value**',options.value)
               
           if options.isForward, .isForward = true
@@ -234,7 +242,7 @@ If this item has a different case than the name we're adding, emit error
             logger.error .originalDeclarationPosition() #add original declaration line info
             return true
 
-#### helper method addMember(nameDecl:Declaration, options:NameDeclOptions, nodeDeclared) returns Declaration
+#### helper method addMember(nameDecl:Declaration, options:DeclarationOptions, nodeDeclared) returns Declaration
 Adds passed Declaration to .members
 Reports duplicated.
 returns: Identifier
@@ -358,14 +366,16 @@ By keeping 1st char untouched, we allow "token" and "Token" to co-exists in the 
       return false
 
 
-### export class NameDeclOptions
+### export class DeclarationOptions
         properties
 
             normalizeModeKeepFirstCase: boolean
 
             pointsTo : Declaration
 
-            type, itemType, returnType 
+            type: Grammar.TypeDeclaration
+
+            returnType
             
             nodeClass: ASTBase
 
