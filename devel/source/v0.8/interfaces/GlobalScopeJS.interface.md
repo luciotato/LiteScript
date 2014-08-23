@@ -25,15 +25,15 @@ global Classes pre-created are:
         
     append to namespace Object
         
-        method keys() returns array of string
+        method keys(obj) returns array of string
         method create() 
-        method defineProperty() 
-        method defineProperties() 
+        method defineProperty
+        method defineProperties
         method freeze() 
-        method getPrototypeOf() 
-        method setPrototypeOf() 
-        method getOwnPropertyDescriptor() 
-        method getOwnPropertyNames() 
+        method getPrototypeOf(obj)
+        method setPrototypeOf(obj,newProto)
+        method getOwnPropertyDescriptor
+        method getOwnPropertyNames(ibj)
         //method is() 
         method isExtensible() 
         method isFrozen() 
@@ -47,30 +47,31 @@ global Classes pre-created are:
             length:number
         
         method toLocaleString() 
-        method join() returns string
+        method join(separator:string) returns string
         method pop() 
-        method push() 
-        method concat() 
+        method push
+        method concat
         method reverse() 
         method shift() 
-        method unshift() 
-        method slice() returns array
-        method splice() 
-        method sort() 
-        method filter() 
-        method forEach() 
-        method some() 
-        method every() 
-        method map() 
-        method indexOf() 
-        method lastIndexOf() 
-        method reduce() 
-        method reduceRight() 
-        method entries() 
-        method values() 
+        method unshift 
+        method slice(startIndex,endIndexNotIncluded) returns array
+        method splice(startIndex,howManytoDelete,...) returns array
+        method sort 
+        method filter 
+        method forEach 
+        method some 
+        method every 
+        method map 
+        method indexOf 
+        method lastIndexOf 
+        method reduce 
+        method reduceRight 
+        #ifdef ES6
         method keys() 
-        method find() 
-        method findIndex() 
+        method entries()
+        method find 
+        method findIndex 
+        #endif
     
     append to namespace Array
         method isArray() 
@@ -79,22 +80,22 @@ global Classes pre-created are:
         
         properties
             length:number
-        
+
         method valueOf() 
-        method charAt() 
-        method charCodeAt() 
-        method concat() 
-        method indexOf() 
-        method lastIndexOf() 
-        method localeCompare() 
-        method match() 
+        method charAt(index) 
+        method charCodeAt(index) 
+        method concat
+        method indexOf(needle:string, startIndex) 
+        method lastIndexOf(needle:string, startIndex) 
+        method localeCompare
+        method match
         //method normalize() 
-        method replace() 
-        method search() 
-        method slice() returns string
-        method split() returns array of string
-        method substring() 
-        method substr() 
+        method replace
+        method search
+        method slice(startIndex,endIndexNotIncluded) returns string
+        method split(separator:string) returns array of string
+        method substring
+        method substr
         method toLowerCase() 
         method toLocaleLowerCase() 
         method toUpperCase() 
@@ -102,29 +103,31 @@ global Classes pre-created are:
         method trim() 
         //method trimLeft() 
         //method trimRight() 
-        method link() 
-        method anchor() 
-        method fontcolor() 
-        method fontsize() 
-        method big() 
-        method blink() 
-        method bold() 
-        method fixed() 
-        method italics() 
-        method small() 
-        method strike() 
-        method sub() 
-        method sup() 
-        method repeat() 
-        method startsWith() 
-        method endsWith() 
-        method contains() 
+        method link 
+        method anchor 
+        method fontcolor 
+        method fontsize 
+        method big 
+        method blink 
+        method bold 
+        method fixed 
+        method italics 
+        method small 
+        method strike 
+        method sub 
+        method sup 
+        method repeat 
+        #ifdef ES6
+        method startsWith(text:string, position) 
+        method endsWith(text:string, position) 
+        method contains(text:string, position) 
+        #endif ES6
 
     append to namespace String
         method fromCharCode()
 
 ### Append to class Number
-        
+
         method toLocaleString() 
         method valueOf() 
         method toFixed() 
@@ -146,8 +149,8 @@ global Classes pre-created are:
         method isInteger() 
         method isNaN() 
         method isSafeInteger() 
-        method parseInt() 
-        method parseFloat() 
+        method parseInt
+        method parseFloat
 
 
 ## Classes declared here
@@ -155,6 +158,8 @@ global Classes pre-created are:
 ### public class Error extends Object
         properties
             name, message,stack
+
+        constructor new Error(...)
 
     append to namespace Error
         properties
@@ -165,6 +170,8 @@ global Classes pre-created are:
 
 ### public class Date extends Object
         
+        constructor new Date(...)
+
         method toDateString() 
         method toTimeString() 
         method toLocaleString() 
@@ -189,25 +196,25 @@ global Classes pre-created are:
         method getMilliseconds() 
         method getUTCMilliseconds() 
         method getTimezoneOffset() 
-        method setTime() 
-        method setMilliseconds() 
-        method setUTCMilliseconds() 
-        method setSeconds() 
-        method setUTCSeconds() 
-        method setMinutes() 
-        method setUTCMinutes() 
-        method setHours() 
-        method setUTCHours() 
-        method setDate() 
-        method setUTCDate() 
-        method setMonth() 
-        method setUTCMonth() 
-        method setFullYear() 
-        method setUTCFullYear() 
-        method toGMTString() 
-        method toUTCString() 
-        method getYear() 
-        method setYear() 
+        method setTime 
+        method setMilliseconds 
+        method setUTCMilliseconds 
+        method setSeconds 
+        method setUTCSeconds 
+        method setMinutes 
+        method setUTCMinutes 
+        method setHours 
+        method setUTCHours 
+        method setDate 
+        method setUTCDate 
+        method setMonth 
+        method setUTCMonth 
+        method setFullYear 
+        method setUTCFullYear 
+        method toGMTString 
+        method toUTCString()
+        method getYear 
+        method setYear 
         method toISOString() 
         method toJSON() 
     
@@ -224,6 +231,8 @@ global Classes pre-created are:
             ignoreCase:boolean
             multiline:boolean
             lastIndex:number
+
+        constructor new RegExp(pattern,flags:string)
         
         method exec() 
         method test() 
@@ -243,8 +252,8 @@ global Classes pre-created are:
 
     
 ### public namespace JSON
-        method parse() 
-        method stringify()     
+        method parse(text, reviver:function) 
+        method stringify(obj, replacer, indent)     
 
 ### public namespace Math
         properties

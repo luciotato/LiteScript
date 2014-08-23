@@ -244,13 +244,12 @@
    // export
    module.exports.relName=relName;
 
-   // export helper function dirName(filename)
-   function dirName(filename){
-        //relative to basePath
+   // export helper function dirname(filename)
+   function dirname(filename){
        return path.dirname(filename);
    };
    // export
-   module.exports.dirName=dirName;
+   module.exports.dirname=dirname;
 
 // ----------
 

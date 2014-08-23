@@ -156,8 +156,9 @@
        ASTBase.prototype.constructor.apply(this,arguments)
       // properties
         // name
-        // aliasVarRef: VariableRef
         // assignedValue: Expression
+        // required:boolean
+        // aliasVarRef: VariableRef
    };
    // VariableDecl (extends|proto is) ASTBase
    VariableDecl.prototype.__proto__ = ASTBase.prototype;
@@ -166,6 +167,13 @@
 
      // method parse()
      VariableDecl.prototype.parse = function(){
+
+       // if .lexer.token.value is '...' // -backport- support v0.8 syntax
+       if (this.lexer.token.value === '...') { // -backport- support v0.8 syntax
+           this.name = this.opt('...');
+           return;
+       };
+
        this.name = this.req('IDENTIFIER');
        this.lock();
 
@@ -174,8 +182,13 @@
 
        var parseFreeForm = undefined;
 
-       // if .opt(':'), .parseType
-       if (this.opt(':')) {this.parseType()};
+       // if .opt(':')
+       if (this.opt(':')) {
+           this.parseType();
+           // if .opt('required'), .required = true
+           if (this.opt('required')) {this.required = true};
+       };
+
 
        // if .opt('=')
        if (this.opt('=')) {
@@ -2686,12 +2699,29 @@
        };
 
        // end if
-       
+
+        // # backport - supported v0.8 sytax: '...'
+        // # now remove from param list
+       // if .paramsDeclarations
+       if (this.paramsDeclarations) {
+           var inx = 0;
+           // while inx<.paramsDeclarations.length
+           while(inx < this.paramsDeclarations.length){
+               // if .paramsDeclarations[inx].name is '...'
+               if (this.paramsDeclarations[inx].name === '...') {
+                   this.paramsDeclarations.splice(inx, 1);
+               }
+               
+               else {
+                   inx++;
+               };
+           };// end loop
+           
+       };
      };
    // export
    module.exports.FunctionDeclaration = FunctionDeclaration;
    // end class FunctionDeclaration
-
 
    // public class DefinePropertyItem extends ASTBase
    // constructor

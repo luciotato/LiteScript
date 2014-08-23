@@ -173,7 +173,7 @@ from this point is a syntax error.
 
 ### export class VariableDecl extends ASTBase
     
-`VariableDecl: IDENTIFIER [':' dataType-VariableRef] ['=' assignedValue-Expression]`
+`VariableDecl: IDENTIFIER [':' TypeDeclaration] ['=' assignedValue-Expression]`
 
 (variable name, optional type anotation and optionally assign a value)
 
@@ -187,15 +187,16 @@ Example:
   `function x ( a : string = 'some text', b, c=0)`
 
       properties
-        aliasVarRef: VariableRef
         assignedValue: Expression
+        required:boolean
+        aliasVarRef: VariableRef //for .interface. files
 
       declare name affinity varDecl, paramDecl
 
       method parse()
 
         // accept '...' as if it was a parameter declaration inside FunctionParameters
-        if .lexer.token.value is '...' and .parent is FunctionParameters
+        if .lexer.token.value is '...' and .parent instance of FunctionParameters
             .name = .req('...')
             return 
 
@@ -213,6 +214,8 @@ optional assigned value
 
         if .opt(':') 
             .type = .req(TypeDeclaration)
+            if .opt('required'), .required = true
+
             //Note: TypeDeclaration if parses "Map", stores type as a VarRef->Map and also sets .isMap=true
 
         if .opt('=') 
@@ -594,7 +597,7 @@ Parses `if` statments and any attached `else` or chained `else if`
         .conditional = .req(Expression)
 
 after `,` or `then`, a statement on the same line is required 
-if we're processing all single-line if's, ',|then' is *required*
+if we're processing all single-line if's, ',|then' are *required*
 
 choose same body class as parent:
 either SingleLineBody or Body (multiline indented)
@@ -2147,7 +2150,6 @@ Functions: parametrized pieces of callable code.
         definePropItems: DefinePropertyItem array
         body
         hasExceptionBlock: boolean
-        EndFnLineNum
 
       method parse()
 
@@ -2176,8 +2178,6 @@ get parameter members, and function body
 This method is shared by functions, methods and constructors. 
 `()` after `function` are optional. It parses: `['(' [VariableDecl,] ')'] [returns VariableRef] '['DefinePropertyItem']'`
 
-        .EndFnLineNum = .sourceLineNum+1 //default value - store to generate accurate SourceMaps (js)
-
 get parameters declarations
 
         .paramsDeclarations = .opt(FunctionParameters)
@@ -2196,9 +2196,6 @@ now parse body
 
             #indented function body
             .body = .req(Body)
-
-            # get function exit point source line number (for SourceMap)
-            .EndFnLineNum = .lexer.last.sourceLineNum
 
         end if
 
@@ -2320,6 +2317,7 @@ ConstructorDeclaration derives from MethodDeclaration, so it is also a instance 
           # to ease reading, and to find also the constructor when searching for "new Person"
           var className = .req('IDENTIFIER')
           var classDeclaration = .getParent(ClassDeclaration)
+          if no classDeclaration, . sayErr "constructor found outside Class Declaration"
           if classDeclaration and classDeclaration.name isnt className
               .sayErr "Class Name mismatch #{className}/#{classDeclaration.name}"
 
@@ -3193,8 +3191,11 @@ Body parser expects a [NEWLINE] and then a indented list of statements
 
       properties
         statements: Statement array
+        endSourceLineNum 
 
       method parse()
+
+        .endSourceLineNum = .sourceLineNum //default value - store to generate accurate SourceMaps (js)
 
         if .lexer.interfaceMode
             if .parent isnt instance of ClassDeclaration
@@ -3208,6 +3209,9 @@ We use the generic ***ASTBase.reqSeparatedList*** to get a list of **Statement**
 
         .statements = .reqSeparatedList(Statement,";")
 
+        # get function exit point source line number (for SourceMap)
+        .endSourceLineNum = .lexer.getPrevCODELineNum(.lexer.sourceLineNum)
+        //console.log .parent.constructor.name,.parent.name," endSourceLineNum: #{.endSourceLineNum}"
 
 
       method validate

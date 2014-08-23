@@ -754,7 +754,7 @@
            console.log(thisModule.fileInfo.dirname);
        };
 
-       var fn = Environment.relName(this.importedModule.fileInfo.outRelFilename, Environment.dirName(thisModule.fileInfo.outRelFilename));
+       var fn = Environment.relName(this.importedModule.fileInfo.outRelFilename, Environment.dirname(thisModule.fileInfo.outRelFilename));
 
 // check for 'import x from 'path/file';
 

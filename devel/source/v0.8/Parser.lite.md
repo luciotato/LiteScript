@@ -816,6 +816,11 @@ if it is a CODE line, store in lexer.sourceLineNum, and return true (ok)
 
         return inx
 
+#### method getPrevCODELineNum(baseSourceLineNum)
+
+        if .getPrevCODEInfoLineIndex(baseSourceLineNum) into var infoLineInx
+            return .infoLines[infoLineInx].sourceLineNum
+
 #### method getInfoLineIndex(sourceLineNum)
 
         //search InfoLine where the required source line resides
@@ -1545,18 +1550,19 @@ get result and clear memory
 
         var col = .column 
         if not .currLine.length, col += indent-1
-        return new SourceMapMark({
-                      col :col        
-                      lin :.lineNum-1
-                })
+        return {
+                  col : col        
+                  lin :.lineNum-1
+                }
 
-#### helper method addSourceMap(mark, sourceLin, sourceCol, indent)
+#### helper method addCompleteSourceMap(mark, sourceLin)
 
         #ifdef PROD_JS
         if .sourceMap
             declare on mark 
                 lin,col
             .sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
+            // debug: console.log "map source:", (sourceLin or 1)-1, "-> js:",mark.lin
         #else
         do nothing
         #endif

@@ -586,7 +586,7 @@ get the required file path, relative to the location of this module (as nodejs's
             print thisModule.fileInfo.dirname
 
         var fn = Environment.relName(.importedModule.fileInfo.outRelFilename
-                                     ,Environment.dirName(thisModule.fileInfo.outRelFilename));
+                                     ,Environment.dirname(thisModule.fileInfo.outRelFilename));
         
 check for 'import x from 'path/file';
 

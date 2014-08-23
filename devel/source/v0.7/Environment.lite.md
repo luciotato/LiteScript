@@ -208,8 +208,7 @@ Check if interface cache is updated
         //relative to basePath
         return path.relative(basePath, filename)
 
-### export helper function dirName(filename)
-        //relative to basePath
+### export helper function dirname(filename)
         return path.dirname(filename)
     
 ----------

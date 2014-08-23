@@ -174,12 +174,18 @@ Example:
 
       properties
         name 
-        aliasVarRef: VariableRef
         assignedValue: Expression
+        required:boolean
+        aliasVarRef: VariableRef
 
       declare name affinity varDecl, paramDecl
 
       method parse()
+
+        if .lexer.token.value is '...' // -backport- support v0.8 syntax
+            .name = .opt('...')
+            return
+
         .name = .req('IDENTIFIER')
         .lock()
 
@@ -188,7 +194,10 @@ optional assigned value
 
         var parseFreeForm
 
-        if .opt(':'), .parseType
+        if .opt(':') 
+            .parseType
+            if .opt('required'), .required = true
+
 
         if .opt('=') 
 
@@ -2148,6 +2157,15 @@ This method is shared by functions, methods and constructors.
 
         end if
 
+        # backport - supported v0.8 sytax: '...'
+        # now remove from param list
+        if .paramsDeclarations
+            var inx=0
+            while inx<.paramsDeclarations.length
+                if .paramsDeclarations[inx].name is '...'
+                    .paramsDeclarations.splice(inx,1)
+                else
+                    inx++
 
 ### public class DefinePropertyItem extends ASTBase
 This Symbol handles property attributes, the same used at js's **Object.DefineProperty()**

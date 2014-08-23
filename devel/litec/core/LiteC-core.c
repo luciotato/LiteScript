@@ -724,7 +724,11 @@
      */
     any _fastNew(any anyClass, len_t argc, ...) {
         assert(argc>0);
-
+/**
+ * TO DO:
+ * Handle "Map","Dictionary" and "Object" specially
+ * -now the producer_C is calling _fastNew for all of this classes - handle here
+ */
         va_list argPointer; //create ptr to arguments
         va_start(argPointer, argc); //make argPointer point to first argument *after* arg
 

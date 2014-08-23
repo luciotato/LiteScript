@@ -42,16 +42,8 @@ another modules via import|require.
 
 Create a 'Project' to hold the main module and dependant modules
 
-        #ifdef PROD_C
-        default options.outDir = 'out'
-        default options.target = 'c'
-        #else
-        default options.outDir = 'out'
-        default options.target = 'js'
-        #endif
-
         #since "options" come from a external source, it can be anything
-        options = normalizeOptions(options)
+        options = prepareOptions(options)
 
         console.time 'Total Compile Project'
 
@@ -81,7 +73,7 @@ output:
 * string, compiled code
 
         #since "options" come from a external source, it can be anything
-        options = normalizeOptions(options)
+        options = prepareOptions(options)
 
         if options.storeMessages
             logger.options.storeMessages = true
@@ -108,7 +100,7 @@ output:
         options.mainModuleName = filename
 
         #since "options" come from a external source, it can be anything
-        options = normalizeOptions(options)
+        options = prepareOptions(options)
 
         var project = new Project(options)
 
@@ -135,7 +127,7 @@ validate var & property names
 
         if no project.options.skip
 
-            Validate.launch project
+            Validate.execute
             if logger.errorCount is 0, logger.info "Validation OK"
 
 initialize out buffer & produce target code 
@@ -151,18 +143,21 @@ text compiled result can be obtained with: moduleNode.lexer.out.getResult() :str
 
         return moduleNode
 
-### helper function normalizeOptions(options) returns GeneralOptions
+### helper function prepareOptions(options) returns GeneralOptions
 
 
-        if options instance of GeneralOptions, return options
+        if options isnt instance of GeneralOptions
 
-        var normalizedOptions = new GeneralOptions
-        for each own property key,value in options
-            normalizedOptions.setProperty key, value
+            var generalOptions = new GeneralOptions
+            for each own property key,value in options
+                generalOptions.setProperty key, value
+            end for
+            options = generalOptions
 
-        normalizedOptions.version = version
 
-        return normalizedOptions
+        options.version = version
+
+        return options
 
 
 Require Extensions

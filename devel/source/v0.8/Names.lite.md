@@ -207,8 +207,10 @@ mix in found namedecl here
         this.members = nameDecl.members
         //since we get the members, we must also respect the same normalization mode
         this.normalizeModeKeepFirstCase = nameDecl.normalizeModeKeepFirstCase
-        this.nodeClass = nameDecl.nodeClass //and other data
+        //and other data
+        this.nodeClass = nameDecl.nodeClass 
         this.isPublicVar = nameDecl.isPublicVar
+        this.nodeDeclared = nameDecl.nodeDeclared
 
         #other nameDecl pointing here are redirected
         for each other in allNameDeclarations

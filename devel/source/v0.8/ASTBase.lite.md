@@ -157,7 +157,7 @@ return parsed statement or nothing
 
 
 
-#### Method opt() returns ASTBase
+#### Method opt(...) returns ASTBase
 **opt** (optional) is for optional parts of a grammar. It attempts to parse 
 the token stream using one of the classes or token types specified.
 This method takes a variable number of arguments.
@@ -282,7 +282,7 @@ No more arguments.
      end method opt
 
 
-#### method req() returns ASTBase
+#### method req(...) returns ASTBase
 
 **req** (required) if for required symbols of the grammar. It works the same way as `opt` 
 except that it throws an error if none of the arguments can be used to parse the stream.
@@ -519,7 +519,7 @@ and syntax error reporting
 Helper functions for code generation
 =====================================
 
-#### helper method out
+#### helper method out(...)
 
 *out* is a helper function for code generation
 It evaluates and output its arguments. uses .lexer.out
@@ -685,7 +685,7 @@ such as `a = 1 #comment`. We want to try to add these at the end of the current 
 
 #### helper method addSourceMap(mark)
 
-        .lexer.outCode.addSourceMap mark, .sourceLineNum, .column, .indent
+        .lexer.outCode.addCompleteSourceMap mark, .sourceLineNum
 
 
 #### helper method levelIndent()

@@ -30,7 +30,7 @@ and also pass the --harmony flag when executing node.
         
 
         var lastArg = args.length-1;
-        var finalCallback:function = args[lastArg];
+        var finalCallback = args[lastArg];
 
         if typeof finalCallback isnt 'function'
 

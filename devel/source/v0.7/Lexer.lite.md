@@ -836,6 +836,7 @@ Whitespace is discarded by the lexer, but needs to exist to break up other token
 We recognize ' .' (space+dot) to be able to recognize: 'myFunc .x' as alias to: 'myFunc this.x'
 We recognize ' [' (space+bracket) to be able to recognize between: 'myFunc [x]' and 'myFunc[x]'
 
+        ['PUNC',/^\.\.\./],
         ['SPACE_DOT',/^\s+\./],
         ['SPACE_BRACKET',/^\s+\[/],
         ['WHITESPACE',/^[\f\r\t\v\u00A0\u2028\u2029 ]+/],

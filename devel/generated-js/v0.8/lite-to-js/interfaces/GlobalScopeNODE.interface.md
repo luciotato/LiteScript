@@ -12,7 +12,120 @@ node.js gobals compatible
     public function require
 
 
+Error is defined in JS global scope, node adds "code"
+
+### append to class Error
+
+        properties
+            code
+
 ## global namespaces / singletons
+
+### public namespace process
+
+        properties
+
+            argv: array
+
+            env:array
+
+            versions: processVersions
+
+            stdin:Stream
+            stdout:Stream
+            stderr:Stream
+
+            moduleLoadList: array
+            exitCode:number
+            features:array
+            pid:number
+            execArgv:array
+
+            debugPort:number
+            version:string
+            arch:string
+            execPath:string
+            title:string
+            platform:string
+            config
+        
+        method setgroups() 
+        method setgid() 
+        method uptime() 
+        method nextTick(callback) 
+        method removeListener(type, listener) 
+        method getgroups() 
+        method createAsyncListener(listener, callbacks, value) 
+        method getgid() 
+        method hrtime() 
+        method initgroups() 
+        method on(type, listener) 
+        method addAsyncListener(listener, callbacks, value) 
+        method memoryUsage() 
+        method removeAsyncListener(obj) 
+        method openStdin() 
+        method reallyExit() 
+        method chdir() 
+        method cwd() 
+        method setuid() 
+        method assert(x, msg) 
+        method addListener(type, listener) 
+        method abort() 
+        method getuid() 
+        method dlopen() 
+        method umask() 
+        method exit(code) 
+        method kill(pid, sig) 
+        method binding() 
+
+    helper class processVersions
+        properties 
+            http_parser:string
+            node:string
+            uv:string
+            zlib:string
+            modules:string
+            openssl:string
+    
+    
+### public class EventEmitter
+        
+        constructor new EventEmitter () 
+        
+        properties
+            domain
+        
+        method setMaxListeners(n) 
+        method emit(type) 
+        method addListener(type, listener) 
+        method on(type, listener) 
+        method once(type, listener) 
+        method removeListener(type, listener) 
+        method removeAllListeners(type) 
+        method listeners(type) 
+    
+    append to namespace EventEmitter
+        properties
+            usingDomains:boolean
+            defaultMaxListeners:number
+        
+        method listenerCount(emitter, type) 
+
+
+### public class Stream
+        properties 
+            readable:boolean
+            writable:boolean
+            allowHalfOpen:boolean
+            destroyed:boolean
+            errorEmitted:boolean
+            bytesRead:number
+            columns:number
+            rows:number
+            fd:number
+            destroySoon:function(er) 
+            destroy:function(er) 
+
 
 ### public class Buffer
 
@@ -82,114 +195,3 @@ node.js gobals compatible
         method isEncoding(encoding) 
         method concat(list, length) 
         method byteLength(str, enc) 
-
-### append to class Error
-
-        properties
-            code
-
-
-### public namespace process
-
-        properties
-
-            argv: array
-
-            env:array
-
-            versions: processVersions
-
-            stdin:Stream
-            stdout:Stream
-            stderr:Stream
-
-            moduleLoadList: array
-            exitCode:number
-            features:array
-            pid:number
-            execArgv:array
-
-            debugPort:number
-            version:string
-            arch:string
-            execPath:string
-            title:string
-            platform:string
-            config
-        
-        method setgroups() 
-        method setgid() 
-        method uptime() 
-        method nextTick(callback) 
-        method removeListener(type, listener) 
-        method getgroups() 
-        method createAsyncListener(listener, callbacks, value) 
-        method getgid() 
-        method hrtime() 
-        method initgroups() 
-        method on(type, listener) 
-        method addAsyncListener(listener, callbacks, value) 
-        method memoryUsage() 
-        method removeAsyncListener(obj) 
-        method openStdin() 
-        method reallyExit() 
-        method chdir() 
-        method cwd() 
-        method setuid() 
-        method assert(x, msg) 
-        method addListener(type, listener) 
-        method abort() 
-        method getuid() 
-        method dlopen() 
-        method umask() 
-        method exit(code) 
-        method kill(pid, sig) 
-        method binding() 
-    
-    
-    public class EventEmitter
-        
-        constructor new EventEmitter () 
-        
-        properties
-            domain
-        
-        method setMaxListeners(n) 
-        method emit(type) 
-        method addListener(type, listener) 
-        method on(type, listener) 
-        method once(type, listener) 
-        method removeListener(type, listener) 
-        method removeAllListeners(type) 
-        method listeners(type) 
-    
-    append to namespace EventEmitter
-        properties
-            usingDomains:boolean
-            defaultMaxListeners:number
-        
-        method listenerCount(emitter, type) 
-
-    helper class processVersions
-        properties 
-            http_parser:string
-            node:string
-            uv:string
-            zlib:string
-            modules:string
-            openssl:string
-    
-
-    helper class Stream
-        properties 
-            readable:boolean
-            writable:boolean
-            allowHalfOpen:boolean
-            destroyed:boolean
-            errorEmitted:boolean
-            bytesRead:number
-            columns:number
-            rows:number
-            fd:number
-            destroySoon:function(er) 
-            destroy:function(er) 
