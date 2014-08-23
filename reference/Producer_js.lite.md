@@ -72,7 +72,7 @@ Produce all vars & functions definitions first.
 
 add end of file comments
 
-        .outPreviousComments .lexer.infoLines.length
+        .outSourceLinesAsComment .endSourceLineNum+1
 
 export 'export default' namespace, if it was set.
 
@@ -1018,7 +1018,7 @@ JavaScript supports this syntax, so we just pass it through.
 A `FreeObjectLiteral` is an object definition using key/value pairs, but in free-form
 (one NameValuePair per line, indented, comma is optional)
 
-      method produce()
+#### method produce()
 
           if .parent.constructor is Grammar.Operand
               if .parent.parent.isMap //expression has isMap set
@@ -1028,6 +1028,14 @@ A `FreeObjectLiteral` is an object definition using key/value pairs, but in free
           .out '{',{CSL:.items, freeForm:.constructor is Grammar.FreeObjectLiteral },'}'
           if .isMap, .out ')'
 
+
+#### method calcFastNew(className)
+
+calcFastNew compose the arguments when a function is called with a instanceLiteral (ObjectLiteral).
+In this case (producing JS) we just pass the ObjectLiteral to the constructor,
+in the case of Producer C, there's a optimized version.
+
+        return this
 
 ### Append to class Grammar.FunctionDeclaration ###
 
@@ -1143,7 +1151,7 @@ close the function, add source map for function default "return undefined" execu
       .out "}"
       #ifdef PROD_JS // if compile-to-js
       if .lexer.outCode.sourceMap
-          .lexer.outCode.sourceMap.add ( .EndFnLineNum, 0, .lexer.outCode.lineNum-1, 0)
+          .lexer.outCode.sourceMap.add ( .body.endSourceLineNum+1, 0, .lexer.outCode.lineNum-1, 0)
       #endif
 
 --------------------
@@ -1209,6 +1217,7 @@ initialize own properties
 
         for each item in .body.statements 
           where item.specific.constructor is Grammar.PropertiesDeclaration
+            declare item.specific:Grammar.PropertiesDeclaration
             item.specific.produce('this.') //produce property assignments
         
         if .constructorDeclaration //there was a body

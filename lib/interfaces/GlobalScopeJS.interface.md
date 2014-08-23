@@ -26,20 +26,20 @@ global Classes pre-created are:
     append to namespace Object
         
         method keys(obj) returns array of string
-        method create() 
+        method create 
         method defineProperty
         method defineProperties
-        method freeze() 
+        method freeze 
         method getPrototypeOf(obj)
         method setPrototypeOf(obj,newProto)
         method getOwnPropertyDescriptor
         method getOwnPropertyNames(ibj)
         //method is() 
-        method isExtensible() 
-        method isFrozen() 
-        method isSealed() 
-        method preventExtensions() 
-        method seal() 
+        method isExtensible 
+        method isFrozen 
+        method isSealed 
+        method preventExtensions 
+        method seal 
         //method getOwnPropertySymbols() 
 
 ### Append to class Array 
@@ -97,9 +97,9 @@ global Classes pre-created are:
         method substring
         method substr
         method toLowerCase() 
-        method toLocaleLowerCase() 
+        method toLocaleLowerCase 
         method toUpperCase() 
-        method toLocaleUpperCase() 
+        method toLocaleUpperCase 
         method trim() 
         //method trimLeft() 
         //method trimRight() 
@@ -124,15 +124,15 @@ global Classes pre-created are:
         #endif ES6
 
     append to namespace String
-        method fromCharCode()
+        method fromCharCode
 
 ### Append to class Number
 
-        method toLocaleString() 
-        method valueOf() 
-        method toFixed() 
-        method toExponential() 
-        method toPrecision() 
+        method toLocaleString 
+        method valueOf 
+        method toFixed 
+        method toExponential 
+        method toPrecision 
     
     append to namespace Number
         properties
@@ -165,7 +165,7 @@ global Classes pre-created are:
         properties
             stackTraceLimit:number
 
-        method captureStackTrace() 
+        method captureStackTrace 
 
 
 ### public class Date extends Object
@@ -211,7 +211,7 @@ global Classes pre-created are:
         method setUTCMonth 
         method setFullYear 
         method setUTCFullYear 
-        method toGMTString 
+        method toGMTString() 
         method toUTCString()
         method getYear 
         method setYear 
@@ -219,8 +219,8 @@ global Classes pre-created are:
         method toJSON() 
     
     append to namespace Date
-        method UTC() 
-        method parse() 
+        method UTC 
+        method parse 
         method now() 
 
 ### public class RegExp
@@ -234,10 +234,10 @@ global Classes pre-created are:
 
         constructor new RegExp(pattern,flags:string)
         
-        method exec() 
-        method test() 
-        method toString() 
-        method compile() 
+        method exec 
+        method test 
+        method toString 
+        method compile 
     
     append to namespace RegExp
         properties
@@ -260,41 +260,41 @@ global Classes pre-created are:
             E:number
             PI:number
         
-        method random() 
-        method abs() 
-        method acos() 
-        method asin() 
-        method atan() 
-        method ceil() 
-        method cos() 
-        method exp() 
-        method floor() 
-        method log() 
-        method round() 
-        method sin() 
-        method sqrt() 
-        method tan() 
-        method atan2() 
-        method pow() 
-        method max() 
-        method min() 
-        method imul() 
-        method sign() 
-        method trunc() 
-        method sinh() 
-        method cosh() 
-        method tanh() 
-        method asinh() 
-        method acosh() 
-        method atanh() 
-        method log10() 
-        method log2() 
-        method hypot() 
-        method fround() 
-        method clz32() 
-        method cbrt() 
-        method log1p() 
-        method expm1() 
+        method random 
+        method abs 
+        method acos 
+        method asin 
+        method atan 
+        method ceil 
+        method cos 
+        method exp 
+        method floor 
+        method log 
+        method round 
+        method sin 
+        method sqrt 
+        method tan 
+        method atan2 
+        method pow 
+        method max 
+        method min 
+        method imul 
+        method sign 
+        method trunc 
+        method sinh 
+        method cosh 
+        method tanh 
+        method asinh 
+        method acosh 
+        method atanh 
+        method log10 
+        method log2 
+        method hypot 
+        method fround 
+        method clz32 
+        method cbrt 
+        method log1p 
+        method expm1 
 
 ### global functions
 

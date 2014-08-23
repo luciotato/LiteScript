@@ -155,9 +155,9 @@ Example:
 */
 
 
-### export function launch()
+### export function execute()
 
-We start this module once the entire multi-node AST tree has been parsed.
+We start this validation process after the entire multi-module AST tree has been parsed.
 
 Start running passes on the AST
 
@@ -406,7 +406,6 @@ a)non-instance values
 
         var opt = new Names.DeclarationOptions
         opt.nodeClass = Grammar.VariableDecl
-
         globalScope.addMember 'undefined',opt
         opt.value = null
         globalScope.addMember 'null',opt
@@ -489,14 +488,19 @@ b.2) Lite-C: the Lexer replaces string interpolation with calls to `_concatAny`
               nodeClass:  Grammar.VariableDecl
               } 
 
-Process the global scope declarations interface file: GlobalScopeJS|C.interface.md
+Process the global scope declarations interface file
+by parsing the file: "interfaces/GlobalScope(JS|C|NODE|BROWSER).interface.md"
 
         processInterfaceFile 'GlobalScope#{project.options.target.toUpperCase()}'
 
 if we're compiling for node.js, add extra node global core objects, e.g: process, Buffer
+if we're compiling for the browser, add window, document the DOM, localStorage,etc
 
-        if project.options.target is 'js' and not project.options.browser
-            processInterfaceFile 'GlobalScopeNODE'
+        if project.options.target is 'js'
+            if project.options.browser
+                processInterfaceFile 'GlobalScopeBROWSER'
+            else
+                processInterfaceFile 'GlobalScopeNODE'
 
 Initial NameAffinity, err|xxxErr => type:Error
 
@@ -1031,7 +1035,9 @@ initializes an empty scope in this node
 
         if no .scope 
 
-            .scope = .declareName("[#{.constructor.name} #{.name} Scope]", {
+            var scopeName = .name is '*Global Scope*'? .name else "[#{.constructor.name} #{.name} Scope]"
+
+            .scope = .declareName(scopeName, {
                   normalizeModeKeepFirstCase:true
                   nodeClass: Grammar.VariableDecl
                   })
@@ -1904,17 +1910,18 @@ and next property access should be on defined members of the return type
             else if ac instanceof Grammar.FunctionAccess
                 declare ac:Grammar.FunctionAccess
 
-                if no actualVar.findMember('call') and actualVar.name isnt 'Object'
+                if no actualVar.findMember('call') and no actualVar.findMember('prototype')
                 //if actualVar.findOwnMember('**proto**') into var prt
                 //    if prt.name is 'prototype', prt=prt.parent
                 //    if prt.name isnt 'Function'
                         //.warn "function call. '#{actualVar}' is class '#{prt.name}', not 'Function'"
-                        .warn "function call. '#{actualVar}' has no method 'call', it is not type:Function"
+                        .warn "function call. '#{actualVar}' has no method 'call' nor 'prototype', it is not type:Function or Class"
 
 Validate arguments against function parameters declaration
 
                 if actualVar.nodeDeclared instanceof Grammar.FunctionDeclaration
-                    ac.validateArguments actualVar.nodeDeclared
+                    or actualVar.nodeDeclared.constructor is Grammar.ClassDeclaration
+                        ac.composeArgumentsList actualVar 
 
                 actualVar = actualVar.findMember('**return type**')
 
@@ -1999,37 +2006,175 @@ check if we can continue on the chain
 
 ### Append to class Grammar.FunctionAccess
 
-#### method validateArguments(funcDecl:Grammar.FunctionDeclaration) 
+##### helper method composeArgumentsList(actualVar:Names.Declaration)
 
-        var definedArgs= funcDecl.paramsDeclarations? funcDecl.paramsDeclarations.list.length else 0
+        var argsLength = .args? .args.length else 0
 
-        if no definedArgs, return
+        var actualArgs=new Array(argsLength)
+        var argumentSet=new Array(argsLength)
+        var isClass: boolean
+        var funcDecl: Grammar.FunctionDeclaration 
+        var fnParams: Grammar.FunctionParameters
 
-        var varDecl
-        for each inx,functionArgument in .args
+        var typeAny: Names.Declaration = .findInScope('any');
 
-            if inx<definedArgs
-                varDecl = funcDecl.paramsDeclarations.list[inx]
-            else 
-                varDecl = undefined
-                if no funcDecl.paramsDeclarations.variadic
-                    .sayErr "#{funcDecl.specifier} #{funcDecl.nameDecl} accepts only #{definedArgs} arguments"
-                    funcDecl.sayErr "function declaration is here"
+locate the FunctionDeclaration for the function we're calling
 
-            if varDecl and varDecl.nameDecl
-                var defined = varDecl.nameDecl.findMember("**proto**")
-                if defined and defined.name is 'prototype', defined = defined.parent
-                var passed = functionArgument.expression.getResultType()
-                if defined isnt passed
-                    do nothing
-                    //.sayErr "#{funcDecl.nameDecl} argument ##{inx+1} is type:#{defined} and a type:#{passed} was passed"
+        if actualVar and actualVar.nodeDeclared
 
-        end for
+            if actualVar.nodeDeclared instanceof Grammar.FunctionDeclaration
+                funcDecl = actualVar.nodeDeclared
 
--------
+if we're calling the constructor of a class, 
+look for constructor declaration in the hierarchy
+or assume default constructor. 
+default constructor accepts a instance literal as construction parameter.
+
+            else if actualVar.nodeDeclared.constructor is Grammar.ClassDeclaration
+
+                isClass = true
+                var classNameDecl = actualVar, classDecl: Grammar.ClassDeclaration
+                // search upward in the hierarchy looking for a declared constructor
+                do while classNameDecl.nodeDeclared into classDecl
+                    if classDecl.constructorDeclaration into funcDecl, break //has a explicit constructor, got it
+                    if no classDecl.varRefSuper, break //no super => super is Object => no explicit constructor
+                    classNameDecl = classDecl.varRefSuper.tryGetReference({informError:true}) //jump to super name declaration
+                loop
+
+If we can't locate function declaration, we assume variadic and all types matching / default constructor
+
+        if no funcDecl 
+
+            if argsLength is 0
+                return // call with no args
+
+            if isClass //no funcDecl & isClass => calling a *default* constructor
+
+                var firstArg = .args[0]
+
+                if argsLength > 1
+                    or firstArg.expression.operandCount isnt 1
+                    or firstArg.expression.root.name isnt instance of Grammar.ObjectLiteral
+                        .sayErr "class [#{actualVar}] default constructor accepts only one argument: a instance literal"
+
+                // compose a call with _fastNew - single arg
+                actualArgs[0] = firstArg.calcParam(actualVar,0)
+                return actualArgs
+
+            //calling an unknown function
+            for each inx,arg in .args
+                if arg.name, .sayErr "cannot determine function being called => cannot use named arguments"
+                actualArgs[inx] = arg.calcParam(typeAny,0)
+
+            return actualArgs
+
+        end if no funcDecl
+
+Here we have located a funcDecl, we:
+- check parameter count / variadic fn
+- reorder named arguments if present
+- call _fastNew on instance literals
+
+        var funcParamsLength = funcDecl.paramsDeclarations.list.length
+        var paramPosition, paramNamesSet=[], namedParamOptionUsed:boolean
+
+        if argsLength
+
+            for each inx,arg in .args
+
+                paramPosition = inx
+                if arg.name //named argument: e.g: `server.listen(port=30371)` 
+                    namedParamOptionUsed = true
+                    var found
+                    for each paramInx,param in funcDecl.paramsDeclarations.list
+                        if param.name is arg.name 
+                            found = true
+                            paramPosition = paramInx
+                            if param.name in paramNamesSet, .sayErr "duplicated parameter '#{param.name}'"
+                            paramNamesSet.push param.name
+                            break
+                    end for
+                    if not found
+                        .sayErr "invalid parameter name: '#{arg.name}'"
+                        funcDecl.sayErr "function declaration is here"
+                else 
+                    //positional argument
+                    if namedParamOptionUsed, .sayErr "cannot include positional arguments after named arguments"
+                    if paramPosition < funcParamsLength
+                        paramNamesSet.push funcDecl.paramsDeclarations.list[paramPosition].name
+
+                //try to get param declared type
+                var paramType:Names.Declaration
+
+                if paramPosition >= funcParamsLength
+                    // past the declared parameters
+                    if no funcDecl.paramsDeclarations.variadic
+                        .sayErr "function accepts #{funcParamsLength? 'only #{funcParamsLength}':'no'} arguments."
+                        funcDecl.sayErr "function declaration is here. (add '...' to declare as variadic)"
+                        return actualArgs
+
+                    paramType = typeAny
+
+                else
+                    //get param declared type
+                    paramType = funcDecl.paramsDeclarations.list[paramPosition].nameDecl.findOwnMember('**proto**')
+                    if paramType
+                        if paramType.name is 'prototype' 
+                            isClass = true
+                            paramType = paramType.parent // class
+                    else
+                        paramType = typeAny 
+
+                end if
+
+                //set argument
+                actualArgs[paramPosition] = arg.calcParam(paramType,inx,funcDecl)
+                argumentSet[paramPosition] = true
+
+            end for each arg
+
+        end if arguments
+
+make sure all the required parameters are set
+
+        for each inx,param in funcDecl.paramsDeclarations.list
+            if param.required and param.name not in paramNamesSet
+                .sayErr "parameter ##{inx+1},'#{param.name}' is required"
+                funcDecl.sayErr "function declaration is here"
+            
+
+### Append to class Grammar.FunctionArgument
+
+##### helper method calcParam(typeNameDecl:Names.Declaration,inx,funcDecl:Grammar.FunctionDeclaration) returns array
+inx and funcDecl are included to enhance error reporting 
+
+        var expr = .expression 
+
+if we're producing C, a instance literal {...} as parameter
+gets converted to a _fastNew() call, initializing the instance with the provided values.
+
+We're supporting a common practice in JS: pass a LiteralObject in place of a class
+
+        if project.options.target is 'c'
+
+            if expr.operandCount is 1 and expr.root.name instanceof Grammar.ObjectLiteral
+
+                //Here we have a ObjectLiteral argument
+                var objLit:Grammar.ObjectLiteral = expr.root.name
+
+                if typeNameDecl.name isnt 'any' and no typeNameDecl.findOwnMember('prototype') 
+                    .sayErr "Argument ##{inx+1}: passing a instance literal {...}, but the function expects: #{typeNameDecl}"
+                    if funcDecl, funcDecl.sayErr "function declaration is here. To be able to pass a instance literal, define parameter type as a class"
+                
+                else
+                    return objLit.calcFastNew(typeNameDecl.getComposedName())
+
+else, just return argument expression
+
+        return [expr]
+
 
 ### Append to class Grammar.AssignmentStatement ###
-
 
 #### method evaluateAssignments() ## Grammar.AssignmentStatement 
     
@@ -2319,7 +2464,7 @@ declare members on the fly, with optional type
                 .setTypes actualVar
 
 
-### helper function AddGlobalClasses()
+### helper function AddGlobalClasses(...)
   
         var nameDecl
 
@@ -2332,3 +2477,36 @@ declare members on the fly, with optional type
             // add to name affinity
             if not nameAffinity.members.has(name)
                 nameAffinity.members.set name, nameDecl
+
+----------------------------
+### Append to class Names.Declaration ###
+
+#### helper method getComposedName
+
+if this nameDecl is member of a namespace, goes up the parent chain
+composing the name. e.g. a property x in module Foo, namespace Bar => `Foo_Bar_x`
+
+            var result = []
+            var node = this
+            while node and not node.isScope
+
+                if node.nodeDeclared instanceof Grammar.ImportStatementItem
+                    //stop here, imported modules create a local var, but act as global var
+                    //since all others import of the same name, return the same content 
+                    result.unshift node.name
+                    return result.join('_')
+
+                if node.name isnt 'prototype', result.unshift node.name
+
+                node = node.parent
+
+if we reach module scope, (and not Global Scope) 
+then it's a var|fn|class declared at module scope.
+Since modules act as namespaces, we add module.fileinfo.base to the name.
+
+            if node and node.isScope and node.nodeDeclared.constructor is Grammar.Module 
+                var scopeModule = node.nodeDeclared
+                if scopeModule.name isnt '*Global Scope*' //except for global scope
+                        result.unshift scopeModule.fileInfo.base
+
+            return result.join('_')

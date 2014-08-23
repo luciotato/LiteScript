@@ -68,15 +68,13 @@ Builds up a V3 source map, returning the generated JSON as a string.
 map.  Also, `options.sourceFiles` and `options.generatedFile` may be passed to
 set "sources" and "file", respectively.
 
-      method generate(generatedFile:string, sourceFiles:array) 
+      method generate(generatedFile:string required, sourceRoot:string required, sourceFiles:array required) 
         
         //default options = 
         //  generatedFile: ''
         //  sourceRoot   : ''
         //  sourceFiles  : ['']
-        //  inline: undefined
 
-        var sourceRoot = ''
         if no sourceFiles, sourceFiles=['']
 
         var

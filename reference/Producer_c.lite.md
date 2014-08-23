@@ -1964,26 +1964,22 @@ and a controlled|checked access otherwise
 
 ##### helper method pushArgumentsTo(callParams:array, actualVar:Names.Declaration, skipAnyArr:boolean)
 
-        if no .args or .args.length is 0
-            callParams.push "0,NULL"        
-            return 
+        var composedArgs=.composeArgumentsList(actualVar)
 
-        callParams.push "#{.args.length},"
+        if no composedArgs
+            callParams.push "0,NULL"
+        else
+            callParams.push 
+                "#{.args.length}," 
+                skipAnyArr? '' else "(any_arr){"
+                composedArgs,join(",") 
+                skipAnyArr? '' else "}"
 
-        if not skipAnyArr, callParams.push "(any_arr){"
 
-        for each inx,functionArgument in .args
-            if inx, callParams.push ","
-            callParams.push functionArgument.calcParam(inx,actualVar)
+/*
+##### helper method calcParam2(inx, fnParams:Grammar.FunctionParameters) returns array
 
-        if not skipAnyArr, callParams.push "}"
-
-            
-### Append to class Grammar.FunctionArgument
-
-##### helper method calcParam(inx, actualVar:Names.Declaration) returns array
-
-decl contains the parameter declaration from the Function Declaration, to validate type
+optional fnParams contains the parameter declaration from the Function Declaration, to validate type
 
         var expr = .expression 
 
@@ -1995,7 +1991,6 @@ decl contains the parameter declaration from the Function Declaration, to valida
 find the FunctionDeclaration for the function we're calling
 
             var funcDecl: Grammar.FunctionDeclaration = actualVar.nodeDeclared
-
 
 check if the function defines a "class" for this parameter, 
 so we produce a _fastNew() call creating a instance on-the-fly 
@@ -2018,7 +2013,7 @@ Here funcDecl is: function or method
 
                 if no funcDecl.paramsDeclarations or no funcDecl.paramsDeclarations.list.length
                     if no funcDecl.paramsDeclarations.variadic
-                        .sayErr "#{funcDecl.specifier} #{funcDecl.nameDecl} accepts no parameters"
+                        .sayErr "#{funcDecl.specifier} #{funcDecl.nameDecl} takes no arguments"
                         funcDecl.sayErr "function declaration is here"
 
                 else 
@@ -2046,6 +2041,7 @@ Here funcDecl is: function or method
 else, just return argument expression
 
         return [expr]
+*/
 
 
 ### append to class Grammar.AssignmentStatement ###
@@ -2942,40 +2938,6 @@ Out as comments
 
 ----------------------------
 ### Append to class Names.Declaration ###
-
-#### method getComposedName
-
-if this nameDecl is member of a namespace, goes up the parent chain
-composing the name. e.g. a property x in module Foo, namespace Bar => `Foo_Bar_x`
-
-            var result = []
-            var node = this
-            while node and not node.isScope
-
-                if node.nodeDeclared instanceof Grammar.ImportStatementItem
-                    //stop here, imported modules create a local var, but act as global var
-                    //since all others import of the same name, return the same content 
-                    result.unshift node.name
-                    return result.join('_')
-
-                if node.name isnt 'prototype', result.unshift node.name
-
-                node = node.parent
-
-if we reach module scope, (and not Global Scope) 
-then it's a var|fn|class declared at module scope.
-Since modules act as namespaces, we add module.fileinfo.base to the name.
-Except is the same name as the top namespace|class (auto export default).
-
-
-            if node and node.isScope and node.nodeDeclared.constructor is Grammar.Module 
-                var scopeModule = node.nodeDeclared
-                if scopeModule.name isnt '*Global Scope*' //except for global scope
-                    if result[0] isnt scopeModule.fileInfo.base
-                        result.unshift scopeModule.fileInfo.base
-
-            return result.join('_')
-
 
 #### method addToAllMethodNames() 
 

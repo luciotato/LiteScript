@@ -289,7 +289,7 @@
 					<key>name</key>
 					<string>storage.type.modifier.lite</string>
 					<key>match</key>
-					<string>\b(global|public|shim|export|helper)\b</string>
+					<string>\b(global|public|shim|export|only|nice|helper)\b</string>
 				</dict>
 
 				<dict>
@@ -514,6 +514,13 @@
 
 				<dict>
 					<key>name</key>
+					<string>keyword.other.lite</string>
+					<key>match</key>
+					<string>\b(import)\b</string>
+				</dict>
+
+				<dict>
+					<key>name</key>
 					<string>keyword.control.lite</string>
 					<key>match</key>
 					<string>\b(break|catch|continue|else|finally|for|if|where|return|switch|then|throw|
@@ -554,14 +561,14 @@ raise|fail\s+with|try|print|case|end|while|wait\s+for|until)\b</string>
 					<string>keyword.operator.lite</string>
 					<key>match</key>
 					<string>\^|\*|\/|\-|\+|!==|&lt;=|=&gt;||&gt;=|&lt;&lt;|&gt;&gt;|&lt;&gt;|&lt;|&gt;|&amp;|\?||\*=|\/=
-|\b(no|type of|typeof|in|into|has|property|each|own|is|isnt)\b</string>
+|\b(no|not|type of|typeof|in|into|has|property|each|own|is|isnt)\b</string>
 				</dict>
 
 				<dict>
 					<key>name</key>
 					<string>keyword.operator.boolean.lite</string>
 					<key>match</key>
-					<string>\b(and|or|not)\b</string>
+					<string>\b(and|or)\b</string>
 				</dict>
 
 				<dict>

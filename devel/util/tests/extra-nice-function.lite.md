@@ -35,8 +35,11 @@
             // callback after 1.5 secs
             
             setTimeout 
-                function = callback(null, 'the answer is: '+self.value)
-                , Math.floor(Math.random()*400)+200
+            
+                    function 
+                        return callback(null, 'the answer is: '+self.value)
+
+                    Math.floor(Math.random()*400)+200
 
         method pingPong (ping,callback:function)
             // callback before return
