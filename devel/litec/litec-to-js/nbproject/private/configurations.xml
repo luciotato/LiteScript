@@ -66,7 +66,6 @@
       </nativedebugger>
       <runprofile version="9">
         <runcommandpicklist>
-          <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source-v0.8/c_lite -o ../../../out/byV08c/$targetLang/lite-to-$targetTarget -v 1 -D PROD_C -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/c_lite -o ../../../out/byV08c/$targetLang/lite-to-$targetTarget -v 1 -D PROD_C -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/c_lite -o ../../../out/byV08c/$targetLang/lite-to-$targetTarget -v 2 -D PROD_C -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/c_lite -o ../../../out/byV08c/$targetLang/lite-to-$targetTarget -v 2 -D PROD_C -D FROM_C -perf 1</runcommandpicklistitem>
@@ -76,9 +75,10 @@
           <runcommandpicklistitem>"${OUTPUT_PATH}"   ../../../source/v0.8/js_lite -o ../../out/by-c-v08/js/lite-to-js-compiler -v 1 -perf 1 -D PROD_JS -D FROM_C</runcommandpicklistitem>
           <runcommandpicklistitem>pwd;run.sh "${OUTPUT_PATH}"</runcommandpicklistitem>
           <runcommandpicklistitem>bash ./run.sh "${OUTPUT_PATH}"</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"   source/v0.8/js_lite -o out/by-c-v08/js/lite-to-js-compiler -v 1 -D PROD_JS -D FROM_C -perf 1</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>bash ./run.sh "${OUTPUT_PATH}"</runcommand>
-        <rundir></rundir>
+        <runcommand>"${OUTPUT_PATH}"   source/v0.8/js_lite -o out/by-c-v08/js/lite-to-js-compiler -v 1 -D PROD_JS -D FROM_C -perf 1</runcommand>
+        <rundir>/home/ltato/LiteScript/devel</rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>
         <remove-instrumentation>0</remove-instrumentation>

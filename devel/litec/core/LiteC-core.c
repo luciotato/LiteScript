@@ -92,11 +92,11 @@
 
     static str _CORE_PROPS_NAMES[]= {
         "constructor" //all instances, symbol:0
-        ,"name" // Class.name | NameValuePair
+        ,"name" // Class.name | _nameValuePair
         ,"initInstance" // Class.initInstance
 
         ,"key" // Map | Iterable_Position
-        ,"value" // NameValuePair | Iterable_Position
+        ,"value" // _nameValuePair | Iterable_Position
         ,"index" // Iterable_Position
         ,"size" // Map | Iterable_Position
         ,"iterable" // Iterable_Position
@@ -120,7 +120,7 @@
         Undefined, Null, NotANumber, InfinityClass,
         Object, Class, Function, Iterable_Position,
         String, Boolean, Number, Date,
-        Array, Map, NameValuePair,
+        Array, Map, _nameValuePair,
         Error, Buffer, FileDescriptor;
 
 // core-class instances -------------------
@@ -545,16 +545,16 @@
         }
     };
 
-    //init Fn for Map Objects. arguments can be a argc NameValuePairs initializing the map
-    //new Map(this,argc,(any_arr){NameValuePair,*})
+    //init Fn for Map Objects. arguments can be a argc _nameValuePairs initializing the map
+    //new Map(this,argc,(any_arr){_nameValuePair,*})
     void Map__init(DEFAULT_ARGUMENTS){
 
-        //Map is implemented with an internal array of NameValuePair
+        //Map is implemented with an internal array of _nameValuePair
         // and also a KeyTree string->index for fast access
         //
         this.value.map->size=any_number(argc);
         Array_ptr nvpArr=&(this.value.map->nvpArr);
-        _initArrayStruct(nvpArr, sizeof(NameValuePair_s), argc+4);
+        _initArrayStruct(nvpArr, sizeof(_nameValuePair_s), argc+4);
 
         //init keyTree
         _initKeyTreeRootStruct(&this.value.map->keyTreeRoot,8);
@@ -562,8 +562,8 @@
         //init map's nvp array with passed args
         if (argc){
             for(len_t inxValue=0; argc--; arguments++,inxValue++) {
-                assert(arguments->class==NameValuePair_inx);
-                NameValuePair_ptr argNvp = (NameValuePair_ptr)arguments->value.ptr;
+                assert(arguments->class==_nameValuePair_inx);
+                _nameValuePair_ptr argNvp = (_nameValuePair_ptr)arguments->value.ptr;
 
                 int64_t found = _map_KeyTree_do(this.value.map,FIND_OR_INSERT,argNvp->name,inxValue);
                 if (found!=inxValue){ //key already-exists
@@ -577,21 +577,21 @@
             }
     };
 
-    //initFromObject for Map Objects. arguments are argc NameValuePairs initializing the map
-    //Map_newFromObject(this,argc,(any_arr){NameValuePair,*})
+    //initFromObject for Map Objects. arguments are argc _nameValuePairs initializing the map
+    //Map_newFromObject(this,argc,(any_arr){_nameValuePair,*})
     any Map_newFromObject(DEFAULT_ARGUMENTS){
         assert_arg(Map);
         return arguments[0];
     };
 
-    void NameValuePair__init(DEFAULT_ARGUMENTS){
+    void _nameValuePair__init(DEFAULT_ARGUMENTS){
         assert(argc==2);
-        ((NameValuePair_ptr)this.value.ptr)->name=arguments[0];
-        ((NameValuePair_ptr)this.value.ptr)->value=arguments[1];
+        ((_nameValuePair_ptr)this.value.ptr)->name=arguments[0];
+        ((_nameValuePair_ptr)this.value.ptr)->value=arguments[1];
     };
 
     any _newPair(str name, any value){
-        return new(NameValuePair,2,(any_arr){any_CStr(name),value});
+        return new(_nameValuePair,2,(any_arr){any_CStr(name),value});
     }
 
 //-------------------
@@ -709,7 +709,7 @@
         len_t len = theMap->size.value.number;
         assert(len==theMap->nvpArr.length);
         //assign properties from map
-        NameValuePair_ptr nvp = theMap->nvpArr.base.nvp;
+        _nameValuePair_ptr nvp = theMap->nvpArr.base.nvp;
         for(; len--; nvp++){
             Object_setProperty(newInstance,2,(any_arr){nvp->name,nvp->value});
         }
@@ -1023,15 +1023,15 @@
      * to make js LiteralObjects and Maps interchangeable,
      * _unifiedGetNVPAtIndex(), if the object is a Map,
      * returns *MAP_NVP_PTR(index)
-     * else returns a NameValuePair with decoded PropName and PropValue
+     * else returns a _nameValuePair with decoded PropName and PropValue
     */
-    NameValuePair_s
+    _nameValuePair_s
     _unifiedGetNVPAtIndex(any this, len_t index) {
         if (this.class==Map_inx)
             return *(MAP_NVP_PTR(index,this));
         else
             //note: _object_getPropertyNameAtIndex will validate "index"
-            return (NameValuePair_s){
+            return (_nameValuePair_s){
                 .name=_object_getPropertyNameAtIndex(this,index)
                 ,.value=this.value.prop[index]
             };
@@ -1126,7 +1126,7 @@
 
         if (++inx >= iter->size.value.int64) return false;
 
-        NameValuePair_ptr nvp = MAP_NVP_PTR(inx,this);
+        _nameValuePair_ptr nvp = MAP_NVP_PTR(inx,this);
         iter->key = nvp->name;
         iter->value = nvp->value;
 
@@ -1386,7 +1386,7 @@
     }
 
     any Array_toString(DEFAULT_ARGUMENTS) {
-       return Array_join(this,1,(any_arr){any_COMMA});
+       return Array_join(this,1,(any_arr){any_COMMASPACE});
     }
 
     any String_toString(DEFAULT_ARGUMENTS) {
@@ -2182,7 +2182,7 @@
         assert_args({.req=0,.max=1,.control=1},String);
         return _arrayJoin(undefined
                 , this.value.arr->length, this.value.arr->base.anyPtr
-                , argc? arguments[0]: any_COMMA);
+                , argc? arguments[0]: any_COMMASPACE);
     }
 
     any Array_clear(any this, len_t argc, any* arguments) {
@@ -2236,15 +2236,15 @@
     * Maps are arrays of name:value pairs
     */
 
-    /*str NameValuePair_toStr(NameValuePair_ptr nv) {
+    /*str _nameValuePair_toStr(_nameValuePair_ptr nv) {
         _Buffer_concatToNULL("\"", CALL0(toString_,nv->name).value.str,"\":",CALL0(toString_,nv->value).value.str, NULL);
     }*/
 
-    any NameValuePair_toString(DEFAULT_ARGUMENTS) {
-        assert(this.class==NameValuePair_inx);
+    any _nameValuePair_toString(DEFAULT_ARGUMENTS) {
+        assert(this.class==_nameValuePair_inx);
         return _concatAny(4
-                ,any_QUOTE, ((NameValuePair_ptr)this.value.ptr)->name, any_QUOTE, any_COLON
-                ,((NameValuePair_ptr)this.value.ptr)->value );
+                ,any_QUOTE, ((_nameValuePair_ptr)this.value.ptr)->name, any_QUOTE, any_COLON
+                ,((_nameValuePair_ptr)this.value.ptr)->value );
     }
 
     //-----------
@@ -2255,7 +2255,7 @@
         return _KeyTree_do(&map->keyTreeRoot,what,key,valueIndex);
     }
 
-    NameValuePair_ptr _map_find(Map_ptr map, any key, byte doDelete) {
+    _nameValuePair_ptr _map_find(Map_ptr map, any key, byte doDelete) {
 
         len_t len;
         if ((len=map->nvpArr.length)==0) return NULL; //if no length
@@ -2265,8 +2265,8 @@
         assert(key.class==String_inx); //has KeyTree
 
         int64_t foundInx=-1;
-        NameValuePair_ptr foundNVP=NULL;
-        NameValuePair_ptr nvpArrBase = map->nvpArr.base.nvp;
+        _nameValuePair_ptr foundNVP=NULL;
+        _nameValuePair_ptr nvpArrBase = map->nvpArr.base.nvp;
 
         //_KeyTree_do 1:FIND 2:REMOVE, found?
         if ((foundInx=_KeyTree_do(&map->keyTreeRoot,doDelete?REMOVE_KEY:FIND_KEY,key,0))>=0) {
@@ -2275,7 +2275,7 @@
 
         /* OLD - linear search
                 len_t inx=0;
-                for(NameValuePair_ptr nvp=nvpArrBase; len--; nvp++, inx++){
+                for(_nameValuePair_ptr nvp=nvpArrBase; len--; nvp++, inx++){
                     //DEBUG(nv->name);
                     if (__is(nvp->name, key)) {
                         foundInx=inx;
@@ -2293,7 +2293,7 @@
         return foundNVP;
     }
 
-    NameValuePair_ptr
+    _nameValuePair_ptr
     _map_getNVP(int64_t index, any this, str file, int line, str func) {
         if (index<0) {
             debug_abort(file,line,func,any_LTR("index access: [], negative index"));
@@ -2316,7 +2316,7 @@
     any Map_get(any this, len_t argc, any* arguments) {
         assert(argc==1);
         assert(_instanceof(this,Map));
-        NameValuePair_ptr nv=_map_find(this.value.map, arguments[0],0);
+        _nameValuePair_ptr nv=_map_find(this.value.map, arguments[0],0);
         if (!nv) return undefined;
         return nv->value;
     }
@@ -2327,7 +2327,7 @@
     any Map_getProperty(any this, len_t argc, any* arguments) {
         assert(argc==1);
         assert(_instanceof(this,Map));
-        NameValuePair_ptr nv=_map_find(this.value.map, arguments[0],0);
+        _nameValuePair_ptr nv=_map_find(this.value.map, arguments[0],0);
         if(!nv) return undefined;
         return nv->value;
     }
@@ -2335,7 +2335,7 @@
     any Map_has(any this, len_t argc, any* arguments) {
         assert(argc==1);
         assert(_instanceof(this,Map));
-        NameValuePair_ptr nv=_map_find(this.value.map, arguments[0],0);
+        _nameValuePair_ptr nv=_map_find(this.value.map, arguments[0],0);
         if(!nv) return false;
         return true;
     }
@@ -2353,7 +2353,7 @@
         len_t nextInx = this.value.map->nvpArr.length;
         int64_t found = _map_KeyTree_do(this.value.map,FIND_OR_INSERT,key,nextInx);
         if (found==nextInx){ //key inserted
-            NameValuePair_s newItem={.name=key,.value=arguments[1]};
+            _nameValuePair_s newItem={.name=key,.value=arguments[1]};
             _array_push(&(this.value.map->nvpArr),&newItem);
             this.value.map->size.value.number = this.value.map->nvpArr.length; //keep size prop
             assert(this.value.map->nvpArr.length==found+1);
@@ -2366,7 +2366,7 @@
     any Map_delete(any this, len_t argc, any* arguments) {
         assert(argc==1);
         assert(_instanceof(this,Map));
-        NameValuePair_ptr removedNVP;
+        _nameValuePair_ptr removedNVP;
         removedNVP=_map_find( this.value.map, arguments[0], 1); //1=doDelete
         //remove found index from map array
         this.value.map->size.value.number--; //keep "size" prop
@@ -2378,7 +2378,7 @@
         len_t len = this.value.map->nvpArr.length;
         var result = _newArray(len,NULL);
         any* resItem = result.value.arr->base.anyPtr;
-        for( NameValuePair_ptr nvp = this.value.map->nvpArr.base.nvp; len--; nvp++){
+        for( _nameValuePair_ptr nvp = this.value.map->nvpArr.base.nvp; len--; nvp++){
             _array_pushString(result, nvp->name);
         }
         return result;
@@ -2433,55 +2433,68 @@
     //-------------
 
     int _json_indent_count=0;
+    int _json_prettyPrint_spaces=0;
+    int _json_requireIndent=FALSE;
+
+    void _json_out(any* c, any value){
+        if (_json_requireIndent) {
+            _pushToConcatd(c, _string_spaces(_json_indent_count*_json_prettyPrint_spaces));
+            _json_requireIndent = FALSE;
+        }
+        _pushToConcatd(c,value);
+    }
 
     void _json_newLine(any* c){
-        _pushToConcatd(c, any_LTR("\n"));
-        _pushToConcatd(c, _string_spaces(_json_indent_count*2));
+        if (_json_prettyPrint_spaces){
+            _pushToConcatd(c, any_LTR("\n"));
+            _json_requireIndent = TRUE;
+        }
     }
 
     void _json_open(any* c, any opener){
-        _pushToConcatd(c,opener);
+        _json_out(c,opener);
         _json_indent_count++;
     }
 
     void _json_close(any* c, any closer){
         if (_json_indent_count) _json_indent_count--;
-        _pushToConcatd(c,closer);
+        _json_out(c,closer);
     }
 
     void _json_comma(any* c){
-        _pushToConcatd(c, any_COMMA);
+        _json_out(c, any_LTR(","));
     }
 
     void _json_stringify(any what, any* c) {
 
         if (_json_indent_count>5){
-            _pushToConcatd(c,any_LTR("[circular|too deep]"));
+            _json_out(c,any_LTR("*circular|too deep*"));
         }
         else if (what.class==Array_inx){
             // Array
+            len_t arrCount=what.value.arr->length;
             _json_open(c,any_OPEN_BRACKET);
+            if (arrCount) _json_newLine(c);
             any* item = what.value.arr->base.anyPtr;
-            len_t count=what.value.arr->length;
-            for(int n=0; count--; n++,item++){
+            for(int n=0; n<arrCount; n++,item++){
                 if (n) _json_comma(c);
                 _json_stringify(*item, c); //recurse
             }
-            //if(what.value.arr->length)_json_newLine(c);
+            if(arrCount) _json_newLine(c);
             _json_close(c,any_CLOSE_BRACKET);
         }
         else if (_instanceof(what,Map)){
             // Map
             _json_open(c,any_OPEN_CURLY);
-            NameValuePair_ptr nvp = what.value.map->nvpArr.base.nvp;
+            _nameValuePair_ptr nvp = what.value.map->nvpArr.base.nvp;
             len_t count = what.value.map->nvpArr.length;
             if (count) {
                 for(;;nvp++){
                     _json_newLine(c);
-                    _pushToConcatd(c, any_QUOTE);
-                    _pushToConcatd(c, nvp->name);
-                    _pushToConcatd(c, any_QUOTE);
-                    _pushToConcatd(c, any_COLON);
+                    _json_out(c, any_QUOTE);
+                    _json_out(c, nvp->name);
+                    _json_out(c, any_QUOTE);
+                    _json_out(c, any_COLON);
                     _json_stringify(nvp->value, c); //recurse
                     if (!--count) break;
                      _json_comma(c);
@@ -2498,10 +2511,10 @@
             for(int n=0; count--; n++, prop++){
                 if (n) _json_comma(c);
                 _json_newLine(c);
-                _pushToConcatd(c, any_QUOTE);
-                _pushToConcatd(c, _object_getPropertyNameAtIndex(what,n));
-                _pushToConcatd(c, any_QUOTE);
-                _pushToConcatd(c, any_COLON);
+                _json_out(c, any_QUOTE);
+                _json_out(c, _object_getPropertyNameAtIndex(what,n));
+                _json_out(c, any_QUOTE);
+                _json_out(c, any_COLON);
                 _json_stringify(*prop, c); //recurse
             }
             _json_newLine(c);
@@ -2527,10 +2540,10 @@
                     _Buffer_addBytes(&b,&ch,1);
                 }
                 _Buffer_add(&b,any_QUOTE);
-                _pushToConcatd(c,_Buffer_toString(&b));
+                _json_out(c,_Buffer_toString(&b));
             }
             else {
-                _pushToConcatd(c, what);
+                _json_out(c, what);
             }
         }
 
@@ -2538,6 +2551,8 @@
 
     any JSON_stringify(any this, len_t argc, any* arguments) {
         assert(argc>=1);
+        _json_prettyPrint_spaces = argc>=2? arguments[2].value.number:0;
+        if (_json_prettyPrint_spaces<0||_json_prettyPrint_spaces>80) _json_prettyPrint_spaces=0;
         _json_indent_count=0;
         var c=_newConcatdSlices();
         _json_stringify(arguments[0], &c);
@@ -2581,7 +2596,7 @@
             len=s.value.arr->length;
             fprintf(stderr,"Array[0..%d]=[",len);
             for(int n=0;n<s.value.arr->length;n++){
-                if(n) _outErr(any_COMMA);
+                if(n) _outErr(any_COMMASPACE);
                 fprintf(stderr,"%d:",n);
                 if (n==10){
                     _outErr(any_LTR(",..."));
@@ -2596,13 +2611,13 @@
             fprintf(stderr,"[Map]={",len);
             for(int n=0;n<len;n++){
                 if(n) {
-                    _outErr(any_COMMA);
+                    _outErr(any_COMMASPACE);
                     if (n==10){
                         _outErr(any_LTR("..."));
                         break;
                     }
                 }
-                NameValuePair_s nvp = _unifiedGetNVPAtIndex(s,n);
+                _nameValuePair_s nvp = _unifiedGetNVPAtIndex(s,n);
                 _outErr(nvp.name);
                 _outErr(any_COLON);
                 _outErr(nvp.value);
@@ -2612,7 +2627,7 @@
         else if (len=CLASSES[s.class].propertyCount) {
             _outErr(_concatAny(3,any_LTR("["),CLASSES[s.class].name,any_LTR("]={")));
             for(int n=0;n<len;n++){
-                if(n) _outErr(any_COMMA);
+                if(n) _outErr(any_COMMASPACE);
                 _outErr(_object_getPropertyNameAtIndex(s,n));
                 _outErr(any_COLON);
                 _outErr(s.value.prop[n]);
@@ -3369,8 +3384,8 @@
             size_
         };
 
-    //NameValuePair
-    static propIndex_t NameValuePair_PROPS[] = {
+    //_nameValuePair
+    static propIndex_t _nameValuePair_PROPS[] = {
             name_,
             value_
         };
@@ -3462,7 +3477,7 @@
 //--------------------
 
     any
-        any_EMPTY_STR, any_COMMA, any_COLON,
+        any_EMPTY_STR, any_COMMASPACE, any_COLON,
         any_SINGLE_QUOTE, any_QUOTE,
         any_OPEN_BRACKET, any_CLOSE_BRACKET,
         any_OPEN_CURLY, any_CLOSE_CURLY;
@@ -3481,7 +3496,7 @@
 
         //common Strings
         any_EMPTY_STR=any_LTR("");
-        any_COMMA=any_LTR(", ");
+        any_COMMASPACE=any_LTR(", ");
         any_SINGLE_QUOTE=any_LTR("'");
         any_QUOTE=any_LTR("\"");
         any_COLON=any_LTR(": ");
@@ -3684,8 +3699,8 @@
         _declareMethods(Map, Map_CORE_METHODS);
         _declareProps(Map, Map_PROPS, sizeof Map_PROPS); //only prop is .size
 
-        FROM_OBJECT(NameValuePair); // only internal
-        _declareProps(NameValuePair, NameValuePair_PROPS, sizeof NameValuePair_PROPS);
+        FROM_OBJECT(_nameValuePair); // only internal
+        _declareProps(_nameValuePair, _nameValuePair_PROPS, sizeof _nameValuePair_PROPS);
 
         FROM_OBJECT(Buffer); // only internal props (allocd, used, ptr)
         _declareMethods(Buffer, Buffer_CORE_METHODS);

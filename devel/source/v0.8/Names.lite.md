@@ -30,7 +30,7 @@ Module vars
         normalizeModeKeepFirstCase: boolean
 
         isScope: boolean
-        isPublicVar: boolean
+        isExported: boolean
 
         type, itemType
         value
@@ -63,6 +63,12 @@ try to determine nodeClass from node.nodeDeclared
               when
                 Grammar.ObjectLiteral, Grammar.FreeObjectLiteral:
                     .nodeClass = Grammar.NameValuePair
+
+              when 
+                Grammar.FunctionDeclaration, Grammar.ClassDeclaration
+                Grammar.NamespaceDeclaration, Grammar.VarStatement:
+                    .isExported = node.hasAdjective('export') and not node.hasAdjective('only')
+
 
       end if
 
@@ -209,7 +215,7 @@ mix in found namedecl here
         this.normalizeModeKeepFirstCase = nameDecl.normalizeModeKeepFirstCase
         //and other data
         this.nodeClass = nameDecl.nodeClass 
-        this.isPublicVar = nameDecl.isPublicVar
+        //this.isExported = nameDecl.isExported
         this.nodeDeclared = nameDecl.nodeDeclared
 
         #other nameDecl pointing here are redirected

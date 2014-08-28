@@ -263,9 +263,9 @@ check for title-keywords: e.g.: `### Class MyClass`, `### export Function compil
 
         //var titleKeyRegexp = /^(#)+ *(?:(?:public|export|only|helper)\s*)*(class|namespace|append to|function|method|constructor|properties)\b/i
 
-        var words = line.split(" ")
+        if line.slice(0,3) isnt "###", return  // should be at least indent 4: '### '
 
-        if words[0].length<3, return // should be at least indent 4: '### '
+        var words = line.split(" ")
 
         // return if first word is not all #'s
         if words[0].replaceAll("#"," ").trim(), return 
@@ -278,7 +278,7 @@ check for title-keywords: e.g.: `### Class MyClass`, `### export Function compil
 
             if words[inx] //skip empty items
 
-                if words[inx].toLowerCase() in ["public","export","only","helper"]
+                if words[inx].toLowerCase() in ["public","export","only","helper","global"]
                     countAdj++ //valid
                 else
                   break //invalid word
@@ -294,8 +294,9 @@ check for title-keywords: e.g.: `### Class MyClass`, `### export Function compil
 
             if words[inx] into var w:string //skip empty items
             
-                if w.indexOf('(') into var posParen <> -1
-                    //split at "(". remove composed and insert splitted at "("
+                // word contains a "(", split the word at the "("
+                if w.indexOf('(') into var posParen isnt -1
+                    //split at "(", create two words
                     words.splice inx,1, w.slice(0,posParen), w.slice(posParen)
                     w = words[inx]
 
@@ -1550,10 +1551,10 @@ get result and clear memory
 
         var col = .column 
         if not .currLine.length, col += indent-1
-        return {
+        return new SourceMapMark({
                   col : col        
                   lin :.lineNum-1
-                }
+                })
 
 #### helper method addCompleteSourceMap(mark, sourceLin)
 

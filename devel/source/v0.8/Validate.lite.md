@@ -515,15 +515,16 @@ Process the global scope declarations interface file: GlobalScope(JS|C|NODE).int
         var globalInterfaceModule = project.compileFile(globalInterfaceFile)
         logger.info '    from:',globalInterfaceModule.fileInfo.relFilename
 
-call "declare" on each item of the GlobalScope interface file, to create the NameDeclarations
+call "declare" on each item of the GlobalScope interface file, to create the Names.Declaration
+(normally in the global scope)
 
         globalInterfaceModule.callOnSubTree LiteCore.getSymbol('declare')
 
-move all exported from the interface file, to project.rootModule global scope
+/*move all exported from the interface file, to project.rootModule global scope
 
         for each nameDecl in map globalInterfaceModule.exports.members
             project.rootModule.addToSpecificScope globalScope, nameDecl
-
+*/
 
 ----------
 
@@ -1030,6 +1031,47 @@ else, not found, add it to the scope
         return nameDecl
 
 
+#### method selectAndAddToScope(nameDecl)
+
+if has adjective "global" add to global scope
+
+        if .hasAdjective('global')
+            globalScope.addMember nameDecl
+
+get parent. We cover here class/namespaces directly declared inside namespaces (without AppendTo)
+        
+        else
+            var container = .getParent(Grammar.NamespaceDeclaration)
+
+if it is declared inside a namespace, it is added to namespace scope, so inside a namespace, 
+namespace functions and properties can be accessed directly.
+*AFTER* it is added as a item of the namespace (as a Object).
+This need to be done *after* so the nameDecl.parent ends up being the namespace rather than "namespace scope"
+
+
+            if container
+                declare container: Grammar.NamespaceDeclaration
+                .addToSpecificScope container.scope, nameDecl //1st
+                container.nameDecl.addMember nameDecl //2nd - order is important
+
+            else
+                //check for "append to"
+                container = .getParent(Grammar.AppendToDeclaration)
+                if container
+                    do nothing //will be handled later in processAppendToExtends()
+                else
+                    //else, is a module-level class|namespace|fn|var. Add to parent scope
+                    .parent.addToScope nameDecl
+
+export:
+
+if has adjective public/export, add to module.exports
+
+        if .hasAdjective('export') 
+            var moduleNode:Grammar.Module = .getParent(Grammar.Module)
+            moduleNode.addToExport nameDecl 
+
+
 #### Helper method createScope()
 initializes an empty scope in this node
 
@@ -1147,6 +1189,7 @@ recurse on all properties (exclude 'parent' and 'importedModule' and others, sho
       //logger.debugGroupEnd
 
 
+
 ### Append to class Grammar.Module ###
 
 #### Helper method addToExport(exportedNameDecl)
@@ -1246,19 +1289,20 @@ Examples:
      method declare()  # pass 1
 
         var moduleNode:Grammar.Module = .getParent(Grammar.Module)
+        var isPublic = .hasAdjective("export")
 
         for each varDecl in .list
 
             varDecl.declareInScope
 
-            if .hasAdjective("export")
+            if isPublic
                 
                 moduleNode.addToExport varDecl.nameDecl
 
                 //mark as isPublicVar to prepend "module.exports.x" when referenced in module body
                 // except interfaces (no body & vars are probably aliases. case: public var $=jQuery)
                 if not moduleNode.fileInfo.isInterface
-                      varDecl.nameDecl.isPublicVar = true
+                      varDecl.nameDecl.isExported = true
                 
 
      method evaluateAssignments() # pass 4, determine type from assigned value
@@ -1290,36 +1334,14 @@ Examples:
             .nameDecl = .addToScope(.name)
 
 
-----------------------------
-/*
-### Append to class Grammar.NamespaceDeclaration
-
-#### method declare()
-
-        .nameDecl = .addToScope(.declareName(.name))
-
-        .createScope
-*/
-        
-
+----------------------
 ### Append to class Grammar.ClassDeclaration 
-also AppendToDeclaration and NamespaceDeclaration (child classes).
+derived classes are:  AppendToDeclaration and NamespaceDeclaration 
 
 #### properties
-
       nameDecl
 
-#### method declare()
-
-AppendToDeclarations do not "declare" anything at this point. 
-
-        if this.constructor is Grammar.AppendToDeclaration, return
-
-AppendToDeclarations add to a existing classes or namespaces. 
-The adding is delayed until pass:"processAppendToExtends", 
-where append-To var reference is searched in the scope 
-and methods and properties are added. 
-This need to be done after all declarations.
+#### method declare() # class
 
 if is a class adjectivated "shim", do not declare if already exists
     
@@ -1327,80 +1349,30 @@ if is a class adjectivated "shim", do not declare if already exists
             if .tryGetFromScope(.name) 
                 return 
 
-Check if it is a class or a namespace
-
-        var isNamespace = this.constructor is Grammar.NamespaceDeclaration
-        var isClass = this.constructor is Grammar.ClassDeclaration
-
-        if isNamespace 
-
-declare the namespace
-
-            .nameDecl = .declareName(.name)
-
-        else 
-
-declare the class
-
-            .nameDecl = .declareName(.name, {type:globalPrototype('Function')} ) //class
-
-        end if
-
-if has adjective "global" add to global scope
-
-        if .hasAdjective('global')
-            globalScope.addMember .nameDecl
-
-get parent. We cover here class/namespaces directly declared inside namespaces (without AppendTo)
+        .nameDecl = .declareName(.name, {type:globalPrototype('Function')} ) //class
         
-        else
-            var container = .getParent(Grammar.NamespaceDeclaration)
+        .selectAndAddToScope .nameDecl
 
-if it is declared inside a namespace, it becomes a item of the namespace
-
-            if container
-                declare container: Grammar.NamespaceDeclaration
-                container.nameDecl.addMember .nameDecl
-
-            else
-                //check for "append to"
-                container = .getParent(Grammar.AppendToDeclaration)
-                if container
-                    do nothing //will be handled later in processAppendToExtends()
-                else
-                    //else, is a module-level class|namespace. Add to scope
-                    .addToScope .nameDecl
-
-export:
-
-if has adjective public/export, add to module.exports
-
-        if .hasAdjective('export') 
-            var moduleNode:Grammar.Module = .getParent(Grammar.Module)
-            moduleNode.addToExport .nameDecl 
-
-
-if it is a Class, we create 'Class.prototype' member
+we create 'Class.prototype' member
 Class's properties & methods will be added to 'prototype' as valid member members.
 'prototype' starts with 'constructor' which is a pointer to the class-funcion itself
 
-        if isClass
-            var prtypeNameDecl = .nameDecl.findOwnMember('prototype') or .addMemberTo(.nameDecl,'prototype')
-            if .varRefSuper 
-                prtypeNameDecl.setMember('**proto**',.varRefSuper)
-            //else
-            //    prtypeNameDecl.setMember('**proto**',globalObjectProto)
+        var prtypeNameDecl = .nameDecl.findOwnMember('prototype') or .addMemberTo(.nameDecl,'prototype')
+        if .varRefSuper 
+            prtypeNameDecl.setMember('**proto**',.varRefSuper)
+        //else
+        //    prtypeNameDecl.setMember('**proto**',globalObjectProto)
 
-            prtypeNameDecl.addMember('constructor',{pointsTo:.nameDecl}) 
+        prtypeNameDecl.addMember('constructor',{pointsTo:.nameDecl}) 
 
 return type of the class-function, is the prototype
 
-            .nameDecl.setMember '**return type**',prtypeNameDecl
+        .nameDecl.setMember '**return type**',prtypeNameDecl
 
 add to nameAffinity
 
-            if not nameAffinity.members.has(.name)
-                nameAffinity.members.set .name, .nameDecl
+        if not nameAffinity.members.has(.name)
+            nameAffinity.members.set .name, .nameDecl
 
 
 #### method validatePropertyAccess() 
@@ -1415,7 +1387,34 @@ we check for duplicate property names in the super-class-chain
                 propNameDecl.checkSuperChainProperties .nameDecl.superDecl
 
 
+### Append to class Grammar.NamespaceDeclaration
+#### method declare()
 
+        if .hasAdjective('shim') 
+            if .tryGetFromScope(.name) 
+                return 
+
+declare the namespace. namespaces also create a scope
+
+        .nameDecl = .declareName(.name)
+        .createScope
+
+        .selectAndAddToScope .nameDecl
+
+   
+### Append to class Grammar.AppendToDeclaration
+#### method declare()
+AppendToDeclarations do not "declare" anything at this point. 
+
+AppendToDeclarations add to a existing classes or namespaces. 
+The adding is delayed until pass:"processAppendToExtends", 
+where append-To var reference is searched in the scope 
+and methods and properties are added. 
+This need to be done after all declarations.
+    
+      do nothing
+
+----------------------------
 
 ### Append to class Grammar.ArrayLiteral ###
 
@@ -1510,13 +1509,10 @@ check if we can determine type from value
 if it is not anonymous, add function name to parent scope,
 if its 'public/export' (or we're processing an "interface" file), add to exports
 
-      if isFunction
+      if isFunction and .name
 
-          .nameDecl = .addToScope(.name)
-
-          if .hasAdjective('export') 
-              var moduleNode:Grammar.Module=.getParent(Grammar.Module)
-              moduleNode.addToExport .nameDecl
+          .nameDecl = .declareName(.name)
+          .selectAndAddToScope .nameDecl
 
 /* commmented, for functions and namespace methods, this should'n be a parameter
 determine 'owner' (where 'this' points to for this function)
@@ -2006,7 +2002,7 @@ check if we can continue on the chain
 
 ### Append to class Grammar.FunctionAccess
 
-##### helper method composeArgumentsList(actualVar:Names.Declaration)
+##### helper method composeArgumentsList(actualVar:Names.Declaration) returns array
 
         var argsLength = .args? .args.length else 0
 
@@ -2046,7 +2042,7 @@ If we can't locate function declaration, we assume variadic and all types matchi
         if no funcDecl 
 
             if argsLength is 0
-                return // call with no args
+                return actualArgs // a call with no arguments
 
             if isClass //no funcDecl & isClass => calling a *default* constructor
 
@@ -2141,7 +2137,12 @@ make sure all the required parameters are set
             if param.required and param.name not in paramNamesSet
                 .sayErr "parameter ##{inx+1},'#{param.name}' is required"
                 funcDecl.sayErr "function declaration is here"
-            
+        end for    
+
+return array with arguements
+
+        return actualArgs
+
 
 ### Append to class Grammar.FunctionArgument
 
@@ -2472,7 +2473,9 @@ declare members on the fly, with optional type
 
             nameDecl = globalScope.addMember(name,{nodeClass:Grammar.ClassDeclaration})
 
-            nameDecl.addMember 'prototype',{nodeClass:Grammar.VariableDecl}
+            var prtypeNameDecl = nameDecl.addMember('prototype',{nodeClass:Grammar.VariableDecl})
+
+            nameDecl.setMember '**return type**',prtypeNameDecl
 
             // add to name affinity
             if not nameAffinity.members.has(name)
@@ -2481,32 +2484,62 @@ declare members on the fly, with optional type
 ----------------------------
 ### Append to class Names.Declaration ###
 
-#### helper method getComposedName
+#### helper method calcComposedPrefix returns Array
 
-if this nameDecl is member of a namespace, goes up the parent chain
-composing the name. e.g. a property x in module Foo, namespace Bar => `Foo_Bar_x`
+if this node is member of a namespace, goes up the parent chain
+composing the prefix. e.g. a property x in module Foo, namespace Bar => `Foo_Bar_`
 
-            var result = []
-            var node = this
-            while node and not node.isScope
+        var result = []
 
-                if node.nodeDeclared instanceof Grammar.ImportStatementItem
-                    //stop here, imported modules create a local var, but act as global var
-                    //since all others import of the same name, return the same content 
-                    result.unshift node.name
-                    return result.join('_')
+        if .nodeDeclared instanceof Grammar.ImportStatementItem
+            // imported modules create a local var, but act as global var
+            //since all others import of the same name, return the same content 
+            // no prefix for "import" module declared vars
+            return result
 
-                if node.name isnt 'prototype', result.unshift node.name
+        var lastWasExported = .isExported
 
-                node = node.parent
+        var node = this.parent
 
-if we reach module scope, (and not Global Scope) 
+        while node 
+
+            if node.isScope and node.nodeDeclared isnt instance of Grammar.NamespaceDeclaration
+                break // end composing when a scope is reached. Except for NamespaceDeclaration
+                // NamespaceDeclaration scope exists only to be able to use namespace items
+                // without namespace prefix inside the namespace declaration, 
+                // but it is not a real scope at execution time
+
+            if node.name isnt 'prototype' //skip .prototype. in C
+                result.unshift node.name
+                lastWasExported = node.isExported
+
+            node = node.parent
+
+        end while loop
+
+if we reached module scope, (and not Global Scope) 
 then it's a var|fn|class declared at module scope.
-Since modules act as namespaces, we add module.fileinfo.base to the name.
+If the object is 'public|exported' we add module.fileinfo.base to the name 
+(to use always it's "global" name)
 
-            if node and node.isScope and node.nodeDeclared.constructor is Grammar.Module 
-                var scopeModule = node.nodeDeclared
-                if scopeModule.name isnt '*Global Scope*' //except for global scope
-                        result.unshift scopeModule.fileInfo.base
+        if lastWasExported and node and node.isScope and node.nodeDeclared.constructor is Grammar.Module 
+            var scopeModule = node.nodeDeclared
+            if scopeModule.name isnt '*Global Scope*' //except for global scope
+                  result.unshift scopeModule.fileInfo.base
 
-            return result.join('_')
+
+        return result
+
+
+#### helper method getComposedPrefix() returns string
+
+        return .calcComposedPrefix().join("_")
+
+#### helper method getComposedName() returns string
+
+        var result = .calcComposedPrefix()
+
+        if .name isnt 'prototype' //skip .prototype. in C
+            result.push .name
+
+        return result.join("_")

@@ -216,7 +216,7 @@ produce & get result target code
                         Environment.externalCacheSave '#{moduleNode.fileInfo.outFilename}.map',
                                 moduleNode.lexer.outCode.sourceMap.generate(
                                               moduleNode.fileInfo.base & moduleNode.fileInfo.outExtension
-                                              ,Environment.getDir(Environment.relativeFrom(moduleNode.fileInfo.outDir,moduleNode.fileInfo.sourcename))
+                                              ,'' //Environment.getDir(Environment.relativeFrom(moduleNode.fileInfo.outDir,moduleNode.fileInfo.outFilename))
                                               ,[moduleNode.fileInfo.sourcename]
                                               )
                         //if .options.perf, console.timeEnd('Generate SourceMap #{moduleNode.fileInfo.base}')

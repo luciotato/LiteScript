@@ -31,7 +31,7 @@
 
     extern any
         any_EMPTY_STR
-        ,any_COMMA, any_COLON
+        ,any_COMMASPACE, any_COLON
         ,any_QUOTE, any_SINGLE_QUOTE
         ,any_OPEN_BRACKET, any_CLOSE_BRACKET
         ,any_OPEN_CURLY, any_CLOSE_CURLY
@@ -161,11 +161,11 @@
     // core property symbols
     enum _CORE_PROPERTIES_ENUM {
         constructor_, // always constructor is symbol:0 and prop[0]
-        name_, //class name | NameValuePair
+        name_, //class name | _nameValuePair
         initInstance_, //class __init:Function
 
         key_, // Iterable_Position
-        value_, //NameValuePair | Iterable_Position
+        value_, //_nameValuePair | Iterable_Position
         index_, // Iterable_Position
         size_, // Map | Iterable_Position
         iterable_, // Iterable_Position
@@ -259,7 +259,7 @@
         Function_inx,
         String_inx, Number_inx, Integer_inx, Boolean_inx,
         Array_inx, Map_inx,
-        NameValuePair_inx, Iterable_Position_inx,
+        _nameValuePair_inx, Iterable_Position_inx,
         InfinityClass_inx,
         Date_inx, Error_inx, Buffer_inx,
         FileDescriptor_inx,
@@ -282,7 +282,7 @@
         Undefined, Null, NotANumber, InfinityClass,
         Object, Class, Function,
         String, Number, Date,
-        Array, Map, NameValuePair,
+        Array, Map, _nameValuePair,
         Error, Buffer, Iterable_Position,
         FileDescriptor;
 
@@ -300,13 +300,13 @@
         len_t byteLen ;
     } ConcatdItem_s;
 
-    //NameValuePair
-    typedef struct NameValuePair_s * NameValuePair_ptr;
-    typedef struct NameValuePair_s {
+    //_nameValuePair
+    typedef struct _nameValuePair_s * _nameValuePair_ptr;
+    typedef struct _nameValuePair_s {
         any name,value;
-    } NameValuePair_s;
+    } _nameValuePair_s;
 
-    extern any NameValuePair; //class object
+    extern any _nameValuePair; //class object
 
     //Array
     typedef struct Array_s * Array_ptr;
@@ -314,12 +314,12 @@
         //private-native - array Object "properties" are (as in js arrays) the same array "items"
         union base{ // by default any*, but not always any*. see: itemSize
             any* anyPtr;
-            NameValuePair_ptr nvp;
+            _nameValuePair_ptr nvp;
             char* bytePtr;
         } base;
         len_t length;
         len_t allocd; //# of items. bytes allocd = allocd*itemSize
-        uint16_t itemSize; //by default sizeof(any) - but also sizeOf(NameValuePair) sizeOf(char*) for keytrees
+        uint16_t itemSize; //by default sizeof(any) - but also sizeOf(_nameValuePair) sizeOf(char*) for keytrees
                             // having a generic size allows to reuse _array_split _array_extend for any array
     } Array_s;
     extern any Array; //class object
@@ -329,9 +329,9 @@
      * to make js LiteralObjects and Maps interchangeable,
      * _unifiedGetNVPAtIndex(), if the object is a Map,
      * returns *MAP_NVP_PTR(index)
-     * else returns a NameValuePair with decoded PropName and PropValue
+     * else returns a _nameValuePair with decoded PropName and PropValue
     */
-    extern NameValuePair_s
+    extern _nameValuePair_s
         _unifiedGetNVPAtIndex(any this, len_t index);
 
     //Key Tree
@@ -366,7 +366,7 @@
     typedef struct Map_s * Map_ptr;
     typedef struct Map_s {
         any size;
-        Array_s nvpArr; // Array of NameValuePairs
+        Array_s nvpArr; // Array of _nameValuePairs
         Array_s keyTreeRoot; // fast key search
     } Map_s;
     extern any Map; //class object
@@ -445,7 +445,7 @@
         //extern any* __item2(int index, int prop, any this, str file, int line);
         // access map.array[index]. get a NVP by index, used to implement for each in map, w/o iterators
         #define MAP_NVP_PTR(index,this) _map_getNVP(index,this,__FILE__, __LINE__, __func__)
-        extern NameValuePair_ptr _map_getNVP(int64_t index, any this, str file, int line, str func);
+        extern _nameValuePair_ptr _map_getNVP(int64_t index, any this, str file, int line, str func);
         #include <signal.h>
         extern void debug_abort(str file, int line, str func, any message);
     #endif
@@ -596,7 +596,7 @@
     extern any Error_toString(DEFAULT_ARGUMENTS);
     extern any Array_toString(DEFAULT_ARGUMENTS);
     extern any Map_toString(DEFAULT_ARGUMENTS); //Map = js Object, array of props
-    extern any NameValuePair_toString(DEFAULT_ARGUMENTS);
+    extern any _nameValuePair_toString(DEFAULT_ARGUMENTS);
 
     extern any Object_tryGetMethod(DEFAULT_ARGUMENTS); // from method symbol
     extern any Object_getProperty(DEFAULT_ARGUMENTS); // from prop symbol, throws
@@ -679,7 +679,7 @@
     extern any Map_delete(DEFAULT_ARGUMENTS); //Map = js Object, array of props
     extern any Map_clear(DEFAULT_ARGUMENTS); //Map = js Object, array of props
 
-    extern void NameValuePair__init(DEFAULT_ARGUMENTS);
+    extern void _nameValuePair__init(DEFAULT_ARGUMENTS);
     extern any _newPair(str name, any value);
 
     //namespace JSON

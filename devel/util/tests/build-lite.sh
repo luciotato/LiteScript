@@ -1,1 +1,1 @@
-node ../liteVersion -use v0.8/lite-to-js -nomap $1 -v 1
+node $3 ../liteVersion -use v0.8/lite-to-js -nomap $1 -v 1

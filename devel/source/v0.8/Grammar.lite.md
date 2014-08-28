@@ -2885,8 +2885,8 @@ else, get parameters, add to varRef as FunctionAccess accessor,
 
         var functionAccess = new FunctionAccess(.varRef)
         functionAccess.args = functionAccess.reqSeparatedList(FunctionArgument,",")
-        if .lexer.token.value is '->' #add last parameter: callback function
-            functionAccess.args.push .req(FunctionDeclaration)
+        if .lexer.token.value is '->' #add last parameter: callback function (comma before -> is optional)
+            functionAccess.args.push .req(FunctionArgument)
 
         .varRef.addAccessor functionAccess
 
@@ -3055,7 +3055,6 @@ Check for 'map', e.g.: `var list : map string to Statement`
 
 
 
-
 ##Statement
 
 A `Statement` is an imperative statment (command) or a control construct.
@@ -3145,21 +3144,24 @@ store keyword of specific statement
         
 Check valid adjective-statement combination 
 
-        var validCombinations = map
-              export: ['class','namespace','function','var'] 
-              only: ['class','namespace'] 
-              generator: ['function','method'] 
-              nice: ['function','method'] 
-              shim: ['function','method','import'] 
-              helper:  ['function','method','class','namespace']
-              global: ['declare','class','namespace']
-
         for each adjective in .adjectives
 
               var valid:string array = validCombinations.get(adjective) or ['-*none*-']
               if key not in valid, .throwError "'#{adjective}' can only apply to #{valid.join('|')} not to '#{key}'"
                           
         end for
+
+#### Module level var: validCombinations adjective-statement
+
+    var validCombinations = map
+          export: ['class','namespace','function','var'] 
+          only: ['class','namespace'] 
+          generator: ['function','method'] 
+          nice: ['function','method'] 
+          shim: ['function','method','import'] 
+          helper:  ['function','method','class','namespace']
+          global: ['declare','class','namespace','function','var']
+
 
 ### Append to class ASTBase
 
@@ -3209,10 +3211,9 @@ We use the generic ***ASTBase.reqSeparatedList*** to get a list of **Statement**
 
         .statements = .reqSeparatedList(Statement,";")
 
-        # get function exit point source line number (for SourceMap)
-        .endSourceLineNum = .lexer.getPrevCODELineNum(.lexer.sourceLineNum)
-        //console.log .parent.constructor.name,.parent.name," endSourceLineNum: #{.endSourceLineNum}"
-
+        # store "endSourceLineNum". 
+        .endSourceLineNum = .lexer.sourceLineNum
+        # Note: is the line num of the FOLLOWING statement, the one that is NOT part of this body
 
       method validate
 
@@ -3245,9 +3246,10 @@ normally: ReturnStatement, ThrowStatement, PrintStatement, AssignmentStatement
 
 The `Module` represents a complete source file. 
 
-    public class Module extends Body
+    public class Module extends ASTBase
 
       properties
+        body
         //numbers determining initialization order
         dependencyTreeLevel = 0
         dependencyTreeLevelOrder = 0
@@ -3262,8 +3264,9 @@ if Module.parse() fails we abort compilation.
           
 Get Module body: Statements, separated by NEWLINE|';' closer:'EOF'
 
-          .statements = .optFreeFormList(Statement,';','EOF')
+          .body = new Body(this)
 
+          .body.statements = .optFreeFormList(Statement,';','EOF')
 
       #end Module parse
 

@@ -25,21 +25,21 @@ global Classes pre-created are:
         
     append to namespace Object
         
-        method keys() returns array of string
-        method create() 
-        method defineProperty() 
-        method defineProperties() 
-        method freeze() 
-        method getPrototypeOf() 
-        method setPrototypeOf() 
-        method getOwnPropertyDescriptor() 
-        method getOwnPropertyNames() 
+        method keys(obj) returns array of string
+        method create 
+        method defineProperty
+        method defineProperties
+        method freeze 
+        method getPrototypeOf(obj)
+        method setPrototypeOf(obj,newProto)
+        method getOwnPropertyDescriptor
+        method getOwnPropertyNames(ibj)
         //method is() 
-        method isExtensible() 
-        method isFrozen() 
-        method isSealed() 
-        method preventExtensions() 
-        method seal() 
+        method isExtensible 
+        method isFrozen 
+        method isSealed 
+        method preventExtensions 
+        method seal 
         //method getOwnPropertySymbols() 
 
 ### Append to class Array 
@@ -47,30 +47,31 @@ global Classes pre-created are:
             length:number
         
         method toLocaleString() 
-        method join() returns string
+        method join(separator:string) returns string
         method pop() 
-        method push() 
-        method concat() 
+        method push
+        method concat
         method reverse() 
         method shift() 
-        method unshift() 
-        method slice() returns array
-        method splice() 
-        method sort() 
-        method filter() 
-        method forEach() 
-        method some() 
-        method every() 
-        method map() 
-        method indexOf() 
-        method lastIndexOf() 
-        method reduce() 
-        method reduceRight() 
-        method entries() 
-        method values() 
+        method unshift 
+        method slice(startIndex,endIndexNotIncluded) returns array
+        method splice(startIndex,howManytoDelete,...) returns array
+        method sort 
+        method filter 
+        method forEach 
+        method some 
+        method every 
+        method map 
+        method indexOf 
+        method lastIndexOf 
+        method reduce 
+        method reduceRight 
+        #ifdef ES6
         method keys() 
-        method find() 
-        method findIndex() 
+        method entries()
+        method find 
+        method findIndex 
+        #endif
     
     append to namespace Array
         method isArray() 
@@ -79,57 +80,59 @@ global Classes pre-created are:
         
         properties
             length:number
-        
+
         method valueOf() 
-        method charAt() 
-        method charCodeAt() 
-        method concat() 
-        method indexOf() 
-        method lastIndexOf() 
-        method localeCompare() 
-        method match() 
+        method charAt(index) 
+        method charCodeAt(index) 
+        method concat
+        method indexOf(needle:string, startIndex) 
+        method lastIndexOf(needle:string, startIndex) 
+        method localeCompare
+        method match
         //method normalize() 
-        method replace() 
-        method search() 
-        method slice() returns string
-        method split() returns array of string
-        method substring() 
-        method substr() 
+        method replace
+        method search
+        method slice(startIndex,endIndexNotIncluded) returns string
+        method split(separator:string, limit) returns array of string
+        method substring
+        method substr
         method toLowerCase() 
-        method toLocaleLowerCase() 
+        method toLocaleLowerCase 
         method toUpperCase() 
-        method toLocaleUpperCase() 
+        method toLocaleUpperCase 
         method trim() 
         //method trimLeft() 
         //method trimRight() 
-        method link() 
-        method anchor() 
-        method fontcolor() 
-        method fontsize() 
-        method big() 
-        method blink() 
-        method bold() 
-        method fixed() 
-        method italics() 
-        method small() 
-        method strike() 
-        method sub() 
-        method sup() 
-        method repeat() 
-        method startsWith() 
-        method endsWith() 
-        method contains() 
+        method link 
+        method anchor 
+        method fontcolor 
+        method fontsize 
+        method big 
+        method blink 
+        method bold 
+        method fixed 
+        method italics 
+        method small 
+        method strike 
+        method sub 
+        method sup 
+        method repeat 
+        #ifdef ES6
+        method startsWith(text:string, position) 
+        method endsWith(text:string, position) 
+        method contains(text:string, position) 
+        #endif ES6
 
     append to namespace String
-        method fromCharCode()
+        method fromCharCode
 
 ### Append to class Number
-        
-        method toLocaleString() 
-        method valueOf() 
-        method toFixed() 
-        method toExponential() 
-        method toPrecision() 
+
+        method toLocaleString 
+        method valueOf 
+        method toFixed 
+        method toExponential 
+        method toPrecision 
     
     append to namespace Number
         properties
@@ -146,25 +149,29 @@ global Classes pre-created are:
         method isInteger() 
         method isNaN() 
         method isSafeInteger() 
-        method parseInt() 
-        method parseFloat() 
+        method parseInt
+        method parseFloat
 
 
 ## Classes declared here
 
-### public class Error extends Object
+### global class Error extends Object
         properties
             name, message,stack
+
+        constructor new Error(...)
 
     append to namespace Error
         properties
             stackTraceLimit:number
 
-        method captureStackTrace() 
+        method captureStackTrace 
 
 
-### public class Date extends Object
+### global class Date extends Object
         
+        constructor new Date(...)
+
         method toDateString() 
         method toTimeString() 
         method toLocaleString() 
@@ -189,34 +196,34 @@ global Classes pre-created are:
         method getMilliseconds() 
         method getUTCMilliseconds() 
         method getTimezoneOffset() 
-        method setTime() 
-        method setMilliseconds() 
-        method setUTCMilliseconds() 
-        method setSeconds() 
-        method setUTCSeconds() 
-        method setMinutes() 
-        method setUTCMinutes() 
-        method setHours() 
-        method setUTCHours() 
-        method setDate() 
-        method setUTCDate() 
-        method setMonth() 
-        method setUTCMonth() 
-        method setFullYear() 
-        method setUTCFullYear() 
+        method setTime 
+        method setMilliseconds 
+        method setUTCMilliseconds 
+        method setSeconds 
+        method setUTCSeconds 
+        method setMinutes 
+        method setUTCMinutes 
+        method setHours 
+        method setUTCHours 
+        method setDate 
+        method setUTCDate 
+        method setMonth 
+        method setUTCMonth 
+        method setFullYear 
+        method setUTCFullYear 
         method toGMTString() 
-        method toUTCString() 
-        method getYear() 
-        method setYear() 
+        method toUTCString()
+        method getYear 
+        method setYear 
         method toISOString() 
         method toJSON() 
     
     append to namespace Date
-        method UTC() 
-        method parse() 
+        method UTC 
+        method parse 
         method now() 
 
-### public class RegExp
+### global class RegExp
 
         properties
             source:string
@@ -224,11 +231,13 @@ global Classes pre-created are:
             ignoreCase:boolean
             multiline:boolean
             lastIndex:number
+
+        constructor new RegExp(pattern,flags:string)
         
-        method exec() 
-        method test() 
-        method toString() 
-        method compile() 
+        method exec 
+        method test 
+        method toString 
+        method compile 
     
     append to namespace RegExp
         properties
@@ -242,62 +251,62 @@ global Classes pre-created are:
             rightContext:string
 
     
-### public namespace JSON
-        method parse() 
-        method stringify()     
+### global namespace JSON
+        method parse(text, reviver:function) 
+        method stringify(obj, replacer, indent)     
 
-### public namespace Math
+### global namespace Math
         properties
             E:number
             PI:number
         
-        method random() 
-        method abs() 
-        method acos() 
-        method asin() 
-        method atan() 
-        method ceil() 
-        method cos() 
-        method exp() 
-        method floor() 
-        method log() 
-        method round() 
-        method sin() 
-        method sqrt() 
-        method tan() 
-        method atan2() 
-        method pow() 
-        method max() 
-        method min() 
-        method imul() 
-        method sign() 
-        method trunc() 
-        method sinh() 
-        method cosh() 
-        method tanh() 
-        method asinh() 
-        method acosh() 
-        method atanh() 
-        method log10() 
-        method log2() 
-        method hypot() 
-        method fround() 
-        method clz32() 
-        method cbrt() 
-        method log1p() 
-        method expm1() 
+        method random 
+        method abs 
+        method acos 
+        method asin 
+        method atan 
+        method ceil 
+        method cos 
+        method exp 
+        method floor 
+        method log 
+        method round 
+        method sin 
+        method sqrt 
+        method tan 
+        method atan2 
+        method pow 
+        method max 
+        method min 
+        method imul 
+        method sign 
+        method trunc 
+        method sinh 
+        method cosh 
+        method tanh 
+        method asinh 
+        method acosh 
+        method atanh 
+        method log10 
+        method log2 
+        method hypot 
+        method fround 
+        method clz32 
+        method cbrt 
+        method log1p 
+        method expm1 
 
 ### global functions
 
-    function setTimeout
-    function clearTimeout
-    function setInterval
-    function clearInterval
-    function eval
+    global function setTimeout
+    global function clearTimeout
+    global function setInterval
+    global function clearInterval
+    global function eval
 
 ## Global Namespaces
 
-### public namespace console
+### global namespace console
 
         method log
         method error

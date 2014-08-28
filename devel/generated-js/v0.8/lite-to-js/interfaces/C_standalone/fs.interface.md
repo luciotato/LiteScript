@@ -1,14 +1,14 @@
 
 fs as supported in LiteC-core
 
-    public namespace fs
+    export only namespace fs
 
-        method existsSync(filename:string)
+        method existsSync(filename:string) returns boolean
 
         method readFileSync(filename) returns string
         method writeFileSync(filename, contents) 
 
-        method statSync(filename:string)
+        method statSync(filename:string) returns Stat
         method unlinkSync(filename:string)
         method mkdirSync(path:string, mode)
 

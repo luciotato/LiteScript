@@ -12,7 +12,6 @@
       <itemPath>../core/exceptions.c</itemPath>
       <itemPath>../core/exceptions.h</itemPath>
       <itemPath>../core/fs-native.c</itemPath>
-      <itemPath>../core/fs-native.h</itemPath>
       <itemPath>../core/keytree.c</itemPath>
       <itemPath>../core/utf8strings.c</itemPath>
       <itemPath>../core/utf8strings.h</itemPath>
@@ -158,8 +157,6 @@
       <item path="../core/exceptions.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../core/fs-native.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="../core/fs-native.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../core/keytree.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -350,8 +347,6 @@
       <item path="../core/exceptions.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../core/fs-native.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="../core/fs-native.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../core/keytree.c" ex="false" tool="0" flavor2="0">
       </item>

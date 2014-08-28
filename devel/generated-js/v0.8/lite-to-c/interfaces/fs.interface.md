@@ -1,5 +1,5 @@
     
-    public namespace fs
+    export only namespace fs
         
         method exists(path, callback) 
         method existsSync(path) 
@@ -27,14 +27,14 @@
         method fsyncSync(fd) 
         method mkdir(path, mode, callback) 
         method mkdirSync(path, mode) 
-        method readdir(path, callback) 
-        method readdirSync(path) 
-        method fstat(fd, callback) 
-        method lstat(path, callback) 
-        method stat(path, callback) 
-        method fstatSync(fd) 
-        method lstatSync(path) 
-        method statSync(path) 
+        method readdir(path, callback) returns array
+        method readdirSync(path) returns array
+        method fstat(fd, callback) returns fs.Stats
+        method lstat(path, callback) returns fs.Stats
+        method stat(path, callback)  returns fs.Stats
+        method fstatSync(fd) returns fs.Stats
+        method lstatSync(path) returns fs.Stats
+        method statSync(path) returns fs.Stats
         method readlink(path, callback) 
         method readlinkSync(path) 
         method symlink(destination, path, type_, callback) 
@@ -68,7 +68,7 @@
         method createWriteStream(path, options) 
     
     
-        public class Stats
+        class Stats
             constructor new Stats () 
             
             method isDirectory() 
@@ -80,7 +80,7 @@
             method isSocket() 
         
         
-        public class ReadStream
+        class ReadStream
             constructor new ReadStream (path, options) 
             
             method open() 
@@ -88,7 +88,7 @@
             method close(cb) 
         
         
-        public class FileReadStream
+        class FileReadStream
             constructor new FileReadStream (path, options) 
             
             method open() 
@@ -96,7 +96,7 @@
             method close(cb) 
         
         
-        public class WriteStream
+        class WriteStream
             constructor new WriteStream (path, options) 
             
             method open() 
@@ -105,7 +105,7 @@
             method destroySoon(chunk, encoding, cb) 
         
         
-        public class FileWriteStream
+        class FileWriteStream
             constructor new FileWriteStream (path, options) 
             
             method open() 
@@ -114,7 +114,7 @@
             method destroySoon(chunk, encoding, cb) 
         
         
-        public class SyncWriteStream
+        class SyncWriteStream
             constructor new SyncWriteStream (fd) 
             
             method write(data, arg1, arg2) 

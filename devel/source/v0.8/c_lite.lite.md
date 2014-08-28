@@ -44,7 +44,7 @@ when it is generated as C-code standalone executable
 
 Get & parse command line arguments
 
-    var args = new OptionsParser(process.argv,'invalid argument')
+    var args = new OptionsParser(process.argv)
 
 Check for -version
 

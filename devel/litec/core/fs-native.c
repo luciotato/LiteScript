@@ -6,15 +6,12 @@
  */
 
     // fs.h gets generated based on fs.interface.lite.md
-    #include "fs-native.h"
+    #include "../C_standalone/fs.h"
     #include "LiteC-core.h"
     #include <sys/stat.h>
     #include <errno.h>
     #include <unistd.h>
     #include <sys/types.h>
-
-    //class fs.Stat
-    any fs_Stat; //class Fs_Stat
 
     #define THIS ((fs_Stat_s*)this.value.ptr)
 

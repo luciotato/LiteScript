@@ -8,7 +8,7 @@ global pre-created vars are:
 global pre-created Classes are:
   Object, Function, Array, String, Number, Boolean
 
-### Namespace LiteCore
+### global namespace LiteCore
 
         properties
             version,buildDate
@@ -77,7 +77,7 @@ a Map (compile-to-c) or a Object (compile-to-js)
 
 Object as *Iterable*
 
-        method iterableNext(iter:Position) returns boolean
+        method iterableNext(iter:Iterable.Position) returns boolean
 
 Other Object methods - LiteC specific
 
@@ -89,7 +89,7 @@ Other Object methods - LiteC specific
 
 ## Iterable.Position as supported by core (see also: Iterable.lite.md)
 
-### Namespace Iterable
+### global namespace Iterable
     
         class Position
             properties 
@@ -144,7 +144,7 @@ new methods not in js
 
 *Iterable* interface
 
-        method iterableNext(iter:Position) returns boolean
+        method iterableNext(iter:Iterable.Position) returns boolean
 
 
 ## JS array item access 
@@ -194,24 +194,24 @@ LiteC:
             length:number
         
         //method valueOf() 
-        method charAt() returns string
-        method charCodeAt() 
-        method concat() returns string
-        method indexOf() 
-        method lastIndexOf() 
+        method charAt(index) returns string
+        method charCodeAt(index) 
+        method concat returns string
+        method indexOf(needle:string, startIndex) 
+        method lastIndexOf(needle:string, startIndex) 
         //method localeCompare() 
         //method match() 
         //method normalize() 
-        method replace() returns string
+        method replace returns string
         //method search() 
 
         method replaceAll(search,replaceby) //like .replace //g
         
-        method slice() returns string
-        method split(separator:string,limit) returns array of string
+        method slice(startIndex,endIndexNotIncluded) returns string
+        method split(separator:string, limit) returns array of string
 
         //method substring() 
-        method substr() 
+        method substr
         method toLowerCase() returns string
         //method toLocaleLowerCase() 
         method toUpperCase() returns string
@@ -220,7 +220,7 @@ LiteC:
         //method trimLeft() 
         //method trimRight() 
 
-        method countSpaces returns number
+        method countSpaces() returns number
 
         /*method link() 
         method anchor() 
@@ -236,7 +236,7 @@ LiteC:
         method sub() 
         method sup() 
         */
-        method repeat() 
+        method repeat
 
         //method startsWith() 
         //method endsWith() 
@@ -245,7 +245,7 @@ LiteC:
 
 *Iterable* interface
 
-        method iterableNext(iter:Position) returns boolean
+        method iterableNext(iter:Iterable.Position) returns boolean
 
         /**
         * String_byteSubstr(byteStartIndex:number, charCount:number)
@@ -308,7 +308,9 @@ LiteC:
         method isNaN() 
 
 
-### public Class Date 
+## Classes declared here (not in compiler code)
+
+### global Class Date 
         
         method toDateString() 
         method toTimeString() 
@@ -364,13 +366,13 @@ LiteC:
     */
 */
 
-## Classes declared here (not in compiler code)
-
-### public class Error extends Object
+### global class Error extends Object
         properties
             name, message
             stack
             code
+
+        constructor new Error(...)
 
     //append to namespace Error
     //    properties
@@ -379,7 +381,7 @@ LiteC:
     //    method captureStackTrace() 
 
 
-### public class Map
+### global class Map
 
         properties
             size
@@ -402,11 +404,13 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
 
 *Iterable* interface
 
-        method iterableNext(iter:Position) returns boolean
+        method iterableNext(iter:Iterable.Position) returns boolean
 
 
-### public class RegExp
+### global class RegExp
 
+        constructor new RegExp(pattern,flags:string)
+        
 /*
         properties
             source:string
@@ -435,9 +439,9 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
 
 */    
 
-### public namespace JSON
-        //method parse() 
-        method stringify()     
+### global namespace JSON
+        //method parse(text, reviver:function) 
+        method stringify(obj, replacer, indent)     
 
 /*
 ### public namespace Math
@@ -493,7 +497,7 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
 
 ## Global Namespaces
 
-### public namespace console
+### global namespace console
 
         method log
         method error
@@ -523,7 +527,7 @@ not supported yet by liteC
 node.js compatible 
 -------------------
 
-### public class Buffer
+### global class Buffer
 
 API compatible with nodejs Buffers
 
@@ -542,7 +546,7 @@ API compatible with nodejs Buffers
 
         method byteLength(s:string)
 
-### public namespace process
+### global namespace process
 
         properties
             argv: array of string
@@ -554,7 +558,7 @@ API compatible with nodejs Buffers
 
 #PMREX, poor's man RegEx - native implemented at core -
 
-### public namespace PMREX
+### global namespace PMREX
 
 #### method whileRanges(chunk:string, rangesStr:string) returns string
 

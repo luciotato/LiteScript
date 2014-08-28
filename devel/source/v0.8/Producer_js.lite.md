@@ -37,7 +37,7 @@ Produce all vars & functions definitions first.
             {COMMENT:"Module Init"},NL
             {COMMENT: "-----------"},NL 
 
-        for each statement in .statements
+        for each statement in .body.statements
 
             case statement.specific.constructor
   
@@ -67,12 +67,6 @@ Produce all vars & functions definitions first.
             {COMMENT:'end of module'},NL
             NL
 
-//        for each statement in .statements
-//            statement.produce
-
-add end of file comments
-
-        .outSourceLinesAsComment .endSourceLineNum+1
 
 export 'export default' namespace, if it was set.
 
@@ -81,7 +75,7 @@ export 'export default' namespace, if it was set.
                 .out 'module.exports=',.exports.name,";",NL
 
 
-### Append to class Grammar.Body ### and Module (derives from Body)
+### Append to class Grammar.Body 
 
 A "Body" is an ordered list of statements.
 
@@ -352,7 +346,7 @@ Prefix ++/--, varName, Accessors and postfix ++/--
             if no refNameDecl
                 .sayErr "cannot find '#{.name}' in scope"
             else
-                if refNameDecl.isPublicVar
+                if refNameDecl.isExported and refNameDecl.nodeClass is Grammar.VariableDecl
                     preIfExported='module.exports.'
 
 node.js module.exports is a leaky abstractions for exported
@@ -1149,9 +1143,11 @@ if params defaults where included, we assign default values to arguments
 close the function, add source map for function default "return undefined" execution point
 
       .out "}"
+
       #ifdef PROD_JS // if compile-to-js
       if .lexer.outCode.sourceMap
-          .lexer.outCode.sourceMap.add ( .body.endSourceLineNum+1, 0, .lexer.outCode.lineNum-1, 0)
+          var exitPoint = .lexer.getPrevCODELineNum(.body.endSourceLineNum)+1
+          .lexer.outCode.sourceMap.add (exitPoint, 0, .lexer.outCode.lineNum-1, 0)
       #endif
 
 --------------------

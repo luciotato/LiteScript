@@ -153,8 +153,8 @@ Now search the file in all specidief dirs/with all the extensions
 
             if not found
                 logger.throwControlled """
-                        #{.importInfo.source}:#{.importInfo.line}:1 Module not found: #{.importInfo.name}
-                        Searched as:
+                        #{.importInfo.source}:#{.importInfo.line}:1 Module not found: 
+                        Searched '#{.importInfo.name}' at:
                         #{search.join('\n')}
                            with extensions (.lite.md|.md|.interface.md|.js)
                         """
@@ -252,14 +252,14 @@ Check if interface cache is updated
         options = projectOptions
 
 
-### export helper function relativeFrom(actualPath, destFilename) returns string
+### export helper function relativeFrom(actualPath, destFullPathFilename) returns string
 
         //relative to fromFileinfo.outFilename
         //print "relativeFileRef(filename, fromFileinfo)"
         //print filename
         //print fromFileinfo.outDir
         //print path.relative(fromFileinfo.outDir, filename)
-        return path.relative(actualPath, destFilename ) //from path, to filename/fullpath
+        return path.relative(actualPath, destFullPathFilename ) //from path, to fullpath/filename
 
 
 ### export helper function resolvePath(text)

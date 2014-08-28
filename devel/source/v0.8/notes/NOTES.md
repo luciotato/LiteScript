@@ -1,3 +1,7 @@
+#SUPER IS NOT WORKING ON "APPEND TO" - disable "super" until fixed
+see: #### method produce() # Module @ producer_C
+
+
 # validate required and optional parameters - ON CALL TO new
 see: 
   var args = new OptionsParser(process.argv,'invalid argument')
