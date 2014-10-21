@@ -366,7 +366,7 @@ Pre-Processor
 
 #### method preprocessor(line:string)
 
-This is a ver crude preprocessor.
+This is a very simple preprocessor.
 Here we search for simple macros as __DATE__, __TIME__ , __TTMESTAMP__
 
         for each macro,value in map preprocessor_replaces
@@ -378,7 +378,9 @@ Here we search for simple macros as __DATE__, __TIME__ , __TTMESTAMP__
 
 #### method process()
 
-Analyze generated lines. preParseSource() set line type, calculates indent, 
+Analyze generated lines. 
+
+preParseSource() sets line type, calculates indent, 
 handles multiline string, comments, string interpolation, etc.
 
       .infoLines = .preParseSource()
@@ -392,7 +394,7 @@ Next Source Line
 
 #### method nextSourceLine()
 
-returns false is there are no more lines
+returns false if there are no more lines
 
         if .sourceLineNum >= .lines.length
             return false
@@ -544,8 +546,6 @@ This method handles "#ifdef/#else/#endif" as multiline comments
             .project.setCompilerVar words[1],false
             return false
 
-ifdef, #ifndef, #else and #endif should be the first thing on the line
-
         if line.indexOf("#endif") is 0, .throwErr 'found "#endif" without "#ifdef"'
         if line.indexOf("#else") is 0, .throwErr 'found "#else" without "#ifdef"'
 
@@ -554,6 +554,8 @@ ifdef, #ifndef, #else and #endif should be the first thing on the line
         if pos isnt 0 
             pos = line.indexOf("#ifndef ")
             invert = true
+
+ifdef, #ifndef, #else and #endif should be the first thing on the line
 
         if pos isnt 0, return 
 
@@ -895,7 +897,7 @@ split expressions
            
             item = s.slice(start+1, closerPos);
 
-            // add parens if expression (no a single number or varname or prop)
+            // add parens if expression (if not a single number or varname or prop)
             var singleUnit = PMREX.whileRanges(item,"A-Za-z0-9_$.")
             if item isnt singleUnit, item = '(#{item})';
 
