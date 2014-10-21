@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"> 
 <plist version="1.0">
 <dict>
 	<key>author</key>
@@ -15,13 +15,13 @@
 			<dict>
 
 				<key>background</key>
-				<string>#ffffff</string> //#ececfa
+				<string>#ffffff</string> <!--#ececfa -->
 				
 				<key>caret</key>
 				<string>#000000</string>
 
 				<key>foreground</key>
-				<string>#606060</string> // 80B457 HERE - other not defined // -- default colum 1 markup
+				<string>#606060</string> <!-- 80B457 HERE - other not defined - default colum 1 markup -->
 
 				<key>invisibles</key>
 				<string>#CAE2FB30</string>
@@ -38,7 +38,7 @@
 			<key>name</key>
 			<string>meta</string>
 			<key>scope</key>
-			<string>comment.line.js</string> //commetn line js
+			<string>comment.line.js</string> <!-- commetn line js -->
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -58,7 +58,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#4a681A</string>  // #778141 #47C14F green, #CCB86A gold - source code
+				<string>#4a681A</string>  <!-- #778141 #47C14F green, #CCB86A gold - source code -->
 			</dict>
 		</dict>
 
@@ -70,7 +70,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#7C682A</string> // yellow as 'var' - B3E570 light green 
+				<string>#7C682A</string> <!-- yellow as 'var' - B3E570 light green  -->
 			</dict>
 		</dict>
 
@@ -82,7 +82,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#706521</string> // #778141 #BCA85A #CCB86A gold - x.*member*
+				<string>#706521</string> <!-- #778141 #BCA85A #CCB86A gold - x.*member* -->
 			</dict>
 		</dict>
 
@@ -95,7 +95,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#61331B</string> // type: dark red - #CCB86A gold 
+				<string>#61331B</string> <!-- type: dark red - #CCB86A gold  -->
 			</dict>
 		</dict>
 
@@ -107,7 +107,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#203020</string> // me|this, gyray - #CCB86A gold 
+				<string>#203020</string> <!-- me|this, gyray - #CCB86A gold  -->
 			</dict>
 		</dict>
 
@@ -121,7 +121,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#A03000</string> // "var|let|function" KEYWORD --- yellow
+				<string>#A03000</string> <!-- "var|let|function" KEYWORD - yellow -->
 			</dict>
 		</dict>
 
@@ -133,7 +133,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#A04020</string> // KEYWORD - orange
+				<string>#A04020</string> <!-- KEYWORD - orange -->
 			</dict>
 		</dict>
 
@@ -143,7 +143,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#505050</string> //- punctuation
+				<string>#505050</string> <!--- punctuation -->
 			</dict>
 		</dict>
 
@@ -153,7 +153,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#707000</string> //- punctuation
+				<string>#707000</string> <!--- punctuation -->
 			</dict>
 		</dict>
 
@@ -168,7 +168,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#164F4F</string> // comment #80B457 green as markup, #60B0B0 cyan
+				<string>#164F4F</string> <!-- comment #80B457 green as markup, #60B0B0 cyan -->
 			</dict>
 		</dict>
 		<dict>
@@ -179,7 +179,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#404040</string> // CONSTANTS - Tests.length === *0*
+				<string>#404040</string> <!-- CONSTANTS - Tests.length === *0* -->
 			</dict>
 		</dict>
 
@@ -202,7 +202,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#336570</string> //#B47A56:light orange- oper: and or is isnt
+				<string>#336570</string> <!--#B47A56:light orange- oper: and or is isnt -->
 			</dict>
 		</dict>
 
@@ -212,7 +212,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#766534</string> // class.name  -- yellow.brown
+				<string>#766534</string> <!-- class.name  -- yellow.brown -->
 				<key>fontStyle</key>
 				<string>italic</string>
 			</dict>
@@ -224,7 +224,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#336570</string> // 'extends' 'inherits from' #73A5B0 blueish - #B3E570 light green - #B6A574 yellow.brown
+				<string>#336570</string> <!-- 'extends' 'inherits from' #73A5B0 blueish - #B3E570 light green - #B6A574 yellow.brown -->
 				<key>fontStyle</key>
 				<string>italic</string>
 			</dict>
@@ -240,7 +240,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#273127</string> // *global*.expect = function(result,expectedResult)
+				<string>#273127</string> <!-- *global*.expect = function(result,expectedResult) -->
 			</dict>
 		</dict>
 
@@ -252,7 +252,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#07910F</string> //-green - global.expect = function(*result* , *expectedResult* ){
+				<string>#07910F</string> <!---green - global.expect = function(*result* , *expectedResult* ){ -->
 			</dict>
 		</dict>
 
@@ -326,7 +326,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#8C7800</string> // #CCB86A gold
+				<string>#8C7800</string> <!-- #CCB86A gold -->
 			</dict>
 		</dict>
 
@@ -336,7 +336,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#303030</string> // light green
+				<string>#303030</string> <!-- light green -->
 			</dict>
 		</dict>
 
@@ -346,7 +346,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#504020</string> // light green
+				<string>#504020</string> <!-- light green -->
 			</dict>
 		</dict>
 
@@ -380,7 +380,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#4A5A55</string> // dark green
+				<string>#4A5A55</string> <!-- dark green -->
 			</dict>
 		</dict>
 		<dict>
@@ -393,7 +393,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#409050</string>  // js: result.*push*(x)
+				<string>#409050</string>  <!-- js: result.*push*(x) -->
 			</dict>
 		</dict>
 		<dict>
@@ -406,7 +406,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#408040</string> //js: Tests.*length*===0
+				<string>#408040</string> <!--js: Tests.*length*===0 -->
 			</dict>
 		</dict>
 		<dict>
@@ -478,7 +478,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#0D6849</string> // gold
+				<string>#0D6849</string> <!-- gold -->
 			</dict>
 		</dict>
 		<dict>
@@ -489,7 +489,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#4F5D2A</string> // dark green
+				<string>#4F5D2A</string> <!-- dark green -->
 			</dict>
 		</dict>
 		<dict>
@@ -500,7 +500,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#4B583B</string> // dark green
+				<string>#4B583B</string> <!-- dark green -->
 			</dict>
 		</dict>
 		<dict>
@@ -511,7 +511,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#5B3000</string> // dark gold
+				<string>#5B3000</string> <!-- dark gold -->
 			</dict>
 		</dict>
 		<dict>
@@ -522,7 +522,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#556F35</string> // gold
+				<string>#556F35</string> <!-- gold -->
 			</dict>
 		</dict>
 		<dict>
@@ -533,7 +533,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#695E18</string> // ligth gold
+				<string>#695E18</string> <!-- ligth gold -->
 			</dict>
 		</dict>
 		<dict>
@@ -544,7 +544,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#465315</string> // green
+				<string>#465315</string> <!-- green -->
 			</dict>
 		</dict>
 		<dict>
@@ -555,7 +555,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#405040</string> //css numbers
+				<string>#405040</string> <!--css numbers -->
 			</dict>
 		</dict>
 		<dict>
@@ -566,7 +566,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#3F4D1A</string> //green
+				<string>#3F4D1A</string> <!--green -->
 			</dict>
 		</dict>
 		<dict>
@@ -639,7 +639,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#897000</string> // gold
+				<string>#897000</string> <!-- gold -->
 			</dict>
 		</dict>
 		<dict>
@@ -652,7 +652,7 @@
 				<key>fontStyle</key>
 				<string>bold</string>
 				<key>foreground</key>
-				<string>#895000</string> // gold
+				<string>#895000</string> <!-- gold -->
 			</dict>
 		</dict>
 		<dict>
@@ -665,7 +665,7 @@
 				<key>fontStyle</key>
 				<string>underline</string>
 				<key>foreground</key>
-				<string>#803000</string> // orange
+				<string>#803000</string> <!-- orange -->
 			</dict>
 		</dict>
 		<dict>
@@ -680,7 +680,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#808059</string> // grey
+				<string>#808059</string> <!-- grey -->
 			</dict>
 		</dict>
 		<dict>
@@ -708,7 +708,7 @@
 				<key>background</key>
 				<string>#b0b0b0</string>
 				<key>foreground</key>
-				<string>#632D04</string>  //MARKUP TITLE #CDA869 #B6A574 #A0A020
+				<string>#632D04</string>  <!--MARKUP TITLE #CDA869 #B6A574 #A0A020 -->
 			</dict>
 		</dict>
 		<dict>
@@ -723,7 +723,7 @@
 				<key>background</key>
 				<string>#c0c0c0</string>
 				<key>foreground</key>
-				<string>#203020</string>  //MARKUP TITLE #CDA869 #B6A574 #A0A020
+				<string>#203020</string>  <!--MARKUP TITLE #CDA869 #B6A574 #A0A020 -->
 			</dict>
 		</dict>
 		<dict>
@@ -738,7 +738,7 @@
 				<key>background</key>
 				<string>#f3f0f0</string>
 				<key>foreground</key>
-				<string>#531D04</string>  //MARKUP TITLE #CDA869 #B6A574 #A0A020
+				<string>#531D04</string>  <!--MARKUP TITLE #CDA869 #B6A574 #A0A020 -->
 			</dict>
 		</dict>
 
@@ -751,7 +751,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#817459</string> // grey
+				<string>#817459</string> <!-- grey -->
 			</dict>
 		</dict>
 
@@ -765,12 +765,12 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#606060</string> // #86bFbF comment- #A6DFDF cyan - #80B457 as markup 
+				<string>#606060</string> <!-- #86bFbF comment- #A6DFDF cyan - #80B457 as markup  -->
 			</dict>
 		</dict>
 		<dict>
 			<key>name</key>
-			<string>Markup: Separator</string> //----------------------
+			<string>Markup: Separator</string> <!------------------------ -->
 			<key>scope</key>
 			<string>meta.separator</string>
 			<key>settings</key>
@@ -800,7 +800,7 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#751012</string> // dark red
+				<string>#751012</string> <!-- dark red -->
 			</dict>
 		</dict>
 	</array>

@@ -32,7 +32,7 @@
 			<array>
 				<dict>
 					<key>include</key>
-					<string>#LiteScript_Code</string> //anything indented 4 spaces is LS code
+					<string>#LiteScript_Code</string> 
 				</dict>
 			</array>
 		</dict>
@@ -302,7 +302,7 @@
 						<key>1</key>
 						<dict>
 							<key>name</key>
-							<string>keyword.operator.lite</string> //
+							<string>keyword.operator.lite</string> 
 						</dict>
 						<key>2</key>
 						<dict>

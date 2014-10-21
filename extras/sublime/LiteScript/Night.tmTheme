@@ -21,7 +21,7 @@
 				<string>#FFFFFF</string>
 
 				<key>foreground</key>
-				<string>#909090</string> // #909090 80B457 HERE - other not defined // -- default colum 1 markup
+				<string>#909090</string> <!-- #909090 80B457 HERE - other not defined - default colum 1 markup -->
 
 				<key>invisibles</key>
 				<string>#CAE2FB30</string>
@@ -42,7 +42,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#a0a0a0</string> // meta=markdown, meta.name = markdown titles
+				<string>#a0a0a0</string> <!-- meta=markdown, meta.name = markdown titles -->
 			</dict>
 		</dict>
 
@@ -70,7 +70,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#8aA85A</string>  // #778141 #47C14F green, #CCB86A gold - source code
+				<string>#8aA85A</string>  <!-- #778141 #47C14F green, #CCB86A gold - source code -->
 			</dict>
 		</dict>
 
@@ -82,7 +82,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#CCB86A</string> // yellow as 'var' - B3E570 light green 
+				<string>#CCB86A</string> <!-- yellow as 'var' - B3E570 light green -->
 			</dict>
 		</dict>
 
@@ -94,7 +94,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#C0A561</string> // #778141 #BCA85A #CCB86A gold - x.*member*
+				<string>#C0A561</string> <!-- #778141 #BCA85A #CCB86A gold - x.*member* -->
 			</dict>
 		</dict>
 
@@ -107,7 +107,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#A1735B</string> // type: dark red - #CCB86A gold 
+				<string>#A1735B</string> <!-- type: dark red - #CCB86A gold -->
 			</dict>
 		</dict>
 
@@ -119,7 +119,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#609060</string> // "this" #609060 greenish blue - #CCB86A gold 
+				<string>#609060</string> <!-- "this" #609060 greenish blue - #CCB86A gold -->
 			</dict>
 		</dict>
 
@@ -133,7 +133,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#CCB86A</string> // "var" KEYWORD --- yellow
+				<string>#CCB86A</string> <!-- "var" KEYWORD - yellow -->
 			</dict>
 		</dict>
 
@@ -145,7 +145,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#c07040</string> //# lang KEYWORD - orange
+				<string>#c07040</string> <!--# lang KEYWORD - orange -->
 			</dict>
 		</dict>
 
@@ -155,7 +155,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#A0a0a0</string> //- punctuation
+				<string>#A0a0a0</string> <!-- punctuation -->
 			</dict>
 		</dict>
 
@@ -165,7 +165,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#b0b040</string> //- punctuation
+				<string>#b0b040</string> <!-- punctuation -->
 			</dict>
 		</dict>
 
@@ -180,7 +180,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#568F8F</string> // comment #80B457 green as markup, #60B0B0 cyan
+				<string>#568F8F</string> <!-- comment #80B457 green as markup, #60B0B0 cyan -->
 			</dict>
 		</dict>
 
@@ -192,7 +192,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#d0d0d0</string> // CONSTANTS - Tests.length === *0*
+				<string>#d0d0d0</string> <!-- CONSTANTS - Tests.length === *0* -->
 			</dict>
 		</dict>
 
@@ -215,7 +215,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#73A5B0</string> //#B47A56:light orange- oper: and or is isnt
+				<string>#73A5B0</string> <!--#B47A56:light orange- oper: and or is isnt -->
 			</dict>
 		</dict>
 
@@ -228,7 +228,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#90a0b0</string> // true, false, undefined
+				<string>#90a0b0</string> <!-- true, false, undefined -->
 			</dict>
 		</dict>
 
@@ -240,7 +240,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#B6A574</string> // class.name  -- yellow.brown
+				<string>#B6A574</string> <!-- class.name - yellow.brown -->
 				<key>fontStyle</key>
 				<string>italic</string>
 			</dict>
@@ -252,7 +252,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#73A5B0</string> // 'extends' 'inherits from' #73A5B0 blueish - #B3E570 light green - #B6A574 yellow.brown
+				<string>#73A5B0</string> <!-- 'extends' 'inherits from' #73A5B0 blueish - #B3E570 light green #B6A574 yellow.brown -->
 				<key>fontStyle</key>
 				<string>italic</string>
 			</dict>
@@ -266,7 +266,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#E0E0E0</string> // string
+				<string>#E0E0E0</string> <!-- string -->
 			</dict>
 		</dict>
 		<dict>
@@ -279,7 +279,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#E7F1E7</string> // *global*.expect = function(result,expectedResult)
+				<string>#E7F1E7</string> <!-- *global*.expect = function(result,expectedResult) -->
 			</dict>
 		</dict>
 
@@ -291,7 +291,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#47C14F</string> //-green - global.expect = function(*result* , *expectedResult* ){
+				<string>#47C14F</string> <!-- green - global.expect = function(*result* , *expectedResult* ){ -->
 			</dict>
 		</dict>
 
@@ -365,7 +365,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#cCb84A</string> // #CCB86A gold
+				<string>#cCb84A</string> <!-- #CCB86A gold -->
 			</dict>
 		</dict>
 
@@ -375,7 +375,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#b0b0b0</string> // light green
+				<string>#b0b0b0</string> <!-- light green -->
 			</dict>
 		</dict>
 
@@ -385,7 +385,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#908060</string> // light green
+				<string>#908060</string> <!-- light green -->
 			</dict>
 		</dict>
 
@@ -419,7 +419,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#8A9A95</string> // dark green
+				<string>#8A9A95</string> <!-- dark green  -->
 			</dict>
 		</dict>
 		<dict>
@@ -432,7 +432,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#80D090</string>  // js: result.*push*(x)
+				<string>#80D090</string>  <!-- js: result.*push*(x) -->
 			</dict>
 		</dict>
 		<dict>
@@ -445,7 +445,7 @@
 				<key>fontStyle</key>
 				<string></string>
 				<key>foreground</key>
-				<string>#80A080</string> //js: Tests.*length*===0
+				<string>#80A080</string> <!--js: Tests.*length*===0 -->
 			</dict>
 		</dict>
 		<dict>
@@ -517,7 +517,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#0DA869</string> // gold
+				<string>#0DA869</string> <!-- gold -->
 			</dict>
 		</dict>
 		<dict>
@@ -528,7 +528,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#8F9D6A</string> // dark green
+				<string>#8F9D6A</string> <!-- dark green -->
 			</dict>
 		</dict>
 		<dict>
@@ -539,7 +539,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#8B987B</string> // dark green
+				<string>#8B987B</string> <!-- dark green -->
 			</dict>
 		</dict>
 		<dict>
@@ -550,7 +550,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#9B703F</string> // dark gold
+				<string>#9B703F</string> <!-- dark gold -->
 			</dict>
 		</dict>
 		<dict>
@@ -561,7 +561,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#C5AF75</string> // gold
+				<string>#C5AF75</string> <!-- gold -->
 			</dict>
 		</dict>
 		<dict>
@@ -572,7 +572,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#F9EE98</string> // ligth gold
+				<string>#F9EE98</string> <!-- ligth gold -->
 			</dict>
 		</dict>
 		<dict>
@@ -583,7 +583,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#869355</string> // green
+				<string>#869355</string> <!-- green -->
 			</dict>
 		</dict>
 		<dict>
@@ -594,7 +594,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#a0b0a0</string> //css numbers
+				<string>#a0b0a0</string> <!--css numbers -->
 			</dict>
 		</dict>
 		<dict>
@@ -605,7 +605,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#8F9D6A</string> //green
+				<string>#8F9D6A</string> <!--green -->
 			</dict>
 		</dict>
 		<dict>
@@ -678,7 +678,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#E9C062</string> // gold
+				<string>#E9C062</string> <!-- gold -->
 			</dict>
 		</dict>
 		<dict>
@@ -691,7 +691,7 @@
 				<key>fontStyle</key>
 				<string>bold</string>
 				<key>foreground</key>
-				<string>#E9C062</string> // gold
+				<string>#E9C062</string> <!-- gold -->
 			</dict>
 		</dict>
 		<dict>
@@ -704,7 +704,7 @@
 				<key>fontStyle</key>
 				<string>underline</string>
 				<key>foreground</key>
-				<string>#E18964</string> // orange
+				<string>#E18964</string> <!-- orange -->
 			</dict>
 		</dict>
 		<dict>
@@ -719,7 +719,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#E1D4B9</string> // grey
+				<string>#E1D4B9</string> <!-- grey -->
 			</dict>
 		</dict>
 		<dict>
@@ -747,7 +747,7 @@
 				<key>background</key>
 				<string>#632D04</string>
 				<key>foreground</key>
-				<string>#d0d0D0</string>  //MARKUP TITLE #CDA869 #B6A574 #A0A020
+				<string>#d0d0D0</string>  <!--MARKUP TITLE #CDA869 #B6A574 #A0A020 -->
 			</dict>
 		</dict>
 		<dict>
@@ -762,7 +762,7 @@
 				<key>background</key>
 				<string>#330D04</string>
 				<key>foreground</key>
-				<string>#d0d0d0</string>  //MARKUP TITLE #CDA869 #B6A574 #A0A020
+				<string>#d0d0d0</string>  <!--MARKUP TITLE #CDA869 #B6A574 #A0A020 -->
 			</dict>
 		</dict>
 		<dict>
@@ -777,7 +777,7 @@
 				<key>background</key>
 				<string>#0a190a</string>
 				<key>foreground</key>
-				<string>#c0c0c0</string>  //MARKUP TITLE #CDA869 #B6A574 #A0A020
+				<string>#c0c0c0</string>  <!--MARKUP TITLE #CDA869 #B6A574 #A0A020 -->
 			</dict>
 		</dict>
 
@@ -790,7 +790,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#E1D4B9</string> // grey
+				<string>#E1D4B9</string> <!-- grey -->
 			</dict>
 		</dict>
 
@@ -804,7 +804,7 @@
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
-				<string>#909090</string> // #86bFbF comment- #A6DFDF cyan - #80B457 as markup 
+				<string>#909090</string> <!-- #86bFbF comment- #A6DFDF cyan - #80B457 as markup  -->
 			</dict>
 		</dict>
 		<dict>
@@ -839,7 +839,7 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#751012</string> // dark red
+				<string>#751012</string> <!-- dark red -->
 			</dict>
 		</dict>
 	</array>
