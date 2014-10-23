@@ -24,7 +24,7 @@ then each CODE line is *Tokenized*, getting a `tokens[]` array
         ControlledError, GeneralOptions
         logger, fs, mkPath
 
-    shim import LiteCore, PMREX
+    shim import Map, PMREX
 
     #ifdef PROD_JS
     //if we're creating a compile-to-js compiler
