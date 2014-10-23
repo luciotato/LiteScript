@@ -10,8 +10,9 @@
     var Grammar = require('./Grammar.js');
     var logger = require('./lib/logger.js');
 
-    //shim import LiteCore
+    //shim import LiteCore,Map
     var LiteCore = require('./interfaces/LiteCore.js');
+    var Map = require('./interfaces/Map.js');
 
 //Module vars
 
@@ -493,8 +494,8 @@
      }// ---------------------------
      Declaration.prototype.info = function(){
 
-        //var type = ""
-        var type = "";
+        //var type = "any"
+        var type = "any";
 
         //if .nodeClass is Grammar.ClassDeclaration
         if (this.nodeClass === Grammar.ClassDeclaration) {
@@ -539,10 +540,12 @@
             //if nameDecltype instanceof Declaration
             
             else {
-                //if .nodeDeclared and .nodeDeclared.type, type=.nodeDeclared.type
-                if (this.nodeDeclared && this.nodeDeclared.type) {type = this.nodeDeclared.type};
+                //do nothing
+                null;
             };
         };
+                //commented: sometimes is confusing. If it not in **proto** it is not the type
+                //if .nodeDeclared and .nodeDeclared.type, type=.nodeDeclared.type.toString()
         //end if
 
         //if type, type=":#{type}" //prepend :

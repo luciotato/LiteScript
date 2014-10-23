@@ -454,7 +454,7 @@
                }
                
                else if (node.parent instanceof Grammar.ImportStatement) {
-                   importInfo.globalImport = node.parent.global;
+                   importInfo.globalImport = false; //node.parent.global
                };
            }
 
@@ -598,8 +598,8 @@
 // call node.js **require()** for parameter
 // and generate & cache interface
 
-       // if fileInfo.isCore or fileInfo.importInfo.globalImport or fileInfo.extension is '.js'
-       if (fileInfo.isCore || fileInfo.importInfo.globalImport || fileInfo.extension === '.js') {
+       // if fileInfo.isCore or  fileInfo.extension is '.js'
+       if (fileInfo.isCore || fileInfo.extension === '.js') {
 
            log.info(String.spaces(this.recurseLevel * 2), fileInfo.isCore ? "core module" : "javascript file", "require('" + fileInfo.relFilename + "')");
 

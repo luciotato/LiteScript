@@ -10,8 +10,7 @@ in order to return the compiled code for the entire tree.
 We extend the Grammar classes, so this module require the `Grammar` module.
 
     import ASTBase, Grammar, Environment, UniqueID 
-
-    shim import LiteCore
+    shim import Map
     
 JavaScript Producer Functions
 ==============================

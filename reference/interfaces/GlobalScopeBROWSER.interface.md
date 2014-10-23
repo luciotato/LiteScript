@@ -3,13 +3,13 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
     
 ## global scope 
 
-    public var window, document
+    global var window, document
 
-    public function alert(message)
+    global function alert(message)
 
 ### localStorage
 
-    public namespace localStorage
+    global namespace localStorage
         properties
             length
         
@@ -18,7 +18,7 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
 
 ## Classes 
 
-### public class Window
+### class Window
         properties
             applicationCache
             closed
@@ -143,7 +143,7 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
         method scrollBy()
         method scrollByPages()
 
-    public class Location
+    global class Location
         properties
             ancestorOrigins:array
             hash:string
@@ -163,7 +163,7 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
         method valueOf()         
 
 
-### public class Document extends Node
+### class Document extends Node
         properties
             location: Location
 
@@ -207,12 +207,12 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
         method webkitExitPointerLock() 
 
 
-### public class NodeList
+### global class NodeList
         properties
             length
 
 
-### public class Node
+### global class Node
         constructor new Node () 
         
         properties
@@ -251,7 +251,7 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
         method replaceChild() 
     
 
-### public class Element extends Node
+### global class Element extends Node
         constructor new Element () 
         
         properties
@@ -405,41 +405,8 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
         method webkitRequestPointerLock() 
     
 
-### public class XMLHttpRequest
 
-        constructor new XMLHttpRequest () 
-        
-        properties
-
-            onload:function
-            onerror:function
-            ontimeout:function
-
-            readyState:number
-
-            response:object
-            responseText:string
-            responseType:string
-            responseXML:string 
-
-            status:number
-            statusText:string
-
-            timeout:number
-            upload:object
-            withCredentials:boolean
-
-        method abort() 
-        method getAllResponseHeaders() 
-        method getResponseHeader() 
-        method open() 
-        method overrideMimeType() 
-        method send() 
-        method setRequestHeader() 
-    
-
-
-### public class Event
+### global class Event
         constructor new Event () 
         
         properties
@@ -462,7 +429,7 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
         method stopPropagation() 
 
 
-### public class CSSStyle
+### global class CSSStyle
         properties
             alignContent:string
             alignItems:string
@@ -831,4 +798,39 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
             writingMode:string
             zIndex:string
             zoom:string
+
+
+
+### global class XMLHttpRequest
+
+XMLHttpRequest is a global javascript Class
+
+        properties
+
+            onload:function
+            onerror:function
+            ontimeout:function
+
+            readyState:number
+
+            response:object
+            responseText:string
+            responseType:string
+            responseXML:string 
+
+            status:number
+            statusText:string
+
+            timeout:number
+            upload:object
+            withCredentials:boolean
+
+        method abort() 
+        method getAllResponseHeaders() 
+        method getResponseHeader() 
+        method open() 
+        method overrideMimeType() 
+        method send() 
+        method setRequestHeader() 
+    
 

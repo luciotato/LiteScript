@@ -38,14 +38,17 @@ Examples:
     start(10,20) | start(10,20);  | Normal function call
     start 10,20  | start(10,20);  | function call w/o parentheses
     start.data   | start.data();  | start.data, on its own, is considered a function call
-    i++          | i++;           | i++ is imperative statement in itself
+    i++          | i++;           | i++ is an imperative statement in itself
 
 You can omit parentheses only when you're discarding the function result.
 
 Example: 
-<br>`getNextMessage //function call, discard result`
+
+`getNextMessage` //function call, discard result
+
 vs. 
-<br>`a = getNextMessage() //execute & store result in a, "()"" required`
+
+`a = getNextMessage()` //execute & store result in a, "()" means "call the function"
 
 
 ##Comments
@@ -57,7 +60,7 @@ Multiline comments are enclosed by `/*` and `*/` (C-style)
 
 ## Functions
 Module-level Functions are defined with 'function'.
-Functions parameteres can have default arguments. Parentheses are not required if you have no arguments.
+Functions parameteres can have default arguments. Parentheses are not required (variadic is assumed)
 
 Examples:
 
@@ -90,7 +93,7 @@ To avoid long debug sessions over a mistyped object property name,
 LiteScript compiler will emit warnings when a variable is used before declaration, 
 and when a object property is unknown.
 
-Example: The following js code mistake, will be caught only while debugging. 
+Example: In javascritp, the following bug, will be caught only while debugging. 
 The complex the code is, the longer the debugging.
 
 
@@ -105,7 +108,7 @@ The complex the code is, the longer the debugging.
     }
     
 
-The same LiteScript code, will emit an error during compilation -no debugging required-.
+The equivalent LiteScript code, will emit an error during compilation -no debugging required-.
 
     options = options or {}
     if options.impCodeDefaultTrue is undefined, options.impCodeDefaultTrue=true
@@ -128,8 +131,8 @@ The same LiteScript code, will emit an error during compilation -no debugging re
 
 ##JAVASCRIPT, var, and Scope
 
-Javascript (ES5) has 'function' and 'global' scope. Function scope means
-all `var` declarations are considered to be made at the start of the function.
+Javascript (ES5) has 'function scope' and 'global scope'. 
+At 'Function scope' all `var` declarations are considered to be made at the start of the function (hoisted)
 
 Also, Javascript **does not force** an implicit assignment at the point of declaration.
 

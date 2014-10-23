@@ -4,6 +4,8 @@ LiteScript is a highly readable language that compiles to JavaScript.
 
 ###Module Dependencies
 
+    shim import Map
+
 The Project Class require all other modules to
 compile LiteScript code.
 
@@ -12,8 +14,6 @@ compile LiteScript code.
         Names, Validate
         ControlledError, GeneralOptions
         logger, color, shims, mkPath
-
-    shim import LiteCore
 
 Get the 'Environment' object for the compiler to use.
 The 'Environment' object, must provide functions to load files, search modules, 
@@ -216,8 +216,8 @@ produce & get result target code
                         Environment.externalCacheSave '#{moduleNode.fileInfo.outFilename}.map',
                                 moduleNode.lexer.outCode.sourceMap.generate(
                                               moduleNode.fileInfo.base & moduleNode.fileInfo.outExtension
-                                              ,Environment.getDir(Environment.relativeFrom(moduleNode.fileInfo.outDir,moduleNode.fileInfo.sourcename))
-                                              ,[moduleNode.fileInfo.sourcename]
+                                              ,''
+                                              ,[Environment.relativeFrom(moduleNode.fileInfo.outDir,moduleNode.fileInfo.filename)]
                                               )
                         //if .options.perf, console.timeEnd('Generate SourceMap #{moduleNode.fileInfo.base}')
                     #endif
@@ -411,8 +411,7 @@ If the origin is: ImportStatement/global Declare
                 if node.hasAdjective('shim') and node.findInScope(importInfo.name) 
                     continue // do not import if "shim import" and already declared
 
-if it was 'global declare', or 'global import' set flags
-else search will be local: './' and './lib'
+if it was 'global declare' set flags
 
                 if node.parent instanceof Grammar.DeclareStatement
                     importInfo.isGlobalDeclare = true

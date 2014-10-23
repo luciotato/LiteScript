@@ -17,7 +17,7 @@ Dependencies
       Names
       Environment, logger, color, UniqueID
 
-    shim import LiteCore
+    shim import Map, LiteCore
 
 Production
 ----------

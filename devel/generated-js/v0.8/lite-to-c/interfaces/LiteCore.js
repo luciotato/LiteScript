@@ -14,7 +14,7 @@
 //will be used. See file: "GlobalScopeC.interface.md"
 
 
-    //only export namespace LiteCore
+    //export only namespace LiteCore
     var LiteCore={};
 
         //method getSymbol(name)

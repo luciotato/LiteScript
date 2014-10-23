@@ -428,17 +428,17 @@
     module.exports.setBaseInfo = setBaseInfo;
 
 
-    //    export helper function relativeFrom(actualPath, destFilename) returns string
+    //    export helper function relativeFrom(actualPath, destFullPathFilename) returns string
     // ---------------------------
-    function relativeFrom(actualPath, destFilename){
+    function relativeFrom(actualPath, destFullPathFilename){
 
         //relative to fromFileinfo.outFilename
         //print "relativeFileRef(filename, fromFileinfo)"
         //print filename
         //print fromFileinfo.outDir
         //print path.relative(fromFileinfo.outDir, filename)
-        //return path.relative(actualPath, destFilename ) //from path, to filename/fullpath
-        return path.relative(actualPath, destFilename);
+        //return path.relative(actualPath, destFullPathFilename ) //from path, to fullpath/filename
+        return path.relative(actualPath, destFullPathFilename);
     }
     // export
     module.exports.relativeFrom = relativeFrom;

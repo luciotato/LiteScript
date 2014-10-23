@@ -92,7 +92,7 @@ do:
 sudo npm install -g litescript
 git clone https://github.com/luciotato/LiteScript
 cd LiteScript
-lite -run README.md
+lite -v 0 -run README.md
 ```
 
 ***> Hello! I'm the README***

@@ -17,9 +17,8 @@
     var Grammar = require('./Grammar.js');
     var Environment = require('./lib/Environment.js');
     var UniqueID = require('./lib/UniqueID.js');
-
-    //shim import LiteCore
-    var LiteCore = require('./interfaces/LiteCore.js');
+    //shim import Map
+    var Map = require('./interfaces/Map.js');
 
 //JavaScript Producer Functions
 //==============================

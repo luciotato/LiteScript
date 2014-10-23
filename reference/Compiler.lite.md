@@ -137,7 +137,7 @@ initialize out buffer & produce target code
         project.produceModule moduleNode
         # the produced code will be at: moduleNode.lexer.out.getResult() :string array
 
-        if logger.errorCount isnt 0, logger.throwControlled "#logger.errorCount errors during compilation"
+        if logger.errorCount isnt 0, logger.throwControlled "#{logger.errorCount} errors during compilation"
 
 text compiled result can be obtained with: moduleNode.lexer.out.getResult() :string array
 

@@ -62,7 +62,7 @@ a) add the keyword "map" after "var foo ="
 b) use `map.get(key)` and `map.set(key,value)` instead of `object[key]` and `object[key]=value`
 
 
-    export only global class Map
+    export only class Map
 
         properties
             dict:Object

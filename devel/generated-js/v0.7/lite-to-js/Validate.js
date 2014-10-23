@@ -282,6 +282,12 @@
                     // mark as namespace:
                    referenceNameDecl.setMember('*namespace*', referenceNameDecl);
                };
+
+                //si es "global import", muevo la var al global scope
+               // if node.parent.global
+               if (node.parent.global) {
+                   globalScope.addMember(referenceNameDecl, {scopeCase: true});
+               };
              };
            };
          };// end for each in moduleNode.requireCallNodes

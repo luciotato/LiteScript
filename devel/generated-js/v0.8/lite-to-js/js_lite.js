@@ -6,6 +6,10 @@
 //when the LiteScript compiler is generated as js-code
 //to run on node.js or the browser
 
+    //shim import LiteCore, Map
+    var LiteCore = require('./interfaces/LiteCore.js');
+    var Map = require('./interfaces/Map.js');
+
     //import path,fs
     var path = require('path');
     var fs = require('fs');

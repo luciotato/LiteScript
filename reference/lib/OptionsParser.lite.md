@@ -6,7 +6,7 @@ parse command line parameters
         lastIndex
         items: Array of string
 
-#### constructor(argv:array)
+#### constructor(argv:array required)
 
         if argv.length and argv[0] is 'node' 
             argv=argv.slice(1) //remove 'node' if calling as a script

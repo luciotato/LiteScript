@@ -1,5 +1,5 @@
 
-##node.js core  modeule "path" interface
+##node.js core  module "path" interface
 
 Translated to Litescript from node's sources, https://github.com/joyent/node/edit/master/lib/path.js
 

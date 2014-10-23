@@ -25,7 +25,7 @@
         //Names, Environment
         //logger, UniqueID
 
-    //shim import LiteCore
+    //shim import LiteCore,Map
     var ASTBase = require('./ASTBase.js');
     var Grammar = require('./Grammar.js');
     var Names = require('./Names.js');
@@ -33,9 +33,9 @@
     var logger = require('./lib/logger.js');
     var UniqueID = require('./lib/UniqueID.js');
 
-    //shim import LiteCore
+    //shim import LiteCore,Map
     var LiteCore = require('./interfaces/LiteCore.js');
-
+    var Map = require('./interfaces/Map.js');
 
 //---------
 //Module vars:
@@ -730,7 +730,6 @@
         //var globalInterfaceModule = project.compileFile(globalInterfaceFile)
         var globalInterfaceModule = project.compileFile(globalInterfaceFile);
         //logger.info '    from:',globalInterfaceModule.fileInfo.relFilename
-        logger.info('    from:', globalInterfaceModule.fileInfo.relFilename);
 
 //call "declare" on each item of the GlobalScope interface file, to create the Names.Declaration
 //(normally in the global scope)
@@ -1389,6 +1388,8 @@
           
                 //logger.warning "#{.positionText()}. No member named '#{name}' on #{nameDecl.info()}"
                 logger.warning('' + (this.positionText()) + ". No member named '" + name + "' on " + (nameDecl.info()));
+                //if nameDecl.nodeDeclared, nameDecl.nodeDeclared.warn "declaration is here"
+                if (nameDecl.nodeDeclared) {nameDecl.nodeDeclared.warn("declaration is here")};
           };
 
           //if options.isForward, found = .addMemberTo(nameDecl,name,options)
@@ -1400,9 +1401,9 @@
      };
 
 
-     //     helper method getScopeNode()
+     //     helper method getScopeNode(stopAtAppendTo:boolean)
      // ---------------------------
-     ASTBase.prototype.getScopeNode = function(){
+     ASTBase.prototype.getScopeNode = function(stopAtAppendTo){
 
 //**getScopeNode** method return the parent 'scoped' node in the hierarchy.
 //It looks up until found a node with .scope
@@ -1415,10 +1416,10 @@
         //while node
         while(node){
 
-          //if node.scope
-          if (node.scope) {
+          //if node.scope or (stopAtAppendTo and node.constructor is Grammar.AppendToDeclaration)
+          if (node.scope || (stopAtAppendTo && node.constructor === Grammar.AppendToDeclaration)) {
           
-              //return node # found a node with scope
+              //return node # found a node with scope | Grammar.AppendToDeclaration
               return node;
           };
 
@@ -1675,58 +1676,54 @@
         //if .hasAdjective('global')
         
         else {
-            //var container = .getParent(Grammar.NamespaceDeclaration)
-            var container = this.getParent(Grammar.NamespaceDeclaration);
+            //var container = .parent.getScopeNode(stopAtAppendTo=true)
+            var container = this.parent.getScopeNode(true);
 
 //if it is declared inside a namespace, it is added to namespace scope, so inside a namespace,
 //namespace functions and properties can be accessed directly.
 //*AFTER* it is added as a item of the namespace (as a Object).
 //This need to be done *after* so the nameDecl.parent ends up being the namespace rather than "namespace scope"
 
-
-            //if container
-            if (container) {
+            //if container.constructor is Grammar.NamespaceDeclaration
+            if (container.constructor === Grammar.NamespaceDeclaration) {
             
                 //declare container: Grammar.NamespaceDeclaration
                 
                 //.addToSpecificScope container.scope, nameDecl //1st
                 this.addToSpecificScope(container.scope, nameDecl);
-                //container.nameDecl.addMember nameDecl //2nd - order is important
+                //container.nameDecl.addMember nameDecl //2nd - order is important (to set parent)
                 container.nameDecl.addMember(nameDecl);
             }
-            //if container
+            //if container.constructor is Grammar.NamespaceDeclaration
+            
+            else if (container.constructor === Grammar.AppendToDeclaration) {
+            
+                //do nothing //will be handled later in processAppendToExtends()
+                null;
+            }
+            //else if container.constructor is Grammar.AppendToDeclaration
             
             else {
-                //check for "append to"
-                //container = .getParent(Grammar.AppendToDeclaration)
-                container = this.getParent(Grammar.AppendToDeclaration);
-                //if container
-                if (container) {
-                
-                    //do nothing //will be handled later in processAppendToExtends()
-                    null;
-                }
-                //if container
-                
-                else {
-                    //else, is a module-level class|namespace|fn|var. Add to parent scope
-                    //.parent.addToScope nameDecl
-                    this.parent.addToScope(nameDecl);
-                };
+                //else, another kind of container,
+                // it could be a internal-function inside a function, a module-level class|namespace|fn|var.
+                //Add to parent scope
+                //.addToSpecificScope container.scope, nameDecl
+                this.addToSpecificScope(container.scope, nameDecl);
             };
-        };
 
 //export:
-
 //if has adjective public/export, add to module.exports
 
-        //if .hasAdjective('export')
-        if (this.hasAdjective('export')) {
-        
-            //var moduleNode:Grammar.Module = .getParent(Grammar.Module)
-            var moduleNode = this.getParent(Grammar.Module);
-            //moduleNode.addToExport nameDecl
-            moduleNode.addToExport(nameDecl);
+            //if .hasAdjective('export')
+            if (this.hasAdjective('export')) {
+            
+                //if container.constructor isnt Grammar.Module, .sayErr "only module-level objects can be exported. '#{nameDecl}' is contained in #{container} '#{container.name}'."
+                if (container.constructor !== Grammar.Module) {this.sayErr("only module-level objects can be exported. '" + nameDecl + "' is contained in " + container + " '" + container.name + "'.")};
+                //var moduleNode:Grammar.Module = .getParent(Grammar.Module)
+                var moduleNode = this.getParent(Grammar.Module);
+                //moduleNode.addToExport nameDecl
+                moduleNode.addToExport(nameDecl);
+            };
         };
      };
 
@@ -2146,28 +2143,42 @@
         var moduleNode = this.getParent(Grammar.Module);
         //var isPublic = .hasAdjective("export")
         var isPublic = this.hasAdjective("export");
+        //var isGlobal = .hasAdjective("global")
+        var isGlobal = this.hasAdjective("global");
 
         //for each varDecl in .list
         for( var varDecl__inx=0,varDecl ; varDecl__inx<this.list.length ; varDecl__inx++){varDecl=this.list[varDecl__inx];
         
 
-            //varDecl.declareInScope
-            varDecl.declareInScope();
-
-            //if isPublic
-            if (isPublic) {
+            //if isGlobal
+            if (isGlobal) {
             
+                //varDecl.nameDecl = varDecl.createNameDeclaration()
+                varDecl.nameDecl = varDecl.createNameDeclaration();
+                //globalScope.addMember varDecl.nameDecl
+                globalScope.addMember(varDecl.nameDecl);
+            }
+            //if isGlobal
+            
+            else {
+                //varDecl.declareInScope
+                varDecl.declareInScope();
 
-                //moduleNode.addToExport varDecl.nameDecl
-                moduleNode.addToExport(varDecl.nameDecl);
-
-                //mark as isPublicVar to prepend "module.exports.x" when referenced in module body
-                // except interfaces (no body & vars are probably aliases. case: public var $=jQuery)
-                //if not moduleNode.fileInfo.isInterface
-                if (!(moduleNode.fileInfo.isInterface)) {
+                //if isPublic
+                if (isPublic) {
                 
-                      //varDecl.nameDecl.isExported = true
-                      varDecl.nameDecl.isExported = true;
+
+                    //moduleNode.addToExport varDecl.nameDecl
+                    moduleNode.addToExport(varDecl.nameDecl);
+
+                    //mark as isPublicVar to prepend "module.exports.x" when referenced in module body
+                    // except interfaces (no body & vars are probably aliases. case: public var $=jQuery)
+                    //if not moduleNode.fileInfo.isInterface
+                    if (!(moduleNode.fileInfo.isInterface)) {
+                    
+                          //varDecl.nameDecl.isExported = true
+                          varDecl.nameDecl.isExported = true;
+                    };
                 };
             };
         };// end for each in this.list
@@ -2495,13 +2506,13 @@
 
 //check if we can determine type from value
 
-        //if .type and .type instance of Names.Declaration and .type.name not in ["undefined","null"]
-        if (this.type && this.type instanceof Names.Declaration && ["undefined", "null"].indexOf(this.type.name)===-1) {
+        //if .type
+        if (this.type) {
         
             //.nameDecl.setMember '**proto**', .type
             this.nameDecl.setMember('**proto**', this.type);
         }
-        //if .type and .type instance of Names.Declaration and .type.name not in ["undefined","null"]
+        //if .type
         
         else if (this.value) {
         
@@ -3218,8 +3229,8 @@
                 //    if prt.name is 'prototype', prt=prt.parent
                 //    if prt.name isnt 'Function'
                         //.warn "function call. '#{actualVar}' is class '#{prt.name}', not 'Function'"
-                        //.warn "function call. '#{actualVar}' has no method 'call' nor 'prototype', it is not type:Function or Class"
-                        this.warn("function call. '" + actualVar + "' has no method 'call' nor 'prototype', it is not type:Function or Class");
+                        //.warn "function call. #{actualVar.info()} has no method 'call' nor 'prototype', it is not type:Function or Class"
+                        this.warn("function call. " + (actualVar.info()) + " has no method 'call' nor 'prototype', it is not type:Function or Class");
                 };
 
 //Validate arguments against function parameters declaration

@@ -1,4 +1,6 @@
 dir=${1:-Release}
-sudo rm /usr/bin/litec
-sudo ln dist/$dir/GNU-Linux-x86/litec-to-js /usr/bin/litec
-echo "/usr/bin/litec -> dist/$dir/GNU-Linux-x86/litec-to-js"
+sudo rm /usr/local/bin/litec
+sudo ln dist/$dir/GNU-Linux-x86/litec-to-js /usr/local/bin/litec
+echo "/usr/local/bin/litec -> dist/$dir/GNU-Linux-x86/litec-to-js"
+
+sudo cp -rv interfaces/ /usr/local/interfaces/

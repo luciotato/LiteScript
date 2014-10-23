@@ -4,7 +4,7 @@ Dependencies
 
     import ASTBase,Grammar,logger
 
-    shim import LiteCore
+    shim import LiteCore,Map
 
 Module vars
 
@@ -312,7 +312,7 @@ else, if it wasnt a forward declaration, then is a duplicated error
 
 #### helper method info() 
 
-        var type = ""
+        var type = "any"
         
         if .nodeClass is Grammar.ClassDeclaration
             type = 'Class'
@@ -331,7 +331,9 @@ else, if it wasnt a forward declaration, then is a duplicated error
                 if no type and .nodeClass is Grammar.ImportStatement, type="import"
 
             else
-                if .nodeDeclared and .nodeDeclared.type, type=.nodeDeclared.type
+                do nothing
+                //commented: sometimes is confusing. If it not in **proto** it is not the type
+                //if .nodeDeclared and .nodeDeclared.type, type=.nodeDeclared.type.toString()
         end if
 
         if type, type=":#{type}" //prepend :

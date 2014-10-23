@@ -10,8 +10,9 @@
     var Grammar = require('./Grammar.js');
     var logger = require('./lib/logger.js');
 
-    //shim import LiteCore
+    //shim import LiteCore,Map
     var LiteCore = require('./interfaces/LiteCore.js');
+    var Map = require('./interfaces/Map.js');
 
 //Module vars
 
@@ -539,8 +540,8 @@
             //if nameDecltype instanceof Declaration
             
             else {
-                //if .nodeDeclared and .nodeDeclared.type, type=.nodeDeclared.type
-                if (this.nodeDeclared && this.nodeDeclared.type) {type = this.nodeDeclared.type};
+                //if .nodeDeclared and .nodeDeclared.type, type=.nodeDeclared.type.toString()
+                if (this.nodeDeclared && this.nodeDeclared.type) {type = this.nodeDeclared.type.toString()};
             };
         };
         //end if

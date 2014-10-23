@@ -4,7 +4,7 @@ Dependencies
 
     import ASTBase,Grammar,logger
 
-    shim import LiteCore
+    shim import LiteCore,Map
 
 Module vars
 
@@ -30,7 +30,7 @@ Module vars
         normalizeModeKeepFirstCase: boolean
 
         isScope: boolean
-        isPublicVar: boolean
+        isExported: boolean
 
         type, itemType
         value
@@ -63,6 +63,12 @@ try to determine nodeClass from node.nodeDeclared
               when
                 Grammar.ObjectLiteral, Grammar.FreeObjectLiteral:
                     .nodeClass = Grammar.NameValuePair
+
+              when 
+                Grammar.FunctionDeclaration, Grammar.ClassDeclaration
+                Grammar.NamespaceDeclaration, Grammar.VarStatement:
+                    .isExported = node.hasAdjective('export') and not node.hasAdjective('only')
+
 
       end if
 
@@ -209,7 +215,7 @@ mix in found namedecl here
         this.normalizeModeKeepFirstCase = nameDecl.normalizeModeKeepFirstCase
         //and other data
         this.nodeClass = nameDecl.nodeClass 
-        this.isPublicVar = nameDecl.isPublicVar
+        //this.isExported = nameDecl.isExported
         this.nodeDeclared = nameDecl.nodeDeclared
 
         #other nameDecl pointing here are redirected
@@ -306,7 +312,7 @@ else, if it wasnt a forward declaration, then is a duplicated error
 
 #### helper method info() 
 
-        var type = ""
+        var type = "any"
         
         if .nodeClass is Grammar.ClassDeclaration
             type = 'Class'
@@ -325,7 +331,9 @@ else, if it wasnt a forward declaration, then is a duplicated error
                 if no type and .nodeClass is Grammar.ImportStatement, type="import"
 
             else
-                if .nodeDeclared and .nodeDeclared.type, type=.nodeDeclared.type
+                do nothing
+                //commented: sometimes is confusing. If it not in **proto** it is not the type
+                //if .nodeDeclared and .nodeDeclared.type, type=.nodeDeclared.type.toString()
         end if
 
         if type, type=":#{type}" //prepend :

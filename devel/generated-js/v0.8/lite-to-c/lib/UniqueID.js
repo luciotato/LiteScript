@@ -3,12 +3,10 @@
 // Module Init
 // -----------
 
-//### dependencies
+//### Support Module Var:
 
     //shim import Map
     var Map = require('./../interfaces/Map.js');
-
-//### Support Module Var:
 
     //var uniqueIds = new Map
     var uniqueIds = new Map();

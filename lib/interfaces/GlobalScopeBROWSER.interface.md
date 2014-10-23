@@ -143,7 +143,7 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
         method scrollBy()
         method scrollByPages()
 
-    class Location
+    global class Location
         properties
             ancestorOrigins:array
             hash:string
@@ -207,12 +207,12 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
         method webkitExitPointerLock() 
 
 
-### class NodeList
+### global class NodeList
         properties
             length
 
 
-### class Node
+### global class Node
         constructor new Node () 
         
         properties
@@ -251,7 +251,7 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
         method replaceChild() 
     
 
-### class Element extends Node
+### global class Element extends Node
         constructor new Element () 
         
         properties
@@ -406,7 +406,7 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
     
 
 
-### class Event
+### global class Event
         constructor new Event () 
         
         properties
@@ -429,7 +429,7 @@ Window, Document, Element, Node, Event, XMLHttpRequest, CSSStyle
         method stopPropagation() 
 
 
-### class CSSStyle
+### global class CSSStyle
         properties
             alignContent:string
             alignItems:string

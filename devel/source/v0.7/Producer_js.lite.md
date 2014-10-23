@@ -565,7 +565,13 @@ If 'var' was adjectivated 'export', add to exportNamespace
 ### Append to class Grammar.ImportStatementItem ###
 
       method produce() 
-        .out "var ",.name," = require('", .getNodeJSRequireFileRef(),"');", NL
+      
+        if .parent.global
+            .out 'global.'
+        else
+            .out "var "
+
+        .out .name," = require('", .getNodeJSRequireFileRef(),"');", NL
 
 
       method getNodeJSRequireFileRef() 

@@ -270,6 +270,10 @@ make referenceNameDecl point to importedModule.exports
                     // mark as namespace: 
                     referenceNameDecl.setMember '*namespace*', referenceNameDecl
 
+                //si es "global import", muevo la var al global scope
+                if node.parent.global
+                    globalScope.addMember referenceNameDecl,{scopeCase:true}
+
 
 #### Pass 1.3 Process "Append To" Declarations
 Since 'append to [class|object] x.y.z' statement can add to any object, we delay 

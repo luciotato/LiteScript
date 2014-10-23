@@ -17,11 +17,11 @@ The differences with classic PEG are:
 * symbols upper/lower case has meaning
 * we add `(Symbol,)` for `comma separated List of` as a powerful syntax option
 
-Examples:
+Meta-Syntax Examples:
 
-`ReturnStatement`    : CamelCase is reserved for non-terminal symbol<br>
-`function`       : all-lowercase means the literal word<br>
-`":"`            : literal symbols are quoted<br>
+`function`         : all-lowercase means the literal word: "function"<br>
+`":"`              : literal symbols are quoted<br>
+`ReturnStatement`  : CamelCase is reserved for composed, non-terminal symbol<br>
 
 `IDENTIFIER`,`OPER` : all-uppercase denotes a entire class of symbols<br>
 `NEWLINE`,`EOF`     : or special unprintable characters<br>
@@ -36,22 +36,32 @@ Examples:
 `[Expression,]` : means: "optional comma separated list of Expressions".<br>
 `Body: (Statement;)` : means "Body is a semicolon-separated list of statements".<br>
 
+Full Meta-Syntax Example:
 
-###More on separated lists
+`PrintStatement: 'print' [Expression,]` 
 
-Let's analyze the example: `FunctionCall: IDENTIFIER '(' [Expression,] ')'`
+It reads: composed symbol `PrintStatement` is conformed by the word `print` followed by 
+an _optional_ comma-separated list of `Expression` 
+
+###More on comma-separated lists
+
+Let's analyze the example: `PrintStatement: 'print' [Expression,]`
 
 `[Expression,]` means *optional* **comma "Separated List"** of Expressions. 
 Since the comma is inside a **[ ]** group, it means the entire list is optional.
 
 Another example:
 
-given: `VariableDecl: IDENTIFIER ["=" Expression]`
+`VariableDecl: IDENTIFIER ["=" Expression]`
 
-in the grammar: `VarStatement: var (VariableDecl,)`
+`VarStatement: var (VariableDecl,)`
 
-`(VariableDecl,)` means **comma "Separated List"** of `VariableDecl` 
-Since the comma is inside a **( )** group, it means at least one VariableDecl is required.
+It reads: composed symbol `VarStatement` is conformed by the word `var` followed by 
+a comma-separated list of `VariableDecl` (at least one)
+
+The construction `(VariableDecl,)` means: **comma "Separated List"** of `VariableDecl` 
+
+Since the comma is inside a **( )** group, it means _at least one VariableDecl_ is required.
 
 ###"Free form": separated lists are flexible
 
@@ -76,33 +86,34 @@ and the following is *also* a valid text:
 */
 
 
-Implementation
----------------
+Grammar Implementation
+-----------------------
 
 The LiteScript Grammar is defined as `classes`, one class for each non-terminal symbol.
 
 The `.parse()` method of each class will try the grammar on the token stream and:
-* If all tokens match, it will simply return after consuming the tokens. (success)
-* On a token mismatch, it will raise a 'parse failed' exception.
+
+- If all tokens match, it will simply return after consuming the tokens. (success)
+- On a token mismatch, it will raise a 'parse failed' exception.
 
 When a 'parse failed' exception is raised, other classes can be tried. 
 If no class parses ok, a compiler error is emitted and compilation is aborted.
 
-if the error is *before* the class has determined this was the right language construction,
+if the exception is *before* the class has determined this was the right language construction,
 it is a soft-error and other grammars can be tried over the source code.
 
-if the error is *after* the class has determined this was the right language construction 
-(if the node was 'locked'), it is a hard-error and compilation is aborted.
+if the exception is *after* the class has determined this was the right language construction 
+(if the AST node was 'locked'), it is a hard-error and compilation is aborted.
 
-The `ASTBase` module defines the base class for the grammar classes along with
-utility methods to **req**uire tokens and allow **opt**ional ones.
+The `ASTBase` module defines the base class for all grammar classes along with
+utility methods to parse _required_ tokens and parse _optional_ ones.
 
 
 ### Dependencies 
 
     import ASTBase, logger, UniqueID
 
-    shim import LiteCore, PMREX
+    shim import Map, PMREX
 
 Reserved Words
 ---------------
@@ -168,6 +179,9 @@ At this point we lock because it is definitely a `print` statement. Failure to p
 from this point is a syntax error.
 
         .lock()
+
+After the word 'print' we require an optional comma-separated list of 'Expression'
+
         .args = this.optSeparatedList(Expression,",")
 
 
@@ -195,7 +209,7 @@ Example:
 
       method parse()
 
-        // accept '...' as if it was a parameter declaration inside FunctionParameters
+        // accept '...' to denote a variadic function 
         if .lexer.token.value is '...' and .parent instance of FunctionParameters
             .name = .req('...')
             return 
@@ -216,13 +230,12 @@ optional assigned value
             .type = .req(TypeDeclaration)
             if .opt('required'), .required = true
 
-            //Note: TypeDeclaration if parses "Map", stores type as a VarRef->Map and also sets .isMap=true
-
         if .opt('=') 
 
             if .lexer.token.type is 'NEWLINE' #dangling assignment "="[NEWLINE]
                 parseFreeForm=true
 
+            //Note: TypeDeclaration if parses "Map", stores type as a VarRef->Map and also sets .isMap=true
             else if .lexer.token.value is 'map' #literal map creation "x = map"[NEWLINE]name:value[NEWLINE]name=value...
                 .req 'map'
                 .type='Map'
@@ -1425,9 +1438,13 @@ or, upon next token, cherry pick which AST nodes to try,
 
 if it was a Literal, ParenExpression or FunctionDeclaration
 besides base value, this operands can have accessors. For example: `"string".length` , `myObj.fn(10)`
+NOTE: ONLY IF ON THE SAME LINE. After a callback function declaration, there can be a '.' starting
+another statement and w/o "on the same line" restriction it will consider such dot as 
+function object property access. 
 
-        if .name
-            .parseAccessors
+        if .name 
+            if .lexer.sourceLineNum is .sourceLineNum
+                .parseAccessors
 
 else, (if not Literal, ParenExpression or FunctionDeclaration)
 it must be a variable ref 
@@ -3054,6 +3071,9 @@ Check for 'map', e.g.: `var list : map string to Statement`
                 .mainType = 'Array' #real type
 
 
+      method toString
+        return .mainType
+
 
 ##Statement
 
@@ -3142,7 +3162,7 @@ store keyword of specific statement
         key = key.toLowerCase()
         .keyword = key
         
-Check valid adjective-statement combination 
+Check valid combinations adjective-statement
 
         for each adjective in .adjectives
 
@@ -3151,7 +3171,12 @@ Check valid adjective-statement combination
                           
         end for
 
-#### Module level var: validCombinations adjective-statement
+Check valid adjectives combinations
+    
+        if .hasAdjective('global export'), .sayErr "cannot combine 'global' with 'public|export' choose one"
+
+
+#### Module level var: valid combinations adjective-statement
 
     var validCombinations = map
           export: ['class','namespace','function','var'] 

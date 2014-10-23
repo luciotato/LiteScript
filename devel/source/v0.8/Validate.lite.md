@@ -22,8 +22,7 @@ methods to validate var & property names.
         Names, Environment
         logger, UniqueID
 
-    shim import LiteCore
-
+    shim import LiteCore,Map
     
 ---------
 Module vars:
@@ -513,7 +512,7 @@ Process the global scope declarations interface file: GlobalScope(JS|C|NODE).int
 
         logger.info 'Declare global scope using #{globalInterfaceFile}.interface.md'
         var globalInterfaceModule = project.compileFile(globalInterfaceFile)
-        logger.info '    from:',globalInterfaceModule.fileInfo.relFilename
+        //logger.info '    from:',globalInterfaceModule.fileInfo.relFilename
 
 call "declare" on each item of the GlobalScope interface file, to create the Names.Declaration
 (normally in the global scope)
@@ -872,13 +871,14 @@ or inform error. We need this AST node, to correctly report error.
 
           if options.informError 
                 logger.warning "#{.positionText()}. No member named '#{name}' on #{nameDecl.info()}"
+                if nameDecl.nodeDeclared, nameDecl.nodeDeclared.warn "declaration is here"
           
           if options.isForward, found = .addMemberTo(nameDecl,name,options)
 
         return found
 
 
-#### helper method getScopeNode() 
+#### helper method getScopeNode(stopAtAppendTo:boolean) 
 
 **getScopeNode** method return the parent 'scoped' node in the hierarchy.
 It looks up until found a node with .scope
@@ -889,8 +889,8 @@ Start at this node
 
         while node
 
-          if node.scope
-              return node # found a node with scope
+          if node.scope or (stopAtAppendTo and node.constructor is Grammar.AppendToDeclaration)
+              return node # found a node with scope | Grammar.AppendToDeclaration
 
           node = node.parent # move up
 
@@ -1041,35 +1041,33 @@ if has adjective "global" add to global scope
 get parent. We cover here class/namespaces directly declared inside namespaces (without AppendTo)
         
         else
-            var container = .getParent(Grammar.NamespaceDeclaration)
+            var container = .parent.getScopeNode(stopAtAppendTo=true)
 
 if it is declared inside a namespace, it is added to namespace scope, so inside a namespace, 
 namespace functions and properties can be accessed directly.
 *AFTER* it is added as a item of the namespace (as a Object).
 This need to be done *after* so the nameDecl.parent ends up being the namespace rather than "namespace scope"
 
-
-            if container
+            if container.constructor is Grammar.NamespaceDeclaration
                 declare container: Grammar.NamespaceDeclaration
                 .addToSpecificScope container.scope, nameDecl //1st
-                container.nameDecl.addMember nameDecl //2nd - order is important
+                container.nameDecl.addMember nameDecl //2nd - order is important (to set parent)
 
+            else if container.constructor is Grammar.AppendToDeclaration
+                do nothing //will be handled later in processAppendToExtends()
             else
-                //check for "append to"
-                container = .getParent(Grammar.AppendToDeclaration)
-                if container
-                    do nothing //will be handled later in processAppendToExtends()
-                else
-                    //else, is a module-level class|namespace|fn|var. Add to parent scope
-                    .parent.addToScope nameDecl
+                //else, another kind of container, 
+                // it could be a internal-function inside a function, a module-level class|namespace|fn|var. 
+                //Add to parent scope
+                .addToSpecificScope container.scope, nameDecl 
 
 export:
-
 if has adjective public/export, add to module.exports
 
-        if .hasAdjective('export') 
-            var moduleNode:Grammar.Module = .getParent(Grammar.Module)
-            moduleNode.addToExport nameDecl 
+            if .hasAdjective('export') 
+                if container.constructor isnt Grammar.Module, .sayErr "only module-level objects can be exported. '#{nameDecl}' is contained in #{container} '#{container.name}'."
+                var moduleNode:Grammar.Module = .getParent(Grammar.Module)
+                moduleNode.addToExport nameDecl 
 
 
 #### Helper method createScope()
@@ -1290,19 +1288,24 @@ Examples:
 
         var moduleNode:Grammar.Module = .getParent(Grammar.Module)
         var isPublic = .hasAdjective("export")
+        var isGlobal = .hasAdjective("global")
 
         for each varDecl in .list
 
-            varDecl.declareInScope
+            if isGlobal
+                varDecl.nameDecl = varDecl.createNameDeclaration()
+                globalScope.addMember varDecl.nameDecl
+            else
+                varDecl.declareInScope
 
-            if isPublic
-                
-                moduleNode.addToExport varDecl.nameDecl
+                if isPublic
+                    
+                    moduleNode.addToExport varDecl.nameDecl
 
-                //mark as isPublicVar to prepend "module.exports.x" when referenced in module body
-                // except interfaces (no body & vars are probably aliases. case: public var $=jQuery)
-                if not moduleNode.fileInfo.isInterface
-                      varDecl.nameDecl.isExported = true
+                    //mark as isPublicVar to prepend "module.exports.x" when referenced in module body
+                    // except interfaces (no body & vars are probably aliases. case: public var $=jQuery)
+                    if not moduleNode.fileInfo.isInterface
+                          varDecl.nameDecl.isExported = true
                 
 
      method evaluateAssignments() # pass 4, determine type from assigned value
@@ -1485,7 +1488,7 @@ Add this name as member of the parent ObjectLiteral/Value
 
 check if we can determine type from value 
 
-        if .type and .type instance of Names.Declaration and .type.name not in ["undefined","null"]
+        if .type 
             .nameDecl.setMember '**proto**', .type
 
         else if .value
@@ -1506,41 +1509,28 @@ check if we can determine type from value
 
 1st: Grammar.FunctionDeclaration
 
-if it is not anonymous, add function name to parent scope,
-if its 'public/export' (or we're processing an "interface" file), add to exports
+if not anonymous, add function name to parent scope,
 
-      if isFunction and .name
-
-          .nameDecl = .declareName(.name)
-          .selectAndAddToScope .nameDecl
-
-/* commmented, for functions and namespace methods, this should'n be a parameter
-determine 'owner' (where 'this' points to for this function)
-
-          var nameValuePair = .getParent(Grammar.NameValuePair)
-          if nameValuePair #NameValue pair where function is 'value'
-              declare valid nameValuePair.parent.nameDecl
-              ownerNameDecl = nameValuePair.parent.nameDecl  #ownerNameDecl object nameDecl
-          else
-            ownerNameDecl = globalScope
-*/
+      if isFunction 
+          if .name
+              .nameDecl = .declareName(.name)
+              .selectAndAddToScope .nameDecl
 
 2nd: Methods & constructors
 
-Try to determine ownerNameDecl, for declaration and to set scope var "this"'s  **proto**.
+Try to determine ownerNameDecl, to declare the memeber and to set scope var "this"'s **proto**.
 if ownerNameDecl *can* be determined at this point, declare method as member.
 
-Note: following JS design, constructors
-are the body of the function-class itself.
+      ownerNameDecl = .tryGetOwnerNameDecl() 
 
-      else if .tryGetOwnerNameDecl() into ownerNameDecl
+      if isMethod and .name and ownerNameDecl
 
-          if .constructor isnt Grammar.ConstructorDeclaration 
-              //the constructor is the Function-Class itself
-              // so it is not a member function
-              .addMethodToOwnerNameDecl ownerNameDecl
+          .addMethodToOwnerNameDecl ownerNameDecl
 
-      end if
+      end if // function or method 
+
+Note: following JS design, constructors are the body of the function-class itself,
+so the "constructor" is not a member function
 
 Define function's return type from parsed text
 
@@ -1911,7 +1901,7 @@ and next property access should be on defined members of the return type
                 //    if prt.name is 'prototype', prt=prt.parent
                 //    if prt.name isnt 'Function'
                         //.warn "function call. '#{actualVar}' is class '#{prt.name}', not 'Function'"
-                        .warn "function call. '#{actualVar}' has no method 'call' nor 'prototype', it is not type:Function or Class"
+                        .warn "function call. #{actualVar.info()} has no method 'call' nor 'prototype', it is not type:Function or Class"
 
 Validate arguments against function parameters declaration
 

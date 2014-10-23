@@ -3,6 +3,8 @@ This is the command line interface to LiteScript-to-js Compiler
 when the LiteScript compiler is generated as js-code 
 to run on node.js or the browser
 
+    shim import LiteCore, Map
+
     import path,fs
     
     import GeneralOptions, OptionsParser, ControlledError, color

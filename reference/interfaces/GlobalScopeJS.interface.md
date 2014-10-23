@@ -93,7 +93,7 @@ global Classes pre-created are:
         method replace
         method search
         method slice(startIndex,endIndexNotIncluded) returns string
-        method split(separator:string) returns array of string
+        method split(separator:string, limit) returns array of string
         method substring
         method substr
         method toLowerCase() 
@@ -155,7 +155,7 @@ global Classes pre-created are:
 
 ## Classes declared here
 
-### public class Error extends Object
+### global class Error extends Object
         properties
             name, message,stack
 
@@ -168,7 +168,7 @@ global Classes pre-created are:
         method captureStackTrace 
 
 
-### public class Date extends Object
+### global class Date extends Object
         
         constructor new Date(...)
 
@@ -223,7 +223,7 @@ global Classes pre-created are:
         method parse 
         method now() 
 
-### public class RegExp
+### global class RegExp
 
         properties
             source:string
@@ -251,11 +251,11 @@ global Classes pre-created are:
             rightContext:string
 
     
-### public namespace JSON
+### global namespace JSON
         method parse(text, reviver:function) 
         method stringify(obj, replacer, indent)     
 
-### public namespace Math
+### global namespace Math
         properties
             E:number
             PI:number
@@ -298,15 +298,15 @@ global Classes pre-created are:
 
 ### global functions
 
-    public function setTimeout
-    public function clearTimeout
-    public function setInterval
-    public function clearInterval
-    public function eval
+    global function setTimeout
+    global function clearTimeout
+    global function setInterval
+    global function clearInterval
+    global function eval
 
 ## Global Namespaces
 
-### public namespace console
+### global namespace console
 
         method log
         method error

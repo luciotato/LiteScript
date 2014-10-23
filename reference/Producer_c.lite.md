@@ -1,13 +1,15 @@
 Producer C
 ===========
 
-The `producer` module extends Grammar classes, adding a `produce()` method 
+The `producer` module extends Grammar classes, adding several `produce*()` methods 
 to generate target code for the node.
 
 The compiler calls the `.produce()` method of the root 'Module' node 
 in order to return the compiled code for the entire tree.
 
-We extend the Grammar classes, so this module require the `Grammar` module.
+
+Dependencies
+------------
 
     import 
       Project
@@ -15,7 +17,33 @@ We extend the Grammar classes, so this module require the `Grammar` module.
       Names
       Environment, logger, color, UniqueID
 
-    shim import LiteCore
+    shim import Map, LiteCore
+
+Production
+----------
+
+We have different phases of productions for C-code:
+
+- Header: 
+    produce .h file content. public objects produce "external" declarations
+
+- Module level declarations:
+    to produce "declarative" code at the begginig of the .c file. (code valid -outside- a C function)
+    this includes module-level "var" declarations & function forwards declarations.
+
+- Initial Assignments:
+    to produce "executable" code assigning initial value to module|namespace|instance vars. 
+    (code valid -inside- a C function)
+    Here we produce all assignments for initial values given in var|props declarations.
+    Note: C-99 allows to assign a value at var declaration outside a function, but values
+    are strictly limited to literal constants, so it is ununsable in our case.
+
+- normal produce: (main production)
+    to produce "executable" code. (code valid inside a C function)
+
+
+Object Literal
+--------------
 
 To be able to compile-to-c this source, we instruct the
 compiler to create a *new Map* when it encounters an *untyped* object literal.
@@ -28,12 +56,8 @@ Map & Object implement common methods:
 so the same code can handle "objects" (when compiled-to-js) 
 and "Maps" (when compiled-to-c)
 
-
-
-"C" Producer Functions
-==========================
-
 module vars  
+-----------
 
     # list of classes, to call _newClass & _declareMethodsAndProps
     var allClasses: array of Grammar.ClassDeclaration = []
@@ -110,6 +134,9 @@ create _dispatcher.c & .h
 
         return result
 
+
+"C" Producer Functions
+======================
 
 ### Append to class Grammar.Module ###
 
@@ -224,7 +251,7 @@ process methods appended to core classes, by calling LiteC_registerShim
 
         .out '\n'
         for each methodDeclaration in appendToCoreClassMethods
-                var appendToDeclaration = methodDeclaration.getParent(Grammar.ClassDeclaration)
+                var appendToDeclaration = methodDeclaration.getParent(Grammar.AppendToDeclaration)
                 .out '    LiteC_registerShim(',appendToDeclaration.varRef,
                      ',#{methodDeclaration.name}_,',
                      appendToDeclaration.varRef,'_',methodDeclaration.name,');',NL
@@ -261,9 +288,6 @@ and before exit, call LiteC_finish
 
 #### method produce() # Module
 
-default #includes:
-"LiteC-core.h" in the header, the .h in the .c
-
         .out 
             {h:1},NL
             '#ifndef #{normalizeDefine(.fileInfo.outRelFilename)}_H',NL
@@ -277,7 +301,7 @@ default #includes:
 
         .out 
             "//-------------------------",NL
-            "//Module ",prefix, NL
+            "//.h for module ",prefix, NL
             "//-------------------------",NL
 
 Modules have a __moduleInit function holding module items initialization and any loose statements
@@ -290,17 +314,12 @@ to module native support
         if .fileInfo.isInterface // add call to native hand-coded C support for this module 
             .out "extern void ",prefix,"__nativeInit(void);",NL
 
-Since we cannot initialize a module var at declaration in C (err:initializer element is not constant),
-we separate declaration from initialization.
+out header declarations for each statement requiring one 
+(call produce while mode is HEADER, normally used for "public" declarations)
 
-Var names declared inside a module/namespace, get prefixed with namespace name
+        .body.produceHeader prefix
 
-module vars declared public 
-
-        // add each public/export item as a extern declaration
-        .produceDeclaredExternProps prefix
-
-Now produce the .c file,
+Now start the .c file,
 
         .out 
             {h:0} //on .c
@@ -309,45 +328,57 @@ Now produce the .c file,
             "//Module ",prefix, .fileInfo.isInterface? ' - INTERFACE':'',NL
             "//-------------------------",NL
 
-/*
-OLD include __or temp vars
+Now produce module level declarations 
+for statements requiring one.
+e.g: functions do a forward declare, module vars & classes declare existence.
 
-        .out '#include "#{.fileInfo.base}.c.extra"',NL
-        .lexer.outCode.filenames[2] = "#{.fileInfo.outFilename}.extra"
-*/
+if we have a "export only" class or namespace, do not add module prefix.
 
+        var exportPrefix = .exportsReplaced? "" else prefix
 
-Check if there's a "only export"
+        .body.produceModuleLevelDeclarations exportPrefix
 
-        var defaultExportNamespace 
-        for each statement in .statements    
-            if statement.specific.constructor is Grammar.NamespaceDeclaration 
-                and statement.hasAdjective('only export')
-                    defaultExportNamespace=statement
-                    defaultExportNamespace.produce //produce main namespace
-                    break
+Now produce module function & classes bodies.
+We must exclude other loose executable statements,
+which must be moved to the module initialization function.
 
+We exclude Grammar.VarStatement, because it is handled as 3 separated statements:
+a [extern declaration], a module level declaration, and the initialization at __moduleInit
 
-if there's no explicit namespace declaration, 
-produce this module body as a namespace (using module name as namespace)
+        var otherInitStatements = []
+        for each statement in .body.statements
+            where statement.specific.constructor isnt Grammar.VarStatement
+                if statement.isDeclaration()
+                    statement.produce
+                else
+                    otherInitStatements.push statement
 
-        if no defaultExportNamespace 
-            .produceAsNamespace prefix
-
-__moduleInit: module main function 
+Now start module initialization function
 
         .out 
             "\n\n//-------------------------",NL
             "void ",prefix,"__moduleInit(void){",NL
 
-        // all init is done in the module-as-namespace init, just call __namespaceInit
-        .out '    ',prefix,'__namespaceInit();',NL
+produce initial assignment, class registration, etc
+for statements requiring one
 
-        if .fileInfo.isInterface // add call to native hand-coded C support for this module 
+        .body.produceAtModuleInitialization 
+
+Now produce other loose executable statements iun the module body,
+which needed to be moved here, the module initialization function
+
+        for each statement in otherInitStatements
+            statement.produce
+
+if this is a .interface. file, 
+add call to native hand-coded C support for this module 
+
+        if .fileInfo.isInterface 
             .out NL,'    ',prefix,"__nativeInit();"
 
-        .out NL,"};",NL
+close __moduleInit
 
+        .out NL,"};",NL
         .skipSemiColon = true
 
 close .h #ifdef
@@ -376,23 +407,32 @@ but on everything equal, import order wins
 Any class|object can have properties or methods appended at any time. 
 Append-to body contains properties and methods definitions.
 
-      method produceHeader() 
+#### method outCommentTitle(prefix) 
+        .out NL,"//------- append to ",.toNamespace? "namespace ":"class " ,prefix,NL
 
-        var nameDeclClass = .varRef.tryGetReference() // get class being append to
-        if no nameDeclClass, return .sayErr("append to: no reference found")
+Append-to on Header:
 
-        if .toNamespace
-            .body.produceDeclaredExternProps nameDeclClass.getComposedName(), true
-            return //nothing more to do if it's "append to namespace"
+#### method produceHeader() 
 
-handle methods added to core classes
+ calculate .nameDecl 
 
-        if nameDeclClass.nodeDeclared and nameDeclClass.nodeDeclared.name is "*Global Scope*"
+        .nameDecl = .varRef.tryGetReference() // get class|ns being append to
+        if no .nameDecl, return .sayErr("append to: reference not found")
+        
+        var prefix = .nameDecl.getComposedName()
+        .outCommentTitle prefix
 
-for each method declaration in .body
+        if .toNamespace //if it is "append to namespace x"...
+            .body.produceHeader prefix, forcePublic=true
+            return
+
+else, is "append to class"            
+handle methods added to core classes. We assume them "public"
+
+        if .nameDecl.nodeDeclared and .nameDecl.nodeDeclared.name is "*Global Scope*"
 
             for each item in .body.statements
-                where item.specific.constructor is Grammar.MethodDeclaration 
+                if item.specific.constructor is Grammar.MethodDeclaration 
                     declare item.specific: Grammar.MethodDeclaration 
 
                     if no item.specific.nameDecl, continue // do not process, is a shim
@@ -402,41 +442,54 @@ they require a special registration, because the class pre-exists in core
 
                     appendToCoreClassMethods.push item.specific
 
-also add to allMethods, since the class is core, is not declared in this project
+also add to allMethods, since the class is core, the class is not declared in this project
 
                     item.specific.nameDecl.addToAllMethodNames
 
-out header
+out header (assume public)
 
                     .out 'extern any ',item.specific.nameDecl.getComposedName(),"(DEFAULT_ARGUMENTS);",NL                            
 
+                else if item.specific.constructor is Grammar.PropertiesDeclaration
+                    .sayErr "C-production. Cannot append properties to a core class"
 
 
-      method produce() 
+#### method produceModuleLevelDeclarations(prefix,forcePublic) # of Grammar.AppendToDeclaration
 
-        //if .toNamespace, return //nothing to do if it's "append to namespace"
-        .out .body
-        .skipSemiColon = true
+add declarations for appended classes
+
+        .outCommentTitle prefix
+        .body.produceModuleLevelDeclarations prefix,forcePublic
+
+#### method produceAtModuleInitialization() # of Grammar.AppendToDeclaration
+
+register internal classes
+
+        var prefix= .nameDecl.getComposedName()
+        .outCommentTitle prefix
+        .body.produceAtModuleInitialization
+
+#### method produce()
+
+        var prefix = .nameDecl.getComposedName()
+        .outCommentTitle prefix
+        .body.produce
 
 
 ### Append to class Grammar.NamespaceDeclaration ###
-namespaces are like modules inside modules
 
+#### method outCommentTitle(prefix)
+
+        .out NL,"//------- namespace ",prefix,NL
 
 #### method produceHeader
                        
         var prefix= .nameDecl.getComposedName()
+        .outCommentTitle prefix
 
-        .out 
-            "//-------------------------",NL
-            "// namespace ",prefix,NL
-            "//-------------------------",NL
+all namespace methods & props are exported in C
 
-all namespace methods & props are public 
-
-        // add each method
-        var count=0
-        var namespaceMethods=[]
+/*        // export properties & methods
         for each member in map .nameDecl.members
             where member.name not in ['constructor','length','prototype']
                 case member.nodeClass
@@ -444,21 +497,51 @@ all namespace methods & props are public
                         .out '    extern var ',prefix,'_',member.name,';',NL
                     when Grammar.MethodDeclaration:
                         .out '    extern any ',prefix,'_',member.name,'(DEFAULT_ARGUMENTS);',NL
-            
-         // recurse, add internal classes and namespaces
-        .body.produceDeclaredExternProps prefix, forcePublic=true
+
+*/            
+
+         //add internal classes and namespaces
+        .body.produceHeader prefix, forcePublic=true
 
 
-#### method produce # namespace
+#### method produceModuleLevelDeclarations(prefix,forcePublic) # of Grammar.NamespaceDeclaration
+
+add declarations for vars & internal classes
+
+        .outCommentTitle prefix
+        .body.produceModuleLevelDeclarations prefix,forcePublic
+
+
+#### method produceAtModuleInitialization() # of Grammar.NamespaceDeclaration
+
+register internal classes
 
         var prefix= .nameDecl.getComposedName()
-        var isPublic = .hasAdjective('export')
+        .outCommentTitle prefix
+        .body.produceAtModuleInitialization
+
+#### method produce # of Grammar.NamespaceDeclaration
+
+        var prefix= .nameDecl.getComposedName()
+        .outCommentTitle prefix
 
         //logger.debug "produce Namespace",c
-        .body.produceAsNamespace prefix
+
+Now on the .c file,
+
+        .body.produce
+        .skipSemiColon = true
 
 
 ### Append to class Grammar.ClassDeclaration ###
+
+-------------------------------------
+#### helper method outClassTitleComment(prefix)
+
+        .out 
+            NL,"//-------- class ",prefix
+            .varRefSuper?' extends ':'',.varRefSuper
+            NL
 
 #### method produceHeader()
 
@@ -474,6 +557,9 @@ all namespace methods & props are public
 header
 
         .outClassTitleComment c
+
+        //var holding class reference 
+        .out 'extern any ',c,';',NL
 
 In C we create a struct for "instance properties" of each class 
 
@@ -494,7 +580,6 @@ and declare extern for class __init
         //declare extern for this class methods
         .out "extern void ",c,"__init(DEFAULT_ARGUMENTS);",NL
         .out "extern any ",c,"_newFromObject(DEFAULT_ARGUMENTS);",NL
-
 
 add each prop to "all properties list", each method to "all methods list"
 and declare extern for each class method
@@ -522,6 +607,59 @@ methods in the class as namespace
                     //declare extern for this class as namespace method
                     .out "extern any ",c,"_",nameDecl.name,"(DEFAULT_ARGUMENTS); //class as namespace",NL
 
+
+#### method produceModuleLevelDeclarations(prefix,forcePublic)
+
+static definition info for each class: list of _METHODS and _PROPS
+
+        //skip NamespaceDeclaration & AppendToDeclaration (both derived from ClassDeclaration)
+        if .constructor isnt Grammar.ClassDeclaration, return 
+
+        .outClassTitleComment prefix
+
+        //var holding class reference 
+        .out 'any ',prefix,';',NL
+
+        .out 
+            '//-----------------------',NL
+            '// Class ',prefix,': static list of METHODS(verbs) and PROPS(things)',NL
+            '//-----------------------',NL
+            NL 
+            "static _methodInfoArr ",prefix,"_METHODS = {",NL
+
+        var propList=[]
+        var prt = .nameDecl.findOwnMember('prototype')
+        for each nameDecl in map prt.members
+            where nameDecl.name not in ['constructor','length','prototype']
+                if nameDecl.nodeClass is Grammar.MethodDeclaration
+                    .out '  { #{makeSymbolName(nameDecl.name)}, #{prefix}_#{nameDecl.name} },',NL
+                else
+                    propList.push makeSymbolName(nameDecl.name)
+
+        .out 
+            NL,"{0,0}}; //method jmp table initializer end mark",NL
+            NL
+            "static propIndex_t ",prefix,"_PROPS[] = {",NL
+            {CSL:propList, post:'\n    '}
+            "};",NL,NL
+
+#### method produceAtModuleInitialization # of ClassDeclaration
+
+        //skip NamespaceDeclaration & AppendToDeclaration (both derived from ClassDeclaration)
+        if .constructor isnt Grammar.ClassDeclaration, return 
+
+        if no .nameDecl, return //shim class
+
+        var c = .nameDecl.getComposedName()
+        .outClassTitleComment c
+
+        var superName = .nameDecl.superDecl? .nameDecl.superDecl.getComposedName() else 'Object' 
+
+        .out 
+            '    #{c} =_newClass("#{c}", #{c}__init, sizeof(struct #{c}_s), #{superName});',NL
+            '    _declareMethods(#{c}, #{c}_METHODS);',NL
+            '    _declareProps(#{c}, #{c}_PROPS, sizeof #{c}_PROPS);',NL,NL
+
 #### method produce()
 
         if no .nameDecl, return //shim class
@@ -531,7 +669,6 @@ methods in the class as namespace
 this is the class body, goes on the .c file,
 
         var c = .nameDecl.getComposedName()
-
         .outClassTitleComment c
 
         var hasConstructor: boolean
@@ -564,7 +701,7 @@ default constructors
                         "    ",{COMMENT:"//auto call super class __init"},NL
                         "    ",.varRefSuper,"__init(this,argc,arguments);",NL
 
-                .body.producePropertiesInitialValueAssignments '((#{c}_ptr)this.value.ptr)->'
+                .producePropertiesInitialValueAssignments
 
                 // end default constructor
                 .out "};",NL
@@ -587,62 +724,18 @@ produce class body
         .skipSemiColon = true
 
 
--------------------------------------
-#### helper method outClassTitleComment(c:string)
+#### method producePropertiesInitialValueAssignments()
 
-        .out 
-            "\n\n//--------------",NL
-            {COMMENT:c},NL
-            'any #{c}; //Class ',c
-            .varRefSuper? [' extends ',.varRefSuper,NL] else '', NL
+if there is var or properties with assigned values, produce those assignment
+
+        for each item in .body.statements 
+            where item.specific.constructor is Grammar.PropertiesDeclaration 
+                declare item.specific:Grammar.PropertiesDeclaration
+                for each variableDecl in item.specific.list
+                    where variableDecl.assignedValue
+                        .out makeSymbolName(variableDecl.name),'_(this)=',variableDecl.assignedValue,";",NL
 
 
--------------------------------------
-#### method produceStaticListMethodsAndProps
-
-static definition info for each class: list of _METHODS and _PROPS
-
-        //skip NamespaceDeclaration & AppendToDeclaration (both derived from ClassDeclaration)
-        if .constructor isnt Grammar.ClassDeclaration, return 
-
-        var c = .nameDecl.getComposedName()
-
-        .out 
-            '//-----------------------',NL
-            '// Class ',c,': static list of METHODS(verbs) and PROPS(things)',NL
-            '//-----------------------',NL
-            NL 
-            "static _methodInfoArr ",c,"_METHODS = {",NL
-
-        var propList=[]
-        var prt = .nameDecl.findOwnMember('prototype')
-        for each nameDecl in map prt.members
-            where nameDecl.name not in ['constructor','length','prototype']
-                if nameDecl.nodeClass is Grammar.MethodDeclaration
-                    .out '  { #{makeSymbolName(nameDecl.name)}, #{c}_#{nameDecl.name} },',NL
-                else
-                    propList.push makeSymbolName(nameDecl.name)
-
-        .out 
-            NL,"{0,0}}; //method jmp table initializer end mark",NL
-            NL
-            "static propIndex_t ",c,"_PROPS[] = {",NL
-            {CSL:propList, post:'\n    '}
-            "};",NL,NL
-
-#### method produceClassRegistration
-
-        //skip NamespaceDeclaration & AppendToDeclaration (both derived from ClassDeclaration)
-        if .constructor isnt Grammar.ClassDeclaration, return 
-
-        var c = .nameDecl.getComposedName()
-
-        var superName = .nameDecl.superDecl? .nameDecl.superDecl.getComposedName() else 'Object' 
-
-        .out 
-            '    #{c} =_newClass("#{c}", #{c}__init, sizeof(struct #{c}_s), #{superName});',NL
-            '    _declareMethods(#{c}, #{c}_METHODS);',NL
-            '    _declareProps(#{c}, #{c}_PROPS, sizeof #{c}_PROPS);',NL,NL
 
 -------------------------------------
 ### Append to class Names.Declaration
@@ -662,55 +755,10 @@ out all properties of a class, including those of the super's-chain
                     node.out '    any ',prtNameDecl.name,";",NL
 
 
+-------------------------------------
+### Append to class Grammar.Body
 
-### Append to class Grammar.Body 
-
-A "Body" is an ordered list of statements.
-
-"Body"s lines have all the same indent, representing a scope.
-
-"Body"s are used for example, to parse an `if` statement body and `else` body, `for` loops, etc.
-
-#### method produce()
-
-        for each statement in .statements
-          statement.produce()
-
-        .out NL
-
-
-#### method produceAsNamespace(prefix) # namespace
-
-Now on the .c file,
-
-        .out 
-            "//-------------------------",NL
-            "//NAMESPACE ",prefix,NL
-            "//-------------------------",NL
-
-add declarations for vars & internal classes
-
-        .produceInternalDeclarations prefix
-
-__namespaceInit function
-
-        .out 
-            NL,NL,"//------------------",NL
-            "void ",prefix,"__namespaceInit(void){",NL
-
-register internal classes
-
-        .callOnSubTree LiteCore.getSymbol('produceClassRegistration')
-
-namespace initialization vars & code
-
-        .produceInitializationCode prefix
-
-        .out "};",NL
-        .skipSemiColon = true
-
-
-#### method produceDeclaredExternProps(parentName,forcePublic)
+#### method produceHeader(parentName,forcePublic)
 
         if no .statements, return //interface only
 
@@ -723,7 +771,7 @@ namespace initialization vars & code
 
             case item.specific.constructor
 
-                when Grammar.VarStatement:
+                when Grammar.VarStatement, Grammar.PropertiesDeclaration:
                     declare item.specific:Grammar.VarStatement
                     if isPublic, .out 'extern var ',{pre:prefix, CSL:item.specific.getNames()},";",NL
 
@@ -732,103 +780,97 @@ namespace initialization vars & code
                     //export module function
                     if isPublic, .out 'extern any ',prefix,item.specific.name,"(DEFAULT_ARGUMENTS);",NL
 
-                when Grammar.ClassDeclaration, Grammar.AppendToDeclaration:
+                when Grammar.NamespaceDeclaration, Grammar.ClassDeclaration, Grammar.AppendToDeclaration:
                     declare item.specific:Grammar.ClassDeclaration
-                    //produce class header declarations
-                    item.specific.produceHeader
-                    // class headers are always produced. Props are declared in header production
-
-                when Grammar.NamespaceDeclaration:
-                    declare item.specific:Grammar.NamespaceDeclaration
                     item.specific.produceHeader #recurses
-                    // as in JS, always public. Must produce, can have classes inside
+                    // as in JS, always public. Must produce. namespace also can have classes inside
 
 
-#### method produceInternalDeclarations(prefix)
+#### method produceModuleLevelDeclarations(prefix,forcePublic) #body
 
 before main function,
 produce body sustance: vars & other functions declarations
         
         if no .statements, return //just interface
 
-        var produceSecond: array of Grammar.Statement = []
-        var produceThird: array of Grammar.Statement = []
+        //var produceSecond: array of Grammar.Statement = []
+        //var produceThird: array of Grammar.Statement = []
 
         for each item in .statements
 
+            var pre= prefix and (forcePublic or item.hasAdjective('export'))? "#{prefix}_" else ""
+
+            // declare var & functions
             if item.specific instanceof Grammar.VarDeclList // PropertiesDeclaration & VarStatement
                 declare item.specific:Grammar.VarDeclList
                 //just declare existence, do not assign. (C compiler: error: initializer element is not constant)
-                .out 'var ',{pre:"#{prefix}_", CSL:item.specific.getNames()},";",NL
+                .out 'var ',{pre:pre, CSL:item.specific.getNames()},";",NL
 
             //since C require to define a fn before usage. we make forward declarations
             // of all module functions, to avoid any ordering problem.
             else if item.specific.constructor is Grammar.FunctionDeclaration
                 declare item.specific:Grammar.FunctionDeclaration
                 //just declare existence, do not assign. (C compiler: error: initializer element is not constant)
-                .out 'any ',prefix,'_',item.specific.name,"(DEFAULT_ARGUMENTS); //forward declare",NL
-                produceThird.push item
+                .out 'any ',pre,item.specific.name,"(DEFAULT_ARGUMENTS); //forward declare",NL
+                    //produceThird.push item
 
-            else if item.specific.constructor is Grammar.ClassDeclaration
+            else if item.specific instanceof Grammar.ClassDeclaration // % derivates
                 declare item.specific:Grammar.ClassDeclaration
-                item.specific.produceStaticListMethodsAndProps
-                produceSecond.push item.specific
+                item.specific.produceModuleLevelDeclarations 
+                        item.specific.nameDecl.getComposedName()
+                        forcePublic = item.specific.constructor is Grammar.NamespaceDeclaration
 
-            else if item.specific.constructor is Grammar.NamespaceDeclaration
-                declare item.specific:Grammar.NamespaceDeclaration
-                produceSecond.push item.specific #recurses thru namespace.produce()
+            //else if item.specific.constructor is Grammar.NamespaceDeclaration
+                //declare item.specific:Grammar.NamespaceDeclaration
+                //produceSecond.push item.specific #recurses thru namespace.produce()
 
-            else if item.specific.constructor is Grammar.AppendToDeclaration
-                item.specific.callOnSubTree LiteCore.getSymbol('produceStaticListMethodsAndProps') //if there are internal classes
-                produceThird.push item
+            //else if item.specific.constructor is Grammar.AppendToDeclaration
+            //    item.specific.callOnSubTree LiteCore.getSymbol('produceModuleLevelDeclarations') //if there are internal classes
+                //produceThird.push item
 
-            else if item.isDeclaration()
-                produceThird.push item
+            //else if item.isDeclaration()
+            //    produceThird.push item
         
-        end for //produce vars functions & classes sustance
-
-        for each item in produceSecond //class & namespace sustance
+        end for //produce declarations previous to functions & classes sustance
+        
+        /*for each item in produceSecond //class & namespace sustance
             .out item
 
         for each item in produceThird //other declare statements
             .out item
+        */
 
+#### method produceAtModuleInitialization() # for Body
 
-#### method produceInitializationCode(prefix)
-
-Third: assign values for module vars.
-if there are vars or properties with assigned values, produce those assignment.
-also produce any other executable statement (non-declarations) in the body.
 User classes must be registered previously, in case the module vars use them as initial values.
 
-        for each item in .statements 
-            if item.specific instanceof Grammar.VarDeclList //for modules:VarStatement, for Namespaces: PropertiesDeclaration
-                declare item.specific:Grammar.VarDeclList
-                for each variableDecl in item.specific.list
-                    where variableDecl.assignedValue
-                        item.callOnSubTree LiteCore.getSymbol('declareIntoVar') //declare "into" and "__orx" vars
-                        .out '    ',prefix,'_',variableDecl.name,' = ', variableDecl.assignedValue,";",NL
-
-            else if item.specific instanceof Grammar.NamespaceDeclaration
-                declare item.specific:Grammar.NamespaceDeclaration
-                // add call to __namespaceInit
-                .out '    ',item.specific.nameDecl.getComposedName(),'__namespaceInit();',NL
-
-            else if item.isExecutableStatement()
-                item.produce //produce here
-
-
-#### method producePropertiesInitialValueAssignments(fullPrefix)
-
-if there is var or properties with assigned values, produce those assignment
+assign values for module vars.
+if there are vars or properties with assigned values, produce those assignment.
 
         for each item in .statements 
-            where item.specific.constructor is Grammar.PropertiesDeclaration 
-                declare item.specific:Grammar.PropertiesDeclaration
-                for each variableDecl in item.specific.list
-                    where variableDecl.assignedValue
-                        .out makeSymbolName(variableDecl.name),'_(this)=',variableDecl.assignedValue,";",NL
+            where item.specific.constructor is Grammar.ClassDeclaration 
+                declare item.specific:Grammar.ClassDeclaration
+                item.specific.produceAtModuleInitialization //register class
 
+        for each item in .statements 
+            where item.specific.constructor isnt Grammar.ClassDeclaration 
+
+                if item.specific instanceof Grammar.VarDeclList //for modules:VarStatement, for Namespaces: PropertiesDeclaration
+                    declare item.specific:Grammar.VarDeclList
+                    for each variableDecl in item.specific.list
+                        where variableDecl.assignedValue
+                            .out NL,"//-- module level var ", variableDecl.name,NL
+                            item.callOnSubTree LiteCore.getSymbol('declareIntoVar') //declare "into" and "__orx" vars
+                            .out '    ',variableDecl.nameDecl.getComposedName(),' = ', variableDecl.assignedValue,";",NL
+
+                else if item.specific instanceof Grammar.ClassDeclaration //& derivated
+                    declare item.specific:Grammar.ClassDeclaration
+                    item.specific.produceAtModuleInitialization
+
+
+#### method produce # of Body
+
+        .out .statements
 
 -------------------------------------
 ### append to class Grammar.Statement ###
@@ -872,39 +914,34 @@ Also declare __orXX temp vars to implement js || behavior.
 call the specific statement (if,for,print,if,function,class,etc) .produce()
 
         var mark = .lexer.outCode.markSourceMap(.indent)
-        .out .specific
+        .specific.produce
 
 add ";" after the statement
-then EOL comment (if it isnt a multiline statement)
-then NEWLINE
 
         if not .specific.skipSemiColon
           .addSourceMap mark
-          .out ";"
+          .out ";",NL
 
-          // comments: 0=>no comments, 1=>source line & source comments 2=>add compiled by
-          //if .lexer.options.comments is 1 and not .specific has property "body"
-          //      .out .getEOLComment()
-
-          .out NL
-
-helper function to determine if a statement is a declaration (can be outside a funcion in "C")
+helper method to determine if a statement is a declaration (can be outside a funcion in "C")
 or a "statement" (must be inside a funcion in "C")
 
       helper method isDeclaration returns boolean
-
         return .specific is instance of Grammar.ClassDeclaration
             or .specific is instance of Grammar.FunctionDeclaration
-            or .specific is instance of Grammar.VarStatement
             or .specific.constructor in [
                     Grammar.ImportStatement
                     Grammar.DeclareStatement
                     Grammar.CompilerStatement
                     ]
 
-      helper method isExecutableStatement returns boolean
+        //Note: Do not include Grammar.VarStatement, because it is handled as 3 separated statements
+        // a [extern declaration], a module level declaration, and the initialization at __moduleInit
+        // if it has initialization, it is "executable"
 
+
+      helper method isExecutableStatement returns boolean
         return not .isDeclaration()
+
 
     append to class Grammar.Oper
 
@@ -937,8 +974,8 @@ and also "__orX" vars to emulate js's || operator behavior.
 ### Append to class Grammar.ReturnStatement ###
 
       method produce()
-        var defaultReturn = .getParent(Grammar.ConstructorDeclaration)? '' else 'undefined'
-        
+        var funcDecl = .getParent(Grammar.FunctionDeclaration)
+        var defaultReturn = funcDecl.constructor is Grammar.ConstructorDeclaration? '' else 'undefined'
 
 we need to unwind try-catch blocks, to calculate to which active exception frame
 we're "returning" to
@@ -1105,9 +1142,9 @@ conditions: when you call: new Foo({bar:1,baz:2})
                     var objLit:Grammar.ObjectLiteral = ac.args[0].expression.root.name
                     if objLit instanceof Grammar.ObjectLiteral
 
-                        //OK here we can optimize
+                        //OK here we can use _fastNew
                         .out objLit.calcFastNew(newArg.calcPropAccessOnly())
-                        fastNewProduced   = true
+                        fastNewProduced = true
             end if
 
             if not fastNewProduced // then produce a "standard" call to new()
@@ -1966,13 +2003,13 @@ and a controlled|checked access otherwise
 
         var composedArgs=.composeArgumentsList(actualVar)
 
-        if no composedArgs
+        if no composedArgs or no .args
             callParams.push "0,NULL"
         else
             callParams.push 
                 "#{.args.length}," 
                 skipAnyArr? '' else "(any_arr){"
-                composedArgs,join(",") 
+                {CSL:composedArgs}
                 skipAnyArr? '' else "}"
 
 
@@ -2174,11 +2211,19 @@ var with__1=frontDoor;
             varDecl.nameDecl.addToAllProperties
 
 ### Append to class Grammar.VarStatement ###
-
 'var' followed by a list of comma separated: var names and optional assignment
 
-      method produce
+/*##### method produceHeader
+
+        if .hasAdjective('export')
+            var prefix = .list[0].nameDecl.getComposedPrefix() // same prefix for all
+            .out 'extern var ',{pre:prefix, CSL:.getNames()},";",NL
+*/
+
+##### method produce
+
         .out 'var ',{CSL:.list, freeForm:1}
+
 
 ### Append to class Grammar.VariableDecl ###
 
@@ -2302,7 +2347,7 @@ create a var holding object property count
             
 
         // loop vars assignment block
-        .body.out "NameValuePair_s _nvp = _unifiedGetNVPAtIndex(",listName,", __propIndex);",NL
+        .body.out "_nameValuePair_s _nvp = _unifiedGetNVPAtIndex(",listName,", __propIndex);",NL
         .body.out .valueVar.name,"= _nvp.value;"
         if .keyIndexVar
             .body.out .keyIndexVar.name,"= _nvp.name;"
@@ -2694,27 +2739,34 @@ C99 does only support "static" initializers for structs.
 
       method produce()
 
-        .out "new(Map,"
+        .out .calcNewMap(),NL
+
+
+      method calcNewMap()
+
+        var resultArray = ["new(Map,"]
 
         if no .items or .items.length is 0
-            .out "0,NULL"
+            resultArray.push "0,NULL"
         else
-            .out 
-                .items.length,',(any_arr){'
-                {CSL:.items}
-                NL,"}"
+            resultArray.push "#{.items.length},(any_arr){", {CSL:.items},NL,"}"
         
-        .out ")",NL
+        resultArray.push ")"
+        return resultArray
 
 
       method calcFastNew(className) returns array
 
-        var resultArray = ["_fastNew(", className ,",", .items.length]
-        for each nameValuePair in .items
-            resultArray.push ",",nameValuePair.name,"_,",nameValuePair.value,NL
-        resultArray.push ")"
+        if className in ['Map','any']
+            return .calcNewMap()
+            
+        else
+            var resultArray = ["_fastNew(", className ,",", .items.length]
+            for each nameValuePair in .items
+                resultArray.push ",",nameValuePair.name,"_,",nameValuePair.value,NL
+            resultArray.push ")"
 
-        return resultArray
+            return resultArray
 
 
 ### Append to class Grammar.RegExpLiteral ###
@@ -2753,11 +2805,11 @@ auto call supper init
 On the constructor, assign initial values for properties.
 Initialize (non-undefined) properties with assigned values.
 
-        .getParent(Grammar.ClassDeclaration).body.producePropertiesInitialValueAssignments "#{c}_"
+        .getParent(Grammar.ClassDeclaration).producePropertiesInitialValueAssignments 
 
 // now the rest of the constructor body 
 
-        .produceFunctionBody c
+        .produceFunctionBody 
 
 
 ### Append to class Grammar.MethodDeclaration ###
@@ -2788,7 +2840,7 @@ Produce a Method
                 "assert(_instanceof(this,",c,"));",NL
                 "//---------"
 
-        .produceFunctionBody c
+        .produceFunctionBody 
 
 
 ### Append to class Grammar.FunctionDeclaration ###
@@ -2806,9 +2858,9 @@ exit if it is a *shim* method which never got declared (method exists, shim not 
 
 being a function, the only possible parent is a Module
 
-        var parentModule = .getParent(Grammar.Module)
-        var prefix = parentModule.fileInfo.base
-        var name = "#{prefix}_#{.name}"
+        //var parentModule = .getParent(Grammar.Module)
+        //var prefix = parentModule.fileInfo.base
+        var name = .nameDecl.getComposedName() //"#{prefix}_#{.name}"
 
         var isInterface = no .body.statements
         if isInterface, return // just method declaration (interface)
@@ -2816,10 +2868,10 @@ being a function, the only possible parent is a Module
         .out {COMMENT:"---------------------------------"},NL
         .out "any ",name,"(DEFAULT_ARGUMENTS){"
 
-        .produceFunctionBody prefix
+        .produceFunctionBody 
 
 
-##### helper method produceFunctionBody(prefix:string)
+##### helper method produceFunctionBody()
 
 common code
 start body
@@ -3170,8 +3222,8 @@ Helper methods and properties, valid for all nodes
 
 #### helper method assignIfUndefined(name,expression) 
           
-          //.out "if(",name,'.class==&Undefined_CLASSINFO) ',name,"=",expression,";",NL
-          .out "_default(&",name,",",expression,");",NL
+        .out "if (",name,".class==Undefined_inx) ",name,"=",expression,";",NL
+
 
 
 --------------------------------

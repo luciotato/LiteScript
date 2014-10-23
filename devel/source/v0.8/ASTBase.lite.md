@@ -11,8 +11,6 @@ Dependencies
     import Parser, ControlledError
     import logger
     
-    shim import LiteCore
-
 ### only export Class ASTBase 
 
 This class serves as a base class on top of which Grammar classes are defined.

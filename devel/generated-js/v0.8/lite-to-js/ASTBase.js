@@ -17,9 +17,6 @@
     //import logger
     var logger = require('./lib/logger.js');
 
-    //shim import LiteCore
-    var LiteCore = require('./interfaces/LiteCore.js');
-
     //    only export class ASTBase
     // constructor
     function ASTBase(parent, name){

@@ -107,8 +107,8 @@
     var logger = require('./lib/logger.js');
     var UniqueID = require('./lib/UniqueID.js');
 
-    //shim import LiteCore, PMREX
-    var LiteCore = require('./interfaces/LiteCore.js');
+    //shim import Map, PMREX
+    var Map = require('./interfaces/Map.js');
     var PMREX = require('./interfaces/PMREX.js');
 
 //Reserved Words
@@ -2103,12 +2103,19 @@
 
 //if it was a Literal, ParenExpression or FunctionDeclaration
 //besides base value, this operands can have accessors. For example: `"string".length` , `myObj.fn(10)`
+//NOTE: ONLY IF ON THE SAME LINE. After a callback function declaration, there can be a '.' starting
+//another statement and w/o "on the same line" restriction it will consider such dot as
+//function object property access.
 
         //if .name
         if (this.name) {
         
-            //.parseAccessors
-            this.parseAccessors();
+            //if .lexer.sourceLineNum is .sourceLineNum
+            if (this.lexer.sourceLineNum === this.sourceLineNum) {
+            
+                //.parseAccessors
+                this.parseAccessors();
+            };
         }
         //if .name
         
@@ -4628,12 +4635,15 @@
                 this.mainType = 'Array';
             };
         };
+      }// ---------------------------
+      TypeDeclaration.prototype.toString = function(){
+        //return .mainType
+        return this.mainType;
       }
     // export
     module.exports.TypeDeclaration = TypeDeclaration;
     
     // end class TypeDeclaration
-
 
 
 //##Statement
@@ -4762,7 +4772,7 @@
         //.keyword = key
         this.keyword = key;
 
-//Check valid adjective-statement combination
+//Check valid combinations adjective-statement
 
         //for each adjective in .adjectives
         for( var adjective__inx=0,adjective ; adjective__inx<this.adjectives.length ; adjective__inx++){adjective=this.adjectives[adjective__inx];
@@ -4776,17 +4786,23 @@
 
         //end for
 
-//#### Module level var: validCombinations adjective-statement
+//Check valid adjectives combinations
 
-    //var validCombinations = map
+        //if .hasAdjective('global export'), .sayErr "cannot combine 'global' with 'public|export' choose one"
         
+
+//Check valid adjectives combinations
+
+        //if .hasAdjective('global export'), .sayErr "cannot combine 'global' with 'public|export' choose one"
+        if (this.hasAdjective('global export')) {this.sayErr("cannot combine 'global' with 'public|export' choose one")};
       }
     // export
     module.exports.Statement = Statement;
     
     // end class Statement
 
-//#### Module level var: validCombinations adjective-statement
+
+//#### Module level var: valid combinations adjective-statement
 
     //var validCombinations = map
           //export: ['class','namespace','function','var']

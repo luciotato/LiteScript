@@ -1,11 +1,9 @@
 ##module UniqueID
 
-### dependencies
-
-    shim import Map
-
 ### Support Module Var:
 
+    shim import Map
+    
     var uniqueIds = new Map
 
 ### public function set(prefix, value)

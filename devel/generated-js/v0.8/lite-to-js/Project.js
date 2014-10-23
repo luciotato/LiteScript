@@ -7,6 +7,9 @@
 
 //###Module Dependencies
 
+    //shim import Map
+    var Map = require('./interfaces/Map.js');
+
 //The Project Class require all other modules to
 //compile LiteScript code.
 
@@ -16,7 +19,12 @@
         //ControlledError, GeneralOptions
         //logger, color, shims, mkPath
 
-    //shim import LiteCore
+//Get the 'Environment' object for the compiler to use.
+//The 'Environment' object, must provide functions to load files, search modules,
+//and a optional external cache (disk).
+//The `Environment` abstraction allows us to support compile on server(node) or the browser.
+
+    //import Environment
     var ASTBase = require('./ASTBase.js');
     var Grammar = require('./Grammar.js');
     var Parser = require('./Parser.js');
@@ -28,9 +36,6 @@
     var color = require('./lib/color.js');
     var shims = require('./interfaces/shims.js');
     var mkPath = require('./lib/mkPath.js');
-
-    //shim import LiteCore
-    var LiteCore = require('./interfaces/LiteCore.js');
 
 //Get the 'Environment' object for the compiler to use.
 //The 'Environment' object, must provide functions to load files, search modules,
@@ -310,10 +315,10 @@
                         //Environment.externalCacheSave '#{moduleNode.fileInfo.outFilename}.map',
                                 //moduleNode.lexer.outCode.sourceMap.generate(
                                               //moduleNode.fileInfo.base & moduleNode.fileInfo.outExtension
-                                              //,'' //Environment.getDir(Environment.relativeFrom(moduleNode.fileInfo.outDir,moduleNode.fileInfo.outFilename))
-                                              //,[moduleNode.fileInfo.sourcename]
+                                              //,''
+                                              //,[Environment.relativeFrom(moduleNode.fileInfo.outDir,moduleNode.fileInfo.filename)]
                                               //)
-                        Environment.externalCacheSave('' + moduleNode.fileInfo.outFilename + '.map', moduleNode.lexer.outCode.sourceMap.generate(moduleNode.fileInfo.base + moduleNode.fileInfo.outExtension, '', [moduleNode.fileInfo.sourcename]));
+                        Environment.externalCacheSave('' + moduleNode.fileInfo.outFilename + '.map', moduleNode.lexer.outCode.sourceMap.generate(moduleNode.fileInfo.base + moduleNode.fileInfo.outExtension, '', [Environment.relativeFrom(moduleNode.fileInfo.outDir, moduleNode.fileInfo.filename)]));
                     };
                 };
                         //if .options.perf, console.timeEnd('Generate SourceMap #{moduleNode.fileInfo.base}')
@@ -603,8 +608,7 @@
                     continue;
                 };
 
-//if it was 'global declare', or 'global import' set flags
-//else search will be local: './' and './lib'
+//if it was 'global declare' set flags
 
                 //if node.parent instanceof Grammar.DeclareStatement
                 if (node.parent instanceof Grammar.DeclareStatement) {

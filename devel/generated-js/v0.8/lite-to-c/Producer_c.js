@@ -20,7 +20,7 @@
       //Names
       //Environment, logger, color, UniqueID
 
-    //shim import LiteCore
+    //shim import Map, LiteCore
     var Project = require('./Project.js');
     var Parser = require('./Parser.js');
     var ASTBase = require('./ASTBase.js');
@@ -31,7 +31,8 @@
     var color = require('./lib/color.js');
     var UniqueID = require('./lib/UniqueID.js');
 
-    //shim import LiteCore
+    //shim import Map, LiteCore
+    var Map = require('./interfaces/Map.js');
     var LiteCore = require('./interfaces/LiteCore.js');
 
 //Production

@@ -27,15 +27,15 @@
         //ControlledError, GeneralOptions
         //logger, fs, mkPath
 
-    //shim import LiteCore, PMREX
+    //shim import Map, PMREX
     var ControlledError = require('./lib/ControlledError.js');
     var GeneralOptions = require('./lib/GeneralOptions.js');
     var logger = require('./lib/logger.js');
     var fs = require('fs');
     var mkPath = require('./lib/mkPath.js');
 
-    //shim import LiteCore, PMREX
-    var LiteCore = require('./interfaces/LiteCore.js');
+    //shim import Map, PMREX
+    var Map = require('./interfaces/Map.js');
     var PMREX = require('./interfaces/PMREX.js');
 
     //ifdef PROD_JS
@@ -66,7 +66,7 @@
         //#current line
         //line :string
         //indent
-        //lineInx //, sourceLineNum
+        //lineInx, sourceLineNum
         //infoLine, token, index
 
         //interfaceMode: boolean

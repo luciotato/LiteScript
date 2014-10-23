@@ -23,8 +23,8 @@
         properties value,pong
 
         constructor (value,pong)
-            this.value = value;
-            this.pong = pong;
+            .value = value
+            this.pong = pong
     
 
         method think (callback:function)
@@ -40,6 +40,8 @@
                         return callback(null, 'the answer is: '+self.value)
 
                     Math.floor(Math.random()*400)+200
+
+
 
         method pingPong (ping,callback:function)
             // callback before return

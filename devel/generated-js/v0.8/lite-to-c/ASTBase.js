@@ -17,9 +17,6 @@
     //import logger
     var logger = require('./lib/logger.js');
 
-    //shim import LiteCore
-    var LiteCore = require('./interfaces/LiteCore.js');
-
     //    only export class ASTBase
     // constructor
     function ASTBase(parent, name){
@@ -949,8 +946,8 @@
      }// ---------------------------
      ASTBase.prototype.outSourceLinesAsComment = function(upTo, fromLineNum){
 
-        //if no .lexer.options.comments or no .sourceLineNum, return
-        if (!this.lexer.options.comments || !this.sourceLineNum) {return};
+        //if no .lexer.options.comments, return
+        if (!this.lexer.options.comments) {return};
 
         //default fromLineNum = .sourceLineNum // this statement
         if(fromLineNum===undefined) fromLineNum=this.sourceLineNum;

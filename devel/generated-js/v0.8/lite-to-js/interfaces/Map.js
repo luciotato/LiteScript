@@ -65,7 +65,7 @@
 //b) use `map.get(key)` and `map.set(key,value)` instead of `object[key]` and `object[key]=value`
 
 
-    //export only global class Map
+    //export only class Map
     // constructor
     function Map(){
         //properties
@@ -74,8 +74,6 @@
             //.clear
             this.clear();
         };
-    //global class
-    GLOBAL.Map=Map;
         // ---------------------------
         Map.prototype.clear = function(){
             //.dict= new Object()

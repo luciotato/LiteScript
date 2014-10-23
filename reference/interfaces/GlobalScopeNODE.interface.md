@@ -9,7 +9,7 @@ node.js gobals compatible
 
 ## global functions
 
-    public function require
+    global function require
 
 
 Error is defined in JS global scope, node adds "code"
@@ -21,7 +21,7 @@ Error is defined in JS global scope, node adds "code"
 
 ## global namespaces / singletons
 
-### public namespace process
+### global namespace process
 
         properties
 
@@ -88,7 +88,7 @@ Error is defined in JS global scope, node adds "code"
             openssl:string
     
     
-### public class EventEmitter
+### global class EventEmitter
         
         constructor new EventEmitter () 
         
@@ -112,7 +112,7 @@ Error is defined in JS global scope, node adds "code"
         method listenerCount(emitter, type) 
 
 
-### public class Stream
+### global class Stream
         properties 
             readable:boolean
             writable:boolean
@@ -127,7 +127,7 @@ Error is defined in JS global scope, node adds "code"
             destroy:function(er) 
 
 
-### public class Buffer
+### global class Buffer
 
         constructor new Buffer (subject, encoding) 
 

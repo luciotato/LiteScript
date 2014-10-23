@@ -407,7 +407,7 @@ if it was 'global import, inform, els search will be local '.','./lib' and '../l
                 if node.parent instanceof Grammar.DeclareStatement
                     importInfo.interface = true
                 else if node.parent instanceof Grammar.ImportStatement 
-                    importInfo.globalImport = node.parent.global 
+                    importInfo.globalImport = false //node.parent.global 
 
 else, If the origin is a require() call
 
@@ -517,7 +517,7 @@ for .js file/core/global module,
 call node.js **require()** for parameter
 and generate & cache interface
 
-        if fileInfo.isCore or fileInfo.importInfo.globalImport or fileInfo.extension is '.js' 
+        if fileInfo.isCore or  fileInfo.extension is '.js' 
 
             log.info String.spaces(this.recurseLevel*2),
                 fileInfo.isCore?"core module":"javascript file",

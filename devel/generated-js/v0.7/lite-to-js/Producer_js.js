@@ -728,7 +728,17 @@
 
      // method produce()
      Grammar.ImportStatementItem.prototype.produce = function(){
-       this.out("var ", this.name, " = require('", this.getNodeJSRequireFileRef(), "');", NL);
+
+       // if .parent.global
+       if (this.parent.global) {
+           this.out('global.');
+       }
+       
+       else {
+           this.out("var ");
+       };
+
+       this.out(this.name, " = require('", this.getNodeJSRequireFileRef(), "');", NL);
      };
 
 
