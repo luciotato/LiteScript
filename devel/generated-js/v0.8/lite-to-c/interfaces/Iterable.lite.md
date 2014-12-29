@@ -16,7 +16,7 @@ which supports the "iterator" interface.
 b) The "Iterator" *interface* consisting of a method "next" returning the next object in the sequence. 
 (*generators* support the *Iterator* interface, they have a method "next()")
 
-Generators API is designed to conform the *Iterable* and *Iterator* interfaces.
+The Generators API is designed to conform the *Iterable* and *Iterator* interfaces.
 
 #### To make your own class *iterable* in ES6 you need to:
 
@@ -47,12 +47,12 @@ a) The *Iterable.Position* core class, abstracts the position inside an iterable
             .iterable = iterable
             .index = -1
 
-b) The *Iterable* "interface" consistis of a method "iterableNext(pos:Position)", advancing
-"pos" to the next item in the sequence and returning false if there is no more items.
+b) The *Iterable* "interface" consists of a method "iterableNext(pos:Position)", advancing
+"pos" to the next item in the sequence and returning false if there are no more items.
 
 ### To make your own class *iterable* in LiteScript you need to:
 
-a) add to YourClass a `method iterableNext(pos:Position)` returning false if there is no more items. You can 
+a) add to YourClass a `method iterableNext(pos:Position)` returning false if there are no more items. You can 
 store extra state information in pos.extra (other state than: key,value, index & size)
 
 b) nothing more. just a)    
@@ -115,7 +115,7 @@ b) nothing more. just a)
             return true
 
 
-####Using Iterables on Strings, whe compile-to-c
+####Using Iterables on Strings, when compiling-to-c
 
 Note: On LiteC-core (when compiling-to-c LiteScript source),
 the internal representation of strings is UTF-8.
@@ -124,7 +124,7 @@ String.iterableNext keeps:
 - *byte* index at `Position.index`
 - *codepoint* index at `Position.key`
 
-So to make portable code use *Position.key* as *codepoint* index
+So to make portable code use: *Position.key* as *codepoint* index
 and consider that:
 Position.key, *codepoint index* can be < Position.index *byte index*
 if the string contains multibyte UTF-8 codes.
@@ -132,7 +132,7 @@ if the string contains multibyte UTF-8 codes.
 ####Notes on Iterable.Position
 
 The "extra" property type and content, depends on each class implementing
-the *Iterable* interface. Should be used to store the state required
+the *Iterable* interface. It can be used to store the state required
 to perform a fast `iterableNext()`
 
 
