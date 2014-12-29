@@ -19,13 +19,13 @@ LiteScript:
 
     var baz = foo.b
 
-=> js:
+=> when compiled-to-js:
 
     var foo = {a: 1, b: "text", c: new MyClass()};
     var baz = foo.b;
 
-=> C:
-    ***Not translatable to C***
+=> when compiled-to-Lite-C:
+    ***Can not be compiled to lite-C***.- Solution: Use litescript *map*
 
 #### Litescript Literal Map
 
@@ -38,12 +38,12 @@ LiteScript:
 
     var baz = foo.get("b")
 
-=> js:
+=> when compiled-to-js:
 
     var foo = new Map().fromObject( {a: 1, b: "text", c: new MyClass()} );
     var baz = foo.get("b");
 
-=> Lite-C
+=> when compiled-to-Lite-C:
 
     #define _NV(n,v) {&NameValuePair_CLASSINFO, &(NameValuePair_s){n,v}
 
@@ -57,9 +57,10 @@ LiteScript:
 
 */
 
-As you can see, the required changes are:
-a) add the keyword "map" after "var foo ="
-b) use `map.get(key)` and `map.set(key,value)` instead of `object[key]` and `object[key]=value`
+As you can see, to be able to compile litescript code to Lite-C
+you'll need to use *map* instead of using js:Object as a dictionary. The required changes are:
+  1. add the keyword "map" after "var foo ="
+  2. use `map.get(key)` and `map.set(key,value)` instead of `object[key]` and `object[key]=value`
 
 
     export only class Map
@@ -76,9 +77,8 @@ b) use `map.get(key)` and `map.set(key,value)` instead of `object[key]` and `obj
             .dict.__proto__ = null //no __proto__ chain, no "extra" properties
             .size=0
 
-we have a special "Map.fromObject()"
-used to create a Map from a Literal Object. 
-To keep compatibility with ES6, we can't use default Map constructor, 
+we have a special "Map.fromObject()" used to create a Map from a Literal Object. 
+// To keep compatibility with ES6, we can't use default Map constructor, 
 since ES6 Map constructor is: new Map([iterator])
 
         method fromObject(object)
