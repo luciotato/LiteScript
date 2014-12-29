@@ -62,8 +62,12 @@ you'll need to use *map* instead of using js:Object as a dictionary. The require
   1. add the keyword "map" after "var foo ="
   2. use `map.get(key)` and `map.set(key,value)` instead of `object[key]` and `object[key]=value`
 
+The *map* class is a native class in Lite-C.
 
-    export only class Map
+Here we're declaring a *map* class to be used when the code is compiled-to-js
+
+
+####export only class Map
 
         properties
             dict:Object
