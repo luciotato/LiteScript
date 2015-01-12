@@ -9,6 +9,7 @@ old/
 out/
 debug.log
 *.o
+doc/generated/
 
 generated-c/
 nbproject/
