@@ -6,15 +6,15 @@ mkInterface - creates a name.interface.md from a "require(name)"
     var indent=0
 
     main()
-    
+
 ##Main
 
-    function main 
+    function main
 
         var name = process.argv[2]
 
         if no name
-            print """ 
+            print """
                 usage: mkInterface name [-noreq]
 
                 where "name" is the name of the module to "require()"
@@ -56,7 +56,7 @@ mkInterface - creates a name.interface.md from a "require(name)"
 
         method deindent
             .indentSpace = .indentSpace.slice(4)
-        
+
         method setHeader(s:string)
             .headers.push .indentSpace + s
             .pendingHeaders = .headers.length
@@ -145,7 +145,7 @@ mkInterface - creates a name.interface.md from a "require(name)"
                 out.push 'public '+.type+' '+.name
 
                 // constructor
-                if .params 
+                if .params
                     out.indent
                     out.push 'constructor new '+.name+' '+.params
                     out.deindent
@@ -154,7 +154,7 @@ mkInterface - creates a name.interface.md from a "require(name)"
                 var ptrNameDecl = .members.get("_prototype")
                 if ptrNameDecl, ptrNameDecl.pushMethodsAndProperties out
 
-                //now as namespace 
+                //now as namespace
                 .processAppendToNamespace out
 
 
@@ -170,15 +170,15 @@ mkInterface - creates a name.interface.md from a "require(name)"
 
         method pushMethodsAndProperties(out, comment)
 
-                //properties 
+                //properties
                 out.indent
                 out.setHeader 'properties'
                 out.indent
                 for each key,nameDecl in map .members
-                    where nameDecl.type isnt 'function' 
+                    where nameDecl.type isnt 'function'
                         and nameDecl.type isnt 'class'
                         and nameDecl.name isnt 'prototype'
-                        
+
                         nameDecl.pushMembers out
                         //out.push indent+'#{protoypeMember.name}:#{protoypeMember.type}'
 
@@ -188,11 +188,11 @@ mkInterface - creates a name.interface.md from a "require(name)"
                 //out.setHeader ""
                 //out.setHeader "//methods"
                 out.setHeader ""
-                
+
                 for each key,methodNameDecl in map .members
                     where methodNameDecl.type is 'function'
                         out.push "method #{methodNameDecl.name}#{methodNameDecl.params or ''}"
-                
+
                 out.clearHeader
                 //out.clearHeader
                 //out.clearHeader
@@ -216,17 +216,17 @@ recursively writes a object declaration
                     nameDecl.pushMembers out
                     out.deindent
                 out.clearHeader
-            
+
             else if .type is 'class'
                 do nothing
                 //out.push '#{.name}:#{"function"}#{.params or ""} #CLASS'
 
-            else                
-                if .pointer and typeof .pointer is "string" 
+            else
+                if .pointer and typeof .pointer is "string"
                     out.push '#{.name}="#{.pointer}"'
                 else
                     out.push '#{.name}:#{.type}#{.params or ""}'
-                
+
             end if
 
 
@@ -243,17 +243,17 @@ Also to load the global scope with built-in objects
 
             if no .members, .members = new Map
 
-            //if .pointer instanceof Array 
+            //if .pointer instanceof Array
             //    .type="Array"
             //    return
 
             var list:array =  Object.getOwnPropertyNames(.pointer)
             ##print " ".repeat(indent*4),.name,'has',list.length,'properties'
-              
+
             for each prop:string in list #even not enumerables
-                where prop.charAt(0) isnt '_' # exclude __proto__ 
-                    and prop isnt 'super_' # exclude 
-                    and prop isnt 'constructor' # exclude 
+                where prop.charAt(0) isnt '_' # exclude __proto__
+                    and prop isnt 'super_' # exclude
+                    and prop isnt 'constructor' # exclude
                     # and exclude 'function' core props
                     and not (typeof .pointer is 'function' and prop in ['caller','arguments','length','name'])
 
@@ -269,7 +269,7 @@ Also to load the global scope with built-in objects
 
                     if newMember.type isnt 'function' and  .name isnt prop
 
-                        if value instanceof Object 
+                        if value instanceof Object
                             and not .isInParents(value)
                             and .countDepth()<2
 
@@ -282,7 +282,7 @@ Also to load the global scope with built-in objects
 
 
         helper method countDepth()
-            var result = 0        
+            var result = 0
             var nameDecl = this.parent
             while nameDecl
               result++
@@ -294,7 +294,7 @@ Also to load the global scope with built-in objects
 
 return true if a property name is in the parent chain.
 Used to avoid recursing circular properties
-        
+
             var nameDecl = this.parent
             while nameDecl
               if nameDecl.pointer is value,return true
@@ -304,7 +304,7 @@ Used to avoid recursing circular properties
 
         helper method toString
 
-            var result=.name 
+            var result=.name
             var a=.parent
             while a
                 result=a.name+'.'+result
@@ -330,9 +330,9 @@ Used to avoid recursing circular properties
 
         constructor new Map
             .clear
-            
+
 To keep compatibility with ES6, we have a special "Map.fromObject()"
-used to create a Map from a Literal Object. 
+used to create a Map from a Literal Object.
 We can't use default Map constructor, since ES6 Map constructor is: new Map([iterator])
 
         method fromObject(object)
@@ -372,13 +372,13 @@ We can't use default Map constructor, since ES6 Map constructor is: new Map([ite
         method allPropertyNames() returns array  //use Map|Object interchangeably
             return Object.keys(.dict)
 
-        method forEach(callb)
+        method forEach(callb:function)
             for each property propName,value in .dict
                 callb(propName,value)
 
 
 ### append to class String
-    
+
         shim method repeat(howMany)
             var a =''
             if howMany<1, return a

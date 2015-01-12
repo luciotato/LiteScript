@@ -1,0 +1,42 @@
+#!/bin/bash
+
+#set -e
+
+VERSION=0.8
+
+CWD=$(pwd)
+
+#get main source folder: ~/LiteScript
+cd "../.."
+MAIN=$(pwd)
+cd -
+
+#get devel source folder /devel/source/v${VERSION} 
+cd ../generated-js/v${VERSION}/lite-to-js
+GENERATED=$(pwd)
+cd -
+
+echo ---------------
+echo UPDATE MAIN DIR: /lib
+echo ---------------
+echo "update MAIN ${MAIN}"
+echo "from GENERATED ${GENERATED}"
+echo ---------------
+
+echo "COPY to main dir /lib"
+rm -rf ${MAIN}/lib/
+mkdir -p ${MAIN}/lib
+cp -r ${GENERATED}/* ${MAIN}/lib/
+
+#copy if newer: lite (#!/usr/bin/env node), just: require('./js_lite')
+#ls -l ${MAIN}/devel/source/v${VERSION}/lite
+cp -u ${MAIN}/devel/source/v${VERSION}/lite ${MAIN}/lib/lite
+chmod 777 ${MAIN}/lib/lite
+
+
+#mkdir -p ${MAIN}/reference/interfaces
+#cp  ${SRCVRS}/interfaces/*.md ${MAIN}/reference/interfaces
+
+#mkdir -p ${MAIN}/reference/lib
+#cp  ${SRCVRS}/lib/*.md ${MAIN}/reference/lib
+

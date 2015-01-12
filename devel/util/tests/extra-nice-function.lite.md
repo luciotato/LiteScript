@@ -23,7 +23,7 @@
         properties value,pong
 
         constructor (value,pong)
-            .value = value
+            this.value = value
             this.pong = pong
     
 

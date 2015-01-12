@@ -4,7 +4,7 @@ lite -es6 -r blog-example-dns.lite.md
 
 #####get google.com IPs, reverse DNS (in parallel)
 
-    global import dns, nicegen
+    import dns, nicegen
 
     nice function resolveAndParallelReverse
 
