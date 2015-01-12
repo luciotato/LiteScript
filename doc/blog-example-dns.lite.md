@@ -1,6 +1,11 @@
 to run this code:
 
-lite -es6 -r blog-example-dns.lite.md
+cd ~/LiteScript/doc 
+lite blog-example-dns.lite.md
+cd generated/js
+node -harmony blog-example-dns.js
+
+Note: You need at least node v0.11.6
 
 #####get google.com IPs, reverse DNS (in parallel)
 
