@@ -26,7 +26,8 @@
       "lite": "./lib/lite"
   },
   "scripts": {
-  "test": "bash test.sh"
+    "test": "bash test.sh",
+    "build-0.8": "cd devel/util ; ./release 0.8"
   },
   "preferGlobal": true
 }
