@@ -61,6 +61,6 @@ cd ${CWD}
 mkdir -p ${MAIN}/extras/sublime/LiteScript
 if [ -d $HOME/.config/sublime-text-2/Packages/LiteScript ]; then 
 	cp -uvp $HOME/.config/sublime-text-2/Packages/LiteScript/*  ${MAIN}/extras/sublime/LiteScript
-    rm ${MAIN}/extras/sublime/LiteScript/*.cache
-    rm ${MAIN}/extras/sublime/LiteScript/*~
+    rm -f ${MAIN}/extras/sublime/LiteScript/*.cache
+    rm -f ${MAIN}/extras/sublime/LiteScript/*~
 fi
