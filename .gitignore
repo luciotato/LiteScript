@@ -19,3 +19,8 @@ dist/
 
 *.map
 
+.idea/
+LiteScript.iml
+node_modules/
+npm-debug.log
+
