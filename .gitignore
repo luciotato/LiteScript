@@ -19,8 +19,6 @@ dist/
 
 *.map
 
-.idea/
-LiteScript.iml
+# npm stuff
 node_modules/
 npm-debug.log
-
