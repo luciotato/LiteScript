@@ -12,7 +12,7 @@ when it is generated as C-code standalone executable
     import GeneralOptions, Compiler, ASTBase
 
     var 
-        VERSION = '0.8.5'
+        VERSION = '0.8.9'
         BUILD_DATE = '__DATE__ __TIME__'
 
 ## module vars

@@ -33,7 +33,8 @@ else
 
     #other: use recently compiled (js)v0.8-ls-to-js
     cd ..
-    if node $DBRK ../../util/liteVersion -use v0.8/lite-to-js js_lite -perf 1 -v 2 -D PROD_JS -o ../../generated-js/v0.8/lite-to-js; then 
+    OUT=../../generated-js/v0.8/lite-to-js
+    if node $DBRK ../../util/liteVersion -use v0.8/lite-to-js js_lite -perf 1 -v 2 -D PROD_JS -o ${OUT}; then 
         echo "COPY /interfaces to out dir"
         cp -r interfaces/ ${OUT}
     fi

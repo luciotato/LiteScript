@@ -1,6 +1,6 @@
 {
   "name": "litescript",
-  "version": "0.8.8",
+  "version": "0.8.9",
   "description": "LiteScript is a literate, highly readable, compile-to-js and compile-to-c language",
   "keywords": ["alt-js", "language", "simple", "PEG", "compiler", "fast", "compile-to-js", "compile-to-C"],
   "author": {

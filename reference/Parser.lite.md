@@ -263,22 +263,28 @@ check for title-keywords: e.g.: `### Class MyClass`, `### export Function compil
 
         //var titleKeyRegexp = /^(#)+ *(?:(?:public|export|only|helper)\s*)*(class|namespace|append to|function|method|constructor|properties)\b/i
 
+        // fast exit
         if line.slice(0,3) isnt "###", return  // should be at least indent 4: '### '
 
-        var words = line.split(" ")
+        var sharps = PMREX.whileRanges(line,"#")
+        var indent = sharps.length
 
-        // return if first word is not all #'s
-        if words[0].replaceAll("#"," ").trim(), return 
+        // get spaces after ###...
+        var spaces = PMREX.whileRanges(line.slice(sharps.length)," ")
+        indent += spaces.length
+        
+        var words = line.slice(indent).split(" ")
 
-        var sustantives = ["class","namespace","function","method","constructor","properties"];
 
-        var inx=1, countAdj=0, countSust=0, sustLeft=1
+        // count adjectives
+        var adjectives = ["public","export","only","helper","global"]
 
+        var inx=0, countAdj=0, countSust=0, sustLeft=1
         while inx<words.length
 
             if words[inx] //skip empty items
 
-                if words[inx].toLowerCase() in ["public","export","only","helper","global"]
+                if words[inx].toLowerCase() in adjectives
                     countAdj++ //valid
                 else
                   break //invalid word
@@ -289,6 +295,9 @@ check for title-keywords: e.g.: `### Class MyClass`, `### export Function compil
             if words[inx].toLowerCase() is 'append'
                 inx++ //skip 'append'
                 if words[inx] is 'to', inx++ //skip to
+
+        // get first sustantive
+        var sustantives = ["class","namespace","function","method","constructor","properties"];
 
         while inx<words.length
 
@@ -304,7 +313,7 @@ check for title-keywords: e.g.: `### Class MyClass`, `### export Function compil
                     countSust++ //valid
                     break //exit, sustantive found
                 else
-                  break //invalid word
+                    break //invalid word
             
             inx++ //next
 
@@ -312,14 +321,10 @@ check for title-keywords: e.g.: `### Class MyClass`, `### export Function compil
 
         if countSust
 
-            if words[0].length<3, .throwErr "MarkDown Title-keyword, expected at least indent 4: '### '"
-
-            for recogn=1 to inx //each recognized word, convert to lowercase
+            for recogn=0 to inx //each recognized word, convert to lowercase
                 words[recogn]=words[recogn].toLowerCase()
 
-            words[0] = words[0].replaceAll("#"," ") //replace # by ' '
-
-            return words.join(' ') // re-join
+            return String.spaces(indent) + words.join(' ') // re-join
 
 
 
@@ -1565,7 +1570,7 @@ get result and clear memory
             declare on mark 
                 lin,col
             .sourceMap.add ( (sourceLin or 1)-1, 0, mark.lin, 0)
-            // debug: console.log "map source:", (sourceLin or 1)-1, "-> js:",mark.lin
+            // debug: console.log "map source:", (sourceLin or 1), "-> js:",mark.lin
         #else
         do nothing
         #endif

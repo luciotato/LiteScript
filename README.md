@@ -14,10 +14,10 @@
 
 - Make code as readable and easy to follow as possible.
 - Favor clear, readable code, over terse, hard to read code.
-- Catch typos in object members **in the compilation phase**. 
+- Catch typos in property names **in the compilation phase**. 
 Is too time-expensive to debug subtle bugs caused by mistyped property member names in javascript.
-- Allow an easy context-switch in the coder's mind between programming languages.
-  - Try to use the same meaning for the same symbols when the symbol is used in javascript, CoffeScript, Python, C, C#, JAVA, SQL.
+- Allow an easy context-switch in the coder's mind between programming languages:
+  - Try to use the same meaning for the same symbols when the symbol is used in javascript, CoffeScript, Python, C, C#, JAVA or SQL.
   - Use js and EcmaScript 6 syntax when available.
   - Embrace javascript prototypal inheritance. "class" is just syntax sugar.
 
@@ -269,7 +269,7 @@ to node.js-LiteScript(server)-LiteScript(browser)
 The repository includes again a "BareBones Minimal WebServer", also written in LiteScript, 
 which simulates a database access.
 
-You must clone and host-it locally to test-it.
+You must clone it and host it locally to test it.
 
 
 ----
@@ -281,7 +281,7 @@ The LiteScript compiler is written in LiteScript.
 As a result, a previous version of the compiler 
 is used to to develop and compile a newer -unstable- version. 
 
-Check the /devel/ dir.
+Check the /devel/source dir for the latests sources.
 
 Once the new liteCompiler version passes all tests and ***can compile itself***,
 it's ready for release.
