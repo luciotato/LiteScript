@@ -2568,6 +2568,9 @@
 //Try to determine ownerNameDecl, to declare the memeber and to set scope var "this"'s **proto**.
 //if ownerNameDecl *can* be determined at this point, declare method as member.
 
+//Try to determine ownerNameDecl, to declare the memeber and to set scope var "this"'s **proto**.
+//if ownerNameDecl *can* be determined at this point, declare method as member.
+
       //ownerNameDecl = .tryGetOwnerNameDecl()
       ownerNameDecl = this.tryGetOwnerNameDecl();
 
@@ -2580,6 +2583,9 @@
       };
 
       //end if // function or method
+
+//Note: following JS design, constructors are the body of the function-class itself,
+//so the "constructor" is not a member function
 
 //Note: following JS design, constructors are the body of the function-class itself,
 //so the "constructor" is not a member function
