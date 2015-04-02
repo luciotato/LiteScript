@@ -2527,9 +2527,6 @@ keep track of `import/require` calls
         if .opt('from')
             .lock()
             .importParameter = .req(StringLiteral)
-        else if .opt('=')
-            .lock()
-            .importParameter = .req(StringLiteral)
         end if
 
 ## DeclareStatement

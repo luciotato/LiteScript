@@ -590,7 +590,7 @@ If 'var' was adjectivated 'export', add all vars to exportNamespace
 ### Append to class Grammar.ImportStatementItem ###
 
       method produce() 
-        .out "var ",.name," = require(", .getNodeJSRequireFileRef(),");", NL
+        .out "var ",.name," = require('", .getNodeJSRequireFileRef(),"');", NL
 
 
       method getNodeJSRequireFileRef() 
@@ -603,7 +603,7 @@ It does as bash does for executable files.
 A name  without "./"" means "look in $PATH" (node_modules and up)
 
         if no .importedModule or .importedModule.fileInfo.isCore or '.interface.' in .importedModule.fileInfo.filename
-            return "'#{.name}'" // for node, no './' means "look in node_modules, and up, then global paths"
+            return .name // for node, no './' means "look in node_modules, and up, then global paths"
 
         var thisModule = .getParent(Grammar.Module)
 
@@ -620,11 +620,11 @@ get the required file path, relative to the location of this module (as nodejs's
 check for 'import x from 'path/file';
 
         if .importParameter and fn.charAt(0) is '/' //has `from 'path/file'` AND  is an absolute path 
-            return "'#{fn}'"
+            return fn
 
 else, a simple 'import x'
 
-        return "'./#{fn}'"; // node.js require() use "./" to denote a local module to load                
+        return "./#{fn}"; // node.js require() use "./" to denote a local module to load                
 
 
 ### Append to class Grammar.ImportStatement ###
