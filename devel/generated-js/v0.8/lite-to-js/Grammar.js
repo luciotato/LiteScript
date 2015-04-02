@@ -50,6 +50,10 @@
 
 //Let's analyze the example: `PrintStatement: 'print' [Expression,]`
 
+//###More on comma-separated lists
+
+//Let's analyze the example: `PrintStatement: 'print' [Expression,]`
+
 //`[Expression,]` means *optional* **comma "Separated List"** of Expressions.
 //Since the comma is inside a **[ ]** group, it means the entire list is optional.
 
@@ -61,6 +65,10 @@
 
 //It reads: composed symbol `VarStatement` is conformed by the word `var` followed by
 //a comma-separated list of `VariableDecl` (at least one)
+
+//The construction `(VariableDecl,)` means: **comma "Separated List"** of `VariableDecl`
+
+//Since the comma is inside a **( )** group, it means _at least one VariableDecl_ is required.
 
 //The construction `(VariableDecl,)` means: **comma "Separated List"** of `VariableDecl`
 
@@ -94,6 +102,9 @@
 //The LiteScript Grammar is defined as `classes`, one class for each non-terminal symbol.
 
 //The `.parse()` method of each class will try the grammar on the token stream and:
+
+//- If all tokens match, it will simply return after consuming the tokens. (success)
+//- On a token mismatch, it will raise a 'parse failed' exception.
 
 //- If all tokens match, it will simply return after consuming the tokens. (success)
 //- On a token mismatch, it will raise a 'parse failed' exception.

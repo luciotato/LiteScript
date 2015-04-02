@@ -198,7 +198,7 @@ git clone https://github.com/luciotato/LiteScript-reception-demo.git
 ```
 
 Once you have all that, with Sublime, "open folder" for example: 
-`~/litescript_reception_demo/WebServer`, then open "BareWebServer.lite.md".
+`~/litescript_reception_demo/webServer/source`, then open "BareWebServer.lite.md".
 
 - You can now compile (current dir) with Ctrl-B 
 and then use F4 to check each compiler error (Sublime jumps automatically to source position)

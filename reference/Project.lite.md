@@ -386,7 +386,8 @@ We create a empty a empty `.requireCallNodes[]`, to hold:
 
 #### Method importDependencies(moduleNode:Grammar.Module)
 
-Check if this module 'imported other modules'. Process Imports (recursive)
+Check if this module 'imported other modules'. Process Imports (recursive)<br>
+Note: This function does not get called if lite was run with the '-s' option
 
         for each node:ASTBase in moduleNode.requireCallNodes
 
