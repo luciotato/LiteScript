@@ -25,12 +25,12 @@
             <url>file:/home/ltato/LiteScript/devel/litec/core/LiteC-core.c</url>
             <bookmark id="23">
                 <name/>
-                <line>1736</line>
+                <line>1738</line>
                 <key/>
             </bookmark>
             <bookmark id="22">
                 <name/>
-                <line>2579</line>
+                <line>2581</line>
                 <key/>
             </bookmark>
         </file>
@@ -78,12 +78,6 @@
         </file>
     </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/Project.c</file>
-            <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/Producer_c.c</file>
-            <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/ASTBase.c</file>
-            <file>file:/home/ltato/LiteScript/devel/litec/litec-to-c/generated-c/Parser.c</file>
-            <file>file:/home/ltato/LiteScript/devel/litec/core/LiteC-core.c</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>

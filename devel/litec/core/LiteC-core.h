@@ -6,6 +6,7 @@
 #ifndef LITEC_CORE_H
 #define LITEC_CORE_H
 
+
 #include "util.h"
 #include "any.h"
 #include "utf8strings.h"
@@ -59,7 +60,7 @@
     extern any * _symbol; // table "center", symbol:0, String:"constructor"
 
     // LiteC_init
-    extern void LiteC_init(int classesCount, int argc, char** CharPtrPtrargv);
+    void LiteC_init(int classesCount, int argc, char** CharPtrPtrargv);
     extern void LiteC_finish();
     extern void LiteC_addMethodSymbols(int addedMethods, str* _verb_table);
     extern void LiteC_addPropSymbols(int addedProps, str* _things_table);

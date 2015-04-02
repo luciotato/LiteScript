@@ -128,8 +128,9 @@ Child classes _must_ override this method
         .throwError 'Parser Not Implemented'
 
 #### method produce()
-**produce()** is the method to produce target code
-Target code produces should override this, if the default production isnt: `.out .name`
+**produce()** is the method to produce target code for this node.
+Child classes _should_ override this, 
+if the default production isnt: `.out .name`
 
         .out .name
 
@@ -143,11 +144,15 @@ Check keyword
 
         if directMap.get(key) into var param
 
-try parse by calling .opt, accept Array as param
+try parse by calling .opt 
             
-            var statement = param instance of Array ? 
-                    ASTBase.prototype.opt.apply(this, param) 
-                    : .opt(param)
+            var statement
+            if param instance of Array
+               #accept Arrays also
+               statement = ASTBase.prototype.opt.apply(this, param) 
+            else
+               #normal call
+               statement = .opt(param)
 
 return parsed statement or nothing
 
@@ -156,7 +161,7 @@ return parsed statement or nothing
 
 
 #### Method opt(...) returns ASTBase
-**opt** (optional) is for optional parts of a grammar. It attempts to parse 
+**opt** (optional) parses optional parts of a grammar. It attempts to parse 
 the token stream using one of the classes or token types specified.
 This method takes a variable number of arguments.
 For example:
@@ -166,7 +171,7 @@ For example:
   If all of those fail, it will return `undefined`.
 
 Method start:
-Remember the actual position, to rewind if all the arguments to `opt` fail
+Remember the actual position, to rewind if all optionals fail to parse
 
         var startPos = .lexer.getPos()
 
@@ -183,37 +188,37 @@ skip empty, null & undefined
           if no searched, continue
 
 determine value or type
-For strings we check the token **value** or **TYPE** (if searched is all-uppercase)
+For strings, we check the token **value** or **TYPE** (if searched is all-uppercase)
 
           if typeof searched is 'string'
 
-            declare searched:string
+                declare searched:string
 
-            #debug spaces, .constructor.name,'TRY',searched, 'on', .lexer.token.toString()
+                #debug spaces, .constructor.name,'TRY',searched, 'on', .lexer.token.toString()
 
-            var isTYPE = searched.charAt(0)>="A" and searched.charAt(0)<="Z" and searched is searched.toUpperCase()
-            var found
+                var isTYPE = searched.charAt(0)>="A" and searched.charAt(0)<="Z" and searched is searched.toUpperCase()
+                var found
 
-            if isTYPE 
-              found = .lexer.token.type is searched
-            else
-              found = .lexer.token.value is searched
+                if isTYPE 
+                  found = .lexer.token.type is searched
+                else
+                  found = .lexer.token.value is searched
 
-            if found
+                if found
 
 Ok, type/value found! now we return: token.value
-Note: we shouldnt return the 'token' object, because returning objects (here and in js) 
-is a "pass by reference". You return a "pointer" to the object.
+Note: we shouldn't return the 'token' object, because returning objects (here and in js) 
+is "pass-by-reference". You return a "pointer" to the object.
 If we return the 'token' object, the calling function will recive a "pointer"
 and it can inadvertedly alter the token object in the token stream. (it should not, leads to subtle bugs)
 
-              logger.debug spaces, .constructor.name,'matched OK:',searched, .lexer.token.value
-              var result = .lexer.token.value 
+                      logger.debug spaces, .constructor.name,'matched OK:',searched, .lexer.token.value
+                      var result = .lexer.token.value 
 
 Advance a token, .lexer.token always has next token
 
-              .lexer.nextToken()
-              return result
+                      .lexer.nextToken()
+                      return result
 
           else
 
@@ -282,15 +287,17 @@ No more arguments.
 
 #### method req(...) returns ASTBase
 
-**req** (required) if for required symbols of the grammar. It works the same way as `opt` 
-except that it throws an error if none of the arguments can be used to parse the stream.
+**req** (required) try to parse *required* symbols of the grammar. 
+It works the same way as `opt` except that it throws an error if none of the arguments 
+can be used to parse the stream.
 
-We first call `opt` to see what we get. If a value is returned, the function was successful,
+We first call `opt` to try the arguments in order. 
+If a value is returned, the parsing was successful,
 so we just return the node that `opt` found.
 
-else, If `opt` returned nothing, we give the user a useful error.
-
         var result = ASTBase.prototype.opt.apply(this,arguments)
+
+If `opt` returns nothing, we give the user a useful error message.
 
         if no result 
           .throwParseFailed "#{.constructor.name}:#{.extraInfo or ''} found #{.lexer.token.toString()} but #{.listArgs(arguments)} required"
@@ -299,7 +306,7 @@ else, If `opt` returned nothing, we give the user a useful error.
 
 
 #### method reqOneOf(arr)
-(performance) call req only if next token (value) in list
+(performance) check before try to parse, that the next token is in the list
         
         if .lexer.token.value in arr
             return ASTBase.prototype.req.apply(this,arr)

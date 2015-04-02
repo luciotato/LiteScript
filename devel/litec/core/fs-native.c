@@ -6,7 +6,7 @@
  */
 
     // fs.h gets generated based on fs.interface.lite.md
-    #include "../C_standalone/fs.h"
+    #include "fs.h"
     #include "LiteC-core.h"
     #include <sys/stat.h>
     #include <errno.h>

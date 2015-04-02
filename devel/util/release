@@ -4,7 +4,7 @@
 #make the litescript compiler stable package for the npm repository
 
 echo release $1 $2 $3
-set -ex
+set -e
 
 VERSION=$1
 using=$2
@@ -16,7 +16,7 @@ if [ "$2" = "" ]; then
 fi
 
 if [ "$1" = "" -o "$using" != "using" -o "$CVER" = "" ]; then 
-    echo usage: ./release 0.6 [using x.y]
+    echo usage: ./release 0.8 [using x.y]
     exit 1
 fi
 

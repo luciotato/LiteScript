@@ -1,4 +1,4 @@
-/** PMREX, poor's man RegEx
+/** PMREX - Tokenizer helper
  *
  * --------------------------------
  * LiteScript lang - gtihub.com/luciotato/LiteScript
@@ -11,6 +11,19 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of the
  * GNU Affero General Public License along with LiteScript.  If not, see <http://www.gnu.org/licenses/>.
+
+PMREX is composed of three functions
+which are simple but enough to tokenize a stream of chars (unicode)
+
+By using this functions we can avoid Regex Patterns to tokenize
+
+### public function whileRanges(chunk:string, rangesStr:string) returns string
+
+whileRanges, advance while the char is in the ranges specified.
+will return string up to first char not in range, or entire string if all chars are in ranges
+e.g.: whileRanges("123ABC","0-9") will return "123"
+e.g.: whileRanges("123ABC","0-9A-Z") will return "123ABC" because all chars are in range
+
  */
 
 #include "./PMREX-native.h"
@@ -27,14 +40,10 @@
     void PMREX_parseRanges(any ranges);
 
     /** public function whileRanges(chunk:string, ranges:string).
-     * whileRanges, advance from start, while the char is in the ranges specified.
-     *
-     * will return slice with all chars in range
-     *
-     * e.g.: whileRanges("123ABC",0,"0-9J-Z") will return "123", string[3] is "A"
-     *
-     * e.g.: whileRanges("123ABC",0,"0-9A-Z") will return "123ABC" because all chars are in range
-     *
+    whileRanges, advance while the char is in the ranges specified.
+    will return string up to first char not in range, or entire string if all chars are in ranges
+    e.g.: whileRanges("123ABC","0-9") will return "123"
+    e.g.: whileRanges("123ABC","0-9A-Z") will return "123ABC" because all chars are in range
      */
     any PMREX_whileRanges(DEFAULT_ARGUMENTS){
         assert_args({.req=2,.max=2,.control=2},String, String);
@@ -73,13 +82,10 @@
 
 
     /** public function untilRanges(chunk:string, ranges:string).
-     * untilRanges: advance from start, *until* a char in one of the specified ranges is found.
-     *
-     * will return slice with chars upto first char *in range* or full chunk if no match
-     *
-     * e.g.: findRanges("123ABC",0,"A-Z") will return "123", string[3] is "A"
-     *
-     * e.g.: findRanges("123ABC",0,"D-Z") will return "123ABC" => not found
+    untilRanges: advance from start, *until* a char is in one of the specified ranges.
+    will return string up to first char *in range* or entire string if there's no match
+    e.g.: findRanges("123ABC","A-Z") will return "123"
+    e.g.: findRanges("123ABC","C-FJ-L") will return "123AB"
      */
     any PMREX_untilRanges(DEFAULT_ARGUMENTS){
         assert_args({.req=2,.max=2,.control=2}, String, String);
@@ -113,8 +119,18 @@
 
     /** helper function parseRanges(rangesStr:string) returns string.
      * ranges should be only ASCII
-     *
-     */
+    Range examples:
+
+    * "1-9" means all chars between 1 and 9 (inclusive)
+    * "1-9J-Z" means all chars between 1 and 9 or between "J" and "Z"
+    * "1-9JNW" means all chars between 1 and 9, a "J" a "N" or a "W"
+
+    This function returns a normalized range string without "-"
+    and composed always from ranges:
+        "1-9" => "19"
+        "1-9J-Z" => "19JZ"
+        "1-9JNW" => "19JJNNWW"
+*/
     void PMREX_parseRanges(any ranges){
 
         _FLATTEN(ranges);
@@ -181,8 +197,8 @@
     }
 
 /** public function findMatchingQuote(chunk:string, start)
- * Note: chunk MUST start with the openinig quote
- *
+ * Note: chunk MUST start with the openinig quote, either single-quote or double-quote
+ * return the string up to the matching quote, excluding both
  * return *contents* of quoted string, including escaped internal quotes.
  * throws if malformed/unclosed.
  */

@@ -38,14 +38,14 @@ Meta-Syntax Examples:
 
 Full Meta-Syntax Example:
 
-`PrintStatement: 'print' [Expression,]` 
+`PrintStatement: print [Expression,]` 
 
 It reads: composed symbol `PrintStatement` is conformed by the word `print` followed by 
 an _optional_ comma-separated list of `Expression` 
 
 ###More on comma-separated lists
 
-Let's analyze the example: `PrintStatement: 'print' [Expression,]`
+Let's analyze the example: `PrintStatement: print [Expression,]`
 
 `[Expression,]` means *optional* **comma "Separated List"** of Expressions. 
 Since the comma is inside a **[ ]** group, it means the entire list is optional.
@@ -89,20 +89,20 @@ and the following is *also* a valid text:
 Grammar Implementation
 -----------------------
 
-The LiteScript Grammar is defined as `classes`, one class for each non-terminal symbol.
+The LiteScript Grammar is defined as `classes`, one class for each rule.
 
-The `.parse()` method of each class will try the grammar on the token stream and:
+The `.parse()` method of each class will try the grammar rule on the token stream and:
 
-- If all tokens match, it will simply return after consuming the tokens. (success)
+- If all tokens match, it will populate the node consuming the tokens. (success)
 - On a token mismatch, it will raise a 'parse failed' exception.
 
-When a 'parse failed' exception is raised, other classes can be tried. 
+When a 'parse failed' exception is raised, other classes/rules can be tried. 
 If no class parses ok, a compiler error is emitted and compilation is aborted.
 
-if the exception is *before* the class has determined this was the right language construction,
-it is a soft-error and other grammars can be tried over the source code.
+if the exception is *before* the class has determined this was the right rule,
+it is a soft-error and other rules can be tried on the token stream.
 
-if the exception is *after* the class has determined this was the right language construction 
+if the exception is *after* the class has determined this was the right rule 
 (if the AST node was 'locked'), it is a hard-error and compilation is aborted.
 
 The `ASTBase` module defines the base class for all grammar classes along with

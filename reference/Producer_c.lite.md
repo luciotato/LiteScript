@@ -29,7 +29,7 @@ We have different phases of productions for C-code:
 
 - Module level declarations:
     to produce "declarative" code at the begginig of the .c file. (code valid -outside- a C function)
-    this includes module-level "var" declarations & function forwards declarations.
+    this includes module-level "var" declarations & function forward declarations.
 
 - Initial Assignments:
     to produce "executable" code assigning initial value to module|namespace|instance vars. 
@@ -364,8 +364,8 @@ for statements requiring one
 
         .body.produceAtModuleInitialization 
 
-Now produce other loose executable statements iun the module body,
-which needed to be moved here, the module initialization function
+Now produce other loose executable statements un the module body,
+which needed to be moved here: the module initialization function
 
         for each statement in otherInitStatements
             statement.produce

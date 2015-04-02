@@ -1,16 +1,19 @@
-#PMREX, poor's man RegEx
+#PMREX - Tokenizer helper
+PMREX is composed of three functions 
+which are simple but enough to tokenize a stream of chars (unicode)
 
+By using this functions we can avoid Regex Patterns to tokenize
 
 ### public function whileRanges(chunk:string, rangesStr:string) returns string
 
-whileRanges, advance from start, while the char is in the ranges specified. 
-will return string upto first char not in range, or chunk string if all chars in range
-e.g.: whileRanges("123ABC",0,"0-9J-Z") will return "123"
-e.g.: whileRanges("123ABC",0,"0-9A-Z") will return "123ABC" because all chars are in range
+whileRanges, advance while the char is in the ranges specified. 
+will return string up to first char not in range, or entire string if all chars are in ranges
+e.g.: whileRanges("123ABC","0-9") will return "123"
+e.g.: whileRanges("123ABC","0-9A-Z") will return "123ABC" because all chars are in range
 
         var len = chunk.length
 
-        //parse ranges into an array [[from,to],[from,to]...]
+        //normalize ranges 
         var ranges = parseRanges(rangesStr)
 
         //advance while in any of the ranges
@@ -33,14 +36,14 @@ e.g.: whileRanges("123ABC",0,"0-9A-Z") will return "123ABC" because all chars ar
 
 ### public function untilRanges(chunk:string, rangesStr:string) returns string
 
-findRanges: advance from start, *until* a char in one of the specified ranges is found.
-will return index of first char *in range* or searched string length if no match
-e.g.: findRanges("123ABC",0,"A-Z") will return 3, string[3] is "A"
-e.g.: findRanges("123ABC",0,"D-Z") will return 6 => length of "123ABC" => not found
+untilRanges: advance from start, *until* a char is in one of the specified ranges.
+will return string up to first char *in range* or entire string if there's no match
+e.g.: findRanges("123ABC","A-Z") will return "123"
+e.g.: findRanges("123ABC","C-FJ-L") will return "123AB"
 
         var len = chunk.length
 
-        //parse ranges into an array [[from,to],[from,to]...]
+        //normalize ranges
         var ranges = parseRanges(rangesStr)
 
         //advance until match
@@ -58,6 +61,20 @@ e.g.: findRanges("123ABC",0,"D-Z") will return 6 => length of "123ABC" => not fo
         return chunk.slice(0,inx)
 
 ### helper function parseRanges(rangesStr:string) returns string
+
+Range examples: 
+
+* "1-9" means all chars between 1 and 9 (inclusive)
+* "1-9J-Z" means all chars between 1 and 9 or between "J" and "Z"
+* "1-9JNW" means all chars between 1 and 9, a "J" a "N" or a "W"
+
+This function returns a normalized range string without "-"
+and composed always from ranges:
+/*
+    "1-9" => "19"
+    "1-9J-Z" => "19JZ"
+    "1-9JNW" => "19JJNNWW"
+*/
 
         var result = ""
 
@@ -79,7 +96,9 @@ e.g.: findRanges("123ABC",0,"D-Z") will return 6 => length of "123ABC" => not fo
 
 ### public function whileUnescaped(chunk:string,endChar:string) returns string
 
-        //advance until unescaped endChar
+advance until unescaped endChar
+return string up to endChar (excluded)
+
         var pos = 0
         do
             var inx = chunk.indexOf(endChar,pos)
@@ -104,7 +123,8 @@ e.g.: findRanges("123ABC",0,"D-Z") will return 6 => length of "123ABC" => not fo
 
 ### public function quotedContent(chunk:string) returns string
 
-Note: chunk[0] MUST be the openinig quote
+return the string up to the matching quote, excluding both
+Note: chunk[0] MUST be the openinig quote, either single-quote or double-quote
         
         if no chunk.charAt(0) in '/"\'', throw "chunk.charAt(0) MUST be the openinig quote-char"
         return whileUnescaped(chunk.slice(1),chunk.charAt(0))

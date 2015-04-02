@@ -1644,6 +1644,7 @@
 
     any String_toLowerCase(any this, len_t argc, any* arguments) {
         //NOTE: Only ASCII upper/lower conversion
+        //non-destructive, strings are immutable. Returns a new string
         if (!this.len) return this;
         //performance, for small strings, check if it's already lowercase
         if (!this.res && this.len<128){
@@ -1663,6 +1664,7 @@
 
     any String_toUpperCase(any this, len_t argc, any* arguments) {
         //NOTE: Only ASCII upper/lower conversion
+        //non-destructive, strings are immutable. Returns a new string
         if (!this.len) return this;
         //performance, for small strings, check if it's already uppercase
         if (!this.res && this.len<128){

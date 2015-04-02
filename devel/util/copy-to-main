@@ -27,12 +27,12 @@ echo "MAIN ${MAIN}"
 echo "SRC VERSION ${SRCVRS}"
 echo ---------------
 
-echo "COPY /out/lib to main dir /lib"
+echo "COPY /out/lib to LS/lib"
 rm -rf ${MAIN}/lib/
 mkdir -p ${MAIN}/lib
 cp -r out/lib/* ${MAIN}/lib/
 
-echo "COPY ${SRCVRS} to main dir /reference (snapshot/documentation)"
+echo "COPY ${SRCVRS} to LS/reference"
 # update sources snapshot
 rm -rf ${MAIN}/reference
 mkdir -p ${MAIN}/reference
@@ -58,9 +58,10 @@ end_of_README
 cd ${CWD}
 
 #update extras/sublime
+echo "update extras/sublime"
 mkdir -p ${MAIN}/extras/sublime/LiteScript
 if [ -d $HOME/.config/sublime-text-2/Packages/LiteScript ]; then 
-	cp -uvp $HOME/.config/sublime-text-2/Packages/LiteScript/*  ${MAIN}/extras/sublime/LiteScript
+	cp -up $HOME/.config/sublime-text-2/Packages/LiteScript/*  ${MAIN}/extras/sublime/LiteScript
     rm ${MAIN}/extras/sublime/LiteScript/*.cache
     rm ${MAIN}/extras/sublime/LiteScript/*~
 fi
