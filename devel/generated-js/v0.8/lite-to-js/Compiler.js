@@ -10,8 +10,8 @@
     // export
     module.exports.version = version;
 
-    //public var buildDate = "Mon Jan 12 2015 08:59:14 GMT-0300 (ART)"
-    var buildDate = "Mon Jan 12 2015 08:59:14 GMT-0300 (ART)";
+    //public var buildDate = "Tue Apr 07 2015 12:38:42 GMT-0300 (ART)"
+    var buildDate = "Tue Apr 07 2015 12:38:42 GMT-0300 (ART)";
     // export
     module.exports.buildDate = buildDate;
 

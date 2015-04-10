@@ -114,20 +114,3 @@ method .remove(element)
                 .pop
 
 
-##Console group
-
-### append to namespace console
-
-Note: Today, Node.js "console" object do not have `group` & `groupEnd` methods
-neither do older browsers
-
-        properties indentLevel
-
-        shim method group() 
-            console.log.apply undefined,arguments
-            console.indentLevel = console.indentLevel or 0 + 1
-
-        shim method groupEnd() 
-            if console.indentLevel 
-                console.indentLevel--
-

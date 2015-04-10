@@ -21,7 +21,7 @@ Module vars
         importInfo:ImportParameterInfo #: .name, .globalImport .interface - info passed to new
         dir:string #: path.dirname(importParameter)
         extension:string #: path.extname(importParameter)
-        base:string #: path.basename(importParameter, ext) #with out extensions
+        base:string #: path.basename(importParameter, ext) #without extensions
         sourcename:string #: path.basename(importParameter, ext) #with  extensions
         hasPath # true if starts with '.' or '/'
         isCore # true if it's a core node module as 'fs' or 'path'
@@ -308,11 +308,7 @@ Check if interface cache is updated
 Check for built in and global names
 return true if 'name' is a built-in node module
 
-        #ifdef TARGET_C
-        do nothing // if generating the compile-to-C compiler
-        
-        #else
-
+        #ifdef TARGET_JS
         var isCoreModule = name in ['assert', 'buffer', 'child_process', 'cluster',
           'crypto', 'dgram', 'dns', 'events', 'fs', 'http', 'https', 'net',
           'os', 'path', 'punycode', 'querystring', 'readline', 'repl',
@@ -326,11 +322,13 @@ return true if 'name' is a built-in node module
             
 
         #endif
+        return
 
 ### export helper function isBuiltInObject(name)
     //
     // return true if 'name' is a javascript built-in object
     //
+        #ifdef TARGET_JS
 
         return name in ['isNaN','parseFloat','parseInt','isFinite'
             ,'decodeURI','decodeURIComponent'
@@ -338,16 +336,16 @@ return true if 'name' is a built-in node module
             ,'eval','console'
             ,'process','require']
 
+        #endif
+        return
 
 ### export helper function getGlobalObject(name)
         
+        #ifdef TARGET_JS
+
         if options.target is 'c'
             return
         else
-            #ifdef TARGET_C
-            do nothing
-            
-            #else
             try 
                 return global[name]
             
@@ -356,9 +354,11 @@ return true if 'name' is a built-in node module
                 logger.error 'stack:',e.stack
                 debugger
             
-            #endif
-
         end if
+
+        #endif
+        return
+
     
 ### export helper function fileInfoNewFile(name) returns FileInfo
 

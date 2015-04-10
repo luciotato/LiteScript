@@ -49,6 +49,18 @@
     //var preprocessor_replaces: map string to string
     var preprocessor_replaces = undefined;
 
+    //ifdef PROD_C
+    //var COMMENT_START="//"
+    //endif
+    //ifdef PROD_JS
+    //var COMMENT_START="//"
+    var COMMENT_START = "//";
+    //endif
+    //ifdef PROD_VB
+    //var COMMENT_START="'"
+    //endif
+
+
 //The Lexer Class
 //===============
 
@@ -718,8 +730,8 @@
           //// code a call to "concat" to handle string interpolation
           //line = "_concatAny(#{parsed.join(',')})"
 
-      //else //  compile-to-js
-
+      //else
+          // compile-to-js
           //if the first expression isnt a quoted string constant
           // we add `"" + ` so: we get string concatenation from javascript.
           // Also: if the first expression starts with `(`, LiteScript can
@@ -907,6 +919,8 @@
                     ){
                             //.replaceSourceLine .line.replaceAll("#else","//else")
                             this.replaceSourceLine(this.line.replaceAll("#else", "//else"));
+                            //if words.tryGet(1), .throwErr "expected nothing after '#else' - #elseif not supported, read '#{line}' #{startRef}"
+                            if (words.tryGet(1)) {this.throwErr("expected nothing after '#else' - #elseif not supported, read '" + line + "' " + startRef)};
                             //defValue = not defValue
                             defValue = !(defValue);
                     
@@ -1465,8 +1479,8 @@
             outCode.ensureNewLine();
             //outCode.put String.spaces(.indent)
             outCode.put(String.spaces(this.indent));
-            //if .text.slice(0,2) isnt '//', outCode.put "//"
-            if (this.text.slice(0, 2) !== '//') {outCode.put("//")};
+            //if .text.slice(0,2) isnt COMMENT_START, outCode.put COMMENT_START
+            if (this.text.slice(0, 2) !== COMMENT_START) {outCode.put(COMMENT_START)};
             //outCode.put .text
             outCode.put(this.text);
             //outCode.startNewLine
@@ -1620,7 +1634,8 @@
                     //var composed = new InfoLine(lexer, LineTypes.CODE, token.column,
                         //"_concatAny(#{parsed.join(',')})", .sourceLineNum  )
 
-                //else //generating JavaScript
+                //else
+                    //generating JavaScript
                     //if the first expression isnt a quoted string constant
                     // we add `"" + ` so we get string concatenation from javascript.
                     // Also: if the first expression starts with `(`, LiteScript can

@@ -3013,7 +3013,7 @@ we allow a list of comma separated expressions to compare to and a body
 
       properties
         mainType
-        keyType
+        keyType 
         itemType
 
       method parse

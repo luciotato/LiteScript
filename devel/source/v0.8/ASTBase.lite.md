@@ -11,6 +11,16 @@ Dependencies
     import Parser, ControlledError
     import logger
     
+    #ifdef PROD_C
+    var COMMENT_START="//"
+    #endif
+    #ifdef PROD_JS
+    var COMMENT_START="//"
+    #endif
+    #ifdef PROD_VB
+    var COMMENT_START="'"
+    #endif
+
 ### only export Class ASTBase 
 
 This class serves as a base class on top of which Grammar classes are defined.
@@ -611,7 +621,7 @@ else, Object codes
                   if no .lexer or .lexer.options.comments #comments level > 0
 
                       # prepend // if necessary
-                      if type of item isnt 'string' or not comment.startsWith("//"), rawOut.put "// "
+                      if type of item isnt 'string' or not comment.startsWith(COMMENT_START), rawOut.put "#{COMMENT_START} "
                       .out comment
 
 {h:1/0} --> enable/disabe output to header file

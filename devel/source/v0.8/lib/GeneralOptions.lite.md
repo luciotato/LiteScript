@@ -6,13 +6,18 @@
             warningLevel = 1
             comments = 1   // 0=>no comments, 1=>source line & source comments 2=>add "compiled by..."
 
-            #ifdef PROD_C
-            target ="c"
-            outDir = 'generated/c'
-            #else
+            #ifdef PROD_JS
             target ="js"
             outDir = 'generated/js'
             #end if
+            #ifdef PROD_C
+            target ="c"
+            outDir = 'generated/c'
+            #endif
+            #ifdef PROD_VB
+            target ="vb"
+            outDir = 'generated/vb'
+            #endif
 
             debugEnabled = undefined
             perf=0 // performace counters 0..2

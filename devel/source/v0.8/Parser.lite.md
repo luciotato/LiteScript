@@ -35,6 +35,17 @@ module vars
 
     var preprocessor_replaces: map string to string
 
+    #ifdef PROD_C
+    var COMMENT_START="//"
+    #endif
+    #ifdef PROD_JS
+    var COMMENT_START="//"
+    #endif
+    #ifdef PROD_VB
+    var COMMENT_START="'"
+    #endif
+
+
 The Lexer Class
 ===============
 
@@ -481,8 +492,8 @@ Now we should escape internal d-quotes, but only *outside* string interpolation 
           // code a call to "concat" to handle string interpolation
           line = "_concatAny(#{parsed.join(',')})"
 
-      #else //  compile-to-js
-
+      #else 
+          // compile-to-js
           //if the first expression isnt a quoted string constant
           // we add `"" + ` so: we get string concatenation from javascript.
           // Also: if the first expression starts with `(`, LiteScript can 
@@ -588,6 +599,7 @@ ifdef, #ifndef, #else and #endif should be the first thing on the line
                     case words.tryGet(0)
                         when '#else':
                             .replaceSourceLine .line.replaceAll("#else","//else")
+                            if words.tryGet(1), .throwErr "expected nothing after '#else' - #elseif not supported, read '#{line}' #{startRef}"
                             defValue = not defValue
                         when "#end":
                             if words.tryGet(1) isnt 'if', .throwErr "expected '#end if', read '#{line}' #{startRef}"
@@ -998,7 +1010,7 @@ output this line as a comment
             //text as comment
             outCode.ensureNewLine
             outCode.put String.spaces(.indent)
-            if .text.slice(0,2) isnt '//', outCode.put "//"
+            if .text.slice(0,2) isnt COMMENT_START, outCode.put COMMENT_START
             outCode.put .text
             outCode.startNewLine
 
@@ -1100,7 +1112,8 @@ with a call to core function "concat"
                     var composed = new InfoLine(lexer, LineTypes.CODE, token.column, 
                         "_concatAny(#{parsed.join(',')})", .sourceLineNum  )
 
-                #else //generating JavaScript
+                #else 
+                    //generating JavaScript
                     //if the first expression isnt a quoted string constant
                     // we add `"" + ` so we get string concatenation from javascript.
                     // Also: if the first expression starts with `(`, LiteScript can 

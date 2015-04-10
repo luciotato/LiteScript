@@ -960,6 +960,13 @@
       // ---------------------------
       Grammar.ImportStatementItem.prototype.getNodeJSRequireFileRef = function(){
 
+        //if .lexer.options.single and .importParameter
+        if (this.lexer.options.single && this.importParameter) {
+        
+            //return .importParameter.name
+            return this.importParameter.name;
+        };
+
 //node.js require() use "./" to denote a local module to load.
 //It does as bash does for executable files.
 //A name  without "./"" means "look in $PATH" (node_modules and up)

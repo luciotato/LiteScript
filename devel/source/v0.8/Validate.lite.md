@@ -1427,7 +1427,7 @@ This need to be done after all declarations.
 
 When producing C-code, an ArrayLiteral creates a "new(Array" at module level
 
-        if project.options.target is 'c'
+        if project.options.target isnt 'js'
             .nameDecl = .declareName(UniqueID.getVarName('_literalArray'))
             .getParent(Grammar.Module).addToScope .nameDecl
         
@@ -1464,7 +1464,7 @@ When producing js-code is the ad-hoc type created for the ObjectLiteral
 
      method getResultType
 
-        if project.options.target is 'c' 
+        if project.options.target isnt 'js' 
             return tryGetGlobalPrototype('Map')
         else
             return  .nameDecl
@@ -1479,12 +1479,15 @@ When producing js-code is the ad-hoc type created for the ObjectLiteral
 When producing C-code, a ObjectLiteral creates a "Map string to any" on the fly, 
 but it does not declare a valid type/class.
 
-        if project.options.target is 'c', return
+        if project.options.target isnt 'js', return
 
 Add this name as member of the parent ObjectLiteral/Value
         
         declare .parent: Grammar.ObjectLiteral 
-        .nameDecl = .addMemberTo(.parent.nameDecl, .name)
+        if no .parent.nameDecl
+          .sayErr "cannot add #{.name}, no parent.nameDecl. Parent=#{.parent}"
+        else
+          .nameDecl = .addMemberTo(.parent.nameDecl, .name)
 
 check if we can determine type from value 
 
@@ -2146,7 +2149,7 @@ gets converted to a _fastNew() call, initializing the instance with the provided
 
 We're supporting a common practice in JS: pass a LiteralObject in place of a class
 
-        if project.options.target is 'c'
+        if project.options.target isnt 'js'
 
             if expr.operandCount is 1 and expr.root.name instanceof Grammar.ObjectLiteral
 

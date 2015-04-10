@@ -44,7 +44,7 @@ Module vars
 #### constructor new Declaration(name, options:DeclarationOptions, node:ASTBase)
       
       .name = name.toString()
-      .members = new Map // string to Declaration //contained Declarations
+      .members = new Map //string to Declaration //contained Declarations
 
 try to determine nodeClass from node.nodeDeclared
 
@@ -53,7 +53,7 @@ try to determine nodeClass from node.nodeDeclared
           .nodeClass = node.constructor
           case .nodeClass 
               when 
-                Grammar.ImportStatementItem 
+                Grammar.ImportStatementItem   
                 Grammar.DeclareStatement
                 Grammar.WithStatement
                 Grammar.ArrayLiteral
