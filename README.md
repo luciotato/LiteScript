@@ -1,6 +1,6 @@
 <p align=right><img src="https://travis-ci.org/luciotato/LiteScript.png?branch=master" /></p>
-###LiteScript is a highly-readable, literate, compile-to-js and compile-to-c language.
-##Design considerations
+### LiteScript is a highly-readable, literate, compile-to-js and compile-to-c language.
+## Design considerations
 - More hours are expended *reading* and *debugging* code, than *writing* it.
 - Code should be [easy to read and follow](http://luciotato.svbtle.com/keep-your-mind-at-full-speed-avoid-branch-mispredictions).
 - Programmer intention and code effects should be clear and explicit
@@ -10,7 +10,7 @@
   - Async callbacks and closures *should not* break the exception handling logic.
   - Hidden side-effects and global variables should be avoided whenever possible.  
 
-##Objectives
+## Objectives
 
 - Make code as readable and easy to follow as possible.
 - Favor clear, readable code, over terse, hard to read code.
@@ -21,9 +21,9 @@ Is too time-expensive to debug subtle bugs caused by mistyped property member na
   - Use js and EcmaScript 6 syntax when available.
   - Embrace javascript prototypal inheritance. "class" is just syntax sugar.
 
-##Why?
+## Why?
 
-####a) JavaScript & Large Projects 
+#### a) JavaScript & Large Projects 
 
 I've reached a point, in pure js projects, at which refactoring code gets too risky. 
 It's far too easy to introduce subtle bugs in pure js code, just with a typo.
@@ -35,7 +35,7 @@ errors in the compilation phase, to avoid long debugging hours.***
 Also with LiteScript I found myself coding faster, fearless, trusting LiteScript compiler to catch typos 
 and object misuse.
 
-####b) Easy to hack-on compiler
+#### b) Easy to hack-on compiler
 
 I wanted to have a "easy-to-hack-on" *compiler* to be able to alter and adjust the language itself, 
 and also to be able to add several "compile-to" backends.
@@ -43,7 +43,7 @@ Parsing by PEGs makes the compiler "easy to hack on".
 
 ------
 
-##LiteScript is Literate
+## LiteScript is Literate
 
 LiteScript is literate (based on the idea of *Literate CoffeeScript*).
 You write code and documentation on the same file, using *Github flavored Markdown* syntax.  
@@ -59,7 +59,7 @@ Comments, if left outside the class or function, tend to get detached from their
 code on reorganizations.
 Anything else not indented 4 spaces is a literate comment, Github flavor MarkDown syntax.
 
-###Example:
+### Example:
 
 -----
 ### Public Class Agent
@@ -112,7 +112,7 @@ go to [LiteScript Online Playground](http://luciotato.github.io/LiteScript_onlin
 4. Install and start enjoying
 
 ----
-##Compile-to-C
+## Compile-to-C
 
 LiteScript can also be compiled-to-c  (beta in version 0.8.5)
 
@@ -125,7 +125,7 @@ See: [Self-Compiling LiteScript, 7x performance gain] (doc/self-compiling-LiteSc
 In order to measure performance gains when compiling-to-c, I've "translated" the parser
 from UglifyJS into LiteScript code, and then compiled the LS code to-js and to-c
 
-##Results:
+## Results:
 
 parsing of: `jquery-1.11.1.js + Underscore.js 1.6.0 + AngularJS` 366 KiB
 
@@ -135,27 +135,27 @@ Original Uglify2 parse.js |                    | 430 ms | base
 LiteScript code           | compile-to-js      | 450 ms | +20 ms, 5% slower
 LiteScript code           | compile-to-c       | 150 ms | 2.5 times faster !!
 
-####Conclusion: 
->Uglify2.JS parser "translated" to LiteScript and compiled-to-c, runs 2.5 times faster
+#### Conclusion: 
+> Uglify2.JS parser "translated" to LiteScript and compiled-to-c, runs 2.5 times faster
 
 See: https://github.com/luciotato/UglifyLS
 
 ----
-##LiteScript Installation
+## LiteScript Installation
 
 ```
 sudo npm install -g litescript
 ```
 See ***Development Environment*** below for tools installation.
 
-##Usage
+## Usage
 Primary usage is from the command line, to compile a project or to run a script:
 
 To compile a project: `lite mainModule.lite.md`
 
 To run a script: `lite -run script.lite.md`
 
-###Options:
+### Options:
 ```
   -r, -run         compile & run .lite.md file
   -o dir           output dir. Default is 'out'
@@ -174,7 +174,7 @@ To run a script: `lite -run script.lite.md`
   -run -debug      when -run used with -debug, launch compiled file with: node --debug-brk 
 ```
 
-###Development Environment
+### Development Environment
 
 It's very useful to have syntax coloring to try a new language. This is what I use:
 
@@ -213,7 +213,7 @@ you reach the above configuration.
 
 ----
 
-###Real use cases so far 
+### Real use cases so far 
 
 ##### On the server 
 
@@ -244,7 +244,7 @@ see: [UglifyLS](https://github.com/luciotato/UglifyLS)
 
 ##### On the browser: 
 
-#####[LiteScript_online_playground](https://github.com/luciotato/LiteScript_online_playground.git)
+##### [LiteScript_online_playground](https://github.com/luciotato/LiteScript_online_playground.git)
 
 Its a single page browser app. It downloads the entire LiteScript compiler (not minified) 
 and fetch example LiteScript code  via AJAX, then compile on the browser presenting 
@@ -260,7 +260,7 @@ This project has a minimal "Document.interface.md" for the DOM and also minimals
 **Note:** The "Document.interface.md" and "jQuery.interface.md" are partial and incomplete.
 Patches are welcomed.
 
-#####[LiteScript-reception-demo](https://github.com/luciotato/LiteScript-reception-demo.git)
+##### [LiteScript-reception-demo](https://github.com/luciotato/LiteScript-reception-demo.git)
 
 Its a web app *prototype* for IPAD we were commisioned to do. In order to test LiteScript
 with real-world code, I've ported it from pure browser javascript 
@@ -274,7 +274,7 @@ You must clone it and host it locally to test it.
 
 ----
 
-###Developing a new version of LiteScript 
+### Developing a new version of LiteScript 
 
 The LiteScript compiler is written in LiteScript. 
 
