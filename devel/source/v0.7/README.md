@@ -8,7 +8,7 @@ v0.7 compiler introduces a lot of new syntax and breaking changes,
 in order to compile v0.8 which is able to compile to C. 
 v0.7, by introducing breaking changes, may not be able to compile itself.
 
-v0.7 should be compiled by v0.6 and the used to compile v0.8
+v0.7 should be compiled by v0.6 and then used to compile v0.8
 
 ##IMPORTANT: development is made at /devel/source-v0.7
 
