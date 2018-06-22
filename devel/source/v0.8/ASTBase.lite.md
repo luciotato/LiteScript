@@ -208,9 +208,9 @@ For strings, we check the token **value** or **TYPE** (if searched is all-upperc
 
 Ok, type/value found! now we return: token.value
 Note: we shouldn't return the 'token' object, because returning objects (here and in js) 
-is "pass-by-reference". You return a "pointer" to the object.
+is "pass-by-reference" for the object members. You return a "pointer" to the object.
 If we return the 'token' object, the calling function will recive a "pointer"
-and it can inadvertedly alter the token object in the token stream. (it should not, leads to subtle bugs)
+and it can inadvertedly alter the token object members in the token stream. (it should not, leads to subtle bugs)
 
                       logger.debug spaces, .constructor.name,'matched OK:',searched, .lexer.token.value
                       var result = .lexer.token.value 
