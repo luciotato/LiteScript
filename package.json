@@ -2,7 +2,16 @@
   "name": "litescript",
   "version": "0.8.9",
   "description": "LiteScript is a literate, highly readable, compile-to-js and compile-to-c language",
-  "keywords": ["alt-js", "language", "simple", "PEG", "compiler", "fast", "compile-to-js", "compile-to-C"],
+  "keywords": [
+    "alt-js",
+    "language",
+    "simple",
+    "PEG",
+    "compiler",
+    "fast",
+    "compile-to-js",
+    "compile-to-C"
+  ],
   "author": {
     "name": "Lucio M. Tato",
     "email": "luciotato@gmail.com",
@@ -15,15 +24,15 @@
   },
   "bugs": "http://github.com/luciotato/litescript/issues",
   "license": "AGPL",
-  "engines": [
-    "node >= 0.8.0"
-  ],
-  "directories" : {
-    "lib" : "./lib"
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "directories": {
+    "lib": "./lib"
   },
   "main": "./lib/Compiler.js",
   "bin": {
-      "lite": "./lib/lite"
+    "lite": "./lib/lite"
   },
   "scripts": {
     "test": "bash test.sh",

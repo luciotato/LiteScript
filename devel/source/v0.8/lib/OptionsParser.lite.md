@@ -8,8 +8,8 @@ parse command line parameters
 
 #### constructor(argv:array required)
 
-        if argv.length and argv[0] is 'node' 
-            argv=argv.slice(1) //remove 'node' if calling as a script
+        if argv.length and (argv[0] is 'node' or argv[0].endsWith('/node'))
+            argv=argv.slice(1) //remove 'node' if called as a node script
 
         .items = argv.slice(1) //remove this script/exe 'lite' from command line arguments
 

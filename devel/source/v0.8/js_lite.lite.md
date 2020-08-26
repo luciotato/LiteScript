@@ -11,6 +11,8 @@ to run on node.js or the browser
 
     import Compiler
 
+    var BUILD_DATE = '__DATE__ __TIME__'
+
 execute commands
 
     execute process.argv
@@ -18,7 +20,7 @@ execute commands
 
 ### function execute(params:array)
 
-        var title = "LiteScript-to-js v#{Compiler.version} Build Date #{Compiler.buildDate}"
+        var title = "LiteScript-to-js Compiler v#{Compiler.version} Build Date #{Compiler.buildDate}"
 
 #### usage
 
@@ -29,8 +31,8 @@ execute commands
         #{title}
         
         Usage: 
-                lite mainModule.lite.md [options]
-                lite -run mainModule.lite.md [options]
+                lite [options] mainModule.lite.md 
+                lite [options] -run mainModule.lite.md
 
         This command will launch the LiteScript Compiler for mainModule.lite.md
         
@@ -69,6 +71,7 @@ Get & process command line arguments
 Check for -help
 
         if args.option('h','help') 
+            print "lite-cli built on #{BUILD_DATE}"
             print usage
             process.exit 0
 
@@ -122,25 +125,27 @@ Check for -watch dir
 
 get mainModuleName
 
-        //only mainModuleName should be left
-        case args.items.length 
+        if no options.mainModuleName 
 
-            when 0:
-                if no options.mainModuleName
-                    console.error  """
-                        #{title}
-                        Missing MainModule or -run filename.
-                        lite -h for help
-                        """
+            //only mainModuleName should be left
+            case args.items.length 
+
+                when 0:
+                    if no options.mainModuleName
+                        console.error  """
+                            #{title}
+                            Missing MainModule or -run filename.
+                            lite -h for help
+                            """
+                        process.exit 2
+
+                when 1:
+                    options.mainModuleName = args.items[0]
+
+                else
+                    console.error "Invalid arguments:", args.items.join(' ')
+                    console.error "lite -h for help"
                     process.exit 2
-
-            when 1:
-                options.mainModuleName = args.items[0]
-
-            else
-                console.error "Invalid arguments:", args.items.join(' ')
-                console.error "lite -h for help"
-                process.exit 2
 
 show options
 
