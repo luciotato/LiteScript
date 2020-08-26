@@ -34,10 +34,6 @@
 //
 // - Solution: Use litescript *map*
 //
-// ***Can not be compiled to lite-C***.
-//
-// - Solution: Use litescript *map*
-//
 //#### Litescript Literal Map
 //
 //LiteScript:

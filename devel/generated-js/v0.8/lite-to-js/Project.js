@@ -563,7 +563,8 @@
      }// ---------------------------
      Project.prototype.importDependencies = function(moduleNode){
 
-//Check if this module 'imported other modules'. Process Imports (recursive)
+//Check if this module 'imported other modules'. Process Imports (recursive)<br>
+//Note: This function does not get called if lite was run with the '-s' option
 
         //for each node:ASTBase in moduleNode.requireCallNodes
         for( var node__inx=0,node ; node__inx<moduleNode.requireCallNodes.length ; node__inx++){node=moduleNode.requireCallNodes[node__inx];

@@ -9,10 +9,10 @@
         //lastIndex
         //items: Array of string
 
-        //if argv.length and argv[0] is 'node'
-        if (argv.length && argv[0] === 'node') {
+        //if argv.length and (argv[0] is 'node' or argv[0].endsWith('/node'))
+        if (argv.length && (argv[0] === 'node' || argv[0].endsWith('/node'))) {
         
-            //argv=argv.slice(1) //remove 'node' if calling as a script
+            //argv=argv.slice(1) //remove 'node' if called as a node script
             argv = argv.slice(1);
         };
 

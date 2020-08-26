@@ -115,7 +115,7 @@ b) nothing more. just a)
             return true
 
 
-####Using Iterables on Strings, whe compile-to-c
+####Using Iterables on Strings, when compiling-to-c
 
 Note: On LiteC-core (when compiling-to-c LiteScript source),
 the internal representation of strings is UTF-8.

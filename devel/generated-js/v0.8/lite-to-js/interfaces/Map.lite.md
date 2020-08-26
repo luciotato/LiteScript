@@ -70,7 +70,7 @@ The *map* class is a native class in Lite-C.
 Here we're declaring a *map* class to be used when the code is compiled-to-js
 
 
-### export only class Map
+####export only class Map
 
         properties
             dict:Object

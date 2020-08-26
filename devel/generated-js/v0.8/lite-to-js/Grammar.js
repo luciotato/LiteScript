@@ -41,18 +41,14 @@
 
 //Full Meta-Syntax Example:
 
-//`PrintStatement: 'print' [Expression,]`
+//`PrintStatement: print [Expression,]`
 
 //It reads: composed symbol `PrintStatement` is conformed by the word `print` followed by
 //an _optional_ comma-separated list of `Expression`
 
 //###More on comma-separated lists
 
-//Let's analyze the example: `PrintStatement: 'print' [Expression,]`
-
-//###More on comma-separated lists
-
-//Let's analyze the example: `PrintStatement: 'print' [Expression,]`
+//Let's analyze the example: `PrintStatement: print [Expression,]`
 
 //`[Expression,]` means *optional* **comma "Separated List"** of Expressions.
 //Since the comma is inside a **[ ]** group, it means the entire list is optional.
@@ -65,10 +61,6 @@
 
 //It reads: composed symbol `VarStatement` is conformed by the word `var` followed by
 //a comma-separated list of `VariableDecl` (at least one)
-
-//The construction `(VariableDecl,)` means: **comma "Separated List"** of `VariableDecl`
-
-//Since the comma is inside a **( )** group, it means _at least one VariableDecl_ is required.
 
 //The construction `(VariableDecl,)` means: **comma "Separated List"** of `VariableDecl`
 
@@ -99,23 +91,20 @@
 //Grammar Implementation
 //-----------------------
 
-//The LiteScript Grammar is defined as `classes`, one class for each non-terminal symbol.
+//The LiteScript Grammar is defined as `classes`, one class for each rule.
 
-//The `.parse()` method of each class will try the grammar on the token stream and:
+//The `.parse()` method of each class will try the grammar rule on the token stream and:
 
-//- If all tokens match, it will simply return after consuming the tokens. (success)
+//- If all tokens match, it will populate the node consuming the tokens. (success)
 //- On a token mismatch, it will raise a 'parse failed' exception.
 
-//- If all tokens match, it will simply return after consuming the tokens. (success)
-//- On a token mismatch, it will raise a 'parse failed' exception.
-
-//When a 'parse failed' exception is raised, other classes can be tried.
+//When a 'parse failed' exception is raised, other classes/rules can be tried.
 //If no class parses ok, a compiler error is emitted and compilation is aborted.
 
-//if the exception is *before* the class has determined this was the right language construction,
-//it is a soft-error and other grammars can be tried over the source code.
+//if the exception is *before* the class has determined this was the right rule,
+//it is a soft-error and other rules can be tried on the token stream.
 
-//if the exception is *after* the class has determined this was the right language construction
+//if the exception is *after* the class has determined this was the right rule
 //(if the AST node was 'locked'), it is a hard-error and compilation is aborted.
 
 //The `ASTBase` module defines the base class for all grammar classes along with
@@ -3793,12 +3782,91 @@
             //.importParameter = .req(StringLiteral)
             this.importParameter = this.req(StringLiteral);
         };
+        //end if
+
+//## DeclareStatement
+
+//Declare allows you to define a variable and/or its type
+//*for the type-checker (at compile-time)*
+
+//#####Declare variable:type
+//`DeclareStatement: declare VariableRef:type-VariableRef`
+
+//Declare a variable type on the fly, from declaration point onward
+
+//Example: `declare name:string, parent:Grammar.Statement` #on the fly, from declaration point onward
+
+
+//#####Global Declare
+//`global declare (ImportStatementItem+)`
+//Browser-mode: Import a *.interface.md* file to declare a global pre-existent complex objects
+//Example: `global declare jQuery,Document,Window`
+
+//#####Declare [global] var
+//`DeclareStatement: declare [global] var (VariableDecl,)+`
+
+//Allows you to declare a preexistent [global] variable
+//Example: `declare global var window:object`
+
+//#####Declare global type for VariableRef
+
+//Allows you to set the type on a existing variable
+//globally for the entire compilation.
+
+//Example:
+//`declare global type for LocalData.user: Models.userData` #set type globally for the entire compilation
+
+
+//#####Declare name affinity
+//`DeclareStatement: name affinity (IDENTIFIER,)+`
+
+//To be used inside a class declaration, declare var names
+//that will default to Class as type
+
+//Example
+//```
+  //Class VariableDecl
+    //properties
+      //name: string, sourceLine, column
+      //declare name affinity varDecl
+//```
+
+//Given the above declaration, any `var` named (or ending in) **"varDecl"** or **"VariableDecl"**
+//will assume `:VariableDecl` as type. (Class name is automatically included in 'name affinity')
+
+//Example:
+//`var varDecl, parentVariableDecl, childVarDecl, variableDecl`
+
+//all three vars will assume `:VariableDecl` as type.
+
+//#####Declare valid
+//`DeclareStatement: declare valid IDENTIFIER("."(IDENTIFIER|"()"|"[]"))* [:type-VariableRef]`
+
+//To declare, on the fly, known-valid property chains for local variables.
+//Example:
+  //`declare valid data.user.name`
+  //`declare valid node.parent.parent.text:string`
+  //`declare valid node.parent.items[].name:string`
+
+//#####Declare on
+//`DeclareStatement: declare on IDENTIFIER (VariableDecl,)+`
+
+//To declare valid members on scope vars.
+//Allows you to declare the valid properties for a local variable or parameter
+//Example:
+//
+//    function startServer(options)
+//        declare on options
+//            name:string, useHeaders:boolean, port:number
+
+
+    //    export class DeclareStatement extends ASTBase
+        
       }
     // export
     module.exports.ImportStatementItem = ImportStatementItem;
     
     // end class ImportStatementItem
-
 
 //## DeclareStatement
 

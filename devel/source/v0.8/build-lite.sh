@@ -20,9 +20,9 @@ elif [ $basename = "c_lite.lite.md" ]; then
 elif [ $basename = "Producer_c.lite.md" ]; then
     . ./bld-js-ls-to-c.sh
 
-#elif [ $basename = "js_lite.lite.md" ]; then
-#    pwd
-#    . ./bld-js-ls-to-js.sh
+elif [ $basename = "js_lite.lite.md" ]; then
+    pwd
+    . ./bld-js-ls-to-js.sh
 
 else
     #default: use litec-to-js
